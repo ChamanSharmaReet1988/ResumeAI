@@ -7,6 +7,8 @@
 
 import UIKit
 
-class Resume: NSObject {
-
+struct Resume: Identifiable {
+    var id: Int?
+    var title: String?
+    var lastEdited: String?
 }

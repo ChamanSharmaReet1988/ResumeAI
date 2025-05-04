@@ -29,9 +29,38 @@
 		FED48B022D69F044004F4D44 /* ResumeAIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ResumeAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FEB60B8A2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Views/AIAssistantView.swift,
+				Views/ATSCheckerView.swift,
+				Views/HomeView.swift,
+				Views/ResumeBuilderView.swift,
+				Views/SettingsView.swift,
+			);
+			target = FED48AF72D69F044004F4D44 /* ResumeAITests */;
+		};
+		FEB60B8B2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAIUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Views/AIAssistantView.swift,
+				Views/ATSCheckerView.swift,
+				Views/HomeView.swift,
+				Views/ResumeBuilderView.swift,
+				Views/SettingsView.swift,
+			);
+			target = FED48B012D69F044004F4D44 /* ResumeAIUITests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FED48AE82D69F044004F4D44 /* ResumeAI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FEB60B8A2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAITests" target */,
+				FEB60B8B2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAIUITests" target */,
+			);
 			path = ResumeAI;
 			sourceTree = "<group>";
 		};

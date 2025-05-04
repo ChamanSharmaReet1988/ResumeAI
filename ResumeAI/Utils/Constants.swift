@@ -7,6 +7,4 @@
 
 import UIKit
 
-class Constants: NSObject {
-
-}
+let EmptyString: String = ""
