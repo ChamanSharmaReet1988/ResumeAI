@@ -35,7 +35,8 @@
 			membershipExceptions = (
 				Views/AIAssistantView.swift,
 				Views/ATSCheckerView.swift,
-				Views/HomeView.swift,
+				Views/HomeView/HomeView.swift,
+				Views/HomeView/ResumeCardView.swift,
 				Views/ResumeBuilderView.swift,
 				Views/SettingsView.swift,
 			);
@@ -46,7 +47,8 @@
 			membershipExceptions = (
 				Views/AIAssistantView.swift,
 				Views/ATSCheckerView.swift,
-				Views/HomeView.swift,
+				Views/HomeView/HomeView.swift,
+				Views/HomeView/ResumeCardView.swift,
 				Views/ResumeBuilderView.swift,
 				Views/SettingsView.swift,
 			);
