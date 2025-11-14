@@ -7,57 +7,131 @@
 
 import SwiftUI
 
+import SwiftUI
+
 struct HomeView: View {
-    @ObservedObject var viewModel = HomeViewModel()
-
-        var body: some View {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    Text("Welcome back, Chaman 👋")
-                        .font(.title)
-                        .bold()
-
-                    Text("Your Recent Resumes")
-                        .font(.headline)
-
-                    ScrollView(.horizontal, showsIndicators: false) {
+    @StateObject private var viewModel = HomeViewModel()
+    @State private var showCreateResume = false
+    @State private var name = ""
+    @State private var showToast = false
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                // Your list
+                List {
+                    ForEach(viewModel.recentResumes) { resume in
                         HStack {
-                            ForEach(viewModel.recentResumes) { resume in
-                                ResumeCardView(resume: resume)
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(resume.title ?? empty)
+                                    .font(.body)
+                                Spacer(minLength: 0)
+                                Text(
+                                    "Last edited: \(resume.lastEdited ?? empty)"
+                                )
+                                .font(.caption)
+                                .foregroundColor(.gray)
                             }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
                         }
+                        .frame(height: 40)  // fixed height
+                        .padding(.vertical, 0) // adds ~10px space between rows
+                        .contentShape(Rectangle())
                     }
-
-                    Text("Quick Actions")
-                        .font(.headline)
-
-                    HStack {
-                        HomeActionButton(title: "New Resume", icon: "plus.circle")
-                        HomeActionButton(title: "AI Assist", icon: "sparkles")
-                        HomeActionButton(title: "ATS Check", icon: "chart.bar.doc.horizontal")
-                    }
-
-                    Text("💡 Resume Tip")
-                        .font(.headline)
-                    Text(viewModel.dailyTip)
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(10)
-
-                    if !viewModel.isProUser {
-                        Button("Upgrade to Pro 🚀") {
-                            // handle upgrade
-                        }
-                        .padding()
-                        .background(Color.blue.opacity(0.2))
-                        .cornerRadius(10)
-                    }
-
-                    Spacer()
                 }
-                .padding()
+                .listStyle(PlainListStyle()) // clean list, no grouping style
+                .navigationTitle("Resumes")
+                
+                // Floating Button
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showCreateResume = true
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.blue)
+                                .clipShape(Circle())
+                                .shadow(radius: 4)
+                        }
+                        .padding()
+                    }
+                }
+                
+                if showCreateResume {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                    
+                    VStack(spacing: 0) {
+                        Text("Enter Resume Name")
+                            .font(.headline)
+                            .padding(.top)
+                        
+                        Spacer(minLength: 15)
+                        
+                        TextField("Resume name", text: $name)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding(.horizontal)
+                            .autocapitalization(.words)
+                        
+                        Spacer(minLength: 20)
+                        
+                        Divider()
+                        
+                        HStack {
+                            Button("Cancel") {
+                                withAnimation {
+                                    showCreateResume = false
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            
+                            Divider()
+                            
+                            Button("OK") {
+                                if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                    withAnimation {
+                                        showToast = true
+                                    }
+                                } else {
+                                    withAnimation(.spring()) {
+                                        showCreateResume = false
+                                    }
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .frame(height: 44)
+                    }
+                    .frame(width: 300)
+                    .frame(height: 160)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(14)
+                    .shadow(radius: 10)
+                    .transition(.scale)
+                }
+                
             }
+            .toast(
+                message: "Data saved successfully!",
+                isShowing: $showToast,
+                icon: "checkmark.circle.fill"
+            )
         }
+    }
+}
+
+struct HomeView_Previews: PreviewProvider {
+    static var previews: some View {
+        HomeView()
+    }
 }
 
 #Preview {
