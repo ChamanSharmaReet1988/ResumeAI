@@ -7,4 +7,5 @@
 
 import UIKit
 
-let EmptyString: String = ""
+let empty: String = ""
+let themColor = UIColor(red: 52/255, green: 120/255, blue: 246/255, alpha: 1)

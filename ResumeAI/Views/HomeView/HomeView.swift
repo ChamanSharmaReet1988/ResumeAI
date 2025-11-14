@@ -19,30 +19,50 @@ struct HomeView: View {
         NavigationView {
             ZStack {
                 // Your list
-                List {
-                    ForEach(viewModel.recentResumes) { resume in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text(resume.title ?? empty)
-                                    .font(.body)
-                                Spacer(minLength: 0)
-                                Text(
-                                    "Last edited: \(resume.lastEdited ?? empty)"
-                                )
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.gray)
-                        }
-                        .frame(height: 40)  // fixed height
-                        .padding(.vertical, 0) // adds ~10px space between rows
-                        .contentShape(Rectangle())
+                if viewModel.recentResumes.isEmpty {
+                    VStack(spacing: 8) {
+                        Spacer()
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(size: 40))
+                            .foregroundColor(.gray.opacity(0.6))
+                        
+                        Text("No resumes available")
+                            .font(.system(size: 20, weight: .thin))
+                            .foregroundColor(.gray)
+                        
+                        Text("Click on the + button to create a new resume")
+                            .font(.system(size: 16))
+                            .foregroundColor(.gray.opacity(0.7))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        Spacer()
                     }
+                } else {
+                    List {
+                        ForEach(viewModel.recentResumes) { resume in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(resume.name ?? empty)
+                                        .font(.body)
+                                    Spacer(minLength: 0)
+                                    Text(
+                                        "Last edited: \(resume.updatedAt ?? empty)"
+                                    )
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(height: 40)  // fixed height
+                            .padding(.vertical, 0) // adds ~10px space between rows
+                            .contentShape(Rectangle())
+                        }
+                    }
+                    .listStyle(PlainListStyle()) // clean list, no grouping style
+                    .navigationTitle("Resumes")
                 }
-                .listStyle(PlainListStyle()) // clean list, no grouping style
-                .navigationTitle("Resumes")
                 
                 // Floating Button
                 VStack {
@@ -87,9 +107,8 @@ struct HomeView: View {
                         
                         HStack {
                             Button("Cancel") {
-                                withAnimation {
-                                    showCreateResume = false
-                                }
+                                showCreateResume = false
+                                name = empty
                             }
                             .frame(maxWidth: .infinity)
                             
@@ -97,14 +116,27 @@ struct HomeView: View {
                             
                             Button("OK") {
                                 if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                    withAnimation {
-                                        showToast = true
+                                    showToast = false
+                                    showToast = true
+                                } else {   let resumeTable = ResumeTable()
+                                    resumeTable.saveResume(resume: Resume(
+                                        name: name,
+                                        createdAt: DateFormatter.localizedString(
+                                            from: Date(),
+                                            dateStyle: .medium,
+                                            timeStyle: .short
+                                        ),
+                                        updatedAt: DateFormatter.localizedString(
+                                            from: Date(),
+                                            dateStyle: .medium,
+                                            timeStyle: .short
+                                        )
+                                    )) { sucess, result in
+                                        viewModel.loadRecentResumes()
                                     }
-                                } else {
-                                    withAnimation(.spring()) {
-                                        showCreateResume = false
-                                    }
+                                    showCreateResume = false
                                 }
+                                name = empty
                             }
                             .frame(maxWidth: .infinity)
                         }
@@ -120,9 +152,9 @@ struct HomeView: View {
                 
             }
             .toast(
-                message: "Data saved successfully!",
+                message: "Please enter resume name",
                 isShowing: $showToast,
-                icon: "checkmark.circle.fill"
+                icon: empty
             )
         }
     }

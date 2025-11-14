@@ -35,6 +35,7 @@
 			membershipExceptions = (
 				Views/AIAssistantView.swift,
 				Views/ATSCheckerView.swift,
+				Views/HomeView/CreateResumeView.swift,
 				Views/HomeView/HomeView.swift,
 				Views/HomeView/ResumeCardView.swift,
 				Views/ResumeBuilderView.swift,
@@ -47,6 +48,7 @@
 			membershipExceptions = (
 				Views/AIAssistantView.swift,
 				Views/ATSCheckerView.swift,
+				Views/HomeView/CreateResumeView.swift,
 				Views/HomeView/HomeView.swift,
 				Views/HomeView/ResumeCardView.swift,
 				Views/ResumeBuilderView.swift,
@@ -54,12 +56,20 @@
 			);
 			target = FED48B012D69F044004F4D44 /* ResumeAIUITests */;
 		};
+		FEE0C8842EB7196900BAA73C /* Exceptions for "ResumeAI" folder in "ResumeAI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FED48AE52D69F044004F4D44 /* ResumeAI */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FED48AE82D69F044004F4D44 /* ResumeAI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				FEE0C8842EB7196900BAA73C /* Exceptions for "ResumeAI" folder in "ResumeAI" target */,
 				FEB60B8A2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAITests" target */,
 				FEB60B8B2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAIUITests" target */,
 			);
@@ -429,9 +439,10 @@
 				DEVELOPMENT_ASSET_PATHS = "\"ResumeAI/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ResumeAI/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -457,9 +468,10 @@
 				DEVELOPMENT_ASSET_PATHS = "\"ResumeAI/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ResumeAI/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (

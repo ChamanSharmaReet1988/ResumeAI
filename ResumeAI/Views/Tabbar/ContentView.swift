@@ -17,14 +17,9 @@ struct ContentView: View {
 
             ResumeBuilderView()
                 .tabItem {
-                    Label("Builder", systemImage: "doc.text.fill")
+                    Label("Templates", systemImage: "doc.text.fill")
                 }
-
-            AIAssistantView()
-                .tabItem {
-                    Label("AI Assist", systemImage: "sparkles")
-                }
-
+            
             ATSCheckerView()
                 .tabItem {
                     Label("ATS Score", systemImage: "chart.bar.fill")

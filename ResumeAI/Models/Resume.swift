@@ -9,6 +9,7 @@ import UIKit
 
 struct Resume: Identifiable {
     var id: Int?
-    var title: String?
-    var lastEdited: String?
+    var name: String?
+    var createdAt: String?
+    var updatedAt: String?
 }

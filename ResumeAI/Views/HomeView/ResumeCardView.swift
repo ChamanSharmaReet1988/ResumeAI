@@ -12,12 +12,12 @@ struct ResumeCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(resume.title ?? EmptyString)
+            Text(resume.name ?? empty)
                 .font(.headline)
                 .lineLimit(2)
                 .foregroundColor(.primary)
 
-            Text("Last edited: \(resume.lastEdited ?? EmptyString))")
+            Text("Last edited: \(resume.updatedAt ?? empty))")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
