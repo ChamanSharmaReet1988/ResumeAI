@@ -79,7 +79,10 @@ struct HomeView: View {
                     }
                 }
                 .listStyle(PlainListStyle())
-            }
+                .safeAreaInset(edge: .top) {
+                    Color.clear.frame(height: 5)
+                }
+              }
         }
     }
 

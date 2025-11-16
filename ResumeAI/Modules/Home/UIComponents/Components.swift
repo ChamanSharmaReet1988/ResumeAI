@@ -110,15 +110,15 @@ func emptyStateView(title: String, subtitle: String) -> some View {
         Spacer()
 
         Image(systemName: "doc.text.magnifyingglass")
-            .font(.system(size: 40))
+            .font(.system(size: 35))
             .foregroundColor(.gray.opacity(0.6))
 
         Text(title)
-            .font(.system(size: 20, weight: .thin))
+            .font(.system(size: 18, weight: .thin))
             .foregroundColor(.gray)
 
         Text(subtitle)
-            .font(.system(size: 16))
+            .font(.system(size: 15))
             .foregroundColor(.gray.opacity(0.7))
             .multilineTextAlignment(.center)
             .padding(.horizontal)
