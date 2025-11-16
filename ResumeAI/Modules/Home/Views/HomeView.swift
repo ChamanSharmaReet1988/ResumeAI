@@ -10,153 +10,85 @@ import SwiftUI
 import SwiftUI
 
 struct HomeView: View {
-    @StateObject private var viewModel = HomeViewModel()
+    @State private var selectedTab = 0
     @State private var showCreateResume = false
     @State private var name = ""
     @State private var showToast = false
-    
+    @StateObject var viewModel = HomeViewModel()
+
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            ResumeSegmentControl(selectedIndex: $selectedTab)
+                .padding(.top, 8)
+
             ZStack {
-                // Your list
-                if viewModel.recentResumes.isEmpty {
-                    VStack(spacing: 8) {
-                        Spacer()
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .font(.system(size: 40))
-                            .foregroundColor(.gray.opacity(0.6))
-                        
-                        Text("No resumes available")
-                            .font(.system(size: 20, weight: .thin))
-                            .foregroundColor(.gray)
-                        
-                        Text("Click on the + button to create a new resume")
-                            .font(.system(size: 16))
-                            .foregroundColor(.gray.opacity(0.7))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                        Spacer()
-                    }
+                if selectedTab == 0 {
+                    resumeListSection
                 } else {
-                    List {
-                        ForEach(viewModel.recentResumes) { resume in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 0) {
-                                    Text(resume.name ?? empty)
-                                        .font(.body)
-                                    Spacer(minLength: 0)
-                                    Text(
-                                        "Last edited: \(resume.updatedAt ?? empty)"
-                                    )
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(.gray)
-                            }
-                            .frame(height: 40)  // fixed height
-                            .padding(.vertical, 0) // adds ~10px space between rows
-                            .contentShape(Rectangle())
-                        }
-                    }
-                    .listStyle(PlainListStyle()) // clean list, no grouping style
-                    .navigationTitle("Resumes")
+                    coverLetterSection
                 }
-                
-                // Floating Button
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            showCreateResume = true
-                        }) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 24))
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.blue)
-                                .clipShape(Circle())
-                                .shadow(radius: 4)
-                        }
-                        .padding()
-                    }
+                FloatingAddButton {
+                    showCreateResume = true
                 }
-                
                 if showCreateResume {
-                    Color.black.opacity(0.4)
-                        .ignoresSafeArea()
-                        .transition(.opacity)
-                    
-                    VStack(spacing: 0) {
-                        Text("Enter Resume Name")
-                            .font(.headline)
-                            .padding(.top)
-                        
-                        Spacer(minLength: 15)
-                        
-                        TextField("Resume name", text: $name)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .padding(.horizontal)
-                            .autocapitalization(.words)
-                        
-                        Spacer(minLength: 20)
-                        
-                        Divider()
-                        
-                        HStack {
-                            Button("Cancel") {
-                                showCreateResume = false
-                                name = empty
-                            }
-                            .frame(maxWidth: .infinity)
-                            
-                            Divider()
-                            
-                            Button("OK") {
-                                if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                    showToast = false
-                                    showToast = true
-                                } else {   let resumeTable = ResumeTable()
-                                    resumeTable.saveResume(resume: Resume(
-                                        name: name,
-                                        createdAt: DateFormatter.localizedString(
-                                            from: Date(),
-                                            dateStyle: .medium,
-                                            timeStyle: .short
-                                        ),
-                                        updatedAt: DateFormatter.localizedString(
-                                            from: Date(),
-                                            dateStyle: .medium,
-                                            timeStyle: .short
-                                        )
-                                    )) { sucess, result in
-                                        viewModel.loadRecentResumes()
-                                    }
-                                    showCreateResume = false
-                                }
-                                name = empty
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .frame(height: 44)
+                    CreateResumePopup(
+                        show: $showCreateResume,
+                        name: $name,
+                        showToast: $showToast
+                    ) { resumeName in
+                        viewModel.saveResume(resumeName)
                     }
-                    .frame(width: 300)
-                    .frame(height: 160)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(14)
-                    .shadow(radius: 10)
-                    .transition(.scale)
                 }
-                
             }
             .toast(
                 message: "Please enter resume name",
                 isShowing: $showToast,
-                icon: empty
+                icon: ""
             )
         }
+    }
+
+    // MARK: - Resume List Section
+    private var resumeListSection: some View {
+        Group {
+            if viewModel.recentResumes.isEmpty {
+                emptyStateView(
+                    title: "No resumes available",
+                    subtitle: "Click on the + button to create a new resume"
+                )
+            } else {
+                List {
+                    ForEach(viewModel.recentResumes) { resume in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(resume.name ?? "")
+                                    .font(.body)
+
+                                Spacer(minLength: 0)
+
+                                Text("Last edited: \(resume.updatedAt ?? "")")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
+                        .frame(height: 40)
+                        .padding(.vertical, 0)
+                    }
+                }
+                .listStyle(PlainListStyle())
+            }
+        }
+    }
+
+    // MARK: - Cover Letter Placeholder Section
+    private var coverLetterSection: some View {
+        emptyStateView(
+            title: "No cover letters available",
+            subtitle: "Click on the + button to create a new cover letter"
+        )
     }
 }
 
@@ -165,7 +97,5 @@ struct HomeView_Previews: PreviewProvider {
         HomeView()
     }
 }
+ 
 
-#Preview {
-    HomeView()
-}
