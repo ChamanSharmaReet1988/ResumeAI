@@ -33,26 +33,24 @@
 		FEB60B8A2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Views/AIAssistantView.swift,
-				Views/ATSCheckerView.swift,
-				Views/HomeView/CreateResumeView.swift,
-				Views/HomeView/HomeView.swift,
-				Views/HomeView/ResumeCardView.swift,
-				Views/ResumeBuilderView.swift,
-				Views/SettingsView.swift,
+				Modules/AIAssistant/Views/AIAssistantView.swift,
+				Modules/ATS/Views/ATSCheckerView.swift,
+				Modules/Home/Views/CreateResumeView.swift,
+				Modules/Home/Views/ResumeBuilderView.swift,
+				Modules/Home/Views/ResumeCardView.swift,
+				Modules/Settings/Views/SettingsView.swift,
 			);
 			target = FED48AF72D69F044004F4D44 /* ResumeAITests */;
 		};
 		FEB60B8B2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAIUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Views/AIAssistantView.swift,
-				Views/ATSCheckerView.swift,
-				Views/HomeView/CreateResumeView.swift,
-				Views/HomeView/HomeView.swift,
-				Views/HomeView/ResumeCardView.swift,
-				Views/ResumeBuilderView.swift,
-				Views/SettingsView.swift,
+				Modules/AIAssistant/Views/AIAssistantView.swift,
+				Modules/ATS/Views/ATSCheckerView.swift,
+				Modules/Home/Views/CreateResumeView.swift,
+				Modules/Home/Views/ResumeBuilderView.swift,
+				Modules/Home/Views/ResumeCardView.swift,
+				Modules/Settings/Views/SettingsView.swift,
 			);
 			target = FED48B012D69F044004F4D44 /* ResumeAIUITests */;
 		};
