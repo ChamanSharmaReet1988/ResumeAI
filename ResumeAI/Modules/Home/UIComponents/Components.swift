@@ -100,8 +100,9 @@ struct ResumeSegmentControl: View {
             Text("Resumes").tag(0)
             Text("Cover Letters").tag(1)
         }
-        .pickerStyle(SegmentedPickerStyle())
+        .pickerStyle(.segmented)
         .padding(.horizontal)
+        .tint(.blue)
     }
 }
 
@@ -124,5 +125,15 @@ func emptyStateView(title: String, subtitle: String) -> some View {
             .padding(.horizontal)
 
         Spacer()
+    }
+}
+
+extension UISegmentedControl {
+    override open func didMoveToWindow() {
+        super.didMoveToWindow()
+        // Selected text color = Blue
+        setTitleTextAttributes([.foregroundColor: themColor], for: .selected)
+        // Unselected text color = Gray
+        setTitleTextAttributes([.foregroundColor: UIColor.gray], for: .normal)
     }
 }
