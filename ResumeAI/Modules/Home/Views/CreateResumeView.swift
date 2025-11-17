@@ -52,6 +52,6 @@ struct CreateResumeView: View {
                     }
                 }
             }
-        }
+        } .navigationBarBackButtonHidden(true) 
     }
 }

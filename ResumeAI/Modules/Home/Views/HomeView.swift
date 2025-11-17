@@ -15,36 +15,43 @@ struct HomeView: View {
     @State private var name = ""
     @State private var showToast = false
     @StateObject var viewModel = HomeViewModel()
+    
+    init() {
+            UITableView.appearance().backgroundColor = .clear
+           UITableViewCell.appearance().backgroundColor = .clear
+       }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ResumeSegmentControl(selectedIndex: $selectedTab)
-                .padding(.top, 8)
-
-            ZStack {
-                if selectedTab == 0 {
-                    resumeListSection
-                } else {
-                    coverLetterSection
-                }
-                FloatingAddButton {
-                    showCreateResume = true
-                }
-                if showCreateResume {
-                    CreateResumePopup(
-                        show: $showCreateResume,
-                        name: $name,
-                        showToast: $showToast
-                    ) { resumeName in
-                        viewModel.saveResume(resumeName)
+        NavigationView {
+            VStack(spacing: 0) {
+                ResumeSegmentControl(selectedIndex: $selectedTab)
+                    .padding(.top, 8)
+                
+                ZStack {
+                    if selectedTab == 0 {
+                        resumeListSection
+                    } else {
+                        coverLetterSection
+                    }
+                    FloatingAddButton {
+                        showCreateResume = true
+                    }
+                    if showCreateResume {
+                        CreateResumePopup(
+                            show: $showCreateResume,
+                            name: $name,
+                            showToast: $showToast
+                        ) { resumeName in
+                            viewModel.saveResume(resumeName)
+                        }
                     }
                 }
-            }
-            .toast(
-                message: "Please enter resume name",
-                isShowing: $showToast,
-                icon: ""
-            )
+                .toast(
+                    message: "Please enter resume name",
+                    isShowing: $showToast,
+                    icon: ""
+                )
+            } .background(Color(uiColor: backgroundColor))
         }
     }
 
@@ -57,32 +64,55 @@ struct HomeView: View {
                     subtitle: "Click on the + button to create a new resume"
                 )
             } else {
-                List {
-                    ForEach(viewModel.recentResumes) { resume in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text(resume.name ?? "")
-                                    .font(.body)
-
-                                Spacer(minLength: 0)
-
-                                Text("Last edited: \(resume.updatedAt ?? "")")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                    List {
+                        ForEach(viewModel.recentResumes) { resume in
+                            ZStack {
+                                NavigationLink(destination: CreateResumeView()) {
+                                    EmptyView()
+                                }
+                                .opacity(0)
+                                .buttonStyle(.plain)
+                                
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(resume.name ?? "")
+                                            .font(.body)
+                                        
+                                        Text("Last edited: \(resume.updatedAt ?? "")")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding()
+ 
                             }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.gray)
+                            .background(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .fill(Color(.white))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(Color.gray.opacity(0.3), lineWidth:0.5)
+                            )
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets())
+                            .padding(.vertical, 10)     
+                                      .padding(.horizontal, 16)
+
                         }
-                        .frame(height: 40)
-                        .padding(.vertical, 0)
-                    }
+                     }
+                    .environment(\.defaultMinListRowHeight, 0)
+                                    .listStyle(.plain)
+                    .safeAreaInset(edge: .top) {
+                        Color.clear.frame(height: 5)
                 }
-                .listStyle(PlainListStyle())
-                .safeAreaInset(edge: .top) {
-                    Color.clear.frame(height: 5)
-                }
-              }
+            }
         }
     }
 
