@@ -13,3 +13,11 @@ struct Resume: Identifiable {
     var createdAt: String?
     var updatedAt: String?
 }
+
+
+struct CoverLeter: Identifiable {
+    var id: Int?
+    var name: String?
+    var createdAt: String?
+    var updatedAt: String?
+}

@@ -9,7 +9,8 @@ import Foundation
 import Combine
 
 class HomeViewModel: ObservableObject {
-    @Published var recentResumes: [Resume] = []
+    @Published var resumes: [Resume] = []
+    @Published var coverLetters: [CoverLeter] = []
 
     init() {
         loadRecentResumes()
@@ -17,7 +18,7 @@ class HomeViewModel: ObservableObject {
 
     func loadRecentResumes() {
         let resumeTable = ResumeTable()
-        recentResumes = resumeTable.getResumes()
+        resumes = resumeTable.getResumes()
     }
     
     func saveResume(_ resumeName: String) {

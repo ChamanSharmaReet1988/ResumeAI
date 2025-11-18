@@ -12,41 +12,41 @@ struct CreateResumePopup: View {
     @Binding var name: String
     @Binding var showToast: Bool
     var onSave: (String) -> Void   // callback to parent
-
+    
     var body: some View {
         ZStack {
             Color.black.opacity(0.4)
                 .ignoresSafeArea()
                 .transition(.opacity)
-
+            
             VStack(spacing: 0) {
                 Text("Enter Resume Name")
                     .font(.headline)
                     .padding(.top)
-
+                
                 Spacer(minLength: 15)
-
+                
                 TextField("Resume name", text: $name)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
                     .autocapitalization(.words)
-
+                
                 Spacer(minLength: 20)
-
+                
                 Divider()
-
+                
                 HStack {
                     Button("Cancel") {
                         show = false
                         name = ""
                     }
                     .frame(maxWidth: .infinity)
-
+                    
                     Divider()
-
+                    
                     Button("OK") {
                         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-
+                        
                         if trimmed.isEmpty {
                             showToast = false
                             showToast = true
@@ -94,7 +94,7 @@ struct FloatingAddButton: View {
 
 struct ResumeSegmentControl: View {
     @Binding var selectedIndex: Int
-
+    
     var body: some View {
         Picker("", selection: $selectedIndex) {
             Text("Resumes").tag(0)
@@ -109,21 +109,21 @@ struct ResumeSegmentControl: View {
 func emptyStateView(title: String, subtitle: String) -> some View {
     VStack(spacing: 8) {
         Spacer()
-
+        
         Image(systemName: "doc.text.magnifyingglass")
             .font(.system(size: 35))
             .foregroundColor(.gray.opacity(0.6))
-
+        
         Text(title)
             .font(.system(size: 18, weight: .thin))
             .foregroundColor(.gray)
-
+        
         Text(subtitle)
             .font(.system(size: 15))
             .foregroundColor(.gray.opacity(0.7))
             .multilineTextAlignment(.center)
             .padding(.horizontal)
-
+        
         Spacer()
     }
 }
@@ -135,5 +135,135 @@ extension UISegmentedControl {
         setTitleTextAttributes([.foregroundColor: themColor], for: .selected)
         // Unselected text color = Gray
         setTitleTextAttributes([.foregroundColor: UIColor.gray], for: .normal)
+    }
+}
+
+
+struct ResumeListSection: View {
+    @Binding var resumes: [Resume]
+    
+    var body: some View {
+        Group {
+            if resumes.isEmpty {
+                emptyStateView(
+                    title: "No resumes available",
+                    subtitle: "Click on the + button to create a new resume"
+                )
+            } else {
+                List {
+                    ForEach(resumes) { resume in
+                        ZStack {
+                            NavigationLink(destination: CreateResumeView()) {
+                                EmptyView()
+                            }
+                            .opacity(0)
+                            .buttonStyle(.plain)
+                            
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(resume.name ?? "")
+                                        .font(.body)
+                                    
+                                    Text("Last edited: \(resume.updatedAt ?? "")")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.gray)
+                            }
+                            .padding()
+                            
+                        }
+                        .background(
+                            RoundedRectangle(cornerRadius: 15)
+                                .fill(Color(.white))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 15)
+                                .stroke(Color.gray.opacity(0.3), lineWidth:0.5)
+                        )
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 16)
+                        
+                    }
+                }
+                .environment(\.defaultMinListRowHeight, 0)
+                .listStyle(.plain)
+                .safeAreaInset(edge: .top) {
+                    Color.clear.frame(height: 5)
+                }
+            }
+        }
+    }
+}
+
+
+struct CoverLetterSection: View {
+    @Binding var coverLetters: [CoverLeter]
+    
+    var body: some View {
+        Group {
+            if coverLetters.isEmpty {
+                emptyStateView(
+                    title: "No resumes available",
+                    subtitle: "Click on the + button to create a new resume"
+                )
+            } else {
+                List {
+                    ForEach(coverLetters) { resume in
+                        ZStack {
+                            NavigationLink(destination: CreateResumeView()) {
+                                EmptyView()
+                            }
+                            .opacity(0)
+                            .buttonStyle(.plain)
+                            
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(resume.name ?? "")
+                                        .font(.body)
+                                    
+                                    Text("Last edited: \(resume.updatedAt ?? "")")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.gray)
+                            }
+                            .padding()
+                            
+                        }
+                        .background(
+                            RoundedRectangle(cornerRadius: 15)
+                                .fill(Color(.white))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 15)
+                                .stroke(Color.gray.opacity(0.3), lineWidth:0.5)
+                        )
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 16)
+                        
+                    }
+                }
+                .environment(\.defaultMinListRowHeight, 0)
+                .listStyle(.plain)
+                .safeAreaInset(edge: .top) {
+                    Color.clear.frame(height: 5)
+                }
+            }
+        }
     }
 }

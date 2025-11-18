@@ -25,33 +25,29 @@ struct CreateResumeView: View {
     
     var body: some View {
         NavigationView {
-            List {
-                NavigationLink("Personal Info") {
-                }
-                NavigationLink("Education") {
-                }
-                NavigationLink("Employer") {
-                }
-                NavigationLink("Work Experience") {
-                }
-                NavigationLink("Skills") {
-                }
-                NavigationLink("Summary") {
-                }
-            }
-            .navigationTitle("Create Resume")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        // TODO: Save action
-                        dismiss()
+            ZStack {
+                Color(uiColor: backgroundColor)
+                                  
+                List {
+                    NavigationLink("Personal Info") {
+                    }
+                    NavigationLink("Education") {
+                    }
+                    NavigationLink("Employer") {
+                    }
+                    NavigationLink("Work Experience") {
+                    }
+                    NavigationLink("Skills") {
+                    }
+                    NavigationLink("Summary") {
                     }
                 }
+                .navigationTitle("Create Resume")
+                .navigationBarTitleDisplayMode(.inline)
+                .scrollContentBackground(.hidden) // VERY important
+                                .background(Color.clear)
             }
-        } .navigationBarBackButtonHidden(true) 
+            .background(Color(uiColor: backgroundColor))
+        } .navigationBarBackButtonHidden(true)
     }
 }
