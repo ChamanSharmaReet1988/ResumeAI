@@ -12,9 +12,9 @@ import SwiftUI
 struct HomeView: View {
     @State private var selectedTab = 0
     @State private var showCreateResume = false
-    @State private var name = ""
+    @State private var name = empty
     @State private var showToast = false
-    @StateObject var viewModel = HomeViewModel()
+    @ObservedObject var viewModel = HomeViewModel()
     
     init() {
             UITableView.appearance().backgroundColor = .clear
@@ -30,7 +30,10 @@ struct HomeView: View {
                     
                     ZStack {
                         if selectedTab == 0 {
-                            ResumeListSection(resumes: $viewModel.resumes)
+                            ResumeListSection(
+                                showToast: $showToast,
+                                viewModel: viewModel
+                            )
                         } else {
                             CoverLetterSection(coverLetters: $viewModel.coverLetters)
                         }
@@ -41,7 +44,7 @@ struct HomeView: View {
                     .toast(
                         message: "Please enter resume name",
                         isShowing: $showToast,
-                        icon: ""
+                        icon: empty
                     )
                     
                 } .background(Color(uiColor: backgroundColor))

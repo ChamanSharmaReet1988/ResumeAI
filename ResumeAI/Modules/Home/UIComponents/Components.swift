@@ -38,7 +38,7 @@ struct CreateResumePopup: View {
                 HStack {
                     Button("Cancel") {
                         show = false
-                        name = ""
+                        name = empty
                     }
                     .frame(maxWidth: .infinity)
                     
@@ -54,7 +54,7 @@ struct CreateResumePopup: View {
                             onSave(trimmed)
                             show = false
                         }
-                        name = ""
+                        name = empty
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -140,24 +140,31 @@ extension UISegmentedControl {
 
 
 struct ResumeListSection: View {
-    @Binding var resumes: [Resume]
-    
+    @Binding var showToast: Bool
+    @ObservedObject var viewModel: HomeViewModel
+    @State private var showOptions: Bool = false
+    @State private var selectedResume: Resume?
+    @State private var renameText = empty
+    @State private var showRenameResume = false
+    @State private var goToCreateResume = false
+    @State private var showDuplicateResume = false
+
     var body: some View {
-        Group {
-            if resumes.isEmpty {
+        ZStack {
+            if viewModel.resumes.isEmpty {
                 emptyStateView(
                     title: "No resumes available",
                     subtitle: "Click on the + button to create a new resume"
                 )
             } else {
                 List {
-                    ForEach(resumes) { resume in
+                    ForEach(viewModel.resumes) { resume in
                         ZStack {
-                            NavigationLink(destination: CreateResumeView()) {
-                                EmptyView()
-                            }
-                            .opacity(0)
-                            .buttonStyle(.plain)
+                            NavigationLink(
+                                destination: CreateResumeView(),
+                                isActive: $goToCreateResume
+                            ) { EmptyView() }
+                            .hidden()
                             
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
@@ -177,6 +184,7 @@ struct ResumeListSection: View {
                             .padding()
                             
                         }
+                       
                         .background(
                             RoundedRectangle(cornerRadius: 15)
                                 .fill(Color(.white))
@@ -185,18 +193,63 @@ struct ResumeListSection: View {
                             RoundedRectangle(cornerRadius: 15)
                                 .stroke(Color.gray.opacity(0.3), lineWidth:0.5)
                         )
+                        .onTapGesture {
+                            selectedResume = resume
+                            showOptions = true
+                        }
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
                         .listRowInsets(EdgeInsets())
                         .padding(.vertical, 10)
                         .padding(.horizontal, 16)
-                        
                     }
                 }
                 .environment(\.defaultMinListRowHeight, 0)
                 .listStyle(.plain)
                 .safeAreaInset(edge: .top) {
                     Color.clear.frame(height: 5)
+                }
+                .confirmationDialog(
+                    selectedResume?.name ?? "",
+                    isPresented: $showOptions,
+                    titleVisibility: .visible
+                ) {
+                    Button("Open") {
+                        goToCreateResume = true
+                    }
+                    Button("Rename") {
+                        renameText = selectedResume?.name ?? ""
+                        showRenameResume = true
+                    }
+                    Button("Duplicate") {
+                        renameText = empty
+                        showDuplicateResume = true
+                    }
+                    Button("Delete", role: .destructive) {
+                        if let id = selectedResume?.id {
+                            viewModel.deleteResume(id)
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                }
+            }
+            if showRenameResume || showDuplicateResume {
+                CreateResumePopup(
+                    show: showRenameResume ? $showRenameResume : $showDuplicateResume,
+                    name: $renameText,
+                    showToast: $showToast
+                ) { resumeName in
+                    if showRenameResume {
+                        viewModel
+                            .renameResume(
+                                id: selectedResume?.id ?? 0,
+                                newName: resumeName
+                            )
+                    } else {
+                        if let id = selectedResume?.id {
+                            viewModel.duplicateResume(resumeName: resumeName, id: id)
+                        }
+                    }
                 }
             }
         }

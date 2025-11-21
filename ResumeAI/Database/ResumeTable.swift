@@ -75,4 +75,64 @@ class ResumeTable: Database {
         
         return resultArray
     }
+    
+    func duplicateResume(resumeName: String, id: Int, completion: @escaping (Bool) -> Void) {
+        let selectQuery = "SELECT * FROM ResumeTable WHERE localId = ?"
+        var stmt: OpaquePointer?
+        
+        if sqlite3_prepare_v2(Database.databaseConnection, selectQuery, -1, &stmt, nil) == SQLITE_OK {
+            sqlite3_bind_int(stmt, 1, Int32(id))
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                let createdAt = String(cString: sqlite3_column_text(stmt, 2))
+                let updatedAt = String(cString: sqlite3_column_text(stmt, 3))
+                sqlite3_finalize(stmt)
+                
+                let insertQuery = "INSERT INTO ResumeTable (name, createdAt, updatedAt) VALUES (?, ?, ?)"
+                var insertStmt: OpaquePointer?
+                
+                if sqlite3_prepare_v2(Database.databaseConnection, insertQuery, -1, &insertStmt, nil) == SQLITE_OK {
+                    sqlite3_bind_text(insertStmt, 1, resumeName, -1, SQLITE_TRANSIENT)
+                    sqlite3_bind_text(insertStmt, 2, createdAt, -1, SQLITE_TRANSIENT)
+                    sqlite3_bind_text(insertStmt, 3, updatedAt, -1, SQLITE_TRANSIENT)
+                    
+                    if sqlite3_step(insertStmt) == SQLITE_DONE {
+                        completion(true)
+                    } else {
+                        completion(false)
+                    }
+                }
+                sqlite3_finalize(insertStmt)
+                return
+            }
+        }
+        completion(false)
+        sqlite3_finalize(stmt)
+    }
+    
+    func deleteResume(id: Int) {
+        let deleteQuery = "DELETE FROM ResumeTable WHERE localId = ?"
+        var stmt: OpaquePointer?
+        
+        if sqlite3_prepare_v2(Database.databaseConnection, deleteQuery, -1, &stmt, nil) == SQLITE_OK {
+            sqlite3_bind_int(stmt, 1, Int32(id))
+            sqlite3_step(stmt)
+        }
+        sqlite3_finalize(stmt)
+    }
+    
+    func updateResumeName(id: Int, newName: String) {
+        let updateQuery = "UPDATE ResumeTable SET name = ?, updatedAt = ? WHERE localId = ?"
+        var stmt: OpaquePointer?
+        
+        let updatedAt = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .short)
+        
+        if sqlite3_prepare_v2(Database.databaseConnection, updateQuery, -1, &stmt, nil) == SQLITE_OK {
+            sqlite3_bind_text(stmt, 1, newName, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 2, updatedAt, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_int(stmt, 3, Int32(id))
+            
+            sqlite3_step(stmt)
+        }
+        sqlite3_finalize(stmt)
+    }
 }

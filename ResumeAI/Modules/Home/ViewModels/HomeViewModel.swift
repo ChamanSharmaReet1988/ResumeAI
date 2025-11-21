@@ -41,4 +41,27 @@ class HomeViewModel: ObservableObject {
             self.loadRecentResumes()
         }
     }
+ 
+    func duplicateResume(resumeName: String, id: Int) {
+        let table = ResumeTable()
+        table.duplicateResume(resumeName: resumeName, id: id) { success in
+            if success {
+                DispatchQueue.main.async {
+                    self.loadRecentResumes()
+                }
+            }
+        }
+    }
+    
+    func deleteResume(_ id: Int) {
+        let table = ResumeTable()
+        table.deleteResume(id: id)
+        loadRecentResumes()
+    }
+    
+    func renameResume(id: Int, newName: String) {
+        let table = ResumeTable()
+        table.updateResumeName(id: id, newName: newName)
+        loadRecentResumes()
+    }
 }
