@@ -11,8 +11,9 @@ struct CreateResumePopup: View {
     @Binding var show: Bool
     @Binding var name: String
     @Binding var showToast: Bool
+    var headerTitle: String
     var onSave: (String) -> Void   // callback to parent
-    
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.4)
@@ -20,7 +21,7 @@ struct CreateResumePopup: View {
                 .transition(.opacity)
             
             VStack(spacing: 0) {
-                Text("Enter Resume Name")
+                Text(headerTitle)
                     .font(.headline)
                     .padding(.top)
                 
@@ -148,7 +149,8 @@ struct ResumeListSection: View {
     @State private var showRenameResume = false
     @State private var goToCreateResume = false
     @State private var showDuplicateResume = false
-
+    @State private var showDeleteAlert = false
+ 
     var body: some View {
         ZStack {
             if viewModel.resumes.isEmpty {
@@ -161,7 +163,7 @@ struct ResumeListSection: View {
                     ForEach(viewModel.resumes) { resume in
                         ZStack {
                             NavigationLink(
-                                destination: CreateResumeView(),
+                                destination: CreateResumeView(resume: selectedResume),
                                 isActive: $goToCreateResume
                             ) { EmptyView() }
                             .hidden()
@@ -226,18 +228,27 @@ struct ResumeListSection: View {
                         showDuplicateResume = true
                     }
                     Button("Delete", role: .destructive) {
-                        if let id = selectedResume?.id {
-                            viewModel.deleteResume(id)
-                        }
+                        showDeleteAlert = true
                     }
                     Button("Cancel", role: .cancel) {}
                 }
+                .alert("Are you sure you want to delete this resume?", isPresented: $showDeleteAlert) {
+                        Button("Cancel", role: .cancel) { }
+
+                        Button("Delete", role: .destructive) {
+                            if let id = selectedResume?.id {
+                                viewModel.deleteResume(id)   // ✅ run delete here
+                            }
+                        }
+                }
             }
+           
             if showRenameResume || showDuplicateResume {
                 CreateResumePopup(
                     show: showRenameResume ? $showRenameResume : $showDuplicateResume,
                     name: $renameText,
-                    showToast: $showToast
+                    showToast: $showToast,
+                    headerTitle: showRenameResume ? "Rename" : "Duplicate Resume"
                 ) { resumeName in
                     if showRenameResume {
                         viewModel

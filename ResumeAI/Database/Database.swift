@@ -38,6 +38,8 @@ class Database: NSObject {
         openDatabase()
         let contactsTable = ResumeTable()
         contactsTable.createResumeTable()
+        let resumeSectionTable = ResumeSectionTable()
+        resumeSectionTable.createResumeSectionTable()
     }
     
     class func openDatabase() {

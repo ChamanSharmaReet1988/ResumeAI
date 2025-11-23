@@ -14,7 +14,7 @@ struct HomeView: View {
     @State private var showCreateResume = false
     @State private var name = empty
     @State private var showToast = false
-    @ObservedObject var viewModel = HomeViewModel()
+    @StateObject var viewModel = HomeViewModel()
     
     init() {
             UITableView.appearance().backgroundColor = .clear
@@ -52,7 +52,8 @@ struct HomeView: View {
                     CreateResumePopup(
                         show: $showCreateResume,
                         name: $name,
-                        showToast: $showToast
+                        showToast: $showToast,
+                         headerTitle: "Resume"
                     ) { resumeName in
                         viewModel.saveResume(resumeName)
                     }

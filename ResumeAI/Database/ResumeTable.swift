@@ -26,7 +26,7 @@ class ResumeTable: Database {
         }
      }
     
-    func saveResume(resume: Resume, completion: @escaping (Bool, String?) -> Void) {
+    func saveResume(resume: Resume, completion: @escaping (Bool, String?, Int?) -> Void) {
         var statement: OpaquePointer?
         let insertQuery = "INSERT INTO ResumeTable (name, createdAt, updatedAt) VALUES (?, ?, ?)"
 
@@ -38,15 +38,15 @@ class ResumeTable: Database {
             if sqlite3_step(statement) != SQLITE_DONE {
                 let errorMsg = String(cString: sqlite3_errmsg(Database.databaseConnection))
                 print("Error inserting contact: \(errorMsg)")
-                completion(false, errorMsg)
+                completion(false, errorMsg, nil)
             } else {
-                print("Contact inserted successfully")
-                completion(true, nil)
+                let lastId = sqlite3_last_insert_rowid(Database.databaseConnection) // ✅ HERE
+                completion(true, nil, Int(lastId))
             }
         } else {
             let errorMsg = String(cString: sqlite3_errmsg(Database.databaseConnection))
             print("Error preparing statement: \(errorMsg)")
-            completion(false, errorMsg)
+            completion(false, nil, nil)
         }
 
         sqlite3_finalize(statement)

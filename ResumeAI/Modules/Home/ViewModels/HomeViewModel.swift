@@ -37,8 +37,28 @@ class HomeViewModel: ObservableObject {
                     timeStyle: .short
                 )
             )
-        ) { success, result in
-            self.loadRecentResumes()
+        ) { success, result, id  in
+            if success {
+                self.loadRecentResumes()
+                 let sections = [
+                    "Personal Info",
+                    "Summary",
+                    "Work Experience",
+                    "Skills",
+                    "Education",
+                    "Other Activities"
+                ]
+                for (index, value) in sections.enumerated() {
+                    let resumeSectionTable = ResumeSectionTable()
+                    var section = ResumeSectionModel()
+                    section.resumeId = "\(id ?? 0)"
+                    section.name = value
+                    section.sequence = "\(index)"
+                    resumeSectionTable
+                        .saveResumeSection(resumeSectionModel: section) { success, result in
+                         }
+                }
+            }
         }
     }
  
