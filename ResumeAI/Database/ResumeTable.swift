@@ -24,17 +24,17 @@ class ResumeTable: Database {
         if sqlite3_exec(Database.databaseConnection, createTableQuery, nil, nil, nil) != SQLITE_OK {
             print("Error creating ResumeTable")
         }
-     }
+    }
     
     func saveResume(resume: Resume, completion: @escaping (Bool, String?, Int?) -> Void) {
         var statement: OpaquePointer?
         let insertQuery = "INSERT INTO ResumeTable (name, createdAt, updatedAt) VALUES (?, ?, ?)"
-
+        
         if sqlite3_prepare_v2(Database.databaseConnection, insertQuery, -1, &statement, nil) == SQLITE_OK {
             sqlite3_bind_text(statement, 1, resume.name, -1, SQLITE_TRANSIENT)
             sqlite3_bind_text(statement, 2, resume.createdAt ?? "", -1, SQLITE_TRANSIENT)
             sqlite3_bind_text(statement, 3, resume.updatedAt, -1, SQLITE_TRANSIENT)
-
+            
             if sqlite3_step(statement) != SQLITE_DONE {
                 let errorMsg = String(cString: sqlite3_errmsg(Database.databaseConnection))
                 print("Error inserting contact: \(errorMsg)")
@@ -48,7 +48,7 @@ class ResumeTable: Database {
             print("Error preparing statement: \(errorMsg)")
             completion(false, nil, nil)
         }
-
+        
         sqlite3_finalize(statement)
     }
     
@@ -56,7 +56,7 @@ class ResumeTable: Database {
         var resultArray = [Resume]()
         var statement: OpaquePointer?
         let query = "SELECT * FROM ResumeTable"
-
+        
         if sqlite3_prepare_v2(Database.databaseConnection, query, -1, &statement, nil) == SQLITE_OK {
             while sqlite3_step(statement) == SQLITE_ROW {
                 var resume = Resume()
@@ -130,7 +130,6 @@ class ResumeTable: Database {
             sqlite3_bind_text(stmt, 1, newName, -1, SQLITE_TRANSIENT)
             sqlite3_bind_text(stmt, 2, updatedAt, -1, SQLITE_TRANSIENT)
             sqlite3_bind_int(stmt, 3, Int32(id))
-            
             sqlite3_step(stmt)
         }
         sqlite3_finalize(stmt)

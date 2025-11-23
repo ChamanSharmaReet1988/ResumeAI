@@ -77,6 +77,9 @@ class HomeViewModel: ObservableObject {
         let table = ResumeTable()
         table.deleteResume(id: id)
         loadRecentResumes()
+        
+        let resumeSectionTable = ResumeSectionTable()
+        resumeSectionTable.deletegetResumeSection(resumeId: "\(id)")
     }
     
     func renameResume(id: Int, newName: String) {

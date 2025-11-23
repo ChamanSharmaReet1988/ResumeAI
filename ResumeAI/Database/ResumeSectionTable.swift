@@ -52,11 +52,10 @@ class ResumeSectionTable {
         sqlite3_finalize(statement)
     }
     
-    func getResumeSections() -> [ResumeSectionModel] {
+    func getResumeSections(resumeId: String) -> [ResumeSectionModel] {
         var resultArray = [ResumeSectionModel]()
         var statement: OpaquePointer?
-        let query = "SELECT * FROM ResumeSectionTable"
-        
+        let query = "SELECT * FROM ResumeSectionTable WHERE resumeId = \(resumeId) ORDER BY sequence ASC"
         if sqlite3_prepare_v2(Database.databaseConnection, query, -1, &statement, nil) == SQLITE_OK {
             while sqlite3_step(statement) == SQLITE_ROW {
                 var resumeSectionModel = ResumeSectionModel()
@@ -85,10 +84,20 @@ class ResumeSectionTable {
         sqlite3_finalize(stmt)
     }
     
-    func updateResumeSectionSequence(id: Int, squence: String) {
-        let updateQuery = "UPDATE ResumeSectionTable SET squence = ? WHERE localId = ?"
+    func deletegetResumeSection(resumeId: String) {
+        let deleteQuery = "DELETE FROM ResumeSectionTable WHERE resumeId = ?"
         var stmt: OpaquePointer?
-        let updatedAt = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .short)
+        
+        if sqlite3_prepare_v2(Database.databaseConnection, deleteQuery, -1, &stmt, nil) == SQLITE_OK {
+            sqlite3_bind_text(stmt, 1, resumeId, -1, SQLITE_TRANSIENT)
+            sqlite3_step(stmt)
+        }
+        sqlite3_finalize(stmt)
+    }
+    
+    func updateResumeSectionSequence(id: Int, squence: String) {
+        let updateQuery = "UPDATE ResumeSectionTable SET sequence = ? WHERE localId = ?"
+        var stmt: OpaquePointer?
         if sqlite3_prepare_v2(Database.databaseConnection, updateQuery, -1, &stmt, nil) == SQLITE_OK {
             sqlite3_bind_text(stmt, 1, squence, -1, SQLITE_TRANSIENT)
             sqlite3_bind_int(stmt, 2, Int32(id))

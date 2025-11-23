@@ -52,6 +52,7 @@ struct HomeView: View {
                     CreateResumePopup(
                         show: $showCreateResume,
                         name: $name,
+                        placeHolder: .constant("Resume name"),
                         showToast: $showToast,
                          headerTitle: "Resume"
                     ) { resumeName in
