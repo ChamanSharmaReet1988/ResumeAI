@@ -2,6 +2,33 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.ResumeAI</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.432621358444-9g13ou07btgm5rcfq6p4fd9om98b9at1</string>
+			</array>
+		</dict>
+	</array>
+    <key>GIDClientID</key>
+    <string>432621358444-9g13ou07btgm5rcfq6p4fd9om98b9at1.apps.googleusercontent.com</string>
+	<key>FirebaseAppCheckDebugToken</key>
+	<string>debug</string>
+	<key>FirebaseAuthRecaptchaEnterpriseEnabled</key>
+	<false/>
+	<key>FirebaseAuthUseFirebaseUI</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>processing</string>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UILaunchScreen</key>
