@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-
 struct MainRootView: View {
     @EnvironmentObject var authVM: AuthViewModel
     
