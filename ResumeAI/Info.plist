@@ -15,14 +15,14 @@
 			</array>
 		</dict>
 	</array>
-    <key>GIDClientID</key>
-    <string>432621358444-9g13ou07btgm5rcfq6p4fd9om98b9at1.apps.googleusercontent.com</string>
 	<key>FirebaseAppCheckDebugToken</key>
 	<string>debug</string>
 	<key>FirebaseAuthRecaptchaEnterpriseEnabled</key>
 	<false/>
 	<key>FirebaseAuthUseFirebaseUI</key>
 	<true/>
+	<key>GIDClientID</key>
+	<string>432621358444-9g13ou07btgm5rcfq6p4fd9om98b9at1.apps.googleusercontent.com</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>processing</string>
