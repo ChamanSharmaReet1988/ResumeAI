@@ -40,6 +40,10 @@ class Database: NSObject {
         contactsTable.createResumeTable()
         let resumeSectionTable = ResumeSectionTable()
         resumeSectionTable.createResumeSectionTable()
+        let personalInfoTable = PersonalInfoTable()
+        personalInfoTable.createPersonalInfoTable()
+        let summaryTable = SummaryTable()
+        summaryTable.createSummaryTable()
     }
     
     class func openDatabase() {

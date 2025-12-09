@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct HomeView: View {
     @State private var selectedTab = 0
     @State private var showCreateResume = false

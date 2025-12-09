@@ -140,3 +140,31 @@ extension UISegmentedControl {
     }
 }
 
+struct RoundedTextField: View {
+    var placeholder: String
+    @Binding var text: String
+    var keyboard: UIKeyboardType = .default
+
+    init(_ placeholder: String, text: Binding<String>, keyboard: UIKeyboardType = .default) {
+        self.placeholder = placeholder
+        self._text = text
+        self.keyboard = keyboard
+    }
+
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .keyboardType(keyboard)
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+            )
+            .autocapitalization(.none)
+    }
+}
+
+

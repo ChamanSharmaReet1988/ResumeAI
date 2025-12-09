@@ -48,30 +48,25 @@ struct CreateResumeView: View {
     
     @ViewBuilder
     func sectionRow(_ section: String) -> some View {
-        ZStack {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(section)
-                        .font(.body)
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.gray)
-            }
-            .padding()
+        HStack {
+            Text(section)
+                .font(.body)
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .foregroundColor(.gray)
         }
-        .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
-        )
+        .padding()
         .background(
             RoundedRectangle(cornerRadius: 15)
                 .fill(Color.white)
         )
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets())
-        .padding(.vertical, 10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 15)
+                .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
+        )
+        .padding(.vertical, 4)
         .padding(.horizontal, 16)
     }
     
@@ -123,7 +118,14 @@ struct CreateResumeView: View {
     func listView() -> some View {
         List {
             ForEach(viewModel.resumeSections) { resumeSection in
-                sectionRow(resumeSection.name ?? empty)
+                NavigationLink(
+                    destination: destinationView(for: resumeSection)
+                ) {
+                    sectionRow(resumeSection.name ?? "")
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PlainButtonStyle())
+                .listRowSeparator(.hidden)
             }
             .onDelete { indexSet in
                 let resumeSection = viewModel.resumeSections[indexSet.first ?? 0]
@@ -163,6 +165,32 @@ struct CreateResumeView: View {
             }
         }
         
+    }
+    
+    @ViewBuilder
+    func destinationView(for section: ResumeSectionModel) -> some View {
+        switch section.name {
+        case "Personal Info":
+            PersonalInfoView(section: section)
+
+        case "Summary":
+            SummaryView(section: section)
+
+        case "Work Experience":
+            WorkExperienceView(section: section)
+
+        case "Skills":
+            SkillsView(section: section)
+
+        case "Education":
+            EducationView(section: section)
+
+        case "Other Activities":
+            OtherActivitiesView(section: section)
+
+        default:
+            Text("Coming soon")
+        }
     }
 }
 

@@ -6,8 +6,10 @@
 //
 
 import SwiftUI
+
 struct MainRootView: View {
     @EnvironmentObject var authVM: AuthViewModel
+    
     var body: some View {
         Group {
             switch authVM.authState {

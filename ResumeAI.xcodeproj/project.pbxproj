@@ -71,20 +71,12 @@
 			);
 			target = FED48B012D69F044004F4D44 /* ResumeAIUITests */;
 		};
-		FEE0C8842EB7196900BAA73C /* Exceptions for "ResumeAI" folder in "ResumeAI" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = FED48AE52D69F044004F4D44 /* ResumeAI */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FED48AE82D69F044004F4D44 /* ResumeAI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				FEE0C8842EB7196900BAA73C /* Exceptions for "ResumeAI" folder in "ResumeAI" target */,
 				FEB60B8A2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAITests" target */,
 				FEB60B8B2DC67A2200DF1AA6 /* Exceptions for "ResumeAI" folder in "ResumeAIUITests" target */,
 			);
