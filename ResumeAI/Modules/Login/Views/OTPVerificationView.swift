@@ -31,13 +31,13 @@ struct OTPVerificationView: View {
                     .textContentType(.oneTimeCode)
                     .multilineTextAlignment(.center)
                     .padding()
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(16)
+                    .background(.white)
                     .foregroundColor(.black)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: textCornerRadius)
                             .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                     )
+                    .cornerRadius(textCornerRadius)
                     .padding(.horizontal, 40)
                                 
                 Button {
@@ -48,15 +48,18 @@ struct OTPVerificationView: View {
                             ProgressView().tint(.white)
                         } else {
                             Text("Verify & Continue")
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color(uiColor: backgroundColor))
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.black)
                         }
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color(uiColor: themColor))
-                    .foregroundColor(.black)
-                    .cornerRadius(16)
+                    .background(.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: textCornerRadius)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+                    .cornerRadius(textCornerRadius)
                     .padding(.horizontal, 40)
                 }
                 .disabled(authVM.isLoading)

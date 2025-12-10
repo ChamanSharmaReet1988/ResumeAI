@@ -19,7 +19,7 @@ struct PhoneLoginView: View {
             VStack {
                 Spacer()
                 
-                VStack(spacing: 12) {
+                VStack(spacing: 5) {
                     Text("ResumeAI")
                         .font(.system(size: 36, weight: .bold))
                         .foregroundColor(Color(uiColor: themColor))
@@ -49,30 +49,19 @@ struct PhoneLoginView: View {
                             .padding(.horizontal, 8)
                     }
                     .padding()
-                    .background(
-                        LinearGradient(colors: [.white.opacity(0.9), .white.opacity(0.6)],
-                                       startPoint: .topLeading,
-                                       endPoint: .bottomTrailing))
-                    .cornerRadius(16)
+                    .background(.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: textCornerRadius)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+                    .cornerRadius(textCornerRadius)
                     
-                    Button {
+                    LoadingButton(
+                        title: "Send OTP",
+                        isLoading: authVM.isLoading,
+                        themeColor: themColor
+                    ) {
                         authVM.sendOTP()
-                    } label: {
-                        HStack {
-                            if authVM.isLoading {
-                                ProgressView()
-                                    .tint(.white)
-                            } else {
-                                Text("Send OTP")
-                                    .fontWeight(.semibold)
-                                    .foregroundColor((Color(uiColor: backgroundColor)))
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color(uiColor: themColor))
-                        .foregroundColor(.black)
-                        .cornerRadius(16)
                     }
                     .disabled(authVM.isLoading)
                     
@@ -85,7 +74,7 @@ struct PhoneLoginView: View {
                     
                     HStack {
                         Rectangle().frame(height: 1).opacity(0.4)
-                        Text("OR CONTINUE WITH")
+                        Text("OR")
                             .foregroundColor(.black)
                             .font(.caption)
                         Rectangle().frame(height: 1).opacity(0.4)
@@ -96,12 +85,8 @@ struct PhoneLoginView: View {
                 }
                 
                 .padding(20)
-                .background(.ultraThinMaterial)
                 .cornerRadius(24)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                )
+                
                 .padding(.horizontal, 24)
                 
                 Spacer()
@@ -121,4 +106,39 @@ struct PhoneLoginView: View {
 #Preview {
     PhoneLoginView()
         .environmentObject(AuthViewModel())
+}
+
+
+@ViewBuilder
+func LoadingButton(
+    title: String,
+    isLoading: Bool,
+    themeColor: UIColor,
+    action: @escaping () -> Void
+) -> some View {
+    
+    Button {
+        if !isLoading {
+            action()
+        }
+    } label: {
+        HStack {
+            if isLoading {
+                ProgressView()
+                    .tint(.white)
+            } else {
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.black)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color.white)
+        .overlay(
+            RoundedRectangle(cornerRadius: textCornerRadius)
+                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+        )
+        .cornerRadius(textCornerRadius)
+    }
 }

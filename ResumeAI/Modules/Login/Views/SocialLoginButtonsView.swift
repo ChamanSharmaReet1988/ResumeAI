@@ -26,6 +26,7 @@ struct SocialLoginButtonsView: View {
                     Image(systemName: "apple.logo")
                         .font(.title3)
                         .foregroundColor(.black)
+                    
 
                     Text("Sign in with Apple")
                         .font(.system(size: 16, weight: .semibold))
@@ -37,10 +38,10 @@ struct SocialLoginButtonsView: View {
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .background(Color.white)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14)
+                    RoundedRectangle(cornerRadius: textCornerRadius)
                         .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                 )
-                .cornerRadius(14)
+                .cornerRadius(textCornerRadius)
             }
             
             // MARK: - Google Custom Button
@@ -50,9 +51,9 @@ struct SocialLoginButtonsView: View {
                 HStack {
                     Spacer()
                     
-                    Image("google_logo")
+                    Image("google")
                         .resizable()
-                        .frame(width: 22, height: 22)
+                        .frame(width: 17, height: 17)
                     
                     Text("Sign in with Google")
                         .font(.system(size: 16, weight: .semibold))
@@ -64,10 +65,10 @@ struct SocialLoginButtonsView: View {
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .background(Color.white)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14)
+                    RoundedRectangle(cornerRadius: textCornerRadius)
                         .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                 )
-                .cornerRadius(14)
+                .cornerRadius(textCornerRadius)
             }
         }
     }
