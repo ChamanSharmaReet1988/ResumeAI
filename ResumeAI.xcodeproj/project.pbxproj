@@ -52,9 +52,10 @@
 			membershipExceptions = (
 				Modules/AIAssistant/Views/AIAssistantView.swift,
 				Modules/ATS/Views/ATSCheckerView.swift,
-				Modules/Home/Views/CreateResumeView.swift,
-				Modules/Home/Views/ResumeBuilderView.swift,
-				Modules/Home/Views/ResumeCardView.swift,
+				"Modules/Home/Cover Letter/CoverLetterEditorView.swift",
+				Modules/Home/Resume/CreateResumeView.swift,
+				Modules/Home/Resume/ResumeBuilderView.swift,
+				Modules/Home/Resume/ResumeCardView.swift,
 				Modules/Settings/Views/SettingsView.swift,
 			);
 			target = FED48AF72D69F044004F4D44 /* ResumeAITests */;
@@ -64,9 +65,10 @@
 			membershipExceptions = (
 				Modules/AIAssistant/Views/AIAssistantView.swift,
 				Modules/ATS/Views/ATSCheckerView.swift,
-				Modules/Home/Views/CreateResumeView.swift,
-				Modules/Home/Views/ResumeBuilderView.swift,
-				Modules/Home/Views/ResumeCardView.swift,
+				"Modules/Home/Cover Letter/CoverLetterEditorView.swift",
+				Modules/Home/Resume/CreateResumeView.swift,
+				Modules/Home/Resume/ResumeBuilderView.swift,
+				Modules/Home/Resume/ResumeCardView.swift,
 				Modules/Settings/Views/SettingsView.swift,
 			);
 			target = FED48B012D69F044004F4D44 /* ResumeAIUITests */;

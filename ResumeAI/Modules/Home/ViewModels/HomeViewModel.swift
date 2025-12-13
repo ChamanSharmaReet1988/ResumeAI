@@ -11,11 +11,13 @@ import Combine
 class HomeViewModel: ObservableObject {
     @Published var resumes: [Resume] = []
     @Published var coverLetters: [CoverLeter] = []
-
+    
     init() {
         loadRecentResumes()
-     }
-
+        loadCoverLetters()
+    }
+    
+    // MARK: - Load Resume
     func loadRecentResumes() {
         let resumeTable = ResumeTable()
         resumes = resumeTable.getResumes()
@@ -40,7 +42,7 @@ class HomeViewModel: ObservableObject {
         ) { success, result, id  in
             if success {
                 self.loadRecentResumes()
-                 let sections = [
+                let sections = [
                     "Personal Info",
                     "Summary",
                     "Work Experience",
@@ -56,12 +58,12 @@ class HomeViewModel: ObservableObject {
                     section.sequence = "\(index)"
                     resumeSectionTable
                         .saveResumeSection(resumeSectionModel: section) { success, result in
-                         }
+                        }
                 }
             }
         }
     }
- 
+    
     func duplicateResume(resumeName: String, id: Int) {
         let table = ResumeTable()
         table.duplicateResume(resumeName: resumeName, id: id) { success in
@@ -86,5 +88,40 @@ class HomeViewModel: ObservableObject {
         let table = ResumeTable()
         table.updateResumeName(id: id, newName: newName)
         loadRecentResumes()
+    }
+    
+    // MARK: - Cover Letter CRUD
+    func loadCoverLetters() {
+        let coverLetterTable = CoverLetterTable()
+        coverLetters = coverLetterTable.getCoverLetters()
+    }
+    
+    func saveCoverLetter(_ name: String) {
+        let table = CoverLetterTable()
+        
+        let model = CoverLeter(
+            name: name,
+            createdAt: DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .short),
+            updatedAt: DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .short)
+        )
+        
+        table.saveCoverLetter(model: model) { success, error, id in
+            if success {
+                self.loadCoverLetters()
+            }
+        }
+    }
+    
+    func updateCoverLetter(id: Int, name: String, details: CoverLeterDetail? = nil) {
+        let table = CoverLetterTable()
+        table.updateCoverLetter(id: id, name: name, details: details)
+        table.debugFetchCoverLetter(id: id)
+        loadCoverLetters()
+    }
+    
+    func deleteCoverLetter(_ id: Int) {
+        let table = CoverLetterTable()
+        table.deleteCoverLetter(id: id)
+        loadCoverLetters()
     }
 }

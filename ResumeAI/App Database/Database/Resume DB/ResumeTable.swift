@@ -14,7 +14,7 @@ class ResumeTable: Database {
     var statement: OpaquePointer? = nil
     func createResumeTable() {
         let createTableQuery = """
-            CREATE TABLE IF NOT EXISTS ResumeTable (
+            CREATE TABLE IF NOT EXISTS \(TableName.resumeTableName.rawValue) (
                 localId INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT,
                 createdAt TEXT,
@@ -22,13 +22,13 @@ class ResumeTable: Database {
             );
         """
         if sqlite3_exec(Database.databaseConnection, createTableQuery, nil, nil, nil) != SQLITE_OK {
-            print("Error creating ResumeTable")
+            print("Error creating \(TableName.resumeTableName.rawValue)")
         }
     }
     
     func saveResume(resume: Resume, completion: @escaping (Bool, String?, Int?) -> Void) {
         var statement: OpaquePointer?
-        let insertQuery = "INSERT INTO ResumeTable (name, createdAt, updatedAt) VALUES (?, ?, ?)"
+        let insertQuery = "INSERT INTO \(TableName.resumeTableName.rawValue) (name, createdAt, updatedAt) VALUES (?, ?, ?)"
         
         if sqlite3_prepare_v2(Database.databaseConnection, insertQuery, -1, &statement, nil) == SQLITE_OK {
             sqlite3_bind_text(statement, 1, resume.name, -1, SQLITE_TRANSIENT)
@@ -55,7 +55,7 @@ class ResumeTable: Database {
     func getResumes() -> [Resume] {
         var resultArray = [Resume]()
         var statement: OpaquePointer?
-        let query = "SELECT * FROM ResumeTable"
+        let query = "SELECT * FROM \(TableName.resumeTableName.rawValue)"
         
         if sqlite3_prepare_v2(Database.databaseConnection, query, -1, &statement, nil) == SQLITE_OK {
             while sqlite3_step(statement) == SQLITE_ROW {
@@ -77,7 +77,7 @@ class ResumeTable: Database {
     }
     
     func duplicateResume(resumeName: String, id: Int, completion: @escaping (Bool) -> Void) {
-        let selectQuery = "SELECT * FROM ResumeTable WHERE localId = ?"
+        let selectQuery = "SELECT * FROM \(TableName.resumeTableName.rawValue) WHERE localId = ?"
         var stmt: OpaquePointer?
         
         if sqlite3_prepare_v2(Database.databaseConnection, selectQuery, -1, &stmt, nil) == SQLITE_OK {
@@ -87,7 +87,7 @@ class ResumeTable: Database {
                 let updatedAt = String(cString: sqlite3_column_text(stmt, 3))
                 sqlite3_finalize(stmt)
                 
-                let insertQuery = "INSERT INTO ResumeTable (name, createdAt, updatedAt) VALUES (?, ?, ?)"
+                let insertQuery = "INSERT INTO \(TableName.resumeTableName.rawValue) (name, createdAt, updatedAt) VALUES (?, ?, ?)"
                 var insertStmt: OpaquePointer?
                 
                 if sqlite3_prepare_v2(Database.databaseConnection, insertQuery, -1, &insertStmt, nil) == SQLITE_OK {
@@ -110,7 +110,7 @@ class ResumeTable: Database {
     }
     
     func deleteResume(id: Int) {
-        let deleteQuery = "DELETE FROM ResumeTable WHERE localId = ?"
+        let deleteQuery = "DELETE FROM \(TableName.resumeTableName.rawValue) WHERE localId = ?"
         var stmt: OpaquePointer?
         
         if sqlite3_prepare_v2(Database.databaseConnection, deleteQuery, -1, &stmt, nil) == SQLITE_OK {
@@ -121,7 +121,7 @@ class ResumeTable: Database {
     }
     
     func updateResumeName(id: Int, newName: String) {
-        let updateQuery = "UPDATE ResumeTable SET name = ?, updatedAt = ? WHERE localId = ?"
+        let updateQuery = "UPDATE \(TableName.resumeTableName.rawValue) SET name = ?, updatedAt = ? WHERE localId = ?"
         var stmt: OpaquePointer?
         
         let updatedAt = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .short)

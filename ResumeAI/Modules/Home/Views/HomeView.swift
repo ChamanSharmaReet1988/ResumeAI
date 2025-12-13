@@ -12,15 +12,16 @@ import SwiftUI
 struct HomeView: View {
     @State private var selectedTab = 0
     @State private var showCreateResume = false
+    @State private var showCreateCoverLetter = false
     @State private var name = empty
     @State private var showToast = false
     @StateObject var viewModel = HomeViewModel()
     
     init() {
-            UITableView.appearance().backgroundColor = .clear
-           UITableViewCell.appearance().backgroundColor = .clear
-       }
-
+        UITableView.appearance().backgroundColor = .clear
+        UITableViewCell.appearance().backgroundColor = .clear
+    }
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -35,10 +36,15 @@ struct HomeView: View {
                                 viewModel: viewModel
                             )
                         } else {
-                            CoverLetterSection(coverLetters: $viewModel.coverLetters)
+                            CoverLetterSection(coverLetters: $viewModel.coverLetters,
+                                               viewModel: viewModel)
                         }
                         FloatingAddButton {
-                            showCreateResume = true
+                            if selectedTab == .zero {
+                                showCreateResume = true
+                            } else {
+                                showCreateCoverLetter = true
+                            }
                         }
                     }
                     .toast(
@@ -48,21 +54,35 @@ struct HomeView: View {
                     )
                     
                 } .background(Color(uiColor: backgroundColor))
+                // Create Resume Popup
                 if showCreateResume {
                     CreateResumePopup(
                         show: $showCreateResume,
                         name: $name,
                         placeHolder: .constant("Resume name"),
                         showToast: $showToast,
-                         headerTitle: "Resume"
+                        headerTitle: "Resume"
                     ) { resumeName in
                         viewModel.saveResume(resumeName)
+                    }
+                }
+                
+                // Create Cover Letter Popup
+                if showCreateCoverLetter {
+                    CreateResumePopup(
+                        show: $showCreateCoverLetter,
+                        name: $name,
+                        placeHolder: .constant("Cover Letter Name"),
+                        showToast: $showToast,
+                        headerTitle: "Cover Letter"
+                    ) { coverLetterName in
+                        viewModel.saveCoverLetter(coverLetterName)
                     }
                 }
             }
         }
     }
- 
+    
     // MARK: - Cover Letter Placeholder Section
     private var coverLetterSection: some View {
         emptyStateView(
@@ -77,5 +97,5 @@ struct HomeView_Previews: PreviewProvider {
         HomeView()
     }
 }
- 
+
 
