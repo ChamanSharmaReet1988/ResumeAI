@@ -212,6 +212,7 @@ ResumeData _sampleResume(ResumeTemplate template) {
         institution: 'Institution',
         degree: 'Degree',
         year: 'Year',
+        score: 'Score',
         details: 'Optional details',
       ),
     ],

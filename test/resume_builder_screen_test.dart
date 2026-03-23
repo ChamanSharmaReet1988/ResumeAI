@@ -8,6 +8,9 @@ import 'package:resume_app/features/builder/resume_builder_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
 
 class _FakeResumeRepository implements ResumeRepository {
+  final List<ResumeData> savedResumes = [];
+  final List<CoverLetterData> savedCoverLetters = [];
+
   @override
   Future<void> deleteCoverLetter(String id) async {}
 
@@ -21,18 +24,24 @@ class _FakeResumeRepository implements ResumeRepository {
   Future<List<ResumeData>> loadResumes() async => const [];
 
   @override
-  Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {}
+  Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {
+    savedCoverLetters.add(coverLetter);
+  }
 
   @override
-  Future<void> upsertResume(ResumeData resume) async {}
+  Future<void> upsertResume(ResumeData resume) async {
+    savedResumes.add(resume);
+  }
 }
 
 void main() {
   late ResumeEditorViewModel viewModel;
+  late _FakeResumeRepository repository;
 
   setUp(() {
+    repository = _FakeResumeRepository();
     viewModel = ResumeEditorViewModel(
-      repository: _FakeResumeRepository(),
+      repository: repository,
       aiService: LocalAiResumeService(),
       pdfService: ResumePdfService(),
       seedResume: ResumeData.empty(template: ResumeTemplate.modern).copyWith(
@@ -45,6 +54,20 @@ void main() {
       ),
     );
     viewModel.setStep(1);
+  });
+
+  test('skills are capped at 50', () async {
+    for (var index = 0; index < ResumeEditorViewModel.maxSkills; index++) {
+      expect(viewModel.addSkill('Skill $index'), isTrue);
+    }
+
+    expect(viewModel.resume.skills.length, ResumeEditorViewModel.maxSkills);
+    expect(viewModel.addSkill('Overflow Skill'), isFalse);
+
+    await viewModel.suggestSkills();
+
+    expect(viewModel.resume.skills.length, ResumeEditorViewModel.maxSkills);
+    expect(viewModel.resume.skills, isNot(contains('Overflow Skill')));
   });
 
   Future<void> pumpBuilder(
@@ -160,6 +183,98 @@ void main() {
     expect(viewModel.resume.workExperiences.first.endDate, 'Present');
   });
 
+  testWidgets('education can be reordered from the builder', (tester) async {
+    viewModel.setStep(2);
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        education: const [
+          EducationItem(
+            institution: 'Alpha University',
+            degree: 'B.Tech',
+            year: '2024',
+            score: '8.5 CGPA',
+            details: 'Alpha details',
+          ),
+          EducationItem(
+            institution: 'Beta Institute',
+            degree: 'M.Tech',
+            year: '2025',
+            score: '9.1 CGPA',
+            details: 'Beta details',
+          ),
+        ],
+      ),
+    );
+
+    await pumpBuilder(tester);
+
+    expect(find.text('Appears first on your resume'), findsOneWidget);
+    expect(find.text('Appears 2nd on your resume'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Move education down').first);
+    await tester.pumpAndSettle();
+
+    expect(viewModel.resume.education.first.institution, 'Beta Institute');
+    expect(find.text('Beta Institute'), findsWidgets);
+  });
+
+  testWidgets(
+    'work date picker uses month and year UI and defaults to completion year',
+    (tester) async {
+      viewModel.updateResume(
+        (resume) => resume.copyWith(
+          workExperiences: const [
+            WorkExperience(
+              role: 'Flutter Developer',
+              company: 'Acme',
+              startDate: '',
+              endDate: '',
+              description: 'Builds features',
+              bullets: [],
+            ),
+          ],
+          education: const [
+            EducationItem(
+              institution: 'Test University',
+              degree: 'B.Tech',
+              year: '2024',
+              score: '8.6 CGPA',
+              details: '',
+            ),
+          ],
+        ),
+      );
+
+      await pumpBuilder(tester);
+
+      await tester.tap(find.byKey(const Key('work-start-date-0')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Select start month and year'), findsOneWidget);
+      expect(find.text('Jan'), findsOneWidget);
+      expect(find.text('Dec'), findsOneWidget);
+
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+
+      expect(
+        viewModel.resume.workExperiences.first.startDate,
+        endsWith('2024'),
+      );
+    },
+  );
+
+  testWidgets('completion year field opens a year picker', (tester) async {
+    viewModel.setStep(2);
+
+    await pumpBuilder(tester);
+
+    await tester.tap(find.byKey(const Key('education-completion-year-0')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(YearPicker), findsOneWidget);
+  });
+
   testWidgets('continue scrolls the next category to the top', (tester) async {
     viewModel.setStep(0);
 
@@ -213,5 +328,23 @@ void main() {
 
     expect(viewModel.currentStep, 1);
     expect(horizontalScrollController.offset, greaterThan(0));
+  });
+
+  testWidgets('continue saves the current draft before moving on', (
+    tester,
+  ) async {
+    viewModel.setStep(0);
+
+    await pumpBuilder(tester);
+
+    await tester.enterText(find.byType(TextField).at(1), 'Saved Name');
+    await tester.pump();
+
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    expect(viewModel.currentStep, 1);
+    expect(repository.savedResumes, isNotEmpty);
+    expect(repository.savedResumes.last.fullName, 'Saved Name');
   });
 }

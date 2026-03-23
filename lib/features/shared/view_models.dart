@@ -109,6 +109,8 @@ class CoverLetterLibraryViewModel extends ChangeNotifier {
 }
 
 class ResumeEditorViewModel extends ChangeNotifier {
+  static const int maxSkills = 50;
+
   ResumeEditorViewModel({
     required this.repository,
     required this.aiService,
@@ -133,6 +135,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
   ResumeAnalysis? get analysis => _analysis;
   JobDescriptionInsights? get jobInsights => _jobInsights;
   String get coverLetter => _coverLetter;
+  bool get hasReachedSkillLimit => _resume.skills.length >= maxSkills;
 
   static const stepTitles = [
     'Personal Information',
@@ -242,6 +245,28 @@ class ResumeEditorViewModel extends ChangeNotifier {
     );
   }
 
+  void moveEducationUp(int index) {
+    if (index <= 0 || index >= _resume.education.length) {
+      return;
+    }
+
+    final items = [..._resume.education];
+    final item = items.removeAt(index);
+    items.insert(index - 1, item);
+    updateResume((resume) => resume.copyWith(education: items));
+  }
+
+  void moveEducationDown(int index) {
+    if (index < 0 || index >= _resume.education.length - 1) {
+      return;
+    }
+
+    final items = [..._resume.education];
+    final item = items.removeAt(index);
+    items.insert(index + 1, item);
+    updateResume((resume) => resume.copyWith(education: items));
+  }
+
   void updateProject(
     int index,
     ProjectItem Function(ProjectItem current) update,
@@ -268,14 +293,19 @@ class ResumeEditorViewModel extends ChangeNotifier {
     );
   }
 
-  void addSkill(String skill) {
+  bool addSkill(String skill) {
     final value = skill.trim();
     if (value.isEmpty) {
-      return;
+      return false;
+    }
+
+    if (_resume.skills.contains(value) || hasReachedSkillLimit) {
+      return false;
     }
 
     final items = {..._resume.skills, value}.toList()..sort();
     updateResume((resume) => resume.copyWith(skills: items));
+    return true;
   }
 
   void removeSkill(String skill) {
@@ -320,13 +350,10 @@ class ResumeEditorViewModel extends ChangeNotifier {
 
   Future<void> suggestSkills() async {
     await _runBusy(() async {
-      final suggestions = await aiService.suggestSkills(
-        jobTitle: _resume.jobTitle,
-      );
+      final suggestions = await aiService.suggestSkills(resume: _resume);
+      final items = {..._resume.skills, ...suggestions}.toList()..sort();
       updateResume(
-        (resume) => resume.copyWith(
-          skills: {...resume.skills, ...suggestions}.toList()..sort(),
-        ),
+        (resume) => resume.copyWith(skills: items.take(maxSkills).toList()),
       );
     });
   }
@@ -425,6 +452,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
               institution: 'Your University',
               degree: 'Bachelor of Technology',
               year: '2022',
+              score: '8.5 CGPA',
               details: 'Relevant coursework, achievements, or specialization',
             ),
           ]

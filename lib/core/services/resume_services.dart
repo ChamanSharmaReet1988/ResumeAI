@@ -88,7 +88,9 @@ class LocalAiResumeService {
     required String targetJobTitle,
   }) async {
     return _simulate(() {
-      final focus = _skillSuggestions(targetJobTitle).take(3).join(', ');
+      final focus = _jobTitleSkillSuggestions(
+        targetJobTitle,
+      ).take(3).join(', ');
       final normalizedRole = role.trim().isEmpty
           ? 'team member'
           : role.trim().toLowerCase();
@@ -104,8 +106,16 @@ class LocalAiResumeService {
     });
   }
 
-  Future<List<String>> suggestSkills({required String jobTitle}) async {
-    return _simulate(() => _skillSuggestions(jobTitle));
+  Future<List<String>> suggestSkills({
+    required ResumeData resume,
+    String? targetJobTitle,
+  }) async {
+    return _simulate(
+      () => _resumeSkillSuggestions(
+        resume: resume,
+        targetJobTitle: targetJobTitle,
+      ),
+    );
   }
 
   Future<List<String>> improveResume(ResumeData resume) async {
@@ -303,13 +313,209 @@ class LocalAiResumeService {
     );
   }
 
-  List<String> _skillSuggestions(String jobTitle) {
+  List<String> _resumeSkillSuggestions({
+    required ResumeData resume,
+    String? targetJobTitle,
+  }) {
+    final suggestions = <String>[];
+    final titleSources = <String>[];
+    final seenTitleSources = <String>{};
+
+    void addTitleSource(String value, {bool ignoreDefaultTitle = false}) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return;
+      }
+      if (ignoreDefaultTitle && trimmed == ResumeData.defaultTitle) {
+        return;
+      }
+
+      if (seenTitleSources.add(trimmed.toLowerCase())) {
+        titleSources.add(trimmed);
+      }
+    }
+
+    addTitleSource(resume.title, ignoreDefaultTitle: true);
+    addTitleSource(resume.jobTitle);
+    addTitleSource(targetJobTitle ?? '');
+
+    final combinedContext = [
+      ...titleSources,
+      ...resume.visibleWorkExperiences.expand(
+        (item) => [item.role, item.company, item.description, ...item.bullets],
+      ),
+    ].where((item) => item.trim().isNotEmpty).join(' ').toLowerCase();
+
+    void addSuggestions(Iterable<String> values) {
+      for (final value in values) {
+        if (!suggestions.contains(value)) {
+          suggestions.add(value);
+        }
+      }
+    }
+
+    if (_containsAny(combinedContext, ['flutter', 'dart'])) {
+      addSuggestions(['Flutter', 'Dart']);
+    }
+    if (_containsAny(combinedContext, [
+      'mobile',
+      'android',
+      'ios',
+      'app store',
+    ])) {
+      addSuggestions(['Mobile App Development']);
+    }
+    if (_containsAny(combinedContext, [
+      'rest api',
+      'restful',
+      'api',
+      'graphql',
+    ])) {
+      addSuggestions(['REST APIs', 'API Integration']);
+    }
+    if (_containsAny(combinedContext, [
+      'provider',
+      'bloc',
+      'riverpod',
+      'state management',
+    ])) {
+      addSuggestions(['State Management']);
+    }
+    if (_containsAny(combinedContext, ['firebase'])) {
+      addSuggestions(['Firebase']);
+    }
+    if (_containsAny(combinedContext, [
+      'unit test',
+      'widget test',
+      'testing',
+    ])) {
+      addSuggestions(['Unit Testing']);
+    }
+    if (_containsAny(combinedContext, [
+      'deploy',
+      'release',
+      'ci/cd',
+      'pipeline',
+    ])) {
+      addSuggestions(['CI/CD']);
+    }
+    if (_containsAny(combinedContext, ['react', 'next.js', 'nextjs'])) {
+      addSuggestions(['React']);
+    }
+    if (_containsAny(combinedContext, ['javascript'])) {
+      addSuggestions(['JavaScript']);
+    }
+    if (_containsAny(combinedContext, ['typescript'])) {
+      addSuggestions(['TypeScript']);
+    }
+    if (_containsAny(combinedContext, ['figma', 'wireframe', 'prototype'])) {
+      addSuggestions(['Figma', 'Wireframing', 'Prototyping']);
+    }
+    if (_containsAny(combinedContext, [
+      'design system',
+      'ui kit',
+      'component library',
+    ])) {
+      addSuggestions(['Design Systems']);
+    }
+    if (_containsAny(combinedContext, [
+      'user research',
+      'user interview',
+      'usability',
+    ])) {
+      addSuggestions(['User Research']);
+    }
+    if (_containsAny(combinedContext, [
+      'sql',
+      'query',
+      'database',
+      'warehouse',
+    ])) {
+      addSuggestions(['SQL', 'Data Analysis']);
+    }
+    if (_containsAny(combinedContext, [
+      'dashboard',
+      'analytics',
+      'metric',
+      'kpi',
+    ])) {
+      addSuggestions(['Analytics', 'Dashboarding']);
+    }
+    if (_containsAny(combinedContext, ['a/b test', 'ab test', 'experiment'])) {
+      addSuggestions(['A/B Testing', 'Experiment Design']);
+    }
+    if (_containsAny(combinedContext, [
+      'roadmap',
+      'product strategy',
+      'backlog',
+    ])) {
+      addSuggestions(['Roadmapping', 'Product Strategy']);
+    }
+    if (_containsAny(combinedContext, [
+      'stakeholder',
+      'client',
+      'cross-functional',
+      'cross functional',
+    ])) {
+      addSuggestions([
+        'Stakeholder Management',
+        'Cross-functional Collaboration',
+      ]);
+    }
+    if (_containsAny(combinedContext, [
+      'document',
+      'documentation',
+      'report',
+      'spec',
+    ])) {
+      addSuggestions(['Documentation']);
+    }
+    if (_containsAny(combinedContext, [
+      'launch',
+      'delivery',
+      'deliver',
+      'execution',
+    ])) {
+      addSuggestions(['Project Management', 'Execution']);
+    }
+    if (_containsAny(combinedContext, [
+      'process improvement',
+      'workflow',
+      'automation',
+      'streamline',
+    ])) {
+      addSuggestions(['Process Improvement']);
+    }
+    if (_containsAny(combinedContext, [
+      'presentation',
+      'presented',
+      'training',
+      'enablement',
+    ])) {
+      addSuggestions(['Presentation Skills']);
+    }
+    if (_containsAny(combinedContext, ['seo', 'campaign', 'content', 'crm'])) {
+      addSuggestions(['SEO', 'Campaign Strategy', 'Content Planning']);
+    }
+
+    for (final titleSource in titleSources) {
+      addSuggestions(_jobTitleSkillSuggestions(titleSource));
+    }
+
+    if (suggestions.isEmpty) {
+      addSuggestions(const [
+        'Communication',
+        'Problem Solving',
+        'Cross-functional Collaboration',
+      ]);
+    }
+
+    return suggestions.take(8).toList();
+  }
+
+  List<String> _jobTitleSkillSuggestions(String jobTitle) {
     final normalized = jobTitle.toLowerCase();
-    final suggestions = <String>{
-      'Communication',
-      'Problem Solving',
-      'Stakeholder Management',
-    };
+    final suggestions = <String>{'Communication', 'Problem Solving'};
 
     if (normalized.contains('designer')) {
       suggestions.addAll([
@@ -323,6 +529,7 @@ class LocalAiResumeService {
     } else if (normalized.contains('product')) {
       suggestions.addAll([
         'Product Strategy',
+        'Stakeholder Management',
         'Roadmapping',
         'A/B Testing',
         'SQL',
@@ -357,6 +564,15 @@ class LocalAiResumeService {
     }
 
     return suggestions.toList();
+  }
+
+  bool _containsAny(String value, List<String> needles) {
+    for (final needle in needles) {
+      if (value.contains(needle)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Iterable<String> _extractKeywords(String input) sync* {
@@ -633,10 +849,13 @@ class ResumePdfService {
             '${item.degree.trim().isEmpty ? 'Degree' : item.degree.trim()} · ${item.institution.trim().isEmpty ? 'Institution' : item.institution.trim()}',
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
           ),
-          if (item.year.trim().isNotEmpty || item.details.trim().isNotEmpty)
+          if (item.year.trim().isNotEmpty ||
+              item.score.trim().isNotEmpty ||
+              item.details.trim().isNotEmpty)
             pw.Text(
               [
                 item.year.trim(),
+                item.score.trim(),
                 item.details.trim(),
               ].where((part) => part.isNotEmpty).join(' · '),
             ),

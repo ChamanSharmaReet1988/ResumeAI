@@ -22,6 +22,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   final _coverLetterRoleController = TextEditingController();
   final _summaryFocusNode = FocusNode();
   final _stepScrollController = ScrollController();
+  final Map<String, FocusNode> _extendedKeyboardHideFocusNodes = {};
 
   @override
   void initState() {
@@ -36,6 +37,24 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     setState(() {});
   }
 
+  void _handleExtendedKeyboardHideFocusChange() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+  }
+
+  FocusNode _focusNodeForExtendedKeyboardField(String key) {
+    return _extendedKeyboardHideFocusNodes.putIfAbsent(key, () {
+      final node = FocusNode();
+      node.addListener(_handleExtendedKeyboardHideFocusChange);
+      return node;
+    });
+  }
+
+  bool get _isExtendedKeyboardHideFieldFocused =>
+      _extendedKeyboardHideFocusNodes.values.any((node) => node.hasFocus);
+
   @override
   void dispose() {
     _skillController.dispose();
@@ -46,6 +65,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     _summaryFocusNode
       ..removeListener(_handleSummaryFocusChange)
       ..dispose();
+    for (final node in _extendedKeyboardHideFocusNodes.values) {
+      node
+        ..removeListener(_handleExtendedKeyboardHideFocusChange)
+        ..dispose();
+    }
     super.dispose();
   }
 
@@ -96,14 +120,43 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   Future<void> _suggestSkills() async {
-    await context.read<ResumeEditorViewModel>().suggestSkills();
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final previousCount = viewModel.resume.skills.length;
+    await viewModel.suggestSkills();
     if (!mounted) {
       return;
     }
 
+    final addedCount =
+        context.read<ResumeEditorViewModel>().resume.skills.length -
+        previousCount;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('AI skills added to the draft.')),
+      SnackBar(
+        content: Text(
+          addedCount > 0
+              ? 'AI added $addedCount skill${addedCount == 1 ? '' : 's'} to the draft.'
+              : 'You already have the maximum 50 skills.',
+        ),
+      ),
     );
+  }
+
+  void _addSkillFromInput() {
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final rawValue = _skillController.text;
+    final wasAtLimit = viewModel.hasReachedSkillLimit;
+    final added = viewModel.addSkill(rawValue);
+
+    if (added) {
+      _skillController.clear();
+      return;
+    }
+
+    if (wasAtLimit && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You can add up to 50 skills.')),
+      );
+    }
   }
 
   Future<void> _analyzeResume() async {
@@ -190,7 +243,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-  String _experienceOrderLabel(int index) {
+  String _resumeOrderLabel(int index) {
     if (index == 0) {
       return 'Appears first on your resume';
     }
@@ -229,7 +282,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.calendar_month_outlined),
-                  title: const Text('Choose date'),
+                  title: const Text('Choose month and year'),
                   onTap: () =>
                       Navigator.of(context).pop(_EndDateSelection.chooseDate),
                 ),
@@ -268,13 +321,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       }
     }
 
-    final selectedDate = await showDatePicker(
-      context: context,
-      initialDate: _parseWorkDate(currentValue),
-      firstDate: DateTime(1970),
-      lastDate: DateTime(2100),
-      initialDatePickerMode: DatePickerMode.year,
-      helpText: isEndDate ? 'Select end date' : 'Select start date',
+    final selectedDate = await _showMonthYearPicker(
+      title: isEndDate
+          ? 'Select end month and year'
+          : 'Select start month and year',
+      initialDate: _initialWorkPickerDate(currentValue),
     );
 
     if (!mounted || selectedDate == null) {
@@ -285,6 +336,161 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       index: index,
       isEndDate: isEndDate,
       value: DateFormat('MMM yyyy').format(selectedDate),
+    );
+  }
+
+  Future<void> _pickEducationCompletionYear({
+    required int index,
+    required String currentValue,
+  }) async {
+    FocusScope.of(context).unfocus();
+    final selectedYear = await _showYearPickerDialog(
+      title: 'Select completion year',
+      initialValue: currentValue,
+    );
+
+    if (!mounted || selectedYear == null) {
+      return;
+    }
+
+    context.read<ResumeEditorViewModel>().updateEducation(
+      index,
+      (current) => current.copyWith(year: selectedYear),
+    );
+  }
+
+  DateTime _initialWorkPickerDate(String currentValue) {
+    final trimmed = currentValue.trim();
+    if (trimmed.isNotEmpty && trimmed.toLowerCase() != 'present') {
+      return _parseWorkDate(trimmed);
+    }
+
+    final educationYear = _latestEducationCompletionYear();
+    if (educationYear != null) {
+      return DateTime(educationYear, DateTime.now().month);
+    }
+
+    return DateTime.now();
+  }
+
+  int? _latestEducationCompletionYear() {
+    final years = context
+        .read<ResumeEditorViewModel>()
+        .resume
+        .education
+        .map((item) => int.tryParse(item.year.trim()))
+        .whereType<int>()
+        .toList();
+
+    if (years.isEmpty) {
+      return null;
+    }
+
+    return years.reduce(math.max);
+  }
+
+  Future<DateTime?> _showMonthYearPicker({
+    required String title,
+    required DateTime initialDate,
+  }) async {
+    final years = _availableYears();
+    var selectedYear = initialDate.year;
+    var selectedMonth = initialDate.month;
+
+    return showDialog<DateTime>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(title),
+              content: SizedBox(
+                width: 340,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonFormField<int>(
+                      initialValue: selectedYear,
+                      decoration: const InputDecoration(labelText: 'Year'),
+                      items: years
+                          .map(
+                            (year) => DropdownMenuItem<int>(
+                              value: year,
+                              child: Text('$year'),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => selectedYear = value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: List.generate(12, (index) {
+                        final month = index + 1;
+                        final label = DateFormat.MMM().format(
+                          DateTime(2000, month),
+                        );
+                        return ChoiceChip(
+                          label: Text(label),
+                          selected: month == selectedMonth,
+                          onSelected: (_) {
+                            setState(() => selectedMonth = month);
+                          },
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pop(DateTime(selectedYear, selectedMonth)),
+                  child: const Text('Done'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<String?> _showYearPickerDialog({
+    required String title,
+    required String initialValue,
+  }) async {
+    final selectedYear = _parseYear(initialValue);
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: SizedBox(
+            width: 320,
+            height: 320,
+            child: YearPicker(
+              firstDate: DateTime(1970),
+              lastDate: DateTime(2100),
+              selectedDate: DateTime(selectedYear),
+              currentDate: DateTime.now(),
+              onChanged: (date) => Navigator.of(context).pop('${date.year}'),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -308,6 +514,15 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     }
 
     return DateTime.now();
+  }
+
+  int _parseYear(String value) {
+    return int.tryParse(value.trim()) ?? DateTime.now().year;
+  }
+
+  List<int> _availableYears() {
+    final currentYear = DateTime.now().year;
+    return List<int>.generate(131, (index) => currentYear + 5 - index);
   }
 
   void _updateWorkDate({
@@ -340,6 +555,22 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
+  void _moveEducation({required int index, required bool moveUp}) {
+    FocusScope.of(context).unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      final viewModel = context.read<ResumeEditorViewModel>();
+      if (moveUp) {
+        viewModel.moveEducationUp(index);
+      } else {
+        viewModel.moveEducationDown(index);
+      }
+    });
+  }
+
   void _scrollToStepTop() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_stepScrollController.hasClients) {
@@ -360,8 +591,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     _scrollToStepTop();
   }
 
-  void _goToNextStep() {
+  Future<void> _goToNextStep() async {
     final viewModel = context.read<ResumeEditorViewModel>();
+    FocusScope.of(context).unfocus();
+    await viewModel.saveResume();
+    if (!mounted) {
+      return;
+    }
     _goToStep(viewModel.currentStep + 1);
   }
 
@@ -404,7 +640,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         final currentTitle = viewModel.resume.title.ifBlank('Resume Builder');
         final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
         final showKeyboardHideButton =
-            _summaryFocusNode.hasFocus && keyboardInset > 0;
+            keyboardInset > 0 &&
+            (_summaryFocusNode.hasFocus || _isExtendedKeyboardHideFieldFocused);
         final iosTitleStyle = Theme.of(
           context,
         ).cupertinoOverrideTheme?.textTheme?.navTitleTextStyle;
@@ -502,7 +739,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                               .resume
                                               .hasRequiredPersonalInfo
                                     ? null
-                                    : _goToNextStep,
+                                    : () => _goToNextStep(),
                               ),
                             ],
                           );
@@ -718,7 +955,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _experienceOrderLabel(index),
+                                _resumeOrderLabel(index),
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: Theme.of(
@@ -785,7 +1022,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           key: Key('work-start-date-$index'),
                           label: 'Start date',
                           value: item.startDate,
-                          hintText: 'Select date',
+                          hintText: 'Month/year',
                           onTap: () => _pickWorkDate(
                             index: index,
                             isEndDate: false,
@@ -796,7 +1033,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           key: Key('work-end-date-$index'),
                           label: 'End date',
                           value: item.endDate,
-                          hintText: 'Select date or Present',
+                          hintText: 'Month/year or Present',
                           onTap: () => _pickWorkDate(
                             index: index,
                             isEndDate: true,
@@ -804,10 +1041,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ),
                         ),
                         _SyncTextField(
+                          key: Key('work-description-$index'),
                           label: 'Short description',
                           value: item.description,
                           maxLines: 4,
                           fullWidth: true,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'work-description-$index',
+                          ),
                           onChanged: (value) => viewModel.updateWorkExperience(
                             index,
                             (current) => current.copyWith(description: value),
@@ -898,9 +1139,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     return _StepSurface(
       title: 'Education',
       subtitle:
-          'Include your degree, institution, year, and supporting details like honors or coursework.',
+          'Include your degree, institution, completion year, score, and supporting details like honors or coursework.',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const _HintBanner(
+            title: 'Resume order',
+            body:
+                'Education entries appear on the resume from top to bottom in this same order. Use the arrows to keep the most important one first.',
+          ),
+          const SizedBox(height: 16),
           ...viewModel.resume.education.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
@@ -916,21 +1164,59 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Text(
-                            'Education ${index + 1}',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Education ${index + 1}',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _resumeOrderLabel(index),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
                           ),
                         ),
-                        if (viewModel.resume.education.length > 1)
+                        if (viewModel.resume.education.length > 1) ...[
+                          IconButton.filledTonal(
+                            tooltip: 'Move education up',
+                            onPressed: index == 0
+                                ? null
+                                : () => _moveEducation(
+                                    index: index,
+                                    moveUp: true,
+                                  ),
+                            icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                          ),
+                          IconButton.filledTonal(
+                            tooltip: 'Move education down',
+                            onPressed:
+                                index == viewModel.resume.education.length - 1
+                                ? null
+                                : () => _moveEducation(
+                                    index: index,
+                                    moveUp: false,
+                                  ),
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                          ),
                           IconButton(
                             onPressed: () => viewModel.removeEducation(index),
                             icon: const ImageIcon(
                               AssetImage('assets/fonts/delete.png'),
                             ),
                           ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -952,19 +1238,37 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             (current) => current.copyWith(degree: value),
                           ),
                         ),
-                        _SyncTextField(
-                          label: 'Graduation year',
+                        _PickerField(
+                          key: Key('education-completion-year-$index'),
+                          label: 'Completion year',
                           value: item.year,
-                          onChanged: (value) => viewModel.updateEducation(
-                            index,
-                            (current) => current.copyWith(year: value),
+                          hintText: 'Select year',
+                          onTap: () => _pickEducationCompletionYear(
+                            index: index,
+                            currentValue: item.year,
                           ),
                         ),
                         _SyncTextField(
+                          label: 'Score / marks',
+                          value: item.score,
+                          hintText: '8.6 CGPA, 92%, or 780/800',
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (value) => viewModel.updateEducation(
+                            index,
+                            (current) => current.copyWith(score: value),
+                          ),
+                        ),
+                        _SyncTextField(
+                          key: Key('education-details-$index'),
                           label: 'Details',
                           value: item.details,
                           fullWidth: true,
                           maxLines: 3,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'education-details-$index',
+                          ),
                           onChanged: (value) => viewModel.updateEducation(
                             index,
                             (current) => current.copyWith(details: value),
@@ -994,25 +1298,29 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     return _StepSurface(
       title: 'Skills',
       subtitle:
-          'Add job-specific tools and keywords. AI can suggest skills based on the target job title.',
+          'Add job-specific tools and keywords. AI suggests skills from the resume title, target role, and work experience details like role, company, and descriptions.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            '${viewModel.resume.skills.length}/${ResumeEditorViewModel.maxSkills} skills',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
           _EnsureVisibleOnFocus(
             child: TextField(
               controller: _skillController,
               textInputAction: TextInputAction.done,
-              onSubmitted: (value) {
-                viewModel.addSkill(value);
-                _skillController.clear();
-              },
+              onSubmitted: (_) => _addSkillFromInput(),
               decoration: InputDecoration(
                 labelText: 'Add a skill',
+                helperText: viewModel.hasReachedSkillLimit
+                    ? 'Maximum 50 skills reached'
+                    : 'You can add up to 50 skills',
                 suffixIcon: IconButton(
-                  onPressed: () {
-                    viewModel.addSkill(_skillController.text);
-                    _skillController.clear();
-                  },
+                  onPressed: _addSkillFromInput,
                   icon: const Icon(Icons.add_rounded),
                 ),
               ),
@@ -1024,7 +1332,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             runSpacing: 12,
             children: [
               FilledButton.tonalIcon(
-                onPressed: viewModel.isBusy ? null : _suggestSkills,
+                onPressed: viewModel.isBusy || viewModel.hasReachedSkillLimit
+                    ? null
+                    : _suggestSkills,
                 style: _mediumTonalButtonStyle(context),
                 icon: const Icon(Icons.psychology_alt_outlined),
                 label: const Text('Suggest skills'),
@@ -1036,7 +1346,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             _HintBanner(
               title: 'No skills added yet',
               body:
-                  'Aim for 6-12 relevant skills so ATS systems can match your resume more reliably.',
+                  'Aim for 6-12 relevant skills so ATS systems can match your resume more reliably, with room for up to 50 if needed.',
             )
           else
             Wrap(
@@ -1045,6 +1355,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               children: viewModel.resume.skills.map((skill) {
                 return InputChip(
                   label: Text(skill),
+                  labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize:
+                        (Theme.of(context).textTheme.bodyMedium?.fontSize ??
+                            14) -
+                        2,
+                    fontWeight: FontWeight.w400,
+                  ),
                   onDeleted: () => viewModel.removeSkill(skill),
                 );
               }).toList(),
@@ -1699,11 +2016,14 @@ class _PickerField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           hintText: hintText,
+          hintMaxLines: 1,
           suffixIcon: const Icon(Icons.calendar_today_outlined),
         ),
         child: hasValue
             ? Text(
                 value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface,
                 ),
@@ -1716,6 +2036,7 @@ class _PickerField extends StatelessWidget {
 
 class _SyncTextField extends StatefulWidget {
   const _SyncTextField({
+    super.key,
     required this.label,
     required this.value,
     required this.onChanged,

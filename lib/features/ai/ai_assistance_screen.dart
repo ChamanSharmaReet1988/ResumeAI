@@ -190,7 +190,7 @@ class _AiAssistanceScreenState extends State<AiAssistanceScreen> {
                     child: _AiToolCard(
                       title: 'AI skill suggestions',
                       subtitle:
-                          'Add targeted keywords based on a job title or the active resume role.',
+                          'Add targeted keywords based on the resume title, target job title, and work experience details.',
                       icon: Icons.psychology_alt_outlined,
                       child: Column(
                         children: [
@@ -209,7 +209,8 @@ class _AiAssistanceScreenState extends State<AiAssistanceScreen> {
                               _runTask(() async {
                                 _skillSuggestions = await aiService
                                     .suggestSkills(
-                                      jobTitle:
+                                      resume: resume,
+                                      targetJobTitle:
                                           _jobTitleController.text
                                               .trim()
                                               .isEmpty

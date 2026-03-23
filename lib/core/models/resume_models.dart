@@ -416,6 +416,7 @@ class EducationItem {
     required this.institution,
     required this.degree,
     required this.year,
+    required this.score,
     required this.details,
   });
 
@@ -423,6 +424,7 @@ class EducationItem {
     : institution = '',
       degree = '',
       year = '',
+      score = '',
       details = '';
 
   factory EducationItem.fromJson(Map<String, dynamic> json) {
@@ -430,6 +432,7 @@ class EducationItem {
       institution: json['institution'] as String? ?? '',
       degree: json['degree'] as String? ?? '',
       year: json['year'] as String? ?? '',
+      score: json['score'] as String? ?? '',
       details: json['details'] as String? ?? '',
     );
   }
@@ -437,24 +440,28 @@ class EducationItem {
   final String institution;
   final String degree;
   final String year;
+  final String score;
   final String details;
 
   bool get isBlank =>
       institution.trim().isEmpty &&
       degree.trim().isEmpty &&
       year.trim().isEmpty &&
+      score.trim().isEmpty &&
       details.trim().isEmpty;
 
   EducationItem copyWith({
     String? institution,
     String? degree,
     String? year,
+    String? score,
     String? details,
   }) {
     return EducationItem(
       institution: institution ?? this.institution,
       degree: degree ?? this.degree,
       year: year ?? this.year,
+      score: score ?? this.score,
       details: details ?? this.details,
     );
   }
@@ -464,6 +471,7 @@ class EducationItem {
       'institution': institution,
       'degree': degree,
       'year': year,
+      'score': score,
       'details': details,
     };
   }
