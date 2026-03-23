@@ -571,6 +571,22 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
+  void _moveProject({required int index, required bool moveUp}) {
+    FocusScope.of(context).unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      final viewModel = context.read<ResumeEditorViewModel>();
+      if (moveUp) {
+        viewModel.moveProjectUp(index);
+      } else {
+        viewModel.moveProjectDown(index);
+      }
+    });
+  }
+
   void _scrollToStepTop() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_stepScrollController.hasClients) {
@@ -808,7 +824,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       2 => _buildEducationStep(viewModel),
       3 => _buildSkillsStep(viewModel),
       4 => _buildProjectsStep(viewModel),
-      _ => _buildPreviewStep(viewModel, showPreview: !isWide),
+      _ => _buildCustomSectionsStep(viewModel, showPreview: !isWide),
     };
   }
 
@@ -1377,7 +1393,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       subtitle:
           'Showcase standout side projects, product launches, or portfolio work with clear outcomes.',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const _HintBanner(
+            title: 'Resume order',
+            body:
+                'Projects appear on the resume from top to bottom in this same order. Use the arrows to move your strongest project to the top.',
+          ),
+          const SizedBox(height: 16),
           ...viewModel.resume.projects.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
@@ -1393,21 +1416,55 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Text(
-                            'Project ${index + 1}',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Project ${index + 1}',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _resumeOrderLabel(index),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
                           ),
                         ),
-                        if (viewModel.resume.projects.length > 1)
+                        if (viewModel.resume.projects.length > 1) ...[
+                          IconButton.filledTonal(
+                            tooltip: 'Move project up',
+                            onPressed: index == 0
+                                ? null
+                                : () =>
+                                      _moveProject(index: index, moveUp: true),
+                            icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                          ),
+                          IconButton.filledTonal(
+                            tooltip: 'Move project down',
+                            onPressed:
+                                index == viewModel.resume.projects.length - 1
+                                ? null
+                                : () =>
+                                      _moveProject(index: index, moveUp: false),
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                          ),
                           IconButton(
                             onPressed: () => viewModel.removeProject(index),
                             icon: const ImageIcon(
                               AssetImage('assets/fonts/delete.png'),
                             ),
                           ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -1422,14 +1479,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ),
                         ),
                         _SyncTextField(
-                          label: 'Subtitle or stack',
-                          value: item.subtitle,
-                          onChanged: (value) => viewModel.updateProject(
-                            index,
-                            (current) => current.copyWith(subtitle: value),
-                          ),
-                        ),
-                        _SyncTextField(
                           label: 'Overview',
                           value: item.overview,
                           maxLines: 4,
@@ -1440,7 +1489,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ),
                         ),
                         _SyncTextField(
-                          label: 'Impact',
+                          label: 'Tools & Technologies',
                           value: item.impact,
                           maxLines: 3,
                           fullWidth: true,
@@ -1466,6 +1515,119 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCustomSectionsStep(
+    ResumeEditorViewModel viewModel, {
+    required bool showPreview,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _StepSurface(
+          title: 'Custom sections',
+          subtitle:
+              'Add your own resume categories like Certifications, Languages, Awards, Publications, or anything else you want to show.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _HintBanner(
+                title: 'Flexible sections',
+                body:
+                    'Each custom section lets you choose the category title and write the content exactly the way you want it to appear on the resume.',
+              ),
+              if (viewModel.resume.customSections.isNotEmpty)
+                const SizedBox(height: 16),
+              ...viewModel.resume.customSections.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Custom section ${index + 1}',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () =>
+                                  viewModel.removeCustomSection(index),
+                              icon: const ImageIcon(
+                                AssetImage('assets/fonts/delete.png'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _ResponsiveFieldGroup(
+                          children: [
+                            _SyncTextField(
+                              key: Key('custom-section-title-$index'),
+                              label: 'Category title',
+                              value: item.title,
+                              hintText: 'Certifications, Languages, Awards...',
+                              onChanged: (value) =>
+                                  viewModel.updateCustomSection(
+                                    index,
+                                    (current) => current.copyWith(title: value),
+                                  ),
+                            ),
+                            _SyncTextField(
+                              key: Key('custom-section-content-$index'),
+                              label: 'Content',
+                              value: item.content,
+                              hintText:
+                                  'Write the section content the way you want it shown on the resume.',
+                              maxLines: 5,
+                              fullWidth: true,
+                              focusNode: _focusNodeForExtendedKeyboardField(
+                                'custom-section-content-$index',
+                              ),
+                              onChanged: (value) =>
+                                  viewModel.updateCustomSection(
+                                    index,
+                                    (current) =>
+                                        current.copyWith(content: value),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.icon(
+                  onPressed: viewModel.isBusy
+                      ? null
+                      : viewModel.addCustomSection,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Add custom section'),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildPreviewStep(viewModel, showPreview: showPreview),
+      ],
     );
   }
 

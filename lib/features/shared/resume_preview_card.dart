@@ -119,6 +119,13 @@ class _ModernPreview extends StatelessWidget {
             ),
           );
         }),
+        if (resume.visibleCustomSections.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          _CustomSectionPreview(
+            item: resume.visibleCustomSections.first,
+            isCompact: isCompact,
+          ),
+        ],
       ],
     );
   }
@@ -179,6 +186,13 @@ class _MinimalPreview extends StatelessWidget {
             ),
           );
         }),
+        if (resume.visibleCustomSections.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _CustomSectionPreview(
+            item: resume.visibleCustomSections.first,
+            isCompact: isCompact,
+          ),
+        ],
       ],
     );
   }
@@ -272,6 +286,13 @@ class _CorporatePreview extends StatelessWidget {
             ),
           ),
         ],
+        if (resume.visibleCustomSections.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _CustomSectionPreview(
+            item: resume.visibleCustomSections.first,
+            isCompact: isCompact,
+          ),
+        ],
       ],
     );
   }
@@ -349,6 +370,13 @@ class _CreativePreview extends StatelessWidget {
             );
           }).toList(),
         ),
+        if (resume.visibleCustomSections.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _CustomSectionPreview(
+            item: resume.visibleCustomSections.first,
+            isCompact: isCompact,
+          ),
+        ],
       ],
     );
   }
@@ -478,6 +506,39 @@ class _BulletPreview extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomSectionPreview extends StatelessWidget {
+  const _CustomSectionPreview({required this.item, required this.isCompact});
+
+  final CustomSectionItem item;
+  final bool isCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          item.title.ifBlank('Custom section'),
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          item.content.ifBlank('Add custom content to preview it here.'),
+          maxLines: isCompact ? 3 : 4,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ],

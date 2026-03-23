@@ -54,6 +54,7 @@ class ResumeData {
     required this.education,
     required this.skills,
     required this.projects,
+    required this.customSections,
     required this.updatedAt,
     required this.githubLink,
     required this.linkedinLink,
@@ -75,6 +76,7 @@ class ResumeData {
       education: const [EducationItem.empty()],
       skills: const [],
       projects: const [ProjectItem.empty()],
+      customSections: const [],
       updatedAt: DateTime.now(),
       githubLink: '',
       linkedinLink: '',
@@ -118,6 +120,13 @@ class ResumeData {
                 ProjectItem.fromJson(Map<String, dynamic>.from(item as Map)),
           )
           .toList(),
+      customSections: (json['customSections'] as List<dynamic>? ?? [])
+          .map(
+            (item) => CustomSectionItem.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(),
       updatedAt:
           DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
           DateTime.now(),
@@ -140,6 +149,7 @@ class ResumeData {
   final List<EducationItem> education;
   final List<String> skills;
   final List<ProjectItem> projects;
+  final List<CustomSectionItem> customSections;
   final DateTime updatedAt;
   final String githubLink;
   final String linkedinLink;
@@ -152,6 +162,9 @@ class ResumeData {
 
   List<ProjectItem> get visibleProjects =>
       projects.where((item) => !item.isBlank).toList();
+
+  List<CustomSectionItem> get visibleCustomSections =>
+      customSections.where((item) => !item.isBlank).toList();
 
   double get completionRatio {
     var completed = 0;
@@ -198,6 +211,7 @@ class ResumeData {
     List<EducationItem>? education,
     List<String>? skills,
     List<ProjectItem>? projects,
+    List<CustomSectionItem>? customSections,
     DateTime? updatedAt,
     String? githubLink,
     String? linkedinLink,
@@ -217,6 +231,7 @@ class ResumeData {
       education: education ?? this.education,
       skills: skills ?? this.skills,
       projects: projects ?? this.projects,
+      customSections: customSections ?? this.customSections,
       updatedAt: updatedAt ?? this.updatedAt,
       githubLink: githubLink ?? this.githubLink,
       linkedinLink: linkedinLink ?? this.linkedinLink,
@@ -239,6 +254,7 @@ class ResumeData {
       'education': education.map((item) => item.toJson()).toList(),
       'skills': skills,
       'projects': projects.map((item) => item.toJson()).toList(),
+      'customSections': customSections.map((item) => item.toJson()).toList(),
       'updatedAt': updatedAt.toIso8601String(),
       'githubLink': githubLink,
       'linkedinLink': linkedinLink,
@@ -506,10 +522,7 @@ class ProjectItem {
   final String impact;
 
   bool get isBlank =>
-      title.trim().isEmpty &&
-      subtitle.trim().isEmpty &&
-      overview.trim().isEmpty &&
-      impact.trim().isEmpty;
+      title.trim().isEmpty && overview.trim().isEmpty && impact.trim().isEmpty;
 
   ProjectItem copyWith({
     String? title,
@@ -532,6 +545,35 @@ class ProjectItem {
       'overview': overview,
       'impact': impact,
     };
+  }
+}
+
+class CustomSectionItem {
+  const CustomSectionItem({required this.title, required this.content});
+
+  const CustomSectionItem.empty() : title = '', content = '';
+
+  factory CustomSectionItem.fromJson(Map<String, dynamic> json) {
+    return CustomSectionItem(
+      title: json['title'] as String? ?? '',
+      content: json['content'] as String? ?? '',
+    );
+  }
+
+  final String title;
+  final String content;
+
+  bool get isBlank => title.trim().isEmpty && content.trim().isEmpty;
+
+  CustomSectionItem copyWith({String? title, String? content}) {
+    return CustomSectionItem(
+      title: title ?? this.title,
+      content: content ?? this.content,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'title': title, 'content': content};
   }
 }
 

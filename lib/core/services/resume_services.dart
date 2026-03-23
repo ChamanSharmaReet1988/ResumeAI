@@ -734,6 +734,12 @@ class ResumePdfService {
             _sectionHeading('Projects', accent),
             ...resume.visibleProjects.map(_buildProject),
           ],
+          if (resume.visibleCustomSections.isNotEmpty) ...[
+            pw.SizedBox(height: 18),
+            ...resume.visibleCustomSections.map(
+              (item) => _buildCustomSection(item, accent),
+            ),
+          ],
         ],
       ),
     );
@@ -874,9 +880,21 @@ class ResumePdfService {
             item.title.trim().isEmpty ? 'Project Title' : item.title.trim(),
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
           ),
-          if (item.subtitle.trim().isNotEmpty) pw.Text(item.subtitle.trim()),
           if (item.overview.trim().isNotEmpty) pw.Text(item.overview.trim()),
           if (item.impact.trim().isNotEmpty) pw.Text(item.impact.trim()),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildCustomSection(CustomSectionItem item, PdfColor accent) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 12),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          _sectionHeading(item.title.ifEmpty('Custom Section'), accent),
+          if (item.content.trim().isNotEmpty) pw.Text(item.content.trim()),
         ],
       ),
     );

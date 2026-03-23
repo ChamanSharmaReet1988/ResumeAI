@@ -220,11 +220,12 @@ ResumeData _sampleResume(ResumeTemplate template) {
     projects: const [
       ProjectItem(
         title: 'Project Title',
-        subtitle: 'Project subtitle',
+        subtitle: '',
         overview: 'Project overview placeholder.',
-        impact: 'Project impact placeholder.',
+        impact: 'Tools and technologies placeholder.',
       ),
     ],
+    customSections: const [],
     updatedAt: DateTime(2026, 3, 1),
     githubLink: 'github.com/username',
     linkedinLink: 'linkedin.com/in/username',

@@ -143,7 +143,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
     'Education',
     'Skills',
     'Projects',
-    'Resume Preview',
+    'Custom Sections',
   ];
 
   void setStep(int value) {
@@ -291,6 +291,53 @@ class ResumeEditorViewModel extends ChangeNotifier {
         projects: items.isEmpty ? const [ProjectItem.empty()] : items,
       ),
     );
+  }
+
+  void moveProjectUp(int index) {
+    if (index <= 0 || index >= _resume.projects.length) {
+      return;
+    }
+
+    final items = [..._resume.projects];
+    final item = items.removeAt(index);
+    items.insert(index - 1, item);
+    updateResume((resume) => resume.copyWith(projects: items));
+  }
+
+  void moveProjectDown(int index) {
+    if (index < 0 || index >= _resume.projects.length - 1) {
+      return;
+    }
+
+    final items = [..._resume.projects];
+    final item = items.removeAt(index);
+    items.insert(index + 1, item);
+    updateResume((resume) => resume.copyWith(projects: items));
+  }
+
+  void updateCustomSection(
+    int index,
+    CustomSectionItem Function(CustomSectionItem current) update,
+  ) {
+    final items = [..._resume.customSections];
+    items[index] = update(items[index]);
+    updateResume((resume) => resume.copyWith(customSections: items));
+  }
+
+  void addCustomSection() {
+    updateResume(
+      (resume) => resume.copyWith(
+        customSections: [
+          ...resume.customSections,
+          const CustomSectionItem.empty(),
+        ],
+      ),
+    );
+  }
+
+  void removeCustomSection(int index) {
+    final items = [..._resume.customSections]..removeAt(index);
+    updateResume((resume) => resume.copyWith(customSections: items));
   }
 
   bool addSkill(String skill) {
@@ -462,11 +509,10 @@ class ResumeEditorViewModel extends ChangeNotifier {
         ? [
             const ProjectItem(
               title: 'AI Resume Builder',
-              subtitle: 'Flutter, Dart, Material 3',
+              subtitle: '',
               overview:
                   'Built a mobile app that lets users create polished resumes in minutes with guided prompts and AI suggestions.',
-              impact:
-                  'Improved resume completion speed with step-based UX, template switching, and export tools.',
+              impact: 'Flutter, Dart, Material 3',
             ),
           ]
         : _resume.projects;

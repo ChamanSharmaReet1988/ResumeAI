@@ -218,6 +218,18 @@ void main() {
     expect(find.text('Beta Institute'), findsWidgets);
   });
 
+  testWidgets('projects no longer show a subtitle or stack field', (
+    tester,
+  ) async {
+    viewModel.setStep(4);
+
+    await pumpBuilder(tester);
+
+    expect(find.text('Subtitle or stack'), findsNothing);
+    expect(find.text('Project title'), findsOneWidget);
+    expect(find.text('Overview'), findsOneWidget);
+  });
+
   testWidgets(
     'work date picker uses month and year UI and defaults to completion year',
     (tester) async {
@@ -273,6 +285,71 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(YearPicker), findsOneWidget);
+  });
+
+  testWidgets(
+    'custom sections replace the preview category and save user content',
+    (tester) async {
+      viewModel.setStep(5);
+
+      await pumpBuilder(tester);
+
+      expect(find.text('Resume Preview'), findsNothing);
+      expect(find.text('Custom Sections'), findsOneWidget);
+
+      await tester.tap(find.text('Add custom section'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('custom-section-title-0')),
+        'Certifications',
+      );
+      await tester.enterText(
+        find.byKey(const Key('custom-section-content-0')),
+        'Google UX Certificate, AWS Cloud Practitioner',
+      );
+      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+
+      expect(viewModel.resume.customSections, hasLength(1));
+      expect(viewModel.resume.customSections.first.title, 'Certifications');
+      expect(
+        viewModel.resume.customSections.first.content,
+        'Google UX Certificate, AWS Cloud Practitioner',
+      );
+    },
+  );
+
+  testWidgets('projects can be reordered from the builder', (tester) async {
+    viewModel.setStep(4);
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        projects: const [
+          ProjectItem(
+            title: 'First project',
+            subtitle: '',
+            overview: 'First overview',
+            impact: 'Flutter',
+          ),
+          ProjectItem(
+            title: 'Second project',
+            subtitle: '',
+            overview: 'Second overview',
+            impact: 'Firebase',
+          ),
+        ],
+      ),
+    );
+
+    await pumpBuilder(tester);
+
+    expect(find.text('Appears first on your resume'), findsOneWidget);
+    expect(find.text('Appears 2nd on your resume'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Move project down').first);
+    await tester.pumpAndSettle();
+
+    expect(viewModel.resume.projects.first.title, 'Second project');
+    expect(find.text('Second project'), findsWidgets);
   });
 
   testWidgets('continue scrolls the next category to the top', (tester) async {
