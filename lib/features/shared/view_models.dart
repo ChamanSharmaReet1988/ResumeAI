@@ -194,6 +194,28 @@ class ResumeEditorViewModel extends ChangeNotifier {
     );
   }
 
+  void moveWorkExperienceUp(int index) {
+    if (index <= 0 || index >= _resume.workExperiences.length) {
+      return;
+    }
+
+    final items = [..._resume.workExperiences];
+    final item = items.removeAt(index);
+    items.insert(index - 1, item);
+    updateResume((resume) => resume.copyWith(workExperiences: items));
+  }
+
+  void moveWorkExperienceDown(int index) {
+    if (index < 0 || index >= _resume.workExperiences.length - 1) {
+      return;
+    }
+
+    final items = [..._resume.workExperiences];
+    final item = items.removeAt(index);
+    items.insert(index + 1, item);
+    updateResume((resume) => resume.copyWith(workExperiences: items));
+  }
+
   void updateEducation(
     int index,
     EducationItem Function(EducationItem current) update,
@@ -269,6 +291,10 @@ class ResumeEditorViewModel extends ChangeNotifier {
   }
 
   Future<void> generateBullets(int index) async {
+    if (index < 0 || index >= _resume.workExperiences.length) {
+      return;
+    }
+
     await _runBusy(() async {
       final experience = _resume.workExperiences[index];
       final bullets = await aiService.generateJobBullets(
@@ -276,6 +302,13 @@ class ResumeEditorViewModel extends ChangeNotifier {
         company: experience.company,
         targetJobTitle: _resume.jobTitle,
       );
+      if (index < 0 || index >= _resume.workExperiences.length) {
+        return;
+      }
+      if (bullets.isEmpty) {
+        return;
+      }
+
       updateWorkExperience(
         index,
         (current) => current.copyWith(
@@ -478,10 +511,13 @@ class ResumeEditorViewModel extends ChangeNotifier {
   }) async {
     _isBusy = true;
     notifyListeners();
-    await action();
-    _isBusy = false;
-    if (notifyOnExit) {
-      notifyListeners();
+    try {
+      await action();
+    } finally {
+      _isBusy = false;
+      if (notifyOnExit) {
+        notifyListeners();
+      }
     }
   }
 }

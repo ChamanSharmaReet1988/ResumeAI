@@ -37,6 +37,8 @@ extension ResumeTemplateX on ResumeTemplate {
 }
 
 class ResumeData {
+  static const defaultTitle = 'Untitled Resume';
+
   const ResumeData({
     required this.id,
     required this.title,
@@ -60,7 +62,7 @@ class ResumeData {
   factory ResumeData.empty({required ResumeTemplate template}) {
     return ResumeData(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
-      title: 'Untitled Resume',
+      title: defaultTitle,
       fullName: '',
       jobTitle: '',
       email: '',
@@ -82,7 +84,7 @@ class ResumeData {
   factory ResumeData.fromJson(Map<String, dynamic> json) {
     return ResumeData(
       id: json['id'] as String? ?? '',
-      title: json['title'] as String? ?? 'Untitled Resume',
+      title: json['title'] as String? ?? defaultTitle,
       fullName: json['fullName'] as String? ?? '',
       jobTitle: json['jobTitle'] as String? ?? '',
       email: json['email'] as String? ?? '',
@@ -169,6 +171,17 @@ class ResumeData {
       completionRatio > 0.15 ||
       fullName.trim().isNotEmpty ||
       jobTitle.trim().isNotEmpty;
+
+  bool get hasRequiredPersonalInfo {
+    final normalizedTitle = title.trim();
+    return normalizedTitle.isNotEmpty &&
+        normalizedTitle != defaultTitle &&
+        fullName.trim().isNotEmpty &&
+        jobTitle.trim().isNotEmpty &&
+        email.trim().isNotEmpty &&
+        phone.trim().isNotEmpty &&
+        summary.trim().isNotEmpty;
+  }
 
   ResumeData copyWith({
     String? id,

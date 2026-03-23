@@ -231,7 +231,9 @@ class _ResumeSection extends StatelessWidget {
                     IconButton(
                       tooltip: 'Delete resume',
                       onPressed: () => library.deleteResume(resume.id),
-                      icon: const Icon(Icons.delete_outline_rounded),
+                      icon: const ImageIcon(
+                        AssetImage('assets/fonts/delete.png'),
+                      ),
                     ),
                   ],
                 ),
@@ -329,7 +331,9 @@ class _CoverLetterSection extends StatelessWidget {
                       tooltip: 'Delete cover letter',
                       onPressed: () =>
                           library.deleteCoverLetter(coverLetter.id),
-                      icon: const Icon(Icons.delete_outline_rounded),
+                      icon: const ImageIcon(
+                        AssetImage('assets/fonts/delete.png'),
+                      ),
                     ),
                   ],
                 ),
