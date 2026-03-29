@@ -63,6 +63,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/fonts/delete.png
+    - assets/templates/
   fonts:
     - family: Nunito
       fonts:

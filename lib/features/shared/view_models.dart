@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/models/resume_models.dart';
@@ -26,7 +28,7 @@ class ResumeLibraryViewModel extends ChangeNotifier {
   bool _isLoading = false;
   List<ResumeData> _resumes = const [];
   String? _selectedResumeId;
-  ResumeTemplate _defaultTemplate = ResumeTemplate.modern;
+  ResumeTemplate _defaultTemplate = ResumeTemplate.corporate;
 
   bool get isLoading => _isLoading;
   List<ResumeData> get resumes => _resumes;
@@ -49,7 +51,7 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     _resumes = await repository.loadResumes();
     if (_resumes.isNotEmpty) {
       _selectedResumeId ??= _resumes.first.id;
-      _defaultTemplate = _resumes.first.template;
+      _defaultTemplate = _resumes.first.template.userFacingTemplate;
     }
     _isLoading = false;
     notifyListeners();
@@ -78,7 +80,26 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     await loadResumes();
   }
 
+  Future<ResumeData> duplicateResume(ResumeData source) async {
+    final duplicated = source.copyWith(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      title: _duplicateTitle(source.title),
+      updatedAt: DateTime.now(),
+    );
+
+    await repository.upsertResume(duplicated);
+    _selectedResumeId = duplicated.id;
+    await loadResumes();
+    return duplicated;
+  }
+
   ResumeData newDraft() => ResumeData.empty(template: _defaultTemplate);
+
+  String _duplicateTitle(String title) {
+    final trimmed = title.trim();
+    final baseTitle = trimmed.isEmpty ? ResumeData.defaultTitle : trimmed;
+    return '$baseTitle (Copy)';
+  }
 }
 
 class CoverLetterLibraryViewModel extends ChangeNotifier {
@@ -110,6 +131,7 @@ class CoverLetterLibraryViewModel extends ChangeNotifier {
 
 class ResumeEditorViewModel extends ChangeNotifier {
   static const int maxSkills = 50;
+  static const Duration _autoSaveDelay = Duration(milliseconds: 500);
 
   ResumeEditorViewModel({
     required this.repository,
@@ -128,6 +150,9 @@ class ResumeEditorViewModel extends ChangeNotifier {
   ResumeAnalysis? _analysis;
   JobDescriptionInsights? _jobInsights;
   String _coverLetter = '';
+  Timer? _autoSaveTimer;
+  Future<void> _autoSaveInFlight = Future<void>.value();
+  bool _hasAutoSaveInFlight = false;
 
   ResumeData get resume => _resume;
   int get currentStep => _currentStep;
@@ -166,6 +191,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
   void updateResume(ResumeData Function(ResumeData current) update) {
     _resume = update(_resume).copyWith(updatedAt: DateTime.now());
     notifyListeners();
+    _scheduleAutoSave();
   }
 
   void updateWorkExperience(
@@ -554,12 +580,15 @@ class ResumeEditorViewModel extends ChangeNotifier {
   }
 
   Future<void> saveResume() async {
+    _autoSaveTimer?.cancel();
+    if (_hasAutoSaveInFlight) {
+      try {
+        await _autoSaveInFlight;
+      } catch (_) {}
+    }
+
     await _runBusy(() async {
-      final normalizedTitle = _resume.title.trim().isEmpty
-          ? (_resume.jobTitle.trim().isEmpty
-                ? 'Untitled Resume'
-                : '${_resume.jobTitle.trim()} Resume')
-          : _resume.title.trim();
+      final normalizedTitle = _normalizeResumeTitle(_resume.title);
 
       final normalizedResume = _resume.copyWith(
         title: normalizedTitle,
@@ -568,6 +597,26 @@ class ResumeEditorViewModel extends ChangeNotifier {
       _resume = normalizedResume;
       await repository.upsertResume(normalizedResume);
     });
+  }
+
+  void _scheduleAutoSave() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(_autoSaveDelay, () {
+      final draftResume = _resume.copyWith(
+        title: _normalizeResumeTitle(_resume.title),
+        updatedAt: DateTime.now(),
+      );
+      _hasAutoSaveInFlight = true;
+      _autoSaveInFlight = repository.upsertResume(draftResume).whenComplete(() {
+        _hasAutoSaveInFlight = false;
+      });
+      unawaited(_autoSaveInFlight);
+    });
+  }
+
+  String _normalizeResumeTitle(String title) {
+    final trimmed = title.trim();
+    return trimmed.isEmpty ? ResumeData.defaultTitle : trimmed;
   }
 
   Future<String> downloadPdf() async {
@@ -615,6 +664,12 @@ class ResumeEditorViewModel extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _autoSaveTimer?.cancel();
+    super.dispose();
   }
 }
 

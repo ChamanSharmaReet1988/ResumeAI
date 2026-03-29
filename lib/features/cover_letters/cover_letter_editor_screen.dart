@@ -59,16 +59,20 @@ class CoverLetterEditorScreen extends StatelessWidget {
         final iosTitleStyle = Theme.of(
           context,
         ).cupertinoOverrideTheme?.textTheme?.navTitleTextStyle;
+        final baseTitleStyle = Theme.of(context).platform == TargetPlatform.iOS
+            ? iosTitleStyle?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              )
+            : Theme.of(context).appBarTheme.titleTextStyle;
+        final titleStyle = baseTitleStyle;
 
         return Scaffold(
           appBar: AppBar(
+            leadingWidth: 40,
+            titleSpacing: 8,
             title: Text(
               viewModel.coverLetter.displayTitle,
-              style: Theme.of(context).platform == TargetPlatform.iOS
-                  ? iosTitleStyle?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    )
-                  : Theme.of(context).appBarTheme.titleTextStyle,
+              style: titleStyle,
             ),
             actions: [
               Padding(

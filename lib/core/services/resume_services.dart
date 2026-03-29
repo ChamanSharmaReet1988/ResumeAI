@@ -617,134 +617,1149 @@ class LocalAiResumeService {
 
 class ResumePdfService {
   Future<Uint8List> buildPdf(ResumeData resume) async {
-    final document = pw.Document();
-    final accent = PdfColor.fromInt(resume.template.accentColor.toARGB32());
-    final muted = PdfColors.grey700;
+    final document = pw.Document(theme: _resumeDocumentTheme);
+
+    switch (resume.template.userFacingTemplate) {
+      case ResumeTemplate.modern:
+      case ResumeTemplate.corporate:
+        _addCorporateTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.minimal:
+        _addMinimalTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.creative:
+        _addCreativeTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.copperSerif:
+        _addCopperSerifTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.splitBanner:
+        _addSplitBannerTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.monogramSidebar:
+        _addMonogramSidebarTemplatePage(document, resume);
+        break;
+    }
+
+    return document.save();
+  }
+
+  static final pw.ThemeData _resumeDocumentTheme = pw.ThemeData.withFont(
+    base: pw.Font.helvetica(),
+    bold: pw.Font.helveticaBold(),
+    italic: pw.Font.helveticaOblique(),
+    boldItalic: pw.Font.helveticaBoldOblique(),
+  );
+
+  void _addCorporateTemplatePage(pw.Document document, ResumeData resume) {
+    final headerColor = PdfColor.fromHex('#3B4046');
+    final lineColor = PdfColor.fromHex('#D7DCE2');
 
     document.addPage(
       pw.MultiPage(
-        margin: const pw.EdgeInsets.all(28),
+        margin: pw.EdgeInsets.zero,
         build: (context) => [
           pw.Container(
-            padding: const pw.EdgeInsets.only(bottom: 18),
-            decoration: pw.BoxDecoration(
-              border: pw.Border(bottom: pw.BorderSide(color: accent, width: 2)),
+            color: headerColor,
+            padding: const pw.EdgeInsets.fromLTRB(30, 28, 30, 22),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Container(
+                  width: 48,
+                  height: 48,
+                  alignment: pw.Alignment.center,
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.white, width: 1.4),
+                  ),
+                  child: pw.Text(
+                    _resumeInitials(resume),
+                    style: pw.TextStyle(
+                      color: PdfColors.white,
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.SizedBox(width: 14),
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        _displayName(resume).toUpperCase(),
+                        style: pw.TextStyle(
+                          color: PdfColors.white,
+                          fontSize: 24,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      pw.SizedBox(height: 6),
+                      pw.Text(
+                        _resumeContactItems(resume).join('  /  '),
+                        style: const pw.TextStyle(
+                          color: PdfColors.white,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+          ),
+          pw.SizedBox(height: 18),
+          if (resume.summary.trim().isNotEmpty)
+            _corporateSection(
+              title: 'Summary',
+              lineColor: lineColor,
+              child: pw.Text(resume.summary.trim()),
+            ),
+          _corporateSection(
+            title: 'Skills',
+            lineColor: lineColor,
+            child: _twoColumnBulletList(_skillsForDisplay(resume)),
+          ),
+          if (resume.visibleWorkExperiences.isNotEmpty)
+            _corporateSection(
+              title: 'Experience',
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (final item in resume.visibleWorkExperiences)
+                    _buildCorporateExperience(item),
+                ],
+              ),
+            ),
+          if (resume.visibleEducation.isNotEmpty)
+            _corporateSection(
+              title: 'Education and Training',
+              lineColor: lineColor,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  for (final item in resume.visibleEducation)
+                    _buildCorporateEducation(item),
+                ],
+              ),
+            ),
+          if (resume.visibleProjects.isNotEmpty)
+            _corporateSection(
+              title: 'Projects',
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (final item in resume.visibleProjects)
+                    _buildCompactProject(item),
+                ],
+              ),
+            ),
+          for (final item in resume.visibleCustomSections)
+            _corporateSection(
+              title: item.title.ifEmpty('Custom Section'),
+              lineColor: lineColor,
+              child: pw.Text(item.content.trim()),
+            ),
+          pw.SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+
+  void _addMinimalTemplatePage(pw.Document document, ResumeData resume) {
+    final lineColor = PdfColor.fromHex('#D7DCE2');
+    final textMuted = PdfColor.fromHex('#5E6369');
+
+    document.addPage(
+      pw.MultiPage(
+        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 28),
+        build: (context) => [
+          pw.Center(
+            child: pw.Container(
+              width: 44,
+              height: 44,
+              alignment: pw.Alignment.center,
+              decoration: pw.BoxDecoration(
+                shape: pw.BoxShape.circle,
+                border: pw.Border.all(color: PdfColors.grey700, width: 1),
+              ),
+              child: pw.Text(
+                _resumeInitials(resume),
+                style: pw.TextStyle(
+                  fontSize: 16,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          pw.SizedBox(height: 10),
+          pw.Center(
+            child: pw.Text(
+              _displayName(resume).toUpperCase(),
+              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+          pw.SizedBox(height: 6),
+          pw.Center(
+            child: pw.Text(
+              _resumeContactItems(resume).join('  |  '),
+              style: pw.TextStyle(fontSize: 9, color: textMuted),
+            ),
+          ),
+          pw.SizedBox(height: 18),
+          if (resume.summary.trim().isNotEmpty)
+            _minimalSection(
+              title: 'Summary',
+              lineColor: lineColor,
+              child: pw.Text(resume.summary.trim()),
+            ),
+          _minimalSection(
+            title: 'Skills',
+            lineColor: lineColor,
+            child: _twoColumnBulletList(_skillsForDisplay(resume)),
+          ),
+          if (resume.visibleWorkExperiences.isNotEmpty)
+            _minimalSection(
+              title: 'Experience',
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (final item in resume.visibleWorkExperiences)
+                    _buildMinimalExperience(item),
+                ],
+              ),
+            ),
+          if (resume.visibleEducation.isNotEmpty)
+            _minimalSection(
+              title: 'Education and Training',
+              lineColor: lineColor,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  for (final item in resume.visibleEducation)
+                    _buildCorporateEducation(item),
+                ],
+              ),
+            ),
+          if (resume.visibleProjects.isNotEmpty)
+            _minimalSection(
+              title: 'Projects',
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (final item in resume.visibleProjects)
+                    _buildCompactProject(item),
+                ],
+              ),
+            ),
+          for (final item in resume.visibleCustomSections)
+            _minimalSection(
+              title: item.title.ifEmpty('Custom Section'),
+              lineColor: lineColor,
+              child: pw.Text(item.content.trim()),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _addCreativeTemplatePage(pw.Document document, ResumeData resume) {
+    final dark = PdfColor.fromHex('#353A40');
+    final lineColor = PdfColor.fromHex('#B8BEC6');
+    final muted = PdfColor.fromHex('#5D6268');
+
+    document.addPage(
+      pw.MultiPage(
+        margin: pw.EdgeInsets.zero,
+        build: (context) => [
+          pw.Container(height: 18, color: dark),
+          pw.Padding(
+            padding: const pw.EdgeInsets.fromLTRB(28, 22, 28, 28),
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(
-                  resume.fullName.trim().isEmpty
-                      ? 'Your Name'
-                      : resume.fullName.trim(),
-                  style: pw.TextStyle(
-                    fontSize: 28,
-                    fontWeight: pw.FontWeight.bold,
-                    color: accent,
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Container(
+                      width: 68,
+                      height: 84,
+                      alignment: pw.Alignment.center,
+                      decoration: pw.BoxDecoration(
+                        color: PdfColor.fromHex('#EED7BF'),
+                        border: pw.Border.all(color: lineColor),
+                      ),
+                      child: pw.Text(
+                        _resumeInitials(resume),
+                        style: pw.TextStyle(
+                          fontSize: 22,
+                          fontWeight: pw.FontWeight.bold,
+                          color: dark,
+                        ),
+                      ),
+                    ),
+                    pw.SizedBox(width: 16),
+                    pw.Expanded(
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            _displayName(resume).toUpperCase(),
+                            style: pw.TextStyle(
+                              fontSize: 23,
+                              fontWeight: pw.FontWeight.bold,
+                              color: dark,
+                            ),
+                          ),
+                          pw.SizedBox(height: 8),
+                          for (final item in _resumeContactItems(resume))
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.only(bottom: 3),
+                              child: pw.Text(
+                                item,
+                                style: pw.TextStyle(fontSize: 9, color: muted),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 16),
+                if (resume.summary.trim().isNotEmpty)
+                  _creativeSection(
+                    title: 'Summary',
+                    lineColor: lineColor,
+                    child: pw.Text(resume.summary.trim()),
+                  ),
+                _creativeSection(
+                  title: 'Skills',
+                  lineColor: lineColor,
+                  child: _twoColumnBulletList(_skillsForDisplay(resume)),
+                ),
+                if (resume.visibleWorkExperiences.isNotEmpty)
+                  _creativeSection(
+                    title: 'Experience',
+                    lineColor: lineColor,
+                    child: pw.Column(
+                      children: [
+                        for (final item in resume.visibleWorkExperiences)
+                          _buildCreativeExperience(item),
+                      ],
+                    ),
+                  ),
+                if (resume.visibleEducation.isNotEmpty)
+                  _creativeSection(
+                    title: 'Education and Training',
+                    lineColor: lineColor,
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        for (final item in resume.visibleEducation)
+                          _buildCorporateEducation(item),
+                      ],
+                    ),
+                  ),
+                if (resume.visibleProjects.isNotEmpty)
+                  _creativeSection(
+                    title: 'Projects',
+                    lineColor: lineColor,
+                    child: pw.Column(
+                      children: [
+                        for (final item in resume.visibleProjects)
+                          _buildCompactProject(item),
+                      ],
+                    ),
+                  ),
+                for (final item in resume.visibleCustomSections)
+                  _creativeSection(
+                    title: item.title.ifEmpty('Custom Section'),
+                    lineColor: lineColor,
+                    child: pw.Text(item.content.trim()),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addCopperSerifTemplatePage(pw.Document document, ResumeData resume) {
+    final copper = PdfColor.fromHex('#E7A055');
+    final lineColor = PdfColor.fromHex('#D5D9DE');
+    final muted = PdfColor.fromHex('#6A7076');
+
+    document.addPage(
+      pw.MultiPage(
+        margin: const pw.EdgeInsets.fromLTRB(28, 28, 28, 28),
+        build: (context) => [
+          pw.Center(
+            child: pw.Text(
+              _displayName(resume).toUpperCase(),
+              style: pw.TextStyle(
+                fontSize: 25,
+                color: copper,
+                fontWeight: pw.FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          pw.SizedBox(height: 6),
+          pw.Center(
+            child: pw.Text(
+              _resumeContactItems(resume).join('   |   '),
+              textAlign: pw.TextAlign.center,
+              style: pw.TextStyle(fontSize: 9, color: muted),
+            ),
+          ),
+          pw.SizedBox(height: 18),
+          if (resume.summary.trim().isNotEmpty)
+            _centeredAccentSection(
+              title: 'Summary',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Text(
+                resume.summary.trim(),
+                textAlign: pw.TextAlign.center,
+              ),
+            ),
+          _centeredAccentSection(
+            title: 'Skills',
+            accentColor: copper,
+            lineColor: lineColor,
+            child: _twoColumnBulletList(_skillsForDisplay(resume)),
+          ),
+          if (resume.visibleWorkExperiences.isNotEmpty)
+            _centeredAccentSection(
+              title: 'Experience',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (final item in resume.visibleWorkExperiences)
+                    _buildMinimalExperience(item),
+                ],
+              ),
+            ),
+          if (resume.visibleEducation.isNotEmpty)
+            _centeredAccentSection(
+              title: 'Education and Training',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                children: [
+                  for (final item in resume.visibleEducation)
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.only(bottom: 8),
+                      child: pw.Column(
+                        children: [
+                          pw.Text(
+                            item.degree.ifEmpty('Degree'),
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                            textAlign: pw.TextAlign.center,
+                          ),
+                          pw.SizedBox(height: 2),
+                          pw.Text(
+                            [
+                              item.institution.trim(),
+                              item.year.trim(),
+                              item.score.trim(),
+                              item.details.trim(),
+                            ].where((part) => part.isNotEmpty).join('   |   '),
+                            textAlign: pw.TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          if (resume.visibleProjects.isNotEmpty)
+            _centeredAccentSection(
+              title: 'Projects',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (final item in resume.visibleProjects)
+                    _buildCompactProject(item),
+                ],
+              ),
+            ),
+          for (final item in resume.visibleCustomSections)
+            _centeredAccentSection(
+              title: item.title.ifEmpty('Custom Section'),
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Text(item.content.trim()),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _addSplitBannerTemplatePage(pw.Document document, ResumeData resume) {
+    final copper = PdfColor.fromHex('#EE9938');
+    final lineColor = PdfColor.fromHex('#D7DBE0');
+
+    document.addPage(
+      pw.MultiPage(
+        margin: const pw.EdgeInsets.fromLTRB(24, 22, 24, 28),
+        build: (context) => [
+          pw.Container(
+            color: copper,
+            padding: const pw.EdgeInsets.fromLTRB(22, 20, 22, 20),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Expanded(
+                  child: pw.Text(
+                    _displayName(resume).toUpperCase(),
+                    style: pw.TextStyle(
+                      color: PdfColors.white,
+                      fontSize: 24,
+                      fontWeight: pw.FontWeight.bold,
+                      height: 1.1,
+                    ),
                   ),
                 ),
-                pw.SizedBox(height: 6),
-                pw.Text(
-                  resume.jobTitle.trim().isEmpty
-                      ? resume.title
-                      : resume.jobTitle.trim(),
-                  style: pw.TextStyle(fontSize: 16, color: muted),
-                ),
-                pw.SizedBox(height: 8),
-                pw.Wrap(
-                  spacing: 12,
-                  runSpacing: 4,
+                pw.SizedBox(width: 16),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
-                    if (resume.email.trim().isNotEmpty)
-                      pw.Text(
-                        resume.email.trim(),
-                        style: pw.TextStyle(color: muted),
-                      ),
-                    if (resume.phone.trim().isNotEmpty)
-                      pw.Text(
-                        resume.phone.trim(),
-                        style: pw.TextStyle(color: muted),
-                      ),
-                    if (resume.location.trim().isNotEmpty)
-                      pw.Text(
-                        resume.location.trim(),
-                        style: pw.TextStyle(color: muted),
-                      ),
-                    if (resume.website.trim().isNotEmpty)
-                      pw.Text(
-                        resume.website.trim(),
-                        style: pw.TextStyle(color: muted),
-                      ),
-                    if (resume.githubLink.trim().isNotEmpty)
-                      pw.Text(
-                        resume.githubLink.trim(),
-                        style: pw.TextStyle(color: muted),
-                      ),
-                    if (resume.linkedinLink.trim().isNotEmpty)
-                      pw.Text(
-                        resume.linkedinLink.trim(),
-                        style: pw.TextStyle(color: muted),
+                    for (final item in _resumeContactItems(resume))
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(bottom: 3),
+                        child: pw.Text(
+                          item,
+                          style: const pw.TextStyle(
+                            color: PdfColors.white,
+                            fontSize: 9,
+                          ),
+                        ),
                       ),
                   ],
                 ),
               ],
             ),
           ),
-          if (resume.summary.trim().isNotEmpty) ...[
-            pw.SizedBox(height: 18),
-            _sectionHeading('Professional Summary', accent),
-            pw.Text(resume.summary.trim()),
-          ],
-          if (resume.visibleWorkExperiences.isNotEmpty) ...[
-            pw.SizedBox(height: 18),
-            _sectionHeading('Work Experience', accent),
-            ...resume.visibleWorkExperiences.map(_buildExperience),
-          ],
-          if (resume.visibleEducation.isNotEmpty) ...[
-            pw.SizedBox(height: 18),
-            _sectionHeading('Education', accent),
-            ...resume.visibleEducation.map(_buildEducation),
-          ],
-          if (resume.skills.isNotEmpty) ...[
-            pw.SizedBox(height: 18),
-            _sectionHeading('Skills', accent),
-            pw.Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final skill in resume.skills)
-                  pw.Container(
-                    padding: const pw.EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColor.fromInt(
-                        resume.template.tintColor.toARGB32(),
-                      ),
-                      borderRadius: pw.BorderRadius.circular(12),
-                    ),
-                    child: pw.Text(skill),
-                  ),
-              ],
+          pw.SizedBox(height: 16),
+          if (resume.summary.trim().isNotEmpty)
+            _splitBannerSection(
+              title: 'Summary',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Text(resume.summary.trim()),
             ),
-          ],
-          if (resume.visibleProjects.isNotEmpty) ...[
-            pw.SizedBox(height: 18),
-            _sectionHeading('Projects', accent),
-            ...resume.visibleProjects.map(_buildProject),
-          ],
-          if (resume.visibleCustomSections.isNotEmpty) ...[
-            pw.SizedBox(height: 18),
-            ...resume.visibleCustomSections.map(
-              (item) => _buildCustomSection(item, accent),
+          _splitBannerSection(
+            title: 'Skills',
+            accentColor: copper,
+            lineColor: lineColor,
+            child: _twoColumnBulletList(_skillsForDisplay(resume)),
+          ),
+          if (resume.visibleWorkExperiences.isNotEmpty)
+            _splitBannerSection(
+              title: 'Experience',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (final item in resume.visibleWorkExperiences)
+                    _buildMinimalExperience(item),
+                ],
+              ),
             ),
-          ],
+          if (resume.visibleEducation.isNotEmpty)
+            _splitBannerSection(
+              title: 'Education',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  for (final item in resume.visibleEducation)
+                    _buildCorporateEducation(item),
+                ],
+              ),
+            ),
+          if (resume.visibleProjects.isNotEmpty)
+            _splitBannerSection(
+              title: 'Projects',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (final item in resume.visibleProjects)
+                    _buildCompactProject(item),
+                ],
+              ),
+            ),
+          for (final item in resume.visibleCustomSections)
+            _splitBannerSection(
+              title: item.title.ifEmpty('Custom'),
+              accentColor: copper,
+              lineColor: lineColor,
+              child: pw.Text(item.content.trim()),
+            ),
+          pw.SizedBox(height: 8),
+          pw.Container(height: 3, color: copper),
         ],
       ),
     );
+  }
 
-    return document.save();
+  void _addMonogramSidebarTemplatePage(
+    pw.Document document,
+    ResumeData resume,
+  ) {
+    final copper = PdfColor.fromHex('#E39A3A');
+    final dark = PdfColor.fromHex('#17181A');
+    final lineColor = PdfColor.fromHex('#D5D9DE');
+    final muted = PdfColor.fromHex('#666B71');
+
+    document.addPage(
+      pw.MultiPage(
+        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 28),
+        build: (context) => [
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Container(
+                width: 100,
+                padding: const pw.EdgeInsets.only(right: 16),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border(
+                    right: pw.BorderSide(color: lineColor, width: 1),
+                  ),
+                ),
+                child: pw.Column(
+                  children: [
+                    pw.Container(
+                      width: 48,
+                      height: 48,
+                      alignment: pw.Alignment.center,
+                      color: dark,
+                      child: pw.Text(
+                        _resumeInitials(resume),
+                        style: pw.TextStyle(
+                          color: copper,
+                          fontSize: 22,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    pw.SizedBox(height: 12),
+                    pw.Text(
+                      _displayName(resume),
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(
+                        color: copper,
+                        fontSize: 15,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 10),
+                    for (final item in _resumeContactItems(resume))
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(bottom: 4),
+                        child: pw.Text(
+                          item,
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(fontSize: 8.5, color: muted),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(width: 16),
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    if (resume.summary.trim().isNotEmpty)
+                      _monogramSidebarSection(
+                        title: 'Summary',
+                        child: pw.Text(resume.summary.trim()),
+                      ),
+                    _monogramSidebarSection(
+                      title: 'Skills',
+                      child: _twoColumnBulletList(_skillsForDisplay(resume)),
+                    ),
+                    if (resume.visibleWorkExperiences.isNotEmpty)
+                      _monogramSidebarSection(
+                        title: 'Experience',
+                        child: pw.Column(
+                          children: [
+                            for (final item in resume.visibleWorkExperiences)
+                              _buildMinimalExperience(item),
+                          ],
+                        ),
+                      ),
+                    if (resume.visibleEducation.isNotEmpty)
+                      _monogramSidebarSection(
+                        title: 'Education and Training',
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            for (final item in resume.visibleEducation)
+                              _buildCorporateEducation(item),
+                          ],
+                        ),
+                      ),
+                    if (resume.visibleProjects.isNotEmpty)
+                      _monogramSidebarSection(
+                        title: 'Projects',
+                        child: pw.Column(
+                          children: [
+                            for (final item in resume.visibleProjects)
+                              _buildCompactProject(item),
+                          ],
+                        ),
+                      ),
+                    for (final item in resume.visibleCustomSections)
+                      _monogramSidebarSection(
+                        title: item.title.ifEmpty('Custom Section'),
+                        child: pw.Text(item.content.trim()),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _displayName(ResumeData resume) =>
+      resume.fullName.trim().isEmpty ? 'Your Name' : resume.fullName.trim();
+
+  String _resumeInitials(ResumeData resume) {
+    final words = _displayName(
+      resume,
+    ).split(RegExp(r'\s+')).where((part) => part.isNotEmpty).take(2).toList();
+    if (words.isEmpty) {
+      return 'DA';
+    }
+    return words.map((part) => part[0].toUpperCase()).join();
+  }
+
+  List<String> _resumeContactItems(ResumeData resume) {
+    return [
+      resume.location.trim(),
+      resume.email.trim(),
+      resume.phone.trim(),
+      resume.website.trim(),
+      resume.githubLink.trim(),
+      resume.linkedinLink.trim(),
+    ].where((item) => item.isNotEmpty).toList();
+  }
+
+  List<String> _skillsForDisplay(ResumeData resume) {
+    if (resume.skills.isNotEmpty) {
+      return resume.skills;
+    }
+    return const ['Communication', 'Collaboration', 'Documentation'];
+  }
+
+  pw.Widget _corporateSection({
+    required String title,
+    required PdfColor lineColor,
+    required pw.Widget child,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 16),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            title.toUpperCase(),
+            style: pw.TextStyle(
+              fontSize: 11,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColor.fromHex('#50555C'),
+            ),
+          ),
+          pw.SizedBox(height: 6),
+          child,
+          pw.SizedBox(height: 10),
+          pw.Container(height: 1, color: lineColor),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _minimalSection({
+    required String title,
+    required PdfColor lineColor,
+    required pw.Widget child,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 16),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Text(
+                title,
+                style: pw.TextStyle(
+                  fontSize: 12,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(width: 8),
+              pw.Expanded(child: pw.Container(height: 1, color: lineColor)),
+            ],
+          ),
+          pw.SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _centeredAccentSection({
+    required String title,
+    required PdfColor accentColor,
+    required PdfColor lineColor,
+    required pw.Widget child,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 16),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        children: [
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Expanded(child: pw.Container(height: 1, color: lineColor)),
+              pw.SizedBox(width: 8),
+              pw.Text(
+                title,
+                style: pw.TextStyle(
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                  color: accentColor,
+                ),
+              ),
+              pw.SizedBox(width: 8),
+              pw.Expanded(child: pw.Container(height: 1, color: lineColor)),
+            ],
+          ),
+          pw.SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _splitBannerSection({
+    required String title,
+    required PdfColor accentColor,
+    required PdfColor lineColor,
+    required pw.Widget child,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 14),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Container(
+            width: 78,
+            padding: const pw.EdgeInsets.only(top: 2, right: 10),
+            child: pw.Text(
+              title.toUpperCase(),
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: accentColor,
+              ),
+            ),
+          ),
+          pw.Container(width: 1, height: 42, color: lineColor),
+          pw.SizedBox(width: 12),
+          pw.Expanded(child: child),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _creativeSection({
+    required String title,
+    required PdfColor lineColor,
+    required pw.Widget child,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 14),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Container(
+            width: 104,
+            padding: const pw.EdgeInsets.only(right: 12, top: 2),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Container(
+                  height: 3,
+                  width: 86,
+                  color: PdfColor.fromHex('#353A40'),
+                ),
+                pw.SizedBox(height: 6),
+                pw.Text(
+                  title.toUpperCase(),
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                child,
+                pw.SizedBox(height: 8),
+                pw.Container(height: 1, color: lineColor),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _monogramSidebarSection({
+    required String title,
+    required pw.Widget child,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 14),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            title.toUpperCase(),
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 6),
+          child,
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _twoColumnBulletList(List<String> items) {
+    final midpoint = (items.length / 2).ceil();
+    final left = items.take(midpoint).toList();
+    final right = items.skip(midpoint).toList();
+
+    pw.Widget buildColumn(List<String> columnItems) {
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          for (final item in columnItems)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(bottom: 3),
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('•  '),
+                  pw.Expanded(child: pw.Text(item)),
+                ],
+              ),
+            ),
+        ],
+      );
+    }
+
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Expanded(child: buildColumn(left)),
+        pw.SizedBox(width: 20),
+        pw.Expanded(child: buildColumn(right)),
+      ],
+    );
+  }
+
+  pw.Widget _buildCorporateExperience(WorkExperience item) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 10),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.RichText(
+                  text: pw.TextSpan(
+                    children: [
+                      pw.TextSpan(
+                        text: item.role.ifEmpty('Role'),
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.TextSpan(
+                        text: ' / ${item.company.ifEmpty('Company')}',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (item.startDate.trim().isNotEmpty ||
+                  item.endDate.trim().isNotEmpty)
+                pw.Text(
+                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
+                  style: pw.TextStyle(
+                    color: PdfColor.fromHex('#666B71'),
+                    fontStyle: pw.FontStyle.italic,
+                  ),
+                ),
+            ],
+          ),
+          if (item.description.trim().isNotEmpty) ...[
+            pw.SizedBox(height: 4),
+            pw.Text(item.description.trim()),
+          ],
+          for (final bullet in item.bullets)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 3),
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('•  '),
+                  pw.Expanded(child: pw.Text(bullet)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildMinimalExperience(WorkExperience item) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 12),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            item.company.ifEmpty('Company'),
+            style: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColor.fromHex('#4B4F55'),
+            ),
+          ),
+          pw.Text(
+            '${item.role.ifEmpty('Role')}${item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty ? '  ${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}' : ''}',
+            style: pw.TextStyle(
+              color: PdfColor.fromHex('#666B71'),
+              fontStyle: pw.FontStyle.italic,
+            ),
+          ),
+          if (item.description.trim().isNotEmpty) ...[
+            pw.SizedBox(height: 4),
+            pw.Text(item.description.trim()),
+          ],
+          for (final bullet in item.bullets)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 3),
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('•  '),
+                  pw.Expanded(child: pw.Text(bullet)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildCreativeExperience(WorkExperience item) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 10),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            '${item.role.ifEmpty('Role').toUpperCase()} ${item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty ? '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}' : ''}',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
+          pw.Text(
+            item.company.ifEmpty('Company'),
+            style: pw.TextStyle(
+              color: PdfColor.fromHex('#555B61'),
+              fontStyle: pw.FontStyle.italic,
+            ),
+          ),
+          if (item.description.trim().isNotEmpty) ...[
+            pw.SizedBox(height: 4),
+            pw.Text(item.description.trim()),
+          ],
+          for (final bullet in item.bullets)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 3),
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('•  '),
+                  pw.Expanded(child: pw.Text(bullet)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildCorporateEducation(EducationItem item) {
+    final details = [
+      item.institution.trim(),
+      item.year.trim(),
+      item.score.trim(),
+      item.details.trim(),
+    ].where((part) => part.isNotEmpty).join('  ');
+
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 8),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            item.degree.ifEmpty('Degree'),
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
+          if (details.isNotEmpty) pw.Text(details),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildCompactProject(ProjectItem item) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 8),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            item.title.ifEmpty('Project'),
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
+          if (item.overview.trim().isNotEmpty) pw.Text(item.overview.trim()),
+          if (item.impact.trim().isNotEmpty) pw.Text(item.impact.trim()),
+        ],
+      ),
+    );
   }
 
   Future<File> savePdfToDevice(ResumeData resume) async {
@@ -780,123 +1795,6 @@ class ResumePdfService {
       onLayout: (_) async => bytes,
       name: '${_sanitizeFileName(resume.title)}.pdf',
       format: PdfPageFormat.a4,
-    );
-  }
-
-  pw.Widget _sectionHeading(String title, PdfColor accent) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 8),
-      child: pw.Text(
-        title,
-        style: pw.TextStyle(
-          color: accent,
-          fontWeight: pw.FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
-    );
-  }
-
-  pw.Widget _buildExperience(WorkExperience item) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 12),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Expanded(
-                child: pw.Text(
-                  '${item.role.trim().isEmpty ? 'Role' : item.role.trim()} · ${item.company.trim().isEmpty ? 'Company' : item.company.trim()}',
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                ),
-              ),
-              if (item.startDate.trim().isNotEmpty ||
-                  item.endDate.trim().isNotEmpty)
-                pw.Text('${item.startDate} - ${item.endDate}'),
-            ],
-          ),
-          if (item.description.trim().isNotEmpty) ...[
-            pw.SizedBox(height: 4),
-            pw.Text(item.description.trim()),
-          ],
-          if (item.bullets.isNotEmpty) ...[
-            pw.SizedBox(height: 6),
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                for (final bullet in item.bullets.take(4))
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.only(bottom: 3),
-                    child: pw.Row(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text('• '),
-                        pw.Expanded(child: pw.Text(bullet)),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildEducation(EducationItem item) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 10),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            '${item.degree.trim().isEmpty ? 'Degree' : item.degree.trim()} · ${item.institution.trim().isEmpty ? 'Institution' : item.institution.trim()}',
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-          ),
-          if (item.year.trim().isNotEmpty ||
-              item.score.trim().isNotEmpty ||
-              item.details.trim().isNotEmpty)
-            pw.Text(
-              [
-                item.year.trim(),
-                item.score.trim(),
-                item.details.trim(),
-              ].where((part) => part.isNotEmpty).join(' · '),
-            ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildProject(ProjectItem item) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 10),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            item.title.trim().isEmpty ? 'Project Title' : item.title.trim(),
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-          ),
-          if (item.overview.trim().isNotEmpty) pw.Text(item.overview.trim()),
-          if (item.impact.trim().isNotEmpty) pw.Text(item.impact.trim()),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildCustomSection(CustomSectionItem item, PdfColor accent) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 12),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          _sectionHeading(item.title.ifEmpty('Custom Section'), accent),
-          if (item.content.trim().isNotEmpty) pw.Text(item.content.trim()),
-        ],
-      ),
     );
   }
 

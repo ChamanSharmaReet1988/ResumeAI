@@ -17,15 +17,39 @@ class ResumeBuilderScreen extends StatefulWidget {
 }
 
 class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
+  static const Duration _stepScrollAnimationDuration = Duration(
+    milliseconds: 280,
+  );
+  static const Duration _stepPageAnimationDuration = Duration(
+    milliseconds: 340,
+  );
+  static const Curve _stepAnimationCurve = Curves.easeInOutCubicEmphasized;
+
   final _skillController = TextEditingController();
   final _summaryFocusNode = FocusNode();
-  final _stepScrollController = ScrollController();
+  late final PageController _pageController;
+  final Map<int, ScrollController> _stepScrollControllers = {};
   final Map<String, FocusNode> _extendedKeyboardHideFocusNodes = {};
+  bool _didInitPageController = false;
+  double _horizontalStepDragDistance = 0;
 
   @override
   void initState() {
     super.initState();
     _summaryFocusNode.addListener(_handleSummaryFocusChange);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didInitPageController) {
+      return;
+    }
+
+    _pageController = PageController(
+      initialPage: context.read<ResumeEditorViewModel>().currentStep,
+    );
+    _didInitPageController = true;
   }
 
   void _handleSummaryFocusChange() {
@@ -56,7 +80,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   @override
   void dispose() {
     _skillController.dispose();
-    _stepScrollController.dispose();
+    _pageController.dispose();
+    for (final controller in _stepScrollControllers.values) {
+      controller.dispose();
+    }
     _summaryFocusNode
       ..removeListener(_handleSummaryFocusChange)
       ..dispose();
@@ -68,14 +95,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     super.dispose();
   }
 
-  Future<void> _saveResume() async {
+  Future<void> _openPreview() async {
     final viewModel = context.read<ResumeEditorViewModel>();
     await viewModel.saveResume();
     if (!mounted) {
       return;
     }
 
-    await Navigator.of(context).push(
+    final targetStep = await Navigator.of(context).push<int>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: viewModel,
@@ -83,6 +110,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         ),
       ),
     );
+
+    if (!mounted || targetStep == null) {
+      return;
+    }
+
+    _goToStep(targetStep);
   }
 
   Future<void> _downloadResume() async {
@@ -563,24 +596,42 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
-  void _scrollToStepTop() {
+  ScrollController _scrollControllerForStep(int step) {
+    return _stepScrollControllers.putIfAbsent(step, ScrollController.new);
+  }
+
+  void _scrollToStepTop([int? step]) {
+    final targetStep =
+        step ?? context.read<ResumeEditorViewModel>().currentStep;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_stepScrollController.hasClients) {
+      final controller = _stepScrollControllers[targetStep];
+      if (!mounted || controller == null || !controller.hasClients) {
         return;
       }
 
-      _stepScrollController.animateTo(
+      controller.animateTo(
         0,
-        duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
+        duration: _stepScrollAnimationDuration,
+        curve: _stepAnimationCurve,
       );
     });
   }
 
   void _goToStep(int step) {
     FocusScope.of(context).unfocus();
-    context.read<ResumeEditorViewModel>().setStep(step);
-    _scrollToStepTop();
+    final normalizedStep = step.clamp(
+      0,
+      ResumeEditorViewModel.stepTitles.length - 1,
+    );
+    context.read<ResumeEditorViewModel>().setStep(normalizedStep);
+    _scrollToStepTop(normalizedStep);
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        normalizedStep,
+        duration: _stepPageAnimationDuration,
+        curve: _stepAnimationCurve,
+      );
+    }
   }
 
   Future<void> _goToNextStep() async {
@@ -596,6 +647,43 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   void _goToPreviousStep() {
     final viewModel = context.read<ResumeEditorViewModel>();
     _goToStep(viewModel.currentStep - 1);
+  }
+
+  void _handleStepPointerDown(PointerDownEvent event) {
+    _horizontalStepDragDistance = 0;
+  }
+
+  void _handleStepPointerMove(PointerMoveEvent event) {
+    _horizontalStepDragDistance += event.delta.dx;
+  }
+
+  void _handleStepPointerUp(PointerUpEvent event) {
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final currentStep = viewModel.currentStep;
+    final maxStep = ResumeEditorViewModel.stepTitles.length - 1;
+
+    if (_horizontalStepDragDistance.abs() < 60) {
+      _horizontalStepDragDistance = 0;
+      return;
+    }
+
+    if (_horizontalStepDragDistance < 0 && currentStep < maxStep) {
+      _horizontalStepDragDistance = 0;
+      _goToStep(currentStep + 1);
+      return;
+    }
+
+    if (_horizontalStepDragDistance > 0 && currentStep > 0) {
+      _horizontalStepDragDistance = 0;
+      _goToStep(currentStep - 1);
+      return;
+    }
+
+    _horizontalStepDragDistance = 0;
+  }
+
+  void _handleStepPointerCancel(PointerCancelEvent event) {
+    _horizontalStepDragDistance = 0;
   }
 
   Future<void> _promptForBullet(int index) async {
@@ -629,7 +717,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   Widget build(BuildContext context) {
     return Consumer<ResumeEditorViewModel>(
       builder: (context, viewModel, _) {
-        final currentTitle = viewModel.resume.title.ifBlank('Resume Builder');
+        final currentTitle = viewModel.resume.title.ifBlank(
+          ResumeData.defaultTitle,
+        );
         final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
         final showKeyboardHideButton =
             keyboardInset > 0 &&
@@ -650,26 +740,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             leadingWidth: 40,
             titleSpacing: 8,
             title: Text(currentTitle, style: titleStyle),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: TextButton.icon(
-                  onPressed: viewModel.isBusy ? null : _saveResume,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  icon: const Icon(Icons.save_outlined, size: 22),
-                  label: const Text('Save'),
-                ),
-              ),
-            ],
           ),
           body: SafeArea(
             child: Stack(
@@ -688,26 +758,46 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           final main = Column(
                             children: [
                               Expanded(
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 260),
-                                  switchInCurve: Curves.easeOutCubic,
-                                  switchOutCurve: Curves.easeInCubic,
-                                  child: SingleChildScrollView(
-                                    controller: _stepScrollController,
-                                    key: ValueKey(viewModel.currentStep),
-                                    keyboardDismissBehavior:
-                                        ScrollViewKeyboardDismissBehavior
-                                            .onDrag,
-                                    padding: EdgeInsets.fromLTRB(
-                                      20,
-                                      20,
-                                      20,
-                                      24 + keyboardInset,
-                                    ),
-                                    child: _buildStepContent(
-                                      context,
-                                      viewModel,
-                                    ),
+                                child: Listener(
+                                  key: const Key('resume-step-pages'),
+                                  onPointerDown: _handleStepPointerDown,
+                                  onPointerMove: _handleStepPointerMove,
+                                  onPointerUp: _handleStepPointerUp,
+                                  onPointerCancel: _handleStepPointerCancel,
+                                  child: PageView.builder(
+                                    controller: _pageController,
+                                    allowImplicitScrolling: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount:
+                                        ResumeEditorViewModel.stepTitles.length,
+                                    onPageChanged: (index) {
+                                      FocusScope.of(context).unfocus();
+                                      if (viewModel.currentStep != index) {
+                                        viewModel.setStep(index);
+                                      }
+                                    },
+                                    itemBuilder: (context, index) {
+                                      return SingleChildScrollView(
+                                        key: Key('step-scroll-$index'),
+                                        controller: _scrollControllerForStep(
+                                          index,
+                                        ),
+                                        keyboardDismissBehavior:
+                                            ScrollViewKeyboardDismissBehavior
+                                                .onDrag,
+                                        padding: EdgeInsets.fromLTRB(
+                                          20,
+                                          20,
+                                          20,
+                                          24 + keyboardInset,
+                                        ),
+                                        child: _buildStepContentForStep(
+                                          index,
+                                          viewModel,
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -724,12 +814,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                                 .stepTitles
                                                 .length -
                                             1
-                                    ? _saveResume
-                                    : viewModel.currentStep == 0 &&
-                                          !viewModel
-                                              .resume
-                                              .hasRequiredPersonalInfo
-                                    ? null
+                                    ? _openPreview
                                     : () => _goToNextStep(),
                               ),
                             ],
@@ -788,11 +873,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-  Widget _buildStepContent(
-    BuildContext context,
-    ResumeEditorViewModel viewModel,
-  ) {
-    return switch (viewModel.currentStep) {
+  Widget _buildStepContentForStep(int step, ResumeEditorViewModel viewModel) {
+    return switch (step) {
       0 => _buildPersonalStep(viewModel),
       1 => _buildWorkStep(viewModel),
       2 => _buildEducationStep(viewModel),
@@ -811,7 +893,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         children: [
           _SyncTextField(
             label: 'Resume title',
-            value: viewModel.resume.title,
+            value: viewModel.resume.title == ResumeData.defaultTitle
+                ? ''
+                : viewModel.resume.title,
             onChanged: (value) => viewModel.updateResume(
               (resume) => resume.copyWith(title: value),
             ),
@@ -1522,6 +1606,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Text(
@@ -1680,8 +1765,8 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
       Scrollable.ensureVisible(
         chipContext,
         alignment: 0.5,
-        duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
+        duration: _ResumeBuilderScreenState._stepScrollAnimationDuration,
+        curve: _ResumeBuilderScreenState._stepAnimationCurve,
       );
     });
   }
@@ -1692,57 +1777,66 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
         (widget.currentStep + 1) / ResumeEditorViewModel.stepTitles.length;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.only(top: 12),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 8,
-                  borderRadius: BorderRadius.circular(99),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '${widget.currentStep + 1}/${ResumeEditorViewModel.stepTitles.length}',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Text(
+                  '${widget.currentStep + 1}/${ResumeEditorViewModel.stepTitles.length}',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
-          SingleChildScrollView(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: ResumeEditorViewModel.stepTitles.asMap().entries.map((
-                entry,
-              ) {
-                final index = entry.key;
-                final label = entry.value;
-                final selected = index == widget.currentStep;
-                return Padding(
-                  key: _chipKeyFor(index),
-                  padding: EdgeInsets.only(
-                    right: index == ResumeEditorViewModel.stepTitles.length - 1
-                        ? 0
-                        : 10,
-                  ),
-                  child: ChoiceChip(
-                    label: Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w400,
-                      ),
+          SizedBox(
+            width: double.infinity,
+            child: SingleChildScrollView(
+              key: const Key('step-progress-scroll'),
+              controller: _scrollController,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: ResumeEditorViewModel.stepTitles.asMap().entries.map((
+                  entry,
+                ) {
+                  final index = entry.key;
+                  final label = entry.value;
+                  final selected = index == widget.currentStep;
+                  return Padding(
+                    key: _chipKeyFor(index),
+                    padding: EdgeInsets.only(
+                      right:
+                          index == ResumeEditorViewModel.stepTitles.length - 1
+                          ? 0
+                          : 10,
                     ),
-                    selected: selected,
-                    onSelected: (_) => widget.onSelectStep(index),
-                  ),
-                );
-              }).toList(),
+                    child: ChoiceChip(
+                      label: Text(
+                        label,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      selected: selected,
+                      onSelected: (_) => widget.onSelectStep(index),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ],
@@ -1789,7 +1883,7 @@ class _BottomControls extends StatelessWidget {
           Expanded(
             child: FilledButton(
               onPressed: onNext,
-              child: Text(isLastStep ? 'Save & Preview' : 'Continue'),
+              child: Text(isLastStep ? 'Preview' : 'Continue'),
             ),
           ),
         ],

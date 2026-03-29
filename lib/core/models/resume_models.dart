@@ -1,38 +1,75 @@
 import 'package:flutter/material.dart';
 
-enum ResumeTemplate { modern, minimal, corporate, creative }
+enum ResumeTemplate {
+  modern,
+  minimal,
+  corporate,
+  creative,
+  copperSerif,
+  splitBanner,
+  monogramSidebar,
+}
+
+const availableResumeTemplates = <ResumeTemplate>[
+  ResumeTemplate.corporate,
+  ResumeTemplate.minimal,
+  ResumeTemplate.creative,
+  ResumeTemplate.copperSerif,
+  ResumeTemplate.splitBanner,
+  ResumeTemplate.monogramSidebar,
+];
 
 extension ResumeTemplateX on ResumeTemplate {
-  String get label => switch (this) {
-    ResumeTemplate.modern => 'Modern',
-    ResumeTemplate.minimal => 'Minimal',
-    ResumeTemplate.corporate => 'Corporate',
-    ResumeTemplate.creative => 'Creative',
+  ResumeTemplate get userFacingTemplate => switch (this) {
+    ResumeTemplate.modern => ResumeTemplate.corporate,
+    _ => this,
   };
 
-  String get description => switch (this) {
-    ResumeTemplate.modern =>
-      'Bold highlights and compact cards for product, design, and tech roles.',
+  String get label => switch (userFacingTemplate) {
+    ResumeTemplate.minimal => 'Centered Classic',
+    ResumeTemplate.corporate => 'Dark Header',
+    ResumeTemplate.creative => 'Profile Sidebar',
+    ResumeTemplate.copperSerif => 'Copper Serif',
+    ResumeTemplate.splitBanner => 'Split Banner',
+    ResumeTemplate.monogramSidebar => 'Monogram Sidebar',
+    ResumeTemplate.modern => 'Dark Header',
+  };
+
+  String get description => switch (userFacingTemplate) {
     ResumeTemplate.minimal =>
-      'Quiet, text-first layout for consultants, analysts, and interns.',
+      'Centered name block with a timeless layout and clean section dividers.',
     ResumeTemplate.corporate =>
-      'Structured hierarchy for enterprise, operations, and leadership roles.',
+      'Dark top header with a strong structured layout and compact sections.',
     ResumeTemplate.creative =>
-      'Expressive blocks and accent color for storytellers and makers.',
+      'Profile-led layout with bold side accents and editorial-style sections.',
+    ResumeTemplate.copperSerif =>
+      'Centered name styling with warm copper section accents and elegant dividers.',
+    ResumeTemplate.splitBanner =>
+      'Bold copper banner header with a structured editorial layout underneath.',
+    ResumeTemplate.monogramSidebar =>
+      'Monogram-led sidebar with contact details on the left and content on the right.',
+    ResumeTemplate.modern =>
+      'Dark top header with a strong structured layout and compact sections.',
   };
 
-  Color get accentColor => switch (this) {
-    ResumeTemplate.modern => const Color(0xFF2563EB),
+  Color get accentColor => switch (userFacingTemplate) {
     ResumeTemplate.minimal => const Color(0xFF111827),
     ResumeTemplate.corporate => const Color(0xFF0F766E),
     ResumeTemplate.creative => const Color(0xFFE85D04),
+    ResumeTemplate.copperSerif => const Color(0xFFE7A055),
+    ResumeTemplate.splitBanner => const Color(0xFFEE9938),
+    ResumeTemplate.monogramSidebar => const Color(0xFFE39A3A),
+    ResumeTemplate.modern => const Color(0xFF0F766E),
   };
 
-  Color get tintColor => switch (this) {
-    ResumeTemplate.modern => const Color(0xFFE7F0FF),
+  Color get tintColor => switch (userFacingTemplate) {
     ResumeTemplate.minimal => const Color(0xFFF3F4F6),
     ResumeTemplate.corporate => const Color(0xFFE4FBF6),
     ResumeTemplate.creative => const Color(0xFFFFE9D8),
+    ResumeTemplate.copperSerif => const Color(0xFFFFF4E9),
+    ResumeTemplate.splitBanner => const Color(0xFFFFF0E0),
+    ResumeTemplate.monogramSidebar => const Color(0xFFFFF3E3),
+    ResumeTemplate.modern => const Color(0xFFE4FBF6),
   };
 }
 
@@ -96,7 +133,7 @@ class ResumeData {
       summary: json['summary'] as String? ?? '',
       template: ResumeTemplate.values.firstWhere(
         (value) => value.name == json['template'],
-        orElse: () => ResumeTemplate.modern,
+        orElse: () => ResumeTemplate.corporate,
       ),
       workExperiences: (json['workExperiences'] as List<dynamic>? ?? [])
           .map(

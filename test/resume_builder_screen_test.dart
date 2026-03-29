@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/builder/resume_builder_screen.dart';
+import 'package:resume_app/features/builder/resume_preview_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
 
 class _FakeResumeRepository implements ResumeRepository {
@@ -68,6 +69,8 @@ void main() {
 
     expect(viewModel.resume.skills.length, ResumeEditorViewModel.maxSkills);
     expect(viewModel.resume.skills, isNot(contains('Overflow Skill')));
+
+    viewModel.dispose();
   });
 
   Future<void> pumpBuilder(
@@ -79,9 +82,26 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      ChangeNotifierProvider<ResumeEditorViewModel>.value(
-        value: viewModel,
+      ChangeNotifierProvider<ResumeEditorViewModel>(
+        create: (_) => viewModel,
         child: const MaterialApp(home: ResumeBuilderScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> pumpPreview(
+    WidgetTester tester, {
+    Size size = const Size(1440, 1200),
+  }) async {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<ResumeEditorViewModel>(
+        create: (_) => viewModel,
+        child: const MaterialApp(home: ResumePreviewScreen()),
       ),
     );
     await tester.pumpAndSettle();
@@ -374,19 +394,132 @@ void main() {
     expect(find.text('Second project'), findsWidgets);
   });
 
-  testWidgets('save opens the separate preview screen with ats score', (
-    tester,
-  ) async {
+  testWidgets('save opens the separate preview screen', (tester) async {
     viewModel.setStep(5);
 
     await pumpBuilder(tester);
 
-    await tester.tap(find.text('Save'));
+    expect(find.text('Save'), findsNothing);
+
+    await tester.tap(find.text('Preview'));
     await tester.pump();
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    expect(find.text('Resume preview'), findsOneWidget);
+    expect(find.text('My Resume'), findsWidgets);
+    expect(find.byKey(const Key('resume-pdf-preview')), findsOneWidget);
+    expect(find.text('ATS score'), findsNothing);
+  });
+
+  testWidgets('preview screen menu shows actions and can choose template', (
+    tester,
+  ) async {
+    await pumpPreview(tester);
+
+    await tester.tap(find.byTooltip('Menu'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Choose template'), findsOneWidget);
     expect(find.text('ATS score'), findsOneWidget);
+    expect(find.text('Download PDF'), findsOneWidget);
+    expect(find.text('Share resume'), findsOneWidget);
+    expect(find.text('Print'), findsOneWidget);
+
+    await tester.tap(find.text('Choose template'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('template-grid')), findsOneWidget);
+    expect(find.text('Choose template'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('template-image-centered-classic')));
+    await tester.pump();
+    await tester.pumpAndSettle(const Duration(milliseconds: 600));
+
+    expect(viewModel.resume.template, ResumeTemplate.minimal);
+  });
+
+  testWidgets('preview back returns to the home screen instead of builder', (
+    tester,
+  ) async {
+    viewModel.setStep(5);
+    addTearDown(viewModel.dispose);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<ResumeEditorViewModel>.value(
+        value: viewModel,
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: Center(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ResumeBuilderScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text('Home screen'),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home screen'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Preview'));
+    await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    expect(find.byKey(const Key('resume-pdf-preview')), findsOneWidget);
+    expect(find.text('ATS score'), findsNothing);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Home screen'), findsOneWidget);
+    expect(find.text('ATS score'), findsNothing);
+  });
+
+  testWidgets('increase ATS returns to the recommended builder category', (
+    tester,
+  ) async {
+    viewModel.setStep(5);
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        summary:
+            'Impact-focused Flutter developer with strong delivery ownership, cross-functional collaboration, and measurable product outcomes across fast-moving teams.',
+      ),
+    );
+
+    await pumpBuilder(tester);
+
+    await tester.tap(find.text('Preview'));
+    await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    expect(find.text('Best next update: Work Experience'), findsNothing);
+
+    await tester.tap(find.byTooltip('Menu'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('ATS score'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Best next update: Work Experience'), findsOneWidget);
+
+    await tester.tap(find.text('Increase ATS in Work Experience'));
+    await tester.pumpAndSettle();
+
+    expect(viewModel.currentStep, 1);
+    expect(find.text('Work experience'), findsOneWidget);
+    expect(find.text('ATS score'), findsNothing);
   });
 
   testWidgets('continue scrolls the next category to the top', (tester) async {
@@ -394,29 +527,55 @@ void main() {
 
     await pumpBuilder(tester, size: const Size(800, 700));
 
-    final verticalScrollable = find
-        .byWidgetPredicate(
-          (widget) =>
-              widget is SingleChildScrollView &&
-              widget.scrollDirection == Axis.vertical,
-        )
-        .first;
+    final verticalScrollable = find.byKey(const Key('step-scroll-0'));
     final verticalScrollView = tester.widget<SingleChildScrollView>(
       verticalScrollable,
     );
-    final verticalScrollController = verticalScrollView.controller!;
+    final currentStepScrollController = verticalScrollView.controller!;
 
     await tester.drag(verticalScrollable, const Offset(0, -500));
     await tester.pumpAndSettle();
 
-    expect(verticalScrollController.offset, greaterThan(0));
+    expect(currentStepScrollController.offset, greaterThan(0));
 
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
+    final nextStepScrollView = tester.widget<SingleChildScrollView>(
+      find.byKey(const Key('step-scroll-1')),
+    );
+    final nextStepScrollController = nextStepScrollView.controller!;
+
     expect(viewModel.currentStep, 1);
-    expect(verticalScrollController.offset, 0);
+    expect(nextStepScrollController.offset, 0);
   });
+
+  testWidgets(
+    'personal info continue stays enabled and blank title saves as untitled',
+    (tester) async {
+      viewModel.dispose();
+      repository = _FakeResumeRepository();
+      viewModel = ResumeEditorViewModel(
+        repository: repository,
+        aiService: LocalAiResumeService(),
+        pdfService: ResumePdfService(),
+        seedResume: ResumeData.empty(template: ResumeTemplate.modern),
+      );
+      viewModel.setStep(0);
+
+      await pumpBuilder(tester, size: const Size(800, 700));
+
+      final titleField = tester.widget<TextField>(find.byType(TextField).first);
+      expect(titleField.controller?.text, isEmpty);
+
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+
+      expect(viewModel.currentStep, 1);
+      expect(viewModel.resume.title, ResumeData.defaultTitle);
+      expect(repository.savedResumes.last.title, ResumeData.defaultTitle);
+    },
+  );
 
   testWidgets('selected category chip scrolls into view on continue', (
     tester,
@@ -444,6 +603,24 @@ void main() {
     expect(horizontalScrollController.offset, greaterThan(0));
   });
 
+  testWidgets('edit screen swipes horizontally between categories', (
+    tester,
+  ) async {
+    viewModel.setStep(0);
+
+    await pumpBuilder(tester, size: const Size(520, 700));
+
+    await tester.fling(
+      find.byKey(const Key('resume-step-pages')),
+      const Offset(-600, 0),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(viewModel.currentStep, 1);
+    expect(find.text('Work experience'), findsOneWidget);
+  });
+
   testWidgets('continue saves the current draft before moving on', (
     tester,
   ) async {
@@ -460,5 +637,19 @@ void main() {
     expect(viewModel.currentStep, 1);
     expect(repository.savedResumes, isNotEmpty);
     expect(repository.savedResumes.last.fullName, 'Saved Name');
+  });
+
+  testWidgets('editing a field auto-saves the draft', (tester) async {
+    viewModel.setStep(0);
+
+    await pumpBuilder(tester);
+
+    await tester.enterText(find.byType(TextField).at(1), 'Auto Saved Name');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump();
+
+    expect(repository.savedResumes, isNotEmpty);
+    expect(repository.savedResumes.last.fullName, 'Auto Saved Name');
   });
 }

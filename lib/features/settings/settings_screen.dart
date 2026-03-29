@@ -83,11 +83,12 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<ResumeTemplate>(
-                        initialValue: library.defaultTemplate,
+                        initialValue:
+                            library.defaultTemplate.userFacingTemplate,
                         decoration: const InputDecoration(
                           labelText: 'Template style',
                         ),
-                        items: ResumeTemplate.values.map((template) {
+                        items: availableResumeTemplates.map((template) {
                           return DropdownMenuItem(
                             value: template,
                             child: Text(template.label),

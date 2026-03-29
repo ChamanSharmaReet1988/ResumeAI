@@ -8,6 +8,7 @@ import '../../core/models/resume_models.dart';
 import '../../core/services/resume_services.dart';
 import '../ai/ai_assistance_screen.dart';
 import '../builder/resume_builder_screen.dart';
+import '../builder/resume_preview_screen.dart';
 import '../cover_letters/cover_letter_editor_screen.dart';
 import '../home/home_screen.dart';
 import '../settings/settings_screen.dart';
@@ -59,6 +60,50 @@ class _AppShellState extends State<AppShell> {
 
     if (!mounted) {
       return;
+    }
+
+    await library.loadResumes();
+  }
+
+  Future<void> _openPreview({required ResumeData seed}) async {
+    final repository = context.read<ResumeRepository>();
+    final aiService = context.read<LocalAiResumeService>();
+    final pdfService = context.read<ResumePdfService>();
+    final library = context.read<ResumeLibraryViewModel>();
+    final viewModel = ResumeEditorViewModel(
+      repository: repository,
+      aiService: aiService,
+      pdfService: pdfService,
+      seedResume: seed,
+    );
+
+    final targetStep = await Navigator.of(context).push<int>(
+      MaterialPageRoute<int>(
+        builder: (_) => ChangeNotifierProvider<ResumeEditorViewModel>.value(
+          value: viewModel,
+          child: const ResumePreviewScreen(),
+        ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (targetStep != null) {
+      viewModel.setStep(targetStep);
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => ChangeNotifierProvider<ResumeEditorViewModel>.value(
+            value: viewModel,
+            child: const ResumeBuilderScreen(),
+          ),
+        ),
+      );
+
+      if (!mounted) {
+        return;
+      }
     }
 
     await library.loadResumes();
@@ -126,6 +171,7 @@ class _AppShellState extends State<AppShell> {
         currentSegment: _homeSegment,
         onSegmentChanged: (value) => setState(() => _homeSegment = value),
         onOpenResume: (resume) => _openBuilder(seed: resume),
+        onPreviewResume: (resume) => _openPreview(seed: resume),
         onOpenCoverLetter: (coverLetter) =>
             _openCoverLetterEditor(seed: coverLetter),
       ),

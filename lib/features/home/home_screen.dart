@@ -15,18 +15,24 @@ extension HomeSegmentX on HomeSegment {
   };
 }
 
+enum _ResumeCardAction { open, edit, duplicate, delete }
+
+enum _CoverLetterCardAction { open, delete }
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
     required this.currentSegment,
     required this.onSegmentChanged,
     required this.onOpenResume,
+    required this.onPreviewResume,
     required this.onOpenCoverLetter,
   });
 
   final HomeSegment currentSegment;
   final ValueChanged<HomeSegment> onSegmentChanged;
   final ValueChanged<ResumeData> onOpenResume;
+  final ValueChanged<ResumeData> onPreviewResume;
   final ValueChanged<CoverLetterData> onOpenCoverLetter;
 
   @override
@@ -124,16 +130,23 @@ class HomeScreen extends StatelessWidget {
                           ),
                     const SizedBox(height: 20),
                     if (currentSegment == HomeSegment.resumes)
-                      _ResumeSection(
-                        library: resumeLibrary,
-                        dateFormat: dateFormat,
-                        onOpenResume: onOpenResume,
+                      SizedBox(
+                        width: double.infinity,
+                        child: _ResumeSection(
+                          library: resumeLibrary,
+                          dateFormat: dateFormat,
+                          onOpenResume: onOpenResume,
+                          onPreviewResume: onPreviewResume,
+                        ),
                       )
                     else
-                      _CoverLetterSection(
-                        library: coverLetterLibrary,
-                        dateFormat: dateFormat,
-                        onOpenCoverLetter: onOpenCoverLetter,
+                      SizedBox(
+                        width: double.infinity,
+                        child: _CoverLetterSection(
+                          library: coverLetterLibrary,
+                          dateFormat: dateFormat,
+                          onOpenCoverLetter: onOpenCoverLetter,
+                        ),
                       ),
                   ],
                 ),
@@ -152,11 +165,113 @@ class _ResumeSection extends StatelessWidget {
     required this.library,
     required this.dateFormat,
     required this.onOpenResume,
+    required this.onPreviewResume,
   });
 
   final ResumeLibraryViewModel library;
   final DateFormat dateFormat;
   final ValueChanged<ResumeData> onOpenResume;
+  final ValueChanged<ResumeData> onPreviewResume;
+
+  Future<void> _confirmDeleteResume(
+    BuildContext context,
+    ResumeData resume,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text('Delete resume?'),
+          content: Text(
+            'Delete "${resume.title}"? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && context.mounted) {
+      await library.deleteResume(resume.id);
+    }
+  }
+
+  Future<void> _showResumeActions(
+    BuildContext context,
+    ResumeData resume,
+  ) async {
+    final action = await showModalBottomSheet<_ResumeCardAction>(
+      context: context,
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ActionSheetTile(
+                icon: Icons.visibility_outlined,
+                label: 'Open',
+                onTap: () => Navigator.of(context).pop(_ResumeCardAction.open),
+              ),
+              _ActionSheetTile(
+                icon: Icons.edit_outlined,
+                label: 'Edit',
+                onTap: () => Navigator.of(context).pop(_ResumeCardAction.edit),
+              ),
+              _ActionSheetTile(
+                icon: Icons.copy_all_outlined,
+                label: 'Duplicate',
+                onTap: () =>
+                    Navigator.of(context).pop(_ResumeCardAction.duplicate),
+              ),
+              _ActionSheetTile(
+                leading: const ImageIcon(AssetImage('assets/fonts/delete.png')),
+                label: 'Delete',
+                onTap: () =>
+                    Navigator.of(context).pop(_ResumeCardAction.delete),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!context.mounted || action == null) {
+      return;
+    }
+
+    switch (action) {
+      case _ResumeCardAction.open:
+        library.selectResume(resume.id);
+        onPreviewResume(resume);
+        return;
+      case _ResumeCardAction.edit:
+        library.selectResume(resume.id);
+        onOpenResume(resume);
+        return;
+      case _ResumeCardAction.duplicate:
+        await library.duplicateResume(resume);
+        if (!context.mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Resume duplicated.')));
+        return;
+      case _ResumeCardAction.delete:
+        await _confirmDeleteResume(context, resume);
+        return;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -178,20 +293,18 @@ class _ResumeSection extends StatelessWidget {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: library.resumes.map((resume) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Card(
             child: InkWell(
               borderRadius: BorderRadius.circular(24),
-              onTap: () {
-                library.selectResume(resume.id);
-                onOpenResume(resume);
-              },
+              onTap: () => _showResumeActions(context, resume),
               child: Padding(
                 padding: const EdgeInsets.all(18),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Column(
@@ -228,12 +341,12 @@ class _ResumeSection extends StatelessWidget {
                         ],
                       ),
                     ),
-                    IconButton(
-                      tooltip: 'Delete resume',
-                      onPressed: () => library.deleteResume(resume.id),
-                      icon: const ImageIcon(
-                        AssetImage('assets/fonts/delete.png'),
-                      ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      key: Key('resume-card-arrow-${resume.id}'),
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ],
                 ),
@@ -257,6 +370,82 @@ class _CoverLetterSection extends StatelessWidget {
   final DateFormat dateFormat;
   final ValueChanged<CoverLetterData> onOpenCoverLetter;
 
+  Future<void> _confirmDeleteCoverLetter(
+    BuildContext context,
+    CoverLetterData coverLetter,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text('Delete cover letter?'),
+          content: Text(
+            'Delete "${coverLetter.displayTitle}"? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && context.mounted) {
+      await library.deleteCoverLetter(coverLetter.id);
+    }
+  }
+
+  Future<void> _showCoverLetterActions(
+    BuildContext context,
+    CoverLetterData coverLetter,
+  ) async {
+    final action = await showModalBottomSheet<_CoverLetterCardAction>(
+      context: context,
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ActionSheetTile(
+                icon: Icons.visibility_outlined,
+                label: 'Open',
+                onTap: () =>
+                    Navigator.of(context).pop(_CoverLetterCardAction.open),
+              ),
+              _ActionSheetTile(
+                leading: const ImageIcon(AssetImage('assets/fonts/delete.png')),
+                label: 'Delete',
+                onTap: () =>
+                    Navigator.of(context).pop(_CoverLetterCardAction.delete),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!context.mounted || action == null) {
+      return;
+    }
+
+    switch (action) {
+      case _CoverLetterCardAction.open:
+        onOpenCoverLetter(coverLetter);
+        return;
+      case _CoverLetterCardAction.delete:
+        await _confirmDeleteCoverLetter(context, coverLetter);
+        return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (library.isLoading) {
@@ -277,17 +466,18 @@ class _CoverLetterSection extends StatelessWidget {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: library.coverLetters.map((coverLetter) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Card(
             child: InkWell(
               borderRadius: BorderRadius.circular(24),
-              onTap: () => onOpenCoverLetter(coverLetter),
+              onTap: () => _showCoverLetterActions(context, coverLetter),
               child: Padding(
                 padding: const EdgeInsets.all(18),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Column(
@@ -327,13 +517,12 @@ class _CoverLetterSection extends StatelessWidget {
                         ],
                       ),
                     ),
-                    IconButton(
-                      tooltip: 'Delete cover letter',
-                      onPressed: () =>
-                          library.deleteCoverLetter(coverLetter.id),
-                      icon: const ImageIcon(
-                        AssetImage('assets/fonts/delete.png'),
-                      ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      key: Key('cover-letter-card-arrow-${coverLetter.id}'),
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ],
                 ),
@@ -386,6 +575,29 @@ class _EmptySegmentState extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ActionSheetTile extends StatelessWidget {
+  const _ActionSheetTile({
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.leading,
+  });
+
+  final IconData? icon;
+  final Widget? leading;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: leading ?? (icon == null ? null : Icon(icon)),
+      title: Text(label),
+      onTap: onTap,
     );
   }
 }
