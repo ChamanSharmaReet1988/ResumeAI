@@ -319,6 +319,28 @@ void main() {
     },
   );
 
+  testWidgets('custom sections can be reordered from the builder', (
+    tester,
+  ) async {
+    viewModel.setStep(5);
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        customSections: const [
+          CustomSectionItem(title: 'First section', content: 'First content'),
+          CustomSectionItem(title: 'Second section', content: 'Second content'),
+        ],
+      ),
+    );
+
+    await pumpBuilder(tester);
+
+    await tester.tap(find.byTooltip('Move custom section down').first);
+    await tester.pumpAndSettle();
+
+    expect(viewModel.resume.customSections.first.title, 'Second section');
+    expect(find.text('Second section'), findsWidgets);
+  });
+
   testWidgets('projects can be reordered from the builder', (tester) async {
     viewModel.setStep(4);
     viewModel.updateResume(
@@ -350,6 +372,21 @@ void main() {
 
     expect(viewModel.resume.projects.first.title, 'Second project');
     expect(find.text('Second project'), findsWidgets);
+  });
+
+  testWidgets('save opens the separate preview screen with ats score', (
+    tester,
+  ) async {
+    viewModel.setStep(5);
+
+    await pumpBuilder(tester);
+
+    await tester.tap(find.text('Save'));
+    await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    expect(find.text('Resume preview'), findsOneWidget);
+    expect(find.text('ATS score'), findsOneWidget);
   });
 
   testWidgets('continue scrolls the next category to the top', (tester) async {

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/resume_models.dart';
+import 'resume_preview_screen.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
 
@@ -17,9 +18,6 @@ class ResumeBuilderScreen extends StatefulWidget {
 
 class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   final _skillController = TextEditingController();
-  final _jobDescriptionController = TextEditingController();
-  final _coverLetterCompanyController = TextEditingController();
-  final _coverLetterRoleController = TextEditingController();
   final _summaryFocusNode = FocusNode();
   final _stepScrollController = ScrollController();
   final Map<String, FocusNode> _extendedKeyboardHideFocusNodes = {};
@@ -58,9 +56,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   @override
   void dispose() {
     _skillController.dispose();
-    _jobDescriptionController.dispose();
-    _coverLetterCompanyController.dispose();
-    _coverLetterRoleController.dispose();
     _stepScrollController.dispose();
     _summaryFocusNode
       ..removeListener(_handleSummaryFocusChange)
@@ -79,7 +74,15 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (!mounted) {
       return;
     }
-    Navigator.of(context).pop();
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: viewModel,
+          child: const ResumePreviewScreen(),
+        ),
+      ),
+    );
   }
 
   Future<void> _downloadResume() async {
@@ -157,49 +160,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         const SnackBar(content: Text('You can add up to 50 skills.')),
       );
     }
-  }
-
-  Future<void> _analyzeResume() async {
-    await context.read<ResumeEditorViewModel>().analyzeResume(
-      jobDescription: _jobDescriptionController.text,
-    );
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Resume analysis refreshed.')));
-  }
-
-  Future<void> _analyzeJobDescription() async {
-    await context.read<ResumeEditorViewModel>().analyzeJobDescription(
-      _jobDescriptionController.text,
-    );
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Job description insights updated.')),
-    );
-  }
-
-  Future<void> _generateCoverLetter() async {
-    final viewModel = context.read<ResumeEditorViewModel>();
-    await viewModel.generateCoverLetter(
-      company: _coverLetterCompanyController.text.ifBlank('the company'),
-      role: _coverLetterRoleController.text.ifBlank(
-        viewModel.resume.jobTitle.ifBlank('the role'),
-      ),
-    );
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Cover letter drafted.')));
   }
 
   Future<void> _generateBullets(int index) async {
@@ -587,6 +547,22 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
+  void _moveCustomSection({required int index, required bool moveUp}) {
+    FocusScope.of(context).unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      final viewModel = context.read<ResumeEditorViewModel>();
+      if (moveUp) {
+        viewModel.moveCustomSectionUp(index);
+      } else {
+        viewModel.moveCustomSectionDown(index);
+      }
+    });
+  }
+
   void _scrollToStepTop() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_stepScrollController.hasClients) {
@@ -731,7 +707,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                     child: _buildStepContent(
                                       context,
                                       viewModel,
-                                      isWide,
                                     ),
                                   ),
                                 ),
@@ -816,7 +791,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   Widget _buildStepContent(
     BuildContext context,
     ResumeEditorViewModel viewModel,
-    bool isWide,
   ) {
     return switch (viewModel.currentStep) {
       0 => _buildPersonalStep(viewModel),
@@ -824,7 +798,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       2 => _buildEducationStep(viewModel),
       3 => _buildSkillsStep(viewModel),
       4 => _buildProjectsStep(viewModel),
-      _ => _buildCustomSectionsStep(viewModel, showPreview: !isWide),
+      _ => _buildCustomSectionsStep(viewModel),
     };
   }
 
@@ -1518,10 +1492,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-  Widget _buildCustomSectionsStep(
-    ResumeEditorViewModel viewModel, {
-    required bool showPreview,
-  }) {
+  Widget _buildCustomSectionsStep(ResumeEditorViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1532,13 +1503,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _HintBanner(
-                title: 'Flexible sections',
-                body:
-                    'Each custom section lets you choose the category title and write the content exactly the way you want it to appear on the resume.',
-              ),
               if (viewModel.resume.customSections.isNotEmpty)
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
               ...viewModel.resume.customSections.asMap().entries.map((entry) {
                 final index = entry.key;
                 final item = entry.value;
@@ -1564,6 +1530,35 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                             ),
+                            if (viewModel.resume.customSections.length > 1) ...[
+                              IconButton.filledTonal(
+                                tooltip: 'Move custom section up',
+                                onPressed: index == 0
+                                    ? null
+                                    : () => _moveCustomSection(
+                                        index: index,
+                                        moveUp: true,
+                                      ),
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_up_rounded,
+                                ),
+                              ),
+                              IconButton.filledTonal(
+                                tooltip: 'Move custom section down',
+                                onPressed:
+                                    index ==
+                                        viewModel.resume.customSections.length -
+                                            1
+                                    ? null
+                                    : () => _moveCustomSection(
+                                        index: index,
+                                        moveUp: false,
+                                      ),
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                ),
+                              ),
+                            ],
                             IconButton(
                               onPressed: () =>
                                   viewModel.removeCustomSection(index),
@@ -1622,166 +1617,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   label: const Text('Add custom section'),
                 ),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildPreviewStep(viewModel, showPreview: showPreview),
-      ],
-    );
-  }
-
-  Widget _buildPreviewStep(
-    ResumeEditorViewModel viewModel, {
-    required bool showPreview,
-  }) {
-    final analysis = viewModel.analysis;
-    final jobInsights = viewModel.jobInsights;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (showPreview) ...[
-          ResumePreviewCard(resume: viewModel.resume),
-          const SizedBox(height: 16),
-        ],
-        _StepSurface(
-          title: 'Preview, analyzer, and export',
-          subtitle:
-              'Review the live template preview, run ATS checks, generate a cover letter, and export to PDF.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (analysis != null) ...[
-                _ScoreTile(analysis: analysis),
-                const SizedBox(height: 16),
-              ],
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  FilledButton.tonalIcon(
-                    onPressed: viewModel.isBusy ? null : _analyzeResume,
-                    style: _mediumTonalButtonStyle(context),
-                    icon: const Icon(Icons.analytics_outlined),
-                    label: const Text('Analyze resume'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _EnsureVisibleOnFocus(
-                child: TextField(
-                  controller: _jobDescriptionController,
-                  maxLines: 5,
-                  decoration: const InputDecoration(
-                    labelText: 'Job description',
-                    hintText:
-                        'Paste a job post to compare ATS keywords and resume alignment.',
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  FilledButton.tonal(
-                    onPressed: viewModel.isBusy ? null : _analyzeJobDescription,
-                    style: _mediumTonalButtonStyle(context),
-                    child: const Text('Analyze job description'),
-                  ),
-                  FilledButton.tonal(
-                    onPressed: viewModel.isBusy ? null : _downloadResume,
-                    style: _mediumTonalButtonStyle(context),
-                    child: const Text('Download PDF'),
-                  ),
-                  OutlinedButton(
-                    onPressed: viewModel.isBusy ? null : _shareResume,
-                    child: const Text('Share resume'),
-                  ),
-                  OutlinedButton(
-                    onPressed: viewModel.isBusy ? null : _printResume,
-                    child: const Text('Print'),
-                  ),
-                ],
-              ),
-              if (jobInsights != null) ...[
-                const SizedBox(height: 16),
-                _InsightPanel(
-                  title: 'Job description insights',
-                  items: [
-                    jobInsights.summary,
-                    if (jobInsights.keywords.isNotEmpty)
-                      'Keywords: ${jobInsights.keywords.join(', ')}',
-                    if (jobInsights.missingSkills.isNotEmpty)
-                      'Missing skills: ${jobInsights.missingSkills.join(', ')}',
-                  ],
-                ),
-              ],
-              const SizedBox(height: 20),
-              Text(
-                'Cover letter generator',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 12),
-              _ResponsiveFieldGroup(
-                children: [
-                  _SyncTextField(
-                    label: 'Company',
-                    value: _coverLetterCompanyController.text,
-                    hintText: 'Acme Inc.',
-                    onChanged: (value) {
-                      if (_coverLetterCompanyController.text != value) {
-                        _coverLetterCompanyController.text = value;
-                      }
-                    },
-                  ),
-                  _SyncTextField(
-                    label: 'Role',
-                    value: _coverLetterRoleController.text,
-                    hintText: viewModel.resume.jobTitle.ifBlank('Target role'),
-                    onChanged: (value) {
-                      if (_coverLetterRoleController.text != value) {
-                        _coverLetterRoleController.text = value;
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              FilledButton.tonalIcon(
-                onPressed: viewModel.isBusy ? null : _generateCoverLetter,
-                style: _mediumTonalButtonStyle(context),
-                icon: const Icon(Icons.description_outlined),
-                label: const Text('Generate cover letter'),
-              ),
-              if (viewModel.coverLetter.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: SelectableText(viewModel.coverLetter),
-                ),
-              ],
-              if ((analysis?.improvements.isNotEmpty ?? false) ||
-                  (analysis?.weakDescriptions.isNotEmpty ?? false)) ...[
-                const SizedBox(height: 16),
-                _InsightPanel(
-                  title: 'Improvement suggestions',
-                  items: [
-                    ...?analysis?.improvements,
-                    ...?analysis?.weakDescriptions,
-                  ],
-                ),
-              ],
             ],
           ),
         ),
@@ -1954,7 +1789,7 @@ class _BottomControls extends StatelessWidget {
           Expanded(
             child: FilledButton(
               onPressed: onNext,
-              child: Text(isLastStep ? 'Save resume' : 'Continue'),
+              child: Text(isLastStep ? 'Save & Preview' : 'Continue'),
             ),
           ),
         ],
@@ -2441,49 +2276,6 @@ class _ScoreTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _InsightPanel extends StatelessWidget {
-  const _InsightPanel({required this.title, required this.items});
-
-  final String title;
-  final List<String> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 10),
-          ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('• '),
-                  Expanded(child: Text(item)),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

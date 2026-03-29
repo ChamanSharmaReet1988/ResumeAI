@@ -340,6 +340,28 @@ class ResumeEditorViewModel extends ChangeNotifier {
     updateResume((resume) => resume.copyWith(customSections: items));
   }
 
+  void moveCustomSectionUp(int index) {
+    if (index <= 0 || index >= _resume.customSections.length) {
+      return;
+    }
+
+    final items = [..._resume.customSections];
+    final item = items.removeAt(index);
+    items.insert(index - 1, item);
+    updateResume((resume) => resume.copyWith(customSections: items));
+  }
+
+  void moveCustomSectionDown(int index) {
+    if (index < 0 || index >= _resume.customSections.length - 1) {
+      return;
+    }
+
+    final items = [..._resume.customSections];
+    final item = items.removeAt(index);
+    items.insert(index + 1, item);
+    updateResume((resume) => resume.copyWith(customSections: items));
+  }
+
   bool addSkill(String skill) {
     final value = skill.trim();
     if (value.isEmpty) {
