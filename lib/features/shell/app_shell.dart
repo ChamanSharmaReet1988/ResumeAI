@@ -9,7 +9,9 @@ import '../../core/services/resume_services.dart';
 import '../ai/ai_assistance_screen.dart';
 import '../builder/resume_builder_screen.dart';
 import '../builder/resume_preview_screen.dart';
+import '../cover_letters/cover_letter_content_screen.dart';
 import '../cover_letters/cover_letter_editor_screen.dart';
+import '../cover_letters/cover_letter_preview_screen.dart';
 import '../home/home_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shared/view_models.dart';
@@ -65,6 +67,50 @@ class _AppShellState extends State<AppShell> {
     await library.loadResumes();
   }
 
+  Future<void> _createResumeFromAddButton() async {
+    final library = context.read<ResumeLibraryViewModel>();
+    final enteredTitle = await _promptForResumeTitle();
+
+    if (!mounted || enteredTitle == null) {
+      return;
+    }
+
+    final normalizedTitle = enteredTitle.trim();
+    final draft = library.newDraft().copyWith(
+      title: normalizedTitle.isEmpty
+          ? ResumeData.defaultTitle
+          : normalizedTitle,
+    );
+
+    await _openBuilder(seed: draft);
+  }
+
+  Future<String?> _promptForResumeTitle() async {
+    return showDialog<String>(
+      context: context,
+      builder: (context) => const _ResumeTitleDialog(),
+    );
+  }
+
+  Future<void> _createCoverLetterFromAddButton() async {
+    final library = context.read<CoverLetterLibraryViewModel>();
+    final enteredTitle = await _promptForCoverLetterTitle();
+
+    if (!mounted || enteredTitle == null) {
+      return;
+    }
+
+    final draft = library.newDraft().copyWith(title: enteredTitle.trim());
+    await _openCoverLetterEditor(seed: draft);
+  }
+
+  Future<String?> _promptForCoverLetterTitle() async {
+    return showDialog<String>(
+      context: context,
+      builder: (context) => const _CoverLetterTitleDialog(),
+    );
+  }
+
   Future<void> _openPreview({required ResumeData seed}) async {
     final repository = context.read<ResumeRepository>();
     final aiService = context.read<LocalAiResumeService>();
@@ -110,12 +156,8 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _openCoverLetterEditor({CoverLetterData? seed}) async {
-    final repository = context.read<ResumeRepository>();
     final library = context.read<CoverLetterLibraryViewModel>();
-    final viewModel = CoverLetterEditorViewModel(
-      repository: repository,
-      seedCoverLetter: seed ?? library.newDraft(),
-    );
+    final viewModel = _buildCoverLetterViewModel(seed: seed ?? library.newDraft());
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -134,6 +176,62 @@ class _AppShellState extends State<AppShell> {
     await library.loadCoverLetters();
   }
 
+  Future<void> _openCoverLetterContent({required CoverLetterData seed}) async {
+    final library = context.read<CoverLetterLibraryViewModel>();
+    final viewModel = _buildCoverLetterViewModel(seed: seed);
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
+              value: viewModel,
+              child: const CoverLetterContentScreen(),
+            ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await library.loadCoverLetters();
+  }
+
+  Future<void> _openCoverLetterPreview({required CoverLetterData seed}) async {
+    final library = context.read<CoverLetterLibraryViewModel>();
+    final viewModel = _buildCoverLetterViewModel(seed: seed);
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
+              value: viewModel,
+              child: const CoverLetterPreviewScreen(),
+            ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await library.loadCoverLetters();
+  }
+
+  CoverLetterEditorViewModel _buildCoverLetterViewModel({
+    required CoverLetterData seed,
+  }) {
+    final repository = context.read<ResumeRepository>();
+    final aiService = context.read<LocalAiResumeService>();
+    final resumeLibrary = context.read<ResumeLibraryViewModel>();
+    return CoverLetterEditorViewModel(
+      repository: repository,
+      aiService: aiService,
+      resumeContext: resumeLibrary.selectedResume,
+      seedCoverLetter: seed,
+    );
+  }
+
   Widget? _buildFloatingActionButton() {
     if (_currentIndex != 0) {
       return null;
@@ -142,21 +240,19 @@ class _AppShellState extends State<AppShell> {
     final isResumeSegment = _homeSegment == HomeSegment.resumes;
     final primaryBlue = Theme.of(context).colorScheme.primary;
 
-    return FloatingActionButton.extended(
-      backgroundColor: Colors.white,
-      onPressed: isResumeSegment
-          ? () => _openBuilder()
-          : () => _openCoverLetterEditor(),
-      icon: Icon(
-        isResumeSegment ? Icons.add_card_rounded : Icons.note_add_rounded,
-        color: primaryBlue,
-      ),
-      label: Text(
-        isResumeSegment ? 'Add Resume' : 'Add Cover Letter',
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+    return SizedBox(
+      width: 60,
+      height: 60,
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        shape: const CircleBorder(),
+        onPressed: isResumeSegment
+            ? _createResumeFromAddButton
+            : _createCoverLetterFromAddButton,
+        child: Icon(
+          isResumeSegment ? Icons.add_card_rounded : Icons.note_add_rounded,
+          color: primaryBlue,
+          size: 28,
         ),
       ),
     );
@@ -172,11 +268,13 @@ class _AppShellState extends State<AppShell> {
         onSegmentChanged: (value) => setState(() => _homeSegment = value),
         onOpenResume: (resume) => _openBuilder(seed: resume),
         onPreviewResume: (resume) => _openPreview(seed: resume),
-        onOpenCoverLetter: (coverLetter) =>
-            _openCoverLetterEditor(seed: coverLetter),
+        onPreviewCoverLetter: (coverLetter) =>
+            _openCoverLetterPreview(seed: coverLetter),
+        onEditCoverLetter: (coverLetter) =>
+            _openCoverLetterContent(seed: coverLetter),
       ),
       TemplatesScreen(onCreateResume: () => _openBuilder()),
-      AiAssistanceScreen(onOpenResumeBuilder: () => _openBuilder()),
+      ResumeAnalyserScreen(onOpenResumeBuilder: () => _openBuilder()),
       const SettingsScreen(),
     ];
 
@@ -309,9 +407,9 @@ class _AppShellState extends State<AppShell> {
           selectedIcon: CupertinoIcons.rectangle_stack_fill,
         ),
         _ShellDestination(
-          label: 'AI',
-          icon: CupertinoIcons.sparkles,
-          selectedIcon: CupertinoIcons.sparkles,
+          label: 'Analyser',
+          icon: CupertinoIcons.chart_bar,
+          selectedIcon: CupertinoIcons.chart_bar_fill,
         ),
         _ShellDestination(
           label: 'Settings',
@@ -333,9 +431,9 @@ class _AppShellState extends State<AppShell> {
         selectedIcon: Icons.dashboard_customize_rounded,
       ),
       _ShellDestination(
-        label: 'AI',
-        icon: Icons.auto_awesome_outlined,
-        selectedIcon: Icons.auto_awesome_rounded,
+        label: 'Analyser',
+        icon: Icons.analytics_outlined,
+        selectedIcon: Icons.analytics_rounded,
       ),
       _ShellDestination(
         label: 'Settings',
@@ -343,6 +441,111 @@ class _AppShellState extends State<AppShell> {
         selectedIcon: Icons.settings_rounded,
       ),
     ];
+  }
+}
+
+class _ResumeTitleDialog extends StatefulWidget {
+  const _ResumeTitleDialog();
+
+  @override
+  State<_ResumeTitleDialog> createState() => _ResumeTitleDialogState();
+}
+
+class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      title: const Text('Resume title'),
+      content: TextField(
+        key: const Key('resume-title-dialog-field'),
+        controller: _controller,
+        textCapitalization: TextCapitalization.words,
+        autofocus: true,
+        decoration: const InputDecoration(
+          labelText: 'Resume title',
+          hintText: 'Product Designer Resume',
+        ),
+        onSubmitted: (value) => Navigator.of(context).pop(value),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(null),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('Create'),
+        ),
+      ],
+    );
+  }
+}
+
+class _CoverLetterTitleDialog extends StatefulWidget {
+  const _CoverLetterTitleDialog();
+
+  @override
+  State<_CoverLetterTitleDialog> createState() =>
+      _CoverLetterTitleDialogState();
+}
+
+class _CoverLetterTitleDialogState extends State<_CoverLetterTitleDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      title: const Text('Cover letter title'),
+      content: TextField(
+        key: const Key('cover-letter-title-dialog-field'),
+        controller: _controller,
+        textCapitalization: TextCapitalization.words,
+        autofocus: true,
+        decoration: const InputDecoration(
+          labelText: 'Cover letter title',
+          hintText: 'Product Designer Application',
+        ),
+        onSubmitted: (value) => Navigator.of(context).pop(value),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(null),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('Create'),
+        ),
+      ],
+    );
   }
 }
 

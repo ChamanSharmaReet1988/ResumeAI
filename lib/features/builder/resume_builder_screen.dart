@@ -269,25 +269,33 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       final selection = await showModalBottomSheet<_EndDateSelection>(
         context: context,
         builder: (context) {
+          final primaryColor = Theme.of(context).colorScheme.primary;
+
           return SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.calendar_month_outlined),
+                  leading: Icon(
+                    Icons.calendar_month_outlined,
+                    color: primaryColor,
+                  ),
                   title: const Text('Choose month and year'),
                   onTap: () =>
                       Navigator.of(context).pop(_EndDateSelection.chooseDate),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.work_history_outlined),
+                  leading: Icon(
+                    Icons.work_history_outlined,
+                    color: primaryColor,
+                  ),
                   title: const Text('Present'),
                   onTap: () =>
                       Navigator.of(context).pop(_EndDateSelection.present),
                 ),
                 if (currentValue.trim().isNotEmpty)
                   ListTile(
-                    leading: const Icon(Icons.clear_rounded),
+                    leading: Icon(Icons.clear_rounded, color: primaryColor),
                     title: const Text('Clear date'),
                     onTap: () =>
                         Navigator.of(context).pop(_EndDateSelection.clear),
@@ -891,15 +899,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           'Start with identity, contact details, target role, and a short positioning summary.',
       child: _ResponsiveFieldGroup(
         children: [
-          _SyncTextField(
-            label: 'Resume title',
-            value: viewModel.resume.title == ResumeData.defaultTitle
-                ? ''
-                : viewModel.resume.title,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(title: value),
-            ),
-          ),
           _SyncTextField(
             label: 'Full name',
             value: viewModel.resume.fullName,
@@ -1794,9 +1793,9 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                 const SizedBox(width: 12),
                 Text(
                   '${widget.currentStep + 1}/${ResumeEditorViewModel.stepTitles.length}',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w400,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400),
                 ),
               ],
             ),

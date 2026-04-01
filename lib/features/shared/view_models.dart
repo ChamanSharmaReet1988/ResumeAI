@@ -80,10 +80,15 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     await loadResumes();
   }
 
-  Future<ResumeData> duplicateResume(ResumeData source) async {
+  Future<ResumeData> duplicateResume(
+    ResumeData source, {
+    String? title,
+  }) async {
     final duplicated = source.copyWith(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
-      title: _duplicateTitle(source.title),
+      title: title == null
+          ? _duplicateTitle(source.title)
+          : _normalizeResumeTitle(title),
       updatedAt: DateTime.now(),
     );
 
@@ -93,12 +98,29 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     return duplicated;
   }
 
+  Future<ResumeData> renameResume(ResumeData source, String newTitle) async {
+    final renamed = source.copyWith(
+      title: _normalizeResumeTitle(newTitle),
+      updatedAt: DateTime.now(),
+    );
+
+    await repository.upsertResume(renamed);
+    _selectedResumeId = renamed.id;
+    await loadResumes();
+    return renamed;
+  }
+
   ResumeData newDraft() => ResumeData.empty(template: _defaultTemplate);
 
   String _duplicateTitle(String title) {
     final trimmed = title.trim();
     final baseTitle = trimmed.isEmpty ? ResumeData.defaultTitle : trimmed;
     return '$baseTitle (Copy)';
+  }
+
+  String _normalizeResumeTitle(String title) {
+    final trimmed = title.trim();
+    return trimmed.isEmpty ? ResumeData.defaultTitle : trimmed;
   }
 }
 
@@ -676,10 +698,14 @@ class ResumeEditorViewModel extends ChangeNotifier {
 class CoverLetterEditorViewModel extends ChangeNotifier {
   CoverLetterEditorViewModel({
     required this.repository,
+    required this.aiService,
+    required this.resumeContext,
     required CoverLetterData seedCoverLetter,
   }) : _coverLetter = seedCoverLetter;
 
   final ResumeRepository repository;
+  final LocalAiResumeService aiService;
+  final ResumeData? resumeContext;
 
   CoverLetterData _coverLetter;
   bool _isBusy = false;
@@ -694,22 +720,77 @@ class CoverLetterEditorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> saveCoverLetter() async {
+  bool get canCreateCoverLetter =>
+      _coverLetter.company.trim().isNotEmpty &&
+      _coverLetter.role.trim().isNotEmpty;
+
+  Future<void> createCoverLetter() async {
+    if (!canCreateCoverLetter) {
+      return;
+    }
+
     _isBusy = true;
     notifyListeners();
 
-    final normalized = _coverLetter.copyWith(
-      title: _coverLetter.title.trim(),
-      company: _coverLetter.company.trim(),
-      role: _coverLetter.role.trim(),
-      content: _coverLetter.content.trim(),
-      updatedAt: DateTime.now(),
-    );
+    try {
+      final normalized = _coverLetter.copyWith(
+        company: _coverLetter.company.trim(),
+        role: _coverLetter.role.trim(),
+        skillToHighlight: _coverLetter.skillToHighlight.trim(),
+        language: _coverLetter.language.trim(),
+        content: _coverLetter.content.trim(),
+        updatedAt: DateTime.now(),
+      );
 
-    _coverLetter = normalized;
-    await repository.upsertCoverLetter(normalized);
+      final resume =
+          resumeContext ?? ResumeData.empty(template: ResumeTemplate.corporate);
+      final generatedContent = await aiService.generateCoverLetter(
+        resume: resume,
+        company: normalized.company,
+        role: normalized.role,
+        skillToHighlight: normalized.skillToHighlight,
+        language: normalized.language,
+      );
 
-    _isBusy = false;
-    notifyListeners();
+      _coverLetter = normalized.copyWith(
+        title: normalized.title.trim().isNotEmpty
+            ? normalized.title.trim()
+            : '${normalized.role} · ${normalized.company}',
+        content: generatedContent,
+        updatedAt: DateTime.now(),
+      );
+
+      await repository.upsertCoverLetter(_coverLetter);
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> saveCoverLetter({bool showBusy = true}) async {
+    if (showBusy) {
+      _isBusy = true;
+      notifyListeners();
+    }
+
+    try {
+      final normalized = _coverLetter.copyWith(
+        title: _coverLetter.title.trim(),
+        company: _coverLetter.company.trim(),
+        role: _coverLetter.role.trim(),
+        skillToHighlight: _coverLetter.skillToHighlight.trim(),
+        language: _coverLetter.language.trim(),
+        content: _coverLetter.content.trim(),
+        updatedAt: DateTime.now(),
+      );
+
+      _coverLetter = normalized;
+      await repository.upsertCoverLetter(normalized);
+    } finally {
+      if (showBusy) {
+        _isBusy = false;
+        notifyListeners();
+      }
+    }
   }
 }

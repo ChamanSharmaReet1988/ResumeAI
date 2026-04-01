@@ -15,9 +15,9 @@ extension HomeSegmentX on HomeSegment {
   };
 }
 
-enum _ResumeCardAction { open, edit, duplicate, delete }
+enum _ResumeCardAction { open, edit, rename, duplicate, delete }
 
-enum _CoverLetterCardAction { open, delete }
+enum _CoverLetterCardAction { open, edit, delete }
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
@@ -26,14 +26,16 @@ class HomeScreen extends StatelessWidget {
     required this.onSegmentChanged,
     required this.onOpenResume,
     required this.onPreviewResume,
-    required this.onOpenCoverLetter,
+    required this.onPreviewCoverLetter,
+    required this.onEditCoverLetter,
   });
 
   final HomeSegment currentSegment;
   final ValueChanged<HomeSegment> onSegmentChanged;
   final ValueChanged<ResumeData> onOpenResume;
   final ValueChanged<ResumeData> onPreviewResume;
-  final ValueChanged<CoverLetterData> onOpenCoverLetter;
+  final ValueChanged<CoverLetterData> onPreviewCoverLetter;
+  final ValueChanged<CoverLetterData> onEditCoverLetter;
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +147,8 @@ class HomeScreen extends StatelessWidget {
                         child: _CoverLetterSection(
                           library: coverLetterLibrary,
                           dateFormat: dateFormat,
-                          onOpenCoverLetter: onOpenCoverLetter,
+                          onPreviewCoverLetter: onPreviewCoverLetter,
+                          onEditCoverLetter: onEditCoverLetter,
                         ),
                       ),
                   ],
@@ -228,6 +231,12 @@ class _ResumeSection extends StatelessWidget {
                 onTap: () => Navigator.of(context).pop(_ResumeCardAction.edit),
               ),
               _ActionSheetTile(
+                icon: Icons.drive_file_rename_outline,
+                label: 'Rename',
+                onTap: () =>
+                    Navigator.of(context).pop(_ResumeCardAction.rename),
+              ),
+              _ActionSheetTile(
                 icon: Icons.copy_all_outlined,
                 label: 'Duplicate',
                 onTap: () =>
@@ -258,8 +267,25 @@ class _ResumeSection extends StatelessWidget {
         library.selectResume(resume.id);
         onOpenResume(resume);
         return;
+      case _ResumeCardAction.rename:
+        final nextTitle = await _showRenameResumeDialog(context, resume);
+        if (!context.mounted || nextTitle == null) {
+          return;
+        }
+        await library.renameResume(resume, nextTitle);
+        if (!context.mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Resume renamed.')));
+        return;
       case _ResumeCardAction.duplicate:
-        await library.duplicateResume(resume);
+        final duplicateTitle = await _showDuplicateResumeDialog(context, resume);
+        if (!context.mounted || duplicateTitle == null) {
+          return;
+        }
+        await library.duplicateResume(resume, title: duplicateTitle);
         if (!context.mounted) {
           return;
         }
@@ -271,6 +297,46 @@ class _ResumeSection extends StatelessWidget {
         await _confirmDeleteResume(context, resume);
         return;
     }
+  }
+
+  Future<String?> _showRenameResumeDialog(
+    BuildContext context,
+    ResumeData resume,
+  ) async {
+    final currentTitle = resume.title.trim();
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return _ResumeTitleDialog(
+          title: 'Rename resume',
+          actionLabel: 'Rename',
+          fieldKey: const Key('rename-resume-title-field'),
+          initialTitle: currentTitle == ResumeData.defaultTitle
+              ? ''
+              : currentTitle,
+        );
+      },
+    );
+  }
+
+  Future<String?> _showDuplicateResumeDialog(
+    BuildContext context,
+    ResumeData resume,
+  ) async {
+    final currentTitle = resume.title.trim();
+    final suggestedTitle =
+        (currentTitle.isEmpty ? ResumeData.defaultTitle : currentTitle);
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return _ResumeTitleDialog(
+          title: 'Duplicate resume',
+          actionLabel: 'Duplicate',
+          fieldKey: const Key('duplicate-resume-title-field'),
+          initialTitle: '$suggestedTitle (Copy)',
+        );
+      },
+    );
   }
 
   @override
@@ -315,19 +381,6 @@ class _ResumeSection extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            [resume.fullName.trim(), resume.jobTitle.trim()]
-                                .where((item) => item.isNotEmpty)
-                                .join(' • ')
-                                .ifBlank('Empty draft'),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                          ),
                           const SizedBox(height: 10),
                           Text(
                             'Updated ${dateFormat.format(resume.updatedAt)}',
@@ -363,12 +416,14 @@ class _CoverLetterSection extends StatelessWidget {
   const _CoverLetterSection({
     required this.library,
     required this.dateFormat,
-    required this.onOpenCoverLetter,
+    required this.onPreviewCoverLetter,
+    required this.onEditCoverLetter,
   });
 
   final CoverLetterLibraryViewModel library;
   final DateFormat dateFormat;
-  final ValueChanged<CoverLetterData> onOpenCoverLetter;
+  final ValueChanged<CoverLetterData> onPreviewCoverLetter;
+  final ValueChanged<CoverLetterData> onEditCoverLetter;
 
   Future<void> _confirmDeleteCoverLetter(
     BuildContext context,
@@ -421,6 +476,12 @@ class _CoverLetterSection extends StatelessWidget {
                     Navigator.of(context).pop(_CoverLetterCardAction.open),
               ),
               _ActionSheetTile(
+                icon: Icons.edit_outlined,
+                label: 'Edit',
+                onTap: () =>
+                    Navigator.of(context).pop(_CoverLetterCardAction.edit),
+              ),
+              _ActionSheetTile(
                 leading: const ImageIcon(AssetImage('assets/fonts/delete.png')),
                 label: 'Delete',
                 onTap: () =>
@@ -438,7 +499,10 @@ class _CoverLetterSection extends StatelessWidget {
 
     switch (action) {
       case _CoverLetterCardAction.open:
-        onOpenCoverLetter(coverLetter);
+        onPreviewCoverLetter(coverLetter);
+        return;
+      case _CoverLetterCardAction.edit:
+        onEditCoverLetter(coverLetter);
         return;
       case _CoverLetterCardAction.delete:
         await _confirmDeleteCoverLetter(context, coverLetter);
@@ -487,22 +551,6 @@ class _CoverLetterSection extends StatelessWidget {
                             coverLetter.displayTitle,
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            [
-                                  coverLetter.company.trim(),
-                                  coverLetter.role.trim(),
-                                ]
-                                .where((item) => item.isNotEmpty)
-                                .join(' • ')
-                                .ifBlank('Empty draft'),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
                           ),
                           const SizedBox(height: 10),
                           Text(
@@ -579,6 +627,69 @@ class _EmptySegmentState extends StatelessWidget {
   }
 }
 
+class _ResumeTitleDialog extends StatefulWidget {
+  const _ResumeTitleDialog({
+    required this.title,
+    required this.actionLabel,
+    required this.initialTitle,
+    required this.fieldKey,
+  });
+
+  final String title;
+  final String actionLabel;
+  final String initialTitle;
+  final Key fieldKey;
+
+  @override
+  State<_ResumeTitleDialog> createState() => _ResumeTitleDialogState();
+}
+
+class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialTitle);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.of(context).pop(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      title: Text(widget.title),
+      content: TextField(
+        key: widget.fieldKey,
+        controller: _controller,
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        decoration: const InputDecoration(
+          labelText: 'Resume title',
+          hintText: 'Enter resume title',
+        ),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(onPressed: _submit, child: Text(widget.actionLabel)),
+      ],
+    );
+  }
+}
+
 class _ActionSheetTile extends StatelessWidget {
   const _ActionSheetTile({
     required this.label,
@@ -594,14 +705,15 @@ class _ActionSheetTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return ListTile(
-      leading: leading ?? (icon == null ? null : Icon(icon)),
+      leading: IconTheme(
+        data: IconThemeData(color: primaryColor),
+        child: leading ?? (icon == null ? const SizedBox.shrink() : Icon(icon)),
+      ),
       title: Text(label),
       onTap: onTap,
     );
   }
-}
-
-extension on String {
-  String ifBlank(String fallback) => trim().isEmpty ? fallback : this;
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'cover_letter_content_screen.dart';
 import '../shared/view_models.dart';
 
 void _scheduleEnsureVisible(BuildContext context) {
@@ -70,42 +71,7 @@ class CoverLetterEditorScreen extends StatelessWidget {
           appBar: AppBar(
             leadingWidth: 40,
             titleSpacing: 8,
-            title: Text(
-              viewModel.coverLetter.displayTitle,
-              style: titleStyle,
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: TextButton.icon(
-                  onPressed: viewModel.isBusy
-                      ? null
-                      : () async {
-                          await viewModel.saveCoverLetter();
-                          if (!context.mounted) {
-                            return;
-                          }
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Cover letter saved locally.'),
-                            ),
-                          );
-                        },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  icon: const Icon(Icons.save_outlined, size: 22),
-                  label: const Text('Save'),
-                ),
-              ),
-            ],
+            title: Text(viewModel.coverLetter.displayTitle, style: titleStyle),
           ),
           body: SafeArea(
             child: SingleChildScrollView(
@@ -127,7 +93,7 @@ class CoverLetterEditorScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Keep this empty for now or add details later from the Home segment.',
+                            'This page creates a cover letter draft automatically from your selected resume plus the details below. Add the company name, job position name, one skill to highlight, and a language you want to mention, then tap Create cover letter to open the full draft on the next screen.',
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
                                   color: Theme.of(
@@ -137,35 +103,71 @@ class CoverLetterEditorScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 20),
                           _SyncTextField(
-                            label: 'Title',
-                            value: viewModel.coverLetter.title,
-                            onChanged: (value) => viewModel.updateCoverLetter(
-                              (current) => current.copyWith(title: value),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _SyncTextField(
-                            label: 'Company',
+                            label: 'Company name',
+                            hintText: 'Acme Labs',
                             value: viewModel.coverLetter.company,
+                            textCapitalization: TextCapitalization.words,
                             onChanged: (value) => viewModel.updateCoverLetter(
                               (current) => current.copyWith(company: value),
                             ),
                           ),
                           const SizedBox(height: 16),
                           _SyncTextField(
-                            label: 'Role',
+                            label: 'Job position name',
+                            hintText: 'Product Designer',
                             value: viewModel.coverLetter.role,
+                            textCapitalization: TextCapitalization.words,
                             onChanged: (value) => viewModel.updateCoverLetter(
                               (current) => current.copyWith(role: value),
                             ),
                           ),
                           const SizedBox(height: 16),
                           _SyncTextField(
-                            label: 'Content',
-                            value: viewModel.coverLetter.content,
-                            maxLines: 12,
+                            label: 'Skill to highlight',
+                            hintText: 'UX research',
+                            value: viewModel.coverLetter.skillToHighlight,
+                            textCapitalization: TextCapitalization.words,
                             onChanged: (value) => viewModel.updateCoverLetter(
-                              (current) => current.copyWith(content: value),
+                              (current) =>
+                                  current.copyWith(skillToHighlight: value),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _SyncTextField(
+                            label: 'Language',
+                            hintText: 'English',
+                            value: viewModel.coverLetter.language,
+                            textCapitalization: TextCapitalization.words,
+                            onChanged: (value) => viewModel.updateCoverLetter(
+                              (current) => current.copyWith(language: value),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed:
+                                  viewModel.isBusy ||
+                                      !viewModel.canCreateCoverLetter
+                                  ? null
+                                  : () async {
+                                      await viewModel.createCoverLetter();
+                                      if (!context.mounted) {
+                                        return;
+                                      }
+                                      await Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => ChangeNotifierProvider<
+                                            CoverLetterEditorViewModel
+                                          >.value(
+                                            value: viewModel,
+                                            child:
+                                                const CoverLetterContentScreen(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                              child: const Text('Create cover letter'),
                             ),
                           ),
                         ],
@@ -187,13 +189,15 @@ class _SyncTextField extends StatefulWidget {
     required this.label,
     required this.value,
     required this.onChanged,
-    this.maxLines = 1,
+    this.hintText,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   final String label;
   final String value;
   final ValueChanged<String> onChanged;
-  final int maxLines;
+  final String? hintText;
+  final TextCapitalization textCapitalization;
 
   @override
   State<_SyncTextField> createState() => _SyncTextFieldState();
@@ -238,9 +242,12 @@ class _SyncTextFieldState extends State<_SyncTextField> {
     return TextField(
       controller: _controller,
       focusNode: _focusNode,
-      maxLines: widget.maxLines,
+      textCapitalization: widget.textCapitalization,
       onChanged: widget.onChanged,
-      decoration: InputDecoration(labelText: widget.label),
+      decoration: InputDecoration(
+        labelText: widget.label,
+        hintText: widget.hintText,
+      ),
     );
   }
 }

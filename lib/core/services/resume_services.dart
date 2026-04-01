@@ -65,21 +65,19 @@ class ResumeRepository {
   }
 }
 
+class ResumeImprovementResult {
+  const ResumeImprovementResult({
+    required this.resume,
+    required this.appliedChanges,
+  });
+
+  final ResumeData resume;
+  final List<String> appliedChanges;
+}
+
 class LocalAiResumeService {
   Future<String> generateSummary(ResumeData resume) async {
-    return _simulate(() {
-      final title = resume.jobTitle.trim().isEmpty
-          ? 'professional candidate'
-          : resume.jobTitle.trim();
-      final primarySkills = resume.skills.take(4).join(', ');
-      final experienceCount = math.max(1, resume.visibleWorkExperiences.length);
-
-      return '${resume.fullName.trim().isEmpty ? 'Results-driven' : resume.fullName.trim()} '
-          'is a $title with $experienceCount standout experience ${experienceCount == 1 ? 'entry' : 'stories'} '
-          'across delivery, collaboration, and measurable execution. '
-          '${primarySkills.isEmpty ? 'Combines strong communication, problem solving, and ownership to create polished outcomes.' : 'Brings $primarySkills to build polished outcomes with real business impact.'} '
-          'Ready to contribute quickly in fast-moving teams.';
-    });
+    return _simulate(() => _buildSummary(resume));
   }
 
   Future<List<String>> generateJobBullets({
@@ -87,23 +85,13 @@ class LocalAiResumeService {
     required String company,
     required String targetJobTitle,
   }) async {
-    return _simulate(() {
-      final focus = _jobTitleSkillSuggestions(
-        targetJobTitle,
-      ).take(3).join(', ');
-      final normalizedRole = role.trim().isEmpty
-          ? 'team member'
-          : role.trim().toLowerCase();
-      final normalizedCompany = company.trim().isEmpty
-          ? 'the company'
-          : company.trim();
-
-      return [
-        'Led $normalizedRole initiatives at $normalizedCompany, improving delivery quality through clearer prioritization and faster stakeholder alignment.',
-        'Translated business needs into repeatable workflows and documentation, helping the team move faster with fewer revision cycles.',
-        'Partnered cross-functionally to launch customer-facing improvements, using $focus to strengthen outcomes and communicate impact.',
-      ];
-    });
+    return _simulate(
+      () => _buildJobBullets(
+        role: role,
+        company: company,
+        targetJobTitle: targetJobTitle,
+      ),
+    );
   }
 
   Future<List<String>> suggestSkills({
@@ -142,29 +130,231 @@ class LocalAiResumeService {
     );
   }
 
+  Future<ResumeAnalysis> analyzeResumeText({
+    required String resumeText,
+    String jobDescription = '',
+  }) async {
+    return _simulate(
+      () => _buildTextAnalysis(
+        resumeText: resumeText,
+        jobDescription: jobDescription,
+      ),
+    );
+  }
+
+  Future<List<String>> generateProofGapPrompts({
+    required String resumeText,
+    String jobDescription = '',
+  }) async {
+    return _simulate(
+      () => _buildProofGapPrompts(
+        resumeText: resumeText,
+        jobDescription: jobDescription,
+      ),
+    );
+  }
+
+  ResumeData parseImportedResumeText({
+    required String resumeText,
+    required ResumeTemplate template,
+    String sourceTitle = '',
+  }) {
+    return _buildResumeFromImportedText(
+      resumeText: resumeText,
+      template: template,
+      sourceTitle: sourceTitle,
+    );
+  }
+
+  Future<ResumeImprovementResult> improveResumeForAts({
+    required ResumeData resume,
+    String jobDescription = '',
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+
+    final normalizedSummary = resume.summary.trim();
+    final normalizedJobDescription = jobDescription.trim();
+    final currentSkills = resume.skills.toSet();
+    final targetJobTitle = resume.jobTitle.trim().isEmpty
+        ? resume.title
+        : resume.jobTitle;
+    final analysis = _buildAnalysis(
+      resume: resume,
+      jobDescription: normalizedJobDescription,
+    );
+    final missingKeywords = analysis.missingSkills;
+    final appliedChanges = <String>[];
+
+    var updatedSummary = normalizedSummary;
+    if (updatedSummary.length < 90) {
+      updatedSummary = _buildSummary(resume);
+      if (missingKeywords.isNotEmpty) {
+        updatedSummary =
+            '$updatedSummary Focused on ${missingKeywords.take(2).join(' and ')}.';
+      }
+      appliedChanges.add(
+        'Refreshed the summary to be stronger and more ATS-friendly.',
+      );
+    }
+
+    final suggestedSkills = {
+      ..._resumeSkillSuggestions(
+        resume: resume,
+        targetJobTitle: targetJobTitle,
+      ),
+      ...missingKeywords.take(4),
+    };
+    final mergedSkills = [...currentSkills, ...suggestedSkills]
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final cappedSkills = mergedSkills.take(50).toList();
+    if (cappedSkills.length > resume.skills.length) {
+      appliedChanges.add(
+        'Added relevant skills and missing keywords from the target role.',
+      );
+    }
+
+    var workChanged = false;
+    final updatedWork = resume.workExperiences.map((item) {
+      final hasWeakBullets =
+          item.bullets.where((bullet) => bullet.trim().length > 45).length < 2;
+      final needsBulletSupport =
+          !item.isBlank && (item.bullets.isEmpty || hasWeakBullets);
+      if (!needsBulletSupport) {
+        return item;
+      }
+
+      workChanged = true;
+      final improvedBullets = {
+        ...item.bullets.where((bullet) => bullet.trim().isNotEmpty),
+        ..._buildJobBullets(
+          role: item.role,
+          company: item.company,
+          targetJobTitle: targetJobTitle,
+        ),
+      }.toList();
+
+      return item.copyWith(bullets: improvedBullets);
+    }).toList();
+    if (workChanged) {
+      appliedChanges.add(
+        'Strengthened work experience bullets with clearer action language.',
+      );
+    }
+
+    if (appliedChanges.isEmpty) {
+      appliedChanges.add(
+        'Your selected resume was already strong, so no direct ATS fixes were needed.',
+      );
+    }
+
+    return ResumeImprovementResult(
+      resume: resume.copyWith(
+        summary: updatedSummary,
+        skills: cappedSkills,
+        workExperiences: updatedWork,
+        updatedAt: DateTime.now(),
+      ),
+      appliedChanges: appliedChanges,
+    );
+  }
+
   Future<String> generateCoverLetter({
     required ResumeData resume,
     required String company,
     required String role,
+    String skillToHighlight = '',
+    String language = '',
   }) async {
     return _simulate(() {
-      final introName = resume.fullName.trim().isEmpty
-          ? 'I'
+      final fullName = resume.fullName.trim().isEmpty
+          ? '[Your Name]'
           : resume.fullName.trim();
-      final highlight = resume.visibleWorkExperiences.isNotEmpty
-          ? resume.visibleWorkExperiences.first.company
-          : 'recent hands-on projects';
-      final strengths = resume.skills.take(3).join(', ');
+      final addressLine = '[Your Address]';
+      final cityLine = resume.location.trim().isEmpty
+          ? '[City, State, Zip Code]'
+          : resume.location.trim();
+      final emailLine = resume.email.trim().isEmpty
+          ? '[Email Address]'
+          : resume.email.trim();
+      final phoneLine = resume.phone.trim().isEmpty
+          ? '[Phone Number]'
+          : resume.phone.trim();
+      final currentDate = _formatCoverLetterDate(DateTime.now());
+      final companyName = company.trim().isEmpty ? 'Dekh Company' : company;
+      final roleName = role.trim().isEmpty ? 'Heheh' : role;
+      final highlightedSkill = skillToHighlight.trim().isNotEmpty
+          ? skillToHighlight.trim()
+          : resume.skills.take(1).join();
+      final primarySkill = highlightedSkill.isEmpty
+          ? roleName
+          : highlightedSkill;
+      final resumeStrength = resume.summary.trim().isNotEmpty
+          ? resume.summary.trim()
+          : 'I bring a thoughtful, reliable approach to planning, communication, and execution.';
+      final firstExperience = resume.visibleWorkExperiences.isNotEmpty
+          ? resume.visibleWorkExperiences.first
+          : null;
+      final experienceLabel = [
+        firstExperience?.role.trim() ?? '',
+        firstExperience?.company.trim() ?? '',
+      ].where((item) => item.isNotEmpty).join(' at ');
+      final experienceSource = experienceLabel.isEmpty
+          ? 'my previous work experience'
+          : 'my work as $experienceLabel';
+      var experienceBullet = '';
+      if (firstExperience != null) {
+        for (final bullet in firstExperience.bullets) {
+          if (bullet.trim().isNotEmpty) {
+            experienceBullet = bullet.trim();
+            break;
+          }
+        }
+      }
+      final experienceSentence = experienceBullet.isEmpty
+          ? 'I have a proven track record of delivering thoughtful work, adapting quickly, and contributing positively to team goals.'
+          : 'For example, $experienceBullet';
+      final languageParagraph = language.trim().isEmpty
+          ? ''
+          : '\n\nI can also collaborate confidently in ${language.trim()}, which helps me communicate clearly across teams and deliver a strong candidate experience.';
 
-      return 'Dear Hiring Team,\n\n'
-          'I am excited to apply for the $role position at $company. '
-          '$introName has built strong experience through $highlight, focusing on execution, communication, and outcomes that matter.\n\n'
-          '${strengths.isEmpty ? 'My background combines adaptability, structured thinking, and a bias toward action.' : 'My background is especially strong in $strengths, which aligns well with the needs of this role.'} '
-          'I enjoy turning ambiguous goals into clear plans and reliable delivery.\n\n'
-          'I would welcome the opportunity to bring that same energy to $company and contribute quickly from day one.\n\n'
-          'Sincerely,\n'
-          '${resume.fullName.trim().isEmpty ? 'Your Name' : resume.fullName.trim()}';
+      return '$fullName\n'
+          '$addressLine\n'
+          '$cityLine\n'
+          '$emailLine\n'
+          '$phoneLine\n'
+          '$currentDate\n\n'
+          'Hiring Manager\n'
+          '$companyName\n'
+          '[Company Address]\n'
+          '[City, State, Zip Code]\n\n'
+          'Dear Hiring Manager,\n\n'
+          'I am writing to express my interest in the $roleName position at $companyName. I believe that my skills and experience make me a strong fit for this role.\n\n'
+          'With a strong background in $primarySkill, I am confident in my ability to contribute positively to the team at $companyName. Through $experienceSource, I have developed practical experience, sound judgment, and a clear understanding of how to deliver results. $experienceSentence\n\n'
+          '$resumeStrength\n\n'
+          'I possess strong communication, problem-solving, and analytical skills, and I enjoy working in collaborative environments where I can learn quickly and add value from day one.$languageParagraph\n\n'
+          'I am excited about the opportunity to bring my experience in $primarySkill to $companyName and contribute to the continued success of the team. Thank you for considering my application. I look forward to the possibility of discussing my application further.\n\n'
+          'Sincerely,\n\n'
+          '$fullName';
     });
+  }
+
+  String _formatCoverLetterDate(DateTime date) {
+    const monthNames = <String>[
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    return '${monthNames[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   Future<JobDescriptionInsights> analyzeJobDescription({
@@ -311,6 +501,652 @@ class LocalAiResumeService {
       strengths: strengths,
       improvements: improvements.toSet().toList(),
     );
+  }
+
+  ResumeAnalysis _buildTextAnalysis({
+    required String resumeText,
+    required String jobDescription,
+  }) {
+    final normalized = resumeText.trim();
+    if (normalized.isEmpty) {
+      return const ResumeAnalysis(
+        score: 0,
+        atsCompatibility: 0,
+        missingSkills: [],
+        weakDescriptions: [],
+        strengths: [],
+        improvements: ['Paste your current resume text to run the analyser.'],
+      );
+    }
+
+    final lower = normalized.toLowerCase();
+    var score = 28;
+    final improvements = <String>[];
+    final strengths = <String>[];
+    final weakDescriptions = <String>[];
+
+    if (RegExp(r'[\w\.-]+@[\w\.-]+\.\w+').hasMatch(normalized)) {
+      score += 8;
+      strengths.add('Includes an email address.');
+    } else {
+      improvements.add('Add a clear email address to the resume header.');
+    }
+
+    if (RegExp(r'(\+\d{1,3}[\s-]?)?(\d[\s-]?){10,}').hasMatch(normalized)) {
+      score += 8;
+      strengths.add('Includes a phone number.');
+    } else {
+      improvements.add('Add a phone number recruiters can reach easily.');
+    }
+
+    if (_containsAny(lower, ['summary', 'profile', 'objective'])) {
+      score += 10;
+      strengths.add('Includes a professional summary section.');
+    } else {
+      improvements.add(
+        'Add a short summary near the top to frame your value quickly.',
+      );
+    }
+
+    if (_containsAny(lower, ['experience', 'employment', 'work history'])) {
+      score += 14;
+      strengths.add('Work experience is present.');
+    } else {
+      improvements.add(
+        'Include work experience or equivalent project experience.',
+      );
+    }
+
+    if (_containsAny(lower, ['education'])) {
+      score += 6;
+    } else {
+      improvements.add('Add education details to round out the resume.');
+    }
+
+    if (_containsAny(lower, ['skills'])) {
+      score += 8;
+    } else {
+      improvements.add('Create a dedicated skills section for ATS matching.');
+    }
+
+    final bulletCount = RegExp(
+      r'^[\-\u2022\*]',
+      multiLine: true,
+    ).allMatches(normalized).length;
+    if (bulletCount >= 3) {
+      score += 10;
+      strengths.add('Uses bullet points for scan-friendly reading.');
+    } else {
+      improvements.add(
+        'Use more bullet points so achievements are easier to scan.',
+      );
+    }
+
+    final metricCount = RegExp(
+      r'\b\d+[%+xXkKmM]?\b',
+    ).allMatches(normalized).length;
+    if (metricCount >= 3) {
+      score += 10;
+      strengths.add('Contains measurable results or scope indicators.');
+    } else {
+      weakDescriptions.add(
+        'Several claims still need numbers, percentages, scale, or concrete outcomes.',
+      );
+      improvements.add(
+        'Add metrics like revenue, time saved, users, accuracy, or growth.',
+      );
+    }
+
+    final keywords = _extractKeywords(jobDescription).take(10).toList();
+    final missingSkills = keywords
+        .where((keyword) => !lower.contains(keyword.toLowerCase()))
+        .take(5)
+        .toList();
+
+    if (keywords.isNotEmpty) {
+      if (missingSkills.isEmpty) {
+        score += 12;
+        strengths.add('Matches the target job description well.');
+      } else {
+        score += 4;
+        improvements.add(
+          'Mirror more truthful target-job keywords in your resume content.',
+        );
+      }
+    }
+
+    score = score.clamp(0, 100);
+
+    return ResumeAnalysis(
+      score: score,
+      atsCompatibility: score / 100,
+      missingSkills: missingSkills,
+      weakDescriptions: weakDescriptions,
+      strengths: strengths,
+      improvements: improvements.toSet().toList(),
+    );
+  }
+
+  List<String> _buildProofGapPrompts({
+    required String resumeText,
+    required String jobDescription,
+  }) {
+    final prompts = <String>[];
+    final normalized = resumeText.trim();
+    final lower = normalized.toLowerCase();
+    final metricCount = RegExp(
+      r'\b\d+[%+xXkKmM]?\b',
+    ).allMatches(normalized).length;
+
+    if (metricCount < 3) {
+      prompts.add(
+        'Which bullet can you quantify with a number, percentage, revenue impact, time saved, or users affected?',
+      );
+    }
+
+    if (!_containsAny(lower, [
+      'led',
+      'owned',
+      'built',
+      'launched',
+      'improved',
+    ])) {
+      prompts.add(
+        'Where can you replace generic language with a stronger action verb like built, led, launched, improved, or reduced?',
+      );
+    }
+
+    if (_containsAny(lower, ['team player', 'hardworking', 'responsible'])) {
+      prompts.add(
+        'Which vague phrase like "team player" or "responsible for" can you replace with a specific result or example?',
+      );
+    }
+
+    final missingKeywords = _extractKeywords(jobDescription)
+        .where((keyword) => !lower.contains(keyword.toLowerCase()))
+        .take(2)
+        .toList();
+    if (missingKeywords.isNotEmpty) {
+      prompts.add(
+        'Which project or job entry best proves ${missingKeywords.join(' and ')} so you can add that evidence truthfully?',
+      );
+    }
+
+    if (!_containsAny(lower, ['skills'])) {
+      prompts.add(
+        'What tools, platforms, or methods should be pulled into a dedicated skills section for easier ATS matching?',
+      );
+    }
+
+    if (prompts.isEmpty) {
+      prompts.add(
+        'Your resume already reads strongly. Next, review each major claim and ask: what proof would make this even more believable to a recruiter?',
+      );
+    }
+
+    return prompts.take(4).toList();
+  }
+
+  ResumeData _buildResumeFromImportedText({
+    required String resumeText,
+    required ResumeTemplate template,
+    required String sourceTitle,
+  }) {
+    final normalizedText = resumeText
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n')
+        .trim();
+    final lines = normalizedText
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    final sections = _splitImportedResumeSections(lines);
+    final headerLines = sections['header'] ?? const <String>[];
+    final summaryLines = sections['summary'] ?? const <String>[];
+    final skillsLines = sections['skills'] ?? const <String>[];
+    final experienceLines = sections['experience'] ?? const <String>[];
+    final educationLines = sections['education'] ?? const <String>[];
+
+    final fallbackTitle = _cleanImportedTitle(sourceTitle);
+    final fullName = _inferImportedFullName(headerLines, fallbackTitle);
+    final jobTitle = _inferImportedJobTitle(
+      headerLines: headerLines,
+      experienceLines: experienceLines,
+      fallbackTitle: fallbackTitle,
+    );
+
+    return ResumeData.empty(template: template.userFacingTemplate).copyWith(
+      title: _normalizeImportedResumeTitle(
+        sourceTitle: fallbackTitle,
+        fullName: fullName,
+        jobTitle: jobTitle,
+      ),
+      fullName: fullName,
+      jobTitle: jobTitle,
+      email:
+          _firstRegexMatch(normalizedText, RegExp(r'[\w\.-]+@[\w\.-]+\.\w+')) ??
+          '',
+      phone: _extractImportedPhone(normalizedText),
+      location: _inferImportedLocation(headerLines),
+      website: _extractImportedWebsite(normalizedText),
+      summary: _collectImportedSummary(
+        summaryLines: summaryLines,
+        headerLines: headerLines,
+        allLines: lines,
+      ),
+      workExperiences: _extractImportedWorkExperiences(
+        experienceLines: experienceLines,
+        fallbackJobTitle: jobTitle,
+      ),
+      education: _extractImportedEducation(educationLines),
+      skills: _extractImportedSkills(
+        skillLines: skillsLines,
+        resumeText: normalizedText,
+      ).take(50).toList(),
+      githubLink: _extractImportedLink(normalizedText, 'github.com'),
+      linkedinLink: _extractImportedLink(normalizedText, 'linkedin.com'),
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  Map<String, List<String>> _splitImportedResumeSections(List<String> lines) {
+    final sections = <String, List<String>>{'header': <String>[]};
+    var currentSection = 'header';
+
+    for (final line in lines) {
+      final heading = _matchImportedSectionHeading(line);
+      if (heading != null) {
+        currentSection = heading;
+        sections.putIfAbsent(currentSection, () => <String>[]);
+        continue;
+      }
+
+      sections.putIfAbsent(currentSection, () => <String>[]).add(line);
+    }
+
+    return sections;
+  }
+
+  String? _matchImportedSectionHeading(String line) {
+    final normalized = line
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z& ]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    const headingMap = <String, String>{
+      'summary': 'summary',
+      'professional summary': 'summary',
+      'profile': 'summary',
+      'objective': 'summary',
+      'skills': 'skills',
+      'technical skills': 'skills',
+      'core skills': 'skills',
+      'key skills': 'skills',
+      'experience': 'experience',
+      'work experience': 'experience',
+      'professional experience': 'experience',
+      'employment': 'experience',
+      'employment history': 'experience',
+      'work history': 'experience',
+      'education': 'education',
+      'education and training': 'education',
+    };
+
+    return headingMap[normalized];
+  }
+
+  String _inferImportedFullName(
+    List<String> headerLines,
+    String fallbackTitle,
+  ) {
+    for (final line in headerLines.take(3)) {
+      if (_isImportedContactLine(line)) {
+        continue;
+      }
+      final cleaned = line.trim();
+      final wordCount = cleaned.split(RegExp(r'\s+')).length;
+      if (cleaned.length <= 40 && wordCount <= 4) {
+        return _toTitleCase(cleaned);
+      }
+    }
+
+    final fallback = fallbackTitle
+        .replaceAll(RegExp(r'\bresume\b', caseSensitive: false), '')
+        .trim();
+    return fallback.isEmpty ? '' : _toTitleCase(fallback);
+  }
+
+  String _inferImportedJobTitle({
+    required List<String> headerLines,
+    required List<String> experienceLines,
+    required String fallbackTitle,
+  }) {
+    for (final line in headerLines.skip(1).take(3)) {
+      if (_isImportedContactLine(line)) {
+        continue;
+      }
+      if (line.split(RegExp(r'\s+')).length <= 8) {
+        return line.trim();
+      }
+    }
+
+    for (final line in experienceLines.take(3)) {
+      if (_isImportedBulletLine(line) || _isImportedContactLine(line)) {
+        continue;
+      }
+      final role = _extractImportedRole(line);
+      if (role.isNotEmpty) {
+        return role;
+      }
+    }
+
+    return fallbackTitle
+        .replaceAll(RegExp(r'\bresume\b', caseSensitive: false), '')
+        .trim();
+  }
+
+  String _inferImportedLocation(List<String> headerLines) {
+    for (final line in headerLines) {
+      if (_isImportedContactLine(line)) {
+        continue;
+      }
+      if (line.contains(',')) {
+        return line.trim();
+      }
+    }
+    return '';
+  }
+
+  String _collectImportedSummary({
+    required List<String> summaryLines,
+    required List<String> headerLines,
+    required List<String> allLines,
+  }) {
+    if (summaryLines.isNotEmpty) {
+      return summaryLines.take(3).join(' ').trim();
+    }
+
+    final fallbackLines = allLines
+        .where((line) {
+          if (headerLines.contains(line)) {
+            return false;
+          }
+          if (_matchImportedSectionHeading(line) != null) {
+            return false;
+          }
+          if (_isImportedContactLine(line)) {
+            return false;
+          }
+          return line.split(RegExp(r'\s+')).length >= 8;
+        })
+        .take(2);
+
+    return fallbackLines.join(' ').trim();
+  }
+
+  List<String> _extractImportedSkills({
+    required List<String> skillLines,
+    required String resumeText,
+  }) {
+    final values = <String>{};
+    final sources = skillLines.isNotEmpty
+        ? skillLines
+        : _extractKeywords(resumeText).take(10).toList();
+
+    for (final source in sources) {
+      final normalized = source
+          .replaceAll('•', ',')
+          .replaceAll('|', ',')
+          .replaceAll('·', ',');
+      for (final item in normalized.split(',')) {
+        final cleaned = item.replaceAll(RegExp(r'^[\-\*\u2022]\s*'), '').trim();
+        if (cleaned.isEmpty) {
+          continue;
+        }
+        if (_matchImportedSectionHeading(cleaned) != null) {
+          continue;
+        }
+        if (cleaned.split(RegExp(r'\s+')).length > 4) {
+          continue;
+        }
+        values.add(cleaned);
+      }
+    }
+
+    return values.toList();
+  }
+
+  List<WorkExperience> _extractImportedWorkExperiences({
+    required List<String> experienceLines,
+    required String fallbackJobTitle,
+  }) {
+    if (experienceLines.isEmpty) {
+      return const [WorkExperience.empty()];
+    }
+
+    final bulletLines = experienceLines
+        .where(_isImportedBulletLine)
+        .map(_stripImportedBullet)
+        .where((line) => line.isNotEmpty)
+        .take(6)
+        .toList();
+    final detailLines = experienceLines
+        .where((line) => !_isImportedBulletLine(line))
+        .toList();
+    final headerLine = detailLines.isNotEmpty
+        ? detailLines.first
+        : fallbackJobTitle;
+    final role = _extractImportedRole(headerLine).ifEmpty(fallbackJobTitle);
+    final company = _extractImportedCompany(headerLine);
+    final description = detailLines.skip(1).take(2).join(' ').trim();
+
+    final workExperience = WorkExperience(
+      role: role,
+      company: company,
+      startDate: '',
+      endDate: '',
+      description: description,
+      bullets: bulletLines,
+    );
+
+    return workExperience.isBlank
+        ? const [WorkExperience.empty()]
+        : [workExperience];
+  }
+
+  List<EducationItem> _extractImportedEducation(List<String> educationLines) {
+    if (educationLines.isEmpty) {
+      return const [EducationItem.empty()];
+    }
+
+    final combined = educationLines.join(' | ');
+    final year =
+        _firstRegexMatch(combined, RegExp(r'\b(?:19|20)\d{2}\b')) ?? '';
+    final score =
+        _firstRegexMatch(
+          combined,
+          RegExp(
+            r'\b\d+(?:\.\d+)?\s*(?:cgpa|gpa|%|percent)\b',
+            caseSensitive: false,
+          ),
+        ) ??
+        '';
+    final degree = educationLines.firstWhere(
+      (line) => RegExp(
+        r'(bachelor|master|diploma|degree|b\.tech|btech|mba|bsc|msc|ba)\b',
+        caseSensitive: false,
+      ).hasMatch(line),
+      orElse: () => educationLines.first,
+    );
+    final institution = educationLines.firstWhere(
+      (line) => line != degree,
+      orElse: () => '',
+    );
+
+    final item = EducationItem(
+      institution: institution,
+      degree: degree,
+      year: year,
+      score: score,
+      details: educationLines.take(3).join(' ').trim(),
+    );
+
+    return item.isBlank ? const [EducationItem.empty()] : [item];
+  }
+
+  String _cleanImportedTitle(String sourceTitle) {
+    return sourceTitle
+        .replaceAll(RegExp(r'[_-]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
+  String _normalizeImportedResumeTitle({
+    required String sourceTitle,
+    required String fullName,
+    required String jobTitle,
+  }) {
+    if (sourceTitle.isNotEmpty) {
+      return sourceTitle;
+    }
+    if (jobTitle.isNotEmpty) {
+      return '$jobTitle Resume';
+    }
+    if (fullName.isNotEmpty) {
+      return '$fullName Resume';
+    }
+    return ResumeData.defaultTitle;
+  }
+
+  bool _isImportedContactLine(String line) {
+    return line.contains('@') ||
+        RegExp(r'(https?:\/\/|www\.)', caseSensitive: false).hasMatch(line) ||
+        RegExp(r'(\+\d{1,3}[\s-]?)?(\d[\s-]?){10,}').hasMatch(line);
+  }
+
+  bool _isImportedBulletLine(String line) {
+    return RegExp(r'^\s*[\-\u2022\*]').hasMatch(line);
+  }
+
+  String _stripImportedBullet(String line) {
+    return line.replaceFirst(RegExp(r'^\s*[\-\u2022\*]\s*'), '').trim();
+  }
+
+  String _extractImportedRole(String line) {
+    final cleaned = line.trim();
+    if (cleaned.contains('|')) {
+      return cleaned.split('|').first.trim();
+    }
+    if (RegExp(r'\bat\b', caseSensitive: false).hasMatch(cleaned)) {
+      return cleaned
+          .split(RegExp(r'\bat\b', caseSensitive: false))
+          .first
+          .trim();
+    }
+    return cleaned;
+  }
+
+  String _extractImportedCompany(String line) {
+    final cleaned = line.trim();
+    if (cleaned.contains('|')) {
+      final parts = cleaned.split('|').map((part) => part.trim()).toList();
+      if (parts.length >= 2) {
+        return parts[1];
+      }
+    }
+    if (RegExp(r'\bat\b', caseSensitive: false).hasMatch(cleaned)) {
+      final parts = cleaned.split(RegExp(r'\bat\b', caseSensitive: false));
+      if (parts.length >= 2) {
+        return parts[1].trim();
+      }
+    }
+    return '';
+  }
+
+  String _extractImportedPhone(String text) {
+    return _firstRegexMatch(
+          text,
+          RegExp(r'(\+\d{1,3}[\s-]?)?(\d[\s-]?){10,}'),
+        ) ??
+        '';
+  }
+
+  String _extractImportedWebsite(String text) {
+    final matches = RegExp(
+      r'((?:https?:\/\/|www\.)[^\s]+)',
+      caseSensitive: false,
+    ).allMatches(text);
+
+    for (final match in matches) {
+      final value = match.group(0)?.trim() ?? '';
+      final lower = value.toLowerCase();
+      if (lower.contains('linkedin.com') || lower.contains('github.com')) {
+        continue;
+      }
+      return value;
+    }
+
+    return '';
+  }
+
+  String _extractImportedLink(String text, String domain) {
+    final regex = RegExp(
+      '((?:https?:\\/\\/|www\\.)[^\\s]*${RegExp.escape(domain)}[^\\s]*)',
+      caseSensitive: false,
+    );
+    return _firstRegexMatch(text, regex) ?? '';
+  }
+
+  String? _firstRegexMatch(String text, RegExp pattern) {
+    final match = pattern.firstMatch(text);
+    return match?.group(0);
+  }
+
+  String _toTitleCase(String input) {
+    return input
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .map(
+          (part) => part.length <= 2
+              ? part.toUpperCase()
+              : '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
+        )
+        .join(' ');
+  }
+
+  String _buildSummary(ResumeData resume) {
+    final title = resume.jobTitle.trim().isEmpty
+        ? 'professional candidate'
+        : resume.jobTitle.trim();
+    final primarySkills = resume.skills.take(4).join(', ');
+    final experienceCount = math.max(1, resume.visibleWorkExperiences.length);
+
+    return '${resume.fullName.trim().isEmpty ? 'Results-driven' : resume.fullName.trim()} '
+        'is a $title with $experienceCount standout experience ${experienceCount == 1 ? 'entry' : 'stories'} '
+        'across delivery, collaboration, and measurable execution. '
+        '${primarySkills.isEmpty ? 'Combines strong communication, problem solving, and ownership to create polished outcomes.' : 'Brings $primarySkills to build polished outcomes with real business impact.'} '
+        'Ready to contribute quickly in fast-moving teams.';
+  }
+
+  List<String> _buildJobBullets({
+    required String role,
+    required String company,
+    required String targetJobTitle,
+  }) {
+    final focus = _jobTitleSkillSuggestions(targetJobTitle).take(3).join(', ');
+    final normalizedRole = role.trim().isEmpty
+        ? 'team member'
+        : role.trim().toLowerCase();
+    final normalizedCompany = company.trim().isEmpty
+        ? 'the company'
+        : company.trim();
+
+    return [
+      'Led $normalizedRole initiatives at $normalizedCompany, improving delivery quality through clearer prioritization and faster stakeholder alignment.',
+      'Translated business needs into repeatable workflows and documentation, helping the team move faster with fewer revision cycles.',
+      'Partnered cross-functionally to launch customer-facing improvements, using $focus to strengthen outcomes and communicate impact.',
+    ];
   }
 
   List<String> _resumeSkillSuggestions({
@@ -644,12 +1480,510 @@ class ResumePdfService {
     return document.save();
   }
 
+  Future<Uint8List> buildHighlightedResumePdf({
+    required ResumeData resume,
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) async {
+    final document = pw.Document(theme: _resumeDocumentTheme);
+    final headerColor = PdfColor.fromHex('#243447');
+    final lineColor = PdfColor.fromHex('#D7DCE2');
+    final highlightColor = PdfColor.fromHex('#FFF0A8');
+
+    document.addPage(
+      pw.MultiPage(
+        margin: pw.EdgeInsets.zero,
+        build: (context) => [
+          pw.Container(
+            color: headerColor,
+            padding: const pw.EdgeInsets.fromLTRB(30, 28, 30, 22),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Container(
+                  width: 48,
+                  height: 48,
+                  alignment: pw.Alignment.center,
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.white, width: 1.4),
+                  ),
+                  child: pw.Text(
+                    _resumeInitials(resume),
+                    style: pw.TextStyle(
+                      color: PdfColors.white,
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.SizedBox(width: 14),
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        _displayName(resume).toUpperCase(),
+                        style: pw.TextStyle(
+                          color: PdfColors.white,
+                          fontSize: 24,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      pw.SizedBox(height: 6),
+                      pw.Text(
+                        _resumeContactItems(resume).join('  /  '),
+                        style: const pw.TextStyle(
+                          color: PdfColors.white,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          pw.Container(
+            width: double.infinity,
+            color: highlightColor,
+            padding: const pw.EdgeInsets.symmetric(horizontal: 30, vertical: 8),
+            child: pw.Text(
+              'Highlighted sections show AI ATS changes.',
+              style: pw.TextStyle(
+                fontSize: 9,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColor.fromHex('#5B4A00'),
+              ),
+            ),
+          ),
+          pw.SizedBox(height: 18),
+          if (resume.summary.trim().isNotEmpty)
+            _corporateSection(
+              title: 'Summary',
+              lineColor: lineColor,
+              child: pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
+                ),
+                color: highlightSummary ? highlightColor : PdfColors.white,
+                child: pw.Text(resume.summary.trim()),
+              ),
+            ),
+          _corporateSection(
+            title: 'Skills',
+            lineColor: lineColor,
+            child: pw.Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: _skillsForDisplay(resume)
+                  .map(
+                    (skill) => pw.Container(
+                      padding: const pw.EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      decoration: pw.BoxDecoration(
+                        color: highlightedSkills.contains(skill)
+                            ? highlightColor
+                            : PdfColor.fromHex('#F4F6F8'),
+                        borderRadius: pw.BorderRadius.circular(12),
+                      ),
+                      child: pw.Text(
+                        skill,
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          if (resume.visibleWorkExperiences.isNotEmpty)
+            _corporateSection(
+              title: 'Experience',
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (
+                    var index = 0;
+                    index < resume.visibleWorkExperiences.length;
+                    index++
+                  )
+                    _buildHighlightedCorporateExperience(
+                      resume.visibleWorkExperiences[index],
+                      highlightedBulletsByExperience[index] ?? const <String>{},
+                      highlightColor,
+                    ),
+                ],
+              ),
+            ),
+          if (resume.visibleEducation.isNotEmpty)
+            _corporateSection(
+              title: 'Education',
+              lineColor: lineColor,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  for (final item in resume.visibleEducation)
+                    _buildCorporateEducation(item),
+                ],
+              ),
+            ),
+          if (resume.visibleProjects.isNotEmpty)
+            _corporateSection(
+              title: 'Projects',
+              lineColor: lineColor,
+              child: pw.Column(
+                children: [
+                  for (final item in resume.visibleProjects)
+                    _buildCompactProject(item),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return document.save();
+  }
+
+  Future<Uint8List> buildCoverLetterPdf(CoverLetterData coverLetter) async {
+    final document = pw.Document(theme: _resumeDocumentTheme);
+    final parsed = _parseCoverLetterContent(coverLetter.content);
+
+    switch (coverLetter.template) {
+      case CoverLetterTemplate.executiveNote:
+        _addExecutiveNoteCoverLetterPage(document, parsed);
+        break;
+      case CoverLetterTemplate.minimalLetter:
+        _addMinimalCoverLetterPage(document, parsed);
+        break;
+      case CoverLetterTemplate.sidebarLetter:
+        _addSidebarCoverLetterPage(document, parsed);
+        break;
+    }
+
+    return document.save();
+  }
+
   static final pw.ThemeData _resumeDocumentTheme = pw.ThemeData.withFont(
     base: pw.Font.helvetica(),
     bold: pw.Font.helveticaBold(),
     italic: pw.Font.helveticaOblique(),
     boldItalic: pw.Font.helveticaBoldOblique(),
   );
+
+  void _addExecutiveNoteCoverLetterPage(
+    pw.Document document,
+    _ParsedCoverLetterContent parsed,
+  ) {
+    final headerColor = PdfColor.fromHex('#1F2937');
+    final dividerColor = PdfColor.fromHex('#E5E7EB');
+
+    document.addPage(
+      pw.MultiPage(
+        margin: const pw.EdgeInsets.fromLTRB(28, 22, 28, 28),
+        build: (context) => [
+          pw.Container(
+            width: double.infinity,
+            padding: const pw.EdgeInsets.all(20),
+            decoration: pw.BoxDecoration(
+              color: headerColor,
+              borderRadius: pw.BorderRadius.circular(18),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  parsed.senderName,
+                  style: pw.TextStyle(
+                    color: PdfColors.white,
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                if (parsed.senderDetails.isNotEmpty) ...[
+                  pw.SizedBox(height: 8),
+                  pw.Text(
+                    parsed.senderDetails.join('  |  '),
+                    style: const pw.TextStyle(
+                      color: PdfColors.white,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 18),
+          pw.Divider(color: dividerColor),
+          pw.SizedBox(height: 10),
+          _buildCoverLetterRecipientBlock(parsed),
+          pw.SizedBox(height: 16),
+          ..._buildCoverLetterBody(parsed),
+        ],
+      ),
+    );
+  }
+
+  void _addMinimalCoverLetterPage(
+    pw.Document document,
+    _ParsedCoverLetterContent parsed,
+  ) {
+    final accent = PdfColor.fromHex('#9A6B2F');
+
+    document.addPage(
+      pw.MultiPage(
+        margin: const pw.EdgeInsets.fromLTRB(32, 26, 32, 28),
+        build: (context) => [
+          pw.Center(
+            child: pw.Text(
+              parsed.senderName,
+              textAlign: pw.TextAlign.center,
+              style: pw.TextStyle(
+                fontSize: 25,
+                fontWeight: pw.FontWeight.bold,
+                color: accent,
+              ),
+            ),
+          ),
+          if (parsed.senderDetails.isNotEmpty) ...[
+            pw.SizedBox(height: 8),
+            pw.Center(
+              child: pw.Text(
+                parsed.senderDetails.join('  |  '),
+                textAlign: pw.TextAlign.center,
+                style: pw.TextStyle(
+                  fontSize: 10,
+                  color: PdfColor.fromHex('#5E6369'),
+                ),
+              ),
+            ),
+          ],
+          pw.SizedBox(height: 16),
+          pw.Container(height: 1, color: accent),
+          pw.SizedBox(height: 18),
+          _buildCoverLetterRecipientBlock(parsed),
+          pw.SizedBox(height: 16),
+          ..._buildCoverLetterBody(parsed),
+        ],
+      ),
+    );
+  }
+
+  void _addSidebarCoverLetterPage(
+    pw.Document document,
+    _ParsedCoverLetterContent parsed,
+  ) {
+    final accent = PdfColor.fromHex('#E39A3A');
+    final dark = PdfColor.fromHex('#161616');
+
+    document.addPage(
+      pw.MultiPage(
+        margin: const pw.EdgeInsets.fromLTRB(24, 24, 24, 28),
+        build: (context) => [
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Container(
+                width: 150,
+                padding: const pw.EdgeInsets.fromLTRB(14, 14, 14, 18),
+                decoration: pw.BoxDecoration(
+                  color: PdfColor.fromHex('#FAF4EB'),
+                  borderRadius: pw.BorderRadius.circular(16),
+                  border: pw.Border.all(color: accent, width: 0.8),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Container(
+                      width: 44,
+                      height: 44,
+                      alignment: pw.Alignment.center,
+                      decoration: pw.BoxDecoration(
+                        color: dark,
+                        borderRadius: pw.BorderRadius.circular(12),
+                      ),
+                      child: pw.Text(
+                        parsed.senderInitial,
+                        style: pw.TextStyle(
+                          color: accent,
+                          fontSize: 24,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    pw.SizedBox(height: 14),
+                    pw.Text(
+                      parsed.senderName,
+                      style: pw.TextStyle(
+                        fontSize: 19,
+                        fontWeight: pw.FontWeight.bold,
+                        color: accent,
+                      ),
+                    ),
+                    pw.SizedBox(height: 12),
+                    for (final line in parsed.senderDetails)
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(bottom: 6),
+                        child: pw.Text(
+                          line,
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColor.fromHex('#4B4F55'),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(width: 20),
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    _buildCoverLetterRecipientBlock(parsed),
+                    pw.SizedBox(height: 16),
+                    ..._buildCoverLetterBody(parsed),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildCoverLetterRecipientBlock(_ParsedCoverLetterContent parsed) {
+    return pw.Text(
+      parsed.recipientLines.join('\n'),
+      style: pw.TextStyle(
+        fontSize: 11,
+        color: PdfColor.fromHex('#4B4F55'),
+        height: 1.45,
+      ),
+    );
+  }
+
+  List<pw.Widget> _buildCoverLetterBody(_ParsedCoverLetterContent parsed) {
+    final bodyStyle = pw.TextStyle(
+      fontSize: 11.5,
+      height: 1.6,
+      color: PdfColor.fromHex('#202327'),
+    );
+
+    return [
+      pw.Text(
+        parsed.greeting,
+        style: bodyStyle.copyWith(fontWeight: pw.FontWeight.bold),
+      ),
+      pw.SizedBox(height: 12),
+      for (final paragraph in parsed.bodyParagraphs) ...[
+        pw.Text(paragraph, style: bodyStyle),
+        pw.SizedBox(height: 12),
+      ],
+      pw.Text(parsed.closing, style: bodyStyle),
+      pw.SizedBox(height: 20),
+      pw.Text(
+        parsed.signature,
+        style: bodyStyle.copyWith(fontWeight: pw.FontWeight.bold),
+      ),
+    ];
+  }
+
+  _ParsedCoverLetterContent _parseCoverLetterContent(String content) {
+    final normalized = content.replaceAll('\r\n', '\n').trim();
+    if (normalized.isEmpty) {
+      return const _ParsedCoverLetterContent(
+        senderLines: <String>['[Your Name]'],
+        recipientLines: <String>[
+          'Hiring Manager',
+          '[Company Name]',
+          '[Company Address]',
+          '[City, State, Zip Code]',
+        ],
+        greeting: 'Dear Hiring Manager,',
+        bodyParagraphs: <String>[
+          'Your generated cover letter will appear here.',
+        ],
+        closing: 'Sincerely,',
+        signature: '[Your Name]',
+      );
+    }
+
+    final sections = normalized
+        .split(RegExp(r'\n\s*\n'))
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+
+    if (sections.length < 3) {
+      return _ParsedCoverLetterContent(
+        senderLines: const <String>['[Your Name]'],
+        recipientLines: const <String>[
+          'Hiring Manager',
+          '[Company Name]',
+          '[Company Address]',
+          '[City, State, Zip Code]',
+        ],
+        greeting: 'Dear Hiring Manager,',
+        bodyParagraphs: <String>[normalized],
+        closing: 'Sincerely,',
+        signature: '[Your Name]',
+      );
+    }
+
+    final senderLines = _nonEmptyLines(sections.first);
+    final recipientLines = sections.length > 1
+        ? _nonEmptyLines(sections[1])
+        : const <String>[];
+    final greeting = sections.length > 2 ? sections[2] : 'Dear Hiring Manager,';
+    final closing = sections.length > 4
+        ? sections[sections.length - 2]
+        : 'Sincerely,';
+    final signature = sections.length > 5
+        ? sections.last
+        : senderLines.isNotEmpty
+        ? senderLines.first
+        : '[Your Name]';
+    final bodyStart = sections.length > 2 ? 3 : 0;
+    final bodyEnd = sections.length > 4 ? sections.length - 2 : sections.length;
+    final bodyParagraphs = sections
+        .sublist(bodyStart, bodyEnd)
+        .where((item) => item.trim().isNotEmpty)
+        .toList();
+
+    return _ParsedCoverLetterContent(
+      senderLines: senderLines.isEmpty
+          ? const <String>['[Your Name]']
+          : senderLines,
+      recipientLines: recipientLines.isEmpty
+          ? const <String>[
+              'Hiring Manager',
+              '[Company Name]',
+              '[Company Address]',
+              '[City, State, Zip Code]',
+            ]
+          : recipientLines,
+      greeting: greeting,
+      bodyParagraphs: bodyParagraphs.isEmpty
+          ? <String>[normalized]
+          : bodyParagraphs,
+      closing: closing,
+      signature: signature,
+    );
+  }
+
+  List<String> _nonEmptyLines(String section) {
+    return section
+        .split('\n')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
 
   void _addCorporateTemplatePage(pw.Document document, ResumeData resume) {
     final headerColor = PdfColor.fromHex('#3B4046');
@@ -1645,6 +2979,76 @@ class ResumePdfService {
     );
   }
 
+  pw.Widget _buildHighlightedCorporateExperience(
+    WorkExperience item,
+    Set<String> highlightedBullets,
+    PdfColor highlightColor,
+  ) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 12),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.RichText(
+                  text: pw.TextSpan(
+                    children: [
+                      pw.TextSpan(
+                        text: item.role.ifEmpty('Role'),
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.TextSpan(
+                        text: ' / ${item.company.ifEmpty('Company')}',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (item.startDate.trim().isNotEmpty ||
+                  item.endDate.trim().isNotEmpty)
+                pw.Text(
+                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
+                  style: pw.TextStyle(
+                    color: PdfColor.fromHex('#666B71'),
+                    fontStyle: pw.FontStyle.italic,
+                  ),
+                ),
+            ],
+          ),
+          if (item.description.trim().isNotEmpty) ...[
+            pw.SizedBox(height: 4),
+            pw.Text(item.description.trim()),
+          ],
+          for (final bullet in item.bullets)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 4),
+              child: pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 3,
+                ),
+                color: highlightedBullets.contains(bullet)
+                    ? highlightColor
+                    : PdfColors.white,
+                child: pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('•  '),
+                    pw.Expanded(child: pw.Text(bullet)),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   pw.Widget _buildMinimalExperience(WorkExperience item) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 12),
@@ -1798,6 +3202,40 @@ class ResumePdfService {
     );
   }
 
+  Future<File> saveCoverLetterPdfToDevice(CoverLetterData coverLetter) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final exportDirectory = Directory('${directory.path}/exports');
+    if (!await exportDirectory.exists()) {
+      await exportDirectory.create(recursive: true);
+    }
+
+    final safeName = _sanitizeFileName(coverLetter.displayTitle);
+    final file = File(
+      '${exportDirectory.path}/$safeName-${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+    final bytes = await buildCoverLetterPdf(coverLetter);
+    await file.writeAsBytes(bytes, flush: true);
+    return file;
+  }
+
+  Future<void> shareCoverLetter(CoverLetterData coverLetter) async {
+    final file = await saveCoverLetterPdfToDevice(coverLetter);
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      subject: '${coverLetter.displayTitle} cover letter',
+      text: 'Shared from ResumeAI',
+    );
+  }
+
+  Future<void> printCoverLetter(CoverLetterData coverLetter) async {
+    final bytes = await buildCoverLetterPdf(coverLetter);
+    await Printing.layoutPdf(
+      onLayout: (_) async => bytes,
+      name: '${_sanitizeFileName(coverLetter.displayTitle)}.pdf',
+      format: PdfPageFormat.a4,
+    );
+  }
+
   String _sanitizeFileName(String input) {
     return input
         .trim()
@@ -1805,6 +3243,35 @@ class ResumePdfService {
         .replaceAll(RegExp(r'_+'), '_')
         .replaceAll(RegExp(r'^_|_$'), '')
         .ifEmpty('resume');
+  }
+}
+
+class _ParsedCoverLetterContent {
+  const _ParsedCoverLetterContent({
+    required this.senderLines,
+    required this.recipientLines,
+    required this.greeting,
+    required this.bodyParagraphs,
+    required this.closing,
+    required this.signature,
+  });
+
+  final List<String> senderLines;
+  final List<String> recipientLines;
+  final String greeting;
+  final List<String> bodyParagraphs;
+  final String closing;
+  final String signature;
+
+  String get senderName =>
+      senderLines.isEmpty ? '[Your Name]' : senderLines.first;
+
+  List<String> get senderDetails =>
+      senderLines.length <= 1 ? const <String>[] : senderLines.sublist(1);
+
+  String get senderInitial {
+    final normalized = senderName.trim();
+    return normalized.isEmpty ? 'A' : normalized.substring(0, 1).toUpperCase();
   }
 }
 

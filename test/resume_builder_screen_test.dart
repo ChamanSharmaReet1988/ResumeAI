@@ -107,6 +107,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Finder textFieldByLabel(String label) {
+    return find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField && widget.decoration?.labelText == label,
+      description: 'TextField with label $label',
+    );
+  }
+
   testWidgets('generate bullets adds AI bullets without throwing', (
     tester,
   ) async {
@@ -551,7 +559,7 @@ void main() {
   });
 
   testWidgets(
-    'personal info continue stays enabled and blank title saves as untitled',
+    'personal info has no resume title field and blank title still saves as untitled',
     (tester) async {
       viewModel.dispose();
       repository = _FakeResumeRepository();
@@ -565,8 +573,7 @@ void main() {
 
       await pumpBuilder(tester, size: const Size(800, 700));
 
-      final titleField = tester.widget<TextField>(find.byType(TextField).first);
-      expect(titleField.controller?.text, isEmpty);
+      expect(find.text('Resume title'), findsNothing);
 
       await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
@@ -628,7 +635,7 @@ void main() {
 
     await pumpBuilder(tester);
 
-    await tester.enterText(find.byType(TextField).at(1), 'Saved Name');
+    await tester.enterText(textFieldByLabel('Full name'), 'Saved Name');
     await tester.pump();
 
     await tester.tap(find.text('Continue'));
@@ -644,7 +651,7 @@ void main() {
 
     await pumpBuilder(tester);
 
-    await tester.enterText(find.byType(TextField).at(1), 'Auto Saved Name');
+    await tester.enterText(textFieldByLabel('Full name'), 'Auto Saved Name');
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump();

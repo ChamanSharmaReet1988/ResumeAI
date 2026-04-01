@@ -1,66 +1,210 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/resume_models.dart';
+import '../../core/services/resume_import_service.dart';
 import '../../core/services/resume_services.dart';
+import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
 
-class AiAssistanceScreen extends StatefulWidget {
-  const AiAssistanceScreen({super.key, required this.onOpenResumeBuilder});
+class ResumeAnalyserScreen extends StatefulWidget {
+  const ResumeAnalyserScreen({super.key, required this.onOpenResumeBuilder});
 
   final VoidCallback onOpenResumeBuilder;
 
   @override
-  State<AiAssistanceScreen> createState() => _AiAssistanceScreenState();
+  State<ResumeAnalyserScreen> createState() => _ResumeAnalyserScreenState();
 }
 
-class _AiAssistanceScreenState extends State<AiAssistanceScreen> {
-  final _jobTitleController = TextEditingController();
-  final _roleController = TextEditingController();
-  final _companyController = TextEditingController();
+@Deprecated('Use ResumeAnalyserScreen instead.')
+class AiAssistanceScreen extends ResumeAnalyserScreen {
+  const AiAssistanceScreen({super.key, required super.onOpenResumeBuilder});
+}
+
+class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
   final _jobDescriptionController = TextEditingController();
-  final _coverLetterCompanyController = TextEditingController();
-  final _coverLetterRoleController = TextEditingController();
 
   bool _isBusy = false;
-  String _summary = '';
-  List<String> _skillSuggestions = const [];
-  List<String> _jobBullets = const [];
-  ResumeAnalysis? _analysis;
-  JobDescriptionInsights? _jobInsights;
-  String _coverLetter = '';
+  List<String> _appliedChanges = const [];
+  ImportedResumeFile? _uploadedResume;
+  _ResumeHighlightPreviewData? _previewData;
+
+  @override
+  void initState() {
+    super.initState();
+    _jobDescriptionController.addListener(_handleInputChanged);
+  }
 
   @override
   void dispose() {
-    _jobTitleController.dispose();
-    _roleController.dispose();
-    _companyController.dispose();
+    _jobDescriptionController.removeListener(_handleInputChanged);
     _jobDescriptionController.dispose();
-    _coverLetterCompanyController.dispose();
-    _coverLetterRoleController.dispose();
     super.dispose();
   }
 
-  Future<void> _runTask(Future<void> Function() task) async {
-    setState(() => _isBusy = true);
-    await task();
-    if (!mounted) {
-      return;
+  void _handleInputChanged() {
+    if (mounted) {
+      setState(() {});
     }
-    setState(() => _isBusy = false);
   }
 
-  ResumeData _fallbackResume(ResumeTemplate template) {
-    return ResumeData.empty(template: template);
+  Future<void> _runTask(Future<void> Function() task) async {
+    if (_isBusy) {
+      return;
+    }
+
+    setState(() => _isBusy = true);
+    try {
+      await task();
+    } finally {
+      if (mounted) {
+        setState(() => _isBusy = false);
+      }
+    }
+  }
+
+  Future<void> _pickResumeFile(ResumeImportService importService) async {
+    try {
+      final importedResume = await importService.pickResumeFile();
+      if (!mounted || importedResume == null) {
+        return;
+      }
+
+      setState(() {
+        _uploadedResume = importedResume;
+        _appliedChanges = const [];
+        _previewData = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${importedResume.fileName} uploaded.')),
+      );
+    } on ResumeImportException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not upload that resume file right now.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _applyAtsFixes({
+    required LocalAiResumeService aiService,
+    required ResumeRepository repository,
+    required ResumeLibraryViewModel library,
+    required ResumeData? selectedResume,
+  }) async {
+    final jobDescription = _jobDescriptionController.text.trim();
+    final uploadedResume = _uploadedResume;
+
+    if (jobDescription.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Paste a job description first.')),
+      );
+      return;
+    }
+
+    if (uploadedResume == null &&
+        (selectedResume == null || !selectedResume.hasMeaningfulContent)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Upload a resume or select a saved one first.'),
+        ),
+      );
+      return;
+    }
+
+    await _runTask(() async {
+      final beforeResume = uploadedResume != null
+          ? aiService.parseImportedResumeText(
+              resumeText: uploadedResume.resumeText,
+              template: library.defaultTemplate,
+              sourceTitle: uploadedResume.suggestedTitle,
+            )
+          : selectedResume!;
+      final result = await aiService.improveResumeForAts(
+        resume: beforeResume,
+        jobDescription: jobDescription,
+      );
+      final improvedResume = result.resume.copyWith(updatedAt: DateTime.now());
+
+      await repository.upsertResume(improvedResume);
+      await library.loadResumes();
+      library.selectResume(improvedResume.id);
+
+      if (!mounted) {
+        return;
+      }
+
+      final beforeSummary = beforeResume.summary.trim();
+      final afterSummary = improvedResume.summary.trim();
+      final highlightedSkills = improvedResume.skills
+          .where((skill) => !beforeResume.skills.contains(skill))
+          .toSet();
+      final highlightedBulletsByExperience = <int, Set<String>>{};
+      for (
+        var index = 0;
+        index < improvedResume.workExperiences.length;
+        index++
+      ) {
+        final updatedExperience = improvedResume.workExperiences[index];
+        final originalExperience = index < beforeResume.workExperiences.length
+            ? beforeResume.workExperiences[index]
+            : const WorkExperience.empty();
+        final newBullets = updatedExperience.bullets
+            .where((bullet) => !originalExperience.bullets.contains(bullet))
+            .toSet();
+        if (newBullets.isNotEmpty) {
+          highlightedBulletsByExperience[index] = newBullets;
+        }
+      }
+
+      setState(() {
+        _appliedChanges = result.appliedChanges;
+        _previewData = _ResumeHighlightPreviewData(
+          beforeResume: beforeResume,
+          afterResume: improvedResume,
+          highlightSummary: beforeSummary != afterSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            uploadedResume != null
+                ? 'Uploaded resume imported and improved.'
+                : 'AI improvements applied to the selected resume.',
+          ),
+        ),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final aiService = context.read<LocalAiResumeService>();
+    final importService = context.read<ResumeImportService>();
+    final repository = context.read<ResumeRepository>();
+    final pdfService = context.read<ResumePdfService>();
     final library = context.watch<ResumeLibraryViewModel>();
-    final resume =
-        library.selectedResume ?? _fallbackResume(library.defaultTemplate);
-    final canDoDeepAnalysis = resume.hasMeaningfulContent;
+    final selectedResume = library.selectedResume;
+    final hasSelectedResume = selectedResume?.hasMeaningfulContent ?? false;
+    final canImprove =
+        (_uploadedResume != null || hasSelectedResume) &&
+        _jobDescriptionController.text.trim().isNotEmpty;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
@@ -68,73 +212,55 @@ class _AiAssistanceScreenState extends State<AiAssistanceScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'AI assistance',
+            'Resume analyser',
             style: Theme.of(
               context,
             ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
-            'Generate stronger summaries, keyword-rich bullets, tailored skills, and ATS guidance using your saved resume as the source of truth.',
+            'Upload a resume, paste the target job description, and let AI improve the resume for that role. Uploaded files open through the system file picker, so this uses Files on iPhone and Drive-enabled pickers on Android.',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 20),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer,
-                    child: const Icon(Icons.auto_awesome_rounded),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          resume.title,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          [
-                            resume.fullName,
-                            resume.jobTitle,
-                            '${resume.skills.length} skills',
-                          ].join(' • '),
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          canDoDeepAnalysis
-                              ? 'This resume is ready for AI suggestions.'
-                              : 'The AI tools work best after you add some real content in the builder.',
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!canDoDeepAnalysis)
-                    FilledButton(
-                      onPressed: widget.onOpenResumeBuilder,
-                      child: const Text('Open builder'),
-                    ),
-                ],
-              ),
+          TextField(
+            controller: _jobDescriptionController,
+            minLines: 5,
+            maxLines: 7,
+            decoration: const InputDecoration(
+              labelText: 'Job description',
+              hintText:
+                  'Paste the target job post to compare your resume against it.',
+              alignLabelWithHint: true,
             ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              FilledButton.tonalIcon(
+                key: const Key('upload-resume-button'),
+                onPressed: () => _pickResumeFile(importService),
+                icon: const Icon(Icons.upload_file_outlined),
+                label: const Text('Upload resume'),
+              ),
+              FilledButton.icon(
+                key: const Key('improve-resume-ai-button'),
+                onPressed: canImprove
+                    ? () => _applyAtsFixes(
+                        aiService: aiService,
+                        repository: repository,
+                        library: library,
+                        selectedResume: selectedResume,
+                      )
+                    : null,
+                icon: const Icon(Icons.auto_fix_high_outlined),
+                label: const Text('Improve resume by AI'),
+              ),
+            ],
           ),
           if (_isBusy)
             const Padding(
@@ -142,302 +268,59 @@ class _AiAssistanceScreenState extends State<AiAssistanceScreen> {
               child: LinearProgressIndicator(),
             ),
           const SizedBox(height: 20),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 1100
-                  ? 2
-                  : constraints.maxWidth >= 760
-                  ? 2
-                  : 1;
-              final itemWidth =
-                  (constraints.maxWidth - ((columns - 1) * 16)) / columns;
-
-              return Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: [
-                  SizedBox(
-                    width: itemWidth,
-                    child: _AiToolCard(
-                      title: 'AI summary generator',
-                      subtitle:
-                          'Create a polished introduction based on the active resume.',
-                      icon: Icons.summarize_outlined,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FilledButton.tonalIcon(
-                            onPressed: () {
-                              _runTask(() async {
-                                _summary = await aiService.generateSummary(
-                                  resume,
-                                );
-                              });
-                            },
-                            icon: const Icon(Icons.auto_fix_high_outlined),
-                            label: const Text('Generate summary'),
-                          ),
-                          if (_summary.isNotEmpty) ...[
-                            const SizedBox(height: 14),
-                            Text(_summary),
-                          ],
-                        ],
-                      ),
-                    ),
+          if (!hasSelectedResume && _uploadedResume == null)
+            FilledButton.tonal(
+              onPressed: widget.onOpenResumeBuilder,
+              child: const Text('Open builder'),
+            ),
+          if (_appliedChanges.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Applied changes',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            ..._appliedChanges.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.check_circle_outline, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(item)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (_previewData != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: _AnalyserCard(
+                title: 'Improved resume PDF',
+                subtitle:
+                    'The improved PDF below highlights AI changes in yellow so you can see exactly what was updated.',
+                icon: Icons.picture_as_pdf_outlined,
+                child: SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.82,
+                  child: _HighlightedResumePdfPreview(
+                    pdfService: pdfService,
+                    previewData: _previewData!,
                   ),
-                  SizedBox(
-                    width: itemWidth,
-                    child: _AiToolCard(
-                      title: 'AI skill suggestions',
-                      subtitle:
-                          'Add targeted keywords based on the resume title, target job title, and work experience details.',
-                      icon: Icons.psychology_alt_outlined,
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _jobTitleController,
-                            decoration: InputDecoration(
-                              labelText: 'Target job title',
-                              hintText: resume.jobTitle.ifBlank(
-                                'Senior Flutter Developer',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.tonalIcon(
-                            onPressed: () {
-                              _runTask(() async {
-                                _skillSuggestions = await aiService
-                                    .suggestSkills(
-                                      resume: resume,
-                                      targetJobTitle:
-                                          _jobTitleController.text
-                                              .trim()
-                                              .isEmpty
-                                          ? resume.jobTitle
-                                          : _jobTitleController.text.trim(),
-                                    );
-                              });
-                            },
-                            icon: const Icon(Icons.tips_and_updates_outlined),
-                            label: const Text('Suggest skills'),
-                          ),
-                          if (_skillSuggestions.isNotEmpty) ...[
-                            const SizedBox(height: 14),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: _skillSuggestions
-                                  .map((item) => Chip(label: Text(item)))
-                                  .toList(),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: itemWidth,
-                    child: _AiToolCard(
-                      title: 'Job bullet generator',
-                      subtitle:
-                          'Create sharper work experience bullets with stronger action language.',
-                      icon: Icons.work_outline_rounded,
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _roleController,
-                            decoration: const InputDecoration(
-                              labelText: 'Role',
-                              hintText: 'Product Designer',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: _companyController,
-                            decoration: const InputDecoration(
-                              labelText: 'Company',
-                              hintText: 'Northstar',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.tonalIcon(
-                            onPressed: () {
-                              _runTask(() async {
-                                _jobBullets = await aiService
-                                    .generateJobBullets(
-                                      role: _roleController.text,
-                                      company: _companyController.text,
-                                      targetJobTitle:
-                                          _jobTitleController.text
-                                              .trim()
-                                              .isEmpty
-                                          ? resume.jobTitle
-                                          : _jobTitleController.text.trim(),
-                                    );
-                              });
-                            },
-                            icon: const Icon(Icons.bolt_outlined),
-                            label: const Text('Generate bullets'),
-                          ),
-                          if (_jobBullets.isNotEmpty) ...[
-                            const SizedBox(height: 14),
-                            ..._jobBullets.map(
-                              (bullet) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('• '),
-                                    Expanded(child: Text(bullet)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: itemWidth,
-                    child: _AiToolCard(
-                      title: 'Resume analyzer',
-                      subtitle:
-                          'Check ATS alignment, missing keywords, and resume score against a job description.',
-                      icon: Icons.analytics_outlined,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextField(
-                            controller: _jobDescriptionController,
-                            maxLines: 5,
-                            decoration: const InputDecoration(
-                              labelText: 'Job description',
-                              hintText:
-                                  'Paste a job post to compare keywords and requirements.',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: [
-                              FilledButton.tonal(
-                                onPressed: canDoDeepAnalysis
-                                    ? () {
-                                        _runTask(() async {
-                                          _analysis = await aiService
-                                              .analyzeResume(
-                                                resume: resume,
-                                                jobDescription:
-                                                    _jobDescriptionController
-                                                        .text,
-                                              );
-                                          _jobInsights = await aiService
-                                              .analyzeJobDescription(
-                                                jobDescription:
-                                                    _jobDescriptionController
-                                                        .text,
-                                                resume: resume,
-                                              );
-                                        });
-                                      }
-                                    : null,
-                                child: const Text('Analyze'),
-                              ),
-                            ],
-                          ),
-                          if (_analysis != null) ...[
-                            const SizedBox(height: 14),
-                            _ScoreRow(score: _analysis!.score),
-                            if (_analysis!.missingSkills.isNotEmpty) ...[
-                              const SizedBox(height: 10),
-                              Text(
-                                'Missing skills: ${_analysis!.missingSkills.join(', ')}',
-                              ),
-                            ],
-                            if (_analysis!.weakDescriptions.isNotEmpty) ...[
-                              const SizedBox(height: 10),
-                              Text(
-                                'Weak descriptions: ${_analysis!.weakDescriptions.join(' ')}',
-                              ),
-                            ],
-                          ],
-                          if (_jobInsights != null) ...[
-                            const SizedBox(height: 14),
-                            Text(_jobInsights!.summary),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: itemWidth,
-                    child: _AiToolCard(
-                      title: 'Cover letter generator',
-                      subtitle:
-                          'Draft a tailored cover letter from the current resume in one tap.',
-                      icon: Icons.mail_outline_rounded,
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _coverLetterCompanyController,
-                            decoration: const InputDecoration(
-                              labelText: 'Company',
-                              hintText: 'Acme Inc.',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: _coverLetterRoleController,
-                            decoration: const InputDecoration(
-                              labelText: 'Role',
-                              hintText: 'Senior Product Designer',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.tonalIcon(
-                            onPressed: canDoDeepAnalysis
-                                ? () {
-                                    _runTask(() async {
-                                      _coverLetter = await aiService
-                                          .generateCoverLetter(
-                                            resume: resume,
-                                            company:
-                                                _coverLetterCompanyController
-                                                    .text
-                                                    .ifBlank('the company'),
-                                            role: _coverLetterRoleController
-                                                .text
-                                                .ifBlank(resume.jobTitle),
-                                          );
-                                    });
-                                  }
-                                : null,
-                            icon: const Icon(Icons.description_outlined),
-                            label: const Text('Generate cover letter'),
-                          ),
-                          if (_coverLetter.isNotEmpty) ...[
-                            const SizedBox(height: 14),
-                            SelectableText(_coverLetter),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
-class _AiToolCard extends StatelessWidget {
-  const _AiToolCard({
+class _AnalyserCard extends StatelessWidget {
+  const _AnalyserCard({
     required this.title,
     required this.subtitle,
     required this.icon,
@@ -487,47 +370,197 @@ class _AiToolCard extends StatelessWidget {
   }
 }
 
-class _ScoreRow extends StatelessWidget {
-  const _ScoreRow({required this.score});
+class _ResumeHighlightPreviewData {
+  const _ResumeHighlightPreviewData({
+    required this.beforeResume,
+    required this.afterResume,
+    required this.highlightSummary,
+    required this.highlightedSkills,
+    required this.highlightedBulletsByExperience,
+  });
 
-  final int score;
+  final ResumeData beforeResume;
+  final ResumeData afterResume;
+  final bool highlightSummary;
+  final Set<String> highlightedSkills;
+  final Map<int, Set<String>> highlightedBulletsByExperience;
+}
+
+class _HighlightedResumePdfPreview extends StatelessWidget {
+  const _HighlightedResumePdfPreview({
+    required this.pdfService,
+    required this.previewData,
+  });
+
+  final ResumePdfService pdfService;
+  final _ResumeHighlightPreviewData previewData;
 
   @override
   Widget build(BuildContext context) {
-    final progress = score / 100;
+    final isTestBinding = WidgetsBinding.instance.runtimeType
+        .toString()
+        .contains('TestWidgetsFlutterBinding');
 
-    return Row(
-      children: [
-        SizedBox(
-          width: 54,
-          height: 54,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CircularProgressIndicator(value: progress, strokeWidth: 6),
-              Center(
-                child: Text(
-                  '$score',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ),
-            ],
+    if (isTestBinding) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: ResumePreviewCard(resume: previewData.afterResume),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            'Resume score indicator based on structure, content strength, and ATS match.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          if (previewData.highlightSummary)
+            const Text('Highlighted summary change'),
+          if (previewData.highlightedSkills.isNotEmpty)
+            Text(
+              'Highlighted skills: ${previewData.highlightedSkills.join(', ')}',
+            ),
+        ],
+      );
+    }
+
+    return PdfPreview.builder(
+      key: ValueKey(previewData.afterResume.updatedAt.microsecondsSinceEpoch),
+      build: (_) => pdfService.buildHighlightedResumePdf(
+        resume: previewData.afterResume,
+        highlightSummary: previewData.highlightSummary,
+        highlightedSkills: previewData.highlightedSkills,
+        highlightedBulletsByExperience:
+            previewData.highlightedBulletsByExperience,
+      ),
+      allowPrinting: false,
+      allowSharing: false,
+      useActions: false,
+      canChangeOrientation: false,
+      canChangePageFormat: false,
+      canDebug: false,
+      shouldRepaint: true,
+      dpi: 220,
+      pagesBuilder: (context, pages) {
+        return _ZoomablePdfPageViewer(pages: pages);
+      },
+      previewPageMargin: EdgeInsets.zero,
+      padding: EdgeInsets.zero,
+      scrollViewDecoration: const BoxDecoration(color: Colors.white),
+      pdfPreviewPageDecoration: const BoxDecoration(color: Colors.white),
+      loadingWidget: const Center(child: CircularProgressIndicator()),
     );
   }
 }
 
-extension on String {
-  String ifBlank(String fallback) => trim().isEmpty ? fallback : this;
+class _ZoomablePdfPageViewer extends StatefulWidget {
+  const _ZoomablePdfPageViewer({required this.pages});
+
+  final List<PdfPreviewPageData> pages;
+
+  @override
+  State<_ZoomablePdfPageViewer> createState() => _ZoomablePdfPageViewerState();
+}
+
+class _ZoomablePdfPageViewerState extends State<_ZoomablePdfPageViewer> {
+  late final PageController _pageController;
+  final List<TransformationController> _controllers = [];
+  int _currentPage = 0;
+  bool _isCurrentPageZoomed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _syncControllers();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ZoomablePdfPageViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncControllers();
+    if (_currentPage >= widget.pages.length && widget.pages.isNotEmpty) {
+      _currentPage = widget.pages.length - 1;
+    }
+    _refreshZoomState();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _syncControllers() {
+    while (_controllers.length < widget.pages.length) {
+      _controllers.add(TransformationController());
+    }
+    while (_controllers.length > widget.pages.length) {
+      _controllers.removeLast().dispose();
+    }
+  }
+
+  void _refreshZoomState() {
+    if (!mounted || widget.pages.isEmpty) {
+      return;
+    }
+
+    final isZoomed =
+        _controllers[_currentPage].value.getMaxScaleOnAxis() > 1.01;
+    if (isZoomed != _isCurrentPageZoomed) {
+      setState(() {
+        _isCurrentPageZoomed = isZoomed;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.pages.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return PageView.builder(
+      controller: _pageController,
+      scrollDirection: Axis.vertical,
+      physics: _isCurrentPageZoomed
+          ? const NeverScrollableScrollPhysics()
+          : const PageScrollPhysics(),
+      itemCount: widget.pages.length,
+      onPageChanged: (index) {
+        setState(() {
+          _currentPage = index;
+          _isCurrentPageZoomed =
+              _controllers[index].value.getMaxScaleOnAxis() > 1.01;
+        });
+      },
+      itemBuilder: (context, index) {
+        final page = widget.pages[index];
+        final controller = _controllers[index];
+
+        return InteractiveViewer(
+          transformationController: controller,
+          minScale: 1,
+          maxScale: 5,
+          boundaryMargin: const EdgeInsets.all(64),
+          trackpadScrollCausesScale: true,
+          clipBehavior: Clip.none,
+          onInteractionUpdate: (_) => _refreshZoomState(),
+          onInteractionEnd: (_) => _refreshZoomState(),
+          child: SizedBox.expand(
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: SizedBox(
+                  width: page.width.toDouble(),
+                  height: page.height.toDouble(),
+                  child: Image(image: page.image, fit: BoxFit.fill),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }

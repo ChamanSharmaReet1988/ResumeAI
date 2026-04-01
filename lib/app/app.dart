@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/services/resume_import_service.dart';
 import '../core/services/resume_services.dart';
 import '../features/shared/view_models.dart';
 import '../features/shell/app_shell.dart';
@@ -19,6 +20,9 @@ class ResumeApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<ResumeRepository>.value(value: repository),
+        Provider<ResumeImportService>(
+          create: (_) => const ResumeImportService(),
+        ),
         Provider<LocalAiResumeService>(create: (_) => LocalAiResumeService()),
         Provider<ResumePdfService>(create: (_) => ResumePdfService()),
         ChangeNotifierProvider<SettingsViewModel>(

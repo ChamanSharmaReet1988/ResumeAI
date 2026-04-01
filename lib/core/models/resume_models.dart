@@ -10,6 +10,12 @@ enum ResumeTemplate {
   monogramSidebar,
 }
 
+enum CoverLetterTemplate {
+  executiveNote,
+  minimalLetter,
+  sidebarLetter,
+}
+
 const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.corporate,
   ResumeTemplate.minimal,
@@ -70,6 +76,14 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.splitBanner => const Color(0xFFFFF0E0),
     ResumeTemplate.monogramSidebar => const Color(0xFFFFF3E3),
     ResumeTemplate.modern => const Color(0xFFE4FBF6),
+  };
+}
+
+extension CoverLetterTemplateX on CoverLetterTemplate {
+  String get label => switch (this) {
+    CoverLetterTemplate.executiveNote => 'Executive Note',
+    CoverLetterTemplate.minimalLetter => 'Minimal Letter',
+    CoverLetterTemplate.sidebarLetter => 'Sidebar Letter',
   };
 }
 
@@ -305,6 +319,9 @@ class CoverLetterData {
     required this.title,
     required this.company,
     required this.role,
+    required this.template,
+    required this.skillToHighlight,
+    required this.language,
     required this.content,
     required this.updatedAt,
   });
@@ -315,6 +332,9 @@ class CoverLetterData {
       title: '',
       company: '',
       role: '',
+      template: CoverLetterTemplate.executiveNote,
+      skillToHighlight: '',
+      language: '',
       content: '',
       updatedAt: DateTime.now(),
     );
@@ -326,6 +346,12 @@ class CoverLetterData {
       title: json['title'] as String? ?? '',
       company: json['company'] as String? ?? '',
       role: json['role'] as String? ?? '',
+      template: CoverLetterTemplate.values.firstWhere(
+        (value) => value.name == json['template'],
+        orElse: () => CoverLetterTemplate.executiveNote,
+      ),
+      skillToHighlight: json['skillToHighlight'] as String? ?? '',
+      language: json['language'] as String? ?? '',
       content: json['content'] as String? ?? '',
       updatedAt:
           DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
@@ -337,6 +363,9 @@ class CoverLetterData {
   final String title;
   final String company;
   final String role;
+  final CoverLetterTemplate template;
+  final String skillToHighlight;
+  final String language;
   final String content;
   final DateTime updatedAt;
 
@@ -344,6 +373,8 @@ class CoverLetterData {
       title.trim().isNotEmpty ||
       company.trim().isNotEmpty ||
       role.trim().isNotEmpty ||
+      skillToHighlight.trim().isNotEmpty ||
+      language.trim().isNotEmpty ||
       content.trim().isNotEmpty;
 
   String get displayTitle {
@@ -364,6 +395,9 @@ class CoverLetterData {
     String? title,
     String? company,
     String? role,
+    CoverLetterTemplate? template,
+    String? skillToHighlight,
+    String? language,
     String? content,
     DateTime? updatedAt,
   }) {
@@ -372,6 +406,9 @@ class CoverLetterData {
       title: title ?? this.title,
       company: company ?? this.company,
       role: role ?? this.role,
+      template: template ?? this.template,
+      skillToHighlight: skillToHighlight ?? this.skillToHighlight,
+      language: language ?? this.language,
       content: content ?? this.content,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -383,6 +420,9 @@ class CoverLetterData {
       'title': title,
       'company': company,
       'role': role,
+      'template': template.name,
+      'skillToHighlight': skillToHighlight,
+      'language': language,
       'content': content,
       'updatedAt': updatedAt.toIso8601String(),
     };

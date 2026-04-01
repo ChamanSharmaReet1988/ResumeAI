@@ -29,7 +29,7 @@ class _FakeTemplatesRepository implements ResumeRepository {
 
 void main() {
   testWidgets(
-    'templates screen uses a two-column grid and opens template preview on a new screen',
+    'templates screen switches between resume and cover letter template grids',
     (tester) async {
       final library = ResumeLibraryViewModel(
         repository: _FakeTemplatesRepository(),
@@ -56,6 +56,10 @@ void main() {
       expect(delegate.crossAxisCount, 2);
       expect(childrenDelegate.childCount, 6);
       expect(
+        find.byKey(const Key('template-segmented-button')),
+        findsOneWidget,
+      );
+      expect(
         find.byKey(const Key('template-image-dark-header')),
         findsOneWidget,
       );
@@ -79,18 +83,43 @@ void main() {
         find.byKey(const Key('template-image-monogram-sidebar')),
         findsOneWidget,
       );
-      expect(find.byKey(const Key('selected-template-preview')), findsNothing);
-
-      final splitBannerTile = find.byKey(
-        const Key('template-tile-split-banner'),
+      expect(
+        find.byKey(const Key('template-image-executive-note')),
+        findsNothing,
       );
-      await tester.ensureVisible(splitBannerTile);
-      await tester.tap(splitBannerTile);
+
+      await tester.tap(find.text('Cover Letter'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Split Banner'), findsOneWidget);
+      final coverLetterGrid = tester.widget<GridView>(
+        find.byKey(const Key('template-grid')),
+      );
+      final coverLetterChildrenDelegate =
+          coverLetterGrid.childrenDelegate as SliverChildBuilderDelegate;
+      expect(coverLetterChildrenDelegate.childCount, 3);
       expect(
-        find.byKey(const Key('template-detail-preview-split-banner')),
+        find.byKey(const Key('template-image-executive-note')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('template-image-minimal-letter')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('template-image-sidebar-letter')),
+        findsOneWidget,
+      );
+
+      final sidebarLetterTile = find.byKey(
+        const Key('template-tile-sidebar-letter'),
+      );
+      await tester.ensureVisible(sidebarLetterTile);
+      await tester.tap(sidebarLetterTile);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sidebar Letter'), findsOneWidget);
+      expect(
+        find.byKey(const Key('template-detail-preview-sidebar-letter')),
         findsOneWidget,
       );
     },

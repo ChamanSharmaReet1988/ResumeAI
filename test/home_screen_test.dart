@@ -77,7 +77,8 @@ void main() {
               onSegmentChanged: (_) {},
               onOpenResume: (value) => openedForEdit = value,
               onPreviewResume: (value) => openedForPreview = value,
-              onOpenCoverLetter: (_) {},
+              onPreviewCoverLetter: (_) {},
+              onEditCoverLetter: (_) {},
             ),
           ),
         ),
@@ -92,6 +93,7 @@ void main() {
 
     expect(find.text('Open'), findsOneWidget);
     expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Rename'), findsOneWidget);
     expect(find.text('Delete'), findsOneWidget);
     expect(find.text('Duplicate'), findsOneWidget);
 
@@ -102,7 +104,7 @@ void main() {
     expect(openedForEdit, isNull);
   });
 
-  testWidgets('resume card duplicate option creates a copied resume', (
+  testWidgets('resume card rename option updates the saved title', (
     tester,
   ) async {
     final resume = ResumeData.empty(template: ResumeTemplate.modern).copyWith(
@@ -136,7 +138,71 @@ void main() {
               onSegmentChanged: (_) {},
               onOpenResume: (_) {},
               onPreviewResume: (_) {},
-              onOpenCoverLetter: (_) {},
+              onPreviewCoverLetter: (_) {},
+              onEditCoverLetter: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Product Designer Resume'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Rename'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rename resume'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('rename-resume-title-field')),
+      'Senior Product Designer Resume',
+    );
+    await tester.tap(find.text('Rename'));
+    await tester.pumpAndSettle();
+
+    expect(resumeLibrary.resumes.single.title, 'Senior Product Designer Resume');
+    expect(find.text('Senior Product Designer Resume'), findsOneWidget);
+    expect(find.text('Resume renamed.'), findsOneWidget);
+  });
+
+  testWidgets('resume card duplicate option asks for title and creates a copy', (
+    tester,
+  ) async {
+    final resume = ResumeData.empty(template: ResumeTemplate.modern).copyWith(
+      id: 'resume-1',
+      title: 'Product Designer Resume',
+      fullName: 'Avery Lee',
+      jobTitle: 'Product Designer',
+    );
+    final repository = _FakeHomeRepository(resumes: [resume]);
+    final resumeLibrary = ResumeLibraryViewModel(repository: repository);
+    final coverLetterLibrary = CoverLetterLibraryViewModel(
+      repository: repository,
+    );
+    await resumeLibrary.loadResumes();
+    await coverLetterLibrary.loadCoverLetters();
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+            value: resumeLibrary,
+          ),
+          ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
+            value: coverLetterLibrary,
+          ),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: HomeScreen(
+              currentSegment: HomeSegment.resumes,
+              onSegmentChanged: (_) {},
+              onOpenResume: (_) {},
+              onPreviewResume: (_) {},
+              onPreviewCoverLetter: (_) {},
+              onEditCoverLetter: (_) {},
             ),
           ),
         ),
@@ -150,22 +216,34 @@ void main() {
     await tester.tap(find.text('Duplicate'));
     await tester.pumpAndSettle();
 
+    expect(find.text('Duplicate resume'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('duplicate-resume-title-field')),
+      'Senior Product Designer Resume Copy',
+    );
+    await tester.tap(find.text('Duplicate'));
+    await tester.pumpAndSettle();
+
     expect(resumeLibrary.resumes, hasLength(2));
     expect(
       resumeLibrary.resumes.any(
-        (item) => item.title == 'Product Designer Resume (Copy)',
+        (item) => item.title == 'Senior Product Designer Resume Copy',
       ),
       isTrue,
     );
     expect(find.text('Resume duplicated.'), findsOneWidget);
   });
 
-  testWidgets('cover letter card matches resume card tap flow', (tester) async {
+  testWidgets('cover letter card routes open to preview and edit to content', (
+    tester,
+  ) async {
     final coverLetter = CoverLetterData.empty().copyWith(
       id: 'cover-1',
       title: 'Retail Sales Application',
       company: 'Zara',
       role: 'Retail Sales Associate',
+      content: 'Generated cover letter content',
     );
     final repository = _FakeHomeRepository(
       resumes: const [],
@@ -178,7 +256,8 @@ void main() {
     await resumeLibrary.loadResumes();
     await coverLetterLibrary.loadCoverLetters();
 
-    CoverLetterData? openedCoverLetter;
+    CoverLetterData? previewedCoverLetter;
+    CoverLetterData? editedCoverLetter;
 
     await tester.pumpWidget(
       MultiProvider(
@@ -197,7 +276,8 @@ void main() {
               onSegmentChanged: (_) {},
               onOpenResume: (_) {},
               onPreviewResume: (_) {},
-              onOpenCoverLetter: (value) => openedCoverLetter = value,
+              onPreviewCoverLetter: (value) => previewedCoverLetter = value,
+              onEditCoverLetter: (value) => editedCoverLetter = value,
             ),
           ),
         ),
@@ -214,12 +294,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Open'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
     expect(find.text('Delete'), findsOneWidget);
 
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(openedCoverLetter?.id, coverLetter.id);
+    expect(previewedCoverLetter?.id, coverLetter.id);
+    expect(editedCoverLetter, isNull);
+
+    await tester.tap(find.text('Retail Sales Application'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+
+    expect(editedCoverLetter?.id, coverLetter.id);
   });
 
   testWidgets('resume cards stretch to the available screen width', (
@@ -260,7 +350,8 @@ void main() {
               onSegmentChanged: (_) {},
               onOpenResume: (_) {},
               onPreviewResume: (_) {},
-              onOpenCoverLetter: (_) {},
+              onPreviewCoverLetter: (_) {},
+              onEditCoverLetter: (_) {},
             ),
           ),
         ),
