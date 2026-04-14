@@ -60,9 +60,10 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final isCupertino = Theme.of(context).platform == TargetPlatform.iOS;
     final blue = Theme.of(context).colorScheme.primary;
     final inactiveColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    final bottomSafeInset = MediaQuery.paddingOf(context).bottom;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 160 + bottomSafeInset),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -155,7 +156,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
               crossAxisCount: 2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
-              childAspectRatio: 0.78,
+              childAspectRatio: 0.66,
             ),
             itemBuilder: (context, index) {
               final item = visibleItems[index];
@@ -218,8 +219,6 @@ class _TemplateDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         leadingWidth: 40,
@@ -228,44 +227,18 @@ class _TemplateDetailScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 child: Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: colorScheme.primary, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF7F4EF),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: Colors.black.withValues(alpha: 0.08),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(18),
-                          child: KeyedSubtree(
-                            key: Key('template-detail-preview-${item.id}'),
-                            child: _TemplatePreviewArt(item: item),
-                          ),
-                        ),
-                      ),
+                  color: Colors.transparent,
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: KeyedSubtree(
+                      key: Key('template-detail-preview-${item.id}'),
+                      child: _TemplatePreviewArt(item: item),
                     ),
                   ),
                 ),
@@ -300,7 +273,6 @@ class _TemplateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final outlineColor = colorScheme.outlineVariant;
     final selectedColor = colorScheme.primary;
     final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
       fontSize: ((Theme.of(context).textTheme.labelSmall?.fontSize ?? 11) - 4)
@@ -312,74 +284,66 @@ class _TemplateTile extends StatelessWidget {
 
     return Material(
       key: Key('template-tile-${item.id}'),
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
+      color: Colors.transparent,
+      borderRadius: BorderRadius.zero,
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.zero,
         onTap: onTap,
         child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: selected ? selectedColor : outlineColor,
-              width: selected ? 2 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
+          decoration: const BoxDecoration(),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 6),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: KeyedSubtree(
+                        key: Key('template-image-${item.id}'),
+                        child: _TemplatePreviewArt(item: item),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      item.headline,
+                      textAlign: TextAlign.center,
+                      style: labelStyle,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF7F4EF),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.08),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: KeyedSubtree(
-                              key: Key('template-image-${item.id}'),
-                              child: _TemplatePreviewArt(item: item),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        item.headline,
-                        textAlign: TextAlign.center,
-                        style: labelStyle,
-                      ),
-                    ],
+              if (selected)
+                Positioned(
+                  top: 14,
+                  right: 14,
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: selectedColor,
+                    size: 20,
                   ),
                 ),
-                if (selected)
-                  Positioned(
-                    top: 14,
-                    right: 14,
-                    child: Icon(
-                      Icons.check_circle_rounded,
-                      color: selectedColor,
-                      size: 20,
+              if (item.isPremium)
+                Positioned(
+                  right: 8,
+                  bottom: 30,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFD54F),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.workspace_premium_rounded,
+                      size: 13,
+                      color: Color(0xFF4A2F00),
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
@@ -394,6 +358,7 @@ const _templateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.darkHeaderResume,
     headline: 'Dark Header',
     caption: 'Bold top band with compact professional sections.',
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'centered-classic',
@@ -401,6 +366,7 @@ const _templateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.centeredClassicResume,
     headline: 'Centered Classic',
     caption: 'Calm centered header with timeless editorial spacing.',
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'profile-sidebar',
@@ -408,6 +374,7 @@ const _templateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.profileSidebarResume,
     headline: 'Profile Sidebar',
     caption: 'Profile-led layout with strong visual anchors.',
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'copper-serif',
@@ -415,6 +382,7 @@ const _templateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.copperSerifResume,
     headline: 'Copper Serif',
     caption: 'Centered serif-inspired layout with warm copper accents.',
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'split-banner',
@@ -422,6 +390,7 @@ const _templateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.splitBannerResume,
     headline: 'Split Banner',
     caption: 'Wide copper banner with crisp section labels and structure.',
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'monogram-sidebar',
@@ -429,6 +398,7 @@ const _templateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.monogramSidebarResume,
     headline: 'Monogram Sidebar',
     caption: 'Narrow profile rail with bold monogram and clean content stack.',
+    isPremium: true,
   ),
 ];
 
@@ -441,6 +411,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.executiveNoteCoverLetter,
     headline: 'Executive Note',
     caption: 'Clean professional cover letter with a strong header block.',
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'minimal-letter',
@@ -448,6 +419,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.minimalCoverLetter,
     headline: 'Minimal Letter',
     caption: 'Centered and airy layout with restrained modern spacing.',
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'sidebar-letter',
@@ -455,6 +427,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.sidebarCoverLetter,
     headline: 'Sidebar Letter',
     caption: 'A bolder cover letter with a left rail for contact details.',
+    isPremium: true,
   ),
 ];
 
@@ -466,6 +439,7 @@ class _TemplateTileData {
     required this.previewKind,
     required this.headline,
     required this.caption,
+    this.isPremium = false,
   });
 
   final String id;
@@ -474,6 +448,7 @@ class _TemplateTileData {
   final _TemplatePreviewKind previewKind;
   final String headline;
   final String caption;
+  final bool isPremium;
 }
 
 enum _TemplatePreviewKind {
@@ -499,7 +474,7 @@ class _TemplatePreviewArt extends StatelessWidget {
       fit: BoxFit.contain,
       child: SizedBox(
         width: 168,
-        height: 216,
+        height: 252,
         child: switch (item.previewKind) {
           _TemplatePreviewKind.darkHeaderResume =>
             const _DarkHeaderTemplateArt(),
@@ -537,10 +512,10 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
           child: Column(
@@ -551,7 +526,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
                 decoration: const BoxDecoration(
                   color: header,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: BorderRadius.vertical(top: Radius.zero),
                 ),
                 child: Row(
                   children: [
@@ -714,10 +689,10 @@ class _CenteredClassicTemplateArt extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
           child: Padding(
@@ -892,10 +867,10 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
           child: Column(
@@ -905,7 +880,7 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
                 height: 15,
                 decoration: const BoxDecoration(
                   color: dark,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: BorderRadius.vertical(top: Radius.zero),
                 ),
               ),
               Padding(
@@ -1069,10 +1044,10 @@ class _CopperSerifTemplateArt extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
           child: Padding(
@@ -1214,10 +1189,10 @@ class _SplitBannerTemplateArt extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
           child: Column(
@@ -1227,7 +1202,7 @@ class _SplitBannerTemplateArt extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                 decoration: const BoxDecoration(
                   color: copper,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: BorderRadius.vertical(top: Radius.zero),
                 ),
                 child: Row(
                   children: [
@@ -1390,10 +1365,10 @@ class _MonogramSidebarTemplateArt extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
           child: Padding(
@@ -1553,10 +1528,10 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(9, 9, 9, 10),
           child: DefaultTextStyle(
@@ -1649,10 +1624,10 @@ class _MinimalCoverLetterArt extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(11, 10, 11, 12),
           child: DefaultTextStyle(
@@ -1755,10 +1730,10 @@ class _SidebarCoverLetterArt extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

@@ -26,12 +26,89 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   static const Curve _stepAnimationCurve = Curves.easeInOutCubicEmphasized;
 
   final _skillController = TextEditingController();
+  final _personalFieldFocusNodes = List<FocusNode>.generate(
+    8,
+    (_) => FocusNode(),
+  );
   final _summaryFocusNode = FocusNode();
   late final PageController _pageController;
   final Map<int, ScrollController> _stepScrollControllers = {};
   final Map<String, FocusNode> _extendedKeyboardHideFocusNodes = {};
   bool _didInitPageController = false;
-  double _horizontalStepDragDistance = 0;
+
+  List<FocusNode> get _personalKeyboardFocusOrder => [
+    ..._personalFieldFocusNodes,
+    _summaryFocusNode,
+  ];
+
+  bool get _isWorkKeyboardHideFieldFocused =>
+      _extendedKeyboardHideFocusNodes.entries.any(
+        (entry) =>
+            (entry.key.startsWith('work-role-') ||
+                entry.key.startsWith('work-company-') ||
+                entry.key.startsWith('work-description-')) &&
+            entry.value.hasFocus,
+      );
+
+  bool get _isProjectKeyboardHideFieldFocused =>
+      _extendedKeyboardHideFocusNodes.entries.any(
+        (entry) => entry.key.startsWith('project-') && entry.value.hasFocus,
+      );
+
+  bool get _isCustomKeyboardHideFieldFocused =>
+      _extendedKeyboardHideFocusNodes.entries.any(
+        (entry) =>
+            entry.key.startsWith('custom-section-') && entry.value.hasFocus,
+      );
+
+  List<FocusNode> get _projectKeyboardFocusOrder {
+    final projectEntries = _extendedKeyboardHideFocusNodes.entries
+        .where((entry) => entry.key.startsWith('project-'))
+        .toList()
+      ..sort((a, b) => _compareProjectFocusKeys(a.key, b.key));
+    return projectEntries.map((entry) => entry.value).toList(growable: false);
+  }
+
+  List<FocusNode> get _customKeyboardFocusOrder {
+    final customEntries = _extendedKeyboardHideFocusNodes.entries
+        .where((entry) => entry.key.startsWith('custom-section-'))
+        .toList()
+      ..sort((a, b) => _compareCustomFocusKeys(a.key, b.key));
+    return customEntries.map((entry) => entry.value).toList(growable: false);
+  }
+
+  int _compareProjectFocusKeys(String a, String b) {
+    int parseIndex(String key) => int.tryParse(key.split('-').last) ?? 0;
+
+    int fieldRank(String key) {
+      if (key.startsWith('project-title-')) return 0;
+      if (key.startsWith('project-overview-')) return 1;
+      if (key.startsWith('project-tools-')) return 2;
+      return 99;
+    }
+
+    final indexCompare = parseIndex(a).compareTo(parseIndex(b));
+    if (indexCompare != 0) {
+      return indexCompare;
+    }
+    return fieldRank(a).compareTo(fieldRank(b));
+  }
+
+  int _compareCustomFocusKeys(String a, String b) {
+    int parseIndex(String key) => int.tryParse(key.split('-').last) ?? 0;
+
+    int fieldRank(String key) {
+      if (key.startsWith('custom-section-title-')) return 0;
+      if (key.startsWith('custom-section-content-')) return 1;
+      return 99;
+    }
+
+    final indexCompare = parseIndex(a).compareTo(parseIndex(b));
+    if (indexCompare != 0) {
+      return indexCompare;
+    }
+    return fieldRank(a).compareTo(fieldRank(b));
+  }
 
   @override
   void initState() {
@@ -74,15 +151,15 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
-  bool get _isExtendedKeyboardHideFieldFocused =>
-      _extendedKeyboardHideFocusNodes.values.any((node) => node.hasFocus);
-
   @override
   void dispose() {
     _skillController.dispose();
     _pageController.dispose();
     for (final controller in _stepScrollControllers.values) {
       controller.dispose();
+    }
+    for (final node in _personalFieldFocusNodes) {
+      node.dispose();
     }
     _summaryFocusNode
       ..removeListener(_handleSummaryFocusChange)
@@ -191,39 +268,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (wasAtLimit && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('You can add up to 50 skills.')),
-      );
-    }
-  }
-
-  Future<void> _generateBullets(int index) async {
-    try {
-      await context.read<ResumeEditorViewModel>().generateBullets(index);
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('AI bullets added to the experience.')),
-      );
-    } catch (error, stackTrace) {
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: error,
-          stack: stackTrace,
-          library: 'resume builder',
-          context: ErrorDescription('while generating work experience bullets'),
-        ),
-      );
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Unable to generate bullets right now. Please try again.',
-          ),
-        ),
       );
     }
   }
@@ -404,6 +448,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: Colors.white,
               title: Text(title),
               content: SizedBox(
                 width: 340,
@@ -413,12 +458,28 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   children: [
                     DropdownButtonFormField<int>(
                       initialValue: selectedYear,
-                      decoration: const InputDecoration(labelText: 'Year'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Year',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                        ),
+                      ),
                       items: years
                           .map(
                             (year) => DropdownMenuItem<int>(
                               value: year,
-                              child: Text('$year'),
+                              child: Text(
+                                '$year',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black,
+                                ),
+                              ),
                             ),
                           )
                           .toList(),
@@ -438,7 +499,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           DateTime(2000, month),
                         );
                         return ChoiceChip(
-                          label: Text(label),
+                          label: Text(
+                            label,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                          ),
                           selected: month == selectedMonth,
                           onSelected: (_) {
                             setState(() => selectedMonth = month);
@@ -478,16 +545,39 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: Text(title),
           content: SizedBox(
             width: 320,
             height: 320,
-            child: YearPicker(
-              firstDate: DateTime(1970),
-              lastDate: DateTime(2100),
-              selectedDate: DateTime(selectedYear),
-              currentDate: DateTime.now(),
-              onChanged: (date) => Navigator.of(context).pop('${date.year}'),
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: Theme.of(context).colorScheme.copyWith(
+                  onSurface: Colors.black,
+                  primary: Colors.black,
+                ),
+                textTheme: Theme.of(context).textTheme.copyWith(
+                  bodyLarge: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  bodyMedium: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  labelLarge: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              child: YearPicker(
+                firstDate: DateTime(1970),
+                lastDate: DateTime(2100),
+                selectedDate: DateTime(selectedYear),
+                currentDate: DateTime.now(),
+                onChanged: (date) => Navigator.of(context).pop('${date.year}'),
+              ),
             ),
           ),
         );
@@ -657,43 +747,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     _goToStep(viewModel.currentStep - 1);
   }
 
-  void _handleStepPointerDown(PointerDownEvent event) {
-    _horizontalStepDragDistance = 0;
-  }
-
-  void _handleStepPointerMove(PointerMoveEvent event) {
-    _horizontalStepDragDistance += event.delta.dx;
-  }
-
-  void _handleStepPointerUp(PointerUpEvent event) {
-    final viewModel = context.read<ResumeEditorViewModel>();
-    final currentStep = viewModel.currentStep;
-    final maxStep = ResumeEditorViewModel.stepTitles.length - 1;
-
-    if (_horizontalStepDragDistance.abs() < 60) {
-      _horizontalStepDragDistance = 0;
-      return;
-    }
-
-    if (_horizontalStepDragDistance < 0 && currentStep < maxStep) {
-      _horizontalStepDragDistance = 0;
-      _goToStep(currentStep + 1);
-      return;
-    }
-
-    if (_horizontalStepDragDistance > 0 && currentStep > 0) {
-      _horizontalStepDragDistance = 0;
-      _goToStep(currentStep - 1);
-      return;
-    }
-
-    _horizontalStepDragDistance = 0;
-  }
-
-  void _handleStepPointerCancel(PointerCancelEvent event) {
-    _horizontalStepDragDistance = 0;
-  }
-
   Future<void> _promptForBullet(int index) async {
     final value = await _showInputDialog(
       title: 'Add bullet point',
@@ -729,9 +782,23 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ResumeData.defaultTitle,
         );
         final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
-        final showKeyboardHideButton =
+        final showPersonalKeyboardBar =
+            keyboardInset > 0 && viewModel.currentStep == 0;
+        final showProjectKeyboardBar =
             keyboardInset > 0 &&
-            (_summaryFocusNode.hasFocus || _isExtendedKeyboardHideFieldFocused);
+            viewModel.currentStep == 4 &&
+            _isProjectKeyboardHideFieldFocused;
+        final showCustomKeyboardBar =
+            keyboardInset > 0 &&
+            viewModel.currentStep ==
+                ResumeEditorViewModel.stepTitles.length - 1 &&
+            _isCustomKeyboardHideFieldFocused;
+        final showWorkKeyboardHideButton =
+            keyboardInset > 0 &&
+            viewModel.currentStep == 1 &&
+            _isWorkKeyboardHideFieldFocused;
+        final showEducationKeyboardHideButton =
+            keyboardInset > 0 && viewModel.currentStep == 2;
         final iosTitleStyle = Theme.of(
           context,
         ).cupertinoOverrideTheme?.textTheme?.navTitleTextStyle;
@@ -766,47 +833,48 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           final main = Column(
                             children: [
                               Expanded(
-                                child: Listener(
+                                child: PageView.builder(
                                   key: const Key('resume-step-pages'),
-                                  onPointerDown: _handleStepPointerDown,
-                                  onPointerMove: _handleStepPointerMove,
-                                  onPointerUp: _handleStepPointerUp,
-                                  onPointerCancel: _handleStepPointerCancel,
-                                  child: PageView.builder(
-                                    controller: _pageController,
-                                    allowImplicitScrolling: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount:
-                                        ResumeEditorViewModel.stepTitles.length,
-                                    onPageChanged: (index) {
-                                      FocusScope.of(context).unfocus();
-                                      if (viewModel.currentStep != index) {
-                                        viewModel.setStep(index);
-                                      }
-                                    },
-                                    itemBuilder: (context, index) {
-                                      return SingleChildScrollView(
-                                        key: Key('step-scroll-$index'),
-                                        controller: _scrollControllerForStep(
-                                          index,
-                                        ),
-                                        keyboardDismissBehavior:
-                                            ScrollViewKeyboardDismissBehavior
-                                                .onDrag,
-                                        padding: EdgeInsets.fromLTRB(
-                                          20,
-                                          20,
-                                          20,
-                                          24 + keyboardInset,
-                                        ),
-                                        child: _buildStepContentForStep(
-                                          index,
-                                          viewModel,
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                  controller: _pageController,
+                                  allowImplicitScrolling: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount:
+                                      ResumeEditorViewModel.stepTitles.length,
+                                  onPageChanged: (index) {
+                                    FocusScope.of(context).unfocus();
+                                    if (viewModel.currentStep != index) {
+                                      viewModel.setStep(index);
+                                    }
+                                  },
+                                  itemBuilder: (context, index) {
+                                    final isIosPersonalStep =
+                                        Theme.of(context).platform ==
+                                            TargetPlatform.iOS &&
+                                        index == 0;
+                                    final keyboardToolbarPadding =
+                                        isIosPersonalStep ? 72.0 : 0.0;
+                                    return SingleChildScrollView(
+                                      key: Key('step-scroll-$index'),
+                                      controller: _scrollControllerForStep(
+                                        index,
+                                      ),
+                                      keyboardDismissBehavior:
+                                          ScrollViewKeyboardDismissBehavior
+                                              .onDrag,
+                                      padding: EdgeInsets.fromLTRB(
+                                        20,
+                                        20,
+                                        20,
+                                        24 +
+                                            keyboardInset +
+                                            keyboardToolbarPadding,
+                                      ),
+                                      child: _buildStepContentForStep(
+                                        index,
+                                        viewModel,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                               _BottomControls(
@@ -863,10 +931,49 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     ),
                   ],
                 ),
-                if (showKeyboardHideButton)
+                if (showPersonalKeyboardBar ||
+                    showProjectKeyboardBar ||
+                    showCustomKeyboardBar)
                   Positioned(
-                    right: 20,
-                    bottom: keyboardInset + 12,
+                    left: 12,
+                    bottom: keyboardInset + 8,
+                    child: Material(
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(14),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 4,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Previous field',
+                              onPressed: () => _focusPreviousKeyboardField(
+                                viewModel.currentStep,
+                              ),
+                              icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                            ),
+                            IconButton(
+                              tooltip: 'Next field',
+                              onPressed: () =>
+                                  _focusNextKeyboardField(viewModel.currentStep),
+                              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                if (showPersonalKeyboardBar ||
+                    showProjectKeyboardBar ||
+                    showCustomKeyboardBar ||
+                    showWorkKeyboardHideButton ||
+                    showEducationKeyboardHideButton)
+                  Positioned(
+                    right: 12,
+                    bottom: keyboardInset + 8,
                     child: IconButton.filledTonal(
                       onPressed: () => FocusScope.of(context).unfocus(),
                       icon: const Icon(Icons.keyboard_hide_rounded),
@@ -893,94 +1000,127 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   Widget _buildPersonalStep(ResumeEditorViewModel viewModel) {
+    final personalFields = _ResponsiveFieldGroup(
+      children: [
+        _SyncTextField(
+          label: 'Full name',
+          value: viewModel.resume.fullName,
+          focusNode: _personalFieldFocusNodes[0],
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => _personalFieldFocusNodes[1].requestFocus(),
+          onChanged: (value) => viewModel.updateResume(
+            (resume) => resume.copyWith(fullName: value),
+          ),
+        ),
+        _SyncTextField(
+          label: 'Target job title',
+          value: viewModel.resume.jobTitle,
+          focusNode: _personalFieldFocusNodes[1],
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => _personalFieldFocusNodes[2].requestFocus(),
+          onChanged: (value) => viewModel.updateResume(
+            (resume) => resume.copyWith(jobTitle: value),
+          ),
+        ),
+        _SyncTextField(
+          label: 'GitHub link',
+          value: viewModel.resume.githubLink,
+          focusNode: _personalFieldFocusNodes[2],
+          keyboardType: TextInputType.url,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => _personalFieldFocusNodes[3].requestFocus(),
+          onChanged: (value) => viewModel.updateResume(
+            (resume) => resume.copyWith(githubLink: value),
+          ),
+        ),
+        _SyncTextField(
+          label: 'LinkedIn link',
+          value: viewModel.resume.linkedinLink,
+          focusNode: _personalFieldFocusNodes[3],
+          keyboardType: TextInputType.url,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => _personalFieldFocusNodes[4].requestFocus(),
+          onChanged: (value) => viewModel.updateResume(
+            (resume) => resume.copyWith(linkedinLink: value),
+          ),
+        ),
+        _SyncTextField(
+          label: 'Email',
+          value: viewModel.resume.email,
+          focusNode: _personalFieldFocusNodes[4],
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => _personalFieldFocusNodes[5].requestFocus(),
+          onChanged: (value) => viewModel.updateResume(
+            (resume) => resume.copyWith(email: value),
+          ),
+        ),
+        _SyncTextField(
+          label: 'Phone',
+          value: viewModel.resume.phone,
+          focusNode: _personalFieldFocusNodes[5],
+          keyboardType: TextInputType.phone,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => _personalFieldFocusNodes[6].requestFocus(),
+          onChanged: (value) => viewModel.updateResume(
+            (resume) => resume.copyWith(phone: value),
+          ),
+        ),
+        _SyncTextField(
+          label: 'Location',
+          value: viewModel.resume.location,
+          focusNode: _personalFieldFocusNodes[6],
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => _personalFieldFocusNodes[7].requestFocus(),
+          onChanged: (value) => viewModel.updateResume(
+            (resume) => resume.copyWith(location: value),
+          ),
+        ),
+        _SyncTextField(
+          label: 'Website or portfolio',
+          value: viewModel.resume.website,
+          focusNode: _personalFieldFocusNodes[7],
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => _summaryFocusNode.requestFocus(),
+          onChanged: (value) => viewModel.updateResume(
+            (resume) => resume.copyWith(website: value),
+          ),
+        ),
+        _SyncTextField(
+          label: 'Professional summary',
+          value: viewModel.resume.summary,
+          maxLines: 5,
+          focusNode: _summaryFocusNode,
+          keyboardType: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
+          onChanged: (value) => viewModel.updateResume(
+            (resume) => resume.copyWith(summary: value),
+          ),
+          fullWidth: true,
+        ),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            FilledButton.tonalIcon(
+              onPressed: viewModel.isBusy ? null : _generateSummary,
+              style: _mediumTonalButtonStyle(context),
+              icon: const Icon(Icons.auto_fix_high_outlined),
+              label: const Text('Generate summary'),
+            ),
+          ],
+        ),
+      ],
+    );
     return _StepSurface(
       title: 'Personal information',
       subtitle:
           'Start with identity, contact details, target role, and a short positioning summary.',
-      child: _ResponsiveFieldGroup(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SyncTextField(
-            label: 'Full name',
-            value: viewModel.resume.fullName,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(fullName: value),
-            ),
-          ),
-          _SyncTextField(
-            label: 'Target job title',
-            value: viewModel.resume.jobTitle,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(jobTitle: value),
-            ),
-          ),
-          _SyncTextField(
-            label: 'GitHub link',
-            value: viewModel.resume.githubLink,
-            keyboardType: TextInputType.url,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(githubLink: value),
-            ),
-          ),
-          _SyncTextField(
-            label: 'LinkedIn link',
-            value: viewModel.resume.linkedinLink,
-            keyboardType: TextInputType.url,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(linkedinLink: value),
-            ),
-          ),
-          _SyncTextField(
-            label: 'Email',
-            value: viewModel.resume.email,
-            keyboardType: TextInputType.emailAddress,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(email: value),
-            ),
-          ),
-          _SyncTextField(
-            label: 'Phone',
-            value: viewModel.resume.phone,
-            keyboardType: TextInputType.phone,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(phone: value),
-            ),
-          ),
-          _SyncTextField(
-            label: 'Location',
-            value: viewModel.resume.location,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(location: value),
-            ),
-          ),
-          _SyncTextField(
-            label: 'Website or portfolio',
-            value: viewModel.resume.website,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(website: value),
-            ),
-          ),
-          _SyncTextField(
-            label: 'Professional summary',
-            value: viewModel.resume.summary,
-            maxLines: 5,
-            focusNode: _summaryFocusNode,
-            onChanged: (value) => viewModel.updateResume(
-              (resume) => resume.copyWith(summary: value),
-            ),
-            fullWidth: true,
-          ),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              FilledButton.tonalIcon(
-                onPressed: viewModel.isBusy ? null : _generateSummary,
-                style: _mediumTonalButtonStyle(context),
-                icon: const Icon(Icons.auto_fix_high_outlined),
-                label: const Text('Generate summary'),
-              ),
-            ],
-          ),
+          const SizedBox(height: 18),
+          personalFields,
         ],
       ),
     );
@@ -989,17 +1129,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   Widget _buildWorkStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
       title: 'Work experience',
-      subtitle:
-          'Add role details and measurable outcomes. Use AI to generate stronger bullet points.',
+      subtitle: '',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _HintBanner(
             title: 'Resume order',
             body:
-                'Experiences appear on the resume from top to bottom in this same order. Use the arrows to move your strongest role to the top.',
+                'Entries stay in this order. Use arrows to move your strongest role to top.',
+            compact: true,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           ...viewModel.resume.workExperiences.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
@@ -1078,6 +1218,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Role',
                           value: item.role,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'work-role-$index',
+                          ),
                           onChanged: (value) => viewModel.updateWorkExperience(
                             index,
                             (current) => current.copyWith(role: value),
@@ -1086,6 +1229,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Company',
                           value: item.company,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'work-company-$index',
+                          ),
                           onChanged: (value) => viewModel.updateWorkExperience(
                             index,
                             (current) => current.copyWith(company: value),
@@ -1134,14 +1280,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       spacing: 12,
                       runSpacing: 12,
                       children: [
-                        FilledButton.tonalIcon(
-                          onPressed: viewModel.isBusy
-                              ? null
-                              : () => _generateBullets(index),
-                          style: _mediumTonalButtonStyle(context),
-                          icon: const Icon(Icons.auto_awesome_outlined),
-                          label: const Text('Generate bullets'),
-                        ),
                         OutlinedButton.icon(
                           onPressed: viewModel.isBusy
                               ? null
@@ -1208,6 +1346,68 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
+  void _focusPreviousKeyboardField(int currentStep) {
+    if (currentStep == 0) {
+      _movePersonalFieldFocus(delta: -1);
+      return;
+    }
+    if (currentStep == 4) {
+      _moveFocusInOrder(_projectKeyboardFocusOrder, delta: -1);
+      return;
+    }
+    if (currentStep == ResumeEditorViewModel.stepTitles.length - 1) {
+      _moveFocusInOrder(_customKeyboardFocusOrder, delta: -1);
+    }
+  }
+
+  void _focusNextKeyboardField(int currentStep) {
+    if (currentStep == 0) {
+      _movePersonalFieldFocus(delta: 1);
+      return;
+    }
+    if (currentStep == 4) {
+      _moveFocusInOrder(_projectKeyboardFocusOrder, delta: 1);
+      return;
+    }
+    if (currentStep == ResumeEditorViewModel.stepTitles.length - 1) {
+      _moveFocusInOrder(_customKeyboardFocusOrder, delta: 1);
+    }
+  }
+
+  void _movePersonalFieldFocus({required int delta}) {
+    final currentIndex = _personalKeyboardFocusOrder.indexWhere(
+      (node) => node.hasFocus,
+    );
+    if (currentIndex < 0) {
+      return;
+    }
+
+    final nextIndex = currentIndex + delta;
+    if (nextIndex < 0 || nextIndex >= _personalKeyboardFocusOrder.length) {
+      return;
+    }
+
+    final target = _personalKeyboardFocusOrder[nextIndex];
+    target.requestFocus();
+    _scheduleEnsureVisible(target.context ?? context);
+  }
+
+  void _moveFocusInOrder(List<FocusNode> orderedNodes, {required int delta}) {
+    final currentIndex = orderedNodes.indexWhere((node) => node.hasFocus);
+    if (currentIndex < 0) {
+      return;
+    }
+
+    final nextIndex = currentIndex + delta;
+    if (nextIndex < 0 || nextIndex >= orderedNodes.length) {
+      return;
+    }
+
+    final target = orderedNodes[nextIndex];
+    target.requestFocus();
+    _scheduleEnsureVisible(target.context ?? context);
+  }
+
   Widget _buildEducationStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
       title: 'Education',
@@ -1216,12 +1416,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _HintBanner(
-            title: 'Resume order',
-            body:
-                'Education entries appear on the resume from top to bottom in this same order. Use the arrows to keep the most important one first.',
-          ),
-          const SizedBox(height: 16),
           ...viewModel.resume.education.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
@@ -1415,13 +1609,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             ],
           ),
           const SizedBox(height: 18),
-          if (viewModel.resume.skills.isEmpty)
-            _HintBanner(
-              title: 'No skills added yet',
-              body:
-                  'Aim for 6-12 relevant skills so ATS systems can match your resume more reliably, with room for up to 50 if needed.',
-            )
-          else
+          if (viewModel.resume.skills.isNotEmpty)
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -1452,12 +1640,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _HintBanner(
-            title: 'Resume order',
-            body:
-                'Projects appear on the resume from top to bottom in this same order. Use the arrows to move your strongest project to the top.',
-          ),
-          const SizedBox(height: 16),
           ...viewModel.resume.projects.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
@@ -1530,6 +1712,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Project title',
                           value: item.title,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'project-title-$index',
+                          ),
                           onChanged: (value) => viewModel.updateProject(
                             index,
                             (current) => current.copyWith(title: value),
@@ -1540,6 +1725,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           value: item.overview,
                           maxLines: 4,
                           fullWidth: true,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'project-overview-$index',
+                          ),
                           onChanged: (value) => viewModel.updateProject(
                             index,
                             (current) => current.copyWith(overview: value),
@@ -1550,6 +1738,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           value: item.impact,
                           maxLines: 3,
                           fullWidth: true,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'project-tools-$index',
+                          ),
                           onChanged: (value) => viewModel.updateProject(
                             index,
                             (current) => current.copyWith(impact: value),
@@ -1660,6 +1851,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               label: 'Category title',
                               value: item.title,
                               hintText: 'Certifications, Languages, Awards...',
+                              focusNode: _focusNodeForExtendedKeyboardField(
+                                'custom-section-title-$index',
+                              ),
                               onChanged: (value) =>
                                   viewModel.updateCustomSection(
                                     index,
@@ -1917,13 +2111,6 @@ class _StepSurface extends StatelessWidget {
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 20),
             child,
           ],
         ),
@@ -1966,7 +2153,7 @@ class _ResponsiveFieldGroup extends StatelessWidget {
 
 void _scheduleEnsureVisible(BuildContext context) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    Future<void>.delayed(const Duration(milliseconds: 260), () {
+    Future<void>.delayed(const Duration(milliseconds: 180), () {
       if (!context.mounted) {
         return;
       }
@@ -1984,8 +2171,9 @@ void _scheduleEnsureVisible(BuildContext context) {
 
       final fieldTop = renderObject.localToGlobal(Offset.zero).dy;
       final fieldBottom = fieldTop + renderObject.size.height;
+      // Keep focused field clearly above iOS keyboard + accessory toolbar.
       final visibleBottom =
-          MediaQuery.sizeOf(context).height - keyboardInset - 12;
+          MediaQuery.sizeOf(context).height - keyboardInset - 96;
       final overlap = fieldBottom - visibleBottom;
 
       if (overlap <= 0) {
@@ -1993,7 +2181,7 @@ void _scheduleEnsureVisible(BuildContext context) {
       }
 
       final position = scrollable.position;
-      final targetOffset = (position.pixels + overlap + 12)
+      final targetOffset = (position.pixels + overlap + 28)
           .clamp(0.0, position.maxScrollExtent)
           .toDouble();
 
@@ -2003,8 +2191,8 @@ void _scheduleEnsureVisible(BuildContext context) {
 
       position.animateTo(
         targetOffset,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeInOutCubic,
       );
     });
   });
@@ -2134,6 +2322,8 @@ class _SyncTextField extends StatefulWidget {
     this.keyboardType,
     this.focusNode,
     this.hintText,
+    this.textInputAction,
+    this.onSubmitted,
     this.fullWidth = false,
   });
 
@@ -2144,6 +2334,8 @@ class _SyncTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final FocusNode? focusNode;
   final String? hintText;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
   final bool fullWidth;
 
   @override
@@ -2190,11 +2382,20 @@ class _SyncTextFieldState extends State<_SyncTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     return TextField(
       controller: _controller,
       focusNode: _focusNode,
       maxLines: widget.maxLines,
       keyboardType: widget.keyboardType,
+      textInputAction: widget.textInputAction,
+      onSubmitted: widget.onSubmitted,
+      scrollPadding: EdgeInsets.only(
+        left: 20,
+        top: 20,
+        right: 20,
+        bottom: keyboardInset + 120,
+      ),
       onChanged: widget.onChanged,
       decoration: InputDecoration(
         labelText: widget.label,
@@ -2205,39 +2406,63 @@ class _SyncTextFieldState extends State<_SyncTextField> {
 }
 
 class _HintBanner extends StatelessWidget {
-  const _HintBanner({required this.title, required this.body});
+  const _HintBanner({
+    required this.title,
+    required this.body,
+    this.compact = false,
+  });
 
   final String title;
   final String body;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final horizontalPadding = compact ? 8.0 : 12.0;
+    final verticalPadding = compact ? 6.0 : 10.0;
+    final radius = compact ? 10.0 : 14.0;
+    final iconSize = compact ? 14.0 : 18.0;
+    final spacing = compact ? 6.0 : 8.0;
+    final bodySpacing = compact ? 1.0 : 2.0;
+    final titleStyle = compact
+        ? theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          )
+        : theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700);
+    final bodyStyle = compact
+        ? theme.textTheme.bodySmall?.copyWith(fontSize: 12, height: 1.2)
+        : theme.textTheme.bodySmall;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(radius),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             Icons.lightbulb_outline,
-            color: Theme.of(context).colorScheme.primary,
+            size: iconSize,
+            color: theme.colorScheme.primary,
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: spacing),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: titleStyle,
                 ),
-                const SizedBox(height: 4),
-                Text(body),
+                SizedBox(height: bodySpacing),
+                Text(body, style: bodyStyle),
               ],
             ),
           ),

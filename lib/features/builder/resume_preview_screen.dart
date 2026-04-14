@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/models/resume_models.dart';
 import '../shared/resume_preview_card.dart';
@@ -27,26 +28,41 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
     });
   }
 
-  Future<void> _downloadResume() async {
-    final path = await context.read<ResumeEditorViewModel>().downloadPdf();
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('PDF saved to $path')));
-  }
-
   Future<void> _shareResume() async {
-    await context.read<ResumeEditorViewModel>().sharePdf();
-    if (!mounted) {
-      return;
-    }
+    final viewModel = context.read<ResumeEditorViewModel>();
+    try {
+      // Let popup menu dismiss animation finish before opening system share sheet.
+      await Future<void>.delayed(const Duration(milliseconds: 160));
+      final file = await viewModel.pdfService.savePdfToDevice(viewModel.resume);
+      if (!mounted) {
+        return;
+      }
+      final box = context.findRenderObject() as RenderBox?;
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: '${viewModel.resume.title} resume',
+        text: 'Shared from ResumeAI',
+        sharePositionOrigin: box == null
+            ? null
+            : box.localToGlobal(Offset.zero) & box.size,
+      );
+      if (!mounted) {
+        return;
+      }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Share sheet opened.')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Share sheet opened.')));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to open share sheet right now.'),
+        ),
+      );
+    }
   }
 
   Future<void> _printResume() async {
@@ -100,9 +116,6 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
         return;
       case _PreviewMenuAction.atsScore:
         await _showAtsOptions();
-        return;
-      case _PreviewMenuAction.downloadPdf:
-        await _downloadResume();
         return;
       case _PreviewMenuAction.shareResume:
         await _shareResume();
@@ -196,6 +209,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                   padding: const EdgeInsets.only(right: 12),
                   child: PopupMenuButton<_PreviewMenuAction>(
                     tooltip: 'Menu',
+                    color: Colors.white,
                     onSelected: _handleMenuSelection,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -212,10 +226,6 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                       PopupMenuItem(
                         value: _PreviewMenuAction.atsScore,
                         child: Text('ATS score', style: menuTextStyle),
-                      ),
-                      PopupMenuItem(
-                        value: _PreviewMenuAction.downloadPdf,
-                        child: Text('Download PDF', style: menuTextStyle),
                       ),
                       PopupMenuItem(
                         value: _PreviewMenuAction.shareResume,
@@ -295,7 +305,6 @@ extension on String {
 enum _PreviewMenuAction {
   chooseTemplate,
   atsScore,
-  downloadPdf,
   shareResume,
   printResume,
 }
@@ -568,11 +577,11 @@ class _ZoomablePdfPageViewerState extends State<_ZoomablePdfPageViewer> {
               child: SizedBox.expand(
                 child: Center(
                   child: FittedBox(
-                    fit: BoxFit.contain,
+                    fit: BoxFit.cover,
                     child: SizedBox(
                       width: page.width.toDouble(),
                       height: page.height.toDouble(),
-                      child: Image(image: page.image, fit: BoxFit.fill),
+                      child: Image(image: page.image, fit: BoxFit.cover),
                     ),
                   ),
                 ),

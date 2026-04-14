@@ -1175,10 +1175,21 @@ class LocalAiResumeService {
     addTitleSource(resume.jobTitle);
     addTitleSource(targetJobTitle ?? '');
 
-    final combinedContext = [
+    final combinedContext = <String>[
       ...titleSources,
+      resume.summary,
+      ...resume.skills,
       ...resume.visibleWorkExperiences.expand(
         (item) => [item.role, item.company, item.description, ...item.bullets],
+      ),
+      ...resume.visibleEducation.expand(
+        (item) => [item.institution, item.degree, item.score, item.details],
+      ),
+      ...resume.visibleProjects.expand(
+        (item) => [item.title, item.subtitle, item.overview, item.impact],
+      ),
+      ...resume.visibleCustomSections.expand(
+        (section) => [section.title, section.content],
       ),
     ].where((item) => item.trim().isNotEmpty).join(' ').toLowerCase();
 
