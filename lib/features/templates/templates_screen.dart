@@ -328,19 +328,11 @@ class _TemplateTile extends StatelessWidget {
                 Positioned(
                   right: 8,
                   bottom: 30,
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFD54F),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.workspace_premium_rounded,
-                      size: 13,
-                      color: Color(0xFF4A2F00),
-                    ),
+                  child: Image.asset(
+                    'assets/premium_badge.png',
+                    width: 18,
+                    height: 18,
+                    fit: BoxFit.contain,
                   ),
                 ),
             ],

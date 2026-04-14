@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +28,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   static const Curve _stepAnimationCurve = Curves.easeInOutCubicEmphasized;
 
   final _skillController = TextEditingController();
+  final _imagePicker = ImagePicker();
   final _personalFieldFocusNodes = List<FocusNode>.generate(
     8,
     (_) => FocusNode(),
@@ -774,6 +777,137 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
+  Future<void> _pickProfileImage(ImageSource source) async {
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1400,
+        imageQuality: 88,
+      );
+      if (!mounted || picked == null) {
+        return;
+      }
+      context.read<ResumeEditorViewModel>().updateResume(
+        (resume) => resume.copyWith(profileImagePath: picked.path),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to pick image right now.')),
+      );
+    }
+  }
+
+  void _clearProfileImage() {
+    context.read<ResumeEditorViewModel>().updateResume(
+      (resume) => resume.copyWith(profileImagePath: ''),
+    );
+  }
+
+  Future<void> _showProfilePhotoOptions({
+    required bool hasImage,
+  }) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      builder: (sheetContext) {
+        final iconColor = Theme.of(sheetContext).colorScheme.primary;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.photo_camera_outlined, color: iconColor),
+                title: const Text('Camera'),
+                onTap: () => Navigator.of(sheetContext).pop('camera'),
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library_outlined, color: iconColor),
+                title: const Text('Library'),
+                onTap: () => Navigator.of(sheetContext).pop('library'),
+              ),
+              if (hasImage)
+                ListTile(
+                  leading: ImageIcon(
+                    const AssetImage('assets/fonts/delete.png'),
+                    color: iconColor,
+                  ),
+                  title: const Text('Remove'),
+                  onTap: () => Navigator.of(sheetContext).pop('remove'),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null) {
+      return;
+    }
+    if (action == 'camera') {
+      await _pickProfileImage(ImageSource.camera);
+      return;
+    }
+    if (action == 'library') {
+      await _pickProfileImage(ImageSource.gallery);
+      return;
+    }
+    if (action == 'remove') {
+      _clearProfileImage();
+    }
+  }
+
+  Widget _buildProfilePhotoPicker(ResumeEditorViewModel viewModel) {
+    final imagePath = viewModel.resume.profileImagePath.trim();
+    final hasImage = imagePath.isNotEmpty && File(imagePath).existsSync();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            'Profile photo',
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+          InkWell(
+            borderRadius: BorderRadius.circular(56),
+            onTap: () => _showProfilePhotoOptions(hasImage: hasImage),
+            child: CircleAvatar(
+              radius: 52,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
+              backgroundImage: hasImage ? FileImage(File(imagePath)) : null,
+              child: hasImage
+                  ? null
+                  : Icon(
+                      Icons.person_rounded,
+                      size: 34,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tap to change photo',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ResumeEditorViewModel>(
@@ -1121,6 +1255,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         children: [
           const SizedBox(height: 18),
           personalFields,
+          const SizedBox(height: 24),
+          _buildProfilePhotoPicker(viewModel),
         ],
       ),
     );

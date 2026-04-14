@@ -43,6 +43,7 @@ dependencies:
   share_plus: ^10.1.4
   syncfusion_flutter_pdf: ^28.2.12
   xml: ^6.5.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +71,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/fonts/delete.png
+    - assets/premium_badge.png
     - assets/templates/
   fonts:
     - family: Nunito

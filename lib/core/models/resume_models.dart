@@ -109,6 +109,7 @@ class ResumeData {
     required this.updatedAt,
     required this.githubLink,
     required this.linkedinLink,
+    required this.profileImagePath,
   });
 
   factory ResumeData.empty({required ResumeTemplate template}) {
@@ -131,6 +132,7 @@ class ResumeData {
       updatedAt: DateTime.now(),
       githubLink: '',
       linkedinLink: '',
+      profileImagePath: '',
     );
   }
 
@@ -183,6 +185,7 @@ class ResumeData {
           DateTime.now(),
       githubLink: json['githubLink'] as String? ?? '',
       linkedinLink: json['linkedinLink'] as String? ?? '',
+      profileImagePath: json['profileImagePath'] as String? ?? '',
     );
   }
 
@@ -204,6 +207,7 @@ class ResumeData {
   final DateTime updatedAt;
   final String githubLink;
   final String linkedinLink;
+  final String profileImagePath;
 
   List<WorkExperience> get visibleWorkExperiences =>
       workExperiences.where((item) => !item.isBlank).toList();
@@ -266,6 +270,7 @@ class ResumeData {
     DateTime? updatedAt,
     String? githubLink,
     String? linkedinLink,
+    String? profileImagePath,
   }) {
     return ResumeData(
       id: id ?? this.id,
@@ -286,6 +291,7 @@ class ResumeData {
       updatedAt: updatedAt ?? this.updatedAt,
       githubLink: githubLink ?? this.githubLink,
       linkedinLink: linkedinLink ?? this.linkedinLink,
+      profileImagePath: profileImagePath ?? this.profileImagePath,
     );
   }
 
@@ -309,6 +315,7 @@ class ResumeData {
       'updatedAt': updatedAt.toIso8601String(),
       'githubLink': githubLink,
       'linkedinLink': linkedinLink,
+      'profileImagePath': profileImagePath,
     };
   }
 }
