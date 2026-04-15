@@ -74,8 +74,8 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
           },
           child: Scaffold(
             appBar: AppBar(
-              leadingWidth: 40,
-              titleSpacing: 8,
+              leadingWidth: 56,
+              titleSpacing: 2,
               title: Text(
                 viewModel.coverLetter.displayTitle,
                 style: titleStyle,

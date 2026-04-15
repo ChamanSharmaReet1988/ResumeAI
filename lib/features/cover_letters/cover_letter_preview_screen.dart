@@ -64,8 +64,8 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
         builder: (routeContext) {
           return Scaffold(
             appBar: AppBar(
-              leadingWidth: 40,
-              titleSpacing: 8,
+              leadingWidth: 56,
+              titleSpacing: 2,
               title: const Text('Choose template'),
             ),
             body: TemplatesScreen(
@@ -140,8 +140,8 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            leadingWidth: 40,
-            titleSpacing: 8,
+            leadingWidth: 56,
+            titleSpacing: 2,
             title: Text(letter.displayTitle, style: baseTitleStyle),
             actions: [
               Padding(

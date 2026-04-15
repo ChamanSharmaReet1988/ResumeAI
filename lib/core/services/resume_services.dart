@@ -1465,26 +1465,39 @@ class LocalAiResumeService {
 class ResumePdfService {
   Future<Uint8List> buildPdf(ResumeData resume) async {
     final document = pw.Document(theme: _resumeDocumentTheme);
+    final profileImage = await _loadProfileImage(resume.profileImagePath);
 
     switch (resume.template.userFacingTemplate) {
       case ResumeTemplate.modern:
       case ResumeTemplate.corporate:
-        _addCorporateTemplatePage(document, resume);
+        _addCorporateTemplatePage(document, resume, profileImage: profileImage);
         break;
       case ResumeTemplate.minimal:
-        _addMinimalTemplatePage(document, resume);
+        _addMinimalTemplatePage(document, resume, profileImage: profileImage);
         break;
       case ResumeTemplate.creative:
-        _addCreativeTemplatePage(document, resume);
+        _addCreativeTemplatePage(document, resume, profileImage: profileImage);
         break;
       case ResumeTemplate.copperSerif:
-        _addCopperSerifTemplatePage(document, resume);
+        _addCopperSerifTemplatePage(
+          document,
+          resume,
+          profileImage: profileImage,
+        );
         break;
       case ResumeTemplate.splitBanner:
-        _addSplitBannerTemplatePage(document, resume);
+        _addSplitBannerTemplatePage(
+          document,
+          resume,
+          profileImage: profileImage,
+        );
         break;
       case ResumeTemplate.monogramSidebar:
-        _addMonogramSidebarTemplatePage(document, resume);
+        _addMonogramSidebarTemplatePage(
+          document,
+          resume,
+          profileImage: profileImage,
+        );
         break;
     }
 
@@ -1685,6 +1698,22 @@ class ResumePdfService {
     italic: pw.Font.helveticaOblique(),
     boldItalic: pw.Font.helveticaBoldOblique(),
   );
+
+  Future<pw.MemoryImage?> _loadProfileImage(String path) async {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    final file = File(trimmed);
+    if (!await file.exists()) {
+      return null;
+    }
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) {
+      return null;
+    }
+    return pw.MemoryImage(bytes);
+  }
 
   void _addExecutiveNoteCoverLetterPage(
     pw.Document document,
@@ -1996,7 +2025,11 @@ class ResumePdfService {
         .toList();
   }
 
-  void _addCorporateTemplatePage(pw.Document document, ResumeData resume) {
+  void _addCorporateTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    pw.MemoryImage? profileImage,
+  }) {
     final headerColor = PdfColor.fromHex('#3B4046');
     final lineColor = PdfColor.fromHex('#D7DCE2');
 
@@ -2010,22 +2043,37 @@ class ResumePdfService {
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Container(
-                  width: 48,
-                  height: 48,
-                  alignment: pw.Alignment.center,
-                  decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfColors.white, width: 1.4),
-                  ),
-                  child: pw.Text(
-                    _resumeInitials(resume),
-                    style: pw.TextStyle(
-                      color: PdfColors.white,
-                      fontSize: 16,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                ),
+                profileImage != null
+                    ? pw.Container(
+                        width: 48,
+                        height: 48,
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(
+                            color: PdfColors.white,
+                            width: 1.4,
+                          ),
+                        ),
+                        child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                      )
+                    : pw.Container(
+                        width: 48,
+                        height: 48,
+                        alignment: pw.Alignment.center,
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(
+                            color: PdfColors.white,
+                            width: 1.4,
+                          ),
+                        ),
+                        child: pw.Text(
+                          _resumeInitials(resume),
+                          style: pw.TextStyle(
+                            color: PdfColors.white,
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ),
                 pw.SizedBox(width: 14),
                 pw.Expanded(
                   child: pw.Column(
@@ -2111,7 +2159,11 @@ class ResumePdfService {
     );
   }
 
-  void _addMinimalTemplatePage(pw.Document document, ResumeData resume) {
+  void _addMinimalTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    pw.MemoryImage? profileImage,
+  }) {
     final lineColor = PdfColor.fromHex('#D7DCE2');
     final textMuted = PdfColor.fromHex('#5E6369');
 
@@ -2120,22 +2172,30 @@ class ResumePdfService {
         margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 28),
         build: (context) => [
           pw.Center(
-            child: pw.Container(
-              width: 44,
-              height: 44,
-              alignment: pw.Alignment.center,
-              decoration: pw.BoxDecoration(
-                shape: pw.BoxShape.circle,
-                border: pw.Border.all(color: PdfColors.grey700, width: 1),
-              ),
-              child: pw.Text(
-                _resumeInitials(resume),
-                style: pw.TextStyle(
-                  fontSize: 16,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-            ),
+            child: profileImage != null
+                ? pw.ClipOval(
+                    child: pw.SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                    ),
+                  )
+                : pw.Container(
+                    width: 44,
+                    height: 44,
+                    alignment: pw.Alignment.center,
+                    decoration: pw.BoxDecoration(
+                      shape: pw.BoxShape.circle,
+                      border: pw.Border.all(color: PdfColors.grey700, width: 1),
+                    ),
+                    child: pw.Text(
+                      _resumeInitials(resume),
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
           ),
           pw.SizedBox(height: 10),
           pw.Center(
@@ -2208,7 +2268,11 @@ class ResumePdfService {
     );
   }
 
-  void _addCreativeTemplatePage(pw.Document document, ResumeData resume) {
+  void _addCreativeTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    pw.MemoryImage? profileImage,
+  }) {
     final dark = PdfColor.fromHex('#353A40');
     final lineColor = PdfColor.fromHex('#B8BEC6');
     final muted = PdfColor.fromHex('#5D6268');
@@ -2226,23 +2290,32 @@ class ResumePdfService {
                 pw.Row(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Container(
-                      width: 68,
-                      height: 84,
-                      alignment: pw.Alignment.center,
-                      decoration: pw.BoxDecoration(
-                        color: PdfColor.fromHex('#EED7BF'),
-                        border: pw.Border.all(color: lineColor),
-                      ),
-                      child: pw.Text(
-                        _resumeInitials(resume),
-                        style: pw.TextStyle(
-                          fontSize: 22,
-                          fontWeight: pw.FontWeight.bold,
-                          color: dark,
-                        ),
-                      ),
-                    ),
+                    profileImage != null
+                        ? pw.Container(
+                            width: 68,
+                            height: 84,
+                            decoration: pw.BoxDecoration(
+                              border: pw.Border.all(color: lineColor),
+                            ),
+                            child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                          )
+                        : pw.Container(
+                            width: 68,
+                            height: 84,
+                            alignment: pw.Alignment.center,
+                            decoration: pw.BoxDecoration(
+                              color: PdfColor.fromHex('#EED7BF'),
+                              border: pw.Border.all(color: lineColor),
+                            ),
+                            child: pw.Text(
+                              _resumeInitials(resume),
+                              style: pw.TextStyle(
+                                fontSize: 22,
+                                fontWeight: pw.FontWeight.bold,
+                                color: dark,
+                              ),
+                            ),
+                          ),
                     pw.SizedBox(width: 16),
                     pw.Expanded(
                       child: pw.Column(
@@ -2330,7 +2403,11 @@ class ResumePdfService {
     );
   }
 
-  void _addCopperSerifTemplatePage(pw.Document document, ResumeData resume) {
+  void _addCopperSerifTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    pw.MemoryImage? profileImage,
+  }) {
     final copper = PdfColor.fromHex('#E7A055');
     final lineColor = PdfColor.fromHex('#D5D9DE');
     final muted = PdfColor.fromHex('#6A7076');
@@ -2339,6 +2416,18 @@ class ResumePdfService {
       pw.MultiPage(
         margin: const pw.EdgeInsets.fromLTRB(28, 28, 28, 28),
         build: (context) => [
+          if (profileImage != null) ...[
+            pw.Center(
+              child: pw.ClipOval(
+                child: pw.SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                ),
+              ),
+            ),
+            pw.SizedBox(height: 8),
+          ],
           pw.Center(
             child: pw.Text(
               _displayName(resume).toUpperCase(),
@@ -2445,7 +2534,11 @@ class ResumePdfService {
     );
   }
 
-  void _addSplitBannerTemplatePage(pw.Document document, ResumeData resume) {
+  void _addSplitBannerTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    pw.MemoryImage? profileImage,
+  }) {
     final copper = PdfColor.fromHex('#EE9938');
     final lineColor = PdfColor.fromHex('#D7DBE0');
 
@@ -2474,6 +2567,16 @@ class ResumePdfService {
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
+                    if (profileImage != null) ...[
+                      pw.ClipOval(
+                        child: pw.SizedBox(
+                          width: 34,
+                          height: 34,
+                          child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                        ),
+                      ),
+                      pw.SizedBox(height: 6),
+                    ],
                     for (final item in _resumeContactItems(resume))
                       pw.Padding(
                         padding: const pw.EdgeInsets.only(bottom: 3),
@@ -2557,8 +2660,9 @@ class ResumePdfService {
 
   void _addMonogramSidebarTemplatePage(
     pw.Document document,
-    ResumeData resume,
-  ) {
+    ResumeData resume, {
+    pw.MemoryImage? profileImage,
+  }) {
     final copper = PdfColor.fromHex('#E39A3A');
     final dark = PdfColor.fromHex('#17181A');
     final lineColor = PdfColor.fromHex('#D5D9DE');
@@ -2581,20 +2685,26 @@ class ResumePdfService {
                 ),
                 child: pw.Column(
                   children: [
-                    pw.Container(
-                      width: 48,
-                      height: 48,
-                      alignment: pw.Alignment.center,
-                      color: dark,
-                      child: pw.Text(
-                        _resumeInitials(resume),
-                        style: pw.TextStyle(
-                          color: copper,
-                          fontSize: 22,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    profileImage != null
+                        ? pw.SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                          )
+                        : pw.Container(
+                            width: 48,
+                            height: 48,
+                            alignment: pw.Alignment.center,
+                            color: dark,
+                            child: pw.Text(
+                              _resumeInitials(resume),
+                              style: pw.TextStyle(
+                                color: copper,
+                                fontSize: 22,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ),
                     pw.SizedBox(height: 12),
                     pw.Text(
                       _displayName(resume),
@@ -2912,12 +3022,9 @@ class ResumePdfService {
           for (final item in columnItems)
             pw.Padding(
               padding: const pw.EdgeInsets.only(bottom: 3),
-              child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('•  '),
-                  pw.Expanded(child: pw.Text(item)),
-                ],
+              child: pw.Bullet(
+                text: item,
+                style: const pw.TextStyle(color: PdfColors.black),
               ),
             ),
         ],
@@ -2977,12 +3084,9 @@ class ResumePdfService {
           for (final bullet in item.bullets)
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 3),
-              child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('•  '),
-                  pw.Expanded(child: pw.Text(bullet)),
-                ],
+              child: pw.Bullet(
+                text: bullet,
+                style: const pw.TextStyle(color: PdfColors.black),
               ),
             ),
         ],
@@ -3046,12 +3150,9 @@ class ResumePdfService {
                 color: highlightedBullets.contains(bullet)
                     ? highlightColor
                     : PdfColors.white,
-                child: pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('•  '),
-                    pw.Expanded(child: pw.Text(bullet)),
-                  ],
+                child: pw.Bullet(
+                  text: bullet,
+                  style: const pw.TextStyle(color: PdfColors.black),
                 ),
               ),
             ),
@@ -3087,12 +3188,9 @@ class ResumePdfService {
           for (final bullet in item.bullets)
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 3),
-              child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('•  '),
-                  pw.Expanded(child: pw.Text(bullet)),
-                ],
+              child: pw.Bullet(
+                text: bullet,
+                style: const pw.TextStyle(color: PdfColors.black),
               ),
             ),
         ],
@@ -3124,12 +3222,9 @@ class ResumePdfService {
           for (final bullet in item.bullets)
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 3),
-              child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('•  '),
-                  pw.Expanded(child: pw.Text(bullet)),
-                ],
+              child: pw.Bullet(
+                text: bullet,
+                style: const pw.TextStyle(color: PdfColors.black),
               ),
             ),
         ],

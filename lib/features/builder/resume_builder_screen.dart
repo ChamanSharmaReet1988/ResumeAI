@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/resume_models.dart';
 import 'resume_preview_screen.dart';
@@ -315,6 +316,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (isEndDate) {
       final selection = await showModalBottomSheet<_EndDateSelection>(
         context: context,
+        backgroundColor: Colors.white,
         builder: (context) {
           final primaryColor = Theme.of(context).colorScheme.primary;
 
@@ -442,7 +444,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     required DateTime initialDate,
   }) async {
     final years = _availableYears();
-    var selectedYear = initialDate.year;
+    var selectedYear = years.contains(initialDate.year)
+        ? initialDate.year
+        : years.first;
     var selectedMonth = initialDate.month;
 
     return showDialog<DateTime>(
@@ -460,7 +464,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     DropdownButtonFormField<int>(
-                      initialValue: selectedYear,
+                      initialValue: years.contains(selectedYear)
+                          ? selectedYear
+                          : years.first,
+                      dropdownColor: Colors.white,
                       style: const TextStyle(
                         fontWeight: FontWeight.w400,
                         color: Colors.black,
@@ -946,8 +953,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         return Scaffold(
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
-            leadingWidth: 40,
-            titleSpacing: 8,
+            leadingWidth: 56,
+            titleSpacing: 2,
             title: Text(currentTitle, style: titleStyle),
           ),
           body: SafeArea(
@@ -1156,22 +1163,24 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             (resume) => resume.copyWith(jobTitle: value),
           ),
         ),
-        _SyncTextField(
+        _ProfileLinkField(
           label: 'GitHub link',
           value: viewModel.resume.githubLink,
+          basePrefix: 'https://github.com/',
+          hintText: 'github.com/username',
           focusNode: _personalFieldFocusNodes[2],
-          keyboardType: TextInputType.url,
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _personalFieldFocusNodes[3].requestFocus(),
           onChanged: (value) => viewModel.updateResume(
             (resume) => resume.copyWith(githubLink: value),
           ),
         ),
-        _SyncTextField(
+        _ProfileLinkField(
           label: 'LinkedIn link',
           value: viewModel.resume.linkedinLink,
+          basePrefix: 'https://www.linkedin.com/in/',
+          hintText: 'linkedin.com/in/your-name',
           focusNode: _personalFieldFocusNodes[3],
-          keyboardType: TextInputType.url,
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _personalFieldFocusNodes[4].requestFocus(),
           onChanged: (value) => viewModel.updateResume(
@@ -1189,11 +1198,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             (resume) => resume.copyWith(email: value),
           ),
         ),
-        _SyncTextField(
-          label: 'Phone',
+        _PhoneWithCountryCodeField(
+          label: 'Phoen number',
           value: viewModel.resume.phone,
           focusNode: _personalFieldFocusNodes[5],
-          keyboardType: TextInputType.phone,
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _personalFieldFocusNodes[6].requestFocus(),
           onChanged: (value) => viewModel.updateResume(
@@ -2496,6 +2504,9 @@ class _SyncTextFieldState extends State<_SyncTextField> {
     if (_focusNode.hasFocus) {
       _scheduleEnsureVisible(context);
     }
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -2539,6 +2550,519 @@ class _SyncTextFieldState extends State<_SyncTextField> {
       ),
     );
   }
+}
+
+class _ProfileLinkField extends StatefulWidget {
+  const _ProfileLinkField({
+    required this.label,
+    required this.value,
+    required this.basePrefix,
+    required this.hintText,
+    required this.onChanged,
+    this.focusNode,
+    this.textInputAction,
+    this.onSubmitted,
+  });
+
+  final String label;
+  final String value;
+  final String basePrefix;
+  final String hintText;
+  final ValueChanged<String> onChanged;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  State<_ProfileLinkField> createState() => _ProfileLinkFieldState();
+}
+
+class _ProfileLinkFieldState extends State<_ProfileLinkField> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  late final bool _ownsFocusNode;
+
+  bool get _hasOpenableValue => _normalizedValue(_controller.text).isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+    _ownsFocusNode = widget.focusNode == null;
+    _focusNode = widget.focusNode ?? FocusNode();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProfileLinkField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_focusNode.hasFocus && oldWidget.value != widget.value) {
+      _controller.text = widget.value;
+    }
+  }
+
+  void _handleFocusChange() {
+    if (_focusNode.hasFocus) {
+      _scheduleEnsureVisible(context);
+      if (_controller.text.trim().isEmpty) {
+        _controller.value = TextEditingValue(
+          text: widget.basePrefix,
+          selection: TextSelection.collapsed(offset: widget.basePrefix.length),
+        );
+      }
+    }
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  String _normalizedValue(String rawInput) {
+    final raw = rawInput.trim();
+    if (raw.isEmpty || raw == widget.basePrefix) {
+      return '';
+    }
+
+    final withoutAt = raw.startsWith('@') ? raw.substring(1) : raw;
+    if (withoutAt.startsWith('http://') || withoutAt.startsWith('https://')) {
+      return withoutAt;
+    }
+
+    if (withoutAt.startsWith('www.')) {
+      return 'https://$withoutAt';
+    }
+
+    final baseHost = Uri.parse(widget.basePrefix).host;
+    if (withoutAt.contains(baseHost)) {
+      return 'https://${withoutAt.replaceFirst(RegExp(r'^https?://'), '')}';
+    }
+
+    return '${widget.basePrefix}$withoutAt';
+  }
+
+  Future<void> _openLink() async {
+    final normalized = _normalizedValue(_controller.text);
+    if (normalized.isEmpty) {
+      return;
+    }
+    final uri = Uri.tryParse(normalized);
+    if (uri == null || !(uri.hasScheme && uri.hasAuthority)) {
+      return;
+    }
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.removeListener(_handleFocusChange);
+    if (_ownsFocusNode) {
+      _focusNode.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    return TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      keyboardType: TextInputType.url,
+      textInputAction: widget.textInputAction,
+      onSubmitted: widget.onSubmitted,
+      scrollPadding: EdgeInsets.only(
+        left: 20,
+        top: 20,
+        right: 20,
+        bottom: keyboardInset + 120,
+      ),
+      onChanged: (value) {
+        widget.onChanged(_normalizedValue(value));
+        if (mounted) {
+          setState(() {});
+        }
+      },
+      decoration: InputDecoration(
+        labelText: widget.label,
+        hintText: widget.hintText,
+        suffixIcon: IconButton(
+          tooltip: 'Open link',
+          onPressed: _hasOpenableValue ? _openLink : null,
+          icon: const Icon(Icons.open_in_new_rounded),
+        ),
+      ),
+    );
+  }
+}
+
+class _PhoneWithCountryCodeField extends StatefulWidget {
+  const _PhoneWithCountryCodeField({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.focusNode,
+    this.textInputAction,
+    this.onSubmitted,
+  });
+
+  final String label;
+  final String value;
+  final ValueChanged<String> onChanged;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  State<_PhoneWithCountryCodeField> createState() =>
+      _PhoneWithCountryCodeFieldState();
+}
+
+class _PhoneWithCountryCodeFieldState extends State<_PhoneWithCountryCodeField> {
+  static const List<_CountryDialCode> _countries = [
+    _CountryDialCode('Afghanistan', '+93'),
+    _CountryDialCode('Albania', '+355'),
+    _CountryDialCode('Algeria', '+213'),
+    _CountryDialCode('Argentina', '+54'),
+    _CountryDialCode('Armenia', '+374'),
+    _CountryDialCode('Australia', '+61'),
+    _CountryDialCode('Austria', '+43'),
+    _CountryDialCode('Azerbaijan', '+994'),
+    _CountryDialCode('Bahrain', '+973'),
+    _CountryDialCode('Bangladesh', '+880'),
+    _CountryDialCode('Belarus', '+375'),
+    _CountryDialCode('Belgium', '+32'),
+    _CountryDialCode('Bhutan', '+975'),
+    _CountryDialCode('Bolivia', '+591'),
+    _CountryDialCode('Bosnia and Herzegovina', '+387'),
+    _CountryDialCode('Brazil', '+55'),
+    _CountryDialCode('Bulgaria', '+359'),
+    _CountryDialCode('Cambodia', '+855'),
+    _CountryDialCode('Canada', '+1'),
+    _CountryDialCode('Chile', '+56'),
+    _CountryDialCode('China', '+86'),
+    _CountryDialCode('Colombia', '+57'),
+    _CountryDialCode('Costa Rica', '+506'),
+    _CountryDialCode('Croatia', '+385'),
+    _CountryDialCode('Cyprus', '+357'),
+    _CountryDialCode('Czech Republic', '+420'),
+    _CountryDialCode('Denmark', '+45'),
+    _CountryDialCode('Dominican Republic', '+1'),
+    _CountryDialCode('Ecuador', '+593'),
+    _CountryDialCode('Egypt', '+20'),
+    _CountryDialCode('Estonia', '+372'),
+    _CountryDialCode('Ethiopia', '+251'),
+    _CountryDialCode('Finland', '+358'),
+    _CountryDialCode('France', '+33'),
+    _CountryDialCode('Georgia', '+995'),
+    _CountryDialCode('Germany', '+49'),
+    _CountryDialCode('Ghana', '+233'),
+    _CountryDialCode('Greece', '+30'),
+    _CountryDialCode('Guatemala', '+502'),
+    _CountryDialCode('Hong Kong', '+852'),
+    _CountryDialCode('Hungary', '+36'),
+    _CountryDialCode('Iceland', '+354'),
+    _CountryDialCode('India', '+91'),
+    _CountryDialCode('Indonesia', '+62'),
+    _CountryDialCode('Iran', '+98'),
+    _CountryDialCode('Iraq', '+964'),
+    _CountryDialCode('Ireland', '+353'),
+    _CountryDialCode('Israel', '+972'),
+    _CountryDialCode('Italy', '+39'),
+    _CountryDialCode('Japan', '+81'),
+    _CountryDialCode('Jordan', '+962'),
+    _CountryDialCode('Kazakhstan', '+7'),
+    _CountryDialCode('Kenya', '+254'),
+    _CountryDialCode('Kuwait', '+965'),
+    _CountryDialCode('Kyrgyzstan', '+996'),
+    _CountryDialCode('Laos', '+856'),
+    _CountryDialCode('Latvia', '+371'),
+    _CountryDialCode('Lebanon', '+961'),
+    _CountryDialCode('Lithuania', '+370'),
+    _CountryDialCode('Luxembourg', '+352'),
+    _CountryDialCode('Malaysia', '+60'),
+    _CountryDialCode('Maldives', '+960'),
+    _CountryDialCode('Mexico', '+52'),
+    _CountryDialCode('Moldova', '+373'),
+    _CountryDialCode('Mongolia', '+976'),
+    _CountryDialCode('Morocco', '+212'),
+    _CountryDialCode('Myanmar', '+95'),
+    _CountryDialCode('Nepal', '+977'),
+    _CountryDialCode('Netherlands', '+31'),
+    _CountryDialCode('New Zealand', '+64'),
+    _CountryDialCode('Nigeria', '+234'),
+    _CountryDialCode('North Macedonia', '+389'),
+    _CountryDialCode('Norway', '+47'),
+    _CountryDialCode('Oman', '+968'),
+    _CountryDialCode('Pakistan', '+92'),
+    _CountryDialCode('Panama', '+507'),
+    _CountryDialCode('Paraguay', '+595'),
+    _CountryDialCode('Peru', '+51'),
+    _CountryDialCode('Philippines', '+63'),
+    _CountryDialCode('Poland', '+48'),
+    _CountryDialCode('Portugal', '+351'),
+    _CountryDialCode('Qatar', '+974'),
+    _CountryDialCode('Romania', '+40'),
+    _CountryDialCode('Russia', '+7'),
+    _CountryDialCode('Saudi Arabia', '+966'),
+    _CountryDialCode('Serbia', '+381'),
+    _CountryDialCode('Singapore', '+65'),
+    _CountryDialCode('Slovakia', '+421'),
+    _CountryDialCode('Slovenia', '+386'),
+    _CountryDialCode('South Africa', '+27'),
+    _CountryDialCode('South Korea', '+82'),
+    _CountryDialCode('Spain', '+34'),
+    _CountryDialCode('Sri Lanka', '+94'),
+    _CountryDialCode('Sweden', '+46'),
+    _CountryDialCode('Switzerland', '+41'),
+    _CountryDialCode('Taiwan', '+886'),
+    _CountryDialCode('Tanzania', '+255'),
+    _CountryDialCode('Thailand', '+66'),
+    _CountryDialCode('Tunisia', '+216'),
+    _CountryDialCode('Turkey', '+90'),
+    _CountryDialCode('Uganda', '+256'),
+    _CountryDialCode('Ukraine', '+380'),
+    _CountryDialCode('United Arab Emirates', '+971'),
+    _CountryDialCode('United Kingdom', '+44'),
+    _CountryDialCode('United States', '+1'),
+    _CountryDialCode('Uruguay', '+598'),
+    _CountryDialCode('Uzbekistan', '+998'),
+    _CountryDialCode('Venezuela', '+58'),
+    _CountryDialCode('Vietnam', '+84'),
+    _CountryDialCode('Yemen', '+967'),
+    _CountryDialCode('Zambia', '+260'),
+    _CountryDialCode('Zimbabwe', '+263'),
+  ];
+
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  late final bool _ownsFocusNode;
+  late String _selectedCountryKey;
+
+  @override
+  void initState() {
+    super.initState();
+    final parsed = _parsePhone(widget.value);
+    _selectedCountryKey = parsed.$1;
+    _controller = TextEditingController(text: parsed.$2);
+    _ownsFocusNode = widget.focusNode == null;
+    _focusNode = widget.focusNode ?? FocusNode();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (_focusNode.hasFocus) {
+      _scheduleEnsureVisible(context);
+    }
+  }
+
+  (String, String) _parsePhone(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) {
+      return (_defaultCountryKey(), '');
+    }
+
+    final match = RegExp(r'^(\+\d+)\s*(.*)$').firstMatch(trimmed);
+    if (match == null) {
+      return (_defaultCountryKey(), trimmed);
+    }
+
+    final code = match.group(1) ?? '+1';
+    final number = match.group(2) ?? '';
+    final matchedCountry = _countries.firstWhere(
+      (item) => item.code == code,
+      orElse: () => const _CountryDialCode('United States', '+1'),
+    );
+    return (_countryKey(matchedCountry), number);
+  }
+
+  void _emitValue() {
+    final number = _controller.text.trim();
+    if (number.isEmpty) {
+      widget.onChanged('');
+      return;
+    }
+    widget.onChanged('${_selectedCountry.code} $number');
+  }
+
+  @override
+  void didUpdateWidget(covariant _PhoneWithCountryCodeField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_focusNode.hasFocus && oldWidget.value != widget.value) {
+      final parsed = _parsePhone(widget.value);
+      _selectedCountryKey = parsed.$1;
+      _controller.text = parsed.$2;
+    }
+  }
+
+  String _countryKey(_CountryDialCode country) => '${country.name}|${country.code}';
+
+  String _defaultCountryKey() {
+    final localeCountry =
+        WidgetsBinding.instance.platformDispatcher.locale.countryCode
+            ?.toUpperCase();
+    final dialCode = _dialCodeFromCountryCode(localeCountry);
+    final matched = _countries.firstWhere(
+      (item) => item.code == dialCode,
+      orElse: () => const _CountryDialCode('United States', '+1'),
+    );
+    return _countryKey(matched);
+  }
+
+  String _dialCodeFromCountryCode(String? code) {
+    return switch (code) {
+      'IN' => '+91',
+      'US' => '+1',
+      'CA' => '+1',
+      'GB' => '+44',
+      'AE' => '+971',
+      'AU' => '+61',
+      'SG' => '+65',
+      'DE' => '+49',
+      'FR' => '+33',
+      'IT' => '+39',
+      'ES' => '+34',
+      'NL' => '+31',
+      'SE' => '+46',
+      'NO' => '+47',
+      'DK' => '+45',
+      'FI' => '+358',
+      'CH' => '+41',
+      'AT' => '+43',
+      'IE' => '+353',
+      'NZ' => '+64',
+      'JP' => '+81',
+      'KR' => '+82',
+      'CN' => '+86',
+      'HK' => '+852',
+      'TW' => '+886',
+      'MY' => '+60',
+      'ID' => '+62',
+      'TH' => '+66',
+      'VN' => '+84',
+      'PH' => '+63',
+      'PK' => '+92',
+      'BD' => '+880',
+      'LK' => '+94',
+      'NP' => '+977',
+      'SA' => '+966',
+      'QA' => '+974',
+      'KW' => '+965',
+      'OM' => '+968',
+      'EG' => '+20',
+      'ZA' => '+27',
+      'NG' => '+234',
+      'KE' => '+254',
+      'BR' => '+55',
+      'MX' => '+52',
+      'AR' => '+54',
+      'CO' => '+57',
+      'CL' => '+56',
+      'PE' => '+51',
+      'TR' => '+90',
+      'RU' => '+7',
+      _ => '+1',
+    };
+  }
+
+  _CountryDialCode get _selectedCountry => _countries.firstWhere(
+    (item) => _countryKey(item) == _selectedCountryKey,
+    orElse: () => const _CountryDialCode('United States', '+1'),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.removeListener(_handleFocusChange);
+    if (_ownsFocusNode) {
+      _focusNode.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final inputStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+      fontWeight: FontWeight.w400,
+      color: Theme.of(context).colorScheme.onSurface,
+    );
+    return TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      keyboardType: TextInputType.phone,
+      style: inputStyle,
+      textInputAction: widget.textInputAction,
+      onSubmitted: widget.onSubmitted,
+      onChanged: (_) => _emitValue(),
+      scrollPadding: EdgeInsets.only(
+        left: 20,
+        top: 20,
+        right: 20,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + 120,
+      ),
+      decoration: InputDecoration(
+        labelText: widget.label,
+        hintText: _focusNode.hasFocus ? '' : 'Phone number',
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 14),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedCountryKey,
+              isDense: true,
+              style: inputStyle,
+              dropdownColor: Colors.white,
+              menuMaxHeight: 340,
+              menuWidth: 280,
+              items: _countries
+                  .map(
+                    (country) => DropdownMenuItem<String>(
+                      value: _countryKey(country),
+                      child: Text(
+                        '${country.name} (${country.code})',
+                        style: inputStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              selectedItemBuilder: (context) => _countries
+                  .map(
+                    (country) => Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        _selectedCountry.code,
+                        style: inputStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+                setState(() => _selectedCountryKey = value);
+                _emitValue();
+              },
+            ),
+          ),
+        ),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 101,
+          maxWidth: 101,
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+      ),
+    );
+  }
+}
+
+class _CountryDialCode {
+  const _CountryDialCode(this.name, this.code);
+
+  final String name;
+  final String code;
 }
 
 class _HintBanner extends StatelessWidget {

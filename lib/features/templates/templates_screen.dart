@@ -221,8 +221,8 @@ class _TemplateDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: 40,
-        titleSpacing: 8,
+        leadingWidth: 56,
+        titleSpacing: 2,
         title: Text(item.headline),
       ),
       body: SafeArea(
@@ -462,31 +462,31 @@ class _TemplatePreviewArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final preview = switch (item.previewKind) {
+      _TemplatePreviewKind.darkHeaderResume => const _DarkHeaderTemplateArt(),
+      _TemplatePreviewKind.centeredClassicResume =>
+        const _CenteredClassicTemplateArt(),
+      _TemplatePreviewKind.profileSidebarResume =>
+        const _ProfileSidebarTemplateArt(),
+      _TemplatePreviewKind.copperSerifResume => const _CopperSerifTemplateArt(),
+      _TemplatePreviewKind.splitBannerResume => const _SplitBannerTemplateArt(),
+      _TemplatePreviewKind.monogramSidebarResume =>
+        const _MonogramSidebarTemplateArt(),
+      _TemplatePreviewKind.executiveNoteCoverLetter =>
+        const _ExecutiveNoteCoverLetterArt(),
+      _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
+      _TemplatePreviewKind.sidebarCoverLetter => const _SidebarCoverLetterArt(),
+    };
+
     return FittedBox(
       fit: BoxFit.contain,
       child: SizedBox(
         width: 168,
         height: 252,
-        child: switch (item.previewKind) {
-          _TemplatePreviewKind.darkHeaderResume =>
-            const _DarkHeaderTemplateArt(),
-          _TemplatePreviewKind.centeredClassicResume =>
-            const _CenteredClassicTemplateArt(),
-          _TemplatePreviewKind.profileSidebarResume =>
-            const _ProfileSidebarTemplateArt(),
-          _TemplatePreviewKind.copperSerifResume =>
-            const _CopperSerifTemplateArt(),
-          _TemplatePreviewKind.splitBannerResume =>
-            const _SplitBannerTemplateArt(),
-          _TemplatePreviewKind.monogramSidebarResume =>
-            const _MonogramSidebarTemplateArt(),
-          _TemplatePreviewKind.executiveNoteCoverLetter =>
-            const _ExecutiveNoteCoverLetterArt(),
-          _TemplatePreviewKind.minimalCoverLetter =>
-            const _MinimalCoverLetterArt(),
-          _TemplatePreviewKind.sidebarCoverLetter =>
-            const _SidebarCoverLetterArt(),
-        },
+        child: ColoredBox(
+          color: Colors.white,
+          child: Align(alignment: Alignment.topCenter, child: preview),
+        ),
       ),
     );
   }

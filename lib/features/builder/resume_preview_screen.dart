@@ -1,7 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
-import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../core/models/resume_models.dart';
 import '../shared/resume_preview_card.dart';
@@ -76,8 +78,8 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
         builder: (routeContext) {
           return Scaffold(
             appBar: AppBar(
-              leadingWidth: 40,
-              titleSpacing: 8,
+              leadingWidth: 56,
+              titleSpacing: 2,
               title: const Text('Choose template'),
             ),
             body: TemplatesScreen(
@@ -196,13 +198,14 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             _returnToHome();
           },
           child: Scaffold(
+            backgroundColor: Colors.white,
             appBar: AppBar(
-              leadingWidth: 40,
+              leadingWidth: 56,
               automaticallyImplyLeading: Navigator.of(context).canPop(),
               leading: Navigator.of(context).canPop()
                   ? BackButton(onPressed: _returnToHome)
                   : null,
-              titleSpacing: 8,
+              titleSpacing: 2,
               title: Text(currentTitle, style: titleStyle),
               actions: [
                 Padding(
@@ -241,7 +244,9 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
               ],
             ),
             body: SafeArea(
-              child: Column(
+              child: Container(
+                color: Colors.white,
+                child: Column(
                 children: [
                   if (viewModel.isBusy) const LinearProgressIndicator(),
                   Expanded(
@@ -256,39 +261,18 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 resume: viewModel.resume,
                               ),
                             )
-                          : PdfPreview.builder(
+                          : _NativePdfPreview(
                               key: ValueKey(
                                 '${viewModel.resume.template.name}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                               ),
-                              build: (_) => viewModel.pdfService.buildPdf(
+                              bytesFuture: viewModel.pdfService.buildPdf(
                                 viewModel.resume,
-                              ),
-                              allowPrinting: false,
-                              allowSharing: false,
-                              useActions: false,
-                              canChangeOrientation: false,
-                              canChangePageFormat: false,
-                              canDebug: false,
-                              shouldRepaint: true,
-                              dpi: 220,
-                              pagesBuilder: (context, pages) {
-                                return _ZoomablePdfPageViewer(pages: pages);
-                              },
-                              previewPageMargin: EdgeInsets.zero,
-                              padding: EdgeInsets.zero,
-                              scrollViewDecoration: const BoxDecoration(
-                                color: Colors.white,
-                              ),
-                              pdfPreviewPageDecoration: const BoxDecoration(
-                                color: Colors.white,
-                              ),
-                              loadingWidget: const Center(
-                                child: CircularProgressIndicator(),
                               ),
                             ),
                     ),
                   ),
                 ],
+                ),
               ),
             ),
           ),
@@ -475,119 +459,78 @@ class _PreviewScoreCard extends StatelessWidget {
   }
 }
 
-class _ZoomablePdfPageViewer extends StatefulWidget {
-  const _ZoomablePdfPageViewer({required this.pages});
+class _NativePdfPreview extends StatefulWidget {
+  const _NativePdfPreview({super.key, required this.bytesFuture});
 
-  final List<PdfPreviewPageData> pages;
+  final Future<Uint8List> bytesFuture;
 
   @override
-  State<_ZoomablePdfPageViewer> createState() => _ZoomablePdfPageViewerState();
+  State<_NativePdfPreview> createState() => _NativePdfPreviewState();
 }
 
-class _ZoomablePdfPageViewerState extends State<_ZoomablePdfPageViewer> {
-  late final PageController _pageController;
-  final List<TransformationController> _controllers = [];
-  int _currentPage = 0;
-  bool _isCurrentPageZoomed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-    _syncControllers();
-  }
-
-  @override
-  void didUpdateWidget(covariant _ZoomablePdfPageViewer oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _syncControllers();
-    if (_currentPage >= widget.pages.length && widget.pages.isNotEmpty) {
-      _currentPage = widget.pages.length - 1;
-    }
-    _refreshZoomState();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  void _syncControllers() {
-    while (_controllers.length < widget.pages.length) {
-      _controllers.add(TransformationController());
-    }
-    while (_controllers.length > widget.pages.length) {
-      _controllers.removeLast().dispose();
-    }
-  }
-
-  void _refreshZoomState() {
-    if (!mounted || widget.pages.isEmpty) {
-      return;
-    }
-
-    final isZoomed =
-        _controllers[_currentPage].value.getMaxScaleOnAxis() > 1.01;
-    if (isZoomed != _isCurrentPageZoomed) {
-      setState(() {
-        _isCurrentPageZoomed = isZoomed;
-      });
-    }
-  }
+class _NativePdfPreviewState extends State<_NativePdfPreview> {
+  final PdfViewerController _controller = PdfViewerController();
+  int _currentPage = 1;
+  int _totalPages = 1;
 
   @override
   Widget build(BuildContext context) {
-    if (widget.pages.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return FutureBuilder<Uint8List>(
+      future: widget.bytesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const Center(
+            child: Text('Unable to load PDF preview right now.'),
+          );
+        }
 
-    return PageView.builder(
-      controller: _pageController,
-      scrollDirection: Axis.vertical,
-      physics: _isCurrentPageZoomed
-          ? const NeverScrollableScrollPhysics()
-          : const PageScrollPhysics(),
-      itemCount: widget.pages.length,
-      onPageChanged: (index) {
-        setState(() {
-          _currentPage = index;
-          _isCurrentPageZoomed =
-              _controllers[index].value.getMaxScaleOnAxis() > 1.01;
-        });
-      },
-      itemBuilder: (context, index) {
-        final page = widget.pages[index];
-        final controller = _controllers[index];
-
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            return InteractiveViewer(
-              transformationController: controller,
-              minScale: 1,
-              maxScale: 5,
-              boundaryMargin: const EdgeInsets.all(64),
-              trackpadScrollCausesScale: true,
-              clipBehavior: Clip.none,
-              onInteractionUpdate: (_) => _refreshZoomState(),
-              onInteractionEnd: (_) => _refreshZoomState(),
-              child: SizedBox.expand(
-                child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: page.width.toDouble(),
-                      height: page.height.toDouble(),
-                      child: Image(image: page.image, fit: BoxFit.cover),
-                    ),
+        return Stack(
+          children: [
+            SfPdfViewer.memory(
+              snapshot.data!,
+              controller: _controller,
+              pageSpacing: 20,
+              canShowPaginationDialog: false,
+              canShowScrollHead: false,
+              onDocumentLoaded: (details) {
+                if (!mounted) {
+                  return;
+                }
+                setState(() {
+                  _totalPages = details.document.pages.count;
+                  _currentPage = 1;
+                });
+              },
+              onPageChanged: (details) {
+                if (!mounted) {
+                  return;
+                }
+                setState(() => _currentPage = details.newPageNumber);
+              },
+            ),
+            Positioned(
+              right: 16,
+              bottom: 14,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  '$_currentPage / $_totalPages',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ],
         );
       },
     );
