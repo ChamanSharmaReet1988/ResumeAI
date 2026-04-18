@@ -308,7 +308,7 @@ class _ZoomablePdfPageViewerState extends State<_ZoomablePdfPageViewer> {
       scrollDirection: Axis.vertical,
       physics: _isCurrentPageZoomed
           ? const NeverScrollableScrollPhysics()
-          : const PageScrollPhysics(),
+          : const BouncingScrollPhysics(parent: PageScrollPhysics()),
       itemCount: widget.pages.length,
       onPageChanged: (index) {
         setState(() {

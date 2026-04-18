@@ -1175,6 +1175,35 @@ class LocalAiResumeService {
     addTitleSource(resume.jobTitle);
     addTitleSource(targetJobTitle ?? '');
 
+    void addSuggestions(Iterable<String> values) {
+      for (final value in values) {
+        if (!suggestions.contains(value)) {
+          suggestions.add(value);
+        }
+      }
+    }
+
+    // 1. Role-based skills from each work experience job title.
+    for (final item in resume.visibleWorkExperiences) {
+      addSuggestions(_jobTitleSkillSuggestions(item.role));
+    }
+
+    // 2. Keywords from work experience text (role, company, description, bullets).
+    final workOnlyContext = resume.visibleWorkExperiences
+        .expand(
+          (item) => [
+            item.role,
+            item.company,
+            item.description,
+            ...item.bullets,
+          ],
+        )
+        .where((item) => item.trim().isNotEmpty)
+        .join(' ')
+        .toLowerCase();
+    _addSkillsMatchingContext(workOnlyContext, addSuggestions);
+
+    // 3. Full resume: summary, education, projects, target role, etc.
     final combinedContext = <String>[
       ...titleSources,
       resume.summary,
@@ -1193,158 +1222,9 @@ class LocalAiResumeService {
       ),
     ].where((item) => item.trim().isNotEmpty).join(' ').toLowerCase();
 
-    void addSuggestions(Iterable<String> values) {
-      for (final value in values) {
-        if (!suggestions.contains(value)) {
-          suggestions.add(value);
-        }
-      }
-    }
+    _addSkillsMatchingContext(combinedContext, addSuggestions);
 
-    if (_containsAny(combinedContext, ['flutter', 'dart'])) {
-      addSuggestions(['Flutter', 'Dart']);
-    }
-    if (_containsAny(combinedContext, [
-      'mobile',
-      'android',
-      'ios',
-      'app store',
-    ])) {
-      addSuggestions(['Mobile App Development']);
-    }
-    if (_containsAny(combinedContext, [
-      'rest api',
-      'restful',
-      'api',
-      'graphql',
-    ])) {
-      addSuggestions(['REST APIs', 'API Integration']);
-    }
-    if (_containsAny(combinedContext, [
-      'provider',
-      'bloc',
-      'riverpod',
-      'state management',
-    ])) {
-      addSuggestions(['State Management']);
-    }
-    if (_containsAny(combinedContext, ['firebase'])) {
-      addSuggestions(['Firebase']);
-    }
-    if (_containsAny(combinedContext, [
-      'unit test',
-      'widget test',
-      'testing',
-    ])) {
-      addSuggestions(['Unit Testing']);
-    }
-    if (_containsAny(combinedContext, [
-      'deploy',
-      'release',
-      'ci/cd',
-      'pipeline',
-    ])) {
-      addSuggestions(['CI/CD']);
-    }
-    if (_containsAny(combinedContext, ['react', 'next.js', 'nextjs'])) {
-      addSuggestions(['React']);
-    }
-    if (_containsAny(combinedContext, ['javascript'])) {
-      addSuggestions(['JavaScript']);
-    }
-    if (_containsAny(combinedContext, ['typescript'])) {
-      addSuggestions(['TypeScript']);
-    }
-    if (_containsAny(combinedContext, ['figma', 'wireframe', 'prototype'])) {
-      addSuggestions(['Figma', 'Wireframing', 'Prototyping']);
-    }
-    if (_containsAny(combinedContext, [
-      'design system',
-      'ui kit',
-      'component library',
-    ])) {
-      addSuggestions(['Design Systems']);
-    }
-    if (_containsAny(combinedContext, [
-      'user research',
-      'user interview',
-      'usability',
-    ])) {
-      addSuggestions(['User Research']);
-    }
-    if (_containsAny(combinedContext, [
-      'sql',
-      'query',
-      'database',
-      'warehouse',
-    ])) {
-      addSuggestions(['SQL', 'Data Analysis']);
-    }
-    if (_containsAny(combinedContext, [
-      'dashboard',
-      'analytics',
-      'metric',
-      'kpi',
-    ])) {
-      addSuggestions(['Analytics', 'Dashboarding']);
-    }
-    if (_containsAny(combinedContext, ['a/b test', 'ab test', 'experiment'])) {
-      addSuggestions(['A/B Testing', 'Experiment Design']);
-    }
-    if (_containsAny(combinedContext, [
-      'roadmap',
-      'product strategy',
-      'backlog',
-    ])) {
-      addSuggestions(['Roadmapping', 'Product Strategy']);
-    }
-    if (_containsAny(combinedContext, [
-      'stakeholder',
-      'client',
-      'cross-functional',
-      'cross functional',
-    ])) {
-      addSuggestions([
-        'Stakeholder Management',
-        'Cross-functional Collaboration',
-      ]);
-    }
-    if (_containsAny(combinedContext, [
-      'document',
-      'documentation',
-      'report',
-      'spec',
-    ])) {
-      addSuggestions(['Documentation']);
-    }
-    if (_containsAny(combinedContext, [
-      'launch',
-      'delivery',
-      'deliver',
-      'execution',
-    ])) {
-      addSuggestions(['Project Management', 'Execution']);
-    }
-    if (_containsAny(combinedContext, [
-      'process improvement',
-      'workflow',
-      'automation',
-      'streamline',
-    ])) {
-      addSuggestions(['Process Improvement']);
-    }
-    if (_containsAny(combinedContext, [
-      'presentation',
-      'presented',
-      'training',
-      'enablement',
-    ])) {
-      addSuggestions(['Presentation Skills']);
-    }
-    if (_containsAny(combinedContext, ['seo', 'campaign', 'content', 'crm'])) {
-      addSuggestions(['SEO', 'Campaign Strategy', 'Content Planning']);
-    }
-
+    // 4. Document title and target job title (deduped).
     for (final titleSource in titleSources) {
       addSuggestions(_jobTitleSkillSuggestions(titleSource));
     }
@@ -1383,6 +1263,51 @@ class LocalAiResumeService {
         'Analytics',
         'Experiment Design',
       ]);
+    } else if (normalized.contains('data scientist') ||
+        normalized.contains('data science') ||
+        normalized.contains('machine learning') ||
+        normalized.contains(' ml ') ||
+        normalized.startsWith('ml ') ||
+        normalized.contains('research scientist')) {
+      suggestions.addAll([
+        'Python',
+        'SQL',
+        'Machine Learning',
+        'Statistics',
+        'Experiment Design',
+        'Data Visualization',
+      ]);
+    } else if (normalized.contains('analyst') ||
+        normalized.contains('analytics')) {
+      suggestions.addAll([
+        'SQL',
+        'Analytics',
+        'Data Visualization',
+        'A/B Testing',
+        'Excel',
+        'Dashboarding',
+      ]);
+    } else if (normalized.contains('devops') ||
+        normalized.contains('sre') ||
+        normalized.contains('platform engineer') ||
+        normalized.contains('site reliability')) {
+      suggestions.addAll([
+        'CI/CD',
+        'Docker',
+        'Kubernetes',
+        'AWS',
+        'Infrastructure as Code',
+        'Monitoring',
+      ]);
+    } else if (normalized.contains('qa') ||
+        normalized.contains('quality engineer') ||
+        normalized.contains('test engineer')) {
+      suggestions.addAll([
+        'Unit Testing',
+        'Test Automation',
+        'CI/CD',
+        'Documentation',
+      ]);
     } else if (normalized.contains('engineer') ||
         normalized.contains('developer')) {
       suggestions.addAll([
@@ -1411,6 +1336,156 @@ class LocalAiResumeService {
     }
 
     return suggestions.toList();
+  }
+
+  /// Keyword-based skills inferred from free text (job descriptions, bullets, etc.).
+  void _addSkillsMatchingContext(
+    String contextLower,
+    void Function(Iterable<String>) addSuggestions,
+  ) {
+    if (_containsAny(contextLower, ['flutter', 'dart'])) {
+      addSuggestions(['Flutter', 'Dart']);
+    }
+    if (_containsAny(contextLower, [
+      'mobile',
+      'android',
+      'ios',
+      'app store',
+    ])) {
+      addSuggestions(['Mobile App Development']);
+    }
+    if (_containsAny(contextLower, [
+      'rest api',
+      'restful',
+      'api',
+      'graphql',
+    ])) {
+      addSuggestions(['REST APIs', 'API Integration']);
+    }
+    if (_containsAny(contextLower, [
+      'provider',
+      'bloc',
+      'riverpod',
+      'state management',
+    ])) {
+      addSuggestions(['State Management']);
+    }
+    if (_containsAny(contextLower, ['firebase'])) {
+      addSuggestions(['Firebase']);
+    }
+    if (_containsAny(contextLower, [
+      'unit test',
+      'widget test',
+      'testing',
+    ])) {
+      addSuggestions(['Unit Testing']);
+    }
+    if (_containsAny(contextLower, [
+      'deploy',
+      'release',
+      'ci/cd',
+      'pipeline',
+    ])) {
+      addSuggestions(['CI/CD']);
+    }
+    if (_containsAny(contextLower, ['react', 'next.js', 'nextjs'])) {
+      addSuggestions(['React']);
+    }
+    if (_containsAny(contextLower, ['javascript'])) {
+      addSuggestions(['JavaScript']);
+    }
+    if (_containsAny(contextLower, ['typescript'])) {
+      addSuggestions(['TypeScript']);
+    }
+    if (_containsAny(contextLower, ['figma', 'wireframe', 'prototype'])) {
+      addSuggestions(['Figma', 'Wireframing', 'Prototyping']);
+    }
+    if (_containsAny(contextLower, [
+      'design system',
+      'ui kit',
+      'component library',
+    ])) {
+      addSuggestions(['Design Systems']);
+    }
+    if (_containsAny(contextLower, [
+      'user research',
+      'user interview',
+      'usability',
+    ])) {
+      addSuggestions(['User Research']);
+    }
+    if (_containsAny(contextLower, [
+      'sql',
+      'query',
+      'database',
+      'warehouse',
+    ])) {
+      addSuggestions(['SQL', 'Data Analysis']);
+    }
+    if (_containsAny(contextLower, [
+      'dashboard',
+      'analytics',
+      'metric',
+      'kpi',
+    ])) {
+      addSuggestions(['Analytics', 'Dashboarding']);
+    }
+    if (_containsAny(contextLower, ['a/b test', 'ab test', 'experiment'])) {
+      addSuggestions(['A/B Testing', 'Experiment Design']);
+    }
+    if (_containsAny(contextLower, [
+      'roadmap',
+      'product strategy',
+      'backlog',
+    ])) {
+      addSuggestions(['Roadmapping', 'Product Strategy']);
+    }
+    if (_containsAny(contextLower, [
+      'stakeholder',
+      'client',
+      'cross-functional',
+      'cross functional',
+    ])) {
+      addSuggestions([
+        'Stakeholder Management',
+        'Cross-functional Collaboration',
+      ]);
+    }
+    if (_containsAny(contextLower, [
+      'document',
+      'documentation',
+      'report',
+      'spec',
+    ])) {
+      addSuggestions(['Documentation']);
+    }
+    if (_containsAny(contextLower, [
+      'launch',
+      'delivery',
+      'deliver',
+      'execution',
+    ])) {
+      addSuggestions(['Project Management', 'Execution']);
+    }
+    if (_containsAny(contextLower, [
+      'process improvement',
+      'workflow',
+      'automation',
+      'streamline',
+    ])) {
+      addSuggestions(['Process Improvement']);
+    }
+    if (_containsAny(contextLower, [
+      'presentation',
+      'presented',
+      'training',
+      'enablement',
+    ])) {
+      addSuggestions(['Presentation Skills']);
+    }
+    if (_containsAny(contextLower, ['seo', 'campaign', 'content', 'crm'])) {
+      addSuggestions(['SEO', 'Campaign Strategy', 'Content Planning']);
+    }
   }
 
   bool _containsAny(String value, List<String> needles) {

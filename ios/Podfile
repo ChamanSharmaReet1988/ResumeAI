@@ -1,5 +1,4 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+platform :ios, '13.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -26,6 +25,26 @@ end
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 flutter_ios_podfile_setup
+
+# pdfium_flutter downloads a large PDFium xcframework during the pod prepare step. A single
+# failed curl (e.g. GitHub 504 + HTML body) breaks the SHA check. Pre-populate the
+# framework from the same URL/hash as the podspec so CocoaPods can skip the flaky download.
+pre_install do |_installer|
+  ios_root = File.dirname(__FILE__)
+  pdfium_darwin = File.expand_path(File.join(ios_root, '.symlinks', 'plugins', 'pdfium_flutter', 'darwin'))
+  unless File.directory?(pdfium_darwin)
+    raise <<~MSG
+      pdfium_flutter iOS pod folder not found at:
+        #{pdfium_darwin}
+      Run `flutter pub get` from the project root, then retry `pod install`.
+    MSG
+  end
+
+  script = File.expand_path(File.join(ios_root, 'scripts', 'ensure_pdfium_for_pod_install.sh'))
+  unless system('bash', script, pdfium_darwin)
+    raise 'ensure_pdfium_for_pod_install.sh failed. Fix network access to GitHub releases or retry later.'
+  end
+end
 
 target 'Runner' do
   use_frameworks!

@@ -128,22 +128,6 @@ void main() {
     expect(find.textContaining('Led'), findsWidgets);
   });
 
-  testWidgets('manual add bullet appends bullet without throwing', (
-    tester,
-  ) async {
-    await pumpBuilder(tester);
-
-    await tester.tap(find.text('Add bullet'));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.byType(TextField).last, 'Built a new feature');
-    await tester.tap(find.text('Add'));
-    await tester.pumpAndSettle();
-
-    expect(tester.takeException(), isNull);
-    expect(find.text('Built a new feature'), findsWidgets);
-  });
-
   testWidgets('work experience can be reordered from the builder', (
     tester,
   ) async {
@@ -428,7 +412,6 @@ void main() {
 
     expect(find.text('Choose template'), findsOneWidget);
     expect(find.text('ATS score'), findsOneWidget);
-    expect(find.text('Download PDF'), findsOneWidget);
     expect(find.text('Share resume'), findsOneWidget);
     expect(find.text('Print'), findsOneWidget);
 

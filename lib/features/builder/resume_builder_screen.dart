@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/resume_models.dart';
 import 'resume_preview_screen.dart';
@@ -757,33 +756,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     _goToStep(viewModel.currentStep - 1);
   }
 
-  Future<void> _promptForBullet(int index) async {
-    final value = await _showInputDialog(
-      title: 'Add bullet point',
-      hintText: 'Describe a measurable accomplishment or responsibility.',
-    );
-
-    if (!mounted || value == null || value.trim().isEmpty) {
-      return;
-    }
-
-    context.read<ResumeEditorViewModel>().updateWorkExperience(
-      index,
-      (current) =>
-          current.copyWith(bullets: [...current.bullets, value.trim()]),
-    );
-  }
-
-  Future<String?> _showInputDialog({
-    required String title,
-    required String hintText,
-  }) async {
-    return showDialog<String>(
-      context: context,
-      builder: (context) => _InputDialog(title: title, hintText: hintText),
-    );
-  }
-
   Future<void> _pickProfileImage(ImageSource source) async {
     try {
       final picked = await _imagePicker.pickImage(
@@ -886,7 +858,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 18),
           InkWell(
             borderRadius: BorderRadius.circular(56),
             onTap: () => _showProfilePhotoOptions(hasImage: hasImage),
@@ -1263,7 +1235,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         children: [
           const SizedBox(height: 18),
           personalFields,
-          const SizedBox(height: 24),
+          const SizedBox(height: 36),
           _buildProfilePhotoPicker(viewModel),
         ],
       ),
@@ -1416,20 +1388,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             index,
                             (current) => current.copyWith(description: value),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        OutlinedButton.icon(
-                          onPressed: viewModel.isBusy
-                              ? null
-                              : () => _promptForBullet(index),
-                          icon: const Icon(Icons.add_rounded),
-                          label: const Text('Add bullet'),
                         ),
                       ],
                     ),
@@ -1709,7 +1667,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     return _StepSurface(
       title: 'Skills',
       subtitle:
-          'Add job-specific tools and keywords. AI suggests skills from the resume title, target role, and work experience details like role, company, and descriptions.',
+          'Add job-specific tools and keywords. Suggest skills prioritizes each work experience role, then descriptions and bullets, then your target job title and the rest of the resume.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2360,55 +2318,6 @@ class _EnsureVisibleOnFocus extends StatelessWidget {
   }
 }
 
-class _InputDialog extends StatefulWidget {
-  const _InputDialog({required this.title, required this.hintText});
-
-  final String title;
-  final String hintText;
-
-  @override
-  State<_InputDialog> createState() => _InputDialogState();
-}
-
-class _InputDialogState extends State<_InputDialog> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.title),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        maxLines: 4,
-        decoration: InputDecoration(hintText: widget.hintText),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_controller.text),
-          child: const Text('Add'),
-        ),
-      ],
-    );
-  }
-}
-
 enum _EndDateSelection { chooseDate, present, clear }
 
 class _PickerField extends StatelessWidget {
@@ -2582,8 +2491,6 @@ class _ProfileLinkFieldState extends State<_ProfileLinkField> {
   late final FocusNode _focusNode;
   late final bool _ownsFocusNode;
 
-  bool get _hasOpenableValue => _normalizedValue(_controller.text).isNotEmpty;
-
   @override
   void initState() {
     super.initState();
@@ -2611,9 +2518,6 @@ class _ProfileLinkFieldState extends State<_ProfileLinkField> {
         );
       }
     }
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   String _normalizedValue(String rawInput) {
@@ -2637,18 +2541,6 @@ class _ProfileLinkFieldState extends State<_ProfileLinkField> {
     }
 
     return '${widget.basePrefix}$withoutAt';
-  }
-
-  Future<void> _openLink() async {
-    final normalized = _normalizedValue(_controller.text);
-    if (normalized.isEmpty) {
-      return;
-    }
-    final uri = Uri.tryParse(normalized);
-    if (uri == null || !(uri.hasScheme && uri.hasAuthority)) {
-      return;
-    }
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -2678,18 +2570,10 @@ class _ProfileLinkFieldState extends State<_ProfileLinkField> {
       ),
       onChanged: (value) {
         widget.onChanged(_normalizedValue(value));
-        if (mounted) {
-          setState(() {});
-        }
       },
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hintText,
-        suffixIcon: IconButton(
-          tooltip: 'Open link',
-          onPressed: _hasOpenableValue ? _openLink : null,
-          icon: const Icon(Icons.open_in_new_rounded),
-        ),
       ),
     );
   }

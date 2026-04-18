@@ -7,6 +7,7 @@ import '../core/services/resume_services.dart';
 import '../features/shared/view_models.dart';
 import '../features/shell/app_shell.dart';
 import 'app_theme.dart';
+import 'vertical_edge_bounce.dart';
 
 class ResumeApp extends StatelessWidget {
   const ResumeApp({super.key, required this.repository});
@@ -43,6 +44,7 @@ class ResumeApp extends StatelessWidget {
           return MaterialApp(
             title: 'ResumeAI',
             debugShowCheckedModeBanner: false,
+            scrollBehavior: const VerticalEdgeBounceScrollBehavior(),
             themeMode: settings.themeMode,
             theme: AppTheme.lightTheme(platform),
             darkTheme: AppTheme.darkTheme(platform),

@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../core/models/resume_models.dart';
 import '../shared/resume_preview_card.dart';
@@ -265,6 +265,8 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                               key: ValueKey(
                                 '${viewModel.resume.template.name}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                               ),
+                              documentKey:
+                                  '${viewModel.resume.id}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                               bytesFuture: viewModel.pdfService.buildPdf(
                                 viewModel.resume,
                               ),
@@ -460,18 +462,54 @@ class _PreviewScoreCard extends StatelessWidget {
 }
 
 class _NativePdfPreview extends StatefulWidget {
-  const _NativePdfPreview({super.key, required this.bytesFuture});
+  const _NativePdfPreview({
+    super.key,
+    required this.bytesFuture,
+    required this.documentKey,
+  });
 
   final Future<Uint8List> bytesFuture;
+  /// Stable id for [PdfViewer.data] `sourceName` (must change when the PDF bytes change).
+  final String documentKey;
 
   @override
   State<_NativePdfPreview> createState() => _NativePdfPreviewState();
 }
 
 class _NativePdfPreviewState extends State<_NativePdfPreview> {
-  final PdfViewerController _controller = PdfViewerController();
   int _currentPage = 1;
   int _totalPages = 1;
+
+  late PdfViewerParams _viewerParams;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _viewerParams = PdfViewerParams(
+      margin: 10,
+      backgroundColor: Colors.white,
+      scrollPhysics: PdfViewerParams.getScrollPhysics(context),
+      onPageChanged: _onPdfPageChanged,
+      onViewerReady: _onPdfViewerReady,
+    );
+  }
+
+  void _onPdfPageChanged(int? pageNumber) {
+    if (!mounted) {
+      return;
+    }
+    setState(() => _currentPage = pageNumber ?? 1);
+  }
+
+  void _onPdfViewerReady(PdfDocument document, PdfViewerController controller) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _totalPages = document.pages.length;
+      _currentPage = controller.pageNumber ?? 1;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -487,50 +525,36 @@ class _NativePdfPreviewState extends State<_NativePdfPreview> {
           );
         }
 
-        return Stack(
-          children: [
-            SfPdfViewer.memory(
-              snapshot.data!,
-              controller: _controller,
-              pageSpacing: 20,
-              canShowPaginationDialog: false,
-              canShowScrollHead: false,
-              onDocumentLoaded: (details) {
-                if (!mounted) {
-                  return;
-                }
-                setState(() {
-                  _totalPages = details.document.pages.count;
-                  _currentPage = 1;
-                });
-              },
-              onPageChanged: (details) {
-                if (!mounted) {
-                  return;
-                }
-                setState(() => _currentPage = details.newPageNumber);
-              },
-            ),
-            Positioned(
-              right: 16,
-              bottom: 14,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.65),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  '$_currentPage / $_totalPages',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5),
+          child: Stack(
+            children: [
+              PdfViewer.data(
+                snapshot.data!,
+                sourceName: widget.documentKey,
+                params: _viewerParams,
+              ),
+              Positioned(
+                right: 16,
+                bottom: 14,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    '$_currentPage / $_totalPages',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
