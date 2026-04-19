@@ -301,7 +301,23 @@ class _TemplateTile extends StatelessWidget {
                     Expanded(
                       child: KeyedSubtree(
                         key: Key('template-image-${item.id}'),
-                        child: _TemplatePreviewArt(item: item),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _TemplatePreviewArt(item: item),
+                            if (item.isPremium)
+                              Positioned(
+                                right: 20,
+                                bottom: 6,
+                                child: Image.asset(
+                                  'assets/premium_badge.png',
+                                  width: 18,
+                                  height: 18,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -322,17 +338,6 @@ class _TemplateTile extends StatelessWidget {
                     Icons.check_circle_rounded,
                     color: selectedColor,
                     size: 20,
-                  ),
-                ),
-              if (item.isPremium)
-                Positioned(
-                  right: 8,
-                  bottom: 30,
-                  child: Image.asset(
-                    'assets/premium_badge.png',
-                    width: 18,
-                    height: 18,
-                    fit: BoxFit.contain,
                   ),
                 ),
             ],

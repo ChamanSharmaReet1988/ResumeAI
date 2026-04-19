@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/models/resume_models.dart';
+import '../../core/resume_text_font.dart';
 
 class ResumePreviewCard extends StatelessWidget {
   const ResumePreviewCard({
@@ -17,47 +18,97 @@ class ResumePreviewCard extends StatelessWidget {
     final theme = Theme.of(context);
     final shadow = theme.colorScheme.shadow.withValues(alpha: 0.08);
     final previewTemplate = resume.template.userFacingTemplate;
+    final base = theme.textTheme;
+    final ff = resume.resumeTextFont.flutterFontFamily;
+    final onSurface = theme.colorScheme.onSurface;
+    final resumeBodyTheme = theme.copyWith(
+      textTheme: base
+          .apply(fontFamily: ff, bodyColor: onSurface, displayColor: onSurface)
+          .copyWith(
+            bodyLarge: base.bodyLarge?.copyWith(
+              fontFamily: ff,
+              fontSize: ResumeTypography.bodyPt,
+            ),
+            bodyMedium: base.bodyMedium?.copyWith(
+              fontFamily: ff,
+              fontSize: ResumeTypography.bodyPt,
+            ),
+            bodySmall: base.bodySmall?.copyWith(
+              fontFamily: ff,
+              fontSize: ResumeTypography.bodyPt,
+            ),
+            titleSmall: base.titleSmall?.copyWith(
+              fontFamily: ff,
+              fontSize: ResumeTypography.headingPt,
+            ),
+            titleMedium: base.titleMedium?.copyWith(
+              fontFamily: ff,
+              fontSize: ResumeTypography.headingPt,
+            ),
+            titleLarge: base.titleLarge?.copyWith(
+              fontFamily: ff,
+              fontSize: ResumeTypography.namePt,
+            ),
+            headlineSmall: base.headlineSmall?.copyWith(
+              fontFamily: ff,
+              fontSize: ResumeTypography.namePt,
+            ),
+            headlineMedium: base.headlineMedium?.copyWith(
+              fontFamily: ff,
+              fontSize: ResumeTypography.namePt,
+            ),
+            labelLarge: base.labelLarge?.copyWith(
+              fontFamily: ff,
+              fontSize: ResumeTypography.headingPt,
+            ),
+          ),
+    );
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-      padding: EdgeInsets.all(isCompact ? 16 : 20),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: resume.template.accentColor.withValues(alpha: 0.12),
+    return Theme(
+      data: resumeBodyTheme,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.all(isCompact ? 16 : 20),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: resume.template.accentColor.withValues(alpha: 0.12),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: shadow,
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(color: shadow, blurRadius: 24, offset: const Offset(0, 12)),
-        ],
+        child: switch (previewTemplate) {
+          ResumeTemplate.corporate || ResumeTemplate.modern =>
+            _CorporatePreview(resume: resume, isCompact: isCompact),
+          ResumeTemplate.minimal => _MinimalPreview(
+            resume: resume,
+            isCompact: isCompact,
+          ),
+          ResumeTemplate.creative => _CreativePreview(
+            resume: resume,
+            isCompact: isCompact,
+          ),
+          ResumeTemplate.copperSerif => _CopperSerifPreview(
+            resume: resume,
+            isCompact: isCompact,
+          ),
+          ResumeTemplate.splitBanner => _SplitBannerPreview(
+            resume: resume,
+            isCompact: isCompact,
+          ),
+          ResumeTemplate.monogramSidebar => _MonogramSidebarPreview(
+            resume: resume,
+            isCompact: isCompact,
+          ),
+        },
       ),
-      child: switch (previewTemplate) {
-        ResumeTemplate.corporate || ResumeTemplate.modern => _CorporatePreview(
-          resume: resume,
-          isCompact: isCompact,
-        ),
-        ResumeTemplate.minimal => _MinimalPreview(
-          resume: resume,
-          isCompact: isCompact,
-        ),
-        ResumeTemplate.creative => _CreativePreview(
-          resume: resume,
-          isCompact: isCompact,
-        ),
-        ResumeTemplate.copperSerif => _CopperSerifPreview(
-          resume: resume,
-          isCompact: isCompact,
-        ),
-        ResumeTemplate.splitBanner => _SplitBannerPreview(
-          resume: resume,
-          isCompact: isCompact,
-        ),
-        ResumeTemplate.monogramSidebar => _MonogramSidebarPreview(
-          resume: resume,
-          isCompact: isCompact,
-        ),
-      },
     );
   }
 }
@@ -129,6 +180,50 @@ class _MinimalPreview extends StatelessWidget {
   }
 }
 
+/// Spacing and type sizes aligned with [ResumePdfService._addCorporateTemplatePage],
+/// [_corporateSection], [_twoColumnBulletList], and [_buildCorporateExperience].
+abstract final class _CorporatePdfMetrics {
+  static const headerColor = Color(0xFF3B4046);
+  static const lineColor = Color(0xFFD7DCE2);
+  static const sectionTitleColor = Color(0xFF50555C);
+  static const dateMutedColor = Color(0xFF666B71);
+
+  static const bodyFontSize = ResumeTypography.bodyPt;
+  static const bodyHeight = 1.25;
+
+  static EdgeInsets headerPadding(bool compact) => compact
+      ? const EdgeInsets.fromLTRB(18, 22, 18, 20)
+      : const EdgeInsets.fromLTRB(30, 36, 30, 30);
+
+  static double headerAvatar(bool compact) => compact ? 42 : 48;
+
+  static double headerNameSize(bool compact) =>
+      ResumeTypography.nameSizePreview(compact);
+
+  static const headerAfterAvatar = 14.0;
+  static const headerNameToContact = 6.0;
+  static const afterHeader = 18.0;
+
+  /// [_corporateSection] uses `fromLTRB(30, 0, 30, 16)`.
+  static EdgeInsets sectionOuter(bool compact) => compact
+      ? const EdgeInsets.fromLTRB(14, 0, 14, 16)
+      : const EdgeInsets.fromLTRB(30, 0, 30, 16);
+
+  static const titleToContent = 6.0;
+  static const contentToRule = 10.0;
+  static const sectionTitleSize = ResumeTypography.headingPt;
+
+  /// [_twoColumnBulletList] column gap.
+  static const skillsColumnGap = 20.0;
+  static const bulletItemBottom = 3.0;
+
+  static const experienceBlockBottom = 10.0;
+  static const descAfterTitle = 4.0;
+  static const bulletTop = 3.0;
+  static const educationBlockBottom = 8.0;
+  static const projectBlockBottom = 8.0;
+}
+
 class _CorporatePreview extends StatelessWidget {
   const _CorporatePreview({required this.resume, required this.isCompact});
 
@@ -138,92 +233,397 @@ class _CorporatePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final name = _pdfAlignedDisplayName(resume);
+    final contactLine = _pdfAlignedContactItems(resume).join('  /  ');
+    final skills = _pdfAlignedSkills(resume);
+    final onSurface = theme.colorScheme.onSurface;
+    final bodyStyle = TextStyle(
+      fontSize: _CorporatePdfMetrics.bodyFontSize,
+      height: _CorporatePdfMetrics.bodyHeight,
+      color: onSurface,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ColoredBox(
+          color: _CorporatePdfMetrics.headerColor,
+          child: Padding(
+            padding: _CorporatePdfMetrics.headerPadding(isCompact),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: _CorporatePdfMetrics.headerAvatar(isCompact),
+                  height: _CorporatePdfMetrics.headerAvatar(isCompact),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white, width: 1.4),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _pdfAlignedInitials(resume),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isCompact ? 14 : 16,
+                          fontWeight: FontWeight.bold,
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: _CorporatePdfMetrics.headerAfterAvatar),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name.toUpperCase(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: _CorporatePdfMetrics.headerNameSize(
+                            isCompact,
+                          ),
+                          fontWeight: FontWeight.bold,
+                          height: 1.05,
+                          letterSpacing: 0.15,
+                        ),
+                      ),
+                      if (contactLine.isNotEmpty) ...[
+                        SizedBox(
+                          height: _CorporatePdfMetrics.headerNameToContact,
+                        ),
+                        Text(
+                          contactLine,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: ResumeTypography.bodyPt,
+                            height: 1.28,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: _CorporatePdfMetrics.afterHeader),
+        if (resume.summary.trim().isNotEmpty)
+          _CorporatePdfLikeSection(
+            outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
+            title: 'SUMMARY',
+            lineColor: _CorporatePdfMetrics.lineColor,
+            titleColor: _CorporatePdfMetrics.sectionTitleColor,
+            child: Text(resume.summary.trim(), style: bodyStyle),
+          ),
+        _CorporatePdfLikeSection(
+          outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
+          title: 'SKILLS',
+          lineColor: _CorporatePdfMetrics.lineColor,
+          titleColor: _CorporatePdfMetrics.sectionTitleColor,
+          child: _CorporateSkillsColumns(skills: skills, bodyStyle: bodyStyle),
+        ),
+        if (resume.visibleWorkExperiences.isNotEmpty)
+          _CorporatePdfLikeSection(
+            outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
+            title: 'EXPERIENCE',
+            lineColor: _CorporatePdfMetrics.lineColor,
+            titleColor: _CorporatePdfMetrics.sectionTitleColor,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final item in resume.visibleWorkExperiences.take(
+                  isCompact ? 2 : 3,
+                ))
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: _CorporatePdfMetrics.experienceBlockBottom,
+                    ),
+                    child: _CorporateExperienceBlock(
+                      item: item,
+                      dateColor: _CorporatePdfMetrics.dateMutedColor,
+                      bodyStyle: bodyStyle,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        if (resume.visibleEducation.isNotEmpty)
+          _CorporatePdfLikeSection(
+            outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
+            title: 'EDUCATION AND TRAINING',
+            lineColor: _CorporatePdfMetrics.lineColor,
+            titleColor: _CorporatePdfMetrics.sectionTitleColor,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final item in resume.visibleEducation.take(2))
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: _CorporatePdfMetrics.educationBlockBottom,
+                    ),
+                    child: _CorporateEducationBlock(
+                      item: item,
+                      bodyStyle: bodyStyle,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        if (resume.visibleProjects.isNotEmpty)
+          _CorporatePdfLikeSection(
+            outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
+            title: 'PROJECTS',
+            lineColor: _CorporatePdfMetrics.lineColor,
+            titleColor: _CorporatePdfMetrics.sectionTitleColor,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final item in resume.visibleProjects.take(2))
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: _CorporatePdfMetrics.projectBlockBottom,
+                    ),
+                    child: _CorporateProjectBlock(
+                      item: item,
+                      bodyStyle: bodyStyle,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        for (final item in resume.visibleCustomSections.take(2))
+          _CorporatePdfLikeSection(
+            outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
+            title: item.title.ifBlank('Custom section').toUpperCase(),
+            lineColor: _CorporatePdfMetrics.lineColor,
+            titleColor: _CorporatePdfMetrics.sectionTitleColor,
+            child: Text(item.content.trim(), style: bodyStyle),
+          ),
+        // [_addCorporateTemplatePage] ends with `pw.SizedBox(height: 10)`.
+        const SizedBox(height: 10),
+      ],
+    );
+  }
+}
+
+class _CorporatePdfLikeSection extends StatelessWidget {
+  const _CorporatePdfLikeSection({
+    required this.outerPadding,
+    required this.title,
+    required this.lineColor,
+    required this.titleColor,
+    required this.child,
+  });
+
+  /// Matches [_corporateSection] horizontal inset and bottom margin.
+  final EdgeInsets outerPadding;
+  final String title;
+  final Color lineColor;
+  final Color titleColor;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: outerPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: _CorporatePdfMetrics.sectionTitleSize,
+              fontWeight: FontWeight.bold,
+              height: 1.0,
+              color: titleColor,
+            ),
+          ),
+          SizedBox(height: _CorporatePdfMetrics.titleToContent),
+          child,
+          SizedBox(height: _CorporatePdfMetrics.contentToRule),
+          Container(height: 1, color: lineColor),
+        ],
+      ),
+    );
+  }
+}
+
+class _CorporateSkillsColumns extends StatelessWidget {
+  const _CorporateSkillsColumns({
+    required this.skills,
+    required this.bodyStyle,
+  });
+
+  final List<String> skills;
+  final TextStyle bodyStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final midpoint = (skills.length / 2).ceil();
+    final left = skills.take(midpoint).toList();
+    final right = skills.skip(midpoint).toList();
+
+    Widget column(List<String> items) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(
+                bottom: _CorporatePdfMetrics.bulletItemBottom,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '• ',
+                    style: bodyStyle.copyWith(
+                      height: _CorporatePdfMetrics.bodyHeight,
+                    ),
+                  ),
+                  Expanded(child: Text(item, style: bodyStyle)),
+                ],
+              ),
+            ),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: column(left)),
+        const SizedBox(width: _CorporatePdfMetrics.skillsColumnGap),
+        Expanded(child: column(right)),
+      ],
+    );
+  }
+}
+
+class _CorporateExperienceBlock extends StatelessWidget {
+  const _CorporateExperienceBlock({
+    required this.item,
+    required this.dateColor,
+    required this.bodyStyle,
+  });
+
+  final WorkExperience item;
+  final Color dateColor;
+  final TextStyle bodyStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+    final start = item.startDate.trim();
+    final end = item.endDate.trim();
+    final dateStr = start.isEmpty && end.isEmpty
+        ? ''
+        : '${start.isNotEmpty ? start : ''}'
+              '${start.isNotEmpty && end.isNotEmpty ? ' - ' : ''}'
+              '${end.isNotEmpty ? end : ''}';
+
+    final dateStyle = bodyStyle.copyWith(
+      color: dateColor,
+      fontStyle: FontStyle.italic,
+      fontSize: bodyStyle.fontSize,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: EdgeInsets.all(isCompact ? 14 : 18),
-          decoration: BoxDecoration(
-            color: resume.template.tintColor,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: _HeaderText(resume: resume, isCompact: isCompact),
-        ),
-        const SizedBox(height: 16),
-        _PreviewSectionLabel(
-          label: 'Executive Summary',
-          color: resume.template.accentColor,
-        ),
-        const SizedBox(height: 8),
-        _SummaryBlock(resume: resume, isCompact: isCompact),
-        const SizedBox(height: 14),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _MetricTile(
-                title: 'ATS',
-                value: '${(resume.completionRatio * 100).round()}%',
+              child: RichText(
+                text: TextSpan(
+                  style: bodyStyle.copyWith(color: onSurface),
+                  children: [
+                    TextSpan(
+                      text: item.role.ifBlank('Role'),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(text: ' / ${item.company.ifBlank('Company')}'),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _MetricTile(
-                title: 'Skills',
-                value: '${resume.skills.length}',
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _MetricTile(
-                title: 'Projects',
-                value: '${resume.visibleProjects.length}',
-              ),
-            ),
+            if (dateStr.isNotEmpty)
+              Text(dateStr, style: dateStyle, textAlign: TextAlign.right),
           ],
         ),
-        const SizedBox(height: 14),
-        _PreviewSectionLabel(
-          label: 'Professional Highlights',
-          color: resume.template.accentColor,
+        if (item.description.trim().isNotEmpty) ...[
+          SizedBox(height: _CorporatePdfMetrics.descAfterTitle),
+          Text(item.description.trim(), style: bodyStyle),
+        ],
+        for (final bullet in item.bullets)
+          Padding(
+            padding: const EdgeInsets.only(top: _CorporatePdfMetrics.bulletTop),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('• ', style: bodyStyle),
+                Expanded(child: Text(bullet, style: bodyStyle)),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _CorporateEducationBlock extends StatelessWidget {
+  const _CorporateEducationBlock({required this.item, required this.bodyStyle});
+
+  final EducationItem item;
+  final TextStyle bodyStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final details = [
+      item.institution.trim(),
+      item.year.trim(),
+      item.score.trim(),
+      item.details.trim(),
+    ].where((part) => part.isNotEmpty).join('  ');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          item.degree.ifBlank('Degree'),
+          style: bodyStyle.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 8),
-        ...resume.visibleWorkExperiences.take(2).map((item) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _BulletPreview(
-              title:
-                  '${item.company.ifBlank('Company')} • ${item.startDate.ifBlank('Dates')}',
-              body: item.bullets.isNotEmpty
-                  ? item.bullets.first
-                  : item.description.ifBlank(
-                      'Add a concise, metric-driven highlight here.',
-                    ),
-            ),
-          );
-        }),
-        if (resume.visibleProjects.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text(
-            resume.visibleProjects.first.title.ifBlank('Featured project'),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            resume.visibleProjects.first.overview.ifBlank(
-              'Add a featured project to showcase leadership and delivery.',
-            ),
-          ),
-        ],
-        if (resume.visibleCustomSections.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          _CustomSectionPreview(
-            item: resume.visibleCustomSections.first,
-            isCompact: isCompact,
-          ),
-        ],
+        if (details.isNotEmpty) Text(details, style: bodyStyle),
+      ],
+    );
+  }
+}
+
+class _CorporateProjectBlock extends StatelessWidget {
+  const _CorporateProjectBlock({required this.item, required this.bodyStyle});
+
+  final ProjectItem item;
+  final TextStyle bodyStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          item.title.ifBlank('Project'),
+          style: bodyStyle.copyWith(fontWeight: FontWeight.bold),
+        ),
+        if (item.overview.trim().isNotEmpty)
+          Text(item.overview.trim(), style: bodyStyle),
+        if (item.impact.trim().isNotEmpty)
+          Text(item.impact.trim(), style: bodyStyle),
       ],
     );
   }
@@ -331,7 +731,7 @@ class _CopperSerifPreview extends StatelessWidget {
           textAlign: TextAlign.center,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w500,
-            fontSize: isCompact ? 22 : 28,
+            fontSize: ResumeTypography.nameSizePreview(isCompact),
             letterSpacing: 0.3,
             color: resume.template.accentColor,
           ),
@@ -421,7 +821,7 @@ class _SplitBannerPreview extends StatelessWidget {
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
-                    fontSize: isCompact ? 20 : 28,
+                    fontSize: ResumeTypography.nameSizePreview(isCompact),
                     height: 1.1,
                   ),
                 ),
@@ -535,6 +935,7 @@ class _MonogramSidebarPreview extends StatelessWidget {
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: resume.template.accentColor,
                   fontWeight: FontWeight.w700,
+                  fontSize: ResumeTypography.nameSizePreview(isCompact),
                 ),
               ),
               const SizedBox(height: 10),
@@ -616,7 +1017,7 @@ class _HeaderText extends StatelessWidget {
           resume.fullName.ifBlank('Your Name'),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            fontSize: isCompact ? 22 : 28,
+            fontSize: ResumeTypography.nameSizePreview(isCompact),
             color: titleColor,
           ),
         ),
@@ -756,44 +1157,6 @@ class _CustomSectionPreview extends StatelessWidget {
   }
 }
 
-class _MetricTile extends StatelessWidget {
-  const _MetricTile({required this.title, required this.value});
-
-  final String title;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PreviewSectionLabel extends StatelessWidget {
   const _PreviewSectionLabel({required this.label, required this.color});
 
@@ -878,6 +1241,43 @@ class _LabeledPreviewSection extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Same naming rules as [ResumePdfService._displayName].
+String _pdfAlignedDisplayName(ResumeData resume) {
+  final name = resume.fullName.trim();
+  return name.isEmpty ? 'Your Name' : name;
+}
+
+/// Same initials rules as [ResumePdfService._resumeInitials].
+String _pdfAlignedInitials(ResumeData resume) {
+  final words = _pdfAlignedDisplayName(
+    resume,
+  ).split(RegExp(r'\s+')).where((part) => part.isNotEmpty).take(2).toList();
+  if (words.isEmpty) {
+    return 'DA';
+  }
+  return words.map((part) => part[0].toUpperCase()).join();
+}
+
+/// Same contact order as [ResumePdfService._resumeContactItems].
+List<String> _pdfAlignedContactItems(ResumeData resume) {
+  return [
+    resume.location.trim(),
+    resume.email.trim(),
+    resume.phone.trim(),
+    resume.website.trim(),
+    resume.githubLink.trim(),
+    resume.linkedinLink.trim(),
+  ].where((item) => item.isNotEmpty).toList();
+}
+
+/// Same fallback skills as [ResumePdfService._skillsForDisplay].
+List<String> _pdfAlignedSkills(ResumeData resume) {
+  if (resume.skills.isNotEmpty) {
+    return resume.skills;
+  }
+  return const ['Communication', 'Collaboration', 'Documentation'];
 }
 
 String _initials(ResumeData resume) {

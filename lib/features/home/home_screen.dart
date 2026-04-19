@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
 import '../shared/view_models.dart';
 
@@ -217,38 +218,46 @@ class _ResumeSection extends StatelessWidget {
       backgroundColor: Colors.white,
       builder: (context) {
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _ActionSheetTile(
-                icon: Icons.visibility_outlined,
-                label: 'Open',
-                onTap: () => Navigator.of(context).pop(_ResumeCardAction.open),
-              ),
-              _ActionSheetTile(
-                icon: Icons.edit_outlined,
-                label: 'Edit',
-                onTap: () => Navigator.of(context).pop(_ResumeCardAction.edit),
-              ),
-              _ActionSheetTile(
-                icon: Icons.drive_file_rename_outline,
-                label: 'Rename',
-                onTap: () =>
-                    Navigator.of(context).pop(_ResumeCardAction.rename),
-              ),
-              _ActionSheetTile(
-                icon: Icons.copy_all_outlined,
-                label: 'Duplicate',
-                onTap: () =>
-                    Navigator.of(context).pop(_ResumeCardAction.duplicate),
-              ),
-              _ActionSheetTile(
-                leading: const ImageIcon(AssetImage('assets/fonts/delete.png')),
-                label: 'Delete',
-                onTap: () =>
-                    Navigator.of(context).pop(_ResumeCardAction.delete),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: BottomSheetInsets.topSpacing),
+                _ActionSheetTile(
+                  icon: Icons.visibility_outlined,
+                  label: 'Open',
+                  onTap: () =>
+                      Navigator.of(context).pop(_ResumeCardAction.open),
+                ),
+                _ActionSheetTile(
+                  icon: Icons.edit_outlined,
+                  label: 'Edit',
+                  onTap: () =>
+                      Navigator.of(context).pop(_ResumeCardAction.edit),
+                ),
+                _ActionSheetTile(
+                  icon: Icons.drive_file_rename_outline,
+                  label: 'Rename',
+                  onTap: () =>
+                      Navigator.of(context).pop(_ResumeCardAction.rename),
+                ),
+                _ActionSheetTile(
+                  icon: Icons.copy_all_outlined,
+                  label: 'Duplicate',
+                  onTap: () =>
+                      Navigator.of(context).pop(_ResumeCardAction.duplicate),
+                ),
+                _ActionSheetTile(
+                  leading: const ImageIcon(
+                    AssetImage('assets/fonts/delete.png'),
+                  ),
+                  label: 'Delete',
+                  onTap: () =>
+                      Navigator.of(context).pop(_ResumeCardAction.delete),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -281,7 +290,10 @@ class _ResumeSection extends StatelessWidget {
         ).showSnackBar(const SnackBar(content: Text('Resume renamed.')));
         return;
       case _ResumeCardAction.duplicate:
-        final duplicateTitle = await _showDuplicateResumeDialog(context, resume);
+        final duplicateTitle = await _showDuplicateResumeDialog(
+          context,
+          resume,
+        );
         if (!context.mounted || duplicateTitle == null) {
           return;
         }
@@ -324,8 +336,9 @@ class _ResumeSection extends StatelessWidget {
     ResumeData resume,
   ) async {
     final currentTitle = resume.title.trim();
-    final suggestedTitle =
-        (currentTitle.isEmpty ? ResumeData.defaultTitle : currentTitle);
+    final suggestedTitle = (currentTitle.isEmpty
+        ? ResumeData.defaultTitle
+        : currentTitle);
     return showDialog<String>(
       context: context,
       builder: (dialogContext) {
@@ -466,28 +479,34 @@ class _CoverLetterSection extends StatelessWidget {
       backgroundColor: Colors.white,
       builder: (context) {
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _ActionSheetTile(
-                icon: Icons.visibility_outlined,
-                label: 'Open',
-                onTap: () =>
-                    Navigator.of(context).pop(_CoverLetterCardAction.open),
-              ),
-              _ActionSheetTile(
-                icon: Icons.edit_outlined,
-                label: 'Edit',
-                onTap: () =>
-                    Navigator.of(context).pop(_CoverLetterCardAction.edit),
-              ),
-              _ActionSheetTile(
-                leading: const ImageIcon(AssetImage('assets/fonts/delete.png')),
-                label: 'Delete',
-                onTap: () =>
-                    Navigator.of(context).pop(_CoverLetterCardAction.delete),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: BottomSheetInsets.topSpacing),
+                _ActionSheetTile(
+                  icon: Icons.visibility_outlined,
+                  label: 'Open',
+                  onTap: () =>
+                      Navigator.of(context).pop(_CoverLetterCardAction.open),
+                ),
+                _ActionSheetTile(
+                  icon: Icons.edit_outlined,
+                  label: 'Edit',
+                  onTap: () =>
+                      Navigator.of(context).pop(_CoverLetterCardAction.edit),
+                ),
+                _ActionSheetTile(
+                  leading: const ImageIcon(
+                    AssetImage('assets/fonts/delete.png'),
+                  ),
+                  label: 'Delete',
+                  onTap: () =>
+                      Navigator.of(context).pop(_CoverLetterCardAction.delete),
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -42,13 +42,6 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
     final viewModel = context.read<CoverLetterEditorViewModel>();
     final pdfService = context.read<ResumePdfService>();
     await pdfService.shareCoverLetter(viewModel.coverLetter);
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Share sheet opened.')));
   }
 
   Future<void> _printPdf() async {

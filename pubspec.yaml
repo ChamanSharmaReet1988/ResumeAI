@@ -75,6 +75,13 @@ flutter:
     - assets/fonts/delete.png
     - assets/premium_badge.png
     - assets/templates/
+    # Bundled for PDF export ([resumePdfThemeForBodyFont]); also declared under fonts.
+    - assets/fonts/inter/Inter-Variable.ttf
+    - assets/fonts/sourcesans3/SourceSans3-Variable.ttf
+    - assets/fonts/carlito/Carlito-Regular.ttf
+    - assets/fonts/carlito/Carlito-Bold.ttf
+    - assets/fonts/arimo/Arimo-Variable.ttf
+    - assets/fonts/worksans/WorkSans-Variable.ttf
   fonts:
     - family: Nunito
       fonts:
@@ -138,6 +145,25 @@ flutter:
           weight: 800
         - asset: assets/fonts/outfit/Outfit-Black.ttf
           weight: 900
+    # Resume body text (open-licensed; labels in UI use common office names).
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/inter/Inter-Variable.ttf
+    - family: Source Sans 3
+      fonts:
+        - asset: assets/fonts/sourcesans3/SourceSans3-Variable.ttf
+    - family: Carlito
+      fonts:
+        - asset: assets/fonts/carlito/Carlito-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/carlito/Carlito-Bold.ttf
+          weight: 700
+    - family: Arimo
+      fonts:
+        - asset: assets/fonts/arimo/Arimo-Variable.ttf
+    - family: Work Sans
+      fonts:
+        - asset: assets/fonts/worksans/WorkSans-Variable.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

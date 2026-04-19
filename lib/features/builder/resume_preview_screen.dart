@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/resume_text_font.dart';
 import '../shared/resume_preview_card.dart';
 import '../templates/templates_screen.dart';
 import '../shared/view_models.dart';
@@ -33,7 +35,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
   Future<void> _shareResume() async {
     final viewModel = context.read<ResumeEditorViewModel>();
     try {
-      // Let popup menu dismiss animation finish before opening system share sheet.
+      // Brief delay before opening the share sheet.
       await Future<void>.delayed(const Duration(milliseconds: 160));
       final file = await viewModel.pdfService.savePdfToDevice(viewModel.resume);
       if (!mounted) {
@@ -48,27 +50,14 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             ? null
             : box.localToGlobal(Offset.zero) & box.size,
       );
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Share sheet opened.')));
     } catch (_) {
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to open share sheet right now.'),
-        ),
+        const SnackBar(content: Text('Unable to open share sheet right now.')),
       );
     }
-  }
-
-  Future<void> _printResume() async {
-    await context.read<ResumeEditorViewModel>().printPdf();
   }
 
   Future<void> _chooseTemplate() async {
@@ -111,23 +100,6 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
     );
   }
 
-  Future<void> _handleMenuSelection(_PreviewMenuAction action) async {
-    switch (action) {
-      case _PreviewMenuAction.chooseTemplate:
-        await _chooseTemplate();
-        return;
-      case _PreviewMenuAction.atsScore:
-        await _showAtsOptions();
-        return;
-      case _PreviewMenuAction.shareResume:
-        await _shareResume();
-        return;
-      case _PreviewMenuAction.printResume:
-        await _printResume();
-        return;
-    }
-  }
-
   void _returnToHome() {
     final navigator = Navigator.of(context);
     if (!navigator.canPop()) {
@@ -137,35 +109,216 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
     navigator.popUntil((route) => route.isFirst);
   }
 
-  Future<void> _showAtsOptions() async {
-    final viewModel = context.read<ResumeEditorViewModel>();
-    final target = _bestImprovementTarget(
-      resume: viewModel.resume,
-      analysis: viewModel.analysis,
-    );
+  /// Closes the PDF screen and returns to the resume editor (same step when possible).
+  void _openEditResume() {
+    final navigator = Navigator.of(context);
+    if (!navigator.canPop()) {
+      return;
+    }
+    final step = context.read<ResumeEditorViewModel>().currentStep;
+    navigator.pop(step);
+  }
 
-    final selectedStep = await showModalBottomSheet<int>(
+  Future<void> _showResumeStyleSheet() async {
+    final viewModel = context.read<ResumeEditorViewModel>();
+    await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (sheetContext) {
-        return SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-            child: _PreviewScoreCard(
-              viewModel: viewModel,
-              target: target,
-              onIncreaseAts: () => Navigator.of(sheetContext).pop(target.step),
-            ),
-          ),
+        final bottomInset = MediaQuery.viewInsetsOf(sheetContext).bottom;
+        // Modal overlay is not under the route's Provider; listen to the
+        // view model directly instead of Consumer<ResumeEditorViewModel>.
+        return ListenableBuilder(
+          listenable: viewModel,
+          builder: (context, _) {
+            final theme = Theme.of(sheetContext);
+            final muted = theme.colorScheme.onSurfaceVariant;
+            final groupValue = _resumeTemplateGroupValue(
+              viewModel.resume.template,
+            );
+
+            Future<void> applyTemplate(ResumeTemplate template) async {
+              if (viewModel.resume.template == template) {
+                return;
+              }
+              viewModel.updateResume((r) => r.copyWith(template: template));
+              await viewModel.saveResume();
+            }
+
+            Future<void> applyResumeTextFont(ResumeTextFont font) async {
+              if (viewModel.resume.resumeTextFont == font) {
+                return;
+              }
+              viewModel.updateResume((r) => r.copyWith(resumeTextFont: font));
+              await viewModel.saveResume();
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: bottomInset),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    20 + BottomSheetInsets.leftPadding,
+                    8 + BottomSheetInsets.topSpacing,
+                    20,
+                    28,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Color & Font',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Choose an accent color and a font layout. Both apply to your preview and exported PDF.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: muted,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Accent color',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Tap a swatch to use that palette.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final template in availableResumeTemplates)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 14),
+                                child: _ResumeAccentSwatch(
+                                  template: template,
+                                  selected:
+                                      _resumeTemplateGroupValue(
+                                        viewModel.resume.template,
+                                      ) ==
+                                      template,
+                                  onTap: () => applyTemplate(template),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Text(
+                        'Font & layout',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Each option uses tuned PDF typography for that structure.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      RadioGroup<ResumeTemplate>(
+                        groupValue: groupValue,
+                        onChanged: (ResumeTemplate? value) {
+                          if (value != null) {
+                            applyTemplate(value);
+                          }
+                        },
+                        child: Column(
+                          children: [
+                            for (final template in availableResumeTemplates)
+                              RadioListTile<ResumeTemplate>(
+                                value: template,
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(template.label),
+                                subtitle: Text(
+                                  template.fontStyleLabel,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: muted,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Text(
+                        'Resume text font',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Used in the preview card. PDF export still follows each template’s PDF fonts.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      RadioGroup<ResumeTextFont>(
+                        groupValue: viewModel.resume.resumeTextFont,
+                        onChanged: (ResumeTextFont? value) {
+                          if (value != null) {
+                            applyResumeTextFont(value);
+                          }
+                        },
+                        child: Column(
+                          children: [
+                            for (final font in ResumeTextFont.values)
+                              RadioListTile<ResumeTextFont>(
+                                value: font,
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(font.label),
+                                subtitle: Text(
+                                  font.hint,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: muted,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.of(sheetContext).pop();
+                            _chooseTemplate();
+                          },
+                          icon: const Icon(Icons.grid_view_rounded, size: 20),
+                          label: const Text('Browse full template gallery'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
-
-    if (!mounted || selectedStep == null) {
-      return;
-    }
-
-    Navigator.of(context).pop(selectedStep);
   }
 
   @override
@@ -176,9 +329,6 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
         final isTestBinding = WidgetsBinding.instance.runtimeType
             .toString()
             .contains('TestWidgetsFlutterBinding');
-        final menuTextStyle = Theme.of(
-          context,
-        ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500);
         final iosTitleStyle = Theme.of(
           context,
         ).cupertinoOverrideTheme?.textTheme?.navTitleTextStyle;
@@ -188,6 +338,8 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
               )
             : Theme.of(context).appBarTheme.titleTextStyle;
         final titleStyle = baseTitleStyle;
+        final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+        const barBg = Colors.white;
 
         return PopScope(
           canPop: false,
@@ -198,8 +350,11 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             _returnToHome();
           },
           child: Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: scaffoldBg,
             appBar: AppBar(
+              backgroundColor: barBg,
+              surfaceTintColor: Colors.transparent,
+              scrolledUnderElevation: 0,
               leadingWidth: 56,
               automaticallyImplyLeading: Navigator.of(context).canPop(),
               leading: Navigator.of(context).canPop()
@@ -209,73 +364,61 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
               title: Text(currentTitle, style: titleStyle),
               actions: [
                 Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: PopupMenuButton<_PreviewMenuAction>(
-                    tooltip: 'Menu',
-                    color: Colors.white,
-                    onSelected: _handleMenuSelection,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 10,
-                      ),
-                      child: const Icon(Icons.more_horiz_rounded, size: 22),
-                    ),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: _PreviewMenuAction.chooseTemplate,
-                        child: Text('Choose template', style: menuTextStyle),
-                      ),
-                      PopupMenuItem(
-                        value: _PreviewMenuAction.atsScore,
-                        child: Text('ATS score', style: menuTextStyle),
-                      ),
-                      PopupMenuItem(
-                        value: _PreviewMenuAction.shareResume,
-                        child: Text('Share resume', style: menuTextStyle),
-                      ),
-                      PopupMenuItem(
-                        value: _PreviewMenuAction.printResume,
-                        child: Text('Print', style: menuTextStyle),
-                      ),
-                    ],
+                  padding: const EdgeInsets.only(right: 10),
+                  child: IconButton(
+                    onPressed: _openEditResume,
+                    tooltip: 'Edit',
+                    icon: const Icon(Icons.edit_outlined),
                   ),
                 ),
               ],
             ),
-            body: SafeArea(
-              child: Container(
-                color: Colors.white,
-                child: Column(
-                children: [
-                  if (viewModel.isBusy) const LinearProgressIndicator(),
-                  Expanded(
+            body: Column(
+              children: [
+                Expanded(
+                  child: SafeArea(
+                    bottom: false,
                     child: Container(
-                      key: const Key('resume-pdf-preview'),
-                      width: double.infinity,
-                      color: Colors.white,
-                      child: isTestBinding
-                          ? Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: ResumePreviewCard(
-                                resume: viewModel.resume,
-                              ),
-                            )
-                          : _NativePdfPreview(
-                              key: ValueKey(
-                                '${viewModel.resume.template.name}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
-                              ),
-                              documentKey:
-                                  '${viewModel.resume.id}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
-                              bytesFuture: viewModel.pdfService.buildPdf(
-                                viewModel.resume,
-                              ),
+                      color: scaffoldBg,
+                      child: Column(
+                        children: [
+                          if (viewModel.isBusy) const LinearProgressIndicator(),
+                          Expanded(
+                            child: Container(
+                              key: const Key('resume-pdf-preview'),
+                              width: double.infinity,
+                              color: scaffoldBg,
+                              child: isTestBinding
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: ResumePreviewCard(
+                                        resume: viewModel.resume,
+                                      ),
+                                    )
+                                  : _NativePdfPreview(
+                                      key: ValueKey(
+                                        '${viewModel.resume.template.name}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
+                                      ),
+                                      documentKey:
+                                          '${viewModel.resume.id}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
+                                      viewerBackground: scaffoldBg,
+                                      bytesFuture: viewModel.pdfService
+                                          .buildPdf(viewModel.resume),
+                                    ),
                             ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
                 ),
-              ),
+                _ResumePreviewBottomBar(
+                  backgroundColor: barBg,
+                  onTemplate: _chooseTemplate,
+                  onShare: _shareResume,
+                  onStyle: _showResumeStyleSheet,
+                ),
+              ],
             ),
           ),
         );
@@ -284,175 +427,178 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
   }
 }
 
-extension on String {
-  String ifBlank(String fallback) => trim().isEmpty ? fallback : this;
-}
-
-enum _PreviewMenuAction {
-  chooseTemplate,
-  atsScore,
-  shareResume,
-  printResume,
-}
-
-class _AtsImprovementTarget {
-  const _AtsImprovementTarget({
-    required this.step,
-    required this.stepTitle,
-    required this.description,
+class _ResumePreviewBottomBar extends StatelessWidget {
+  const _ResumePreviewBottomBar({
+    required this.backgroundColor,
+    required this.onTemplate,
+    required this.onShare,
+    required this.onStyle,
   });
 
-  final int step;
-  final String stepTitle;
-  final String description;
-}
-
-_AtsImprovementTarget _bestImprovementTarget({
-  required ResumeData resume,
-  required ResumeAnalysis? analysis,
-}) {
-  if (!resume.hasRequiredPersonalInfo ||
-      resume.summary.trim().length <= 90 ||
-      resume.email.trim().isEmpty ||
-      resume.phone.trim().isEmpty) {
-    return const _AtsImprovementTarget(
-      step: 0,
-      stepTitle: 'Personal Information',
-      description:
-          'Add complete contact details and strengthen your summary to improve ATS readability.',
-    );
-  }
-
-  if (resume.visibleWorkExperiences.isEmpty ||
-      (analysis?.weakDescriptions.isNotEmpty ?? false)) {
-    return const _AtsImprovementTarget(
-      step: 1,
-      stepTitle: 'Work Experience',
-      description:
-          'Add stronger outcome-focused work details and bullets to raise your ATS score.',
-    );
-  }
-
-  if (resume.skills.length < 6 ||
-      (analysis?.missingSkills.isNotEmpty ?? false)) {
-    return const _AtsImprovementTarget(
-      step: 3,
-      stepTitle: 'Skills',
-      description:
-          'Add more relevant tools and keywords so ATS can match your resume more confidently.',
-    );
-  }
-
-  if (resume.visibleProjects.isEmpty) {
-    return const _AtsImprovementTarget(
-      step: 4,
-      stepTitle: 'Projects',
-      description:
-          'Add 1-2 strong projects with tools and outcomes to improve proof of execution.',
-    );
-  }
-
-  if (resume.visibleEducation.isEmpty) {
-    return const _AtsImprovementTarget(
-      step: 2,
-      stepTitle: 'Education',
-      description:
-          'Complete your education section so your profile feels more complete to recruiters.',
-    );
-  }
-
-  return const _AtsImprovementTarget(
-    step: 1,
-    stepTitle: 'Work Experience',
-    description:
-        'Tune your strongest work entries with clearer outcomes and stronger keywords.',
-  );
-}
-
-class _PreviewScoreCard extends StatelessWidget {
-  const _PreviewScoreCard({
-    required this.viewModel,
-    required this.target,
-    required this.onIncreaseAts,
-  });
-
-  final ResumeEditorViewModel viewModel;
-  final _AtsImprovementTarget target;
-  final VoidCallback onIncreaseAts;
+  final Color backgroundColor;
+  final VoidCallback onTemplate;
+  final VoidCallback onShare;
+  final VoidCallback onStyle;
 
   @override
   Widget build(BuildContext context) {
-    final analysis = viewModel.analysis;
-    final atsCompatibility =
-        analysis?.atsCompatibility ?? viewModel.resume.completionRatio;
-    final score = analysis?.score ?? (atsCompatibility * 100).round();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'ATS score',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                SizedBox(
-                  width: 68,
-                  height: 68,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      CircularProgressIndicator(
-                        value: score / 100,
-                        strokeWidth: 8,
-                      ),
-                      Center(
-                        child: Text(
-                          '$score',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    'ATS compatibility ${(atsCompatibility * 100).round()}%'
-                    '${analysis == null ? '.' : ' with ${analysis.missingSkills.length} missing skill gap${analysis.missingSkills.length == 1 ? '' : 's'}.'}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Best next update: ${target.stepTitle}',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              target.description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return Material(
+      color: backgroundColor,
+      elevation: 2,
+      shadowColor: Colors.black.withValues(alpha: 0.08),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _PreviewBottomAction(
+                icon: Icons.view_quilt_outlined,
+                label: 'Template',
+                onTap: onTemplate,
               ),
+              _PreviewBottomAction(
+                icon: Icons.share_outlined,
+                label: 'Share',
+                onTap: onShare,
+              ),
+              _PreviewBottomAction(
+                icon: Icons.palette_outlined,
+                label: 'Color & Font',
+                onTap: onStyle,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PreviewBottomAction extends StatelessWidget {
+  const _PreviewBottomAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 24, color: primary),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Maps stored template (e.g. legacy `modern`) to the canonical entry in [availableResumeTemplates].
+ResumeTemplate _resumeTemplateGroupValue(ResumeTemplate current) {
+  for (final t in availableResumeTemplates) {
+    if (t.userFacingTemplate == current.userFacingTemplate) {
+      return t;
+    }
+  }
+  return availableResumeTemplates.first;
+}
+
+Color _iconOnAccent(Color accent) {
+  final luminance = accent.computeLuminance();
+  return luminance > 0.55 ? const Color(0xFF1F2937) : Colors.white;
+}
+
+class _ResumeAccentSwatch extends StatelessWidget {
+  const _ResumeAccentSwatch({
+    required this.template,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final ResumeTemplate template;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: template.accentColor,
+                border: Border.all(
+                  color: selected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.55,
+                        ),
+                  width: selected ? 3 : 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.shadow.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: selected
+                  ? Icon(
+                      Icons.check_rounded,
+                      color: _iconOnAccent(template.accentColor),
+                      size: 22,
+                    )
+                  : null,
             ),
-            const SizedBox(height: 14),
-            FilledButton.tonalIcon(
-              onPressed: onIncreaseAts,
-              icon: const Icon(Icons.trending_up_rounded),
-              label: Text('Increase ATS in ${target.stepTitle}'),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: 92,
+              child: Text(
+                template.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
             ),
           ],
         ),
@@ -461,16 +607,23 @@ class _PreviewScoreCard extends StatelessWidget {
   }
 }
 
+extension on String {
+  String ifBlank(String fallback) => trim().isEmpty ? fallback : this;
+}
+
 class _NativePdfPreview extends StatefulWidget {
   const _NativePdfPreview({
     super.key,
     required this.bytesFuture,
     required this.documentKey,
+    required this.viewerBackground,
   });
 
   final Future<Uint8List> bytesFuture;
+
   /// Stable id for [PdfViewer.data] `sourceName` (must change when the PDF bytes change).
   final String documentKey;
+  final Color viewerBackground;
 
   @override
   State<_NativePdfPreview> createState() => _NativePdfPreviewState();
@@ -487,7 +640,13 @@ class _NativePdfPreviewState extends State<_NativePdfPreview> {
     super.didChangeDependencies();
     _viewerParams = PdfViewerParams(
       margin: 10,
-      backgroundColor: Colors.white,
+      backgroundColor: widget.viewerBackground,
+      pageDropShadow: BoxShadow(
+        color: Colors.black.withValues(alpha: 0.07),
+        blurRadius: 8,
+        spreadRadius: 0,
+        offset: const Offset(0, 2),
+      ),
       scrollPhysics: PdfViewerParams.getScrollPhysics(context),
       onPageChanged: _onPdfPageChanged,
       onViewerReady: _onPdfViewerReady,
@@ -525,6 +684,8 @@ class _NativePdfPreviewState extends State<_NativePdfPreview> {
           );
         }
 
+        final theme = Theme.of(context);
+
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: Stack(
@@ -535,18 +696,21 @@ class _NativePdfPreviewState extends State<_NativePdfPreview> {
                 params: _viewerParams,
               ),
               Positioned(
+                top: 14,
                 right: 16,
-                bottom: 14,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.65),
+                    color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
                     '$_currentPage / $_totalPages',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.colorScheme.onPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),

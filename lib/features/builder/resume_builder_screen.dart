@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
 import 'resume_preview_screen.dart';
 import '../shared/resume_preview_card.dart';
@@ -53,10 +54,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             entry.value.hasFocus,
       );
 
-  bool get _isProjectKeyboardHideFieldFocused =>
-      _extendedKeyboardHideFocusNodes.entries.any(
-        (entry) => entry.key.startsWith('project-') && entry.value.hasFocus,
-      );
+  bool get _isProjectKeyboardHideFieldFocused => _extendedKeyboardHideFocusNodes
+      .entries
+      .any((entry) => entry.key.startsWith('project-') && entry.value.hasFocus);
 
   bool get _isCustomKeyboardHideFieldFocused =>
       _extendedKeyboardHideFocusNodes.entries.any(
@@ -65,19 +65,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       );
 
   List<FocusNode> get _projectKeyboardFocusOrder {
-    final projectEntries = _extendedKeyboardHideFocusNodes.entries
-        .where((entry) => entry.key.startsWith('project-'))
-        .toList()
-      ..sort((a, b) => _compareProjectFocusKeys(a.key, b.key));
+    final projectEntries =
+        _extendedKeyboardHideFocusNodes.entries
+            .where((entry) => entry.key.startsWith('project-'))
+            .toList()
+          ..sort((a, b) => _compareProjectFocusKeys(a.key, b.key));
     return projectEntries.map((entry) => entry.value).toList(growable: false);
-  }
-
-  List<FocusNode> get _customKeyboardFocusOrder {
-    final customEntries = _extendedKeyboardHideFocusNodes.entries
-        .where((entry) => entry.key.startsWith('custom-section-'))
-        .toList()
-      ..sort((a, b) => _compareCustomFocusKeys(a.key, b.key));
-    return customEntries.map((entry) => entry.value).toList(growable: false);
   }
 
   int _compareProjectFocusKeys(String a, String b) {
@@ -87,22 +80,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       if (key.startsWith('project-title-')) return 0;
       if (key.startsWith('project-overview-')) return 1;
       if (key.startsWith('project-tools-')) return 2;
-      return 99;
-    }
-
-    final indexCompare = parseIndex(a).compareTo(parseIndex(b));
-    if (indexCompare != 0) {
-      return indexCompare;
-    }
-    return fieldRank(a).compareTo(fieldRank(b));
-  }
-
-  int _compareCustomFocusKeys(String a, String b) {
-    int parseIndex(String key) => int.tryParse(key.split('-').last) ?? 0;
-
-    int fieldRank(String key) {
-      if (key.startsWith('custom-section-title-')) return 0;
-      if (key.startsWith('custom-section-content-')) return 1;
       return 99;
     }
 
@@ -211,13 +188,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Future<void> _shareResume() async {
     await context.read<ResumeEditorViewModel>().sharePdf();
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Share sheet opened.')));
   }
 
   Future<void> _printResume() async {
@@ -320,35 +290,41 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           final primaryColor = Theme.of(context).colorScheme.primary;
 
           return SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: Icon(
-                    Icons.calendar_month_outlined,
-                    color: primaryColor,
-                  ),
-                  title: const Text('Choose month and year'),
-                  onTap: () =>
-                      Navigator.of(context).pop(_EndDateSelection.chooseDate),
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.work_history_outlined,
-                    color: primaryColor,
-                  ),
-                  title: const Text('Present'),
-                  onTap: () =>
-                      Navigator.of(context).pop(_EndDateSelection.present),
-                ),
-                if (currentValue.trim().isNotEmpty)
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: BottomSheetInsets.leftPadding,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: BottomSheetInsets.topSpacing),
                   ListTile(
-                    leading: Icon(Icons.clear_rounded, color: primaryColor),
-                    title: const Text('Clear date'),
+                    leading: Icon(
+                      Icons.calendar_month_outlined,
+                      color: primaryColor,
+                    ),
+                    title: const Text('Choose month and year'),
                     onTap: () =>
-                        Navigator.of(context).pop(_EndDateSelection.clear),
+                        Navigator.of(context).pop(_EndDateSelection.chooseDate),
                   ),
-              ],
+                  ListTile(
+                    leading: Icon(
+                      Icons.work_history_outlined,
+                      color: primaryColor,
+                    ),
+                    title: const Text('Present'),
+                    onTap: () =>
+                        Navigator.of(context).pop(_EndDateSelection.present),
+                  ),
+                  if (currentValue.trim().isNotEmpty)
+                    ListTile(
+                      leading: Icon(Icons.clear_rounded, color: primaryColor),
+                      title: const Text('Clear date'),
+                      onTap: () =>
+                          Navigator.of(context).pop(_EndDateSelection.clear),
+                    ),
+                ],
+              ),
             ),
           );
         },
@@ -687,22 +663,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
-  void _moveCustomSection({required int index, required bool moveUp}) {
-    FocusScope.of(context).unfocus();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-
-      final viewModel = context.read<ResumeEditorViewModel>();
-      if (moveUp) {
-        viewModel.moveCustomSectionUp(index);
-      } else {
-        viewModel.moveCustomSectionDown(index);
-      }
-    });
-  }
-
   ScrollController _scrollControllerForStep(int step) {
     return _stepScrollControllers.putIfAbsent(step, ScrollController.new);
   }
@@ -724,12 +684,63 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
+  Future<void> _showAddCustomCategoryDialog() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('New category'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: 'Category name',
+              hintText: 'Certifications, Languages, Awards…',
+            ),
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            onSubmitted: (_) {
+              final t = controller.text.trim();
+              if (t.isNotEmpty) {
+                Navigator.pop(dialogContext, t);
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final t = controller.text.trim();
+                if (t.isEmpty) {
+                  return;
+                }
+                Navigator.pop(dialogContext, t);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+
+    if (!mounted || name == null || name.trim().isEmpty) {
+      return;
+    }
+
+    final viewModel = context.read<ResumeEditorViewModel>();
+    viewModel.addCustomSectionWithTitle(name.trim());
+    final newIndex = viewModel.resume.customSections.length - 1;
+    _goToStep(ResumeEditorViewModel.coreStepCount + newIndex);
+  }
+
   void _goToStep(int step) {
     FocusScope.of(context).unfocus();
-    final normalizedStep = step.clamp(
-      0,
-      ResumeEditorViewModel.stepTitles.length - 1,
-    );
+    final maxStep = context.read<ResumeEditorViewModel>().totalStepCount - 1;
+    final normalizedStep = step.clamp(0, maxStep < 0 ? 0 : maxStep);
     context.read<ResumeEditorViewModel>().setStep(normalizedStep);
     _scrollToStepTop(normalizedStep);
     if (_pageController.hasClients) {
@@ -785,38 +796,40 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-  Future<void> _showProfilePhotoOptions({
-    required bool hasImage,
-  }) async {
+  Future<void> _showProfilePhotoOptions({required bool hasImage}) async {
     final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.white,
       builder: (sheetContext) {
         final iconColor = Theme.of(sheetContext).colorScheme.primary;
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.photo_camera_outlined, color: iconColor),
-                title: const Text('Camera'),
-                onTap: () => Navigator.of(sheetContext).pop('camera'),
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library_outlined, color: iconColor),
-                title: const Text('Library'),
-                onTap: () => Navigator.of(sheetContext).pop('library'),
-              ),
-              if (hasImage)
+          child: Padding(
+            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: BottomSheetInsets.topSpacing),
                 ListTile(
-                  leading: ImageIcon(
-                    const AssetImage('assets/fonts/delete.png'),
-                    color: iconColor,
-                  ),
-                  title: const Text('Remove'),
-                  onTap: () => Navigator.of(sheetContext).pop('remove'),
+                  leading: Icon(Icons.photo_camera_outlined, color: iconColor),
+                  title: const Text('Camera'),
+                  onTap: () => Navigator.of(sheetContext).pop('camera'),
                 ),
-            ],
+                ListTile(
+                  leading: Icon(Icons.photo_library_outlined, color: iconColor),
+                  title: const Text('Library'),
+                  onTap: () => Navigator.of(sheetContext).pop('library'),
+                ),
+                if (hasImage)
+                  ListTile(
+                    leading: ImageIcon(
+                      const AssetImage('assets/fonts/delete.png'),
+                      color: iconColor,
+                    ),
+                    title: const Text('Remove'),
+                    onTap: () => Navigator.of(sheetContext).pop('remove'),
+                  ),
+              ],
+            ),
           ),
         );
       },
@@ -903,8 +916,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             _isProjectKeyboardHideFieldFocused;
         final showCustomKeyboardBar =
             keyboardInset > 0 &&
-            viewModel.currentStep ==
-                ResumeEditorViewModel.stepTitles.length - 1 &&
+            viewModel.currentStep >= ResumeEditorViewModel.coreStepCount &&
             _isCustomKeyboardHideFieldFocused;
         final showWorkKeyboardHideButton =
             keyboardInset > 0 &&
@@ -936,7 +948,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   children: [
                     _StepProgressHeader(
                       currentStep: viewModel.currentStep,
+                      totalStepCount: viewModel.totalStepCount,
+                      customSections: viewModel.resume.customSections,
                       onSelectStep: _goToStep,
+                      onAddCategory: _showAddCustomCategoryDialog,
                     ),
                     if (viewModel.isBusy) const LinearProgressIndicator(),
                     Expanded(
@@ -951,8 +966,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                   controller: _pageController,
                                   allowImplicitScrolling: true,
                                   physics: const NeverScrollableScrollPhysics(),
-                                  itemCount:
-                                      ResumeEditorViewModel.stepTitles.length,
+                                  itemCount: viewModel.totalStepCount,
                                   onPageChanged: (index) {
                                     FocusScope.of(context).unfocus();
                                     if (viewModel.currentStep != index) {
@@ -992,17 +1006,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               ),
                               _BottomControls(
                                 currentStep: viewModel.currentStep,
-                                totalSteps:
-                                    ResumeEditorViewModel.stepTitles.length,
+                                totalSteps: viewModel.totalStepCount,
                                 onBack: viewModel.currentStep == 0
                                     ? null
                                     : _goToPreviousStep,
                                 onNext:
                                     viewModel.currentStep ==
-                                        ResumeEditorViewModel
-                                                .stepTitles
-                                                .length -
-                                            1
+                                        viewModel.totalStepCount - 1
                                     ? _openPreview
                                     : () => _goToNextStep(),
                               ),
@@ -1070,9 +1080,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             ),
                             IconButton(
                               tooltip: 'Next field',
-                              onPressed: () =>
-                                  _focusNextKeyboardField(viewModel.currentStep),
-                              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                              onPressed: () => _focusNextKeyboardField(
+                                viewModel.currentStep,
+                              ),
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                              ),
                             ),
                           ],
                         ),
@@ -1102,14 +1115,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   Widget _buildStepContentForStep(int step, ResumeEditorViewModel viewModel) {
-    return switch (step) {
-      0 => _buildPersonalStep(viewModel),
-      1 => _buildWorkStep(viewModel),
-      2 => _buildEducationStep(viewModel),
-      3 => _buildSkillsStep(viewModel),
-      4 => _buildProjectsStep(viewModel),
-      _ => _buildCustomSectionsStep(viewModel),
-    };
+    if (step < ResumeEditorViewModel.coreStepCount) {
+      return switch (step) {
+        0 => _buildPersonalStep(viewModel),
+        1 => _buildWorkStep(viewModel),
+        2 => _buildEducationStep(viewModel),
+        3 => _buildSkillsStep(viewModel),
+        4 => _buildProjectsStep(viewModel),
+        _ => const SizedBox.shrink(),
+      };
+    }
+    final customIndex = step - ResumeEditorViewModel.coreStepCount;
+    return _buildSingleCustomSectionStep(viewModel, customIndex);
   }
 
   Widget _buildPersonalStep(ResumeEditorViewModel viewModel) {
@@ -1166,9 +1183,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _personalFieldFocusNodes[5].requestFocus(),
-          onChanged: (value) => viewModel.updateResume(
-            (resume) => resume.copyWith(email: value),
-          ),
+          onChanged: (value) =>
+              viewModel.updateResume((resume) => resume.copyWith(email: value)),
         ),
         _PhoneWithCountryCodeField(
           label: 'Phoen number',
@@ -1176,9 +1192,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           focusNode: _personalFieldFocusNodes[5],
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _personalFieldFocusNodes[6].requestFocus(),
-          onChanged: (value) => viewModel.updateResume(
-            (resume) => resume.copyWith(phone: value),
-          ),
+          onChanged: (value) =>
+              viewModel.updateResume((resume) => resume.copyWith(phone: value)),
         ),
         _SyncTextField(
           label: 'Location',
@@ -1457,8 +1472,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       _moveFocusInOrder(_projectKeyboardFocusOrder, delta: -1);
       return;
     }
-    if (currentStep == ResumeEditorViewModel.stepTitles.length - 1) {
-      _moveFocusInOrder(_customKeyboardFocusOrder, delta: -1);
+    if (currentStep >= ResumeEditorViewModel.coreStepCount) {
+      final i = currentStep - ResumeEditorViewModel.coreStepCount;
+      _moveFocusInOrder(_customKeyboardFocusOrderForIndex(i), delta: -1);
     }
   }
 
@@ -1471,9 +1487,21 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       _moveFocusInOrder(_projectKeyboardFocusOrder, delta: 1);
       return;
     }
-    if (currentStep == ResumeEditorViewModel.stepTitles.length - 1) {
-      _moveFocusInOrder(_customKeyboardFocusOrder, delta: 1);
+    if (currentStep >= ResumeEditorViewModel.coreStepCount) {
+      final i = currentStep - ResumeEditorViewModel.coreStepCount;
+      _moveFocusInOrder(_customKeyboardFocusOrderForIndex(i), delta: 1);
     }
+  }
+
+  List<FocusNode> _customKeyboardFocusOrderForIndex(int customIndex) {
+    return [
+      _focusNodeForExtendedKeyboardField(
+        'custom-section-title-$customIndex',
+      ),
+      _focusNodeForExtendedKeyboardField(
+        'custom-section-content-$customIndex',
+      ),
+    ];
   }
 
   void _movePersonalFieldFocus({required int delta}) {
@@ -1868,133 +1896,69 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-  Widget _buildCustomSectionsStep(ResumeEditorViewModel viewModel) {
+  Widget _buildSingleCustomSectionStep(
+    ResumeEditorViewModel viewModel,
+    int index,
+  ) {
+    final item = viewModel.resume.customSections[index];
+    final heading = item.title.trim().isEmpty
+        ? 'Category ${index + 1}'
+        : item.title.trim();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _StepSurface(
-          title: 'Custom sections',
+          title: heading,
           subtitle:
-              'Add your own resume categories like Certifications, Languages, Awards, Publications, or anything else you want to show.',
+              'Rename the category or write the body text. It appears on your resume under this heading.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (viewModel.resume.customSections.isNotEmpty)
-                const SizedBox(height: 8),
-              ...viewModel.resume.customSections.asMap().entries.map((entry) {
-                final index = entry.key;
-                final item = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(24),
+              _ResponsiveFieldGroup(
+                children: [
+                  _SyncTextField(
+                    key: Key('custom-section-title-$index'),
+                    label: 'Category title',
+                    value: item.title,
+                    hintText: 'Certifications, Languages, Awards…',
+                    focusNode: _focusNodeForExtendedKeyboardField(
+                      'custom-section-title-$index',
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Custom section ${index + 1}',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                            if (viewModel.resume.customSections.length > 1) ...[
-                              IconButton.filledTonal(
-                                tooltip: 'Move custom section up',
-                                onPressed: index == 0
-                                    ? null
-                                    : () => _moveCustomSection(
-                                        index: index,
-                                        moveUp: true,
-                                      ),
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_up_rounded,
-                                ),
-                              ),
-                              IconButton.filledTonal(
-                                tooltip: 'Move custom section down',
-                                onPressed:
-                                    index ==
-                                        viewModel.resume.customSections.length -
-                                            1
-                                    ? null
-                                    : () => _moveCustomSection(
-                                        index: index,
-                                        moveUp: false,
-                                      ),
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                ),
-                              ),
-                            ],
-                            IconButton(
-                              onPressed: () =>
-                                  viewModel.removeCustomSection(index),
-                              icon: const ImageIcon(
-                                AssetImage('assets/fonts/delete.png'),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _ResponsiveFieldGroup(
-                          children: [
-                            _SyncTextField(
-                              key: Key('custom-section-title-$index'),
-                              label: 'Category title',
-                              value: item.title,
-                              hintText: 'Certifications, Languages, Awards...',
-                              focusNode: _focusNodeForExtendedKeyboardField(
-                                'custom-section-title-$index',
-                              ),
-                              onChanged: (value) =>
-                                  viewModel.updateCustomSection(
-                                    index,
-                                    (current) => current.copyWith(title: value),
-                                  ),
-                            ),
-                            _SyncTextField(
-                              key: Key('custom-section-content-$index'),
-                              label: 'Content',
-                              value: item.content,
-                              hintText:
-                                  'Write the section content the way you want it shown on the resume.',
-                              maxLines: 5,
-                              fullWidth: true,
-                              focusNode: _focusNodeForExtendedKeyboardField(
-                                'custom-section-content-$index',
-                              ),
-                              onChanged: (value) =>
-                                  viewModel.updateCustomSection(
-                                    index,
-                                    (current) =>
-                                        current.copyWith(content: value),
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    onChanged: (value) => viewModel.updateCustomSection(
+                      index,
+                      (current) => current.copyWith(title: value),
                     ),
                   ),
-                );
-              }),
+                  _SyncTextField(
+                    key: Key('custom-section-content-$index'),
+                    label: 'Content',
+                    value: item.content,
+                    hintText:
+                        'Write the section content the way you want it shown on the resume.',
+                    maxLines: 5,
+                    fullWidth: true,
+                    focusNode: _focusNodeForExtendedKeyboardField(
+                      'custom-section-content-$index',
+                    ),
+                    onChanged: (value) => viewModel.updateCustomSection(
+                      index,
+                      (current) => current.copyWith(content: value),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
-                child: FilledButton.icon(
+                child: TextButton.icon(
                   onPressed: viewModel.isBusy
                       ? null
-                      : viewModel.addCustomSection,
-                  icon: const Icon(Icons.add_rounded),
-                  label: const Text('Add custom section'),
+                      : () => viewModel.removeCustomSection(index),
+                  icon: const ImageIcon(
+                    AssetImage('assets/fonts/delete.png'),
+                  ),
+                  label: const Text('Remove category'),
                 ),
               ),
             ],
@@ -2005,14 +1969,29 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 }
 
+String _resumeCategoryChipLabel(CustomSectionItem item, int index) {
+  final t = item.title.trim();
+  final raw = t.isEmpty ? 'Category ${index + 1}' : t;
+  if (raw.length > 22) {
+    return '${raw.substring(0, 21)}…';
+  }
+  return raw;
+}
+
 class _StepProgressHeader extends StatefulWidget {
   const _StepProgressHeader({
     required this.currentStep,
+    required this.totalStepCount,
+    required this.customSections,
     required this.onSelectStep,
+    required this.onAddCategory,
   });
 
   final int currentStep;
+  final int totalStepCount;
+  final List<CustomSectionItem> customSections;
   final ValueChanged<int> onSelectStep;
+  final VoidCallback onAddCategory;
 
   @override
   State<_StepProgressHeader> createState() => _StepProgressHeaderState();
@@ -2035,7 +2014,8 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
   @override
   void didUpdateWidget(covariant _StepProgressHeader oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentStep != widget.currentStep) {
+    if (oldWidget.currentStep != widget.currentStep ||
+        oldWidget.customSections.length != widget.customSections.length) {
       _scrollSelectedChip();
     }
   }
@@ -2068,8 +2048,63 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
 
   @override
   Widget build(BuildContext context) {
-    final progress =
-        (widget.currentStep + 1) / ResumeEditorViewModel.stepTitles.length;
+    final total = widget.totalStepCount;
+    final denom = total <= 0 ? 1 : total;
+    final progress = (widget.currentStep + 1) / denom;
+
+    final chipStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+      fontWeight: FontWeight.w400,
+    );
+
+    final rowChildren = <Widget>[];
+
+    for (var i = 0; i < ResumeEditorViewModel.coreStepCount; i++) {
+      rowChildren.add(
+        Padding(
+          key: _chipKeyFor(i),
+          padding: const EdgeInsets.only(right: 10),
+          child: ChoiceChip(
+            label: Text(
+              ResumeEditorViewModel.coreStepTitles[i],
+              style: chipStyle,
+            ),
+            selected: widget.currentStep == i,
+            onSelected: (_) => widget.onSelectStep(i),
+          ),
+        ),
+      );
+    }
+
+    for (var j = 0; j < widget.customSections.length; j++) {
+      final step = ResumeEditorViewModel.coreStepCount + j;
+      rowChildren.add(
+        Padding(
+          key: _chipKeyFor(step),
+          padding: const EdgeInsets.only(right: 10),
+          child: ChoiceChip(
+            label: Text(
+              _resumeCategoryChipLabel(widget.customSections[j], j),
+              style: chipStyle,
+            ),
+            selected: widget.currentStep == step,
+            onSelected: (_) => widget.onSelectStep(step),
+          ),
+        ),
+      );
+    }
+
+    final primary = Theme.of(context).colorScheme.primary;
+    rowChildren.add(
+      Padding(
+        padding: EdgeInsets.zero,
+        child: ChoiceChip(
+          avatar: Icon(Icons.add_rounded, size: 18, color: primary),
+          label: Text('+ Add', style: chipStyle),
+          selected: false,
+          onSelected: (_) => widget.onAddCategory(),
+        ),
+      ),
+    );
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -2081,14 +2116,14 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
               children: [
                 Expanded(
                   child: LinearProgressIndicator(
-                    value: progress,
+                    value: progress.clamp(0.0, 1.0),
                     minHeight: 8,
                     borderRadius: BorderRadius.circular(99),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '${widget.currentStep + 1}/${ResumeEditorViewModel.stepTitles.length}',
+                  '${widget.currentStep + 1}/$total',
                   style: Theme.of(
                     context,
                   ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400),
@@ -2104,34 +2139,7 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
               controller: _scrollController,
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: ResumeEditorViewModel.stepTitles.asMap().entries.map((
-                  entry,
-                ) {
-                  final index = entry.key;
-                  final label = entry.value;
-                  final selected = index == widget.currentStep;
-                  return Padding(
-                    key: _chipKeyFor(index),
-                    padding: EdgeInsets.only(
-                      right:
-                          index == ResumeEditorViewModel.stepTitles.length - 1
-                          ? 0
-                          : 10,
-                    ),
-                    child: ChoiceChip(
-                      label: Text(
-                        label,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      selected: selected,
-                      onSelected: (_) => widget.onSelectStep(index),
-                    ),
-                  );
-                }).toList(),
-              ),
+              child: Row(children: rowChildren),
             ),
           ),
         ],
@@ -2601,7 +2609,8 @@ class _PhoneWithCountryCodeField extends StatefulWidget {
       _PhoneWithCountryCodeFieldState();
 }
 
-class _PhoneWithCountryCodeFieldState extends State<_PhoneWithCountryCodeField> {
+class _PhoneWithCountryCodeFieldState
+    extends State<_PhoneWithCountryCodeField> {
   static const List<_CountryDialCode> _countries = [
     _CountryDialCode('Afghanistan', '+93'),
     _CountryDialCode('Albania', '+355'),
@@ -2778,12 +2787,16 @@ class _PhoneWithCountryCodeFieldState extends State<_PhoneWithCountryCodeField> 
     }
   }
 
-  String _countryKey(_CountryDialCode country) => '${country.name}|${country.code}';
+  String _countryKey(_CountryDialCode country) =>
+      '${country.name}|${country.code}';
 
   String _defaultCountryKey() {
-    final localeCountry =
-        WidgetsBinding.instance.platformDispatcher.locale.countryCode
-            ?.toUpperCase();
+    final localeCountry = WidgetsBinding
+        .instance
+        .platformDispatcher
+        .locale
+        .countryCode
+        ?.toUpperCase();
     final dialCode = _dialCodeFromCountryCode(localeCountry);
     final matched = _countries.firstWhere(
       (item) => item.code == dialCode,
@@ -3001,10 +3014,7 @@ class _HintBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: titleStyle,
-                ),
+                Text(title, style: titleStyle),
                 SizedBox(height: bodySpacing),
                 Text(body, style: bodyStyle),
               ],

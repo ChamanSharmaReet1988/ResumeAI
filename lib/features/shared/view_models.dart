@@ -184,18 +184,27 @@ class ResumeEditorViewModel extends ChangeNotifier {
   String get coverLetter => _coverLetter;
   bool get hasReachedSkillLimit => _resume.skills.length >= maxSkills;
 
-  static const stepTitles = [
+  /// Fixed builder steps (horizontal chips before user-defined categories).
+  static const coreStepTitles = [
     'Personal Information',
     'Work Experience',
     'Education',
     'Skills',
     'Projects',
-    'Custom Sections',
   ];
 
+  static const int coreStepCount = 5;
+
+  /// Total swipeable steps: core + one page per [ResumeData.customSections] entry.
+  int get totalStepCount => coreStepCount + _resume.customSections.length;
+
   void setStep(int value) {
-    _currentStep = value.clamp(0, stepTitles.length - 1);
-    if (_currentStep == stepTitles.length - 1) {
+    final maxStep = totalStepCount - 1;
+    if (maxStep < 0) {
+      return;
+    }
+    _currentStep = value.clamp(0, maxStep);
+    if (_currentStep == maxStep) {
       analyzeResume();
     } else {
       notifyListeners();
@@ -373,11 +382,16 @@ class ResumeEditorViewModel extends ChangeNotifier {
   }
 
   void addCustomSection() {
+    addCustomSectionWithTitle('');
+  }
+
+  void addCustomSectionWithTitle(String title) {
+    final trimmed = title.trim();
     updateResume(
       (resume) => resume.copyWith(
         customSections: [
           ...resume.customSections,
-          const CustomSectionItem.empty(),
+          CustomSectionItem(title: trimmed, content: ''),
         ],
       ),
     );
@@ -385,6 +399,8 @@ class ResumeEditorViewModel extends ChangeNotifier {
 
   void removeCustomSection(int index) {
     final items = [..._resume.customSections]..removeAt(index);
+    final newCount = items.length;
+    _currentStep = _currentStep.clamp(0, coreStepCount + newCount - 1);
     updateResume((resume) => resume.copyWith(customSections: items));
   }
 

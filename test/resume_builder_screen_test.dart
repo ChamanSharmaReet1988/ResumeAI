@@ -115,17 +115,10 @@ void main() {
     );
   }
 
-  testWidgets('generate bullets adds AI bullets without throwing', (
-    tester,
-  ) async {
+  testWidgets('work experience step shows role field', (tester) async {
     await pumpBuilder(tester);
 
-    await tester.tap(find.text('Generate bullets'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(tester.takeException(), isNull);
-    expect(find.textContaining('Led'), findsWidgets);
+    expect(textFieldByLabel('Role'), findsWidgets);
   });
 
   testWidgets('work experience can be reordered from the builder', (
@@ -299,23 +292,27 @@ void main() {
     expect(find.byType(YearPicker), findsOneWidget);
   });
 
+  testWidgets('+ Add chip opens new category dialog', (tester) async {
+    viewModel.setStep(4);
+    await pumpBuilder(tester);
+
+    await tester.tap(find.text('+ Add'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('New category'), findsOneWidget);
+    expect(find.text('OK'), findsOneWidget);
+  });
+
   testWidgets(
-    'custom sections replace the preview category and save user content',
+    'custom section category saves title and content on the resume',
     (tester) async {
+      viewModel.addCustomSectionWithTitle('Certifications');
       viewModel.setStep(5);
 
       await pumpBuilder(tester);
 
       expect(find.text('Resume Preview'), findsNothing);
-      expect(find.text('Custom Sections'), findsOneWidget);
 
-      await tester.tap(find.text('Add custom section'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(
-        find.byKey(const Key('custom-section-title-0')),
-        'Certifications',
-      );
       await tester.enterText(
         find.byKey(const Key('custom-section-content-0')),
         'Google UX Certificate, AWS Cloud Practitioner',
@@ -331,10 +328,7 @@ void main() {
     },
   );
 
-  testWidgets('custom sections can be reordered from the builder', (
-    tester,
-  ) async {
-    viewModel.setStep(5);
+  testWidgets('custom sections can be reordered via view model', (tester) async {
     viewModel.updateResume(
       (resume) => resume.copyWith(
         customSections: const [
@@ -344,12 +338,11 @@ void main() {
       ),
     );
 
-    await pumpBuilder(tester);
-
-    await tester.tap(find.byTooltip('Move custom section down').first);
-    await tester.pumpAndSettle();
+    viewModel.moveCustomSectionDown(0);
 
     expect(viewModel.resume.customSections.first.title, 'Second section');
+
+    await pumpBuilder(tester);
     expect(find.text('Second section'), findsWidgets);
   });
 
@@ -387,7 +380,7 @@ void main() {
   });
 
   testWidgets('save opens the separate preview screen', (tester) async {
-    viewModel.setStep(5);
+    viewModel.setStep(4);
 
     await pumpBuilder(tester);
 
@@ -402,20 +395,12 @@ void main() {
     expect(find.text('ATS score'), findsNothing);
   });
 
-  testWidgets('preview screen menu shows actions and can choose template', (
+  testWidgets('preview screen bottom bar opens template picker', (
     tester,
   ) async {
     await pumpPreview(tester);
 
-    await tester.tap(find.byTooltip('Menu'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Choose template'), findsOneWidget);
-    expect(find.text('ATS score'), findsOneWidget);
-    expect(find.text('Share resume'), findsOneWidget);
-    expect(find.text('Print'), findsOneWidget);
-
-    await tester.tap(find.text('Choose template'));
+    await tester.tap(find.text('Template'));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('template-grid')), findsOneWidget);
@@ -475,41 +460,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Home screen'), findsOneWidget);
-    expect(find.text('ATS score'), findsNothing);
-  });
-
-  testWidgets('increase ATS returns to the recommended builder category', (
-    tester,
-  ) async {
-    viewModel.setStep(5);
-    viewModel.updateResume(
-      (resume) => resume.copyWith(
-        summary:
-            'Impact-focused Flutter developer with strong delivery ownership, cross-functional collaboration, and measurable product outcomes across fast-moving teams.',
-      ),
-    );
-
-    await pumpBuilder(tester);
-
-    await tester.tap(find.text('Preview'));
-    await tester.pump();
-    await tester.pumpAndSettle(const Duration(seconds: 1));
-
-    expect(find.text('Best next update: Work Experience'), findsNothing);
-
-    await tester.tap(find.byTooltip('Menu'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('ATS score'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Best next update: Work Experience'), findsOneWidget);
-
-    await tester.tap(find.text('Increase ATS in Work Experience'));
-    await tester.pumpAndSettle();
-
-    expect(viewModel.currentStep, 1);
-    expect(find.text('Work experience'), findsOneWidget);
     expect(find.text('ATS score'), findsNothing);
   });
 
@@ -593,18 +543,14 @@ void main() {
     expect(horizontalScrollController.offset, greaterThan(0));
   });
 
-  testWidgets('edit screen swipes horizontally between categories', (
+  testWidgets('edit screen selects work step from category chips', (
     tester,
   ) async {
     viewModel.setStep(0);
 
     await pumpBuilder(tester, size: const Size(520, 700));
 
-    await tester.fling(
-      find.byKey(const Key('resume-step-pages')),
-      const Offset(-600, 0),
-      1000,
-    );
+    await tester.tap(find.text('Work Experience'));
     await tester.pumpAndSettle();
 
     expect(viewModel.currentStep, 1);

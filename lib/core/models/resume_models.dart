@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../resume_text_font.dart';
+
 enum ResumeTemplate {
   modern,
   minimal,
@@ -10,11 +12,7 @@ enum ResumeTemplate {
   monogramSidebar,
 }
 
-enum CoverLetterTemplate {
-  executiveNote,
-  minimalLetter,
-  sidebarLetter,
-}
+enum CoverLetterTemplate { executiveNote, minimalLetter, sidebarLetter }
 
 const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.corporate,
@@ -77,6 +75,17 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.monogramSidebar => const Color(0xFFFFF3E3),
     ResumeTemplate.modern => const Color(0xFFE4FBF6),
   };
+
+  /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
+  String get fontStyleLabel => switch (userFacingTemplate) {
+    ResumeTemplate.minimal => 'Sans · centered classic',
+    ResumeTemplate.corporate => 'Sans · dark header',
+    ResumeTemplate.creative => 'Sans · profile sidebar',
+    ResumeTemplate.copperSerif => 'Serif accents · warm',
+    ResumeTemplate.splitBanner => 'Sans · banner header',
+    ResumeTemplate.monogramSidebar => 'Sans · monogram sidebar',
+    ResumeTemplate.modern => 'Sans · dark header',
+  };
 }
 
 extension CoverLetterTemplateX on CoverLetterTemplate {
@@ -110,6 +119,7 @@ class ResumeData {
     required this.githubLink,
     required this.linkedinLink,
     required this.profileImagePath,
+    required this.resumeTextFont,
   });
 
   factory ResumeData.empty({required ResumeTemplate template}) {
@@ -133,6 +143,7 @@ class ResumeData {
       githubLink: '',
       linkedinLink: '',
       profileImagePath: '',
+      resumeTextFont: ResumeTextFont.inter,
     );
   }
 
@@ -186,6 +197,9 @@ class ResumeData {
       githubLink: json['githubLink'] as String? ?? '',
       linkedinLink: json['linkedinLink'] as String? ?? '',
       profileImagePath: json['profileImagePath'] as String? ?? '',
+      resumeTextFont: resumeTextFontFromStorage(
+        json['resumeTextFont'] as String?,
+      ),
     );
   }
 
@@ -208,6 +222,7 @@ class ResumeData {
   final String githubLink;
   final String linkedinLink;
   final String profileImagePath;
+  final ResumeTextFont resumeTextFont;
 
   List<WorkExperience> get visibleWorkExperiences =>
       workExperiences.where((item) => !item.isBlank).toList();
@@ -271,6 +286,7 @@ class ResumeData {
     String? githubLink,
     String? linkedinLink,
     String? profileImagePath,
+    ResumeTextFont? resumeTextFont,
   }) {
     return ResumeData(
       id: id ?? this.id,
@@ -292,6 +308,7 @@ class ResumeData {
       githubLink: githubLink ?? this.githubLink,
       linkedinLink: linkedinLink ?? this.linkedinLink,
       profileImagePath: profileImagePath ?? this.profileImagePath,
+      resumeTextFont: resumeTextFont ?? this.resumeTextFont,
     );
   }
 
@@ -316,6 +333,7 @@ class ResumeData {
       'githubLink': githubLink,
       'linkedinLink': linkedinLink,
       'profileImagePath': profileImagePath,
+      'resumeTextFont': resumeTextFont.name,
     };
   }
 }
