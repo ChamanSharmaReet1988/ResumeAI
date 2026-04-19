@@ -275,6 +275,89 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     };
   }
 
+  Future<void> _toggleResumeSectionVisibility({
+    required bool isIncluded,
+    required String sectionName,
+    required void Function(bool) setIncluded,
+  }) async {
+    if (!isIncluded) {
+      setIncluded(true);
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          title: const Text('Hide from resume?'),
+          content: Text(
+            '$sectionName will not be shown on your resume or in exported PDFs. '
+            'You can show it again anytime using the button next to the section title.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Hide'),
+            ),
+          ],
+        );
+      },
+    );
+    if (!mounted || confirmed != true) {
+      return;
+    }
+    setIncluded(false);
+  }
+
+  Widget _resumeSectionVisibilityLead({
+    required ResumeEditorViewModel viewModel,
+    required bool included,
+    required String sectionName,
+    required void Function(bool) setIncluded,
+  }) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Transform.translate(
+      offset: const Offset(0, 2),
+      child: IconButton(
+        tooltip: included ? 'Hide from resume' : 'Show on resume',
+        style: IconButton.styleFrom(
+          foregroundColor: primary,
+          padding: const EdgeInsetsDirectional.only(start: 6, end: 2),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+        ),
+        onPressed: viewModel.isBusy
+            ? null
+            : () async {
+                await _toggleResumeSectionVisibility(
+                  isIncluded: included,
+                  sectionName: sectionName,
+                  setIncluded: setIncluded,
+                );
+              },
+        icon: Icon(
+          included ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+          size: 22,
+        ),
+      ),
+    );
+  }
+
+  TextStyle? _resumeOrderHintStyle(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.textTheme.labelSmall?.copyWith(
+      fontSize: 11,
+      height: 1.3,
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+  }
+
   Future<void> _pickWorkDate({
     required int index,
     required bool isEndDate,
@@ -690,11 +773,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('New category'),
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          title: const Text('New section'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
-              labelText: 'Category name',
+              labelText: 'Title',
               hintText: 'Certifications, Languages, Awards…',
             ),
             autofocus: true,
@@ -725,7 +810,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         );
       },
     );
-    controller.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
 
     if (!mounted || name == null || name.trim().isEmpty) {
       return;
@@ -734,7 +821,46 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final viewModel = context.read<ResumeEditorViewModel>();
     viewModel.addCustomSectionWithTitle(name.trim());
     final newIndex = viewModel.resume.customSections.length - 1;
-    _goToStep(ResumeEditorViewModel.coreStepCount + newIndex);
+    final targetStep = ResumeEditorViewModel.coreStepCount + newIndex;
+    // Wait until PageView rebuilds with the new itemCount before animateToPage;
+    // otherwise the index can be out of range and the framework asserts.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _goToStep(targetStep);
+    });
+  }
+
+  Future<void> _confirmRemoveCustomSection(int index) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          title: const Text('Remove section?'),
+          content: const Text(
+            'This section will be removed from your resume. You can add a new '
+            'custom section with Add anytime.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Remove'),
+            ),
+          ],
+        );
+      },
+    );
+    if (!mounted || confirmed != true) {
+      return;
+    }
+    context.read<ResumeEditorViewModel>().removeCustomSection(index);
   }
 
   void _goToStep(int step) {
@@ -1261,9 +1387,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     return _StepSurface(
       title: 'Work experience',
       subtitle: '',
+      titleTrailing: _resumeSectionVisibilityLead(
+        viewModel: viewModel,
+        included: viewModel.resume.includeWorkInResume,
+        sectionName: 'Work experience',
+        setIncluded: viewModel.setIncludeWorkInResume,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 12),
           const _HintBanner(
             title: 'Resume order',
             body:
@@ -1300,12 +1433,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 _resumeOrderLabel(index),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
+                                style: _resumeOrderHintStyle(context),
                               ),
                             ],
                           ),
@@ -1343,7 +1471,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     _ResponsiveFieldGroup(
                       children: [
                         _SyncTextField(
@@ -1474,7 +1602,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     }
     if (currentStep >= ResumeEditorViewModel.coreStepCount) {
       final i = currentStep - ResumeEditorViewModel.coreStepCount;
-      _moveFocusInOrder(_customKeyboardFocusOrderForIndex(i), delta: -1);
+      final vm = context.read<ResumeEditorViewModel>();
+      _moveFocusInOrder(_customKeyboardFocusOrderForIndex(vm, i), delta: -1);
     }
   }
 
@@ -1489,18 +1618,28 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     }
     if (currentStep >= ResumeEditorViewModel.coreStepCount) {
       final i = currentStep - ResumeEditorViewModel.coreStepCount;
-      _moveFocusInOrder(_customKeyboardFocusOrderForIndex(i), delta: 1);
+      final vm = context.read<ResumeEditorViewModel>();
+      _moveFocusInOrder(_customKeyboardFocusOrderForIndex(vm, i), delta: 1);
     }
   }
 
-  List<FocusNode> _customKeyboardFocusOrderForIndex(int customIndex) {
+  List<FocusNode> _customKeyboardFocusOrderForIndex(
+    ResumeEditorViewModel vm,
+    int customIndex,
+  ) {
+    final item = vm.resume.customSections[customIndex];
+    if (item.layoutMode == CustomSectionLayoutMode.summary) {
+      return [
+        _focusNodeForExtendedKeyboardField(
+          'custom-section-content-$customIndex',
+        ),
+      ];
+    }
     return [
-      _focusNodeForExtendedKeyboardField(
-        'custom-section-title-$customIndex',
-      ),
-      _focusNodeForExtendedKeyboardField(
-        'custom-section-content-$customIndex',
-      ),
+      for (var i = 0; i < item.bullets.length; i++)
+        _focusNodeForExtendedKeyboardField(
+          'custom-section-bullet-$customIndex-$i',
+        ),
     ];
   }
 
@@ -1543,6 +1682,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       title: 'Education',
       subtitle:
           'Include your degree, institution, completion year, score, and supporting details like honors or coursework.',
+      titleTrailing: _resumeSectionVisibilityLead(
+        viewModel: viewModel,
+        included: viewModel.resume.includeEducationInResume,
+        sectionName: 'Education',
+        setIncluded: viewModel.setIncludeEducationInResume,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1575,12 +1720,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 _resumeOrderLabel(index),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
+                                style: _resumeOrderHintStyle(context),
                               ),
                             ],
                           ),
@@ -1616,7 +1756,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     _ResponsiveFieldGroup(
                       children: [
                         _SyncTextField(
@@ -1696,9 +1836,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       title: 'Skills',
       subtitle:
           'Add job-specific tools and keywords. Suggest skills prioritizes each work experience role, then descriptions and bullets, then your target job title and the rest of the resume.',
+      titleTrailing: _resumeSectionVisibilityLead(
+        viewModel: viewModel,
+        included: viewModel.resume.includeSkillsInResume,
+        sectionName: 'Skills',
+        setIncluded: viewModel.setIncludeSkillsInResume,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 10),
           Text(
             '${viewModel.resume.skills.length}/${ResumeEditorViewModel.maxSkills} skills',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -1716,6 +1863,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 helperText: viewModel.hasReachedSkillLimit
                     ? 'Maximum 50 skills reached'
                     : 'You can add up to 50 skills',
+                helperStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                  height: 1.35,
+                ),
                 suffixIcon: IconButton(
                   onPressed: _addSkillFromInput,
                   icon: const Icon(Icons.add_rounded),
@@ -1767,6 +1919,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       title: 'Projects',
       subtitle:
           'Showcase standout side projects, product launches, or portfolio work with clear outcomes.',
+      titleTrailing: _resumeSectionVisibilityLead(
+        viewModel: viewModel,
+        included: viewModel.resume.includeProjectsInResume,
+        sectionName: 'Projects',
+        setIncluded: viewModel.setIncludeProjectsInResume,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1799,12 +1957,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 _resumeOrderLabel(index),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
+                                style: _resumeOrderHintStyle(context),
                               ),
                             ],
                           ),
@@ -1836,7 +1989,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     _ResponsiveFieldGroup(
                       children: [
                         _SyncTextField(
@@ -1901,72 +2054,200 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     int index,
   ) {
     final item = viewModel.resume.customSections[index];
-    final heading = item.title.trim().isEmpty
-        ? 'Category ${index + 1}'
-        : item.title.trim();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _StepSurface(
-          title: heading,
-          subtitle:
-              'Rename the category or write the body text. It appears on your resume under this heading.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _ResponsiveFieldGroup(
-                children: [
-                  _SyncTextField(
-                    key: Key('custom-section-title-$index'),
-                    label: 'Category title',
-                    value: item.title,
-                    hintText: 'Certifications, Languages, Awards…',
-                    focusNode: _focusNodeForExtendedKeyboardField(
-                      'custom-section-title-$index',
-                    ),
-                    onChanged: (value) => viewModel.updateCustomSection(
+    return _StepSurface(
+      title: _customSectionStepTitle(item, index),
+      subtitle: '',
+      titleTrailing: IconButton(
+        tooltip: 'Remove section',
+        style: IconButton.styleFrom(
+          padding: const EdgeInsetsDirectional.only(start: 6, end: 2),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+        ),
+        onPressed: viewModel.isBusy
+            ? null
+            : () async {
+                await _confirmRemoveCustomSection(index);
+              },
+        icon: const ImageIcon(
+          AssetImage('assets/fonts/delete.png'),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          RadioGroup<CustomSectionLayoutMode>(
+                  groupValue: item.layoutMode,
+                  onChanged: (CustomSectionLayoutMode? value) {
+                    if (value == null || viewModel.isBusy) {
+                      return;
+                    }
+                    viewModel.updateCustomSection(
                       index,
-                      (current) => current.copyWith(title: value),
-                    ),
+                      (c) {
+                        if (value == CustomSectionLayoutMode.bullets &&
+                            c.bullets.isEmpty) {
+                          return c.copyWith(
+                            layoutMode: value,
+                            bullets: [''],
+                          );
+                        }
+                        return c.copyWith(layoutMode: value);
+                      },
+                    );
+                  },
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: RadioListTile<CustomSectionLayoutMode>(
+                          value: CustomSectionLayoutMode.summary,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          horizontalTitleGap: 4,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          title: Text(
+                            'Summary',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w400),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: RadioListTile<CustomSectionLayoutMode>(
+                          value: CustomSectionLayoutMode.bullets,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          horizontalTitleGap: 4,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          title: Text(
+                            'Bullet points',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w400),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  _SyncTextField(
-                    key: Key('custom-section-content-$index'),
-                    label: 'Content',
-                    value: item.content,
-                    hintText:
-                        'Write the section content the way you want it shown on the resume.',
-                    maxLines: 5,
-                    fullWidth: true,
-                    focusNode: _focusNodeForExtendedKeyboardField(
-                      'custom-section-content-$index',
-                    ),
-                    onChanged: (value) => viewModel.updateCustomSection(
-                      index,
-                      (current) => current.copyWith(content: value),
+                ),
+                const SizedBox(height: 16),
+                if (item.layoutMode == CustomSectionLayoutMode.summary)
+                  _ResponsiveFieldGroup(
+                    children: [
+                      _SyncTextField(
+                        key: Key('custom-section-content-$index'),
+                        label: 'Summary',
+                        value: item.content,
+                        hintText:
+                            'Write the section as a short paragraph for your resume.',
+                        maxLines: 5,
+                        fullWidth: true,
+                        focusNode: _focusNodeForExtendedKeyboardField(
+                          'custom-section-content-$index',
+                        ),
+                        onChanged: (value) => viewModel.updateCustomSection(
+                          index,
+                          (current) => current.copyWith(content: value),
+                        ),
+                      ),
+                    ],
+                  )
+                else ...[
+                  ...item.bullets.asMap().entries.map((entry) {
+                    final bi = entry.key;
+                    final text = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _SyncTextField(
+                              key: Key('custom-section-bullet-$index-$bi'),
+                              label: 'Bullet ${bi + 1}',
+                              value: text,
+                              hintText: 'Enter a bullet point',
+                              fullWidth: true,
+                              focusNode: _focusNodeForExtendedKeyboardField(
+                                'custom-section-bullet-$index-$bi',
+                              ),
+                              onChanged: (value) =>
+                                  viewModel.updateCustomSection(
+                                index,
+                                (c) {
+                                  final next = List<String>.from(c.bullets);
+                                  if (bi < next.length) {
+                                    next[bi] = value;
+                                  }
+                                  return c.copyWith(bullets: next);
+                                },
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Remove bullet',
+                            onPressed: viewModel.isBusy
+                                ? null
+                                : () {
+                                    viewModel.updateCustomSection(
+                                      index,
+                                      (c) {
+                                        final next = List<String>.from(
+                                          c.bullets,
+                                        )..removeAt(bi);
+                                        return c.copyWith(bullets: next);
+                                      },
+                                    );
+                                  },
+                            icon: const ImageIcon(
+                              AssetImage('assets/fonts/delete.png'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilledButton.icon(
+                      onPressed: viewModel.isBusy
+                          ? null
+                          : () {
+                              viewModel.updateCustomSection(
+                                index,
+                                (c) => c.copyWith(
+                                  bullets: [...c.bullets, ''],
+                                ),
+                              );
+                            },
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Add bullet point'),
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: viewModel.isBusy
-                      ? null
-                      : () => viewModel.removeCustomSection(index),
-                  icon: const ImageIcon(
-                    AssetImage('assets/fonts/delete.png'),
-                  ),
-                  label: const Text('Remove category'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+String _customSectionStepTitle(CustomSectionItem item, int index) {
+  final t = item.title.trim();
+  if (t.isEmpty) {
+    return 'Category ${index + 1}';
+  }
+  return t;
 }
 
 String _resumeCategoryChipLabel(CustomSectionItem item, int index) {
@@ -2093,13 +2374,15 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
       );
     }
 
-    final primary = Theme.of(context).colorScheme.primary;
+    final addIconColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black;
     rowChildren.add(
       Padding(
         padding: EdgeInsets.zero,
         child: ChoiceChip(
-          avatar: Icon(Icons.add_rounded, size: 18, color: primary),
-          label: Text('+ Add', style: chipStyle),
+          avatar: Icon(Icons.add_rounded, size: 24, color: addIconColor),
+          label: Text('Add', style: chipStyle),
           selected: false,
           onSelected: (_) => widget.onAddCategory(),
         ),
@@ -2200,26 +2483,45 @@ class _StepSurface extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
+    this.titleTrailing,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
+  final Widget? titleTrailing;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 24, 18, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
+            if (titleTrailing == null)
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              )
+            else
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    titleTrailing!,
+                  ],
+                ),
+              ),
             const SizedBox(height: 8),
             child,
           ],

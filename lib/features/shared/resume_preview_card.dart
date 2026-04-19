@@ -1144,14 +1144,39 @@ class _CustomSectionPreview extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          item.content.ifBlank('Add custom content to preview it here.'),
-          maxLines: isCompact ? 3 : 4,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        if (item.layoutMode == CustomSectionLayoutMode.summary)
+          Text(
+            item.content.ifBlank('Add custom content to preview it here.'),
+            maxLines: isCompact ? 3 : 4,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          )
+        else if (item.bullets.any((b) => b.trim().isNotEmpty))
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final line in item.bullets.where((b) => b.trim().isNotEmpty))
+                Text(
+                  '• ${line.trim()}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
+          )
+        else
+          Text(
+            'Add bullet points to preview them here.',
+            maxLines: isCompact ? 3 : 4,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
       ],
     );
   }

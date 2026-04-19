@@ -17,6 +17,35 @@ import 'resume_pdf/resume_pdf_theme.dart';
 part 'resume_pdf/resume_pdf_template_pages.dart';
 part 'resume_pdf/resume_pdf_highlighted_pages.dart';
 
+pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
+  switch (item.layoutMode) {
+    case CustomSectionLayoutMode.summary:
+      return pw.Text(item.content.trim());
+    case CustomSectionLayoutMode.bullets:
+      final lines = item.bullets.where((b) => b.trim().isNotEmpty).toList();
+      if (lines.isEmpty) {
+        return pw.SizedBox();
+      }
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: lines
+            .map(
+              (line) => pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 2),
+                child: pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('• '),
+                    pw.Expanded(child: pw.Text(line.trim())),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      );
+  }
+}
+
 class ResumeRepository {
   ResumeRepository._(this._resumeBox, this._coverLetterBox);
 
@@ -1223,7 +1252,13 @@ class LocalAiResumeService {
         (item) => [item.title, item.subtitle, item.overview, item.impact],
       ),
       ...resume.visibleCustomSections.expand(
-        (section) => [section.title, section.content],
+        (section) => [
+          section.title,
+          if (section.layoutMode == CustomSectionLayoutMode.summary)
+            section.content
+          else
+            ...section.bullets,
+        ],
       ),
     ].where((item) => item.trim().isNotEmpty).join(' ').toLowerCase();
 
@@ -2019,6 +2054,9 @@ class ResumePdfService {
   }
 
   List<String> _skillsForDisplay(ResumeData resume) {
+    if (!resume.includeSkillsInResume) {
+      return const [];
+    }
     if (resume.skills.isNotEmpty) {
       return resume.skills;
     }

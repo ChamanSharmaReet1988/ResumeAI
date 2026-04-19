@@ -404,6 +404,22 @@ class ResumeEditorViewModel extends ChangeNotifier {
     updateResume((resume) => resume.copyWith(customSections: items));
   }
 
+  void setIncludeWorkInResume(bool value) {
+    updateResume((resume) => resume.copyWith(includeWorkInResume: value));
+  }
+
+  void setIncludeEducationInResume(bool value) {
+    updateResume((resume) => resume.copyWith(includeEducationInResume: value));
+  }
+
+  void setIncludeSkillsInResume(bool value) {
+    updateResume((resume) => resume.copyWith(includeSkillsInResume: value));
+  }
+
+  void setIncludeProjectsInResume(bool value) {
+    updateResume((resume) => resume.copyWith(includeProjectsInResume: value));
+  }
+
   void moveCustomSectionUp(int index) {
     if (index <= 0 || index >= _resume.customSections.length) {
       return;

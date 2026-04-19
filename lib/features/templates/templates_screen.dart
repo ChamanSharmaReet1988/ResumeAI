@@ -307,13 +307,19 @@ class _TemplateTile extends StatelessWidget {
                             _TemplatePreviewArt(item: item),
                             if (item.isPremium)
                               Positioned(
-                                right: 20,
-                                bottom: 6,
-                                child: Image.asset(
-                                  'assets/premium_badge.png',
-                                  width: 18,
-                                  height: 18,
-                                  fit: BoxFit.contain,
+                                left: 0,
+                                top: 0,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 20,
+                                    top: 10,
+                                  ),
+                                  child: Image.asset(
+                                    'assets/premium_badge.png',
+                                    width: 18,
+                                    height: 18,
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
                               ),
                           ],
@@ -332,8 +338,8 @@ class _TemplateTile extends StatelessWidget {
               ),
               if (selected)
                 Positioned(
-                  top: 14,
-                  right: 14,
+                  top: 7,
+                  right: 19,
                   child: Icon(
                     Icons.check_circle_rounded,
                     color: selectedColor,

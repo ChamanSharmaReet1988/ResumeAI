@@ -84,11 +84,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               lineColor: lineColor,
               child: pw.Text(resume.summary.trim()),
             ),
-          _corporateSection(
-            title: 'Skills',
-            lineColor: lineColor,
-            child: _twoColumnBulletList(_skillsForDisplay(resume)),
-          ),
+          if (resume.includeSkillsInResume)
+            _corporateSection(
+              title: 'Skills',
+              lineColor: lineColor,
+              child: _twoColumnBulletList(_skillsForDisplay(resume)),
+            ),
           if (resume.visibleWorkExperiences.isNotEmpty)
             _corporateSection(
               title: 'Experience',
@@ -127,7 +128,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             _corporateSection(
               title: item.title.ifEmpty('Custom Section'),
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
           pw.SizedBox(height: 10),
         ],
@@ -218,11 +219,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               lineColor: lineColor,
               child: pw.Text(resume.summary.trim()),
             ),
-          _corporateSection(
-            title: 'Skills',
-            lineColor: lineColor,
-            child: _twoColumnBulletList(_skillsForDisplay(resume)),
-          ),
+          if (resume.includeSkillsInResume)
+            _corporateSection(
+              title: 'Skills',
+              lineColor: lineColor,
+              child: _twoColumnBulletList(_skillsForDisplay(resume)),
+            ),
           if (resume.visibleWorkExperiences.isNotEmpty)
             _corporateSection(
               title: 'Experience',
@@ -261,7 +263,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             _corporateSection(
               title: item.title.ifEmpty('Custom Section'),
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
           pw.SizedBox(height: 10),
         ],
@@ -334,11 +336,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               lineColor: lineColor,
               child: pw.Text(resume.summary.trim()),
             ),
-          _minimalSection(
-            title: 'Skills',
-            lineColor: lineColor,
-            child: _twoColumnBulletList(_skillsForDisplay(resume)),
-          ),
+          if (resume.includeSkillsInResume)
+            _minimalSection(
+              title: 'Skills',
+              lineColor: lineColor,
+              child: _twoColumnBulletList(_skillsForDisplay(resume)),
+            ),
           if (resume.visibleWorkExperiences.isNotEmpty)
             _minimalSection(
               title: 'Experience',
@@ -377,7 +380,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             _minimalSection(
               title: item.title.ifEmpty('Custom Section'),
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
         ],
       ),
@@ -469,11 +472,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                     lineColor: lineColor,
                     child: pw.Text(resume.summary.trim()),
                   ),
-                _creativeSection(
-                  title: 'Skills',
-                  lineColor: lineColor,
-                  child: _twoColumnBulletList(_skillsForDisplay(resume)),
-                ),
+                if (resume.includeSkillsInResume)
+                  _creativeSection(
+                    title: 'Skills',
+                    lineColor: lineColor,
+                    child: _twoColumnBulletList(_skillsForDisplay(resume)),
+                  ),
                 if (resume.visibleWorkExperiences.isNotEmpty)
                   _creativeSection(
                     title: 'Experience',
@@ -512,7 +516,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                   _creativeSection(
                     title: item.title.ifEmpty('Custom Section'),
                     lineColor: lineColor,
-                    child: pw.Text(item.content.trim()),
+                    child: _pwCustomSectionBody(item),
                   ),
               ],
             ),
@@ -580,12 +584,13 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                 textAlign: pw.TextAlign.center,
               ),
             ),
-          _centeredAccentSection(
-            title: 'Skills',
-            accentColor: copper,
-            lineColor: lineColor,
-            child: _twoColumnBulletList(_skillsForDisplay(resume)),
-          ),
+          if (resume.includeSkillsInResume)
+            _centeredAccentSection(
+              title: 'Skills',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: _twoColumnBulletList(_skillsForDisplay(resume)),
+            ),
           if (resume.visibleWorkExperiences.isNotEmpty)
             _centeredAccentSection(
               title: 'Experience',
@@ -649,7 +654,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               title: item.title.ifEmpty('Custom Section'),
               accentColor: copper,
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
         ],
       ),
@@ -723,12 +728,13 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               lineColor: lineColor,
               child: pw.Text(resume.summary.trim()),
             ),
-          _splitBannerSection(
-            title: 'Skills',
-            accentColor: copper,
-            lineColor: lineColor,
-            child: _twoColumnBulletList(_skillsForDisplay(resume)),
-          ),
+          if (resume.includeSkillsInResume)
+            _splitBannerSection(
+              title: 'Skills',
+              accentColor: copper,
+              lineColor: lineColor,
+              child: _twoColumnBulletList(_skillsForDisplay(resume)),
+            ),
           if (resume.visibleWorkExperiences.isNotEmpty)
             _splitBannerSection(
               title: 'Experience',
@@ -771,7 +777,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               title: item.title.ifEmpty('Custom'),
               accentColor: copper,
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
           pw.SizedBox(height: 8),
           pw.Container(height: 3, color: copper),
@@ -863,10 +869,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                         title: 'Summary',
                         child: pw.Text(resume.summary.trim()),
                       ),
-                    _monogramSidebarSection(
-                      title: 'Skills',
-                      child: _twoColumnBulletList(_skillsForDisplay(resume)),
-                    ),
+                    if (resume.includeSkillsInResume)
+                      _monogramSidebarSection(
+                        title: 'Skills',
+                        child: _twoColumnBulletList(_skillsForDisplay(resume)),
+                      ),
                     if (resume.visibleWorkExperiences.isNotEmpty)
                       _monogramSidebarSection(
                         title: 'Experience',
@@ -901,7 +908,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                     for (final item in resume.visibleCustomSections)
                       _monogramSidebarSection(
                         title: item.title.ifEmpty('Custom Section'),
-                        child: pw.Text(item.content.trim()),
+                        child: _pwCustomSectionBody(item),
                       ),
                   ],
                 ),

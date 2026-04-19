@@ -120,6 +120,10 @@ class ResumeData {
     required this.linkedinLink,
     required this.profileImagePath,
     required this.resumeTextFont,
+    required this.includeWorkInResume,
+    required this.includeEducationInResume,
+    required this.includeSkillsInResume,
+    required this.includeProjectsInResume,
   });
 
   factory ResumeData.empty({required ResumeTemplate template}) {
@@ -144,6 +148,10 @@ class ResumeData {
       linkedinLink: '',
       profileImagePath: '',
       resumeTextFont: ResumeTextFont.inter,
+      includeWorkInResume: true,
+      includeEducationInResume: true,
+      includeSkillsInResume: true,
+      includeProjectsInResume: true,
     );
   }
 
@@ -200,6 +208,10 @@ class ResumeData {
       resumeTextFont: resumeTextFontFromStorage(
         json['resumeTextFont'] as String?,
       ),
+      includeWorkInResume: json['includeWorkInResume'] as bool? ?? true,
+      includeEducationInResume: json['includeEducationInResume'] as bool? ?? true,
+      includeSkillsInResume: json['includeSkillsInResume'] as bool? ?? true,
+      includeProjectsInResume: json['includeProjectsInResume'] as bool? ?? true,
     );
   }
 
@@ -223,15 +235,29 @@ class ResumeData {
   final String linkedinLink;
   final String profileImagePath;
   final ResumeTextFont resumeTextFont;
+  final bool includeWorkInResume;
+  final bool includeEducationInResume;
+  final bool includeSkillsInResume;
+  final bool includeProjectsInResume;
 
   List<WorkExperience> get visibleWorkExperiences =>
-      workExperiences.where((item) => !item.isBlank).toList();
+      includeWorkInResume
+          ? workExperiences.where((item) => !item.isBlank).toList()
+          : const <WorkExperience>[];
 
   List<EducationItem> get visibleEducation =>
-      education.where((item) => !item.isBlank).toList();
+      includeEducationInResume
+          ? education.where((item) => !item.isBlank).toList()
+          : const <EducationItem>[];
 
   List<ProjectItem> get visibleProjects =>
-      projects.where((item) => !item.isBlank).toList();
+      includeProjectsInResume
+          ? projects.where((item) => !item.isBlank).toList()
+          : const <ProjectItem>[];
+
+  /// Skills shown on preview/PDF when the section is included.
+  List<String> get skillsForResume =>
+      includeSkillsInResume ? skills : const <String>[];
 
   List<CustomSectionItem> get visibleCustomSections =>
       customSections.where((item) => !item.isBlank).toList();
@@ -287,6 +313,10 @@ class ResumeData {
     String? linkedinLink,
     String? profileImagePath,
     ResumeTextFont? resumeTextFont,
+    bool? includeWorkInResume,
+    bool? includeEducationInResume,
+    bool? includeSkillsInResume,
+    bool? includeProjectsInResume,
   }) {
     return ResumeData(
       id: id ?? this.id,
@@ -309,6 +339,12 @@ class ResumeData {
       linkedinLink: linkedinLink ?? this.linkedinLink,
       profileImagePath: profileImagePath ?? this.profileImagePath,
       resumeTextFont: resumeTextFont ?? this.resumeTextFont,
+      includeWorkInResume: includeWorkInResume ?? this.includeWorkInResume,
+      includeEducationInResume:
+          includeEducationInResume ?? this.includeEducationInResume,
+      includeSkillsInResume: includeSkillsInResume ?? this.includeSkillsInResume,
+      includeProjectsInResume:
+          includeProjectsInResume ?? this.includeProjectsInResume,
     );
   }
 
@@ -334,6 +370,10 @@ class ResumeData {
       'linkedinLink': linkedinLink,
       'profileImagePath': profileImagePath,
       'resumeTextFont': resumeTextFont.name,
+      'includeWorkInResume': includeWorkInResume,
+      'includeEducationInResume': includeEducationInResume,
+      'includeSkillsInResume': includeSkillsInResume,
+      'includeProjectsInResume': includeProjectsInResume,
     };
   }
 }
@@ -650,32 +690,78 @@ class ProjectItem {
   }
 }
 
-class CustomSectionItem {
-  const CustomSectionItem({required this.title, required this.content});
+enum CustomSectionLayoutMode {
+  summary,
+  bullets,
+}
 
-  const CustomSectionItem.empty() : title = '', content = '';
+class CustomSectionItem {
+  const CustomSectionItem({
+    required this.title,
+    required this.content,
+    this.layoutMode = CustomSectionLayoutMode.summary,
+    this.bullets = const [],
+  });
+
+  const CustomSectionItem.empty()
+    : title = '',
+      content = '',
+      layoutMode = CustomSectionLayoutMode.summary,
+      bullets = const [];
 
   factory CustomSectionItem.fromJson(Map<String, dynamic> json) {
+    final bulletsJson = json['bullets'] as List<dynamic>?;
+    final parsedBullets =
+        bulletsJson?.map((e) => e.toString()).toList() ?? const <String>[];
+    final modeStr = json['layoutMode'] as String?;
+    final layoutMode = modeStr == 'bullets'
+        ? CustomSectionLayoutMode.bullets
+        : CustomSectionLayoutMode.summary;
+
     return CustomSectionItem(
       title: json['title'] as String? ?? '',
       content: json['content'] as String? ?? '',
+      layoutMode: layoutMode,
+      bullets: parsedBullets,
     );
   }
 
   final String title;
   final String content;
+  final CustomSectionLayoutMode layoutMode;
+  final List<String> bullets;
 
-  bool get isBlank => title.trim().isEmpty && content.trim().isEmpty;
+  bool get isBlank {
+    if (title.trim().isNotEmpty) {
+      return false;
+    }
+    if (layoutMode == CustomSectionLayoutMode.summary) {
+      return content.trim().isEmpty;
+    }
+    return bullets.isEmpty || bullets.every((b) => b.trim().isEmpty);
+  }
 
-  CustomSectionItem copyWith({String? title, String? content}) {
+  CustomSectionItem copyWith({
+    String? title,
+    String? content,
+    CustomSectionLayoutMode? layoutMode,
+    List<String>? bullets,
+  }) {
     return CustomSectionItem(
       title: title ?? this.title,
       content: content ?? this.content,
+      layoutMode: layoutMode ?? this.layoutMode,
+      bullets: bullets ?? this.bullets,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'title': title, 'content': content};
+    return {
+      'title': title,
+      'content': content,
+      'layoutMode': layoutMode.name,
+      'bullets': bullets,
+    };
   }
 }
 

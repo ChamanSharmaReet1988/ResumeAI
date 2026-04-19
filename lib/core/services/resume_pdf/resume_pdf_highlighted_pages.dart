@@ -81,34 +81,35 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 child: pw.Text(resume.summary.trim()),
               ),
             ),
-          _corporateSection(
-            title: 'Skills',
-            lineColor: lineColor,
-            child: pw.Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: _skillsForDisplay(resume)
-                  .map(
-                    (skill) => pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
+          if (resume.includeSkillsInResume)
+            _corporateSection(
+              title: 'Skills',
+              lineColor: lineColor,
+              child: pw.Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: _skillsForDisplay(resume)
+                    .map(
+                      (skill) => pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 5,
+                        ),
+                        decoration: pw.BoxDecoration(
+                          color: highlightedSkills.contains(skill)
+                              ? highlightColor
+                              : PdfColor.fromHex('#F4F6F8'),
+                          borderRadius: pw.BorderRadius.circular(12),
+                        ),
+                        child: pw.Text(
+                          skill,
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
                       ),
-                      decoration: pw.BoxDecoration(
-                        color: highlightedSkills.contains(skill)
-                            ? highlightColor
-                            : PdfColor.fromHex('#F4F6F8'),
-                        borderRadius: pw.BorderRadius.circular(12),
-                      ),
-                      child: pw.Text(
-                        skill,
-                        style: const pw.TextStyle(fontSize: 9),
-                      ),
-                    ),
-                  )
-                  .toList(),
+                    )
+                    .toList(),
+              ),
             ),
-          ),
           if (resume.visibleWorkExperiences.isNotEmpty)
             _corporateSection(
               title: 'Experience',
@@ -155,7 +156,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _corporateSection(
               title: item.title.ifEmpty('Custom Section'),
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
         ],
       ),
@@ -242,34 +243,35 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 child: pw.Text(resume.summary.trim()),
               ),
             ),
-          _corporateSection(
-            title: 'Skills',
-            lineColor: lineColor,
-            child: pw.Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: _skillsForDisplay(resume)
-                  .map(
-                    (skill) => pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
+          if (resume.includeSkillsInResume)
+            _corporateSection(
+              title: 'Skills',
+              lineColor: lineColor,
+              child: pw.Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: _skillsForDisplay(resume)
+                    .map(
+                      (skill) => pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 5,
+                        ),
+                        decoration: pw.BoxDecoration(
+                          color: highlightedSkills.contains(skill)
+                              ? highlightColor
+                              : PdfColor.fromHex('#F4F6F8'),
+                          borderRadius: pw.BorderRadius.circular(12),
+                        ),
+                        child: pw.Text(
+                          skill,
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
                       ),
-                      decoration: pw.BoxDecoration(
-                        color: highlightedSkills.contains(skill)
-                            ? highlightColor
-                            : PdfColor.fromHex('#F4F6F8'),
-                        borderRadius: pw.BorderRadius.circular(12),
-                      ),
-                      child: pw.Text(
-                        skill,
-                        style: const pw.TextStyle(fontSize: 9),
-                      ),
-                    ),
-                  )
-                  .toList(),
+                    )
+                    .toList(),
+              ),
             ),
-          ),
           if (resume.visibleWorkExperiences.isNotEmpty)
             _corporateSection(
               title: 'Experience',
@@ -316,7 +318,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _corporateSection(
               title: item.title.ifEmpty('Custom Section'),
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
         ],
       ),
@@ -448,7 +450,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _minimalSection(
               title: item.title.ifEmpty('Custom Section'),
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
         ],
       ),
@@ -600,7 +602,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   _creativeSection(
                     title: item.title.ifEmpty('Custom Section'),
                     lineColor: lineColor,
-                    child: pw.Text(item.content.trim()),
+                    child: _pwCustomSectionBody(item),
                   ),
               ],
             ),
@@ -750,7 +752,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               title: item.title.ifEmpty('Custom Section'),
               accentColor: copper,
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
         ],
       ),
@@ -892,7 +894,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               title: item.title.ifEmpty('Custom'),
               accentColor: copper,
               lineColor: lineColor,
-              child: pw.Text(item.content.trim()),
+              child: _pwCustomSectionBody(item),
             ),
           pw.SizedBox(height: 8),
           pw.Container(height: 3, color: copper),
@@ -1047,7 +1049,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                         for (final item in resume.visibleCustomSections)
                           _monogramSidebarSection(
                             title: item.title.ifEmpty('Custom Section'),
-                            child: pw.Text(item.content.trim()),
+                            child: _pwCustomSectionBody(item),
                           ),
                       ],
                     ),

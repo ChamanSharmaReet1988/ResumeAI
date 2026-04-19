@@ -292,14 +292,14 @@ void main() {
     expect(find.byType(YearPicker), findsOneWidget);
   });
 
-  testWidgets('+ Add chip opens new category dialog', (tester) async {
+  testWidgets('Add chip opens new section dialog', (tester) async {
     viewModel.setStep(4);
     await pumpBuilder(tester);
 
-    await tester.tap(find.text('+ Add'));
+    await tester.tap(find.text('Add'));
     await tester.pumpAndSettle();
 
-    expect(find.text('New category'), findsOneWidget);
+    expect(find.text('New section'), findsOneWidget);
     expect(find.text('OK'), findsOneWidget);
   });
 
@@ -413,9 +413,7 @@ void main() {
     expect(viewModel.resume.template, ResumeTemplate.minimal);
   });
 
-  testWidgets('preview back returns to the home screen instead of builder', (
-    tester,
-  ) async {
+  testWidgets('preview back returns to the resume builder', (tester) async {
     viewModel.setStep(5);
     addTearDown(viewModel.dispose);
 
@@ -459,8 +457,9 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    expect(find.text('Home screen'), findsOneWidget);
-    expect(find.text('ATS score'), findsNothing);
+    expect(find.text('Home screen'), findsNothing);
+    expect(find.byKey(const Key('resume-pdf-preview')), findsNothing);
+    expect(find.text('Preview'), findsOneWidget);
   });
 
   testWidgets('continue scrolls the next category to the top', (tester) async {

@@ -127,7 +127,7 @@ class _AppShellState extends State<AppShell> {
       MaterialPageRoute<int>(
         builder: (_) => ChangeNotifierProvider<ResumeEditorViewModel>.value(
           value: viewModel,
-          child: const ResumePreviewScreen(),
+          child: const ResumePreviewScreen(backPopsToHome: true),
         ),
       ),
     );

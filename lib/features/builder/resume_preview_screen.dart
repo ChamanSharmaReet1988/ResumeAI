@@ -13,7 +13,16 @@ import '../templates/templates_screen.dart';
 import '../shared/view_models.dart';
 
 class ResumePreviewScreen extends StatefulWidget {
-  const ResumePreviewScreen({super.key});
+  const ResumePreviewScreen({
+    super.key,
+    this.backPopsToHome = false,
+  });
+
+  /// When `true` (e.g. opened from home via preview action), the system/back
+  /// control pops with `null` so only the home screen remains. When `false`
+  /// (opened from the resume builder), back pops with the current step so the
+  /// builder is shown again.
+  final bool backPopsToHome;
 
   @override
   State<ResumePreviewScreen> createState() => _ResumePreviewScreenState();
@@ -100,16 +109,21 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
     );
   }
 
-  void _returnToHome() {
+  void _onBackPressed() {
     final navigator = Navigator.of(context);
     if (!navigator.canPop()) {
       return;
     }
-
-    navigator.popUntil((route) => route.isFirst);
+    if (widget.backPopsToHome) {
+      navigator.pop<int?>(null);
+      return;
+    }
+    final step = context.read<ResumeEditorViewModel>().currentStep;
+    navigator.pop(step);
   }
 
-  /// Closes the PDF screen and returns to the resume editor (same step when possible).
+  /// Toolbar Edit: always returns a step so the shell can open the builder,
+  /// or the resume builder restores the step underneath preview.
   void _openEditResume() {
     final navigator = Navigator.of(context);
     if (!navigator.canPop()) {
@@ -347,7 +361,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             if (didPop) {
               return;
             }
-            _returnToHome();
+            _onBackPressed();
           },
           child: Scaffold(
             backgroundColor: scaffoldBg,
@@ -358,7 +372,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
               leadingWidth: 56,
               automaticallyImplyLeading: Navigator.of(context).canPop(),
               leading: Navigator.of(context).canPop()
-                  ? BackButton(onPressed: _returnToHome)
+                  ? BackButton(onPressed: _onBackPressed)
                   : null,
               titleSpacing: 2,
               title: Text(currentTitle, style: titleStyle),
