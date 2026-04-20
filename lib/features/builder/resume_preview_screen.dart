@@ -533,7 +533,7 @@ class _PreviewBottomAction extends StatelessWidget {
   }
 }
 
-/// Maps stored template (e.g. legacy `modern`) to the canonical entry in [availableResumeTemplates].
+/// Maps stored template to the canonical entry in [availableResumeTemplates].
 ResumeTemplate _resumeTemplateGroupValue(ResumeTemplate current) {
   for (final t in availableResumeTemplates) {
     if (t.userFacingTemplate == current.userFacingTemplate) {

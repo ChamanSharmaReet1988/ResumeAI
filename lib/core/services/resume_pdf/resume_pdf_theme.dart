@@ -30,8 +30,14 @@ pw.ThemeData _fallbackHelveticaTheme() {
     italic: pw.Font.helveticaOblique(),
     boldItalic: pw.Font.helveticaBoldOblique(),
   ).copyWith(
-    defaultTextStyle: pw.TextStyle(fontSize: ResumeTypography.bodyPt),
-    bulletStyle: pw.TextStyle(fontSize: ResumeTypography.bodyPt),
+    defaultTextStyle: pw.TextStyle(
+      fontSize: ResumeTypography.bodyPt,
+      lineSpacing: ResumeTypography.pdfLineSpacingPt,
+    ),
+    bulletStyle: pw.TextStyle(
+      fontSize: ResumeTypography.bodyPt,
+      lineSpacing: ResumeTypography.pdfLineSpacingPt,
+    ),
   );
 }
 
@@ -43,8 +49,14 @@ Future<pw.ThemeData> _buildEmbeddedFontTheme(ResumeTextFont font) async {
     italic: fonts.italic,
     boldItalic: fonts.boldItalic,
   ).copyWith(
-    defaultTextStyle: pw.TextStyle(fontSize: ResumeTypography.bodyPt),
-    bulletStyle: pw.TextStyle(fontSize: ResumeTypography.bodyPt),
+    defaultTextStyle: pw.TextStyle(
+      fontSize: ResumeTypography.bodyPt,
+      lineSpacing: ResumeTypography.pdfLineSpacingPt,
+    ),
+    bulletStyle: pw.TextStyle(
+      fontSize: ResumeTypography.bodyPt,
+      lineSpacing: ResumeTypography.pdfLineSpacingPt,
+    ),
   );
 }
 

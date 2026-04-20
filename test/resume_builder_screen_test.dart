@@ -46,7 +46,7 @@ void main() {
       repository: repository,
       aiService: LocalAiResumeService(),
       pdfService: ResumePdfService(),
-      seedResume: ResumeData.empty(template: ResumeTemplate.modern).copyWith(
+      seedResume: ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
         title: 'My Resume',
         fullName: 'Test User',
         jobTitle: 'Flutter Developer',
@@ -514,7 +514,7 @@ void main() {
         repository: repository,
         aiService: LocalAiResumeService(),
         pdfService: ResumePdfService(),
-        seedResume: ResumeData.empty(template: ResumeTemplate.modern),
+        seedResume: ResumeData.empty(template: ResumeTemplate.corporate),
       );
       viewModel.setStep(0);
 

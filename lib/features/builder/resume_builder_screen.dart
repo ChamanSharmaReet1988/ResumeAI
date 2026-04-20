@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/bottom_sheet_insets.dart';
@@ -797,7 +798,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               hintText: 'Certifications, Languages, Awards…',
             ),
             autofocus: true,
-            textCapitalization: TextCapitalization.words,
+            textCapitalization: TextCapitalization.sentences,
             onSubmitted: (_) {
               final t = controller.text.trim();
               if (t.isNotEmpty) {
@@ -917,8 +918,25 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       if (!mounted || picked == null) {
         return;
       }
-      context.read<ResumeEditorViewModel>().updateResume(
-        (resume) => resume.copyWith(profileImagePath: picked.path),
+      final viewModel = context.read<ResumeEditorViewModel>();
+      final currentPath = viewModel.resume.profileImagePath.trim();
+      final persistedPath = await _persistProfileImage(
+        picked,
+        resumeId: viewModel.resume.id,
+      );
+      if (!mounted) {
+        return;
+      }
+      if (_isManagedProfileImagePath(currentPath) &&
+          currentPath.isNotEmpty &&
+          currentPath != persistedPath) {
+        final previous = File(currentPath);
+        if (previous.existsSync()) {
+          previous.deleteSync();
+        }
+      }
+      viewModel.updateResume(
+        (resume) => resume.copyWith(profileImagePath: persistedPath),
       );
     } catch (_) {
       if (!mounted) {
@@ -931,10 +949,45 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   void _clearProfileImage() {
-    context.read<ResumeEditorViewModel>().updateResume(
-      (resume) => resume.copyWith(profileImagePath: ''),
-    );
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final currentPath = viewModel.resume.profileImagePath.trim();
+    if (_isManagedProfileImagePath(currentPath) && currentPath.isNotEmpty) {
+      final file = File(currentPath);
+      if (file.existsSync()) {
+        file.deleteSync();
+      }
+    }
+    viewModel.updateResume((resume) => resume.copyWith(profileImagePath: ''));
   }
+
+  Future<String> _persistProfileImage(
+    XFile picked, {
+    required String resumeId,
+  }) async {
+    final appSupport = await getApplicationSupportDirectory();
+    final profileDir = Directory('${appSupport.path}/profile_images');
+    if (!profileDir.existsSync()) {
+      profileDir.createSync(recursive: true);
+    }
+    final extension = _fileExtension(picked.path);
+    final fileName = '${resumeId}_${
+        DateTime.now().millisecondsSinceEpoch
+      }$extension';
+    final target = File('${profileDir.path}/$fileName');
+    await File(picked.path).copy(target.path);
+    return target.path;
+  }
+
+  String _fileExtension(String path) {
+    final dotIndex = path.lastIndexOf('.');
+    if (dotIndex < 0 || dotIndex == path.length - 1) {
+      return '.jpg';
+    }
+    return path.substring(dotIndex);
+  }
+
+  bool _isManagedProfileImagePath(String path) =>
+      path.contains('/profile_images/');
 
   Future<void> _showProfilePhotoOptions({required bool hasImage}) async {
     final action = await showModalBottomSheet<String>(
@@ -1276,6 +1329,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           label: 'Full name',
           value: viewModel.resume.fullName,
           focusNode: _personalFieldFocusNodes[0],
+          textCapitalization: TextCapitalization.sentences,
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _personalFieldFocusNodes[1].requestFocus(),
           onChanged: (value) => viewModel.updateResume(
@@ -1286,6 +1340,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           label: 'Target job title',
           value: viewModel.resume.jobTitle,
           focusNode: _personalFieldFocusNodes[1],
+          textCapitalization: TextCapitalization.sentences,
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _personalFieldFocusNodes[2].requestFocus(),
           onChanged: (value) => viewModel.updateResume(
@@ -1339,6 +1394,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           label: 'Location',
           value: viewModel.resume.location,
           focusNode: _personalFieldFocusNodes[6],
+          textCapitalization: TextCapitalization.sentences,
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _personalFieldFocusNodes[7].requestFocus(),
           onChanged: (value) => viewModel.updateResume(
@@ -1358,9 +1414,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         _SyncTextField(
           label: 'Professional summary',
           value: viewModel.resume.summary,
-          maxLines: 5,
+          minLines: 5,
+          maxLines: null,
           focusNode: _summaryFocusNode,
           keyboardType: TextInputType.multiline,
+          textCapitalization: TextCapitalization.sentences,
           textInputAction: TextInputAction.newline,
           onChanged: (value) => viewModel.updateResume(
             (resume) => resume.copyWith(summary: value),
@@ -1495,6 +1553,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Role',
                           value: item.role,
+                          textCapitalization: TextCapitalization.sentences,
                           focusNode: _focusNodeForExtendedKeyboardField(
                             'work-role-$index',
                           ),
@@ -1506,6 +1565,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Company',
                           value: item.company,
+                          textCapitalization: TextCapitalization.sentences,
                           focusNode: _focusNodeForExtendedKeyboardField(
                             'work-company-$index',
                           ),
@@ -1540,7 +1600,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           key: Key('work-description-$index'),
                           label: 'Short description',
                           value: item.description,
-                          maxLines: 4,
+                          minLines: 4,
+                          maxLines: null,
+                          textCapitalization: TextCapitalization.sentences,
                           fullWidth: true,
                           focusNode: _focusNodeForExtendedKeyboardField(
                             'work-description-$index',
@@ -1792,6 +1854,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Institution',
                           value: item.institution,
+                          textCapitalization: TextCapitalization.sentences,
                           onChanged: (value) => viewModel.updateEducation(
                             index,
                             (current) => current.copyWith(institution: value),
@@ -1800,6 +1863,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Degree',
                           value: item.degree,
+                          textCapitalization: TextCapitalization.sentences,
                           onChanged: (value) => viewModel.updateEducation(
                             index,
                             (current) => current.copyWith(degree: value),
@@ -1831,8 +1895,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           key: Key('education-details-$index'),
                           label: 'Details',
                           value: item.details,
+                          minLines: 3,
+                          maxLines: null,
+                          textCapitalization: TextCapitalization.sentences,
                           fullWidth: true,
-                          maxLines: 3,
                           focusNode: _focusNodeForExtendedKeyboardField(
                             'education-details-$index',
                           ),
@@ -2037,6 +2103,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Project title',
                           value: item.title,
+                          textCapitalization: TextCapitalization.sentences,
                           focusNode: _focusNodeForExtendedKeyboardField(
                             'project-title-$index',
                           ),
@@ -2048,7 +2115,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Overview',
                           value: item.overview,
-                          maxLines: 4,
+                          textCapitalization: TextCapitalization.sentences,
+                          minLines: 4,
+                          maxLines: null,
                           fullWidth: true,
                           focusNode: _focusNodeForExtendedKeyboardField(
                             'project-overview-$index',
@@ -2061,7 +2130,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         _SyncTextField(
                           label: 'Tools & Technologies',
                           value: item.impact,
-                          maxLines: 3,
+                          textCapitalization: TextCapitalization.sentences,
+                          minLines: 3,
+                          maxLines: null,
                           fullWidth: true,
                           focusNode: _focusNodeForExtendedKeyboardField(
                             'project-tools-$index',
@@ -2191,9 +2262,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         key: Key('custom-section-content-$index'),
                         label: 'Summary',
                         value: item.content,
+                        textCapitalization: TextCapitalization.sentences,
                         hintText:
                             'Write the section as a short paragraph for your resume.',
-                        maxLines: 5,
+                        minLines: 5,
+                        maxLines: null,
                         fullWidth: true,
                         focusNode: _focusNodeForExtendedKeyboardField(
                           'custom-section-content-$index',
@@ -2219,6 +2292,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               key: Key('custom-section-bullet-$index-$bi'),
                               label: 'Bullet ${bi + 1}',
                               value: text,
+                              textCapitalization: TextCapitalization.sentences,
                               hintText: 'Enter a bullet point',
                               fullWidth: true,
                               focusNode: _focusNodeForExtendedKeyboardField(
@@ -2724,24 +2798,28 @@ class _SyncTextField extends StatefulWidget {
     required this.value,
     required this.onChanged,
     this.maxLines = 1,
+    this.minLines,
     this.keyboardType,
     this.focusNode,
     this.hintText,
     this.textInputAction,
     this.onSubmitted,
     this.fullWidth = false,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   final String label;
   final String value;
   final ValueChanged<String> onChanged;
-  final int maxLines;
+  final int? maxLines;
+  final int? minLines;
   final TextInputType? keyboardType;
   final FocusNode? focusNode;
   final String? hintText;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
   final bool fullWidth;
+  final TextCapitalization textCapitalization;
 
   @override
   State<_SyncTextField> createState() => _SyncTextFieldState();
@@ -2794,8 +2872,10 @@ class _SyncTextFieldState extends State<_SyncTextField> {
     return TextField(
       controller: _controller,
       focusNode: _focusNode,
+      minLines: widget.minLines,
       maxLines: widget.maxLines,
       keyboardType: widget.keyboardType,
+      textCapitalization: widget.textCapitalization,
       textInputAction: widget.textInputAction,
       onSubmitted: widget.onSubmitted,
       scrollPadding: EdgeInsets.only(

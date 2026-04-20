@@ -1,9 +1,11 @@
 /// Default type scale for resume content (preview + PDF). Font family defaults to
 /// [ResumeTextFont.inter] on [ResumeData.resumeTextFont].
 abstract final class ResumeTypography {
-  static const double bodyPt = 11;
-  static const double headingPt = 13;
+  static const double bodyPt = 12;
+  static const double headingPt = 14;
   static const double namePt = 17;
+  static const double textLineHeight = 1.4;
+  static const double pdfLineSpacingPt = bodyPt * (textLineHeight - 1);
 
   /// In-app preview cards use a slightly smaller name when [compact] to reduce overflow.
   static double nameSizePreview(bool compact) => compact ? 14 : namePt;
@@ -31,7 +33,7 @@ extension ResumeTextFontX on ResumeTextFont {
   String get flutterFontFamily => switch (this) {
     ResumeTextFont.inter => 'Inter',
     ResumeTextFont.aptos => 'Source Sans 3',
-    ResumeTextFont.calibri => 'Carlito',
+    ResumeTextFont.calibri => 'Calibri',
     ResumeTextFont.arial => 'Arimo',
     ResumeTextFont.helvetica => 'Work Sans',
   };

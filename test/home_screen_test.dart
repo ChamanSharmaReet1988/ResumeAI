@@ -43,7 +43,7 @@ void main() {
   testWidgets('resume card opens actions and preview uses the open option', (
     tester,
   ) async {
-    final resume = ResumeData.empty(template: ResumeTemplate.modern).copyWith(
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
       id: 'resume-1',
       title: 'Product Designer Resume',
       fullName: 'Avery Lee',
@@ -107,7 +107,7 @@ void main() {
   testWidgets('resume card rename option updates the saved title', (
     tester,
   ) async {
-    final resume = ResumeData.empty(template: ResumeTemplate.modern).copyWith(
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
       id: 'resume-1',
       title: 'Product Designer Resume',
       fullName: 'Avery Lee',
@@ -170,7 +170,7 @@ void main() {
   testWidgets('resume card duplicate option asks for title and creates a copy', (
     tester,
   ) async {
-    final resume = ResumeData.empty(template: ResumeTemplate.modern).copyWith(
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
       id: 'resume-1',
       title: 'Product Designer Resume',
       fullName: 'Avery Lee',
@@ -319,7 +319,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    final resume = ResumeData.empty(template: ResumeTemplate.modern).copyWith(
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
       id: 'resume-1',
       title: 'Product Designer Resume',
       fullName: 'Avery Lee',

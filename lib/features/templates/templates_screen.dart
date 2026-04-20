@@ -494,9 +494,12 @@ class _TemplatePreviewArt extends StatelessWidget {
       child: SizedBox(
         width: 168,
         height: 252,
-        child: ColoredBox(
-          color: Colors.white,
-          child: Align(alignment: Alignment.topCenter, child: preview),
+        child: DefaultTextStyle.merge(
+          style: const TextStyle(fontFamily: 'Calibri'),
+          child: ColoredBox(
+            color: Colors.white,
+            child: Align(alignment: Alignment.topCenter, child: preview),
+          ),
         ),
       ),
     );

@@ -1560,15 +1560,15 @@ class LocalAiResumeService {
 
 class ResumePdfService {
   Future<Uint8List> buildPdf(ResumeData resume) async {
+    final bodyFont = resume.template == ResumeTemplate.corporate
+        ? ResumeTextFont.inter
+        : resume.resumeTextFont;
     final document = pw.Document(
-      theme: await resumePdfThemeForBodyFont(resume.resumeTextFont),
+      theme: await resumePdfThemeForBodyFont(bodyFont),
     );
     final profileImage = await _loadProfileImage(resume.profileImagePath);
 
     switch (resume.template) {
-      case ResumeTemplate.modern:
-        _addModernTemplatePage(document, resume, profileImage: profileImage);
-        break;
       case ResumeTemplate.corporate:
         _addCorporateTemplatePage(document, resume, profileImage: profileImage);
         break;
@@ -1610,19 +1610,13 @@ class ResumePdfService {
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) async {
+    final bodyFont = resume.template == ResumeTemplate.corporate
+        ? ResumeTextFont.inter
+        : resume.resumeTextFont;
     final document = pw.Document(
-      theme: await resumePdfThemeForBodyFont(resume.resumeTextFont),
+      theme: await resumePdfThemeForBodyFont(bodyFont),
     );
     switch (resume.template) {
-      case ResumeTemplate.modern:
-        _addHighlightedModernTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
-        break;
       case ResumeTemplate.corporate:
         _addHighlightedCorporateTemplatePage(
           document,
@@ -2073,14 +2067,7 @@ class ResumePdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
-            title.toUpperCase(),
-            style: pw.TextStyle(
-              fontSize: ResumeTypography.headingPt,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColor.fromHex('#50555C'),
-            ),
-          ),
+          _corporateHeadingText(title.toUpperCase()),
           pw.SizedBox(height: 6),
           child,
           pw.SizedBox(height: 10),
@@ -2118,6 +2105,20 @@ class ResumePdfService {
           child,
         ],
       ),
+    );
+  }
+
+  pw.Widget _corporateHeadingText(String value) {
+    final style = pw.TextStyle(
+      fontSize: ResumeTypography.headingPt,
+      fontWeight: pw.FontWeight.bold,
+      color: PdfColor.fromHex('#50555C'),
+    );
+    return pw.Stack(
+      children: [
+        pw.Text(value, style: style),
+        pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
+      ],
     );
   }
 
@@ -2257,7 +2258,11 @@ class ResumePdfService {
     );
   }
 
-  pw.Widget _twoColumnBulletList(List<String> items) {
+  pw.Widget _twoColumnBulletList(
+    List<String> items, {
+    double columnGap = 20,
+    double itemBottom = 3,
+  }) {
     final midpoint = (items.length / 2).ceil();
     final left = items.take(midpoint).toList();
     final right = items.skip(midpoint).toList();
@@ -2268,7 +2273,7 @@ class ResumePdfService {
         children: [
           for (final item in columnItems)
             pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 3),
+              padding: pw.EdgeInsets.only(bottom: itemBottom),
               child: pw.Bullet(
                 text: item,
                 style: pw.TextStyle(
@@ -2285,7 +2290,7 @@ class ResumePdfService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Expanded(child: buildColumn(left)),
-        pw.SizedBox(width: 20),
+        pw.SizedBox(width: columnGap),
         pw.Expanded(child: buildColumn(right)),
       ],
     );

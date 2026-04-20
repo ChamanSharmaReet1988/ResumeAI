@@ -7,7 +7,7 @@ void main() {
   test('suggestSkills uses work experience context before job title', () async {
     final service = LocalAiResumeService();
 
-    final mobileResume = ResumeData.empty(template: ResumeTemplate.modern).copyWith(
+    final mobileResume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
       jobTitle: 'Engineer',
       workExperiences: const [
         WorkExperience(
@@ -24,7 +24,7 @@ void main() {
       ],
     );
 
-    final analyticsResume = ResumeData.empty(template: ResumeTemplate.modern).copyWith(
+    final analyticsResume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
       jobTitle: 'Engineer',
       workExperiences: const [
         WorkExperience(
@@ -61,7 +61,7 @@ void main() {
   test('suggestSkills uses the resume title as part of the context', () async {
     final service = LocalAiResumeService();
     final resume = ResumeData.empty(
-      template: ResumeTemplate.modern,
+      template: ResumeTemplate.corporate,
     ).copyWith(title: 'Product Designer Resume');
 
     final suggestions = await service.suggestSkills(resume: resume);
@@ -73,7 +73,7 @@ void main() {
     'suggestSkills falls back to target job title when work history is empty',
     () async {
       final service = LocalAiResumeService();
-      final resume = ResumeData.empty(template: ResumeTemplate.modern);
+      final resume = ResumeData.empty(template: ResumeTemplate.corporate);
 
       final suggestions = await service.suggestSkills(
         resume: resume,

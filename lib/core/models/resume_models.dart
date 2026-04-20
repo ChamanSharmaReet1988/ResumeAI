@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../resume_text_font.dart';
 
 enum ResumeTemplate {
-  modern,
   minimal,
   corporate,
   creative,
@@ -24,10 +23,7 @@ const availableResumeTemplates = <ResumeTemplate>[
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
-  ResumeTemplate get userFacingTemplate => switch (this) {
-    ResumeTemplate.modern => ResumeTemplate.corporate,
-    _ => this,
-  };
+  ResumeTemplate get userFacingTemplate => this;
 
   String get label => switch (userFacingTemplate) {
     ResumeTemplate.minimal => 'Centered Classic',
@@ -36,7 +32,6 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.copperSerif => 'Copper Serif',
     ResumeTemplate.splitBanner => 'Split Banner',
     ResumeTemplate.monogramSidebar => 'Monogram Sidebar',
-    ResumeTemplate.modern => 'Dark Header',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -52,8 +47,6 @@ extension ResumeTemplateX on ResumeTemplate {
       'Bold copper banner header with a structured editorial layout underneath.',
     ResumeTemplate.monogramSidebar =>
       'Monogram-led sidebar with contact details on the left and content on the right.',
-    ResumeTemplate.modern =>
-      'Dark top header with a strong structured layout and compact sections.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -63,7 +56,6 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.copperSerif => const Color(0xFFE7A055),
     ResumeTemplate.splitBanner => const Color(0xFFEE9938),
     ResumeTemplate.monogramSidebar => const Color(0xFFE39A3A),
-    ResumeTemplate.modern => const Color(0xFF0F766E),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -73,7 +65,6 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.copperSerif => const Color(0xFFFFF4E9),
     ResumeTemplate.splitBanner => const Color(0xFFFFF0E0),
     ResumeTemplate.monogramSidebar => const Color(0xFFFFF3E3),
-    ResumeTemplate.modern => const Color(0xFFE4FBF6),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -84,7 +75,6 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.copperSerif => 'Serif accents · warm',
     ResumeTemplate.splitBanner => 'Sans · banner header',
     ResumeTemplate.monogramSidebar => 'Sans · monogram sidebar',
-    ResumeTemplate.modern => 'Sans · dark header',
   };
 }
 

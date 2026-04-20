@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
@@ -12,6 +13,7 @@ class ResumePreviewCard extends StatelessWidget {
 
   final ResumeData resume;
   final bool isCompact;
+  static const double _a4AspectRatio = 1 / 1.4142;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +21,9 @@ class ResumePreviewCard extends StatelessWidget {
     final shadow = theme.colorScheme.shadow.withValues(alpha: 0.08);
     final previewTemplate = resume.template.userFacingTemplate;
     final base = theme.textTheme;
-    final ff = resume.resumeTextFont.flutterFontFamily;
+    final ff = previewTemplate == ResumeTemplate.corporate
+        ? ResumeTextFont.inter.flutterFontFamily
+        : 'Calibri';
     final onSurface = theme.colorScheme.onSurface;
     final resumeBodyTheme = theme.copyWith(
       textTheme: base
@@ -28,86 +32,132 @@ class ResumePreviewCard extends StatelessWidget {
             bodyLarge: base.bodyLarge?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.bodyPt,
+              height: ResumeTypography.textLineHeight,
             ),
             bodyMedium: base.bodyMedium?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.bodyPt,
+              height: ResumeTypography.textLineHeight,
             ),
             bodySmall: base.bodySmall?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.bodyPt,
+              height: ResumeTypography.textLineHeight,
             ),
             titleSmall: base.titleSmall?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.headingPt,
+              height: ResumeTypography.textLineHeight,
             ),
             titleMedium: base.titleMedium?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.headingPt,
+              height: ResumeTypography.textLineHeight,
             ),
             titleLarge: base.titleLarge?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.namePt,
+              height: ResumeTypography.textLineHeight,
             ),
             headlineSmall: base.headlineSmall?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.namePt,
+              height: ResumeTypography.textLineHeight,
             ),
             headlineMedium: base.headlineMedium?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.namePt,
+              height: ResumeTypography.textLineHeight,
             ),
             labelLarge: base.labelLarge?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.headingPt,
+              height: ResumeTypography.textLineHeight,
             ),
           ),
     );
 
     return Theme(
       data: resumeBodyTheme,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.all(isCompact ? 16 : 20),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: resume.template.accentColor.withValues(alpha: 0.12),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: shadow,
-              blurRadius: 24,
-              offset: const Offset(0, 12),
+      child: AspectRatio(
+        aspectRatio: _a4AspectRatio,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.all(isCompact ? 16 : 20),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: resume.template.accentColor.withValues(alpha: 0.12),
             ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: shadow,
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: switch (previewTemplate) {
+                  ResumeTemplate.corporate =>
+                    _DarkHeaderPreview(resume: resume, isCompact: isCompact),
+                  ResumeTemplate.minimal => _MinimalPreview(
+                    resume: resume,
+                    isCompact: isCompact,
+                  ),
+                  ResumeTemplate.creative => _CreativePreview(
+                    resume: resume,
+                    isCompact: isCompact,
+                  ),
+                  ResumeTemplate.copperSerif => _CopperSerifPreview(
+                    resume: resume,
+                    isCompact: isCompact,
+                  ),
+                  ResumeTemplate.splitBanner => _SplitBannerPreview(
+                    resume: resume,
+                    isCompact: isCompact,
+                  ),
+                  ResumeTemplate.monogramSidebar => _MonogramSidebarPreview(
+                    resume: resume,
+                    isCompact: isCompact,
+                  ),
+                },
+              ),
+              if (kDebugMode)
+                Positioned(
+                  right: 10,
+                  top: 10,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          'Font: $ff',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
-        child: switch (previewTemplate) {
-          ResumeTemplate.corporate || ResumeTemplate.modern =>
-            _CorporatePreview(resume: resume, isCompact: isCompact),
-          ResumeTemplate.minimal => _MinimalPreview(
-            resume: resume,
-            isCompact: isCompact,
-          ),
-          ResumeTemplate.creative => _CreativePreview(
-            resume: resume,
-            isCompact: isCompact,
-          ),
-          ResumeTemplate.copperSerif => _CopperSerifPreview(
-            resume: resume,
-            isCompact: isCompact,
-          ),
-          ResumeTemplate.splitBanner => _SplitBannerPreview(
-            resume: resume,
-            isCompact: isCompact,
-          ),
-          ResumeTemplate.monogramSidebar => _MonogramSidebarPreview(
-            resume: resume,
-            isCompact: isCompact,
-          ),
-        },
       ),
     );
   }
@@ -185,23 +235,16 @@ class _MinimalPreview extends StatelessWidget {
 abstract final class _CorporatePdfMetrics {
   static const headerColor = Color(0xFF3B4046);
   static const lineColor = Color(0xFFD7DCE2);
-  static const sectionTitleColor = Color(0xFF50555C);
   static const dateMutedColor = Color(0xFF666B71);
 
   static const bodyFontSize = ResumeTypography.bodyPt;
-  static const bodyHeight = 1.25;
-
-  static EdgeInsets headerPadding(bool compact) => compact
-      ? const EdgeInsets.fromLTRB(18, 22, 18, 20)
-      : const EdgeInsets.fromLTRB(30, 36, 30, 30);
+  static const bodyHeight = ResumeTypography.textLineHeight;
 
   static double headerAvatar(bool compact) => compact ? 42 : 48;
 
-  static double headerNameSize(bool compact) =>
-      ResumeTypography.nameSizePreview(compact);
+  static double headerNameSize(bool compact) => 26;
 
-  static const headerAfterAvatar = 14.0;
-  static const headerNameToContact = 6.0;
+  static const headerAfterAvatar = 18.0;
   static const afterHeader = 18.0;
 
   /// [_corporateSection] uses `fromLTRB(30, 0, 30, 16)`.
@@ -209,13 +252,9 @@ abstract final class _CorporatePdfMetrics {
       ? const EdgeInsets.fromLTRB(14, 0, 14, 16)
       : const EdgeInsets.fromLTRB(30, 0, 30, 16);
 
-  static const titleToContent = 6.0;
-  static const contentToRule = 10.0;
-  static const sectionTitleSize = ResumeTypography.headingPt;
-
   /// [_twoColumnBulletList] column gap.
-  static const skillsColumnGap = 20.0;
-  static const bulletItemBottom = 3.0;
+  static const skillsColumnGap = 24.0;
+  static const bulletItemBottom = 5.0;
 
   static const experienceBlockBottom = 10.0;
   static const descAfterTitle = 4.0;
@@ -224,50 +263,95 @@ abstract final class _CorporatePdfMetrics {
   static const projectBlockBottom = 8.0;
 }
 
-class _CorporatePreview extends StatelessWidget {
-  const _CorporatePreview({required this.resume, required this.isCompact});
+Widget _fauxStrokeText(
+  String text, {
+  required TextStyle style,
+  double strokeWidth = 0.9,
+  double xOffset = 0.25,
+}) {
+  final color = style.color ?? Colors.black;
+  return Stack(
+    children: [
+      Text(
+        text,
+        style: style.copyWith(
+          foreground: Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth
+            ..color = color,
+        ),
+      ),
+      Transform.translate(
+        offset: Offset(xOffset, 0),
+        child: Text(text, style: style),
+      ),
+    ],
+  );
+}
+
+class _DarkHeaderPreview extends StatelessWidget {
+  const _DarkHeaderPreview({required this.resume, required this.isCompact});
 
   final ResumeData resume;
   final bool isCompact;
+  static const double _darkHeaderExtraLineSpacingPx = 0.0;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final name = _pdfAlignedDisplayName(resume);
-    final contactLine = _pdfAlignedContactItems(resume).join('  /  ');
+    final contactItems = _pdfAlignedContactItems(resume);
     final skills = _pdfAlignedSkills(resume);
     final onSurface = theme.colorScheme.onSurface;
+    final bodyLineHeight =
+        _CorporatePdfMetrics.bodyHeight +
+        (_darkHeaderExtraLineSpacingPx / _CorporatePdfMetrics.bodyFontSize);
+    final nameLineHeight =
+        1.05 +
+        (_darkHeaderExtraLineSpacingPx /
+            _CorporatePdfMetrics.headerNameSize(isCompact));
     final bodyStyle = TextStyle(
       fontSize: _CorporatePdfMetrics.bodyFontSize,
-      height: _CorporatePdfMetrics.bodyHeight,
+      height: bodyLineHeight,
       color: onSurface,
     );
 
-    return Column(
+    final headerPadding = isCompact
+        ? const EdgeInsets.fromLTRB(18, 18, 18, 20)
+        : const EdgeInsets.fromLTRB(30, 30, 30, 30);
+    final avatarTopOffset = 0.0;
+    final nameLabelTopOffset = 0.0;
+    final nameToContactSpacing = 4.0;
+    const defaultTextLineHeight = ResumeTypography.textLineHeight;
+
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ColoredBox(
           color: _CorporatePdfMetrics.headerColor,
           child: Padding(
-            padding: _CorporatePdfMetrics.headerPadding(isCompact),
+            padding: headerPadding,
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(
-                  width: _CorporatePdfMetrics.headerAvatar(isCompact),
-                  height: _CorporatePdfMetrics.headerAvatar(isCompact),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white, width: 1.4),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _pdfAlignedInitials(resume),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: isCompact ? 14 : 16,
-                          fontWeight: FontWeight.bold,
-                          height: 1.0,
+                Padding(
+                  padding: EdgeInsets.only(top: avatarTopOffset),
+                  child: SizedBox(
+                    width: _CorporatePdfMetrics.headerAvatar(isCompact),
+                    height: _CorporatePdfMetrics.headerAvatar(isCompact),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white, width: 1.4),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _pdfAlignedInitials(resume),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isCompact ? 14 : 16,
+                            fontWeight: FontWeight.bold,
+                            height: ResumeTypography.textLineHeight,
+                          ),
                         ),
                       ),
                     ),
@@ -275,35 +359,46 @@ class _CorporatePreview extends StatelessWidget {
                 ),
                 SizedBox(width: _CorporatePdfMetrics.headerAfterAvatar),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name.toUpperCase(),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: _CorporatePdfMetrics.headerNameSize(
-                            isCompact,
-                          ),
-                          fontWeight: FontWeight.bold,
-                          height: 1.05,
-                          letterSpacing: 0.15,
-                        ),
-                      ),
-                      if (contactLine.isNotEmpty) ...[
-                        SizedBox(
-                          height: _CorporatePdfMetrics.headerNameToContact,
-                        ),
-                        Text(
-                          contactLine,
-                          style: const TextStyle(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: nameLabelTopOffset),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _fauxStrokeText(
+                          name.toUpperCase(),
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: ResumeTypography.bodyPt,
-                            height: 1.28,
+                            fontSize: _CorporatePdfMetrics.headerNameSize(
+                              isCompact,
+                            ),
+                            fontWeight: FontWeight.w900,
+                            height: nameLineHeight,
+                            letterSpacing: 0.15,
                           ),
+                          strokeWidth: 1.1,
+                          xOffset: 0.35,
                         ),
+                        if (contactItems.isNotEmpty) ...[
+                          SizedBox(height: nameToContactSpacing),
+                          ...contactItems.asMap().entries.expand((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
+                            return <Widget>[
+                              Text(
+                                item,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: ResumeTypography.bodyPt,
+                                ),
+                              ),
+                              if (index < contactItems.length - 1)
+                                const SizedBox(height: 8),
+                            ];
+                          }),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -316,14 +411,12 @@ class _CorporatePreview extends StatelessWidget {
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'SUMMARY',
             lineColor: _CorporatePdfMetrics.lineColor,
-            titleColor: _CorporatePdfMetrics.sectionTitleColor,
             child: Text(resume.summary.trim(), style: bodyStyle),
           ),
         _CorporatePdfLikeSection(
           outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
           title: 'SKILLS',
           lineColor: _CorporatePdfMetrics.lineColor,
-          titleColor: _CorporatePdfMetrics.sectionTitleColor,
           child: _CorporateSkillsColumns(skills: skills, bodyStyle: bodyStyle),
         ),
         if (resume.visibleWorkExperiences.isNotEmpty)
@@ -331,7 +424,6 @@ class _CorporatePreview extends StatelessWidget {
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'EXPERIENCE',
             lineColor: _CorporatePdfMetrics.lineColor,
-            titleColor: _CorporatePdfMetrics.sectionTitleColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -356,7 +448,6 @@ class _CorporatePreview extends StatelessWidget {
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'EDUCATION AND TRAINING',
             lineColor: _CorporatePdfMetrics.lineColor,
-            titleColor: _CorporatePdfMetrics.sectionTitleColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -378,7 +469,6 @@ class _CorporatePreview extends StatelessWidget {
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'PROJECTS',
             lineColor: _CorporatePdfMetrics.lineColor,
-            titleColor: _CorporatePdfMetrics.sectionTitleColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -400,12 +490,16 @@ class _CorporatePreview extends StatelessWidget {
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: item.title.ifBlank('Custom section').toUpperCase(),
             lineColor: _CorporatePdfMetrics.lineColor,
-            titleColor: _CorporatePdfMetrics.sectionTitleColor,
             child: Text(item.content.trim(), style: bodyStyle),
           ),
         // [_addCorporateTemplatePage] ends with `pw.SizedBox(height: 10)`.
         const SizedBox(height: 10),
       ],
+    );
+
+    return DefaultTextStyle.merge(
+      style: TextStyle(height: defaultTextLineHeight),
+      child: content,
     );
   }
 }
@@ -415,7 +509,6 @@ class _CorporatePdfLikeSection extends StatelessWidget {
     required this.outerPadding,
     required this.title,
     required this.lineColor,
-    required this.titleColor,
     required this.child,
   });
 
@@ -423,7 +516,6 @@ class _CorporatePdfLikeSection extends StatelessWidget {
   final EdgeInsets outerPadding;
   final String title;
   final Color lineColor;
-  final Color titleColor;
   final Widget child;
 
   @override
@@ -433,19 +525,22 @@ class _CorporatePdfLikeSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          _fauxStrokeText(
             title,
             style: TextStyle(
-              fontSize: _CorporatePdfMetrics.sectionTitleSize,
-              fontWeight: FontWeight.bold,
-              height: 1.0,
-              color: titleColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              height: ResumeTypography.textLineHeight,
+              color: const Color.fromARGB(255, 0, 0, 0),
+              letterSpacing: 0.1,
             ),
+            strokeWidth: 0.95,
+            xOffset: 0.2,
           ),
-          SizedBox(height: _CorporatePdfMetrics.titleToContent),
-          child,
-          SizedBox(height: _CorporatePdfMetrics.contentToRule),
+          const SizedBox(height: 5),
           Container(height: 1, color: lineColor),
+          const SizedBox(height: 12),
+          child,
         ],
       ),
     );
@@ -822,7 +917,7 @@ class _SplitBannerPreview extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: ResumeTypography.nameSizePreview(isCompact),
-                    height: 1.1,
+                    height: ResumeTypography.textLineHeight,
                   ),
                 ),
               ),
@@ -836,7 +931,7 @@ class _SplitBannerPreview extends StatelessWidget {
                   textAlign: TextAlign.right,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.88),
-                    height: 1.4,
+                    height: ResumeTypography.textLineHeight,
                   ),
                 ),
               ),
@@ -947,7 +1042,7 @@ class _MonogramSidebarPreview extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.4,
+                  height: ResumeTypography.textLineHeight,
                 ),
               ),
             ],
@@ -1067,7 +1162,7 @@ class _SummaryBlock extends StatelessWidget {
       maxLines: isCompact ? 4 : 5,
       overflow: TextOverflow.ellipsis,
       style: theme.textTheme.bodyMedium?.copyWith(
-        height: 1.45,
+        height: ResumeTypography.textLineHeight,
         color: theme.colorScheme.onSurfaceVariant,
       ),
     );
