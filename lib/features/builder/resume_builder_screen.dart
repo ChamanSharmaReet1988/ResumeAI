@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/services/app_preferences.dart';
 import 'resume_preview_screen.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
@@ -39,6 +40,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   final Map<int, ScrollController> _stepScrollControllers = {};
   final Map<String, FocusNode> _extendedKeyboardHideFocusNodes = {};
   bool _didInitPageController = false;
+  bool _prefsHydrated = false;
+  bool _resumeOrderNudgeDismissed = false;
 
   List<FocusNode> get _personalKeyboardFocusOrder => [
     ..._personalFieldFocusNodes,
@@ -99,6 +102,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_prefsHydrated) {
+      _prefsHydrated = true;
+      _resumeOrderNudgeDismissed =
+          context.read<AppPreferences>().resumeOrderNudgeDismissed;
+    }
     if (_didInitPageController) {
       return;
     }
@@ -107,6 +115,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       initialPage: context.read<ResumeEditorViewModel>().currentStep,
     );
     _didInitPageController = true;
+  }
+
+  void _onDismissResumeOrderNudge() {
+    final prefs = context.read<AppPreferences>();
+    setState(() => _resumeOrderNudgeDismissed = true);
+    prefs.setResumeOrderNudgeDismissed(true);
   }
 
   void _handleSummaryFocusChange() {
@@ -1397,13 +1411,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
-          const _HintBanner(
-            title: 'Resume order',
-            body:
-                'Entries stay in this order. Use arrows to move your strongest role to top.',
-            compact: true,
-          ),
-          const SizedBox(height: 10),
+          if (!_resumeOrderNudgeDismissed &&
+              viewModel.resume.workExperiences.length > 1) ...[
+            _HintBanner(
+              title: 'Resume order',
+              body:
+                  'Entries stay in this order. Use arrows to move your strongest role to top.',
+              compact: true,
+              onDismiss: _onDismissResumeOrderNudge,
+            ),
+            const SizedBox(height: 10),
+          ],
           ...viewModel.resume.workExperiences.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
@@ -1691,6 +1709,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (!_resumeOrderNudgeDismissed &&
+              viewModel.resume.education.length > 1) ...[
+            const SizedBox(height: 12),
+            _HintBanner(
+              title: 'Resume order',
+              body:
+                  'Entries stay in this order. Use arrows to move your strongest role to top.',
+              compact: true,
+              onDismiss: _onDismissResumeOrderNudge,
+            ),
+            const SizedBox(height: 10),
+          ],
           ...viewModel.resume.education.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
@@ -1928,6 +1958,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (!_resumeOrderNudgeDismissed &&
+              viewModel.resume.projects.length > 1) ...[
+            const SizedBox(height: 12),
+            _HintBanner(
+              title: 'Resume order',
+              body:
+                  'Entries stay in this order. Use arrows to move your strongest role to top.',
+              compact: true,
+              onDismiss: _onDismissResumeOrderNudge,
+            ),
+            const SizedBox(height: 10),
+          ],
           ...viewModel.resume.projects.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
@@ -3269,11 +3311,13 @@ class _HintBanner extends StatelessWidget {
     required this.title,
     required this.body,
     this.compact = false,
+    this.onDismiss,
   });
 
   final String title;
   final String body;
   final bool compact;
+  final VoidCallback? onDismiss;
 
   @override
   Widget build(BuildContext context) {
@@ -3284,6 +3328,7 @@ class _HintBanner extends StatelessWidget {
     final iconSize = compact ? 14.0 : 18.0;
     final spacing = compact ? 6.0 : 8.0;
     final bodySpacing = compact ? 1.0 : 2.0;
+    final dismissReserve = onDismiss != null ? 26.0 : 0.0;
     final titleStyle = compact
         ? theme.textTheme.labelMedium?.copyWith(
             fontWeight: FontWeight.w700,
@@ -3294,35 +3339,64 @@ class _HintBanner extends StatelessWidget {
         ? theme.textTheme.bodySmall?.copyWith(fontSize: 12, height: 1.2)
         : theme.textTheme.bodySmall;
 
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: verticalPadding,
-      ),
-      decoration: BoxDecoration(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: Container(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(radius),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.lightbulb_outline,
-            size: iconSize,
-            color: theme.colorScheme.primary,
-          ),
-          SizedBox(width: spacing),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: titleStyle),
-                SizedBox(height: bodySpacing),
-                Text(body, style: bodyStyle),
-              ],
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                verticalPadding,
+                horizontalPadding + dismissReserve,
+                verticalPadding,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.lightbulb_outline,
+                    size: iconSize,
+                    color: theme.colorScheme.primary,
+                  ),
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: titleStyle),
+                        SizedBox(height: bodySpacing),
+                        Text(body, style: bodyStyle),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            if (onDismiss != null)
+              Positioned(
+                top: 2,
+                right: 2,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Dismiss',
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: compact ? 18 : 20,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: onDismiss,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

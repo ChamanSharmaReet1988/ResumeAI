@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/resume_import_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/shell/app_shell.dart';
@@ -59,6 +60,9 @@ void main() {
           providers: [
             Provider<ResumeImportService>.value(value: ResumeImportService()),
             Provider<ResumeRepository>.value(value: repository),
+            Provider<AppPreferences>.value(
+              value: AppPreferences.inMemory(),
+            ),
             Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
             Provider<ResumePdfService>.value(value: ResumePdfService()),
             ChangeNotifierProvider<ResumeLibraryViewModel>.value(
@@ -109,6 +113,9 @@ void main() {
           providers: [
             Provider<ResumeImportService>.value(value: ResumeImportService()),
             Provider<ResumeRepository>.value(value: repository),
+            Provider<AppPreferences>.value(
+              value: AppPreferences.inMemory(),
+            ),
             Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
             Provider<ResumePdfService>.value(value: ResumePdfService()),
             ChangeNotifierProvider<ResumeLibraryViewModel>.value(

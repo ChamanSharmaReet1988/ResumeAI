@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/services/app_preferences.dart';
 import '../core/services/resume_import_service.dart';
 import '../core/services/resume_services.dart';
 import '../features/shared/view_models.dart';
@@ -10,9 +11,14 @@ import 'app_theme.dart';
 import 'vertical_edge_bounce.dart';
 
 class ResumeApp extends StatelessWidget {
-  const ResumeApp({super.key, required this.repository});
+  const ResumeApp({
+    super.key,
+    required this.repository,
+    required this.appPreferences,
+  });
 
   final ResumeRepository repository;
+  final AppPreferences appPreferences;
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +27,7 @@ class ResumeApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<ResumeRepository>.value(value: repository),
+        Provider<AppPreferences>.value(value: appPreferences),
         Provider<ResumeImportService>(
           create: (_) => const ResumeImportService(),
         ),

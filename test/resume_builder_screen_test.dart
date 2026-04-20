@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/builder/resume_builder_screen.dart';
 import 'package:resume_app/features/builder/resume_preview_screen.dart';
@@ -82,8 +83,15 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      ChangeNotifierProvider<ResumeEditorViewModel>(
-        create: (_) => viewModel,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ResumeEditorViewModel>(
+            create: (_) => viewModel,
+          ),
+          Provider<AppPreferences>.value(
+            value: AppPreferences.inMemory(),
+          ),
+        ],
         child: const MaterialApp(home: ResumeBuilderScreen()),
       ),
     );
@@ -418,8 +426,15 @@ void main() {
     addTearDown(viewModel.dispose);
 
     await tester.pumpWidget(
-      ChangeNotifierProvider<ResumeEditorViewModel>.value(
-        value: viewModel,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ResumeEditorViewModel>.value(
+            value: viewModel,
+          ),
+          Provider<AppPreferences>.value(
+            value: AppPreferences.inMemory(),
+          ),
+        ],
         child: MaterialApp(
           home: Builder(
             builder: (context) {
