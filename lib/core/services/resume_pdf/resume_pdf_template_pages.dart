@@ -13,7 +13,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
+        margin: const pw.EdgeInsets.only(bottom: 30),
         build: (context) => [
           pw.Container(
             color: headerColor,
@@ -155,7 +155,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     required pw.Widget child,
   }) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 16),
+      padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 26),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -172,22 +172,24 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   pw.Widget _darkHeaderNameText(String value) {
     final style = pw.TextStyle(
       color: PdfColors.white,
-      fontSize: 26,
+      fontSize: 30,
       fontWeight: pw.FontWeight.bold,
     );
     // Faux-stroke by drawing the same text with tiny x offsets.
     return pw.Stack(
       children: [
         pw.Text(value, style: style),
-        pw.Positioned(left: 0.28, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.56, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.32, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.64, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.96, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 1.28, top: 0, child: pw.Text(value, style: style)),
       ],
     );
   }
 
   pw.Widget _darkHeaderHeadingText(String value) {
     final style = pw.TextStyle(
-      fontSize: 14,
+      fontSize: 18,
       fontWeight: pw.FontWeight.bold,
       color: const PdfColor(0, 0, 0),
       letterSpacing: 0.1,
@@ -195,7 +197,9 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     return pw.Stack(
       children: [
         pw.Text(value, style: style),
-        pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.24, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.48, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.72, top: 0, child: pw.Text(value, style: style)),
       ],
     );
   }
@@ -211,7 +215,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 28),
+        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 30),
         build: (context) => [
           pw.Center(
             child: profileImage != null
@@ -329,7 +333,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
+        margin: const pw.EdgeInsets.only(bottom: 30),
         build: (context) => [
           pw.Container(height: 18, color: dark),
           pw.Padding(
@@ -469,7 +473,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(28, 28, 28, 28),
+        margin: const pw.EdgeInsets.fromLTRB(28, 28, 28, 30),
         build: (context) => [
           if (profileImage != null) ...[
             pw.Center(
@@ -604,7 +608,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(24, 22, 24, 28),
+        margin: const pw.EdgeInsets.fromLTRB(24, 22, 24, 30),
         build: (context) => [
           pw.Container(
             color: copper,
@@ -732,7 +736,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 28),
+        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 30),
         build: (context) => [
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,

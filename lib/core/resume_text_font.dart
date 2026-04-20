@@ -1,7 +1,7 @@
 /// Default type scale for resume content (preview + PDF). Font family defaults to
 /// [ResumeTextFont.inter] on [ResumeData.resumeTextFont].
 abstract final class ResumeTypography {
-  static const double bodyPt = 12;
+  static const double bodyPt = 13;
   static const double headingPt = 14;
   static const double namePt = 17;
   static const double textLineHeight = 1.4;

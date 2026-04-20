@@ -982,6 +982,9 @@ class LocalAiResumeService {
       endDate: '',
       description: description,
       bullets: bulletLines,
+      layoutMode: bulletLines.isNotEmpty && description.isEmpty
+          ? WorkExperienceLayoutMode.bullets
+          : WorkExperienceLayoutMode.bullets,
     );
 
     return workExperience.isBlank
@@ -2063,7 +2066,7 @@ class ResumePdfService {
     required pw.Widget child,
   }) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 16),
+      padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 26),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -2110,14 +2113,16 @@ class ResumePdfService {
 
   pw.Widget _corporateHeadingText(String value) {
     final style = pw.TextStyle(
-      fontSize: ResumeTypography.headingPt,
+      fontSize: ResumeTypography.headingPt + 4,
       fontWeight: pw.FontWeight.bold,
       color: PdfColor.fromHex('#50555C'),
     );
     return pw.Stack(
       children: [
         pw.Text(value, style: style),
-        pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.24, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.48, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.72, top: 0, child: pw.Text(value, style: style)),
       ],
     );
   }
@@ -2296,6 +2301,24 @@ class ResumePdfService {
     );
   }
 
+  String _workSummaryText(WorkExperience item) {
+    return '';
+  }
+
+  List<String> _workBulletLines(WorkExperience item) {
+    final nonEmptyBullets = item.bullets
+        .where((b) => b.trim().isNotEmpty)
+        .toList();
+    if (nonEmptyBullets.isNotEmpty) {
+      return nonEmptyBullets;
+    }
+    final legacyDescription = item.description.trim();
+    if (legacyDescription.isNotEmpty) {
+      return [legacyDescription];
+    }
+    return const <String>[];
+  }
+
   pw.Widget _buildCorporateExperience(WorkExperience item) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 10),
@@ -2332,11 +2355,11 @@ class ResumePdfService {
                 ),
             ],
           ),
-          if (item.description.trim().isNotEmpty) ...[
+          if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
-            pw.Text(item.description.trim()),
+            pw.Text(_workSummaryText(item)),
           ],
-          for (final bullet in item.bullets)
+          for (final bullet in _workBulletLines(item))
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 3),
               child: pw.Bullet(
@@ -2392,11 +2415,11 @@ class ResumePdfService {
                 ),
             ],
           ),
-          if (item.description.trim().isNotEmpty) ...[
+          if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
-            pw.Text(item.description.trim()),
+            pw.Text(_workSummaryText(item)),
           ],
-          for (final bullet in item.bullets)
+          for (final bullet in _workBulletLines(item))
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 4),
               child: pw.Container(
@@ -2510,11 +2533,11 @@ class ResumePdfService {
               fontStyle: pw.FontStyle.italic,
             ),
           ),
-          if (item.description.trim().isNotEmpty) ...[
+          if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
-            pw.Text(item.description.trim()),
+            pw.Text(_workSummaryText(item)),
           ],
-          for (final bullet in item.bullets)
+          for (final bullet in _workBulletLines(item))
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 3),
               child: pw.Container(
@@ -2561,11 +2584,11 @@ class ResumePdfService {
               fontStyle: pw.FontStyle.italic,
             ),
           ),
-          if (item.description.trim().isNotEmpty) ...[
+          if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
-            pw.Text(item.description.trim()),
+            pw.Text(_workSummaryText(item)),
           ],
-          for (final bullet in item.bullets)
+          for (final bullet in _workBulletLines(item))
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 3),
               child: pw.Container(
@@ -2611,11 +2634,11 @@ class ResumePdfService {
               fontStyle: pw.FontStyle.italic,
             ),
           ),
-          if (item.description.trim().isNotEmpty) ...[
+          if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
-            pw.Text(item.description.trim()),
+            pw.Text(_workSummaryText(item)),
           ],
-          for (final bullet in item.bullets)
+          for (final bullet in _workBulletLines(item))
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 3),
               child: pw.Bullet(
@@ -2648,11 +2671,11 @@ class ResumePdfService {
               fontStyle: pw.FontStyle.italic,
             ),
           ),
-          if (item.description.trim().isNotEmpty) ...[
+          if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
-            pw.Text(item.description.trim()),
+            pw.Text(_workSummaryText(item)),
           ],
-          for (final bullet in item.bullets)
+          for (final bullet in _workBulletLines(item))
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 3),
               child: pw.Bullet(

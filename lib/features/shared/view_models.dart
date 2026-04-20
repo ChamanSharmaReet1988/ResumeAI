@@ -591,6 +591,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
                 'Built reusable systems and templates that reduced handoff friction and improved delivery consistency.',
                 'Used feedback loops and lightweight analysis to prioritize the highest-impact changes first.',
               ],
+              layoutMode: WorkExperienceLayoutMode.bullets,
             ),
           ]
         : _resume.workExperiences;

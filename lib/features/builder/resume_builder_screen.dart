@@ -54,7 +54,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         (entry) =>
             (entry.key.startsWith('work-role-') ||
                 entry.key.startsWith('work-company-') ||
-                entry.key.startsWith('work-description-')) &&
+                entry.key.startsWith('work-bullet-')) &&
             entry.value.hasFocus,
       );
 
@@ -1596,63 +1596,117 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             currentValue: item.endDate,
                           ),
                         ),
-                        _SyncTextField(
-                          key: Key('work-description-$index'),
-                          label: 'Short description',
-                          value: item.description,
-                          minLines: 4,
-                          maxLines: null,
-                          textCapitalization: TextCapitalization.sentences,
-                          fullWidth: true,
-                          focusNode: _focusNodeForExtendedKeyboardField(
-                            'work-description-$index',
-                          ),
-                          onChanged: (value) => viewModel.updateWorkExperience(
-                            index,
-                            (current) => current.copyWith(description: value),
-                          ),
-                        ),
                       ],
                     ),
-                    if (item.bullets.isNotEmpty) ...[
-                      const SizedBox(height: 14),
-                      ...item.bullets.asMap().entries.map((bulletEntry) {
-                        final bulletIndex = bulletEntry.key;
-                        final bullet = bulletEntry.value;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                    const SizedBox(height: 14),
+                    ...(() {
+                      final displayBullets = item.bullets.isNotEmpty
+                          ? item.bullets
+                          : (item.description.trim().isNotEmpty
+                                ? <String>[item.description.trim()]
+                                : <String>['']);
+                      return <Widget>[
+                        ...displayBullets.asMap().entries.map((bulletEntry) {
+                          final bulletIndex = bulletEntry.key;
+                          final bullet = bulletEntry.value;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('• '),
-                                Expanded(child: Text(bullet)),
-                                IconButton(
-                                  visualDensity: VisualDensity.compact,
-                                  onPressed: () {
-                                    final updated = [...item.bullets]
-                                      ..removeAt(bulletIndex);
-                                    viewModel.updateWorkExperience(
+                                Expanded(
+                                  child: _SyncTextField(
+                                    key: Key('work-bullet-$index-$bulletIndex'),
+                                    label: 'Bullet ${bulletIndex + 1}',
+                                    value: bullet,
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    fullWidth: true,
+                                    focusNode:
+                                        _focusNodeForExtendedKeyboardField(
+                                          'work-bullet-$index-$bulletIndex',
+                                        ),
+                                    onChanged: (value) =>
+                                        viewModel.updateWorkExperience(
                                       index,
-                                      (current) =>
-                                          current.copyWith(bullets: updated),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.close_rounded),
+                                      (current) {
+                                        final currentBullets = current.bullets
+                                            .where((b) => b.trim().isNotEmpty)
+                                            .toList();
+                                        final updated = List<String>.from(
+                                          currentBullets.isEmpty
+                                              ? displayBullets
+                                              : currentBullets,
+                                        );
+                                        if (bulletIndex < updated.length) {
+                                          updated[bulletIndex] = value;
+                                        }
+                                        return current.copyWith(
+                                          bullets: updated,
+                                          layoutMode:
+                                              WorkExperienceLayoutMode.bullets,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Remove bullet',
+                                  onPressed: viewModel.isBusy
+                                      ? null
+                                      : () {
+                                          viewModel.updateWorkExperience(
+                                            index,
+                                            (current) {
+                                              final currentBullets = current
+                                                  .bullets
+                                                  .where(
+                                                    (b) => b.trim().isNotEmpty,
+                                                  )
+                                                  .toList();
+                                              final updated = List<String>.from(
+                                                currentBullets.isEmpty
+                                                    ? displayBullets
+                                                    : currentBullets,
+                                              )..removeAt(bulletIndex);
+                                              return current.copyWith(
+                                                bullets: updated,
+                                                layoutMode:
+                                                    WorkExperienceLayoutMode
+                                                        .bullets,
+                                              );
+                                            },
+                                          );
+                                        },
+                                  icon: const ImageIcon(
+                                    AssetImage('assets/fonts/delete.png'),
+                                  ),
                                 ),
                               ],
                             ),
+                          );
+                        }),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: FilledButton.icon(
+                            onPressed: viewModel.isBusy
+                                ? null
+                                : () {
+                                    viewModel.updateWorkExperience(
+                                      index,
+                                      (current) => current.copyWith(
+                                        bullets: [...current.bullets, ''],
+                                        layoutMode:
+                                            WorkExperienceLayoutMode.bullets,
+                                      ),
+                                    );
+                                  },
+                            icon: const Icon(Icons.add_rounded),
+                            label: const Text('Add bullet point'),
                           ),
-                        );
-                      }),
-                    ],
+                        ),
+                      ];
+                    })(),
                   ],
                 ),
               ),

@@ -492,6 +492,7 @@ class WorkExperience {
     required this.endDate,
     required this.description,
     required this.bullets,
+    this.layoutMode = WorkExperienceLayoutMode.bullets,
   });
 
   const WorkExperience.empty()
@@ -500,19 +501,24 @@ class WorkExperience {
       startDate = '',
       endDate = '',
       description = '',
-      bullets = const [];
+      bullets = const [],
+      layoutMode = WorkExperienceLayoutMode.bullets;
 
   factory WorkExperience.fromJson(Map<String, dynamic> json) {
+    final parsedBullets = (json['bullets'] as List<dynamic>? ?? [])
+        .map((item) => item.toString())
+        .where((item) => item.trim().isNotEmpty)
+        .toList();
+    final description = json['description'] as String? ?? '';
+    final layoutMode = WorkExperienceLayoutMode.bullets;
     return WorkExperience(
       role: json['role'] as String? ?? '',
       company: json['company'] as String? ?? '',
       startDate: json['startDate'] as String? ?? '',
       endDate: json['endDate'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      bullets: (json['bullets'] as List<dynamic>? ?? [])
-          .map((item) => item.toString())
-          .where((item) => item.trim().isNotEmpty)
-          .toList(),
+      description: description,
+      bullets: parsedBullets,
+      layoutMode: layoutMode,
     );
   }
 
@@ -522,12 +528,13 @@ class WorkExperience {
   final String endDate;
   final String description;
   final List<String> bullets;
+  final WorkExperienceLayoutMode layoutMode;
 
   bool get isBlank =>
       role.trim().isEmpty &&
       company.trim().isEmpty &&
       description.trim().isEmpty &&
-      bullets.isEmpty;
+      (bullets.isEmpty || bullets.every((bullet) => bullet.trim().isEmpty));
 
   WorkExperience copyWith({
     String? role,
@@ -536,6 +543,7 @@ class WorkExperience {
     String? endDate,
     String? description,
     List<String>? bullets,
+    WorkExperienceLayoutMode? layoutMode,
   }) {
     return WorkExperience(
       role: role ?? this.role,
@@ -544,6 +552,7 @@ class WorkExperience {
       endDate: endDate ?? this.endDate,
       description: description ?? this.description,
       bullets: bullets ?? this.bullets,
+      layoutMode: layoutMode ?? this.layoutMode,
     );
   }
 
@@ -555,8 +564,14 @@ class WorkExperience {
       'endDate': endDate,
       'description': description,
       'bullets': bullets,
+      'layoutMode': layoutMode.name,
     };
   }
+}
+
+enum WorkExperienceLayoutMode {
+  summary,
+  bullets,
 }
 
 class EducationItem {

@@ -15,7 +15,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
+        margin: const pw.EdgeInsets.only(bottom: 30),
         build: (context) => [
           pw.Container(
             color: headerColor,
@@ -173,7 +173,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 28),
+        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 30),
         build: (context) => [
           _highlightedAtsNoticeBar(highlightColor),
           pw.SizedBox(height: 14),
@@ -295,14 +295,16 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   pw.Widget _highlightedCorporateNameText(String value) {
     final style = pw.TextStyle(
       color: PdfColors.white,
-      fontSize: ResumeTypography.namePt,
+      fontSize: ResumeTypography.namePt + 4,
       fontWeight: pw.FontWeight.bold,
     );
     return pw.Stack(
       children: [
         pw.Text(value, style: style),
-        pw.Positioned(left: 0.25, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.5, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.3, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.6, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.9, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 1.2, top: 0, child: pw.Text(value, style: style)),
       ],
     );
   }
@@ -322,7 +324,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
+        margin: const pw.EdgeInsets.only(bottom: 30),
         build: (context) => [
           pw.Container(height: 18, color: dark),
           pw.Padding(
@@ -478,7 +480,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(28, 28, 28, 28),
+        margin: const pw.EdgeInsets.fromLTRB(28, 28, 28, 30),
         build: (context) => [
           _highlightedAtsNoticeBar(highlightColor),
           pw.SizedBox(height: 12),
@@ -625,7 +627,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(24, 22, 24, 28),
+        margin: const pw.EdgeInsets.fromLTRB(24, 22, 24, 30),
         build: (context) => [
           pw.Container(
             color: copper,
@@ -772,7 +774,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 28),
+        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 30),
         build: (context) => [
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.stretch,

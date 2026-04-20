@@ -212,7 +212,7 @@ class _MinimalPreview extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 10),
             child: _BulletPreview(
               title: item.role.ifBlank('Role'),
-              body: item.description.ifBlank(
+              body: _workPreviewBody(item).ifBlank(
                 'Describe your responsibilities and the measurable outcomes you created.',
               ),
             ),
@@ -242,15 +242,15 @@ abstract final class _CorporatePdfMetrics {
 
   static double headerAvatar(bool compact) => compact ? 42 : 48;
 
-  static double headerNameSize(bool compact) => 26;
+  static double headerNameSize(bool compact) => 30;
 
   static const headerAfterAvatar = 18.0;
   static const afterHeader = 18.0;
 
-  /// [_corporateSection] uses `fromLTRB(30, 0, 30, 16)`.
+  /// [_corporateSection] uses `fromLTRB(30, 0, 30, 26)`.
   static EdgeInsets sectionOuter(bool compact) => compact
-      ? const EdgeInsets.fromLTRB(14, 0, 14, 16)
-      : const EdgeInsets.fromLTRB(30, 0, 30, 16);
+      ? const EdgeInsets.fromLTRB(14, 0, 14, 26)
+      : const EdgeInsets.fromLTRB(30, 0, 30, 26);
 
   /// [_twoColumnBulletList] column gap.
   static const skillsColumnGap = 24.0;
@@ -376,8 +376,8 @@ class _DarkHeaderPreview extends StatelessWidget {
                             height: nameLineHeight,
                             letterSpacing: 0.15,
                           ),
-                          strokeWidth: 1.1,
-                          xOffset: 0.35,
+                          strokeWidth: 1.6,
+                          xOffset: 0.65,
                         ),
                         if (contactItems.isNotEmpty) ...[
                           SizedBox(height: nameToContactSpacing),
@@ -528,14 +528,14 @@ class _CorporatePdfLikeSection extends StatelessWidget {
           _fauxStrokeText(
             title,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 18,
               fontWeight: FontWeight.w900,
               height: ResumeTypography.textLineHeight,
               color: const Color.fromARGB(255, 0, 0, 0),
               letterSpacing: 0.1,
             ),
-            strokeWidth: 0.95,
-            xOffset: 0.2,
+            strokeWidth: 1.35,
+            xOffset: 0.45,
           ),
           const SizedBox(height: 5),
           Container(height: 1, color: lineColor),
@@ -652,11 +652,11 @@ class _CorporateExperienceBlock extends StatelessWidget {
               Text(dateStr, style: dateStyle, textAlign: TextAlign.right),
           ],
         ),
-        if (item.description.trim().isNotEmpty) ...[
+        if (_workSummaryText(item).isNotEmpty) ...[
           SizedBox(height: _CorporatePdfMetrics.descAfterTitle),
-          Text(item.description.trim(), style: bodyStyle),
+          Text(_workSummaryText(item), style: bodyStyle),
         ],
-        for (final bullet in item.bullets)
+        for (final bullet in _workBulletLines(item))
           Padding(
             padding: const EdgeInsets.only(top: _CorporatePdfMetrics.bulletTop),
             child: Row(
@@ -875,11 +875,9 @@ class _CopperSerifPreview extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 10),
             child: _BulletPreview(
               title: item.role.ifBlank('Role'),
-              body: item.bullets.isNotEmpty
-                  ? item.bullets.first
-                  : item.description.ifBlank(
-                      'Add a short accomplishment that shows measurable impact.',
-                    ),
+              body: _workPreviewBody(item).ifBlank(
+                'Add a short accomplishment that shows measurable impact.',
+              ),
             ),
           );
         }),
@@ -964,11 +962,9 @@ class _SplitBannerPreview extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: _BulletPreview(
                   title: item.role.ifBlank('Role'),
-                  body: item.bullets.isNotEmpty
-                      ? item.bullets.first
-                      : item.description.ifBlank(
-                          'Add a short accomplishment that shows measurable impact.',
-                        ),
+                  body: _workPreviewBody(item).ifBlank(
+                    'Add a short accomplishment that shows measurable impact.',
+                  ),
                 ),
               );
             }).toList(),
@@ -1072,11 +1068,9 @@ class _MonogramSidebarPreview extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: _BulletPreview(
                     title: item.role.ifBlank('Role'),
-                    body: item.bullets.isNotEmpty
-                        ? item.bullets.first
-                        : item.description.ifBlank(
-                            'Add a short accomplishment that shows measurable impact.',
-                          ),
+                    body: _workPreviewBody(item).ifBlank(
+                      'Add a short accomplishment that shows measurable impact.',
+                    ),
                   ),
                 );
               }),
@@ -1398,6 +1392,29 @@ List<String> _pdfAlignedSkills(ResumeData resume) {
     return resume.skills;
   }
   return const ['Communication', 'Collaboration', 'Documentation'];
+}
+
+String _workSummaryText(WorkExperience item) {
+  return '';
+}
+
+List<String> _workBulletLines(WorkExperience item) {
+  final nonEmptyBullets = item.bullets
+      .where((b) => b.trim().isNotEmpty)
+      .toList();
+  if (nonEmptyBullets.isNotEmpty) {
+    return nonEmptyBullets;
+  }
+  final legacyDescription = item.description.trim();
+  if (legacyDescription.isNotEmpty) {
+    return [legacyDescription];
+  }
+  return const <String>[];
+}
+
+String _workPreviewBody(WorkExperience item) {
+  final bullets = _workBulletLines(item);
+  return bullets.isEmpty ? '' : bullets.first;
 }
 
 String _initials(ResumeData resume) {
