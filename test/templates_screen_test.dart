@@ -54,7 +54,7 @@ void main() {
           gridView.childrenDelegate as SliverChildBuilderDelegate;
 
       expect(delegate.crossAxisCount, 2);
-      expect(childrenDelegate.childCount, 6);
+      expect(childrenDelegate.childCount, 2);
       expect(
         find.byKey(const Key('template-segmented-button')),
         findsOneWidget,
@@ -64,23 +64,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.byKey(const Key('template-image-centered-classic')),
-        findsOneWidget,
-      );
-      expect(
         find.byKey(const Key('template-image-profile-sidebar')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('template-image-copper-serif')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('template-image-split-banner')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('template-image-monogram-sidebar')),
         findsOneWidget,
       );
       expect(

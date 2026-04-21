@@ -215,6 +215,35 @@ class AppTheme {
           color: scheme.onSurface,
         ),
       ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        titleTextStyle: isDark
+            ? textTheme.titleLarge?.copyWith(color: const Color(0xFF1C1B1F))
+            : textTheme.titleLarge,
+        contentTextStyle: isDark
+            ? textTheme.bodyMedium?.copyWith(color: const Color(0xFF44474E))
+            : textTheme.bodyMedium,
+        iconColor: isDark ? const Color(0xFF1C1B1F) : null,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: Colors.white,
+        elevation: 2,
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 4,
+        textStyle: isDark
+            ? textTheme.bodyMedium?.copyWith(color: const Color(0xFF1C1B1F))
+            : textTheme.bodyMedium,
+      ),
     );
   }
 

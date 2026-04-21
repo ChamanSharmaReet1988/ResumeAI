@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/skill_autocomplete_suggestions.dart';
 import '../../core/services/app_preferences.dart';
 import 'resume_preview_screen.dart';
 import '../shared/resume_preview_card.dart';
@@ -31,6 +32,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   static const Curve _stepAnimationCurve = Curves.easeInOutCubicEmphasized;
 
   final _skillController = TextEditingController();
+  final _skillFocusNode = FocusNode();
   final _imagePicker = ImagePicker();
   final _personalFieldFocusNodes = List<FocusNode>.generate(
     8,
@@ -115,6 +117,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   void initState() {
     super.initState();
     _summaryFocusNode.addListener(_handleSummaryFocusChange);
+    _skillFocusNode.addListener(_handleSkillFocusChange);
+  }
+
+  void _handleSkillFocusChange() {
+    if (_skillFocusNode.hasFocus && mounted) {
+      _scheduleEnsureVisible(context);
+    }
   }
 
   @override
@@ -165,6 +174,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   @override
   void dispose() {
+    _skillFocusNode
+      ..removeListener(_handleSkillFocusChange)
+      ..dispose();
     _skillController.dispose();
     _pageController.dispose();
     for (final controller in _stepScrollControllers.values) {
@@ -267,6 +279,35 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (added) {
       _skillController.clear();
       return;
+    }
+  }
+
+  Future<void> _confirmRemoval({
+    required String title,
+    required String message,
+    required VoidCallback onConfirm,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+    if (result == true && mounted) {
+      onConfirm();
     }
   }
 
@@ -1552,8 +1593,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             icon: const Icon(Icons.keyboard_arrow_down_rounded),
                           ),
                           IconButton(
-                            onPressed: () =>
-                                viewModel.removeWorkExperience(index),
+                            tooltip: 'Delete experience',
+                            onPressed: viewModel.isBusy
+                                ? null
+                                : () {
+                                    _confirmRemoval(
+                                      title: 'Delete work experience?',
+                                      message:
+                                          'This will remove this job and all of its bullet points. This cannot be undone.',
+                                      onConfirm: () =>
+                                          viewModel.removeWorkExperience(index),
+                                    );
+                                  },
                             icon: const ImageIcon(
                               AssetImage('assets/fonts/delete.png'),
                             ),
@@ -1642,6 +1693,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                     textCapitalization:
                                         TextCapitalization.sentences,
                                     fullWidth: true,
+                                    minLines: 1,
+                                    maxLines: null,
+                                    keyboardType: TextInputType.multiline,
                                     focusNode:
                                         _focusNodeForExtendedKeyboardField(
                                           'work-bullet-$index-$bulletIndex',
@@ -1670,22 +1724,32 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                   onPressed: viewModel.isBusy
                                       ? null
                                       : () {
-                                          viewModel.updateWorkExperience(
-                                            index,
-                                            (current) {
-                                              final updated = List<String>.from(
-                                                current.bullets,
-                                              );
-                                              if (bulletIndex >=
-                                                  updated.length) {
-                                                return current;
-                                              }
-                                              updated.removeAt(bulletIndex);
-                                              return current.copyWith(
-                                                bullets: updated,
-                                                layoutMode:
-                                                    WorkExperienceLayoutMode
-                                                        .bullets,
+                                          _confirmRemoval(
+                                            title: 'Remove bullet?',
+                                            message:
+                                                'This bullet will be removed from this job.',
+                                            onConfirm: () {
+                                              viewModel.updateWorkExperience(
+                                                index,
+                                                (current) {
+                                                  final updated =
+                                                      List<String>.from(
+                                                    current.bullets,
+                                                  );
+                                                  if (bulletIndex >=
+                                                      updated.length) {
+                                                    return current;
+                                                  }
+                                                  updated.removeAt(
+                                                    bulletIndex,
+                                                  );
+                                                  return current.copyWith(
+                                                    bullets: updated,
+                                                    layoutMode:
+                                                        WorkExperienceLayoutMode
+                                                            .bullets,
+                                                  );
+                                                },
                                               );
                                             },
                                           );
@@ -1906,7 +1970,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             icon: const Icon(Icons.keyboard_arrow_down_rounded),
                           ),
                           IconButton(
-                            onPressed: () => viewModel.removeEducation(index),
+                            tooltip: 'Delete education entry',
+                            onPressed: viewModel.isBusy
+                                ? null
+                                : () {
+                                    _confirmRemoval(
+                                      title: 'Delete education entry?',
+                                      message:
+                                          'This will remove this school and degree from your resume. This cannot be undone.',
+                                      onConfirm: () =>
+                                          viewModel.removeEducation(index),
+                                    );
+                                  },
                             icon: const ImageIcon(
                               AssetImage('assets/fonts/delete.png'),
                             ),
@@ -2011,25 +2086,104 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          _EnsureVisibleOnFocus(
-            child: TextField(
-              controller: _skillController,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _addSkillFromInput(),
-              decoration: InputDecoration(
-                labelText: 'Add a skill',
-                helperText: 'Add role-relevant skills and keywords',
-                helperStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 11,
-                  height: 1.35,
+          RawAutocomplete<String>(
+            focusNode: _skillFocusNode,
+            textEditingController: _skillController,
+            displayStringForOption: (skill) => skill,
+            optionsBuilder: (textEditingValue) {
+              return skillSuggestionsForQuery(
+                textEditingValue.text,
+                excludeLowercase: viewModel.resume.skills
+                    .map((s) => s.toLowerCase())
+                    .toSet(),
+              );
+            },
+            onSelected: (selection) {
+              final added = viewModel.addSkill(selection);
+              if (added) {
+                _skillController.clear();
+              }
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              final list = options.toList();
+              if (list.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              final theme = Theme.of(context);
+              final onPopup = theme.brightness == Brightness.dark
+                  ? const Color(0xFF1C1B1F)
+                  : theme.colorScheme.onSurface;
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  elevation: 6,
+                  shadowColor: Colors.black26,
+                  surfaceTintColor: Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 360),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: list.length,
+                      separatorBuilder: (_, _) => Divider(
+                        height: 1,
+                        color: Colors.black.withValues(alpha: 0.08),
+                      ),
+                      itemBuilder: (context, index) {
+                        final option = list[index];
+                        return InkWell(
+                          onTap: () => onSelected(option),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Text(
+                              option,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                color: onPopup,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
-                suffixIcon: IconButton(
-                  onPressed: _addSkillFromInput,
-                  icon: const Icon(Icons.add_rounded),
+              );
+            },
+            fieldViewBuilder: (context, textEditingController, focusNode, _) {
+              final inset = MediaQuery.viewInsetsOf(context).bottom;
+              return TextField(
+                controller: textEditingController,
+                focusNode: focusNode,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _addSkillFromInput(),
+                scrollPadding: EdgeInsets.only(
+                  left: 20,
+                  top: 20,
+                  right: 20,
+                  bottom: inset + 120,
                 ),
-              ),
-            ),
+                decoration: InputDecoration(
+                  labelText: 'Add a skill',
+                  helperText:
+                      'Type to see suggestions, or add your own keywords',
+                  helperStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                    height: 1.35,
+                  ),
+                  suffixIcon: IconButton(
+                    onPressed: _addSkillFromInput,
+                    icon: const Icon(Icons.add_rounded),
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -2147,7 +2301,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             icon: const Icon(Icons.keyboard_arrow_down_rounded),
                           ),
                           IconButton(
-                            onPressed: () => viewModel.removeProject(index),
+                            tooltip: 'Delete project',
+                            onPressed: viewModel.isBusy
+                                ? null
+                                : () {
+                                    _confirmRemoval(
+                                      title: 'Delete project?',
+                                      message:
+                                          'This will remove this project and all of its bullet points. This cannot be undone.',
+                                      onConfirm: () =>
+                                          viewModel.removeProject(index),
+                                    );
+                                  },
                             icon: const ImageIcon(
                               AssetImage('assets/fonts/delete.png'),
                             ),
@@ -2193,6 +2358,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                         TextCapitalization.sentences,
                                     hintText: 'Enter a bullet point',
                                     fullWidth: true,
+                                    minLines: 1,
+                                    maxLines: null,
+                                    keyboardType: TextInputType.multiline,
                                     focusNode: _focusNodeForExtendedKeyboardField(
                                       'project-bullet-$index-$bi',
                                     ),
@@ -2220,19 +2388,27 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                   onPressed: viewModel.isBusy
                                       ? null
                                       : () {
-                                          viewModel.updateProject(
-                                            index,
-                                            (current) {
-                                              final next = current.bullets.isEmpty
-                                                  ? <String>[]
-                                                  : List<String>.from(
-                                                      current.bullets,
-                                                    );
-                                              if (bi < next.length) {
-                                                next.removeAt(bi);
-                                              }
-                                              return current.copyWith(
-                                                bullets: next,
+                                          _confirmRemoval(
+                                            title: 'Remove bullet?',
+                                            message:
+                                                'This bullet will be removed from this project.',
+                                            onConfirm: () {
+                                              viewModel.updateProject(
+                                                index,
+                                                (current) {
+                                                  final next =
+                                                      current.bullets.isEmpty
+                                                      ? <String>[]
+                                                      : List<String>.from(
+                                                          current.bullets,
+                                                        );
+                                                  if (bi < next.length) {
+                                                    next.removeAt(bi);
+                                                  }
+                                                  return current.copyWith(
+                                                    bullets: next,
+                                                  );
+                                                },
                                               );
                                             },
                                           );
@@ -2413,6 +2589,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               textCapitalization: TextCapitalization.sentences,
                               hintText: 'Enter a bullet point',
                               fullWidth: true,
+                              minLines: 1,
+                              maxLines: null,
+                              keyboardType: TextInputType.multiline,
                               focusNode: _focusNodeForExtendedKeyboardField(
                                 'custom-section-bullet-$index-$bi',
                               ),
@@ -2842,24 +3021,6 @@ void _scheduleEnsureVisible(BuildContext context) {
       );
     });
   });
-}
-
-class _EnsureVisibleOnFocus extends StatelessWidget {
-  const _EnsureVisibleOnFocus({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Focus(
-      onFocusChange: (hasFocus) {
-        if (hasFocus) {
-          _scheduleEnsureVisible(context);
-        }
-      },
-      child: child,
-    );
-  }
 }
 
 enum _EndDateSelection { chooseDate, present, clear }

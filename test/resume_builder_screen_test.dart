@@ -414,11 +414,11 @@ void main() {
     expect(find.byKey(const Key('template-grid')), findsOneWidget);
     expect(find.text('Choose template'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('template-image-centered-classic')));
+    await tester.tap(find.byKey(const Key('template-image-profile-sidebar')));
     await tester.pump();
     await tester.pumpAndSettle(const Duration(milliseconds: 600));
 
-    expect(viewModel.resume.template, ResumeTemplate.minimal);
+    expect(viewModel.resume.template, ResumeTemplate.creative);
   });
 
   testWidgets('preview back returns to the resume builder', (tester) async {

@@ -124,13 +124,7 @@ class ResumeImportService {
       );
     }
 
-    final content = documentFile.content;
-    if (content is! List<int>) {
-      throw const ResumeImportException(
-        'Could not read text from that DOCX file.',
-      );
-    }
-
+    final content = documentFile.content as List<int>;
     final xmlString = utf8.decode(content, allowMalformed: true);
     final document = XmlDocument.parse(xmlString);
     final paragraphs = <String>[];

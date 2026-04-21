@@ -1603,32 +1603,8 @@ class ResumePdfService {
       case ResumeTemplate.corporate:
         _addCorporateTemplatePage(document, resume, profileImage: profileImage);
         break;
-      case ResumeTemplate.minimal:
-        _addMinimalTemplatePage(document, resume, profileImage: profileImage);
-        break;
       case ResumeTemplate.creative:
         _addCreativeTemplatePage(document, resume, profileImage: profileImage);
-        break;
-      case ResumeTemplate.copperSerif:
-        _addCopperSerifTemplatePage(
-          document,
-          resume,
-          profileImage: profileImage,
-        );
-        break;
-      case ResumeTemplate.splitBanner:
-        _addSplitBannerTemplatePage(
-          document,
-          resume,
-          profileImage: profileImage,
-        );
-        break;
-      case ResumeTemplate.monogramSidebar:
-        _addMonogramSidebarTemplatePage(
-          document,
-          resume,
-          profileImage: profileImage,
-        );
         break;
     }
 
@@ -1664,44 +1640,8 @@ class ResumePdfService {
           highlightedBulletsByExperience: highlightedBulletsByExperience,
         );
         break;
-      case ResumeTemplate.minimal:
-        _addHighlightedMinimalTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
-        break;
       case ResumeTemplate.creative:
         _addHighlightedCreativeTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
-        break;
-      case ResumeTemplate.copperSerif:
-        _addHighlightedCopperSerifTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
-        break;
-      case ResumeTemplate.splitBanner:
-        _addHighlightedSplitBannerTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
-        break;
-      case ResumeTemplate.monogramSidebar:
-        _addHighlightedMonogramSidebarTemplatePage(
           document,
           resume,
           highlightSummary: highlightSummary,
@@ -2129,36 +2069,6 @@ class ResumePdfService {
     );
   }
 
-  pw.Widget _minimalSection({
-    required String title,
-    required PdfColor lineColor,
-    required pw.Widget child,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 16),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
-            children: [
-              pw.Text(
-                title,
-                style: pw.TextStyle(
-                  fontSize: ResumeTypography.headingPt,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.SizedBox(width: 8),
-              pw.Expanded(child: pw.Container(height: 1, color: lineColor)),
-            ],
-          ),
-          pw.SizedBox(height: 8),
-          child,
-        ],
-      ),
-    );
-  }
 
   pw.Widget _corporateHeadingText(String value, {PdfColor? color}) {
     final style = pw.TextStyle(
@@ -2169,71 +2079,7 @@ class ResumePdfService {
     return pw.Text(value, style: style);
   }
 
-  pw.Widget _centeredAccentSection({
-    required String title,
-    required PdfColor accentColor,
-    required PdfColor lineColor,
-    required pw.Widget child,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 16),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-        children: [
-          pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
-            children: [
-              pw.Expanded(child: pw.Container(height: 1, color: lineColor)),
-              pw.SizedBox(width: 8),
-              pw.Text(
-                title,
-                style: pw.TextStyle(
-                  fontSize: ResumeTypography.headingPt,
-                  fontWeight: pw.FontWeight.bold,
-                  color: accentColor,
-                ),
-              ),
-              pw.SizedBox(width: 8),
-              pw.Expanded(child: pw.Container(height: 1, color: lineColor)),
-            ],
-          ),
-          pw.SizedBox(height: 8),
-          child,
-        ],
-      ),
-    );
-  }
 
-  pw.Widget _splitBannerSection({
-    required String title,
-    required PdfColor accentColor,
-    required PdfColor lineColor,
-    required pw.Widget child,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 14),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Container(
-            width: 78,
-            padding: const pw.EdgeInsets.only(top: 2, right: 10),
-            child: pw.Text(
-              title.toUpperCase(),
-              style: pw.TextStyle(
-                fontSize: ResumeTypography.headingPt,
-                fontWeight: pw.FontWeight.bold,
-                color: accentColor,
-              ),
-            ),
-          ),
-          pw.Container(width: 1, height: 42, color: lineColor),
-          pw.SizedBox(width: 12),
-          pw.Expanded(child: child),
-        ],
-      ),
-    );
-  }
 
   pw.Widget _creativeSection({
     required String title,
@@ -2282,28 +2128,6 @@ class ResumePdfService {
     );
   }
 
-  pw.Widget _monogramSidebarSection({
-    required String title,
-    required pw.Widget child,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 14),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            title.toUpperCase(),
-            style: pw.TextStyle(
-              fontSize: ResumeTypography.headingPt,
-              fontWeight: pw.FontWeight.bold,
-            ),
-          ),
-          pw.SizedBox(height: 6),
-          child,
-        ],
-      ),
-    );
-  }
 
   List<pw.Widget> _twoColumnBulletRows(
     List<String> items, {
@@ -2562,74 +2386,6 @@ class ResumePdfService {
     );
   }
 
-  pw.Widget _buildHighlightedMinimalExperience(
-    WorkExperience item,
-    Set<String> highlightedBullets,
-    PdfColor highlightColor,
-  ) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 12),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Expanded(
-                child: pw.RichText(
-                  text: pw.TextSpan(
-                    style: pw.TextStyle(
-                      fontWeight: pw.FontWeight.bold,
-                      fontSize: 15,
-                      color: PdfColor.fromHex('#4B4F55'),
-                    ),
-                    children: [
-                      pw.TextSpan(text: item.role.ifEmpty('Role')),
-                      pw.TextSpan(text: ' / ${item.company.ifEmpty('Company')}'),
-                    ],
-                  ),
-                ),
-              ),
-              if (item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty)
-                pw.Text(
-                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
-                  style: pw.TextStyle(
-                    color: PdfColor.fromHex('#666B71'),
-                    fontStyle: pw.FontStyle.italic,
-                  ),
-                ),
-            ],
-          ),
-          if (_workSummaryText(item).isNotEmpty) ...[
-            pw.SizedBox(height: 4),
-            pw.Text(_workSummaryText(item)),
-          ],
-          for (final bullet in _workBulletLines(item))
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 3),
-              child: pw.Container(
-                width: double.infinity,
-                padding: const pw.EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 3,
-                ),
-                color: highlightedBullets.contains(bullet)
-                    ? highlightColor
-                    : PdfColors.white,
-                child: pw.Bullet(
-                  text: bullet,
-                  style: pw.TextStyle(
-                    color: PdfColors.black,
-                    fontSize: ResumeTypography.bodyPt,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 
   pw.Widget _buildHighlightedCreativeExperience(
     WorkExperience item,
@@ -2699,60 +2455,6 @@ class ResumePdfService {
     );
   }
 
-  pw.Widget _buildMinimalExperience(WorkExperience item) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 12),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Expanded(
-                child: pw.RichText(
-                  text: pw.TextSpan(
-                    style: pw.TextStyle(
-                      fontWeight: pw.FontWeight.bold,
-                      fontSize: 15,
-                      color: PdfColor.fromHex('#4B4F55'),
-                    ),
-                    children: [
-                      pw.TextSpan(text: item.role.ifEmpty('Role')),
-                      pw.TextSpan(text: ' / ${item.company.ifEmpty('Company')}'),
-                    ],
-                  ),
-                ),
-              ),
-              if (item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty)
-                pw.Text(
-                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
-                  style: pw.TextStyle(
-                    color: PdfColor.fromHex('#666B71'),
-                    fontStyle: pw.FontStyle.italic,
-                  ),
-                ),
-            ],
-          ),
-          if (_workSummaryText(item).isNotEmpty) ...[
-            pw.SizedBox(height: 4),
-            pw.Text(_workSummaryText(item)),
-          ],
-          for (final bullet in _workBulletLines(item))
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 3),
-              child: pw.Bullet(
-                text: bullet,
-                style: pw.TextStyle(
-                  color: PdfColors.black,
-                  fontSize: ResumeTypography.bodyPt,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 
   pw.Widget _buildCreativeExperience(WorkExperience item) {
     return pw.Padding(
