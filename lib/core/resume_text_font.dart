@@ -6,6 +6,8 @@ abstract final class ResumeTypography {
   static const double namePt = 17;
   static const double textLineHeight = 1.4;
   static const double pdfLineSpacingPt = bodyPt * (textLineHeight - 1);
+  static const double sectionGapPreviewPx = 44;
+  static const double sectionGapPdfPt = 30;
 
   /// In-app preview cards use a slightly smaller name when [compact] to reduce overflow.
   static double nameSizePreview(bool compact) => compact ? 14 : namePt;

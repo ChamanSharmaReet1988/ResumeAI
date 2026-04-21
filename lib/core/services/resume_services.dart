@@ -1024,9 +1024,9 @@ class LocalAiResumeService {
     final item = EducationItem(
       institution: institution,
       degree: degree,
-      year: year,
+      startDate: '',
+      endDate: year,
       score: score,
-      details: educationLines.take(3).join(' ').trim(),
     );
 
     return item.isBlank ? const [EducationItem.empty()] : [item];
@@ -1249,7 +1249,13 @@ class LocalAiResumeService {
         (item) => [item.role, item.company, item.description, ...item.bullets],
       ),
       ...resume.visibleEducation.expand(
-        (item) => [item.institution, item.degree, item.score, item.details],
+        (item) => [
+          item.institution,
+          item.degree,
+          item.startDate,
+          item.endDate,
+          item.score,
+        ],
       ),
       ...resume.visibleProjects.expand(
         (item) => [item.title, item.subtitle, item.overview, item.impact],
@@ -1563,9 +1569,7 @@ class LocalAiResumeService {
 
 class ResumePdfService {
   Future<Uint8List> buildPdf(ResumeData resume) async {
-    final bodyFont = resume.template == ResumeTemplate.corporate
-        ? ResumeTextFont.inter
-        : resume.resumeTextFont;
+    final bodyFont = ResumeTextFont.helvetica;
     final document = pw.Document(
       theme: await resumePdfThemeForBodyFont(bodyFont),
     );
@@ -1613,9 +1617,7 @@ class ResumePdfService {
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) async {
-    final bodyFont = resume.template == ResumeTemplate.corporate
-        ? ResumeTextFont.inter
-        : resume.resumeTextFont;
+    final bodyFont = ResumeTextFont.helvetica;
     final document = pw.Document(
       theme: await resumePdfThemeForBodyFont(bodyFont),
     );
@@ -2065,18 +2067,29 @@ class ResumePdfService {
     required PdfColor lineColor,
     required pw.Widget child,
   }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 26),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          _corporateHeadingText(title.toUpperCase()),
-          pw.SizedBox(height: 6),
-          child,
-          pw.SizedBox(height: 10),
-          pw.Container(height: 1, color: lineColor),
-        ],
-      ),
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: _corporateHeadingText(title.toUpperCase()),
+        ),
+        pw.SizedBox(height: 8),
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: child,
+        ),
+        pw.SizedBox(height: 10),
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(
+            30,
+            0,
+            30,
+            ResumeTypography.sectionGapPdfPt,
+          ),
+          child: pw.Container(height: 2, color: lineColor),
+        ),
+      ],
     );
   }
 
@@ -2123,6 +2136,7 @@ class ResumePdfService {
         pw.Positioned(left: 0.24, top: 0, child: pw.Text(value, style: style)),
         pw.Positioned(left: 0.48, top: 0, child: pw.Text(value, style: style)),
         pw.Positioned(left: 0.72, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.96, top: 0, child: pw.Text(value, style: style)),
       ],
     );
   }
@@ -2263,41 +2277,66 @@ class ResumePdfService {
     );
   }
 
+  List<pw.Widget> _twoColumnBulletRows(
+    List<String> items, {
+    double columnGap = 20,
+    double itemBottom = 3,
+  }) {
+    final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
+    if (cleaned.isEmpty) {
+      return const <pw.Widget>[];
+    }
+    final leftCount = (cleaned.length / 2).ceil();
+    return [
+      for (var i = 0; i < leftCount; i++)
+        pw.Padding(
+          padding: pw.EdgeInsets.only(bottom: itemBottom),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.Bullet(
+                  text: cleaned[i],
+                  style: pw.TextStyle(
+                    color: PdfColors.black,
+                    fontSize: ResumeTypography.bodyPt,
+                  ),
+                ),
+              ),
+              pw.SizedBox(width: columnGap),
+              pw.Expanded(
+                child: i + leftCount < cleaned.length
+                    ? pw.Bullet(
+                        text: cleaned[i + leftCount],
+                        style: pw.TextStyle(
+                          color: PdfColors.black,
+                          fontSize: ResumeTypography.bodyPt,
+                        ),
+                      )
+                    : pw.SizedBox(),
+              ),
+            ],
+          ),
+        ),
+    ];
+  }
+
   pw.Widget _twoColumnBulletList(
     List<String> items, {
     double columnGap = 20,
     double itemBottom = 3,
   }) {
-    final midpoint = (items.length / 2).ceil();
-    final left = items.take(midpoint).toList();
-    final right = items.skip(midpoint).toList();
-
-    pw.Widget buildColumn(List<String> columnItems) {
-      return pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          for (final item in columnItems)
-            pw.Padding(
-              padding: pw.EdgeInsets.only(bottom: itemBottom),
-              child: pw.Bullet(
-                text: item,
-                style: pw.TextStyle(
-                  color: PdfColors.black,
-                  fontSize: ResumeTypography.bodyPt,
-                ),
-              ),
-            ),
-        ],
-      );
+    final rows = _twoColumnBulletRows(
+      items,
+      columnGap: columnGap,
+      itemBottom: itemBottom,
+    );
+    if (rows.isEmpty) {
+      return pw.SizedBox();
     }
-
-    return pw.Row(
+    return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Expanded(child: buildColumn(left)),
-        pw.SizedBox(width: columnGap),
-        pw.Expanded(child: buildColumn(right)),
-      ],
+      children: rows,
     );
   }
 
@@ -2319,59 +2358,19 @@ class ResumePdfService {
     return const <String>[];
   }
 
-  pw.Widget _buildCorporateExperience(WorkExperience item) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 10),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Expanded(
-                child: pw.RichText(
-                  text: pw.TextSpan(
-                    children: [
-                      pw.TextSpan(
-                        text: item.role.ifEmpty('Role'),
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                      ),
-                      pw.TextSpan(
-                        text: ' / ${item.company.ifEmpty('Company')}',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (item.startDate.trim().isNotEmpty ||
-                  item.endDate.trim().isNotEmpty)
-                pw.Text(
-                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
-                  style: pw.TextStyle(
-                    color: PdfColor.fromHex('#666B71'),
-                    fontStyle: pw.FontStyle.italic,
-                  ),
-                ),
-            ],
-          ),
-          if (_workSummaryText(item).isNotEmpty) ...[
-            pw.SizedBox(height: 4),
-            pw.Text(_workSummaryText(item)),
-          ],
-          for (final bullet in _workBulletLines(item))
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 3),
-              child: pw.Bullet(
-                text: bullet,
-                style: pw.TextStyle(
-                  color: PdfColors.black,
-                  fontSize: ResumeTypography.bodyPt,
-                ),
-              ),
-            ),
-        ],
-      ),
+  pw.Widget _corporateRoleCompanyText(String role, String company) {
+    final style = pw.TextStyle(
+      fontWeight: pw.FontWeight.bold,
+      fontSize: 15,
+      color: PdfColors.black,
+    );
+    final value = '${role.ifEmpty('Role')} / ${company.ifEmpty('Company')}';
+    return pw.Stack(
+      children: [
+        pw.Text(value, style: style),
+        pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.4, top: 0, child: pw.Text(value, style: style)),
+      ],
     );
   }
 
@@ -2380,68 +2379,66 @@ class ResumePdfService {
     Set<String> highlightedBullets,
     PdfColor highlightColor,
   ) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 12),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
               pw.Expanded(
-                child: pw.RichText(
-                  text: pw.TextSpan(
-                    children: [
-                      pw.TextSpan(
-                        text: item.role.ifEmpty('Role'),
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                      ),
-                      pw.TextSpan(
-                        text: ' / ${item.company.ifEmpty('Company')}',
-                      ),
-                    ],
-                  ),
-                ),
+                child: _corporateRoleCompanyText(item.role, item.company),
               ),
               if (item.startDate.trim().isNotEmpty ||
                   item.endDate.trim().isNotEmpty)
-                pw.Text(
-                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
-                  style: pw.TextStyle(
-                    color: PdfColor.fromHex('#666B71'),
-                    fontStyle: pw.FontStyle.italic,
+                pw.Align(
+                  alignment: pw.Alignment.centerRight,
+                  child: pw.Text(
+                    '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
+                    style: pw.TextStyle(
+                      color: PdfColor.fromHex('#666B71'),
+                      fontStyle: pw.FontStyle.italic,
+                      fontWeight: pw.FontWeight.normal,
+                      font: pw.Font.helveticaOblique(),
+                    ),
                   ),
                 ),
             ],
           ),
+          pw.SizedBox(height: 4),
           if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
             pw.Text(_workSummaryText(item)),
           ],
-          for (final bullet in _workBulletLines(item))
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 4),
-              child: pw.Container(
-                width: double.infinity,
-                padding: const pw.EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 3,
-                ),
-                color: highlightedBullets.contains(bullet)
-                    ? highlightColor
-                    : PdfColors.white,
-                child: pw.Bullet(
-                  text: bullet,
-                  style: pw.TextStyle(
-                    color: PdfColors.black,
-                    fontSize: ResumeTypography.bodyPt,
+          ...(() {
+            final bullets = _workBulletLines(item);
+            return bullets.asMap().entries.map((entry) {
+              final index = entry.key;
+              final bullet = entry.value;
+              return pw.Padding(
+                padding: pw.EdgeInsets.only(top: index == 0 ? 0 : 4),
+                child: pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  color: highlightedBullets.contains(bullet)
+                      ? highlightColor
+                      : PdfColors.white,
+                  child: pw.Bullet(
+                    text: bullet,
+                    style: pw.TextStyle(
+                      color: PdfColors.black,
+                      fontSize: ResumeTypography.bodyPt,
+                    ),
                   ),
                 ),
-              ),
-            ),
-        ],
-      ),
+              );
+            });
+          })(),
+          pw.SizedBox(height: 12),
+      ],
     );
   }
 
@@ -2466,45 +2463,64 @@ class ResumePdfService {
     Set<String> highlightedSkills,
     PdfColor highlightColor,
   ) {
-    final midpoint = (items.length / 2).ceil();
-    final left = items.take(midpoint).toList();
-    final right = items.skip(midpoint).toList();
-
-    pw.Widget buildColumn(List<String> columnItems) {
-      return pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          for (final item in columnItems)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 3),
-              child: pw.Container(
-                width: double.infinity,
-                padding: const pw.EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 2,
-                ),
-                color: highlightedSkills.contains(item)
-                    ? highlightColor
-                    : PdfColors.white,
-                child: pw.Bullet(
-                  text: item,
-                  style: pw.TextStyle(
-                    color: PdfColors.black,
-                    fontSize: ResumeTypography.bodyPt,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      );
+    final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
+    if (cleaned.isEmpty) {
+      return pw.SizedBox();
     }
-
-    return pw.Row(
+    final leftCount = (cleaned.length / 2).ceil();
+    return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Expanded(child: buildColumn(left)),
-        pw.SizedBox(width: 20),
-        pw.Expanded(child: buildColumn(right)),
+        for (var i = 0; i < leftCount; i++)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 3),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Expanded(
+                  child: pw.Container(
+                    width: double.infinity,
+                    padding: const pw.EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    color: highlightedSkills.contains(cleaned[i])
+                        ? highlightColor
+                        : PdfColors.white,
+                    child: pw.Bullet(
+                      text: cleaned[i],
+                      style: pw.TextStyle(
+                        color: PdfColors.black,
+                        fontSize: ResumeTypography.bodyPt,
+                      ),
+                    ),
+                  ),
+                ),
+                pw.SizedBox(width: 20),
+                pw.Expanded(
+                  child: i + leftCount < cleaned.length
+                      ? pw.Container(
+                          width: double.infinity,
+                          padding: const pw.EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          color: highlightedSkills.contains(cleaned[i + leftCount])
+                              ? highlightColor
+                              : PdfColors.white,
+                          child: pw.Bullet(
+                            text: cleaned[i + leftCount],
+                            style: pw.TextStyle(
+                              color: PdfColors.black,
+                              fontSize: ResumeTypography.bodyPt,
+                            ),
+                          ),
+                        )
+                      : pw.SizedBox(),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -2519,19 +2535,34 @@ class ResumePdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
-            item.company.ifEmpty('Company'),
-            style: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColor.fromHex('#4B4F55'),
-            ),
-          ),
-          pw.Text(
-            '${item.role.ifEmpty('Role')}${item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty ? '  ${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}' : ''}',
-            style: pw.TextStyle(
-              color: PdfColor.fromHex('#666B71'),
-              fontStyle: pw.FontStyle.italic,
-            ),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.RichText(
+                  text: pw.TextSpan(
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 15,
+                      color: PdfColor.fromHex('#4B4F55'),
+                    ),
+                    children: [
+                      pw.TextSpan(text: item.role.ifEmpty('Role')),
+                      pw.TextSpan(text: ' / ${item.company.ifEmpty('Company')}'),
+                    ],
+                  ),
+                ),
+              ),
+              if (item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty)
+                pw.Text(
+                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
+                  style: pw.TextStyle(
+                    color: PdfColor.fromHex('#666B71'),
+                    fontStyle: pw.FontStyle.italic,
+                  ),
+                ),
+            ],
           ),
           if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
@@ -2573,16 +2604,33 @@ class ResumePdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
-            '${item.role.ifEmpty('Role').toUpperCase()} ${item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty ? '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}' : ''}',
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-          ),
-          pw.Text(
-            item.company.ifEmpty('Company'),
-            style: pw.TextStyle(
-              color: PdfColor.fromHex('#555B61'),
-              fontStyle: pw.FontStyle.italic,
-            ),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.RichText(
+                  text: pw.TextSpan(
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                    children: [
+                      pw.TextSpan(text: item.role.ifEmpty('Role').toUpperCase()),
+                      pw.TextSpan(text: ' / ${item.company.ifEmpty('Company')}'),
+                    ],
+                  ),
+                ),
+              ),
+              if (item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty)
+                pw.Text(
+                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
+                  style: pw.TextStyle(
+                    color: PdfColor.fromHex('#555B61'),
+                    fontStyle: pw.FontStyle.italic,
+                  ),
+                ),
+            ],
           ),
           if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
@@ -2620,19 +2668,34 @@ class ResumePdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
-            item.company.ifEmpty('Company'),
-            style: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColor.fromHex('#4B4F55'),
-            ),
-          ),
-          pw.Text(
-            '${item.role.ifEmpty('Role')}${item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty ? '  ${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}' : ''}',
-            style: pw.TextStyle(
-              color: PdfColor.fromHex('#666B71'),
-              fontStyle: pw.FontStyle.italic,
-            ),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.RichText(
+                  text: pw.TextSpan(
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 15,
+                      color: PdfColor.fromHex('#4B4F55'),
+                    ),
+                    children: [
+                      pw.TextSpan(text: item.role.ifEmpty('Role')),
+                      pw.TextSpan(text: ' / ${item.company.ifEmpty('Company')}'),
+                    ],
+                  ),
+                ),
+              ),
+              if (item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty)
+                pw.Text(
+                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
+                  style: pw.TextStyle(
+                    color: PdfColor.fromHex('#666B71'),
+                    fontStyle: pw.FontStyle.italic,
+                  ),
+                ),
+            ],
           ),
           if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
@@ -2660,16 +2723,33 @@ class ResumePdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
-            '${item.role.ifEmpty('Role').toUpperCase()} ${item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty ? '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}' : ''}',
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-          ),
-          pw.Text(
-            item.company.ifEmpty('Company'),
-            style: pw.TextStyle(
-              color: PdfColor.fromHex('#555B61'),
-              fontStyle: pw.FontStyle.italic,
-            ),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.RichText(
+                  text: pw.TextSpan(
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                    children: [
+                      pw.TextSpan(text: item.role.ifEmpty('Role').toUpperCase()),
+                      pw.TextSpan(text: ' / ${item.company.ifEmpty('Company')}'),
+                    ],
+                  ),
+                ),
+              ),
+              if (item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty)
+                pw.Text(
+                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
+                  style: pw.TextStyle(
+                    color: PdfColor.fromHex('#555B61'),
+                    fontStyle: pw.FontStyle.italic,
+                  ),
+                ),
+            ],
           ),
           if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
@@ -2692,11 +2772,14 @@ class ResumePdfService {
   }
 
   pw.Widget _buildCorporateEducation(EducationItem item) {
+    final range = [
+      item.startDate.trim(),
+      item.endDate.trim(),
+    ].where((part) => part.isNotEmpty).join(' - ');
     final details = [
       item.institution.trim(),
-      item.year.trim(),
+      range,
       item.score.trim(),
-      item.details.trim(),
     ].where((part) => part.isNotEmpty).join('  ');
 
     return pw.Padding(

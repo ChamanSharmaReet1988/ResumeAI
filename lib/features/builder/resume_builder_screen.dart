@@ -462,13 +462,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-  Future<void> _pickEducationCompletionYear({
+  Future<void> _pickEducationDate({
     required int index,
+    required bool isEndDate,
     required String currentValue,
   }) async {
     FocusScope.of(context).unfocus();
     final selectedYear = await _showYearPickerDialog(
-      title: 'Select completion year',
+      title: isEndDate ? 'Select end year' : 'Select start year',
       initialValue: currentValue,
     );
 
@@ -478,7 +479,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
     context.read<ResumeEditorViewModel>().updateEducation(
       index,
-      (current) => current.copyWith(year: selectedYear),
+      (current) => current.copyWith(
+        startDate: isEndDate ? current.startDate : selectedYear,
+        endDate: isEndDate ? selectedYear : current.endDate,
+      ),
     );
   }
 
@@ -488,7 +492,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       return _parseWorkDate(trimmed);
     }
 
-    final educationYear = _latestEducationCompletionYear();
+    final educationYear = _latestEducationEndYear();
     if (educationYear != null) {
       return DateTime(educationYear, DateTime.now().month);
     }
@@ -496,12 +500,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     return DateTime.now();
   }
 
-  int? _latestEducationCompletionYear() {
+  int? _latestEducationEndYear() {
     final years = context
         .read<ResumeEditorViewModel>()
         .resume
         .education
-        .map((item) => int.tryParse(item.year.trim()))
+        .map((item) => int.tryParse(item.endDate.trim()))
         .whereType<int>()
         .toList();
 
@@ -510,6 +514,56 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     }
 
     return years.reduce(math.max);
+  }
+
+  Future<String?> _showYearPickerDialog({
+    required String title,
+    required String initialValue,
+  }) async {
+    final selectedYear = _parseYear(initialValue);
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(title),
+          content: SizedBox(
+            width: 320,
+            height: 320,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: Theme.of(context).colorScheme.copyWith(
+                  onSurface: Colors.black,
+                  primary: Colors.black,
+                ),
+                textTheme: Theme.of(context).textTheme.copyWith(
+                  bodyLarge: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  bodyMedium: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  labelLarge: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              child: YearPicker(
+                firstDate: DateTime(1970),
+                lastDate: DateTime(2100),
+                selectedDate: DateTime(selectedYear),
+                currentDate: DateTime.now(),
+                onChanged: (date) => Navigator.of(context).pop('${date.year}'),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<DateTime?> _showMonthYearPicker({
@@ -613,56 +667,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               ],
             );
           },
-        );
-      },
-    );
-  }
-
-  Future<String?> _showYearPickerDialog({
-    required String title,
-    required String initialValue,
-  }) async {
-    final selectedYear = _parseYear(initialValue);
-
-    return showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(title),
-          content: SizedBox(
-            width: 320,
-            height: 320,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: Theme.of(context).colorScheme.copyWith(
-                  onSurface: Colors.black,
-                  primary: Colors.black,
-                ),
-                textTheme: Theme.of(context).textTheme.copyWith(
-                  bodyLarge: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                  bodyMedium: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                  labelLarge: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              child: YearPicker(
-                firstDate: DateTime(1970),
-                lastDate: DateTime(2100),
-                selectedDate: DateTime(selectedYear),
-                currentDate: DateTime.now(),
-                onChanged: (date) => Navigator.of(context).pop('${date.year}'),
-              ),
-            ),
-          ),
         );
       },
     );
@@ -1600,12 +1604,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     ),
                     const SizedBox(height: 14),
                     ...(() {
-                      final displayBullets = item.bullets.isNotEmpty
-                          ? item.bullets
-                          : (item.description.trim().isNotEmpty
-                                ? <String>[item.description.trim()]
-                                : <String>['']);
+                      final displayBullets = List<String>.from(item.bullets);
                       return <Widget>[
+                        if (displayBullets.isEmpty)
+                          Text(
+                            'Add bullet points for this experience.',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
                         ...displayBullets.asMap().entries.map((bulletEntry) {
                           final bulletIndex = bulletEntry.key;
                           final bullet = bulletEntry.value;
@@ -1630,13 +1640,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                         viewModel.updateWorkExperience(
                                       index,
                                       (current) {
-                                        final currentBullets = current.bullets
-                                            .where((b) => b.trim().isNotEmpty)
-                                            .toList();
                                         final updated = List<String>.from(
-                                          currentBullets.isEmpty
-                                              ? displayBullets
-                                              : currentBullets,
+                                          current.bullets,
                                         );
                                         if (bulletIndex < updated.length) {
                                           updated[bulletIndex] = value;
@@ -1658,17 +1663,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                           viewModel.updateWorkExperience(
                                             index,
                                             (current) {
-                                              final currentBullets = current
-                                                  .bullets
-                                                  .where(
-                                                    (b) => b.trim().isNotEmpty,
-                                                  )
-                                                  .toList();
                                               final updated = List<String>.from(
-                                                currentBullets.isEmpty
-                                                    ? displayBullets
-                                                    : currentBullets,
-                                              )..removeAt(bulletIndex);
+                                                current.bullets,
+                                              );
+                                              if (bulletIndex >=
+                                                  updated.length) {
+                                                return current;
+                                              }
+                                              updated.removeAt(bulletIndex);
                                               return current.copyWith(
                                                 bullets: updated,
                                                 layoutMode:
@@ -1815,7 +1817,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     return _StepSurface(
       title: 'Education',
       subtitle:
-          'Include your degree, institution, completion year, score, and supporting details like honors or coursework.',
+          'Include your degree, institution, and study timeline.',
       titleTrailing: _resumeSectionVisibilityLead(
         viewModel: viewModel,
         included: viewModel.resume.includeEducationInResume,
@@ -1924,17 +1926,29 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ),
                         ),
                         _PickerField(
-                          key: Key('education-completion-year-$index'),
-                          label: 'Completion year',
-                          value: item.year,
+                          key: Key('education-start-date-$index'),
+                          label: 'Start year',
+                          value: item.startDate,
                           hintText: 'Select year',
-                          onTap: () => _pickEducationCompletionYear(
+                          onTap: () => _pickEducationDate(
                             index: index,
-                            currentValue: item.year,
+                            isEndDate: false,
+                            currentValue: item.startDate,
+                          ),
+                        ),
+                        _PickerField(
+                          key: Key('education-end-date-$index'),
+                          label: 'End year',
+                          value: item.endDate,
+                          hintText: 'Select year',
+                          onTap: () => _pickEducationDate(
+                            index: index,
+                            isEndDate: true,
+                            currentValue: item.endDate,
                           ),
                         ),
                         _SyncTextField(
-                          label: 'Score / marks',
+                          label: 'Marks / score',
                           value: item.score,
                           hintText: '8.6 CGPA, 92%, or 780/800',
                           keyboardType: const TextInputType.numberWithOptions(
@@ -1943,22 +1957,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           onChanged: (value) => viewModel.updateEducation(
                             index,
                             (current) => current.copyWith(score: value),
-                          ),
-                        ),
-                        _SyncTextField(
-                          key: Key('education-details-$index'),
-                          label: 'Details',
-                          value: item.details,
-                          minLines: 3,
-                          maxLines: null,
-                          textCapitalization: TextCapitalization.sentences,
-                          fullWidth: true,
-                          focusNode: _focusNodeForExtendedKeyboardField(
-                            'education-details-$index',
-                          ),
-                          onChanged: (value) => viewModel.updateEducation(
-                            index,
-                            (current) => current.copyWith(details: value),
                           ),
                         ),
                       ],

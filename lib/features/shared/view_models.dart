@@ -601,9 +601,9 @@ class ResumeEditorViewModel extends ChangeNotifier {
             const EducationItem(
               institution: 'Your University',
               degree: 'Bachelor of Technology',
-              year: '2022',
+              startDate: 'Aug 2018',
+              endDate: 'May 2022',
               score: '8.5 CGPA',
-              details: 'Relevant coursework, achievements, or specialization',
             ),
           ]
         : _resume.education;

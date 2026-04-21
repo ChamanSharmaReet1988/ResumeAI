@@ -204,16 +204,14 @@ void main() {
           EducationItem(
             institution: 'Alpha University',
             degree: 'B.Tech',
-            year: '2024',
-            score: '8.5 CGPA',
-            details: 'Alpha details',
+            startDate: '2020',
+            endDate: '2024',
           ),
           EducationItem(
             institution: 'Beta Institute',
             degree: 'M.Tech',
-            year: '2025',
-            score: '9.1 CGPA',
-            details: 'Beta details',
+            startDate: '2023',
+            endDate: '2025',
           ),
         ],
       ),
@@ -244,7 +242,7 @@ void main() {
   });
 
   testWidgets(
-    'work date picker uses month and year UI and defaults to completion year',
+    'work date picker uses month and year UI and defaults to education end year',
     (tester) async {
       viewModel.updateResume(
         (resume) => resume.copyWith(
@@ -262,9 +260,8 @@ void main() {
             EducationItem(
               institution: 'Test University',
               degree: 'B.Tech',
-              year: '2024',
-              score: '8.6 CGPA',
-              details: '',
+              startDate: '2020',
+              endDate: '2024',
             ),
           ],
         ),
@@ -289,14 +286,15 @@ void main() {
     },
   );
 
-  testWidgets('completion year field opens a year picker', (tester) async {
+  testWidgets('education end year field opens year picker', (tester) async {
     viewModel.setStep(2);
 
     await pumpBuilder(tester);
 
-    await tester.tap(find.byKey(const Key('education-completion-year-0')));
+    await tester.tap(find.byKey(const Key('education-end-date-0')));
     await tester.pumpAndSettle();
 
+    expect(find.text('Select end year'), findsOneWidget);
     expect(find.byType(YearPicker), findsOneWidget);
   });
 

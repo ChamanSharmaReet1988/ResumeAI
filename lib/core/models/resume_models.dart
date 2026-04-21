@@ -578,54 +578,55 @@ class EducationItem {
   const EducationItem({
     required this.institution,
     required this.degree,
-    required this.year,
-    required this.score,
-    required this.details,
+    required this.startDate,
+    required this.endDate,
+    this.score = '',
   });
 
   const EducationItem.empty()
     : institution = '',
       degree = '',
-      year = '',
-      score = '',
-      details = '';
+      startDate = '',
+      endDate = '',
+      score = '';
 
   factory EducationItem.fromJson(Map<String, dynamic> json) {
     return EducationItem(
       institution: json['institution'] as String? ?? '',
       degree: json['degree'] as String? ?? '',
-      year: json['year'] as String? ?? '',
+      startDate: json['startDate'] as String? ?? '',
+      endDate:
+          json['endDate'] as String? ?? (json['year'] as String? ?? ''),
       score: json['score'] as String? ?? '',
-      details: json['details'] as String? ?? '',
     );
   }
 
   final String institution;
   final String degree;
-  final String year;
+  final String startDate;
+  final String endDate;
   final String score;
-  final String details;
 
   bool get isBlank =>
       institution.trim().isEmpty &&
       degree.trim().isEmpty &&
-      year.trim().isEmpty &&
-      score.trim().isEmpty &&
-      details.trim().isEmpty;
+      startDate.trim().isEmpty &&
+      endDate.trim().isEmpty &&
+      score.trim().isEmpty;
 
   EducationItem copyWith({
     String? institution,
     String? degree,
-    String? year,
+    String? startDate,
+    String? endDate,
     String? score,
-    String? details,
   }) {
     return EducationItem(
       institution: institution ?? this.institution,
       degree: degree ?? this.degree,
-      year: year ?? this.year,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
       score: score ?? this.score,
-      details: details ?? this.details,
     );
   }
 
@@ -633,9 +634,9 @@ class EducationItem {
     return {
       'institution': institution,
       'degree': degree,
-      'year': year,
+      'startDate': startDate,
+      'endDate': endDate,
       'score': score,
-      'details': details,
     };
   }
 }

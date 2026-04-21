@@ -21,9 +21,7 @@ class ResumePreviewCard extends StatelessWidget {
     final shadow = theme.colorScheme.shadow.withValues(alpha: 0.08);
     final previewTemplate = resume.template.userFacingTemplate;
     final base = theme.textTheme;
-    final ff = previewTemplate == ResumeTemplate.corporate
-        ? ResumeTextFont.inter.flutterFontFamily
-        : 'Calibri';
+    final ff = ResumeTextFont.helvetica.flutterFontFamily;
     final onSurface = theme.colorScheme.onSurface;
     final resumeBodyTheme = theme.copyWith(
       textTheme: base
@@ -244,13 +242,13 @@ abstract final class _CorporatePdfMetrics {
 
   static double headerNameSize(bool compact) => 30;
 
-  static const headerAfterAvatar = 18.0;
+  static const headerAfterAvatar = 25.0;
   static const afterHeader = 18.0;
 
-  /// [_corporateSection] uses `fromLTRB(30, 0, 30, 26)`.
+  /// Keep this aligned with [ResumeTypography.sectionGapPreviewPx].
   static EdgeInsets sectionOuter(bool compact) => compact
-      ? const EdgeInsets.fromLTRB(14, 0, 14, 26)
-      : const EdgeInsets.fromLTRB(30, 0, 30, 26);
+      ? const EdgeInsets.fromLTRB(14, 0, 14, ResumeTypography.sectionGapPreviewPx)
+      : const EdgeInsets.fromLTRB(30, 0, 30, ResumeTypography.sectionGapPreviewPx);
 
   /// [_twoColumnBulletList] column gap.
   static const skillsColumnGap = 24.0;
@@ -376,8 +374,8 @@ class _DarkHeaderPreview extends StatelessWidget {
                             height: nameLineHeight,
                             letterSpacing: 0.15,
                           ),
-                          strokeWidth: 1.6,
-                          xOffset: 0.65,
+                          strokeWidth: 1.9,
+                          xOffset: 0.82,
                         ),
                         if (contactItems.isNotEmpty) ...[
                           SizedBox(height: nameToContactSpacing),
@@ -413,12 +411,6 @@ class _DarkHeaderPreview extends StatelessWidget {
             lineColor: _CorporatePdfMetrics.lineColor,
             child: Text(resume.summary.trim(), style: bodyStyle),
           ),
-        _CorporatePdfLikeSection(
-          outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
-          title: 'SKILLS',
-          lineColor: _CorporatePdfMetrics.lineColor,
-          child: _CorporateSkillsColumns(skills: skills, bodyStyle: bodyStyle),
-        ),
         if (resume.visibleWorkExperiences.isNotEmpty)
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
@@ -464,6 +456,12 @@ class _DarkHeaderPreview extends StatelessWidget {
               ],
             ),
           ),
+        _CorporatePdfLikeSection(
+          outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
+          title: 'SKILLS',
+          lineColor: _CorporatePdfMetrics.lineColor,
+          child: _CorporateSkillsColumns(skills: skills, bodyStyle: bodyStyle),
+        ),
         if (resume.visibleProjects.isNotEmpty)
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
@@ -534,11 +532,11 @@ class _CorporatePdfLikeSection extends StatelessWidget {
               color: const Color.fromARGB(255, 0, 0, 0),
               letterSpacing: 0.1,
             ),
-            strokeWidth: 1.35,
-            xOffset: 0.45,
+            strokeWidth: 1.6,
+            xOffset: 0.58,
           ),
-          const SizedBox(height: 5),
-          Container(height: 1, color: lineColor),
+          const SizedBox(height: 7),
+          Container(height: 2, color: lineColor),
           const SizedBox(height: 12),
           child,
         ],
@@ -625,6 +623,7 @@ class _CorporateExperienceBlock extends StatelessWidget {
     final dateStyle = bodyStyle.copyWith(
       color: dateColor,
       fontStyle: FontStyle.italic,
+      fontWeight: FontWeight.w400,
       fontSize: bodyStyle.fontSize,
     );
 
@@ -632,41 +631,59 @@ class _CorporateExperienceBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: RichText(
-                text: TextSpan(
-                  style: bodyStyle.copyWith(color: onSurface),
-                  children: [
-                    TextSpan(
-                      text: item.role.ifBlank('Role'),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(text: ' / ${item.company.ifBlank('Company')}'),
-                  ],
+              child: _fauxStrokeText(
+                '${item.role.ifBlank('Role')} / ${item.company.ifBlank('Company')}',
+                style: bodyStyle.copyWith(
+                  color: onSurface,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
                 ),
+                strokeWidth: 0.95,
+                xOffset: 0.24,
               ),
             ),
             if (dateStr.isNotEmpty)
-              Text(dateStr, style: dateStyle, textAlign: TextAlign.right),
+              Center(
+                child: Transform(
+                  alignment: Alignment.centerRight,
+                  transform: Matrix4.skewX(-0.22),
+                  child: Text(
+                    dateStr,
+                    style: dateStyle,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ),
           ],
         ),
+        const SizedBox(height: 4),
         if (_workSummaryText(item).isNotEmpty) ...[
           SizedBox(height: _CorporatePdfMetrics.descAfterTitle),
           Text(_workSummaryText(item), style: bodyStyle),
         ],
-        for (final bullet in _workBulletLines(item))
-          Padding(
-            padding: const EdgeInsets.only(top: _CorporatePdfMetrics.bulletTop),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('• ', style: bodyStyle),
-                Expanded(child: Text(bullet, style: bodyStyle)),
-              ],
-            ),
-          ),
+        ...(() {
+          final bullets = _workBulletLines(item);
+          return bullets.asMap().entries.map((entry) {
+            final index = entry.key;
+            final bullet = entry.value;
+            final top = index == 0
+                ? (_CorporatePdfMetrics.bulletTop - 3)
+                : _CorporatePdfMetrics.bulletTop;
+            return Padding(
+              padding: EdgeInsets.only(top: top),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: bodyStyle),
+                  Expanded(child: Text(bullet, style: bodyStyle)),
+                ],
+              ),
+            );
+          });
+        })(),
       ],
     );
   }
@@ -680,11 +697,14 @@ class _CorporateEducationBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final range = [
+      item.startDate.trim(),
+      item.endDate.trim(),
+    ].where((part) => part.isNotEmpty).join(' - ');
     final details = [
       item.institution.trim(),
-      item.year.trim(),
+      range,
       item.score.trim(),
-      item.details.trim(),
     ].where((part) => part.isNotEmpty).join('  ');
 
     return Column(
@@ -1194,6 +1214,7 @@ class _BulletPreview extends StatelessWidget {
                 title,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
+                  fontSize: 15,
                 ),
               ),
               const SizedBox(height: 4),

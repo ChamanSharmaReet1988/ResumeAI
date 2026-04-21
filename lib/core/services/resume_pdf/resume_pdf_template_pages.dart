@@ -1,6 +1,9 @@
 part of 'package:resume_app/core/services/resume_services.dart';
 
 extension _ResumePdfTemplatePages on ResumePdfService {
+  pw.Widget _continuedPageTopGap(pw.Context context) =>
+      context.pageNumber > 1 ? pw.SizedBox(height: 40) : pw.SizedBox();
+
   void _addCorporateTemplatePage(
     pw.Document document,
     ResumeData resume, {
@@ -13,7 +16,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.only(bottom: 30),
+        margin: const pw.EdgeInsets.fromLTRB(0, 0, 0, 30),
+        header: _continuedPageTopGap,
         build: (context) => [
           pw.Container(
             color: headerColor,
@@ -52,7 +56,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                           ),
                         ),
                       ),
-                pw.SizedBox(width: 18),
+                pw.SizedBox(width: 25),
                 pw.Expanded(
                   child: pw.Padding(
                     padding: const pw.EdgeInsets.only(top: 0),
@@ -93,26 +97,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               lineColor: lineColor,
               child: pw.Text(resume.summary.trim()),
             ),
-          if (resume.includeSkillsInResume)
-            _darkHeaderSection(
-              title: 'Skills',
-              lineColor: lineColor,
-              child: _twoColumnBulletList(
-                _skillsForDisplay(resume),
-                columnGap: 24,
-                itemBottom: 5,
-              ),
-            ),
           if (resume.visibleWorkExperiences.isNotEmpty)
-            _darkHeaderSection(
-              title: 'Experience',
-              lineColor: lineColor,
-              child: pw.Column(
-                children: [
-                  for (final item in resume.visibleWorkExperiences)
-                    _buildCorporateExperience(item),
-                ],
-              ),
+            ..._darkHeaderExperienceSectionWidgets(
+              resume.visibleWorkExperiences,
+              lineColor,
             ),
           if (resume.visibleEducation.isNotEmpty)
             _darkHeaderSection(
@@ -124,6 +112,16 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                   for (final item in resume.visibleEducation)
                     _buildCorporateEducation(item),
                 ],
+              ),
+            ),
+          if (resume.includeSkillsInResume)
+            _darkHeaderSection(
+              title: 'Skills',
+              lineColor: lineColor,
+              child: _twoColumnBulletList(
+                _skillsForDisplay(resume),
+                columnGap: 24,
+                itemBottom: 5,
               ),
             ),
           if (resume.visibleProjects.isNotEmpty)
@@ -143,7 +141,6 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               lineColor: lineColor,
               child: _pwCustomSectionBody(item),
             ),
-          pw.SizedBox(height: 10),
         ],
       ),
     );
@@ -154,18 +151,133 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     required PdfColor lineColor,
     required pw.Widget child,
   }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 26),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          _darkHeaderHeadingText(title.toUpperCase()),
-          pw.SizedBox(height: 5),
-          pw.Container(height: 1, color: lineColor),
-          pw.SizedBox(height: 12),
-          child,
-        ],
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: _darkHeaderHeadingText(title.toUpperCase()),
+        ),
+        pw.SizedBox(height: 7),
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: pw.Container(height: 2, color: lineColor),
+        ),
+        pw.SizedBox(height: 12),
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(
+            30,
+            0,
+            30,
+            ResumeTypography.sectionGapPdfPt,
+          ),
+          child: child,
+        ),
+      ],
+    );
+  }
+
+  List<pw.Widget> _darkHeaderExperienceSectionWidgets(
+    List<WorkExperience> items,
+    PdfColor lineColor,
+  ) {
+    final widgets = <pw.Widget>[
+      pw.Padding(
+        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        child: _darkHeaderHeadingText('EXPERIENCE'),
       ),
+      pw.SizedBox(height: 7),
+      pw.Padding(
+        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        child: pw.Container(height: 2, color: lineColor),
+      ),
+      pw.SizedBox(height: 12),
+    ];
+
+    for (var index = 0; index < items.length; index++) {
+      final item = items[index];
+      final start = item.startDate.trim();
+      final end = item.endDate.trim();
+      final dateStr = start.isEmpty && end.isEmpty
+          ? ''
+          : '${start.isNotEmpty ? start : ''}'
+                '${start.isNotEmpty && end.isNotEmpty ? ' - ' : ''}'
+                '${end.isNotEmpty ? end : ''}';
+
+      widgets.add(
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Expanded(
+                child: _darkHeaderRoleCompanyText(
+                  item.role.ifEmpty('Role'),
+                  item.company.ifEmpty('Company'),
+                ),
+              ),
+              if (dateStr.isNotEmpty)
+                pw.Align(
+                  alignment: pw.Alignment.centerRight,
+                  child: pw.Text(
+                    dateStr,
+                    style: pw.TextStyle(
+                      color: PdfColor.fromHex('#666B71'),
+                      fontStyle: pw.FontStyle.italic,
+                      fontWeight: pw.FontWeight.normal,
+                      font: pw.Font.helveticaOblique(),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+
+      widgets.add(pw.SizedBox(height: 4));
+
+      final bullets = _workBulletLines(item);
+      for (var i = 0; i < bullets.length; i++) {
+        final bullet = bullets[i];
+        widgets.add(
+          pw.Padding(
+            padding: pw.EdgeInsets.fromLTRB(30, i == 0 ? 0 : 3, 30, 0),
+            child: pw.Bullet(
+              text: bullet,
+              style: pw.TextStyle(
+                color: PdfColors.black,
+                fontSize: ResumeTypography.bodyPt,
+              ),
+            ),
+          ),
+        );
+      }
+
+      final isLast = index == items.length - 1;
+      widgets.add(
+        pw.SizedBox(
+          height: isLast ? ResumeTypography.sectionGapPdfPt : 10,
+        ),
+      );
+    }
+
+    return widgets;
+  }
+
+  pw.Widget _darkHeaderRoleCompanyText(String role, String company) {
+    final value = '$role / $company';
+    final style = pw.TextStyle(
+      fontWeight: pw.FontWeight.bold,
+      fontSize: 15,
+      color: PdfColors.black,
+    );
+    return pw.Stack(
+      children: [
+        pw.Text(value, style: style),
+        pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.4, top: 0, child: pw.Text(value, style: style)),
+      ],
     );
   }
 
@@ -183,9 +295,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         pw.Positioned(left: 0.64, top: 0, child: pw.Text(value, style: style)),
         pw.Positioned(left: 0.96, top: 0, child: pw.Text(value, style: style)),
         pw.Positioned(left: 1.28, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 1.6, top: 0, child: pw.Text(value, style: style)),
       ],
     );
   }
+
 
   pw.Widget _darkHeaderHeadingText(String value) {
     final style = pw.TextStyle(
@@ -200,6 +314,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         pw.Positioned(left: 0.24, top: 0, child: pw.Text(value, style: style)),
         pw.Positioned(left: 0.48, top: 0, child: pw.Text(value, style: style)),
         pw.Positioned(left: 0.72, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.96, top: 0, child: pw.Text(value, style: style)),
       ],
     );
   }
@@ -215,7 +330,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 30),
+        margin: const pw.EdgeInsets.fromLTRB(28, 0, 28, 30),
+        header: _continuedPageTopGap,
         build: (context) => [
           pw.Center(
             child: profileImage != null
@@ -333,7 +449,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.only(bottom: 30),
+        margin: const pw.EdgeInsets.fromLTRB(0, 0, 0, 30),
+        header: _continuedPageTopGap,
         build: (context) => [
           pw.Container(height: 18, color: dark),
           pw.Padding(
@@ -473,7 +590,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(28, 28, 28, 30),
+        margin: const pw.EdgeInsets.fromLTRB(28, 0, 28, 30),
+        header: _continuedPageTopGap,
         build: (context) => [
           if (profileImage != null) ...[
             pw.Center(
@@ -561,9 +679,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                           pw.Text(
                             [
                               item.institution.trim(),
-                              item.year.trim(),
+                              [
+                                item.startDate.trim(),
+                                item.endDate.trim(),
+                              ].where((part) => part.isNotEmpty).join(' - '),
                               item.score.trim(),
-                              item.details.trim(),
                             ].where((part) => part.isNotEmpty).join('   |   '),
                             textAlign: pw.TextAlign.center,
                           ),
@@ -608,7 +728,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(24, 22, 24, 30),
+        margin: const pw.EdgeInsets.fromLTRB(24, 0, 24, 30),
+        header: _continuedPageTopGap,
         build: (context) => [
           pw.Container(
             color: copper,
@@ -736,7 +857,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(28, 26, 28, 30),
+        margin: const pw.EdgeInsets.fromLTRB(28, 0, 28, 30),
+        header: _continuedPageTopGap,
         build: (context) => [
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
