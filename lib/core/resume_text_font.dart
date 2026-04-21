@@ -9,6 +9,10 @@ abstract final class ResumeTypography {
   static const double sectionGapPreviewPx = 44;
   static const double sectionGapPdfPt = 30;
 
+  /// Dark Header (corporate template) — static name + section heading sizes in preview and PDF.
+  static const double darkHeaderNamePt = 30;
+  static const double darkHeaderSectionTitlePt = 19;
+
   /// In-app preview cards use a slightly smaller name when [compact] to reduce overflow.
   static double nameSizePreview(bool compact) => compact ? 14 : namePt;
 }

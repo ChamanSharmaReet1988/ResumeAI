@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -10,12 +11,21 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../corporate_resume_style.dart';
 import '../models/resume_models.dart';
 import '../resume_text_font.dart';
 import 'resume_pdf/resume_pdf_theme.dart';
 
 part 'resume_pdf/resume_pdf_template_pages.dart';
 part 'resume_pdf/resume_pdf_highlighted_pages.dart';
+
+PdfColor _pdfRgb(Color c) => PdfColor(c.r, c.g, c.b);
+
+PdfColor _corporateTitlePdf(ResumeData resume) =>
+    _pdfRgb(resume.corporateColorPreset.titleColor);
+
+PdfColor _corporateHeaderPdf(ResumeData resume) =>
+    _pdfRgb(resume.corporateColorPreset.headerColor);
 
 pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
   switch (item.layoutMode) {
@@ -1577,8 +1587,15 @@ class ResumePdfService {
     final bodyFont = resume.template.userFacingTemplate == ResumeTemplate.corporate
         ? ResumeTextFont.calibri
         : ResumeTextFont.helvetica;
+    final corporateBodyPt = resume.template.userFacingTemplate ==
+            ResumeTemplate.corporate
+        ? resume.effectiveBodyFontPt.toDouble()
+        : null;
     final document = pw.Document(
-      theme: await resumePdfThemeForBodyFont(bodyFont),
+      theme: await resumePdfThemeForBodyFont(
+        bodyFont,
+        bodyFontPt: corporateBodyPt,
+      ),
     );
     final profileImage = await _loadProfileImage(resume.profileImagePath);
 
@@ -1627,8 +1644,15 @@ class ResumePdfService {
     final bodyFont = resume.template.userFacingTemplate == ResumeTemplate.corporate
         ? ResumeTextFont.calibri
         : ResumeTextFont.helvetica;
+    final corporateBodyPt = resume.template.userFacingTemplate ==
+            ResumeTemplate.corporate
+        ? resume.effectiveBodyFontPt.toDouble()
+        : null;
     final document = pw.Document(
-      theme: await resumePdfThemeForBodyFont(bodyFont),
+      theme: await resumePdfThemeForBodyFont(
+        bodyFont,
+        bodyFontPt: corporateBodyPt,
+      ),
     );
     switch (resume.template) {
       case ResumeTemplate.corporate:
@@ -2074,13 +2098,17 @@ class ResumePdfService {
     required String title,
     required PdfColor lineColor,
     required pw.Widget child,
+    PdfColor? sectionTitleColor,
   }) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Padding(
           padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
-          child: _corporateHeadingText(title.toUpperCase()),
+          child: _corporateHeadingText(
+            title.toUpperCase(),
+            color: sectionTitleColor,
+          ),
         ),
         pw.SizedBox(height: 8),
         pw.Padding(
@@ -2132,11 +2160,11 @@ class ResumePdfService {
     );
   }
 
-  pw.Widget _corporateHeadingText(String value) {
+  pw.Widget _corporateHeadingText(String value, {PdfColor? color}) {
     final style = pw.TextStyle(
-      fontSize: ResumeTypography.headingPt + 2,
+      fontSize: ResumeTypography.darkHeaderSectionTitlePt,
       fontWeight: pw.FontWeight.bold,
-      color: PdfColor.fromHex('#50555C'),
+      color: color ?? PdfColor.fromHex('#50555C'),
     );
     return pw.Text(value, style: style);
   }
@@ -2281,6 +2309,7 @@ class ResumePdfService {
     List<String> items, {
     double columnGap = 20,
     double itemBottom = 3,
+    double fontSize = ResumeTypography.bodyPt,
   }) {
     final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
     if (cleaned.isEmpty) {
@@ -2299,7 +2328,7 @@ class ResumePdfService {
                   text: cleaned[i],
                   style: pw.TextStyle(
                     color: PdfColors.black,
-                    fontSize: ResumeTypography.bodyPt,
+                    fontSize: fontSize,
                   ),
                 ),
               ),
@@ -2310,7 +2339,7 @@ class ResumePdfService {
                         text: cleaned[i + leftCount],
                         style: pw.TextStyle(
                           color: PdfColors.black,
-                          fontSize: ResumeTypography.bodyPt,
+                          fontSize: fontSize,
                         ),
                       )
                     : pw.SizedBox(),
@@ -2325,11 +2354,13 @@ class ResumePdfService {
     List<String> items, {
     double columnGap = 20,
     double itemBottom = 3,
+    double fontSize = ResumeTypography.bodyPt,
   }) {
     final rows = _twoColumnBulletRows(
       items,
       columnGap: columnGap,
       itemBottom: itemBottom,
+      fontSize: fontSize,
     );
     if (rows.isEmpty) {
       return pw.SizedBox();
@@ -2381,8 +2412,9 @@ class ResumePdfService {
   pw.Widget _buildHighlightedCorporateExperience(
     WorkExperience item,
     Set<String> highlightedBullets,
-    PdfColor highlightColor,
-  ) {
+    PdfColor highlightColor, {
+    double bodyFontPt = ResumeTypography.bodyPt,
+  }) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -2434,7 +2466,7 @@ class ResumePdfService {
                     text: bullet,
                     style: pw.TextStyle(
                       color: PdfColors.black,
-                      fontSize: ResumeTypography.bodyPt,
+                      fontSize: bodyFontPt,
                     ),
                   ),
                 ),
@@ -2465,8 +2497,9 @@ class ResumePdfService {
   pw.Widget _twoColumnBulletListWithHighlights(
     List<String> items,
     Set<String> highlightedSkills,
-    PdfColor highlightColor,
-  ) {
+    PdfColor highlightColor, {
+    double fontSize = ResumeTypography.bodyPt,
+  }) {
     final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
     if (cleaned.isEmpty) {
       return pw.SizedBox();
@@ -2495,7 +2528,7 @@ class ResumePdfService {
                       text: cleaned[i],
                       style: pw.TextStyle(
                         color: PdfColors.black,
-                        fontSize: ResumeTypography.bodyPt,
+                        fontSize: fontSize,
                       ),
                     ),
                   ),
@@ -2516,7 +2549,7 @@ class ResumePdfService {
                             text: cleaned[i + leftCount],
                             style: pw.TextStyle(
                               color: PdfColors.black,
-                              fontSize: ResumeTypography.bodyPt,
+                              fontSize: fontSize,
                             ),
                           ),
                         )
@@ -2775,7 +2808,10 @@ class ResumePdfService {
     );
   }
 
-  pw.Widget _buildCorporateEducation(EducationItem item) {
+  pw.Widget _buildCorporateEducation(
+    EducationItem item, {
+    double bodyFontPt = ResumeTypography.bodyPt,
+  }) {
     // Same line as template card: `Institution  |  2014 - 2018`
     final titleLine = corporateEducationTitleLine(
       item.institution,
@@ -2798,13 +2834,19 @@ class ResumePdfService {
             ),
           ),
           pw.SizedBox(height: 4),
-          pw.Text(item.degree.ifEmpty('Degree')),
+          pw.Text(
+            item.degree.ifEmpty('Degree'),
+            style: pw.TextStyle(fontSize: bodyFontPt),
+          ),
         ],
       ),
     );
   }
 
-  pw.Widget _buildCompactProject(ProjectItem item) {
+  pw.Widget _buildCompactProject(
+    ProjectItem item, {
+    double bodyFontPt = ResumeTypography.bodyPt,
+  }) {
     final bullets = _projectBulletLines(item);
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
@@ -2821,7 +2863,7 @@ class ResumePdfService {
                 text: bullets[i],
                 style: pw.TextStyle(
                   color: PdfColors.black,
-                  fontSize: ResumeTypography.bodyPt,
+                  fontSize: bodyFontPt,
                 ),
               ),
             ),

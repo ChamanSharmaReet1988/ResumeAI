@@ -11,7 +11,9 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     required Set<String> highlightedSkills,
     required Map<int, Set<String>> highlightedBulletsByExperience,
   }) {
-    final headerColor = PdfColor.fromHex('#243447');
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final sectionTitleColor = _corporateTitlePdf(resume);
+    final headerColor = _corporateHeaderPdf(resume);
     final lineColor = PdfColor.fromHex('#D7DCE2');
     final highlightColor = PdfColor.fromHex('#FFF0A8');
 
@@ -54,9 +56,9 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       pw.SizedBox(height: 6),
                       pw.Text(
                         _resumeContactItems(resume).join(' | '),
-                        style: const pw.TextStyle(
+                        style: pw.TextStyle(
                           color: PdfColors.white,
-                          fontSize: ResumeTypography.bodyPt,
+                          fontSize: bodyPt,
                           lineSpacing: 2.0,
                         ),
                       ),
@@ -72,6 +74,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _corporateSection(
               title: 'Summary',
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.symmetric(
@@ -86,6 +89,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _corporateSection(
               title: 'Experience',
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: pw.Column(
                 children: [
                   for (
@@ -97,6 +101,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       resume.visibleWorkExperiences[index],
                       highlightedBulletsByExperience[index] ?? const <String>{},
                       highlightColor,
+                      bodyFontPt: bodyPt,
                     ),
                 ],
               ),
@@ -105,11 +110,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _corporateSection(
               title: 'Education',
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   for (final item in resume.visibleEducation)
-                    _buildCorporateEducation(item),
+                    _buildCorporateEducation(item, bodyFontPt: bodyPt),
                 ],
               ),
             ),
@@ -117,6 +123,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _corporateSection(
               title: 'Skills',
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: pw.Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -146,10 +153,11 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _corporateSection(
               title: 'Projects',
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: pw.Column(
                 children: [
                   for (final item in resume.visibleProjects)
-                    _buildCompactProject(item),
+                    _buildCompactProject(item, bodyFontPt: bodyPt),
                 ],
               ),
             ),
@@ -157,6 +165,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _corporateSection(
               title: item.title.ifEmpty('Custom Section'),
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: _pwCustomSectionBody(item),
             ),
         ],
@@ -301,7 +310,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   pw.Widget _highlightedCorporateNameText(String value) {
     final style = pw.TextStyle(
       color: PdfColors.white,
-      fontSize: ResumeTypography.namePt + 4,
+      fontSize: ResumeTypography.darkHeaderNamePt,
       fontWeight: pw.FontWeight.bold,
     );
     return pw.Text(value, style: style);

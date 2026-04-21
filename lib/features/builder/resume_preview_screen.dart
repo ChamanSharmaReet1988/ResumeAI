@@ -6,8 +6,8 @@ import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/bottom_sheet_insets.dart';
+import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
-import '../../core/resume_text_font.dart';
 import '../shared/resume_preview_card.dart';
 import '../templates/templates_screen.dart';
 import '../shared/view_models.dart';
@@ -140,7 +140,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
       isScrollControlled: true,
       showDragHandle: true,
       useSafeArea: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Colors.white,
       builder: (sheetContext) {
         final bottomInset = MediaQuery.viewInsetsOf(sheetContext).bottom;
         // Modal overlay is not under the route's Provider; listen to the
@@ -150,25 +150,9 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
           builder: (context, _) {
             final theme = Theme.of(sheetContext);
             final muted = theme.colorScheme.onSurfaceVariant;
-            final groupValue = _resumeTemplateGroupValue(
-              viewModel.resume.template,
-            );
-
-            Future<void> applyTemplate(ResumeTemplate template) async {
-              if (viewModel.resume.template == template) {
-                return;
-              }
-              viewModel.updateResume((r) => r.copyWith(template: template));
-              await viewModel.saveResume();
-            }
-
-            Future<void> applyResumeTextFont(ResumeTextFont font) async {
-              if (viewModel.resume.resumeTextFont == font) {
-                return;
-              }
-              viewModel.updateResume((r) => r.copyWith(resumeTextFont: font));
-              await viewModel.saveResume();
-            }
+            final resume = viewModel.resume;
+            final presetIndex = resume.corporateColorPresetIndex
+                .clamp(0, kCorporateColorPresets.length - 1);
 
             return Padding(
               padding: EdgeInsets.only(bottom: bottomInset),
@@ -184,146 +168,75 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Color & Font',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Choose an accent color and a font layout. Both apply to your preview and exported PDF.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: muted,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Accent color',
+                        'Font size',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tap a swatch to use that palette.',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: muted,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final template in availableResumeTemplates)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 14),
-                                child: _ResumeAccentSwatch(
-                                  template: template,
-                                  selected:
-                                      _resumeTemplateGroupValue(
-                                        viewModel.resume.template,
-                                      ) ==
-                                      template,
-                                  onTap: () => applyTemplate(template),
-                                ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 24,
+                            child: Text(
+                              '11',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: muted,
                               ),
-                          ],
-                        ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Slider(
+                              value: resume.effectiveBodyFontPt.toDouble(),
+                              min: 11,
+                              max: 15,
+                              divisions: 4,
+                              label: '${resume.effectiveBodyFontPt}',
+                              onChanged: (v) {
+                                viewModel.updateResume(
+                                  (r) => r.copyWith(bodyFontPt: v.round()),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 24,
+                            child: Text(
+                              '15',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: muted,
+                              ),
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 30),
                       Text(
-                        'Font & layout',
+                        'Color',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Each option uses tuned PDF typography for that structure.',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: muted,
-                        ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          for (var i = 0; i < kCorporateColorPresets.length; i++)
+                            _CorporateColorPresetCircle(
+                              preset: kCorporateColorPresets[i],
+                              selected: presetIndex == i,
+                              onTap: () {
+                                viewModel.updateResume(
+                                  (r) =>
+                                      r.copyWith(corporateColorPresetIndex: i),
+                                );
+                              },
+                            ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      RadioGroup<ResumeTemplate>(
-                        groupValue: groupValue,
-                        onChanged: (ResumeTemplate? value) {
-                          if (value != null) {
-                            applyTemplate(value);
-                          }
-                        },
-                        child: Column(
-                          children: [
-                            for (final template in availableResumeTemplates)
-                              RadioListTile<ResumeTemplate>(
-                                value: template,
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(template.label),
-                                subtitle: Text(
-                                  template.fontStyleLabel,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: muted,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      Text(
-                        'Resume text font',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Used in the preview card. PDF export still follows each template’s PDF fonts.',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: muted,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      RadioGroup<ResumeTextFont>(
-                        groupValue: viewModel.resume.resumeTextFont,
-                        onChanged: (ResumeTextFont? value) {
-                          if (value != null) {
-                            applyResumeTextFont(value);
-                          }
-                        },
-                        child: Column(
-                          children: [
-                            for (final font in ResumeTextFont.values)
-                              RadioListTile<ResumeTextFont>(
-                                value: font,
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(font.label),
-                                subtitle: Text(
-                                  font.hint,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: muted,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          onPressed: () {
-                            Navigator.of(sheetContext).pop();
-                            _chooseTemplate();
-                          },
-                          icon: const Icon(Icons.grid_view_rounded, size: 20),
-                          label: const Text('Browse full template gallery'),
-                        ),
-                      ),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
@@ -411,7 +324,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                     )
                                   : _NativePdfPreview(
                                       key: ValueKey(
-                                        '${viewModel.resume.template.name}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
+                                        '${viewModel.resume.template.name}-${viewModel.resume.bodyFontPt}-${viewModel.resume.corporateColorPresetIndex}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                                       ),
                                       documentKey:
                                           '${viewModel.resume.id}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
@@ -437,6 +350,44 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _CorporateColorPresetCircle extends StatelessWidget {
+  const _CorporateColorPresetCircle({
+    required this.preset,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final CorporateColorPreset preset;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Ink(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: preset.headerColor,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: selected ? 0.12 : 0.06),
+                blurRadius: selected ? 8 : 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -527,94 +478,6 @@ class _PreviewBottomAction extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Maps stored template to the canonical entry in [availableResumeTemplates].
-ResumeTemplate _resumeTemplateGroupValue(ResumeTemplate current) {
-  for (final t in availableResumeTemplates) {
-    if (t.userFacingTemplate == current.userFacingTemplate) {
-      return t;
-    }
-  }
-  return availableResumeTemplates.first;
-}
-
-Color _iconOnAccent(Color accent) {
-  final luminance = accent.computeLuminance();
-  return luminance > 0.55 ? const Color(0xFF1F2937) : Colors.white;
-}
-
-class _ResumeAccentSwatch extends StatelessWidget {
-  const _ResumeAccentSwatch({
-    required this.template,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final ResumeTemplate template;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: template.accentColor,
-                border: Border.all(
-                  color: selected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outlineVariant.withValues(
-                          alpha: 0.55,
-                        ),
-                  width: selected ? 3 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: selected
-                  ? Icon(
-                      Icons.check_rounded,
-                      color: _iconOnAccent(template.accentColor),
-                      size: 22,
-                    )
-                  : null,
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: 92,
-              child: Text(
-                template.label,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

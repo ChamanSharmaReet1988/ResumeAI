@@ -4,26 +4,47 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../resume_text_font.dart';
 
 /// Cached PDF themes so repeated exports do not reload font bytes.
-final Map<ResumeTextFont, pw.ThemeData> _resumePdfThemeCache = {};
+/// Key: `fontName_bodyPt` (body pt affects default/bullet styles).
+final Map<String, pw.ThemeData> _resumePdfThemeCache = {};
 
 /// Same [ResumeTextFont] choices as the in-app resume preview ([ResumePreviewCard]).
 /// Embeds bundled TTFs so exported PDFs match the template typography instead of
 /// built-in Helvetica.
-Future<pw.ThemeData> resumePdfThemeForBodyFont(ResumeTextFont font) async {
-  final cached = _resumePdfThemeCache[font];
+///
+/// [bodyFontPt] overrides default body size (e.g. Dark Header 11–15); defaults to [ResumeTypography.bodyPt].
+Future<pw.ThemeData> resumePdfThemeForBodyFont(
+  ResumeTextFont font, {
+  double? bodyFontPt,
+}) async {
+  final pt = bodyFontPt ?? ResumeTypography.bodyPt;
+  final lineSpacing = pt * (ResumeTypography.textLineHeight - 1);
+  final cacheKey = '${font.name}_$pt';
+  final cached = _resumePdfThemeCache[cacheKey];
   if (cached != null) {
     return cached;
   }
   try {
-    final theme = await _buildEmbeddedFontTheme(font);
-    _resumePdfThemeCache[font] = theme;
+    final theme = await _buildEmbeddedFontTheme(
+      font,
+      bodyPt: pt,
+      lineSpacing: lineSpacing,
+    );
+    _resumePdfThemeCache[cacheKey] = theme;
     return theme;
   } catch (_) {
-    return _fallbackHelveticaTheme();
+    final fallback = _fallbackHelveticaTheme(
+      bodyPt: pt,
+      lineSpacing: lineSpacing,
+    );
+    _resumePdfThemeCache[cacheKey] = fallback;
+    return fallback;
   }
 }
 
-pw.ThemeData _fallbackHelveticaTheme() {
+pw.ThemeData _fallbackHelveticaTheme({
+  required double bodyPt,
+  required double lineSpacing,
+}) {
   return pw.ThemeData.withFont(
     base: pw.Font.helvetica(),
     bold: pw.Font.helveticaBold(),
@@ -31,17 +52,21 @@ pw.ThemeData _fallbackHelveticaTheme() {
     boldItalic: pw.Font.helveticaBoldOblique(),
   ).copyWith(
     defaultTextStyle: pw.TextStyle(
-      fontSize: ResumeTypography.bodyPt,
-      lineSpacing: ResumeTypography.pdfLineSpacingPt,
+      fontSize: bodyPt,
+      lineSpacing: lineSpacing,
     ),
     bulletStyle: pw.TextStyle(
-      fontSize: ResumeTypography.bodyPt,
-      lineSpacing: ResumeTypography.pdfLineSpacingPt,
+      fontSize: bodyPt,
+      lineSpacing: lineSpacing,
     ),
   );
 }
 
-Future<pw.ThemeData> _buildEmbeddedFontTheme(ResumeTextFont font) async {
+Future<pw.ThemeData> _buildEmbeddedFontTheme(
+  ResumeTextFont font, {
+  required double bodyPt,
+  required double lineSpacing,
+}) async {
   final fonts = await _loadPdfFonts(font);
   return pw.ThemeData.withFont(
     base: fonts.base,
@@ -50,12 +75,12 @@ Future<pw.ThemeData> _buildEmbeddedFontTheme(ResumeTextFont font) async {
     boldItalic: fonts.boldItalic,
   ).copyWith(
     defaultTextStyle: pw.TextStyle(
-      fontSize: ResumeTypography.bodyPt,
-      lineSpacing: ResumeTypography.pdfLineSpacingPt,
+      fontSize: bodyPt,
+      lineSpacing: lineSpacing,
     ),
     bulletStyle: pw.TextStyle(
-      fontSize: ResumeTypography.bodyPt,
-      lineSpacing: ResumeTypography.pdfLineSpacingPt,
+      fontSize: bodyPt,
+      lineSpacing: lineSpacing,
     ),
   );
 }

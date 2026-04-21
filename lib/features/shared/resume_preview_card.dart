@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
 
@@ -25,23 +26,26 @@ class ResumePreviewCard extends StatelessWidget {
         ? ResumeTextFont.calibri.flutterFontFamily
         : ResumeTextFont.helvetica.flutterFontFamily;
     final onSurface = theme.colorScheme.onSurface;
+    final bodyPx = previewTemplate == ResumeTemplate.corporate
+        ? resume.effectiveBodyFontPt.toDouble()
+        : ResumeTypography.bodyPt.toDouble();
     final resumeBodyTheme = theme.copyWith(
       textTheme: base
           .apply(fontFamily: ff, bodyColor: onSurface, displayColor: onSurface)
           .copyWith(
             bodyLarge: base.bodyLarge?.copyWith(
               fontFamily: ff,
-              fontSize: ResumeTypography.bodyPt,
+              fontSize: bodyPx,
               height: ResumeTypography.textLineHeight,
             ),
             bodyMedium: base.bodyMedium?.copyWith(
               fontFamily: ff,
-              fontSize: ResumeTypography.bodyPt,
+              fontSize: bodyPx,
               height: ResumeTypography.textLineHeight,
             ),
             bodySmall: base.bodySmall?.copyWith(
               fontFamily: ff,
-              fontSize: ResumeTypography.bodyPt,
+              fontSize: bodyPx,
               height: ResumeTypography.textLineHeight,
             ),
             titleSmall: base.titleSmall?.copyWith(
@@ -235,16 +239,15 @@ class _MinimalPreview extends StatelessWidget {
 /// Spacing and type sizes aligned with [ResumePdfService._addCorporateTemplatePage],
 /// [_corporateSection], [_twoColumnBulletList], and [_buildCorporateExperience].
 abstract final class _CorporatePdfMetrics {
-  static const headerColor = Color(0xFF3B4046);
   static const lineColor = Color(0xFFD7DCE2);
   static const dateMutedColor = Color(0xFF666B71);
 
-  static const bodyFontSize = ResumeTypography.bodyPt;
   static const bodyHeight = ResumeTypography.textLineHeight;
 
   static double headerAvatar(bool compact) => compact ? 42 : 48;
 
-  static double headerNameSize(bool compact) => 27;
+  static double headerNameSize(bool _) =>
+      ResumeTypography.darkHeaderNamePt;
 
   static const headerAfterAvatar = 25.0;
   static const afterHeader = 18.0;
@@ -289,15 +292,17 @@ class _DarkHeaderPreview extends StatelessWidget {
     final contactItems = _pdfAlignedContactItems(resume);
     final skills = _pdfAlignedSkills(resume);
     final onSurface = theme.colorScheme.onSurface;
+    final bodyFontPx = resume.effectiveBodyFontPt.toDouble();
+    final preset = resume.corporateColorPreset;
     final bodyLineHeight =
         _CorporatePdfMetrics.bodyHeight +
-        (_darkHeaderExtraLineSpacingPx / _CorporatePdfMetrics.bodyFontSize);
+        (_darkHeaderExtraLineSpacingPx / bodyFontPx);
     final nameLineHeight =
         1.05 +
         (_darkHeaderExtraLineSpacingPx /
             _CorporatePdfMetrics.headerNameSize(isCompact));
     final bodyStyle = TextStyle(
-      fontSize: _CorporatePdfMetrics.bodyFontSize,
+      fontSize: bodyFontPx,
       height: bodyLineHeight,
       color: onSurface,
     );
@@ -314,7 +319,7 @@ class _DarkHeaderPreview extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ColoredBox(
-          color: _CorporatePdfMetrics.headerColor,
+          color: preset.headerColor,
           child: Padding(
             padding: headerPadding,
             child: Row(
@@ -367,9 +372,9 @@ class _DarkHeaderPreview extends StatelessWidget {
                           SizedBox(height: nameToContactSpacing),
                           Text(
                             contactItems.join(' | '),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: ResumeTypography.bodyPt,
+                              fontSize: bodyFontPx,
                               height: 1.35,
                             ),
                           ),
@@ -387,6 +392,7 @@ class _DarkHeaderPreview extends StatelessWidget {
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'SUMMARY',
+            titleColor: preset.titleColor,
             lineColor: _CorporatePdfMetrics.lineColor,
             child: Text(resume.summary.trim(), style: bodyStyle),
           ),
@@ -394,6 +400,7 @@ class _DarkHeaderPreview extends StatelessWidget {
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'EXPERIENCE',
+            titleColor: preset.titleColor,
             lineColor: _CorporatePdfMetrics.lineColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -418,6 +425,7 @@ class _DarkHeaderPreview extends StatelessWidget {
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'EDUCATION AND TRAINING',
+            titleColor: preset.titleColor,
             lineColor: _CorporatePdfMetrics.lineColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,6 +446,7 @@ class _DarkHeaderPreview extends StatelessWidget {
         _CorporatePdfLikeSection(
           outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
           title: 'SKILLS',
+          titleColor: preset.titleColor,
           lineColor: _CorporatePdfMetrics.lineColor,
           child: _CorporateSkillsColumns(skills: skills, bodyStyle: bodyStyle),
         ),
@@ -445,6 +454,7 @@ class _DarkHeaderPreview extends StatelessWidget {
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'PROJECTS',
+            titleColor: preset.titleColor,
             lineColor: _CorporatePdfMetrics.lineColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,6 +476,7 @@ class _DarkHeaderPreview extends StatelessWidget {
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: item.title.ifBlank('Custom section').toUpperCase(),
+            titleColor: preset.titleColor,
             lineColor: _CorporatePdfMetrics.lineColor,
             child: _corporateCustomSectionBody(item, bodyStyle),
           ),
@@ -485,6 +496,7 @@ class _CorporatePdfLikeSection extends StatelessWidget {
   const _CorporatePdfLikeSection({
     required this.outerPadding,
     required this.title,
+    required this.titleColor,
     required this.lineColor,
     required this.child,
   });
@@ -492,6 +504,7 @@ class _CorporatePdfLikeSection extends StatelessWidget {
   /// Matches [_corporateSection] horizontal inset and bottom margin.
   final EdgeInsets outerPadding;
   final String title;
+  final Color titleColor;
   final Color lineColor;
   final Widget child;
 
@@ -505,10 +518,10 @@ class _CorporatePdfLikeSection extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: ResumeTypography.darkHeaderSectionTitlePt,
               fontWeight: FontWeight.w900,
               height: ResumeTypography.textLineHeight,
-              color: const Color.fromARGB(255, 0, 0, 0),
+              color: titleColor,
               letterSpacing: 0.1,
             ),
           ),

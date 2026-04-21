@@ -9,7 +9,9 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     ResumeData resume, {
     pw.MemoryImage? profileImage,
   }) {
-    final headerColor = PdfColor.fromHex('#3B4046');
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final sectionTitleColor = _corporateTitlePdf(resume);
+    final headerColor = _corporateHeaderPdf(resume);
     final lineColor = PdfColor.fromHex('#D7DCE2');
     final headerContactItems = _resumeContactItems(resume);
 
@@ -70,9 +72,9 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                         pw.SizedBox(height: 4),
                         pw.Text(
                           headerContactItems.join(' | '),
-                          style: const pw.TextStyle(
+                          style: pw.TextStyle(
                             color: PdfColors.white,
-                            fontSize: ResumeTypography.bodyPt,
+                            fontSize: bodyPt,
                             lineSpacing: 2.0,
                           ),
                         ),
@@ -88,22 +90,26 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             _darkHeaderSection(
               title: 'Summary',
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: pw.Text(resume.summary.trim()),
             ),
           if (resume.visibleWorkExperiences.isNotEmpty)
             ..._darkHeaderExperienceSectionWidgets(
               resume.visibleWorkExperiences,
               lineColor,
+              sectionTitleColor,
+              bodyPt,
             ),
           if (resume.visibleEducation.isNotEmpty)
             _darkHeaderSection(
               title: 'Education and Training',
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   for (final item in resume.visibleEducation)
-                    _buildCorporateEducation(item),
+                    _buildCorporateEducation(item, bodyFontPt: bodyPt),
                 ],
               ),
             ),
@@ -111,20 +117,23 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             _darkHeaderSection(
               title: 'Skills',
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: _twoColumnBulletList(
                 _skillsForDisplay(resume),
                 columnGap: 24,
                 itemBottom: 5,
+                fontSize: bodyPt,
               ),
             ),
           if (resume.visibleProjects.isNotEmpty)
             _darkHeaderSection(
               title: 'Projects',
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: pw.Column(
                 children: [
                   for (final item in resume.visibleProjects)
-                    _buildCompactProject(item),
+                    _buildCompactProject(item, bodyFontPt: bodyPt),
                 ],
               ),
             ),
@@ -132,6 +141,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             _darkHeaderSection(
               title: item.title.ifEmpty('Custom Section'),
               lineColor: lineColor,
+              sectionTitleColor: sectionTitleColor,
               child: _pwCustomSectionBody(item),
             ),
         ],
@@ -142,6 +152,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   pw.Widget _darkHeaderSection({
     required String title,
     required PdfColor lineColor,
+    required PdfColor sectionTitleColor,
     required pw.Widget child,
   }) {
     return pw.Column(
@@ -149,7 +160,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       children: [
         pw.Padding(
           padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
-          child: _darkHeaderHeadingText(title.toUpperCase()),
+          child: _darkHeaderHeadingText(
+            title.toUpperCase(),
+            color: sectionTitleColor,
+          ),
         ),
         pw.SizedBox(height: 7),
         pw.Padding(
@@ -173,11 +187,16 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   List<pw.Widget> _darkHeaderExperienceSectionWidgets(
     List<WorkExperience> items,
     PdfColor lineColor,
+    PdfColor sectionTitleColor,
+    double bodyPt,
   ) {
     final widgets = <pw.Widget>[
       pw.Padding(
         padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
-        child: _darkHeaderHeadingText('EXPERIENCE'),
+        child: _darkHeaderHeadingText(
+          'EXPERIENCE',
+          color: sectionTitleColor,
+        ),
       ),
       pw.SizedBox(height: 7),
       pw.Padding(
@@ -240,7 +259,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               text: bullet,
               style: pw.TextStyle(
                 color: PdfColors.black,
-                fontSize: ResumeTypography.bodyPt,
+                fontSize: bodyPt,
               ),
             ),
           ),
@@ -271,18 +290,21 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   pw.Widget _darkHeaderNameText(String value) {
     final style = pw.TextStyle(
       color: PdfColors.white,
-      fontSize: 27,
+      fontSize: ResumeTypography.darkHeaderNamePt,
       fontWeight: pw.FontWeight.bold,
     );
     return pw.Text(value, style: style);
   }
 
 
-  pw.Widget _darkHeaderHeadingText(String value) {
+  pw.Widget _darkHeaderHeadingText(
+    String value, {
+    PdfColor color = const PdfColor(0, 0, 0),
+  }) {
     final style = pw.TextStyle(
-      fontSize: 16,
+      fontSize: ResumeTypography.darkHeaderSectionTitlePt,
       fontWeight: pw.FontWeight.bold,
-      color: const PdfColor(0, 0, 0),
+      color: color,
       letterSpacing: 0.1,
     );
     return pw.Text(value, style: style);

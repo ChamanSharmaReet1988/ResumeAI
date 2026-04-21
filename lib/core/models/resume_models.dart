@@ -114,6 +114,8 @@ class ResumeData {
     required this.includeEducationInResume,
     required this.includeSkillsInResume,
     required this.includeProjectsInResume,
+    required this.bodyFontPt,
+    required this.corporateColorPresetIndex,
   });
 
   factory ResumeData.empty({required ResumeTemplate template}) {
@@ -142,6 +144,8 @@ class ResumeData {
       includeEducationInResume: true,
       includeSkillsInResume: true,
       includeProjectsInResume: true,
+      bodyFontPt: 13,
+      corporateColorPresetIndex: 0,
     );
   }
 
@@ -202,6 +206,9 @@ class ResumeData {
       includeEducationInResume: json['includeEducationInResume'] as bool? ?? true,
       includeSkillsInResume: json['includeSkillsInResume'] as bool? ?? true,
       includeProjectsInResume: json['includeProjectsInResume'] as bool? ?? true,
+      bodyFontPt: (json['bodyFontPt'] as num?)?.toInt() ?? 13,
+      corporateColorPresetIndex:
+          (json['corporateColorPresetIndex'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -229,6 +236,12 @@ class ResumeData {
   final bool includeEducationInResume;
   final bool includeSkillsInResume;
   final bool includeProjectsInResume;
+
+  /// Body text size (pt) for Dark Header preview + PDF; typically 11–15.
+  final int bodyFontPt;
+
+  /// Index 0–4 for Dark Header title + top bar colors (see `corporate_resume_style.dart`).
+  final int corporateColorPresetIndex;
 
   List<WorkExperience> get visibleWorkExperiences =>
       includeWorkInResume
@@ -307,6 +320,8 @@ class ResumeData {
     bool? includeEducationInResume,
     bool? includeSkillsInResume,
     bool? includeProjectsInResume,
+    int? bodyFontPt,
+    int? corporateColorPresetIndex,
   }) {
     return ResumeData(
       id: id ?? this.id,
@@ -335,6 +350,9 @@ class ResumeData {
       includeSkillsInResume: includeSkillsInResume ?? this.includeSkillsInResume,
       includeProjectsInResume:
           includeProjectsInResume ?? this.includeProjectsInResume,
+      bodyFontPt: bodyFontPt ?? this.bodyFontPt,
+      corporateColorPresetIndex:
+          corporateColorPresetIndex ?? this.corporateColorPresetIndex,
     );
   }
 
@@ -364,6 +382,8 @@ class ResumeData {
       'includeEducationInResume': includeEducationInResume,
       'includeSkillsInResume': includeSkillsInResume,
       'includeProjectsInResume': includeProjectsInResume,
+      'bodyFontPt': bodyFontPt,
+      'corporateColorPresetIndex': corporateColorPresetIndex,
     };
   }
 }
