@@ -21,7 +21,9 @@ class ResumePreviewCard extends StatelessWidget {
     final shadow = theme.colorScheme.shadow.withValues(alpha: 0.08);
     final previewTemplate = resume.template.userFacingTemplate;
     final base = theme.textTheme;
-    final ff = ResumeTextFont.helvetica.flutterFontFamily;
+    final ff = previewTemplate == ResumeTemplate.corporate
+        ? ResumeTextFont.calibri.flutterFontFamily
+        : ResumeTextFont.helvetica.flutterFontFamily;
     final onSurface = theme.colorScheme.onSurface;
     final resumeBodyTheme = theme.copyWith(
       textTheme: base
@@ -242,7 +244,7 @@ abstract final class _CorporatePdfMetrics {
 
   static double headerAvatar(bool compact) => compact ? 42 : 48;
 
-  static double headerNameSize(bool compact) => 30;
+  static double headerNameSize(bool compact) => 27;
 
   static const headerAfterAvatar = 25.0;
   static const afterHeader = 18.0;
@@ -271,36 +273,6 @@ abstract final class _CorporatePdfMetrics {
   static const bulletTop = 3.0;
   static const educationBlockBottom = 8.0;
   static const projectBlockBottom = 8.0;
-}
-
-Widget _fauxStrokeText(
-  String text, {
-  required TextStyle style,
-  double strokeWidth = 0.9,
-  double xOffset = 0.25,
-  int? maxLines,
-  TextOverflow? overflow,
-}) {
-  final color = style.color ?? Colors.black;
-  return Stack(
-    children: [
-      Text(
-        text,
-        maxLines: maxLines,
-        overflow: overflow,
-        style: style.copyWith(
-          foreground: Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = strokeWidth
-            ..color = color,
-        ),
-      ),
-      Transform.translate(
-        offset: Offset(xOffset, 0),
-        child: Text(text, maxLines: maxLines, overflow: overflow, style: style),
-      ),
-    ],
-  );
 }
 
 class _DarkHeaderPreview extends StatelessWidget {
@@ -379,7 +351,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _fauxStrokeText(
+                        Text(
                           name.toUpperCase(),
                           style: TextStyle(
                             color: Colors.white,
@@ -390,8 +362,6 @@ class _DarkHeaderPreview extends StatelessWidget {
                             height: nameLineHeight,
                             letterSpacing: 0.15,
                           ),
-                          strokeWidth: 2.9,
-                          xOffset: 0.82,
                         ),
                         if (contactItems.isNotEmpty) ...[
                           SizedBox(height: nameToContactSpacing),
@@ -400,7 +370,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: ResumeTypography.bodyPt,
-                              height: 8.0,
+                              height: 1.35,
                             ),
                           ),
                         ],
@@ -532,17 +502,15 @@ class _CorporatePdfLikeSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _fauxStrokeText(
+          Text(
             title,
             style: TextStyle(
-              fontSize: 21,
+              fontSize: 16,
               fontWeight: FontWeight.w900,
               height: ResumeTypography.textLineHeight,
               color: const Color.fromARGB(255, 0, 0, 0),
               letterSpacing: 0.1,
             ),
-            strokeWidth: 2.0,
-            xOffset: 0.58,
           ),
           const SizedBox(height: 7),
           Container(height: 2, color: lineColor),
@@ -643,15 +611,13 @@ class _CorporateExperienceBlock extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: _fauxStrokeText(
+              child: Text(
                 '${item.role.ifBlank('Role')} / ${item.company.ifBlank('Company')}',
                 style: bodyStyle.copyWith(
                   color: onSurface,
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
                 ),
-                strokeWidth: 1.45,
-                xOffset: 0.24,
               ),
             ),
             if (dateStr.isNotEmpty)
@@ -708,61 +674,27 @@ class _CorporateEducationBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final onSurface = theme.colorScheme.onSurface;
-    final start = item.startDate.trim();
-    final end = item.endDate.trim();
-    final dateStr = start.isEmpty && end.isEmpty
-        ? ''
-        : '${start.isNotEmpty ? start : ''}'
-              '${start.isNotEmpty && end.isNotEmpty ? ' - ' : ''}'
-              '${end.isNotEmpty ? end : ''}';
-    final dateStyle = bodyStyle.copyWith(
-      color: const Color(0xFF666B71),
-      fontStyle: FontStyle.italic,
-      fontWeight: FontWeight.w400,
+    // Same line as template card: `Institution  |  2014 - 2018`
+    final titleLine = corporateEducationTitleLine(
+      item.institution,
+      item.startDate,
+      item.endDate,
+      institutionFallback: 'Institution',
     );
-    const headerRowHeight = 22.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: headerRowHeight,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: _fauxStrokeText(
-                    item.institution.ifBlank('Institution'),
-                    style: bodyStyle.copyWith(
-                      color: onSurface,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 15,
-                      height: 1.0,
-                    ),
-                    strokeWidth: 1.45,
-                    xOffset: 0.24,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ),
-
-            if (dateStr.isNotEmpty)
-              SizedBox(
-                height: headerRowHeight,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    dateStr,
-                    style: dateStyle.copyWith(height: 1.0),
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-              ),
-          ],
+        Text(
+          titleLine,
+          style: bodyStyle.copyWith(
+            color: onSurface,
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            height: 1.0,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
         Text(item.degree.ifBlank('Degree'), style: bodyStyle),
@@ -782,11 +714,9 @@ class _CorporateProjectBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fauxStrokeText(
+        Text(
           item.title.ifBlank('Project'),
           style: bodyStyle.copyWith(fontWeight: FontWeight.w900, fontSize: 15),
-          strokeWidth: 1.45,
-          xOffset: 0.24,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

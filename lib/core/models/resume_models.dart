@@ -641,6 +641,30 @@ class EducationItem {
   }
 }
 
+/// `2014 - 2018`, or a single year if only one side is set (matches template card).
+String educationDateRangeLabel(String startDate, String endDate) {
+  final a = startDate.trim();
+  final b = endDate.trim();
+  if (a.isEmpty && b.isEmpty) return '';
+  if (a.isEmpty) return b;
+  if (b.isEmpty) return a;
+  return '$a - $b';
+}
+
+/// Dark Header education first line: `Northeastern University  |  2014 - 2018`.
+String corporateEducationTitleLine(
+  String institution,
+  String startDate,
+  String endDate, {
+  String institutionFallback = 'Institution',
+}) {
+  final inst =
+      institution.trim().isEmpty ? institutionFallback : institution.trim();
+  final range = educationDateRangeLabel(startDate, endDate);
+  if (range.isEmpty) return inst;
+  return '$inst  |  $range';
+}
+
 class ProjectItem {
   const ProjectItem({
     required this.title,

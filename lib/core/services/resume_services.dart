@@ -1574,7 +1574,9 @@ class LocalAiResumeService {
 
 class ResumePdfService {
   Future<Uint8List> buildPdf(ResumeData resume) async {
-    final bodyFont = ResumeTextFont.helvetica;
+    final bodyFont = resume.template.userFacingTemplate == ResumeTemplate.corporate
+        ? ResumeTextFont.calibri
+        : ResumeTextFont.helvetica;
     final document = pw.Document(
       theme: await resumePdfThemeForBodyFont(bodyFont),
     );
@@ -1622,7 +1624,9 @@ class ResumePdfService {
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) async {
-    final bodyFont = ResumeTextFont.helvetica;
+    final bodyFont = resume.template.userFacingTemplate == ResumeTemplate.corporate
+        ? ResumeTextFont.calibri
+        : ResumeTextFont.helvetica;
     final document = pw.Document(
       theme: await resumePdfThemeForBodyFont(bodyFont),
     );
@@ -2130,19 +2134,11 @@ class ResumePdfService {
 
   pw.Widget _corporateHeadingText(String value) {
     final style = pw.TextStyle(
-      fontSize: ResumeTypography.headingPt + 7,
+      fontSize: ResumeTypography.headingPt + 2,
       fontWeight: pw.FontWeight.bold,
       color: PdfColor.fromHex('#50555C'),
     );
-    return pw.Stack(
-      children: [
-        pw.Text(value, style: style),
-        pw.Positioned(left: 0.24, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.48, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.72, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.96, top: 0, child: pw.Text(value, style: style)),
-      ],
-    );
+    return pw.Text(value, style: style);
   }
 
   pw.Widget _centeredAccentSection({
@@ -2369,14 +2365,7 @@ class ResumePdfService {
       color: PdfColors.black,
     );
     final value = '${role.ifEmpty('Role')} / ${company.ifEmpty('Company')}';
-    return pw.Stack(
-      children: [
-        pw.Text(value, style: style),
-        pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.4, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.6, top: 0, child: pw.Text(value, style: style)),
-      ],
-    );
+    return pw.Text(value, style: style);
   }
 
   pw.Widget _corporateStrokeLabelText(String value) {
@@ -2386,14 +2375,7 @@ class ResumePdfService {
       color: PdfColors.black,
       lineSpacing: 0,
     );
-    return pw.Stack(
-      children: [
-        pw.Text(value, style: style),
-        pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.4, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.6, top: 0, child: pw.Text(value, style: style)),
-      ],
-    );
+    return pw.Text(value, style: style);
   }
 
   pw.Widget _buildHighlightedCorporateExperience(
@@ -2794,49 +2776,26 @@ class ResumePdfService {
   }
 
   pw.Widget _buildCorporateEducation(EducationItem item) {
-    final start = item.startDate.trim();
-    final end = item.endDate.trim();
-    final dateStr = start.isEmpty && end.isEmpty
-        ? ''
-        : '${start.isNotEmpty ? start : ''}'
-              '${start.isNotEmpty && end.isNotEmpty ? ' - ' : ''}'
-              '${end.isNotEmpty ? end : ''}';
-    const headerRowHeight = 18.0;
+    // Same line as template card: `Institution  |  2014 - 2018`
+    final titleLine = corporateEducationTitleLine(
+      item.institution,
+      item.startDate,
+      item.endDate,
+    );
 
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
-            children: [
-              pw.Expanded(
-                child: pw.Container(
-                  height: headerRowHeight,
-                  alignment: pw.Alignment.centerLeft,
-                  child: _corporateStrokeLabelText(
-                    item.institution.ifEmpty('Institution'),
-                  ),
-                ),
-              ),
-              if (dateStr.isNotEmpty)
-                pw.Container(
-                  height: headerRowHeight,
-                  alignment: pw.Alignment.centerRight,
-                  child: pw.Text(
-                    dateStr,
-                    style: pw.TextStyle(
-                      color: PdfColor.fromHex('#666B71'),
-                      fontStyle: pw.FontStyle.italic,
-                      fontWeight: pw.FontWeight.normal,
-                      font: pw.Font.helveticaOblique(),
-                      lineSpacing: 0,
-                    ),
-                  ),
-                ),
-            ],
+          pw.Text(
+            titleLine,
+            style: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              fontSize: 15,
+              color: PdfColors.black,
+              lineSpacing: 0,
+            ),
           ),
           pw.SizedBox(height: 4),
           pw.Text(item.degree.ifEmpty('Degree')),

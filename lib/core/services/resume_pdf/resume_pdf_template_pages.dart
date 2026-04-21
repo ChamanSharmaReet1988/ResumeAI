@@ -73,7 +73,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                           style: const pw.TextStyle(
                             color: PdfColors.white,
                             fontSize: ResumeTypography.bodyPt,
-                            lineSpacing: 8.0,
+                            lineSpacing: 2.0,
                           ),
                         ),
                       ],
@@ -265,54 +265,27 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       fontSize: 15,
       color: PdfColors.black,
     );
-    return pw.Stack(
-      children: [
-        pw.Text(value, style: style),
-        pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.4, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.6, top: 0, child: pw.Text(value, style: style)),
-      ],
-    );
+    return pw.Text(value, style: style);
   }
 
   pw.Widget _darkHeaderNameText(String value) {
     final style = pw.TextStyle(
       color: PdfColors.white,
-      fontSize: 30,
+      fontSize: 27,
       fontWeight: pw.FontWeight.bold,
     );
-    // Faux-stroke by drawing the same text with tiny x offsets.
-    return pw.Stack(
-      children: [
-        pw.Text(value, style: style),
-        pw.Positioned(left: 0.32, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.64, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.96, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 1.28, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 1.6, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 1.92, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 2.24, top: 0, child: pw.Text(value, style: style)),
-      ],
-    );
+    return pw.Text(value, style: style);
   }
 
 
   pw.Widget _darkHeaderHeadingText(String value) {
     final style = pw.TextStyle(
-      fontSize: 21,
+      fontSize: 16,
       fontWeight: pw.FontWeight.bold,
       color: const PdfColor(0, 0, 0),
       letterSpacing: 0.1,
     );
-    return pw.Stack(
-      children: [
-        pw.Text(value, style: style),
-        pw.Positioned(left: 0.24, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.48, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.72, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.96, top: 0, child: pw.Text(value, style: style)),
-      ],
-    );
+    return pw.Text(value, style: style);
   }
 
   void _addMinimalTemplatePage(

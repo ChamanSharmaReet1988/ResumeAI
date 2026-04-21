@@ -57,7 +57,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                         style: const pw.TextStyle(
                           color: PdfColors.white,
                           fontSize: ResumeTypography.bodyPt,
-                          lineSpacing: 8.0,
+                          lineSpacing: 2.0,
                         ),
                       ),
                     ],
@@ -304,18 +304,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
       fontSize: ResumeTypography.namePt + 4,
       fontWeight: pw.FontWeight.bold,
     );
-    return pw.Stack(
-      children: [
-        pw.Text(value, style: style),
-        pw.Positioned(left: 0.3, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.6, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 0.9, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 1.2, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 1.5, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 1.8, top: 0, child: pw.Text(value, style: style)),
-        pw.Positioned(left: 2.1, top: 0, child: pw.Text(value, style: style)),
-      ],
-    );
+    return pw.Text(value, style: style);
   }
 
   void _addHighlightedCreativeTemplatePage(

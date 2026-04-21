@@ -528,8 +528,8 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                height: 56,
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                height: 54,
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
                 decoration: const BoxDecoration(
                   color: header,
                   borderRadius: BorderRadius.vertical(top: Radius.zero),
@@ -547,7 +547,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                         'ML',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 6.5,
+                          fontSize: 7.2,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -568,17 +568,27 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Austin, TX 78701',
+                            'Austin, TX 78701  |  +1 512 555 0148',
                             style: TextStyle(
                               color: Colors.white70,
-                              fontSize: 5.2,
+                              fontSize: 4.5,
+                              height: 1.35,
                             ),
                           ),
                           Text(
-                            'maya.lopez@mail.com  |  +1 512 555 0148',
+                            'portfolio.dev/maya  |  github.com/mayalopez',
                             style: TextStyle(
                               color: Colors.white70,
-                              fontSize: 5.2,
+                              fontSize: 4.5,
+                              height: 1.35,
+                            ),
+                          ),
+                          Text(
+                            'linkedin.com/in/mayalopez',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 4.5,
+                              height: 1.35,
                             ),
                           ),
                         ],
@@ -592,7 +602,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                 child: DefaultTextStyle(
                   style: const TextStyle(
                     fontSize: 4.6,
-                    height: 1.32,
+                    height: 1.3,
                     color: text,
                   ),
                   child: Column(
@@ -602,41 +612,11 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                         title: 'SUMMARY',
                         lineColor: line,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       const Text(
-                        'Client success manager with 6 years leading renewals, onboarding, and high-touch account support for fast-growing SaaS teams.',
-                      ),
-                      const SizedBox(height: 7),
-                      const _MiniSectionHeading(
-                        title: 'SKILLS',
-                        lineColor: line,
+                        'Client success manager focused on renewals and onboarding.',
                       ),
                       const SizedBox(height: 4),
-                      const Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _MiniBulletColumn(
-                              items: [
-                                'Renewal strategy',
-                                'CRM operations',
-                                'Service recovery',
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: _MiniBulletColumn(
-                              items: [
-                                'Lifecycle emails',
-                                'Stakeholder updates',
-                                'Churn analysis',
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 7),
                       const _MiniSectionHeading(
                         title: 'EXPERIENCE',
                         lineColor: line,
@@ -650,27 +630,57 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                           'Lifted renewal rate by 14% through proactive risk reviews.',
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Row(
+                      const SizedBox(height: 4),
+                      const _MiniSectionHeading(
+                        title: 'EDUCATION AND TRAINING',
+                        lineColor: line,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Northeastern University  |  2014 - 2018',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'BBA, Communication Strategy',
+                      ),
+                      const SizedBox(height: 4),
+                      const _MiniSectionHeading(
+                        title: 'SKILLS',
+                        lineColor: line,
+                      ),
+                      const SizedBox(height: 4),
+                      const Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Expanded(
-                            child: _MiniInfoSection(
-                              heading: 'EDUCATION',
-                              lineColor: line,
-                              lines: ['BBA, Communication Strategy', '2018'],
+                            child: _MiniBulletColumn(
+                              items: ['Renewal strategy', 'CRM operations'],
                             ),
                           ),
                           SizedBox(width: 10),
                           Expanded(
-                            child: _MiniInfoSection(
-                              heading: 'LANGUAGES',
-                              lineColor: line,
-                              lines: ['English  C2', 'Spanish  B2'],
+                            child: _MiniBulletColumn(
+                              items: ['Lifecycle emails', 'Churn analysis'],
                             ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 4),
+                      const _MiniSectionHeading(
+                        title: 'PROJECTS',
+                        lineColor: line,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Customer Health Dashboard',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Shipped dashboard for weekly reviews.',
+                      ),
+                      const SizedBox(height: 15),
                     ],
                   ),
                 ),
