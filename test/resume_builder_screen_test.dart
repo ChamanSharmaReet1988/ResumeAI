@@ -58,18 +58,18 @@ void main() {
     viewModel.setStep(1);
   });
 
-  test('skills are capped at 50', () async {
-    for (var index = 0; index < ResumeEditorViewModel.maxSkills; index++) {
+  test('skills can grow without hard cap', () async {
+    for (var index = 0; index < 80; index++) {
       expect(viewModel.addSkill('Skill $index'), isTrue);
     }
 
-    expect(viewModel.resume.skills.length, ResumeEditorViewModel.maxSkills);
-    expect(viewModel.addSkill('Overflow Skill'), isFalse);
+    expect(viewModel.resume.skills.length, 80);
+    expect(viewModel.addSkill('Overflow Skill'), isTrue);
 
     await viewModel.suggestSkills();
 
-    expect(viewModel.resume.skills.length, ResumeEditorViewModel.maxSkills);
-    expect(viewModel.resume.skills, isNot(contains('Overflow Skill')));
+    expect(viewModel.resume.skills.length, greaterThan(80));
+    expect(viewModel.resume.skills, contains('Overflow Skill'));
 
     viewModel.dispose();
   });
@@ -229,7 +229,7 @@ void main() {
     expect(find.text('Beta Institute'), findsWidgets);
   });
 
-  testWidgets('projects no longer show a subtitle or stack field', (
+  testWidgets('projects show bullet points input only', (
     tester,
   ) async {
     viewModel.setStep(4);
@@ -238,7 +238,9 @@ void main() {
 
     expect(find.text('Subtitle or stack'), findsNothing);
     expect(find.text('Project title'), findsOneWidget);
-    expect(find.text('Overview'), findsOneWidget);
+    expect(find.text('Overview'), findsNothing);
+    expect(find.text('Tools & Technologies'), findsNothing);
+    expect(find.text('Bullet 1'), findsOneWidget);
   });
 
   testWidgets(

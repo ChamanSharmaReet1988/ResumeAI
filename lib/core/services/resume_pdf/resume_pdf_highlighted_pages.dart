@@ -38,7 +38,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     _resumeInitials(resume),
                     style: pw.TextStyle(
                       color: PdfColors.white,
-                      fontSize: 16,
+                      fontSize: 19,
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
@@ -53,10 +53,11 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       ),
                       pw.SizedBox(height: 6),
                       pw.Text(
-                        _resumeContactItems(resume).join('  /  '),
+                        _resumeContactItems(resume).join(' | '),
                         style: const pw.TextStyle(
                           color: PdfColors.white,
                           fontSize: ResumeTypography.bodyPt,
+                          lineSpacing: 8.0,
                         ),
                       ),
                     ],
@@ -194,7 +195,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               child: pw.Text(
                 _resumeInitials(resume),
                 style: pw.TextStyle(
-                  fontSize: 16,
+                  fontSize: 19,
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),
@@ -311,6 +312,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         pw.Positioned(left: 0.9, top: 0, child: pw.Text(value, style: style)),
         pw.Positioned(left: 1.2, top: 0, child: pw.Text(value, style: style)),
         pw.Positioned(left: 1.5, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 1.8, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 2.1, top: 0, child: pw.Text(value, style: style)),
       ],
     );
   }
@@ -355,7 +358,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       child: pw.Text(
                         _resumeInitials(resume),
                         style: pw.TextStyle(
-                          fontSize: 22,
+                          fontSize: 25,
                           fontWeight: pw.FontWeight.bold,
                           color: dark,
                         ),
@@ -589,7 +592,6 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                                 item.startDate.trim(),
                                 item.endDate.trim(),
                               ].where((part) => part.isNotEmpty).join(' - '),
-                              item.score.trim(),
                             ].where((part) => part.isNotEmpty).join('   |   '),
                             textAlign: pw.TextAlign.center,
                           ),
@@ -815,7 +817,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                             _resumeInitials(resume),
                             style: pw.TextStyle(
                               color: copper,
-                              fontSize: 22,
+                              fontSize: 25,
                               fontWeight: pw.FontWeight.bold,
                             ),
                           ),

@@ -644,23 +644,27 @@ class EducationItem {
 class ProjectItem {
   const ProjectItem({
     required this.title,
-    required this.subtitle,
-    required this.overview,
-    required this.impact,
+    this.subtitle = '',
+    this.overview = '',
+    this.impact = '',
+    this.bullets = const [],
   });
 
   const ProjectItem.empty()
     : title = '',
       subtitle = '',
       overview = '',
-      impact = '';
+      impact = '',
+      bullets = const [];
 
   factory ProjectItem.fromJson(Map<String, dynamic> json) {
+    final bulletsJson = json['bullets'] as List<dynamic>?;
     return ProjectItem(
       title: json['title'] as String? ?? '',
       subtitle: json['subtitle'] as String? ?? '',
       overview: json['overview'] as String? ?? '',
       impact: json['impact'] as String? ?? '',
+      bullets: bulletsJson?.map((item) => item.toString()).toList() ?? const [],
     );
   }
 
@@ -668,21 +672,27 @@ class ProjectItem {
   final String subtitle;
   final String overview;
   final String impact;
+  final List<String> bullets;
 
   bool get isBlank =>
-      title.trim().isEmpty && overview.trim().isEmpty && impact.trim().isEmpty;
+      title.trim().isEmpty &&
+      overview.trim().isEmpty &&
+      impact.trim().isEmpty &&
+      bullets.every((item) => item.trim().isEmpty);
 
   ProjectItem copyWith({
     String? title,
     String? subtitle,
     String? overview,
     String? impact,
+    List<String>? bullets,
   }) {
     return ProjectItem(
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
       overview: overview ?? this.overview,
       impact: impact ?? this.impact,
+      bullets: bullets ?? this.bullets,
     );
   }
 
@@ -692,6 +702,7 @@ class ProjectItem {
       'subtitle': subtitle,
       'overview': overview,
       'impact': impact,
+      'bullets': bullets,
     };
   }
 }

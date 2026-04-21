@@ -152,7 +152,6 @@ class CoverLetterLibraryViewModel extends ChangeNotifier {
 }
 
 class ResumeEditorViewModel extends ChangeNotifier {
-  static const int maxSkills = 50;
   static const Duration _autoSaveDelay = Duration(milliseconds: 500);
 
   ResumeEditorViewModel({
@@ -182,7 +181,6 @@ class ResumeEditorViewModel extends ChangeNotifier {
   ResumeAnalysis? get analysis => _analysis;
   JobDescriptionInsights? get jobInsights => _jobInsights;
   String get coverLetter => _coverLetter;
-  bool get hasReachedSkillLimit => _resume.skills.length >= maxSkills;
 
   /// Fixed builder steps (horizontal chips before user-defined categories).
   static const coreStepTitles = [
@@ -448,7 +446,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
       return false;
     }
 
-    if (_resume.skills.contains(value) || hasReachedSkillLimit) {
+    if (_resume.skills.contains(value)) {
       return false;
     }
 
@@ -501,9 +499,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
     await _runBusy(() async {
       final suggestions = await aiService.suggestSkills(resume: _resume);
       final items = {..._resume.skills, ...suggestions}.toList()..sort();
-      updateResume(
-        (resume) => resume.copyWith(skills: items.take(maxSkills).toList()),
-      );
+      updateResume((resume) => resume.copyWith(skills: items));
     });
   }
 
@@ -612,10 +608,10 @@ class ResumeEditorViewModel extends ChangeNotifier {
         ? [
             const ProjectItem(
               title: 'AI Resume Builder',
-              subtitle: '',
-              overview:
-                  'Built a mobile app that lets users create polished resumes in minutes with guided prompts and AI suggestions.',
-              impact: 'Flutter, Dart, Material 3',
+              bullets: [
+                'Built a mobile app that lets users create polished resumes in minutes with guided prompts and AI suggestions.',
+                'Tools: Flutter, Dart, Material 3',
+              ],
             ),
           ]
         : _resume.projects;

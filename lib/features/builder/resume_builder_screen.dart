@@ -78,20 +78,37 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   int _compareProjectFocusKeys(String a, String b) {
-    int parseIndex(String key) => int.tryParse(key.split('-').last) ?? 0;
+    int parseProjectIndex(String key) {
+      final parts = key.split('-');
+      if (parts.length >= 4 && parts[1] == 'bullet') {
+        return int.tryParse(parts[2]) ?? 0;
+      }
+      return int.tryParse(parts.last) ?? 0;
+    }
+
+    int parseBulletIndex(String key) {
+      final parts = key.split('-');
+      if (parts.length >= 4 && parts[1] == 'bullet') {
+        return int.tryParse(parts[3]) ?? 0;
+      }
+      return 0;
+    }
 
     int fieldRank(String key) {
       if (key.startsWith('project-title-')) return 0;
-      if (key.startsWith('project-overview-')) return 1;
-      if (key.startsWith('project-tools-')) return 2;
+      if (key.startsWith('project-bullet-')) return 1;
       return 99;
     }
 
-    final indexCompare = parseIndex(a).compareTo(parseIndex(b));
+    final indexCompare = parseProjectIndex(a).compareTo(parseProjectIndex(b));
     if (indexCompare != 0) {
       return indexCompare;
     }
-    return fieldRank(a).compareTo(fieldRank(b));
+    final rankCompare = fieldRank(a).compareTo(fieldRank(b));
+    if (rankCompare != 0) {
+      return rankCompare;
+    }
+    return parseBulletIndex(a).compareTo(parseBulletIndex(b));
   }
 
   @override
@@ -236,7 +253,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         content: Text(
           addedCount > 0
               ? 'AI added $addedCount skill${addedCount == 1 ? '' : 's'} to the draft.'
-              : 'You already have the maximum 50 skills.',
+              : 'No new skills were added.',
         ),
       ),
     );
@@ -245,18 +262,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   void _addSkillFromInput() {
     final viewModel = context.read<ResumeEditorViewModel>();
     final rawValue = _skillController.text;
-    final wasAtLimit = viewModel.hasReachedSkillLimit;
     final added = viewModel.addSkill(rawValue);
 
     if (added) {
       _skillController.clear();
       return;
-    }
-
-    if (wasAtLimit && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You can add up to 50 skills.')),
-      );
     }
   }
 
@@ -1948,7 +1958,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ),
                         ),
                         _SyncTextField(
-                          label: 'Marks / score',
+                          label: 'Marks / score (%)',
                           value: item.score,
                           hintText: '8.6 CGPA, 92%, or 780/800',
                           keyboardType: const TextInputType.numberWithOptions(
@@ -1995,7 +2005,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         children: [
           const SizedBox(height: 10),
           Text(
-            '${viewModel.resume.skills.length}/${ResumeEditorViewModel.maxSkills} skills',
+            '${viewModel.resume.skills.length} skills',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -2008,9 +2018,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               onSubmitted: (_) => _addSkillFromInput(),
               decoration: InputDecoration(
                 labelText: 'Add a skill',
-                helperText: viewModel.hasReachedSkillLimit
-                    ? 'Maximum 50 skills reached'
-                    : 'You can add up to 50 skills',
+                helperText: 'Add role-relevant skills and keywords',
                 helperStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 11,
@@ -2029,9 +2037,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             runSpacing: 12,
             children: [
               FilledButton.tonalIcon(
-                onPressed: viewModel.isBusy || viewModel.hasReachedSkillLimit
-                    ? null
-                    : _suggestSkills,
+                onPressed: viewModel.isBusy ? null : _suggestSkills,
                 style: _mediumTonalButtonStyle(context),
                 icon: const Icon(Icons.psychology_alt_outlined),
                 label: const Text('Suggest skills'),
@@ -2164,37 +2170,97 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             (current) => current.copyWith(title: value),
                           ),
                         ),
-                        _SyncTextField(
-                          label: 'Overview',
-                          value: item.overview,
-                          textCapitalization: TextCapitalization.sentences,
-                          minLines: 4,
-                          maxLines: null,
-                          fullWidth: true,
-                          focusNode: _focusNodeForExtendedKeyboardField(
-                            'project-overview-$index',
-                          ),
-                          onChanged: (value) => viewModel.updateProject(
-                            index,
-                            (current) => current.copyWith(overview: value),
-                          ),
-                        ),
-                        _SyncTextField(
-                          label: 'Tools & Technologies',
-                          value: item.impact,
-                          textCapitalization: TextCapitalization.sentences,
-                          minLines: 3,
-                          maxLines: null,
-                          fullWidth: true,
-                          focusNode: _focusNodeForExtendedKeyboardField(
-                            'project-tools-$index',
-                          ),
-                          onChanged: (value) => viewModel.updateProject(
-                            index,
-                            (current) => current.copyWith(impact: value),
-                          ),
-                        ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    ...((item.bullets.isEmpty ? [''] : item.bullets)
+                        .asMap()
+                        .entries
+                        .map((entry) {
+                          final bi = entry.key;
+                          final text = entry.value;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: _SyncTextField(
+                                    key: Key('project-bullet-$index-$bi'),
+                                    label: 'Bullet ${bi + 1}',
+                                    value: text,
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    hintText: 'Enter a bullet point',
+                                    fullWidth: true,
+                                    focusNode: _focusNodeForExtendedKeyboardField(
+                                      'project-bullet-$index-$bi',
+                                    ),
+                                    onChanged: (value) =>
+                                        viewModel.updateProject(
+                                          index,
+                                          (current) {
+                                            final next = current.bullets.isEmpty
+                                                ? ['']
+                                                : List<String>.from(
+                                                    current.bullets,
+                                                  );
+                                            if (bi < next.length) {
+                                              next[bi] = value;
+                                            }
+                                            return current.copyWith(
+                                              bullets: next,
+                                            );
+                                          },
+                                        ),
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Remove bullet',
+                                  onPressed: viewModel.isBusy
+                                      ? null
+                                      : () {
+                                          viewModel.updateProject(
+                                            index,
+                                            (current) {
+                                              final next = current.bullets.isEmpty
+                                                  ? <String>[]
+                                                  : List<String>.from(
+                                                      current.bullets,
+                                                    );
+                                              if (bi < next.length) {
+                                                next.removeAt(bi);
+                                              }
+                                              return current.copyWith(
+                                                bullets: next,
+                                              );
+                                            },
+                                          );
+                                        },
+                                  icon: const ImageIcon(
+                                    AssetImage('assets/fonts/delete.png'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        })),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FilledButton.icon(
+                        onPressed: viewModel.isBusy
+                            ? null
+                            : () {
+                                viewModel.updateProject(
+                                  index,
+                                  (current) => current.copyWith(
+                                    bullets: [...current.bullets, ''],
+                                  ),
+                                );
+                              },
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Add bullet point'),
+                      ),
                     ),
                   ],
                 ),

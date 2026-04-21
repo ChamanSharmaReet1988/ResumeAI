@@ -28,20 +28,19 @@ pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
       }
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: lines
-            .map(
-              (line) => pw.Padding(
-                padding: const pw.EdgeInsets.only(bottom: 2),
-                child: pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('• '),
-                    pw.Expanded(child: pw.Text(line.trim())),
-                  ],
+        children: [
+          for (var i = 0; i < lines.length; i++)
+            pw.Padding(
+              padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
+              child: pw.Bullet(
+                text: lines[i].trim(),
+                style: pw.TextStyle(
+                  color: PdfColors.black,
+                  fontSize: ResumeTypography.bodyPt,
                 ),
               ),
-            )
-            .toList(),
+            ),
+        ],
       );
   }
 }
@@ -1258,7 +1257,13 @@ class LocalAiResumeService {
         ],
       ),
       ...resume.visibleProjects.expand(
-        (item) => [item.title, item.subtitle, item.overview, item.impact],
+        (item) => [
+          item.title,
+          item.subtitle,
+          item.overview,
+          item.impact,
+          ...item.bullets,
+        ],
       ),
       ...resume.visibleCustomSections.expand(
         (section) => [
@@ -2044,7 +2049,6 @@ class ResumePdfService {
   List<String> _resumeContactItems(ResumeData resume) {
     return [
       resume.location.trim(),
-      resume.email.trim(),
       resume.phone.trim(),
       resume.website.trim(),
       resume.githubLink.trim(),
@@ -2126,7 +2130,7 @@ class ResumePdfService {
 
   pw.Widget _corporateHeadingText(String value) {
     final style = pw.TextStyle(
-      fontSize: ResumeTypography.headingPt + 4,
+      fontSize: ResumeTypography.headingPt + 7,
       fontWeight: pw.FontWeight.bold,
       color: PdfColor.fromHex('#50555C'),
     );
@@ -2370,6 +2374,24 @@ class ResumePdfService {
         pw.Text(value, style: style),
         pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
         pw.Positioned(left: 0.4, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.6, top: 0, child: pw.Text(value, style: style)),
+      ],
+    );
+  }
+
+  pw.Widget _corporateStrokeLabelText(String value) {
+    final style = pw.TextStyle(
+      fontWeight: pw.FontWeight.bold,
+      fontSize: 15,
+      color: PdfColors.black,
+      lineSpacing: 0,
+    );
+    return pw.Stack(
+      children: [
+        pw.Text(value, style: style),
+        pw.Positioned(left: 0.2, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.4, top: 0, child: pw.Text(value, style: style)),
+        pw.Positioned(left: 0.6, top: 0, child: pw.Text(value, style: style)),
       ],
     );
   }
@@ -2772,46 +2794,93 @@ class ResumePdfService {
   }
 
   pw.Widget _buildCorporateEducation(EducationItem item) {
-    final range = [
-      item.startDate.trim(),
-      item.endDate.trim(),
-    ].where((part) => part.isNotEmpty).join(' - ');
-    final details = [
-      item.institution.trim(),
-      range,
-      item.score.trim(),
-    ].where((part) => part.isNotEmpty).join('  ');
+    final start = item.startDate.trim();
+    final end = item.endDate.trim();
+    final dateStr = start.isEmpty && end.isEmpty
+        ? ''
+        : '${start.isNotEmpty ? start : ''}'
+              '${start.isNotEmpty && end.isNotEmpty ? ' - ' : ''}'
+              '${end.isNotEmpty ? end : ''}';
+    const headerRowHeight = 18.0;
 
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
-            item.degree.ifEmpty('Degree'),
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Expanded(
+                child: pw.Container(
+                  height: headerRowHeight,
+                  alignment: pw.Alignment.centerLeft,
+                  child: _corporateStrokeLabelText(
+                    item.institution.ifEmpty('Institution'),
+                  ),
+                ),
+              ),
+              if (dateStr.isNotEmpty)
+                pw.Container(
+                  height: headerRowHeight,
+                  alignment: pw.Alignment.centerRight,
+                  child: pw.Text(
+                    dateStr,
+                    style: pw.TextStyle(
+                      color: PdfColor.fromHex('#666B71'),
+                      fontStyle: pw.FontStyle.italic,
+                      fontWeight: pw.FontWeight.normal,
+                      font: pw.Font.helveticaOblique(),
+                      lineSpacing: 0,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          if (details.isNotEmpty) pw.Text(details),
+          pw.SizedBox(height: 4),
+          pw.Text(item.degree.ifEmpty('Degree')),
         ],
       ),
     );
   }
 
   pw.Widget _buildCompactProject(ProjectItem item) {
+    final bullets = _projectBulletLines(item);
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
+          _corporateStrokeLabelText(
             item.title.ifEmpty('Project'),
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
           ),
-          if (item.overview.trim().isNotEmpty) pw.Text(item.overview.trim()),
-          if (item.impact.trim().isNotEmpty) pw.Text(item.impact.trim()),
+          for (var i = 0; i < bullets.length; i++)
+            pw.Padding(
+              padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
+              child: pw.Bullet(
+                text: bullets[i],
+                style: pw.TextStyle(
+                  color: PdfColors.black,
+                  fontSize: ResumeTypography.bodyPt,
+                ),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  List<String> _projectBulletLines(ProjectItem item) {
+    final nonEmptyBullets = item.bullets
+        .where((b) => b.trim().isNotEmpty)
+        .toList();
+    if (nonEmptyBullets.isNotEmpty) {
+      return nonEmptyBullets;
+    }
+    return [item.overview.trim(), item.impact.trim()]
+        .where((part) => part.isNotEmpty)
+        .toList();
   }
 
   Future<File> savePdfToDevice(ResumeData resume) async {
