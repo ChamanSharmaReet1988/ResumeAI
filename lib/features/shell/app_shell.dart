@@ -82,13 +82,14 @@ class _AppShellState extends State<AppShell> {
           : normalizedTitle,
     );
 
+    await context.read<ResumeRepository>().upsertResume(draft);
     await _openBuilder(seed: draft);
   }
 
-  Future<String?> _promptForResumeTitle() async {
+  Future<String?> _promptForResumeTitle({String initialTitle = ''}) async {
     return showDialog<String>(
       context: context,
-      builder: (context) => const _ResumeTitleDialog(),
+      builder: (context) => _ResumeTitleDialog(initialTitle: initialTitle),
     );
   }
 
@@ -445,7 +446,9 @@ class _AppShellState extends State<AppShell> {
 }
 
 class _ResumeTitleDialog extends StatefulWidget {
-  const _ResumeTitleDialog();
+  const _ResumeTitleDialog({this.initialTitle = ''});
+
+  final String initialTitle;
 
   @override
   State<_ResumeTitleDialog> createState() => _ResumeTitleDialogState();
@@ -453,15 +456,23 @@ class _ResumeTitleDialog extends StatefulWidget {
 
 class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
   late final TextEditingController _controller;
+  late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
+    _controller = TextEditingController(text: widget.initialTitle);
+    _focusNode = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNode.requestFocus();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -474,11 +485,10 @@ class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
       content: TextField(
         key: const Key('resume-title-dialog-field'),
         controller: _controller,
+        focusNode: _focusNode,
         textCapitalization: TextCapitalization.words,
-        autofocus: true,
         decoration: const InputDecoration(
           labelText: 'Resume title',
-          hintText: 'Product Designer Resume',
         ),
         onSubmitted: (value) => Navigator.of(context).pop(value),
       ),

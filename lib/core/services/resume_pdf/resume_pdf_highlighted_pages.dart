@@ -71,22 +71,21 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           ),
           _highlightedAtsNoticeBar(highlightColor),
           pw.SizedBox(height: 18),
-          if (resume.summary.trim().isNotEmpty)
-            _corporateSection(
-              title: 'Summary',
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: pw.Container(
-                width: double.infinity,
-                padding: const pw.EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 6,
-                ),
-                color: highlightSummary ? highlightColor : PdfColors.white,
-                child: pw.Text(resume.summary.trim()),
+          _corporateSection(
+            title: 'Summary',
+            lineColor: lineColor,
+            sectionTitleColor: sectionTitleColor,
+            child: pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 6,
               ),
+              color: highlightSummary ? highlightColor : PdfColors.white,
+              child: pw.Text(resume.summary.trim()),
             ),
-          if (resume.visibleWorkExperiences.isNotEmpty)
+          ),
+          if (resume.includeWorkInResume)
             _corporateSection(
               title: 'Experience',
               lineColor: lineColor,
@@ -107,7 +106,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 ],
               ),
             ),
-          if (resume.visibleEducation.isNotEmpty)
+          if (resume.includeEducationInResume)
             _corporateSection(
               title: 'Education',
               lineColor: lineColor,
@@ -150,7 +149,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     .toList(),
               ),
             ),
-          if (resume.visibleProjects.isNotEmpty)
+          if (resume.includeProjectsInResume)
             _corporateSection(
               title: 'Projects',
               lineColor: lineColor,
@@ -261,20 +260,19 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   ],
                 ),
                 pw.SizedBox(height: 16),
-                if (resume.summary.trim().isNotEmpty)
-                  _creativeSection(
-                    title: 'Summary',
-                    lineColor: lineColor,
-                    child: pw.Container(
-                      width: double.infinity,
-                      padding: const pw.EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 4,
-                      ),
-                      color: highlightSummary ? highlightColor : PdfColors.white,
-                      child: pw.Text(resume.summary.trim()),
+                _creativeSection(
+                  title: 'Summary',
+                  lineColor: lineColor,
+                  child: pw.Container(
+                    width: double.infinity,
+                    padding: const pw.EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
                     ),
+                    color: highlightSummary ? highlightColor : PdfColors.white,
+                    child: pw.Text(resume.summary.trim()),
                   ),
+                ),
                 _creativeSection(
                   title: 'Skills',
                   lineColor: lineColor,
@@ -284,7 +282,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     highlightColor,
                   ),
                 ),
-                if (resume.visibleWorkExperiences.isNotEmpty)
+                if (resume.includeWorkInResume)
                   _creativeSection(
                     title: 'Experience',
                     lineColor: lineColor,
@@ -304,9 +302,9 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       ],
                     ),
                   ),
-                if (resume.visibleEducation.isNotEmpty)
+                if (resume.includeEducationInResume)
                   _creativeSection(
-                    title: 'Education and Training',
+                    title: 'Education',
                     lineColor: lineColor,
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -316,7 +314,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       ],
                     ),
                   ),
-                if (resume.visibleProjects.isNotEmpty)
+                if (resume.includeProjectsInResume)
                   _creativeSection(
                     title: 'Projects',
                     lineColor: lineColor,

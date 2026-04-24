@@ -87,23 +87,22 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             ),
           ),
           pw.SizedBox(height: 18),
-          if (resume.summary.trim().isNotEmpty)
-            _darkHeaderSection(
-              title: 'Summary',
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: pw.Text(resume.summary.trim()),
-            ),
-          if (resume.visibleWorkExperiences.isNotEmpty)
+          _darkHeaderSection(
+            title: 'Summary',
+            lineColor: lineColor,
+            sectionTitleColor: sectionTitleColor,
+            child: pw.Text(resume.summary.trim()),
+          ),
+          if (resume.includeWorkInResume)
             ..._darkHeaderExperienceSectionWidgets(
               resume.visibleWorkExperiences,
               lineColor,
               sectionTitleColor,
               bodyPt,
             ),
-          if (resume.visibleEducation.isNotEmpty)
+          if (resume.includeEducationInResume)
             _darkHeaderSection(
-              title: 'Education and Training',
+              title: 'Education',
               lineColor: lineColor,
               sectionTitleColor: sectionTitleColor,
               child: pw.Column(
@@ -126,7 +125,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                 fontSize: bodyPt,
               ),
             ),
-          if (resume.visibleProjects.isNotEmpty)
+          if (resume.includeProjectsInResume)
             _darkHeaderSection(
               title: 'Projects',
               lineColor: lineColor,
@@ -206,6 +205,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       ),
       pw.SizedBox(height: 12),
     ];
+
+    if (items.isEmpty) {
+      widgets.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+      return widgets;
+    }
 
     for (var index = 0; index < items.length; index++) {
       final item = items[index];
@@ -393,19 +397,18 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                   ],
                 ),
                 pw.SizedBox(height: 16),
-                if (resume.summary.trim().isNotEmpty)
-                  _creativeSection(
-                    title: 'Summary',
-                    lineColor: lineColor,
-                    child: pw.Text(resume.summary.trim()),
-                  ),
+                _creativeSection(
+                  title: 'Summary',
+                  lineColor: lineColor,
+                  child: pw.Text(resume.summary.trim()),
+                ),
                 if (resume.includeSkillsInResume)
                   _creativeSection(
                     title: 'Skills',
                     lineColor: lineColor,
                     child: _twoColumnBulletList(_skillsForDisplay(resume)),
                   ),
-                if (resume.visibleWorkExperiences.isNotEmpty)
+                if (resume.includeWorkInResume)
                   _creativeSection(
                     title: 'Experience',
                     lineColor: lineColor,
@@ -416,9 +419,9 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                       ],
                     ),
                   ),
-                if (resume.visibleEducation.isNotEmpty)
+                if (resume.includeEducationInResume)
                   _creativeSection(
-                    title: 'Education and Training',
+                    title: 'Education',
                     lineColor: lineColor,
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -428,7 +431,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                       ],
                     ),
                   ),
-                if (resume.visibleProjects.isNotEmpty)
+                if (resume.includeProjectsInResume)
                   _creativeSection(
                     title: 'Projects',
                     lineColor: lineColor,

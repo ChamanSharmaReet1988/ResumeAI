@@ -588,7 +588,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       const _MiniSectionHeading(
-                        title: 'EDUCATION AND TRAINING',
+                        title: 'EDUCATION',
                         lineColor: line,
                       ),
                       const SizedBox(height: 4),

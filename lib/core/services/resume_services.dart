@@ -2044,7 +2044,7 @@ class ResumePdfService {
     if (resume.skills.isNotEmpty) {
       return resume.skills;
     }
-    return const ['Communication', 'Collaboration', 'Documentation'];
+    return const <String>[];
   }
 
   pw.Widget _corporateSection({

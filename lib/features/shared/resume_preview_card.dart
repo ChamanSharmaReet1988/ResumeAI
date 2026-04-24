@@ -303,20 +303,23 @@ class _DarkHeaderPreview extends StatelessWidget {
           ),
         ),
         SizedBox(height: _CorporatePdfMetrics.afterHeader),
-        if (resume.summary.trim().isNotEmpty)
-          _CorporatePdfLikeSection(
-            outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
-            title: 'SUMMARY',
-            titleColor: preset.titleColor,
-            lineColor: _CorporatePdfMetrics.lineColor,
-            child: Text(resume.summary.trim(), style: bodyStyle),
-          ),
-        if (resume.visibleWorkExperiences.isNotEmpty)
+        _CorporatePdfLikeSection(
+          outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
+          title: 'SUMMARY',
+          titleColor: preset.titleColor,
+          lineColor: _CorporatePdfMetrics.lineColor,
+          hasContent: resume.summary.trim().isNotEmpty,
+          child: resume.summary.trim().isNotEmpty
+              ? Text(resume.summary.trim(), style: bodyStyle)
+              : const SizedBox.shrink(),
+        ),
+        if (resume.includeWorkInResume)
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'EXPERIENCE',
             titleColor: preset.titleColor,
             lineColor: _CorporatePdfMetrics.lineColor,
+            hasContent: resume.visibleWorkExperiences.isNotEmpty,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -336,12 +339,13 @@ class _DarkHeaderPreview extends StatelessWidget {
               ],
             ),
           ),
-        if (resume.visibleEducation.isNotEmpty)
+        if (resume.includeEducationInResume)
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
-            title: 'EDUCATION AND TRAINING',
+            title: 'EDUCATION',
             titleColor: preset.titleColor,
             lineColor: _CorporatePdfMetrics.lineColor,
+            hasContent: resume.visibleEducation.isNotEmpty,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -363,14 +367,16 @@ class _DarkHeaderPreview extends StatelessWidget {
           title: 'SKILLS',
           titleColor: preset.titleColor,
           lineColor: _CorporatePdfMetrics.lineColor,
+          hasContent: skills.isNotEmpty,
           child: _CorporateSkillsColumns(skills: skills, bodyStyle: bodyStyle),
         ),
-        if (resume.visibleProjects.isNotEmpty)
+        if (resume.includeProjectsInResume)
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(isCompact),
             title: 'PROJECTS',
             titleColor: preset.titleColor,
             lineColor: _CorporatePdfMetrics.lineColor,
+            hasContent: resume.visibleProjects.isNotEmpty,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -417,6 +423,7 @@ class _CorporatePdfLikeSection extends StatelessWidget {
     required this.titleColor,
     required this.lineColor,
     required this.child,
+    this.hasContent = true,
   });
 
   /// Matches [_corporateSection] horizontal inset and bottom margin.
@@ -425,6 +432,7 @@ class _CorporatePdfLikeSection extends StatelessWidget {
   final Color titleColor;
   final Color lineColor;
   final Widget child;
+  final bool hasContent;
 
   @override
   Widget build(BuildContext context) {
@@ -445,8 +453,12 @@ class _CorporatePdfLikeSection extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Container(height: 2, color: lineColor),
-          const SizedBox(height: 12),
-          child,
+          if (hasContent) ...[
+            const SizedBox(height: 12),
+            child,
+          ] else ...[
+            const SizedBox(height: 8),
+          ],
         ],
       ),
     );
@@ -957,7 +969,7 @@ List<String> _pdfAlignedSkills(ResumeData resume) {
   if (resume.skills.isNotEmpty) {
     return resume.skills;
   }
-  return const ['Communication', 'Collaboration', 'Documentation'];
+  return const <String>[];
 }
 
 String _workSummaryText(WorkExperience item) {
