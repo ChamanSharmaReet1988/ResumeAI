@@ -238,17 +238,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     await context.read<ResumeEditorViewModel>().printPdf();
   }
 
-  Future<void> _generateSummary() async {
-    await context.read<ResumeEditorViewModel>().generateSummary();
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('AI summary added to the resume.')),
-    );
-  }
-
   Future<void> _suggestSkills() async {
     final viewModel = context.read<ResumeEditorViewModel>();
     final previousCount = viewModel.resume.skills.length;
@@ -1479,18 +1468,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             (resume) => resume.copyWith(summary: value),
           ),
           fullWidth: true,
-        ),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            FilledButton.tonalIcon(
-              onPressed: viewModel.isBusy ? null : _generateSummary,
-              style: _mediumTonalButtonStyle(context),
-              icon: const Icon(Icons.auto_fix_high_outlined),
-              label: const Text('Generate summary'),
-            ),
-          ],
         ),
       ],
     );
@@ -3005,20 +2982,28 @@ void _scheduleEnsureVisible(BuildContext context) {
         return;
       }
 
-      final position = scrollable.position;
-      final targetOffset = (position.pixels + overlap + 28)
-          .clamp(0.0, position.maxScrollExtent)
-          .toDouble();
+      try {
+        final position = scrollable.position;
+        if (!position.hasPixels || !position.hasContentDimensions) {
+          return;
+        }
+        final targetOffset = (position.pixels + overlap + 28)
+            .clamp(0.0, position.maxScrollExtent)
+            .toDouble();
 
-      if ((targetOffset - position.pixels).abs() < 1) {
-        return;
+        if ((targetOffset - position.pixels).abs() < 1) {
+          return;
+        }
+
+        position.animateTo(
+          targetOffset,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeInOutCubic,
+        );
+      } catch (_) {
+        // Focus may outlive its scroll context briefly during transitions.
+        // Skip auto-scroll in that frame instead of crashing.
       }
-
-      position.animateTo(
-        targetOffset,
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeInOutCubic,
-      );
     });
   });
 }

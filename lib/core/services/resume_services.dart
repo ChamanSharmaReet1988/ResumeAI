@@ -1372,6 +1372,19 @@ class LocalAiResumeService {
         'CI/CD',
         'Documentation',
       ]);
+    } else if (normalized.contains('intern') ||
+        normalized.contains('student') ||
+        normalized.contains('undergraduate') ||
+        normalized.contains('graduate') ||
+        normalized.contains('fresher')) {
+      suggestions.addAll([
+        'Data Structures and Algorithms',
+        'Object-Oriented Programming',
+        'SQL',
+        'Git',
+        'Unit Testing',
+        'Debugging',
+      ]);
     } else if (normalized.contains('engineer') ||
         normalized.contains('developer')) {
       suggestions.addAll([
