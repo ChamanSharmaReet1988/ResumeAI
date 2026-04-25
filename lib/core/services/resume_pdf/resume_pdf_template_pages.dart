@@ -30,8 +30,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               children: [
                 profileImage != null
                     ? pw.Container(
-                        width: 48,
-                        height: 48,
+                        width: 75,
+                        height: 75,
                         decoration: pw.BoxDecoration(
                           border: pw.Border.all(
                             color: PdfColors.white,
@@ -41,8 +41,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                         child: pw.Image(profileImage, fit: pw.BoxFit.cover),
                       )
                     : pw.Container(
-                        width: 48,
-                        height: 48,
+                        width: 75,
+                        height: 75,
                         alignment: pw.Alignment.center,
                         decoration: pw.BoxDecoration(
                           border: pw.Border.all(
@@ -54,7 +54,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                           _resumeInitials(resume),
                           style: pw.TextStyle(
                             color: PdfColors.white,
-                            fontSize: 19,
+                            fontSize: 30,
                             fontWeight: pw.FontWeight.bold,
                           ),
                         ),
@@ -70,7 +70,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                         _darkHeaderNameText(
                           _displayName(resume).toUpperCase(),
                         ),
-                        pw.SizedBox(height: 4),
+                        pw.SizedBox(height: 10),
                         pw.Text(
                           headerContactItems.join(' | '),
                           style: pw.TextStyle(
@@ -321,9 +321,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     ResumeData resume, {
     pw.MemoryImage? profileImage,
   }) {
-    final dark = PdfColor.fromHex('#353A40');
+    final dark = _corporateHeaderPdf(resume);
+    final textColor = _corporateTitlePdf(resume);
     final lineColor = PdfColor.fromHex('#B8BEC6');
     final muted = PdfColor.fromHex('#5D6268');
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
 
     document.addPage(
       pw.MultiPage(
@@ -331,7 +333,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         margin: const pw.EdgeInsets.fromLTRB(0, 0, 0, 30),
         header: _continuedPageTopGap,
         build: (context) => [
-          pw.Container(height: 18, color: dark),
+          pw.Container(height: 24, color: dark),
           pw.Padding(
             padding: const pw.EdgeInsets.fromLTRB(28, 22, 28, 28),
             child: pw.Column(
@@ -342,55 +344,69 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                   children: [
                     profileImage != null
                         ? pw.Container(
-                            width: 68,
-                            height: 84,
+                            width: 96,
+                            height: 112,
                             decoration: pw.BoxDecoration(
-                              border: pw.Border.all(color: lineColor),
+                              
                             ),
                             child: pw.Image(profileImage, fit: pw.BoxFit.cover),
                           )
                         : pw.Container(
-                            width: 68,
-                            height: 84,
-                            alignment: pw.Alignment.center,
-                            decoration: pw.BoxDecoration(
-                              color: PdfColor.fromHex('#EED7BF'),
-                              border: pw.Border.all(color: lineColor),
-                            ),
-                            child: pw.Text(
-                              _resumeInitials(resume),
-                              style: pw.TextStyle(
-                                fontSize: 25,
-                                fontWeight: pw.FontWeight.bold,
-                                color: dark,
-                              ),
-                            ),
+                            child: _creativeAvatarIconPlaceholder(),
                           ),
-                    pw.SizedBox(width: 16),
+                    pw.SizedBox(width: 26),
                     pw.Expanded(
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          pw.Text(
-                            _displayName(resume).toUpperCase(),
-                            style: pw.TextStyle(
-                              fontSize: ResumeTypography.namePt,
-                              fontWeight: pw.FontWeight.bold,
-                              color: dark,
-                            ),
-                          ),
-                          pw.SizedBox(height: 8),
-                          for (final item in _resumeContactItems(resume))
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.only(bottom: 3),
-                              child: pw.Text(
-                                item,
-                                style: pw.TextStyle(
-                                  fontSize: ResumeTypography.bodyPt,
-                                  color: muted,
-                                ),
+                          pw.Transform.translate(
+                            offset: const PdfPoint(0, 9),
+                            child: pw.Text(
+                              _displayName(resume).toUpperCase(),
+                              style: pw.TextStyle(
+                                fontSize: ResumeTypography.darkHeaderNamePt,
+                                fontWeight: pw.FontWeight.bold,
+                                lineSpacing: 0,
+                                color: textColor,
                               ),
                             ),
+                          ),
+                          pw.SizedBox(height: 0),
+                          pw.Transform.translate(
+                            offset: const PdfPoint(0, -6),
+                            child: pw.Column(
+                              children: [
+                                for (final item in _resumeContactItems(resume))
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.only(bottom: 3),
+                                    child: pw.Row(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.start,
+                                      children: [
+                                        pw.Container(
+                                          width: 10,
+                                          height: 10,
+                                          margin: const pw.EdgeInsets.only(
+                                            right: 6,
+                                            top: 2,
+                                          ),
+                                          color: muted,
+                                        ),
+                                        pw.Expanded(
+                                          child: pw.Text(
+                                            item,
+                                            style: pw.TextStyle(
+                                              fontSize: bodyPt,
+                                              color: muted,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -415,7 +431,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                     child: pw.Column(
                       children: [
                         for (final item in resume.visibleWorkExperiences)
-                          _buildCreativeExperience(item),
+                          _buildCreativeExperience(
+                            item,
+                            bodyFontPt: bodyPt,
+                          ),
                       ],
                     ),
                   ),
@@ -427,7 +446,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         for (final item in resume.visibleEducation)
-                          _buildCorporateEducation(item),
+                          _buildCorporateEducation(
+                            item,
+                            bodyFontPt: bodyPt,
+                          ),
                       ],
                     ),
                   ),
@@ -438,7 +460,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                     child: pw.Column(
                       children: [
                         for (final item in resume.visibleProjects)
-                          _buildCompactProject(item),
+                          _buildCompactProject(
+                            item,
+                            bodyFontPt: bodyPt,
+                          ),
                       ],
                     ),
                   ),

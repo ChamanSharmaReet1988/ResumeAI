@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -238,7 +240,13 @@ class _TemplateDetailScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(2),
                     child: KeyedSubtree(
                       key: Key('template-detail-preview-${item.id}'),
-                      child: _TemplatePreviewArt(item: item),
+                      child: _TemplatePreviewArt(
+                        item: item,
+                        showPremiumBadgeOnPage: true,
+                        premiumBadgeRightPadding: 10,
+                        premiumBadgeSize: 18,
+                        badgeMetricsInScreenPixels: true,
+                      ),
                     ),
                   ),
                 ),
@@ -307,12 +315,12 @@ class _TemplateTile extends StatelessWidget {
                             _TemplatePreviewArt(item: item),
                             if (item.isPremium)
                               Positioned(
-                                left: 0,
-                                top: 0,
+                                right: 0,
+                                bottom: 0,
                                 child: Padding(
                                   padding: const EdgeInsets.only(
-                                    left: 20,
-                                    top: 10,
+                                    right: 20,
+                                    bottom: 10,
                                   ),
                                   child: Image.asset(
                                     'assets/premium_badge.png',
@@ -431,9 +439,19 @@ enum _TemplatePreviewKind {
 }
 
 class _TemplatePreviewArt extends StatelessWidget {
-  const _TemplatePreviewArt({required this.item});
+  const _TemplatePreviewArt({
+    required this.item,
+    this.showPremiumBadgeOnPage = false,
+    this.premiumBadgeRightPadding = 20,
+    this.premiumBadgeSize = 18,
+    this.badgeMetricsInScreenPixels = false,
+  });
 
   final _TemplateTileData item;
+  final bool showPremiumBadgeOnPage;
+  final double premiumBadgeRightPadding;
+  final double premiumBadgeSize;
+  final bool badgeMetricsInScreenPixels;
 
   @override
   Widget build(BuildContext context) {
@@ -447,19 +465,60 @@ class _TemplatePreviewArt extends StatelessWidget {
       _TemplatePreviewKind.sidebarCoverLetter => const _SidebarCoverLetterArt(),
     };
 
-    return FittedBox(
-      fit: BoxFit.contain,
-      child: SizedBox(
-        width: 168,
-        height: 252,
-        child: DefaultTextStyle.merge(
-          style: const TextStyle(fontFamily: 'Calibri'),
-          child: ColoredBox(
-            color: Colors.white,
-            child: Align(alignment: Alignment.topCenter, child: preview),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scaleX = constraints.maxWidth / 168;
+        final scaleY = constraints.maxHeight / 252;
+        final scale = math.min(scaleX, scaleY).toDouble();
+        final safeScale = (scale.isFinite && scale > 0) ? scale : 1.0;
+        final double badgeRightPadding = badgeMetricsInScreenPixels
+            ? premiumBadgeRightPadding / safeScale
+            : premiumBadgeRightPadding;
+        final double badgeBottomPadding = badgeMetricsInScreenPixels
+            ? 10.0 / safeScale
+            : 10.0;
+        final double badgeSize = badgeMetricsInScreenPixels
+            ? premiumBadgeSize / safeScale
+            : premiumBadgeSize;
+
+        return FittedBox(
+          fit: BoxFit.contain,
+          child: SizedBox(
+            width: 168,
+            height: 252,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DefaultTextStyle.merge(
+                    style: const TextStyle(fontFamily: 'Calibri'),
+                    child: ColoredBox(
+                      color: Colors.white,
+                      child: Align(alignment: Alignment.topCenter, child: preview),
+                    ),
+                  ),
+                ),
+                if (showPremiumBadgeOnPage && item.isPremium)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: badgeRightPadding,
+                        bottom: badgeBottomPadding,
+                      ),
+                      child: Image.asset(
+                        'assets/premium_badge.png',
+                        width: badgeSize,
+                        height: badgeSize,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -495,8 +554,8 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                 child: Row(
                   children: [
                     Container(
-                      width: 26,
-                      height: 26,
+                      width: 33,
+                      height: 33,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.white70),

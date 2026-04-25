@@ -97,16 +97,13 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
     }
 
     viewModel.updateResume(
-      (resume) => resume.copyWith(template: selectedTemplate),
+      (resume) => resume.copyWith(
+        template: selectedTemplate,
+        bodyFontPt: 13,
+        corporateColorPresetIndex: 0,
+      ),
     );
     await viewModel.saveResume();
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${selectedTemplate.label} template applied.')),
-    );
   }
 
   void _onBackPressed() {
@@ -509,8 +506,24 @@ class _NativePdfPreview extends StatefulWidget {
 class _NativePdfPreviewState extends State<_NativePdfPreview> {
   int _currentPage = 1;
   int _totalPages = 1;
+  late Future<Uint8List> _cachedBytesFuture;
 
   late PdfViewerParams _viewerParams;
+
+  @override
+  void initState() {
+    super.initState();
+    _cachedBytesFuture = widget.bytesFuture;
+  }
+
+  @override
+  void didUpdateWidget(covariant _NativePdfPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Regenerate bytes only when the caller signals a new PDF document.
+    if (oldWidget.documentKey != widget.documentKey) {
+      _cachedBytesFuture = widget.bytesFuture;
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -550,7 +563,7 @@ class _NativePdfPreviewState extends State<_NativePdfPreview> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Uint8List>(
-      future: widget.bytesFuture,
+      future: _cachedBytesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());

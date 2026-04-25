@@ -1593,6 +1593,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     _ResponsiveFieldGroup(
                       children: [
                         _SyncTextField(
+                          key: Key('work-role-$index'),
                           label: 'Role',
                           value: item.role,
                           textCapitalization: TextCapitalization.sentences,
@@ -1605,6 +1606,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ),
                         ),
                         _SyncTextField(
+                          key: Key('work-company-$index'),
                           label: 'Company',
                           value: item.company,
                           textCapitalization: TextCapitalization.sentences,
@@ -2301,6 +2303,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     _ResponsiveFieldGroup(
                       children: [
                         _SyncTextField(
+                          key: Key('project-title-$index'),
                           label: 'Project title',
                           value: item.title,
                           textCapitalization: TextCapitalization.sentences,
