@@ -71,6 +71,151 @@ pw.Widget _creativeAvatarIconPlaceholder({
   );
 }
 
+const double _creativeSidebarRailWidthPt = 156.0;
+const double _creativeSidebarContentWidthPt = 118.0;
+const double _creativeSidebarGapPt = 28.0;
+
+PdfColor _creativeSidebarRailColorPdf() => PdfColor.fromHex('#F7EADF');
+
+PdfColor _creativeSidebarLineColorPdf() => PdfColor.fromHex('#CDBAAC');
+
+PdfColor _creativeSidebarMutedColorPdf() => PdfColor.fromHex('#5F656C');
+
+pw.PageTheme _creativeSidebarPageTheme({
+  required PdfColor railColor,
+  PdfPageFormat pageFormat = PdfPageFormat.a4,
+}) {
+  return pw.PageTheme(
+    pageFormat: pageFormat,
+    margin: const pw.EdgeInsets.fromLTRB(24, 18, 24, 30),
+    buildBackground: (context) => pw.FullPage(
+      ignoreMargins: true,
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        children: [
+          pw.Container(width: _creativeSidebarRailWidthPt, color: railColor),
+          pw.Expanded(child: pw.Container(color: PdfColors.white)),
+        ],
+      ),
+    ),
+  );
+}
+
+pw.Widget _creativeSectionHeadingRow({
+  required String title,
+  required PdfColor titleColor,
+  required PdfColor lineColor,
+}) {
+  return pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.center,
+    children: [
+      pw.Text(
+        title.toUpperCase(),
+        style: pw.TextStyle(
+          fontSize: ResumeTypography.darkHeaderSectionTitlePt,
+          fontWeight: pw.FontWeight.bold,
+          color: titleColor,
+          letterSpacing: 0.15,
+        ),
+      ),
+      pw.SizedBox(width: 8),
+      pw.Expanded(child: pw.Container(height: 1.2, color: lineColor)),
+    ],
+  );
+}
+
+pw.Widget _creativeMainSection({
+  required String title,
+  required PdfColor titleColor,
+  required PdfColor lineColor,
+  required pw.Widget child,
+}) {
+  return pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      _creativeSectionHeadingRow(
+        title: title,
+        titleColor: titleColor,
+        lineColor: lineColor,
+      ),
+      pw.SizedBox(height: 8),
+      child,
+    ],
+  );
+}
+
+pw.Widget _creativeSidebarContactRow(
+  String value, {
+  required PdfColor iconColor,
+  required PdfColor textColor,
+  double fontSize = 10.5,
+}) {
+  return pw.Padding(
+    padding: const pw.EdgeInsets.only(bottom: 5),
+    child: pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Container(
+          width: 7,
+          height: 7,
+          margin: const pw.EdgeInsets.only(top: 3, right: 6),
+          decoration: pw.BoxDecoration(
+            color: iconColor,
+            borderRadius: pw.BorderRadius.circular(1.5),
+          ),
+        ),
+        pw.Expanded(
+          child: pw.Text(
+            value,
+            style: pw.TextStyle(color: textColor, fontSize: fontSize),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+pw.Widget _creativeSidebarEducationEntry(
+  EducationItem item, {
+  required PdfColor titleColor,
+  required PdfColor mutedColor,
+  double bodyFontPt = ResumeTypography.bodyPt,
+}) {
+  final dates = [
+    item.startDate.trim(),
+    item.endDate.trim(),
+  ].where((value) => value.isNotEmpty).join(' - ');
+
+  return pw.Padding(
+    padding: const pw.EdgeInsets.only(bottom: 9),
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          item.degree.ifEmpty('Degree'),
+          style: pw.TextStyle(
+            color: titleColor,
+            fontSize: bodyFontPt,
+            fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+        pw.SizedBox(height: 2),
+        pw.Text(
+          item.institution.ifEmpty('Institution'),
+          style: pw.TextStyle(color: mutedColor, fontSize: bodyFontPt - 0.3),
+        ),
+        if (dates.isNotEmpty) ...[
+          pw.SizedBox(height: 1.5),
+          pw.Text(
+            dates,
+            style: pw.TextStyle(color: mutedColor, fontSize: bodyFontPt - 0.8),
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
 class ResumeRepository {
   ResumeRepository._(this._resumeBox, this._coverLetterBox);
 
@@ -2101,55 +2246,6 @@ class ResumePdfService {
     );
     return pw.Text(value, style: style);
   }
-
-
-
-  pw.Widget _creativeSection({
-    required String title,
-    required PdfColor lineColor,
-    required pw.Widget child,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 14),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Container(
-            width: 141,
-            padding: const pw.EdgeInsets.only(right: 12, top: 2),
-            child: pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.center,
-              children: [
-                pw.SizedBox(
-                  width: 97,
-                  child: pw.Text(
-                    title.toUpperCase(),
-                    style: pw.TextStyle(
-                      fontSize: ResumeTypography.darkHeaderSectionTitlePt,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                ),
-                pw.SizedBox(width: 6),
-                pw.Expanded(child: pw.Container(height: 1.1, color: lineColor)),
-              ],
-            ),
-          ),
-          pw.Expanded(
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                child,
-                pw.SizedBox(height: 8),
-                pw.Container(height: 1, color: lineColor),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
 
   List<pw.Widget> _twoColumnBulletRows(
     List<String> items, {

@@ -694,10 +694,13 @@ class _CreativePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = resume.corporateColorPreset.headerColor;
+    final railColor =
+        Color.lerp(Colors.white, resume.template.tintColor, 0.72) ??
+        resume.template.tintColor;
+    final accentColor = resume.corporateColorPreset.headerColor;
     final textColor = resume.corporateColorPreset.titleColor;
     final mutedColor = textColor.withValues(alpha: 0.72);
-    final lineColor = textColor.withValues(alpha: 0.34);
+    final lineColor = textColor.withValues(alpha: 0.28);
     final bodyStyle = TextStyle(
       color: textColor,
       fontSize: resume.effectiveBodyFontPt.toDouble(),
@@ -708,218 +711,244 @@ class _CreativePreview extends StatelessWidget {
     final experiences = resume.visibleWorkExperiences;
     final education = resume.visibleEducation;
     final projects = resume.visibleProjects;
-    final contacts = <String>[
-      resume.location.trim(),
-      resume.phone.trim(),
-      resume.email.trim(),
-    ].where((item) => item.isNotEmpty).toList();
+    final contacts = _pdfAlignedContactItems(resume).take(4).toList();
     final midpoint = (skills.length / 2).ceil();
+    final firstProjectLine = projects.isNotEmpty
+        ? (_projectBulletLines(projects.first).isNotEmpty
+              ? _projectBulletLines(projects.first).first
+              : 'Add project details.')
+        : '';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
       children: [
-        Container(
-          height: 24,
-          decoration: BoxDecoration(color: dark),
+        Positioned.fill(
+          child: Row(
+            children: [
+              Container(width: 120, color: railColor),
+              const Expanded(child: SizedBox()),
+            ],
+          ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-          child: Column(
+          padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 96,
-                    height: 112,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFE7D0B2), Color(0xFFF7ECDD)],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+              SizedBox(
+                width: 96,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 78,
+                      height: 92,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: accentColor.withValues(alpha: 0.12),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _pdfAlignedInitials(resume),
+                        style: TextStyle(
+                          color: accentColor,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 26),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Transform.translate(
-                          offset: const Offset(0, 9),
-                          child: Text(
-                            _pdfAlignedDisplayName(resume).toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 12),
+                    if (contacts.isNotEmpty)
+                      ...contacts.map(
+                        (line) => Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: _CreativeSidebarMetaItem(
+                            text: line,
+                            iconColor: accentColor,
                             style: bodyStyle.copyWith(
-                              fontSize: ResumeTypography.darkHeaderNamePt,
-                              fontWeight: FontWeight.w900,
-                              height: 1.0,
-                              letterSpacing: 0.2,
+                              color: mutedColor,
+                              fontSize: bodyStyle.fontSize! - 0.4,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 0),
-                        Transform.translate(
-                          offset: const Offset(0, -6),
+                      ),
+                    if (education.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      _CreativeSidebarHeading(
+                        title: 'EDUCATION',
+                        lineColor: lineColor,
+                      ),
+                      const SizedBox(height: 6),
+                      ...education.take(2).map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 7),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              for (final line in contacts.take(3))
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 2),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 10,
-                                        height: 10,
-                                        margin: const EdgeInsets.only(right: 6),
-                                        color: mutedColor,
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          line,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: bodyStyle.copyWith(
-                                            color: mutedColor,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              Text(
+                                item.degree.ifBlank('Degree'),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: bodyStyle.copyWith(
+                                  fontWeight: FontWeight.w800,
                                 ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                item.institution.ifBlank('Institution'),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: bodyStyle.copyWith(
+                                  color: mutedColor,
+                                  fontSize: bodyStyle.fontSize! - 0.4,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              _CreativeSidebarHeading(title: 'SUMMARY', lineColor: lineColor),
-              const SizedBox(height: 6),
-              Text(
-                summary.ifBlank(
-                  'Add a short summary to position your experience and strengths.',
+                      ),
+                    ],
+                  ],
                 ),
-                maxLines: 5,
-                overflow: TextOverflow.ellipsis,
-                style: bodyStyle.copyWith(color: mutedColor),
               ),
-              const SizedBox(height: 10),
-              _CreativeSidebarHeading(title: 'SKILLS', lineColor: lineColor),
-              const SizedBox(height: 6),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _CreativeBulletColumn(
-                      items: skills.take(midpoint).toList(),
-                      bodyStyle: bodyStyle,
+              const SizedBox(width: 22),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _pdfAlignedDisplayName(resume).toUpperCase(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: bodyStyle.copyWith(
+                        fontSize: ResumeTypography.darkHeaderNamePt,
+                        fontWeight: FontWeight.w900,
+                        height: 1.0,
+                        letterSpacing: 0.2,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _CreativeBulletColumn(
-                      items: skills.skip(midpoint).toList(),
-                      bodyStyle: bodyStyle,
+                    if (resume.jobTitle.trim().isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        resume.jobTitle.trim(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: bodyStyle.copyWith(
+                          color: mutedColor,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    _CreativeSidebarHeading(
+                      title: 'SUMMARY',
+                      lineColor: lineColor,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              _CreativeSidebarHeading(title: 'EXPERIENCE', lineColor: lineColor),
-              const SizedBox(height: 6),
-              if (experiences.isNotEmpty)
-                ...experiences.take(2).map((item) {
-                  final title = [
-                    item.role.trim(),
-                    item.startDate.trim(),
-                    item.endDate.trim(),
-                  ].where((s) => s.isNotEmpty).join(', ');
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Column(
+                    const SizedBox(height: 6),
+                    Text(
+                      summary.ifBlank(
+                        'Add a short summary to position your experience and strengths.',
+                      ),
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                      style: bodyStyle.copyWith(color: mutedColor),
+                    ),
+                    const SizedBox(height: 12),
+                    _CreativeSidebarHeading(
+                      title: 'EXPERIENCE',
+                      lineColor: lineColor,
+                    ),
+                    const SizedBox(height: 6),
+                    if (experiences.isNotEmpty)
+                      ...experiences.take(2).map((item) {
+                        final title = [
+                          item.role.trim(),
+                          item.startDate.trim(),
+                          item.endDate.trim(),
+                        ].where((s) => s.isNotEmpty).join(' • ');
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title.ifBlank('Role'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: bodyStyle.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              Text(
+                                item.company.ifBlank('Company'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: bodyStyle.copyWith(
+                                  color: mutedColor,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              _CreativeBulletColumn(
+                                items: _workBulletLines(item).take(1).toList(),
+                                bodyStyle: bodyStyle,
+                              ),
+                            ],
+                          ),
+                        );
+                      })
+                    else
+                      Text(
+                        'Add your work experience details.',
+                        style: bodyStyle.copyWith(color: mutedColor),
+                      ),
+                    const SizedBox(height: 10),
+                    _CreativeSidebarHeading(
+                      title: 'SKILLS',
+                      lineColor: lineColor,
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title.ifBlank('Role'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: bodyStyle.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                        Text(
-                          item.company.ifBlank('Company'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: bodyStyle.copyWith(
-                            color: mutedColor,
-                            fontStyle: FontStyle.italic,
-                            fontWeight: FontWeight.w700,
+                        Expanded(
+                          child: _CreativeBulletColumn(
+                            items: skills.take(midpoint).toList(),
+                            bodyStyle: bodyStyle,
                           ),
                         ),
-                        _CreativeBulletColumn(
-                          items: _workBulletLines(item).take(1).toList(),
-                          bodyStyle: bodyStyle,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _CreativeBulletColumn(
+                            items: skills.skip(midpoint).toList(),
+                            bodyStyle: bodyStyle,
+                          ),
                         ),
                       ],
                     ),
-                  );
-                })
-              else
-                Text(
-                  'Add your work experience details.',
-                  style: bodyStyle.copyWith(color: mutedColor),
+                    const SizedBox(height: 10),
+                    _CreativeSidebarHeading(
+                      title: 'PROJECTS',
+                      lineColor: lineColor,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      projects.isNotEmpty
+                          ? projects.first.title.ifBlank('Project')
+                          : 'Add projects',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: bodyStyle.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    if (projects.isNotEmpty)
+                      Text(
+                        firstProjectLine,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: bodyStyle.copyWith(color: mutedColor),
+                      ),
+                  ],
                 ),
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _CreativeSidebarHeading(
-                          title: 'EDUCATION',
-                          lineColor: lineColor,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          education.isNotEmpty
-                              ? education.first.degree.ifBlank('Degree')
-                              : 'Add education',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: bodyStyle,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _CreativeSidebarHeading(
-                          title: 'PROJECTS',
-                          lineColor: lineColor,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          projects.isNotEmpty
-                              ? projects.first.title.ifBlank('Project')
-                              : 'Add projects',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: bodyStyle,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -939,8 +968,7 @@ class _CreativeSidebarHeading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SizedBox(
-          width: 123,
+        Flexible(
           child: Text(
             title,
             maxLines: 1,
@@ -952,7 +980,46 @@ class _CreativeSidebarHeading extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(width: 8),
         Expanded(child: Container(height: 1.1, color: lineColor)),
+      ],
+    );
+  }
+}
+
+class _CreativeSidebarMetaItem extends StatelessWidget {
+  const _CreativeSidebarMetaItem({
+    required this.text,
+    required this.iconColor,
+    required this.style,
+  });
+
+  final String text;
+  final Color iconColor;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          margin: const EdgeInsets.only(top: 4, right: 6),
+          decoration: BoxDecoration(
+            color: iconColor,
+            borderRadius: BorderRadius.circular(1.5),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
       ],
     );
   }

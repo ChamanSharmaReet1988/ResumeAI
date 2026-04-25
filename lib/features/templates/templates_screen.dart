@@ -712,9 +712,11 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const rail = Color(0xFFF4E6DA);
     const dark = Color(0xFF33373D);
     const text = Color(0xFF2E3135);
     const line = Color(0xFFBFC4CB);
+    const muted = Color(0xFF6E747B);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -723,162 +725,212 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.zero,
-        child: SingleChildScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 15,
-                decoration: const BoxDecoration(
-                  color: dark,
-                  borderRadius: BorderRadius.vertical(top: Radius.zero),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              width: 48,
+              color: rail,
+              padding: const EdgeInsets.fromLTRB(6, 9, 6, 8),
+              child: const DefaultTextStyle(
+                style: TextStyle(
+                  fontSize: 3.8,
+                  height: 1.35,
+                  color: text,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _MiniAvatarBlock(),
+                    SizedBox(height: 6),
+                    Text(
+                      'MATEO',
+                      style: TextStyle(
+                        fontSize: 5.6,
+                        fontWeight: FontWeight.w800,
+                        color: dark,
+                      ),
+                    ),
+                    Text(
+                      'VARGAS',
+                      style: TextStyle(
+                        fontSize: 5.6,
+                        fontWeight: FontWeight.w800,
+                        color: dark,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    _MiniAccentDotLine(text: 'Seattle, WA'),
+                    SizedBox(height: 2),
+                    _MiniAccentDotLine(text: '+1 206 555 0117'),
+                    SizedBox(height: 2),
+                    _MiniAccentDotLine(text: 'mateo@sample.in'),
+                    SizedBox(height: 7),
+                    Text(
+                      'EDUCATION',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: dark,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text('B.A. Media Studies'),
+                    Text('2021', style: TextStyle(color: muted)),
+                  ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                child: DefaultTextStyle(
-                  style: const TextStyle(
-                    fontSize: 4.6,
-                    height: 1.28,
-                    color: text,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 30,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(2),
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFE7D0B2), Color(0xFFF7ECDD)],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                  child: DefaultTextStyle(
+                    style: const TextStyle(
+                      fontSize: 4.6,
+                      height: 1.28,
+                      color: text,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'PROJECT COORDINATOR',
+                          style: TextStyle(
+                            fontSize: 8.8,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.2,
+                            color: dark,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Marketing operations and handoff management',
+                          style: TextStyle(color: muted),
+                        ),
+                        const SizedBox(height: 7),
+                        const _MiniSidebarHeading(
+                          title: 'SUMMARY',
+                          lineColor: line,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Project coordinator with a sharp eye for handoffs, meeting cadence, and stakeholder updates across marketing and product teams.',
+                        ),
+                        const SizedBox(height: 7),
+                        const _MiniSidebarHeading(
+                          title: 'EXPERIENCE',
+                          lineColor: line,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'PROJECT COORDINATOR, 2021 - Present',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const Text(
+                          'Juniper Studio, Seattle, WA',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        const _MiniBulletColumn(
+                          items: [
+                            'Managed creative timelines for 25+ campaign deliverables.',
+                            'Published weekly status updates and stakeholder summaries.',
+                          ],
+                        ),
+                        const SizedBox(height: 7),
+                        const _MiniSidebarHeading(
+                          title: 'SKILLS',
+                          lineColor: line,
+                        ),
+                        const SizedBox(height: 4),
+                        const Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _MiniBulletColumn(
+                                items: ['Timeline tracking', 'Meeting notes'],
                               ),
                             ),
-                            child: const Icon(
-                              Icons.person_rounded,
-                              color: Color(0xFF84664A),
-                              size: 20,
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: _MiniBulletColumn(
+                                items: [
+                                  'Cross-team briefs',
+                                  'Status reports',
+                                  'Client updates',
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'MATEO VARGAS',
-                                  style: TextStyle(
-                                    fontSize: 9.4,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.2,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                _MiniIconLine(text: 'Seattle, WA 98101'),
-                                SizedBox(height: 2),
-                                _MiniIconLine(text: '+1 206 555 0117'),
-                                SizedBox(height: 2),
-                                _MiniIconLine(text: 'mateo.vargas@mail.com'),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 7),
-                      const _MiniSidebarHeading(
-                        title: 'SUMMARY',
-                        lineColor: line,
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Project coordinator with a sharp eye for handoffs, meeting cadence, and stakeholder updates across marketing and product teams.',
-                      ),
-                      const SizedBox(height: 6),
-                      const _MiniSidebarHeading(
-                        title: 'SKILLS',
-                        lineColor: line,
-                      ),
-                      const SizedBox(height: 4),
-                      const Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _MiniBulletColumn(
-                              items: ['Timeline tracking', 'Meeting notes'],
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: _MiniBulletColumn(
-                              items: [
-                                'Cross-team briefs',
-                                'Status reports',
-                                'Client updates',
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      const _MiniSidebarHeading(
-                        title: 'EXPERIENCE',
-                        lineColor: line,
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'PROJECT COORDINATOR, 2021 - Present',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      const Text(
-                        'Juniper Studio, Seattle, WA',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontStyle: FontStyle.italic,
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 3),
-                      const _MiniBulletColumn(
-                        items: [
-                          'Managed creative timelines for 25+ campaign deliverables.',
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Expanded(
-                            child: _MiniInfoSection(
-                              heading: 'EDUCATION',
-                              lineColor: line,
-                              lines: ['B.A. Media Studies', '2021'],
-                              sidebarStyle: true,
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: _MiniInfoSection(
-                              heading: 'LANGUAGES',
-                              lineColor: line,
-                              lines: ['English  C2', 'Portuguese  B1'],
-                              sidebarStyle: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _MiniAvatarBlock extends StatelessWidget {
+  const _MiniAvatarBlock();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 30,
+      height: 38,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(2),
+        color: const Color(0xFFF1D7BE),
+      ),
+      alignment: Alignment.center,
+      child: const Text(
+        'MV',
+        style: TextStyle(
+          color: Color(0xFFE17A3B),
+          fontSize: 8,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniAccentDotLine extends StatelessWidget {
+  const _MiniAccentDotLine({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 4,
+          height: 4,
+          margin: const EdgeInsets.only(top: 3, right: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE17A3B),
+            borderRadius: BorderRadius.circular(1),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(color: Color(0xFF6E747B)),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1351,64 +1403,6 @@ class _MiniExperienceBlock extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         _MiniBulletColumn(items: bullets),
-      ],
-    );
-  }
-}
-
-class _MiniInfoSection extends StatelessWidget {
-  const _MiniInfoSection({
-    required this.heading,
-    required this.lineColor,
-    required this.lines,
-    this.sidebarStyle = false,
-  });
-
-  final String heading;
-  final Color lineColor;
-  final List<String> lines;
-  final bool sidebarStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    final headingWidget = sidebarStyle
-        ? _MiniSidebarHeading(title: heading, lineColor: lineColor)
-        : _MiniSectionHeading(title: heading, lineColor: lineColor);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        headingWidget,
-        const SizedBox(height: 4),
-        for (final line in lines)
-          Padding(padding: const EdgeInsets.only(bottom: 2), child: Text(line)),
-      ],
-    );
-  }
-}
-
-
-class _MiniIconLine extends StatelessWidget {
-  const _MiniIconLine({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 5,
-          height: 5,
-          decoration: BoxDecoration(
-            color: const Color(0xFF444950),
-            borderRadius: BorderRadius.circular(1),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(text, style: const TextStyle(color: Color(0xFF6A7077))),
-        ),
       ],
     );
   }
