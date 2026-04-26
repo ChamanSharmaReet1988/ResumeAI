@@ -245,7 +245,7 @@ class _AppShellState extends State<AppShell> {
       width: 60,
       height: 60,
       child: FloatingActionButton(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).cardColor,
         shape: const CircleBorder(),
         onPressed: isResumeSegment
             ? _createResumeFromAddButton
@@ -480,7 +480,7 @@ class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       title: const Text('Resume title'),
       content: TextField(
         key: const Key('resume-title-dialog-field'),
@@ -532,7 +532,7 @@ class _CoverLetterTitleDialogState extends State<_CoverLetterTitleDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       title: const Text('Cover letter title'),
       content: TextField(
         key: const Key('cover-letter-title-dialog-field'),

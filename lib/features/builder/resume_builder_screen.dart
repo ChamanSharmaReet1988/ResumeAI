@@ -343,7 +343,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardColor,
           surfaceTintColor: Colors.transparent,
           title: const Text('Hide from resume?'),
           content: Text(
@@ -423,7 +423,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (isEndDate) {
       final selection = await showModalBottomSheet<_EndDateSelection>(
         context: context,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).cardColor,
         builder: (context) {
           final primaryColor = Theme.of(context).colorScheme.primary;
 
@@ -566,39 +566,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardColor,
           title: Text(title),
           content: SizedBox(
             width: 320,
             height: 320,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: Theme.of(context).colorScheme.copyWith(
-                  onSurface: Colors.black,
-                  primary: Colors.black,
-                ),
-                textTheme: Theme.of(context).textTheme.copyWith(
-                  bodyLarge: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                  bodyMedium: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                  labelLarge: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              child: YearPicker(
-                firstDate: DateTime(1970),
-                lastDate: DateTime(2100),
-                selectedDate: DateTime(selectedYear),
-                currentDate: DateTime.now(),
-                onChanged: (date) => Navigator.of(context).pop('${date.year}'),
-              ),
+            child: YearPicker(
+              firstDate: DateTime(1970),
+              lastDate: DateTime(2100),
+              selectedDate: DateTime(selectedYear),
+              currentDate: DateTime.now(),
+              onChanged: (date) => Navigator.of(context).pop('${date.year}'),
             ),
           ),
         );
@@ -622,7 +600,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).cardColor,
               title: Text(title),
               content: SizedBox(
                 width: 340,
@@ -634,16 +612,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       initialValue: years.contains(selectedYear)
                           ? selectedYear
                           : years.first,
-                      dropdownColor: Colors.white,
-                      style: const TextStyle(
+                      dropdownColor: Theme.of(context).cardColor,
+                      style: TextStyle(
                         fontWeight: FontWeight.w400,
-                        color: Colors.black,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Year',
                         labelStyle: TextStyle(
                           fontWeight: FontWeight.w400,
-                          color: Colors.black,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       items: years
@@ -652,9 +630,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               value: year,
                               child: Text(
                                 '$year',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.black,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -678,9 +656,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         return ChoiceChip(
                           label: Text(
                             label,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w400,
-                              color: Colors.black,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           selected: month == selectedMonth,
@@ -832,7 +810,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardColor,
           surfaceTintColor: Colors.transparent,
           title: const Text('New section'),
           content: TextField(
@@ -896,7 +874,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardColor,
           surfaceTintColor: Colors.transparent,
           title: const Text('Remove section?'),
           content: const Text(
@@ -1036,7 +1014,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   Future<void> _showProfilePhotoOptions({required bool hasImage}) async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       builder: (sheetContext) {
         final iconColor = Theme.of(sheetContext).colorScheme.primary;
         return SafeArea(
@@ -2150,7 +2128,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 decoration: InputDecoration(
                   labelText: 'Add a skill',
                   helperText:
-                      'Type to see suggestions, or add your own keywords',
+                      'Type to see suggestions or add your own skill',
                   helperStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 11,
@@ -3597,7 +3575,7 @@ class _PhoneWithCountryCodeFieldState
               value: _selectedCountryKey,
               isDense: true,
               style: inputStyle,
-              dropdownColor: Colors.white,
+              dropdownColor: Theme.of(context).cardColor,
               menuMaxHeight: 340,
               menuWidth: 280,
               items: _countries

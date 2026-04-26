@@ -185,7 +185,7 @@ class _ResumeSection extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardColor,
           title: const Text('Delete resume?'),
           content: Text(
             'Delete "${resume.title}"? This action cannot be undone.',
@@ -215,7 +215,7 @@ class _ResumeSection extends StatelessWidget {
   ) async {
     final action = await showModalBottomSheet<_ResumeCardAction>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       builder: (context) {
         return SafeArea(
           child: Padding(
@@ -446,7 +446,7 @@ class _CoverLetterSection extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardColor,
           title: const Text('Delete cover letter?'),
           content: Text(
             'Delete "${coverLetter.displayTitle}"? This action cannot be undone.',
@@ -476,7 +476,7 @@ class _CoverLetterSection extends StatelessWidget {
   ) async {
     final action = await showModalBottomSheet<_CoverLetterCardAction>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       builder: (context) {
         return SafeArea(
           child: Padding(
@@ -685,7 +685,7 @@ class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       title: Text(widget.title),
       content: TextField(
         key: widget.fieldKey,

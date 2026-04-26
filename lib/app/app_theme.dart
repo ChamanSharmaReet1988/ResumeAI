@@ -174,6 +174,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          foregroundColor: isDark ? Colors.white : scheme.onPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -192,6 +193,13 @@ class AppTheme {
           textStyle: textTheme.labelLarge?.copyWith(
             fontWeight: FontWeight.w700,
           ),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          foregroundColor: isDark ? Colors.white : scheme.onPrimary,
+          backgroundColor: scheme.primary,
+          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -216,33 +224,29 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: cardColor,
         surfaceTintColor: Colors.transparent,
         elevation: 3,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
-        titleTextStyle: isDark
-            ? textTheme.titleLarge?.copyWith(color: const Color(0xFF1C1B1F))
-            : textTheme.titleLarge,
-        contentTextStyle: isDark
-            ? textTheme.bodyMedium?.copyWith(color: const Color(0xFF44474E))
-            : textTheme.bodyMedium,
-        iconColor: isDark ? const Color(0xFF1C1B1F) : null,
+        titleTextStyle: textTheme.titleLarge?.copyWith(color: scheme.onSurface),
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
+        iconColor: scheme.onSurface,
       ),
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: Colors.white,
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: cardColor,
         surfaceTintColor: Colors.transparent,
-        modalBackgroundColor: Colors.white,
+        modalBackgroundColor: cardColor,
         elevation: 2,
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: Colors.white,
+        color: cardColor,
         surfaceTintColor: Colors.transparent,
         elevation: 4,
-        textStyle: isDark
-            ? textTheme.bodyMedium?.copyWith(color: const Color(0xFF1C1B1F))
-            : textTheme.bodyMedium,
+        textStyle: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
       ),
     );
   }

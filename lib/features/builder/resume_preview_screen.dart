@@ -137,7 +137,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
       isScrollControlled: true,
       showDragHandle: true,
       useSafeArea: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       builder: (sheetContext) {
         final bottomInset = MediaQuery.viewInsetsOf(sheetContext).bottom;
         // Modal overlay is not under the route's Provider; listen to the
