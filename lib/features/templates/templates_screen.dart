@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/resume_models.dart';
+import '../../core/resume_text_font.dart';
+import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
 
 enum _TemplateSegment { resume, coverLetter }
@@ -458,7 +460,9 @@ class _TemplatePreviewArt extends StatelessWidget {
     final preview = switch (item.previewKind) {
       _TemplatePreviewKind.darkHeaderResume => const _DarkHeaderTemplateArt(),
       _TemplatePreviewKind.profileSidebarResume =>
-        const _ProfileSidebarTemplateArt(),
+        showPremiumBadgeOnPage
+            ? _ResumeTemplatePreviewArt(resume: _profileSidebarTemplateResume)
+            : const _ProfileSidebarTemplateArtCompact(),
       _TemplatePreviewKind.executiveNoteCoverLetter =>
         const _ExecutiveNoteCoverLetterArt(),
       _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
@@ -493,7 +497,10 @@ class _TemplatePreviewArt extends StatelessWidget {
                     style: const TextStyle(fontFamily: 'Calibri'),
                     child: ColoredBox(
                       color: Colors.white,
-                      child: Align(alignment: Alignment.topCenter, child: preview),
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: preview,
+                      ),
                     ),
                   ),
                 ),
@@ -515,6 +522,116 @@ class _TemplatePreviewArt extends StatelessWidget {
                     ),
                   ),
               ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+final ResumeData _profileSidebarTemplateResume = ResumeData(
+  id: 'template-profile-sidebar',
+  title: 'Profile Sidebar Template',
+  fullName: 'Mateo Vargas',
+  jobTitle: 'Project Coordinator',
+  email: 'mateo@sample.in',
+  phone: '+1 206 555 0117',
+  location: 'Seattle, WA',
+  website: 'mateovargas.dev',
+  summary:
+      'Project coordinator with a sharp eye for handoffs, meeting cadence, and stakeholder updates across marketing and product teams.',
+  template: ResumeTemplate.creative,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Project Coordinator',
+      company: 'Juniper Studio',
+      startDate: '2021',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Managed creative timelines for 25+ campaign deliverables.',
+        'Published weekly status updates and stakeholder summaries.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'University of Washington',
+      degree: 'B.A. Media Studies',
+      startDate: '2017',
+      endDate: '2021',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'Timeline tracking',
+    'Meeting notes',
+    'Cross-team briefs',
+    'Status reports',
+    'Client updates',
+  ],
+  projects: const [
+    ProjectItem(
+      title: 'Campaign Launch Dashboard',
+      bullets: ['Built rollout tracker for weekly stakeholder reviews.'],
+    ),
+  ],
+  customSections: const [],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: 'github.com/mateovargas',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.calibri,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: true,
+  bodyFontPt: 13,
+  corporateColorPresetIndex: 3,
+);
+
+class _ResumeTemplatePreviewArt extends StatelessWidget {
+  const _ResumeTemplatePreviewArt({required this.resume});
+
+  final ResumeData resume;
+  static const double _pageWidth = 210;
+  static const double _pageHeight = 297;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = math.min(
+          constraints.maxWidth / _pageWidth,
+          constraints.maxHeight / _pageHeight,
+        );
+        final safeScale = (scale.isFinite && scale > 0) ? scale : 1.0;
+
+        return ColoredBox(
+          color: Colors.white,
+          child: ClipRect(
+            child: OverflowBox(
+              minWidth: _pageWidth,
+              maxWidth: _pageWidth,
+              minHeight: _pageHeight,
+              maxHeight: _pageHeight,
+              alignment: Alignment.topCenter,
+              child: Transform.scale(
+                scale: safeScale,
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: _pageWidth,
+                  height: _pageHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: ResumePreviewCanvas(
+                      resume: resume,
+                      showDebugLabel: false,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         );
@@ -656,9 +773,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
-                        'BBA, Communication Strategy',
-                      ),
+                      const Text('BBA, Communication Strategy'),
                       const SizedBox(height: 4),
                       const _MiniSectionHeading(
                         title: 'SKILLS',
@@ -692,9 +807,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
-                        'Shipped dashboard for weekly reviews.',
-                      ),
+                      const Text('Shipped dashboard for weekly reviews.'),
                     ],
                   ),
                 ),
@@ -707,8 +820,8 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
   }
 }
 
-class _ProfileSidebarTemplateArt extends StatelessWidget {
-  const _ProfileSidebarTemplateArt();
+class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
+  const _ProfileSidebarTemplateArtCompact();
 
   @override
   Widget build(BuildContext context) {
@@ -717,12 +830,14 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
     const text = Color(0xFF2E3135);
     const line = Color(0xFFBFC4CB);
     const muted = Color(0xFF6E747B);
+    final avatarBackground = Color.lerp(
+      rail,
+      Colors.black,
+      0.10,
+    )!.withValues(alpha: 0.4);
 
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.zero,
-      ),
+      decoration: const BoxDecoration(color: Colors.white),
       child: ClipRRect(
         borderRadius: BorderRadius.zero,
         child: Row(
@@ -732,8 +847,8 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
               width: 48,
               color: rail,
               padding: const EdgeInsets.fromLTRB(6, 9, 6, 8),
-              child: const DefaultTextStyle(
-                style: TextStyle(
+              child: DefaultTextStyle(
+                style: const TextStyle(
                   fontSize: 3.8,
                   height: 1.35,
                   color: text,
@@ -741,9 +856,12 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _MiniAvatarBlock(),
-                    SizedBox(height: 6),
-                    Text(
+                    _MiniAvatarBlock(
+                      backgroundColor: avatarBackground,
+                      textColor: const Color(0xFFE17A3B),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
                       'MATEO',
                       style: TextStyle(
                         fontSize: 5.6,
@@ -751,7 +869,7 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
                         color: dark,
                       ),
                     ),
-                    Text(
+                    const Text(
                       'VARGAS',
                       style: TextStyle(
                         fontSize: 5.6,
@@ -759,23 +877,23 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
                         color: dark,
                       ),
                     ),
-                    SizedBox(height: 5),
-                    _MiniAccentDotLine(text: 'Seattle, WA'),
-                    SizedBox(height: 2),
-                    _MiniAccentDotLine(text: '+1 206 555 0117'),
-                    SizedBox(height: 2),
-                    _MiniAccentDotLine(text: 'mateo@sample.in'),
-                    SizedBox(height: 7),
-                    Text(
+                    const SizedBox(height: 5),
+                    const _MiniAccentDotLine(text: 'Seattle, WA'),
+                    const SizedBox(height: 2),
+                    const _MiniAccentDotLine(text: '+1 206 555 0117'),
+                    const SizedBox(height: 2),
+                    const _MiniAccentDotLine(text: 'mateo@sample.in'),
+                    const SizedBox(height: 7),
+                    const Text(
                       'EDUCATION',
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         color: dark,
                       ),
                     ),
-                    SizedBox(height: 3),
-                    Text('B.A. Media Studies'),
-                    Text('2021', style: TextStyle(color: muted)),
+                    const SizedBox(height: 3),
+                    const Text('B.A. Media Studies'),
+                    const Text('2021', style: TextStyle(color: muted)),
                   ],
                 ),
               ),
@@ -876,61 +994,6 @@ class _ProfileSidebarTemplateArt extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _MiniAvatarBlock extends StatelessWidget {
-  const _MiniAvatarBlock();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 30,
-      height: 38,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(2),
-        color: const Color(0xFFF1D7BE),
-      ),
-      alignment: Alignment.center,
-      child: const Text(
-        'MV',
-        style: TextStyle(
-          color: Color(0xFFE17A3B),
-          fontSize: 8,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniAccentDotLine extends StatelessWidget {
-  const _MiniAccentDotLine({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 4,
-          height: 4,
-          margin: const EdgeInsets.only(top: 3, right: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE17A3B),
-            borderRadius: BorderRadius.circular(1),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(color: Color(0xFF6E747B)),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1303,9 +1366,6 @@ class _MiniSectionHeading extends StatelessWidget {
   }
 }
 
-
-
-
 class _MiniSidebarHeading extends StatelessWidget {
   const _MiniSidebarHeading({required this.title, required this.lineColor});
 
@@ -1329,6 +1389,63 @@ class _MiniSidebarHeading extends StatelessWidget {
   }
 }
 
+class _MiniAvatarBlock extends StatelessWidget {
+  const _MiniAvatarBlock({
+    required this.backgroundColor,
+    required this.textColor,
+  });
+
+  final Color backgroundColor;
+  final Color textColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 35.2,
+      height: 44,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(2),
+        color: backgroundColor,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        'MV',
+        style: TextStyle(
+          color: textColor,
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniAccentDotLine extends StatelessWidget {
+  const _MiniAccentDotLine({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 4,
+          height: 4,
+          margin: const EdgeInsets.only(top: 3, right: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE17A3B),
+            borderRadius: BorderRadius.circular(1),
+          ),
+        ),
+        Expanded(
+          child: Text(text, style: const TextStyle(color: Color(0xFF6E747B))),
+        ),
+      ],
+    );
+  }
+}
 
 class _MiniBulletColumn extends StatelessWidget {
   const _MiniBulletColumn({required this.items});

@@ -61,4 +61,19 @@ extension ResumeCorporateStyleX on ResumeData {
         .toInt();
     return kCorporateColorPresets[i];
   }
+
+  /// Creative template uses the selected preset only as an accent, not for titles.
+  Color get creativeAccentColor => corporateColorPreset.headerColor;
+
+  Color get creativeRailColor =>
+      Color.lerp(Colors.white, creativeAccentColor, 0.18) ?? Colors.white;
+
+  Color get creativeAvatarBackgroundColor =>
+      Color.lerp(creativeRailColor, Colors.black, 0.10) ?? creativeRailColor;
+
+  Color get creativeTitleColor => const Color(0xFF2E3135);
+
+  Color get creativeMutedColor => const Color(0xFF5F656C);
+
+  Color get creativeLineColor => const Color(0xFFCDBAAC);
 }

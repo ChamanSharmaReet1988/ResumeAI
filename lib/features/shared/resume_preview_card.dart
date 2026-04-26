@@ -9,15 +9,60 @@ class ResumePreviewCard extends StatelessWidget {
   const ResumePreviewCard({
     super.key,
     required this.resume,
+    this.showDebugLabel = kDebugMode,
   });
 
   final ResumeData resume;
+  final bool showDebugLabel;
   static const double _a4AspectRatio = 1 / 1.4142;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final shadow = theme.colorScheme.shadow.withValues(alpha: 0.08);
+
+    return AspectRatio(
+      aspectRatio: _a4AspectRatio,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: resume.template.accentColor.withValues(alpha: 0.12),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: shadow,
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: ResumePreviewCanvas(
+          resume: resume,
+          showDebugLabel: showDebugLabel,
+        ),
+      ),
+    );
+  }
+}
+
+class ResumePreviewCanvas extends StatelessWidget {
+  const ResumePreviewCanvas({
+    super.key,
+    required this.resume,
+    this.showDebugLabel = false,
+  });
+
+  final ResumeData resume;
+  final bool showDebugLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final previewTemplate = resume.template.userFacingTemplate;
     final base = theme.textTheme;
     final ff = ResumeTextFont.calibri.flutterFontFamily;
@@ -79,65 +124,43 @@ class ResumePreviewCard extends StatelessWidget {
 
     return Theme(
       data: resumeBodyTheme,
-      child: AspectRatio(
-        aspectRatio: _a4AspectRatio,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: resume.template.accentColor.withValues(alpha: 0.12),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: shadow,
-                blurRadius: 24,
-                offset: const Offset(0, 12),
-              ),
-            ],
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: switch (previewTemplate) {
+              ResumeTemplate.corporate => _DarkHeaderPreview(resume: resume),
+              ResumeTemplate.creative => _CreativePreview(resume: resume),
+            },
           ),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: switch (previewTemplate) {
-                  ResumeTemplate.corporate => _DarkHeaderPreview(resume: resume),
-                  ResumeTemplate.creative => _CreativePreview(resume: resume),
-                },
-              ),
-              if (kDebugMode)
-                Positioned(
-                  right: 10,
-                  top: 10,
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.75),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        child: Text(
-                          'Font: $ff',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            height: 1,
-                          ),
-                        ),
+          if (showDebugLabel)
+            Positioned(
+              right: 10,
+              top: 10,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      'Font: $ff',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
                       ),
                     ),
                   ),
                 ),
-            ],
-          ),
-        ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -158,11 +181,11 @@ abstract final class _CorporatePdfMetrics {
 
   /// Keep this aligned with [ResumeTypography.sectionGapPreviewPx].
   static EdgeInsets sectionOuter() => const EdgeInsets.fromLTRB(
-        30,
-        0,
-        30,
-        ResumeTypography.sectionGapPreviewPx,
-      );
+    30,
+    0,
+    30,
+    ResumeTypography.sectionGapPreviewPx,
+  );
 
   /// [_twoColumnBulletList] column gap.
   static const skillsColumnGap = 24.0;
@@ -195,8 +218,7 @@ class _DarkHeaderPreview extends StatelessWidget {
         (_darkHeaderExtraLineSpacingPx / bodyFontPx);
     final nameLineHeight =
         1.05 +
-        (_darkHeaderExtraLineSpacingPx /
-            _CorporatePdfMetrics.headerNameSize());
+        (_darkHeaderExtraLineSpacingPx / _CorporatePdfMetrics.headerNameSize());
     final bodyStyle = TextStyle(
       fontSize: bodyFontPx,
       height: bodyLineHeight,
@@ -660,7 +682,10 @@ class _CorporateProjectBlock extends StatelessWidget {
   }
 }
 
-Widget _corporateCustomSectionBody(CustomSectionItem item, TextStyle bodyStyle) {
+Widget _corporateCustomSectionBody(
+  CustomSectionItem item,
+  TextStyle bodyStyle,
+) {
   if (item.layoutMode == CustomSectionLayoutMode.summary) {
     return Text(item.content.trim(), style: bodyStyle);
   }
@@ -691,16 +716,18 @@ class _CreativePreview extends StatelessWidget {
   const _CreativePreview({required this.resume});
 
   final ResumeData resume;
+  static const double _avatarBackgroundOpacity = 0.4;
+  static const double _avatarWidth = 94.6;
+  static const double _avatarHeight = 110.0;
 
   @override
   Widget build(BuildContext context) {
-    final railColor =
-        Color.lerp(Colors.white, resume.template.tintColor, 0.72) ??
-        resume.template.tintColor;
-    final accentColor = resume.corporateColorPreset.headerColor;
-    final textColor = resume.corporateColorPreset.titleColor;
-    final mutedColor = textColor.withValues(alpha: 0.72);
-    final lineColor = textColor.withValues(alpha: 0.28);
+    final railColor = resume.creativeRailColor;
+    final accentColor = resume.creativeAccentColor;
+    final avatarBackgroundColor = resume.creativeAvatarBackgroundColor;
+    final textColor = resume.creativeTitleColor;
+    final mutedColor = resume.creativeMutedColor;
+    final lineColor = resume.creativeLineColor;
     final bodyStyle = TextStyle(
       color: textColor,
       fontSize: resume.effectiveBodyFontPt.toDouble(),
@@ -713,6 +740,13 @@ class _CreativePreview extends StatelessWidget {
     final projects = resume.visibleProjects;
     final contacts = _pdfAlignedContactItems(resume).take(4).toList();
     final midpoint = (skills.length / 2).ceil();
+    const sectionGap = 20.0;
+    const headingGap = 6.0;
+    const sidebarDividerGap = 20.0;
+    const sidebarRailWidth = 125.0;
+    const sidebarContentWidth = 101.0;
+    const mainContentInset = 123.0;
+    const nameFontSize = 34.0;
     final firstProjectLine = projects.isNotEmpty
         ? (_projectBulletLines(projects.first).isNotEmpty
               ? _projectBulletLines(projects.first).first
@@ -724,94 +758,67 @@ class _CreativePreview extends StatelessWidget {
         Positioned.fill(
           child: Row(
             children: [
-              Container(width: 120, color: railColor),
+              Container(width: sidebarRailWidth, color: railColor),
               const Expanded(child: SizedBox()),
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 96,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 78,
-                      height: 92,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: accentColor.withValues(alpha: 0.12),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        _pdfAlignedInitials(resume),
-                        style: TextStyle(
-                          color: accentColor,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
+        Positioned(
+          left: 16,
+          top: 16,
+          child: SizedBox(
+            width: sidebarContentWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: _avatarWidth,
+                  height: _avatarHeight,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: avatarBackgroundColor.withValues(
+                      alpha: _avatarBackgroundOpacity,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    _pdfAlignedInitials(resume),
+                    style: TextStyle(
+                      color: accentColor,
+                      fontSize: 28.6,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                if (contacts.isNotEmpty) ...[
+                  const SizedBox(height: sectionGap),
+                  Container(height: 1.1, color: lineColor),
+                  const SizedBox(height: sidebarDividerGap),
+                  ...contacts.map(
+                    (line) => Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: _CreativeSidebarMetaItem(
+                        text: line,
+                        iconColor: accentColor,
+                        style: bodyStyle.copyWith(
+                          color: mutedColor,
+                          fontSize: bodyStyle.fontSize! - 0.4,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    if (contacts.isNotEmpty)
-                      ...contacts.map(
-                        (line) => Padding(
-                          padding: const EdgeInsets.only(bottom: 5),
-                          child: _CreativeSidebarMetaItem(
-                            text: line,
-                            iconColor: accentColor,
-                            style: bodyStyle.copyWith(
-                              color: mutedColor,
-                              fontSize: bodyStyle.fontSize! - 0.4,
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (education.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      _CreativeSidebarHeading(
-                        title: 'EDUCATION',
-                        lineColor: lineColor,
-                      ),
-                      const SizedBox(height: 6),
-                      ...education.take(2).map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 7),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.degree.ifBlank('Degree'),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: bodyStyle.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                item.institution.ifBlank('Institution'),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: bodyStyle.copyWith(
-                                  color: mutedColor,
-                                  fontSize: bodyStyle.fontSize! - 0.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 22),
-              Expanded(
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: mainContentInset),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -820,7 +827,7 @@ class _CreativePreview extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: bodyStyle.copyWith(
-                        fontSize: ResumeTypography.darkHeaderNamePt,
+                        fontSize: nameFontSize,
                         fontWeight: FontWeight.w900,
                         height: 1.0,
                         letterSpacing: 0.2,
@@ -839,12 +846,12 @@ class _CreativePreview extends StatelessWidget {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 12),
+                    const SizedBox(height: sectionGap),
                     _CreativeSidebarHeading(
                       title: 'SUMMARY',
                       lineColor: lineColor,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: headingGap),
                     Text(
                       summary.ifBlank(
                         'Add a short summary to position your experience and strengths.',
@@ -853,12 +860,12 @@ class _CreativePreview extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: bodyStyle.copyWith(color: mutedColor),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: sectionGap),
                     _CreativeSidebarHeading(
                       title: 'EXPERIENCE',
                       lineColor: lineColor,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: headingGap),
                     if (experiences.isNotEmpty)
                       ...experiences.take(2).map((item) {
                         final title = [
@@ -902,12 +909,50 @@ class _CreativePreview extends StatelessWidget {
                         'Add your work experience details.',
                         style: bodyStyle.copyWith(color: mutedColor),
                       ),
-                    const SizedBox(height: 10),
+                    if (education.isNotEmpty) ...[
+                      const SizedBox(height: sectionGap),
+                      _CreativeSidebarHeading(
+                        title: 'EDUCATION',
+                        lineColor: lineColor,
+                      ),
+                      const SizedBox(height: headingGap),
+                      ...education
+                          .take(2)
+                          .map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.only(bottom: 7),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.degree.ifBlank('Degree'),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: bodyStyle.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 1),
+                                  Text(
+                                    item.institution.ifBlank('Institution'),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: bodyStyle.copyWith(
+                                      color: mutedColor,
+                                      fontSize: bodyStyle.fontSize! - 0.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                    ],
+                    const SizedBox(height: sectionGap),
                     _CreativeSidebarHeading(
                       title: 'SKILLS',
                       lineColor: lineColor,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: headingGap),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -926,12 +971,12 @@ class _CreativePreview extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: sectionGap),
                     _CreativeSidebarHeading(
                       title: 'PROJECTS',
                       lineColor: lineColor,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: headingGap),
                     Text(
                       projects.isNotEmpty
                           ? projects.first.title.ifBlank('Project')
@@ -1115,12 +1160,12 @@ List<String> _projectBulletLines(ProjectItem item) {
   if (nonEmptyBullets.isNotEmpty) {
     return nonEmptyBullets;
   }
-  final legacy = [item.overview.trim(), item.impact.trim()]
-      .where((part) => part.isNotEmpty)
-      .toList();
+  final legacy = [
+    item.overview.trim(),
+    item.impact.trim(),
+  ].where((part) => part.isNotEmpty).toList();
   return legacy;
 }
-
 
 extension on String {
   String ifBlank(String fallback) => trim().isEmpty ? fallback : this;

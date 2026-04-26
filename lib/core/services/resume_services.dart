@@ -58,8 +58,16 @@ pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
 pw.Widget _creativeAvatarIconPlaceholder({
   double width = 96,
   double height = 112,
+  String initials = 'DA',
+  required PdfColor backgroundColor,
+  PdfColor textColor = const PdfColor(0.9098, 0.3647, 0.0157),
 }) {
-  final bgColor = PdfColor.fromHex('#EED7BF');
+  final bgColor = PdfColor(
+    backgroundColor.red,
+    backgroundColor.green,
+    backgroundColor.blue,
+    _creativeAvatarBackgroundOpacity,
+  );
 
   return pw.Container(
     width: width,
@@ -68,14 +76,39 @@ pw.Widget _creativeAvatarIconPlaceholder({
       borderRadius: pw.BorderRadius.circular(2),
       color: bgColor,
     ),
+    alignment: pw.Alignment.center,
+    child: pw.Text(
+      initials,
+      style: pw.TextStyle(
+        color: textColor,
+        fontSize: width * 0.28,
+        fontWeight: pw.FontWeight.bold,
+      ),
+    ),
   );
 }
 
-const double _creativeSidebarRailWidthPt = 156.0;
-const double _creativeSidebarContentWidthPt = 118.0;
+const double _creativeSidebarRailWidthPt = 161.0;
+const double _creativeSidebarContentWidthPt = 123.0;
 const double _creativeSidebarGapPt = 28.0;
+const double _creativeAvatarWidthPt = 105.6;
+const double _creativeAvatarHeightPt = 123.2;
+const double _creativeMainColumnInsetPt =
+    _creativeSidebarContentWidthPt + _creativeSidebarGapPt;
+const double _creativeSectionGapPt = 20.0;
+const double _creativeHeadingBodyGapPt = 8.0;
+const double _creativeSidebarDividerGapPt = 20.0;
+const double _creativeNameFontPt = 34.0;
+const double _creativeAvatarBackgroundOpacity = 0.4;
 
-PdfColor _creativeSidebarRailColorPdf() => PdfColor.fromHex('#F7EADF');
+PdfColor _creativeSidebarRailColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.creativeRailColor);
+
+PdfColor _creativeSidebarAccentColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.creativeAccentColor);
+
+PdfColor _creativeTitleColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.creativeTitleColor);
 
 PdfColor _creativeSidebarLineColorPdf() => PdfColor.fromHex('#CDBAAC');
 
@@ -83,6 +116,7 @@ PdfColor _creativeSidebarMutedColorPdf() => PdfColor.fromHex('#5F656C');
 
 pw.PageTheme _creativeSidebarPageTheme({
   required PdfColor railColor,
+  pw.Widget? firstPageSidebar,
   PdfPageFormat pageFormat = PdfPageFormat.a4,
 }) {
   return pw.PageTheme(
@@ -90,13 +124,24 @@ pw.PageTheme _creativeSidebarPageTheme({
     margin: const pw.EdgeInsets.fromLTRB(24, 18, 24, 30),
     buildBackground: (context) => pw.FullPage(
       ignoreMargins: true,
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-        children: [
-          pw.Container(width: _creativeSidebarRailWidthPt, color: railColor),
-          pw.Expanded(child: pw.Container(color: PdfColors.white)),
-        ],
-      ),
+      child: context.pageNumber == 1
+          ? pw.Stack(
+              children: [
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                  children: [
+                    pw.Container(
+                      width: _creativeSidebarRailWidthPt,
+                      color: railColor,
+                    ),
+                    pw.Expanded(child: pw.Container(color: PdfColors.white)),
+                  ],
+                ),
+                if (firstPageSidebar != null)
+                  pw.Positioned(left: 24, top: 18, child: firstPageSidebar),
+              ],
+            )
+          : pw.Container(color: PdfColors.white),
     ),
   );
 }
@@ -124,24 +169,57 @@ pw.Widget _creativeSectionHeadingRow({
   );
 }
 
-pw.Widget _creativeMainSection({
-  required String title,
-  required PdfColor titleColor,
-  required PdfColor lineColor,
-  required pw.Widget child,
-}) {
-  return pw.Column(
-    crossAxisAlignment: pw.CrossAxisAlignment.start,
-    children: [
-      _creativeSectionHeadingRow(
-        title: title,
-        titleColor: titleColor,
-        lineColor: lineColor,
-      ),
-      pw.SizedBox(height: 8),
-      child,
-    ],
-  );
+pw.Widget _creativeMainColumnChild(pw.Widget child) {
+  return _CreativePageAwareInset(child: child);
+}
+
+class _CreativePageAwareInset extends pw.SingleChildWidget {
+  _CreativePageAwareInset({required pw.Widget child}) : super(child: child);
+
+  double _leftInsetFor(pw.Context context) =>
+      context.pageNumber == 1 ? _creativeMainColumnInsetPt : 0;
+
+  @override
+  void layout(
+    pw.Context context,
+    pw.BoxConstraints constraints, {
+    bool parentUsesSize = false,
+  }) {
+    final leftInset = _leftInsetFor(context);
+
+    if (child != null) {
+      final childConstraints = constraints.deflate(
+        pw.EdgeInsets.only(left: leftInset),
+      );
+      child!.layout(context, childConstraints, parentUsesSize: parentUsesSize);
+      assert(child!.box != null);
+      box = constraints.constrainRect(
+        width: child!.box!.width + leftInset,
+        height: child!.box!.height,
+      );
+      return;
+    }
+
+    box = constraints.constrainRect(width: leftInset, height: 0);
+  }
+
+  @override
+  void paint(pw.Context context) {
+    super.paint(context);
+
+    final leftInset = _leftInsetFor(context);
+    if (child == null) {
+      return;
+    }
+
+    final mat = context.canvas.getTransform();
+    mat.translateByDouble(box!.x + leftInset, box!.y, 0, 1);
+    context.canvas
+      ..saveContext()
+      ..setTransform(mat);
+    child!.paint(context);
+    context.canvas.restoreContext();
+  }
 }
 
 pw.Widget _creativeSidebarContactRow(
@@ -214,6 +292,65 @@ pw.Widget _creativeSidebarEducationEntry(
       ],
     ),
   );
+}
+
+pw.Widget _creativeFirstPageSidebar({
+  required ResumeData resume,
+  required List<String> contactItems,
+  required PdfColor accentColor,
+  required PdfColor lineColor,
+  required PdfColor mutedColor,
+  required double bodyPt,
+  pw.MemoryImage? profileImage,
+}) {
+  return pw.SizedBox(
+    width: _creativeSidebarContentWidthPt,
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        profileImage != null
+            ? pw.Container(
+                width: _creativeAvatarWidthPt,
+                height: _creativeAvatarHeightPt,
+                child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+              )
+            : _creativeAvatarIconPlaceholder(
+                width: _creativeAvatarWidthPt,
+                height: _creativeAvatarHeightPt,
+                initials: _creativeSidebarInitials(resume),
+                backgroundColor: _pdfRgb(resume.creativeAvatarBackgroundColor),
+                textColor: accentColor,
+              ),
+        if (contactItems.isNotEmpty) ...[
+          pw.SizedBox(height: _creativeSectionGapPt),
+          pw.Container(height: 1.2, color: lineColor),
+          pw.SizedBox(height: _creativeSidebarDividerGapPt),
+          for (final item in contactItems)
+            _creativeSidebarContactRow(
+              item,
+              iconColor: accentColor,
+              textColor: mutedColor,
+              fontSize: bodyPt,
+            ),
+        ],
+      ],
+    ),
+  );
+}
+
+String _creativeSidebarInitials(ResumeData resume) {
+  final name = resume.fullName.trim().isEmpty
+      ? 'Your Name'
+      : resume.fullName.trim();
+  final words = name
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .take(2)
+      .toList();
+  if (words.isEmpty) {
+    return 'DA';
+  }
+  return words.map((part) => part[0].toUpperCase()).join();
 }
 
 class ResumeRepository {
@@ -1773,11 +1910,7 @@ class ResumePdfService {
         _addCorporateTemplatePage(document, resume, profileImage: profileImage);
         break;
       case ResumeTemplate.creative:
-        _addCreativeTemplatePage(
-          document,
-          resume,
-          profileImage: profileImage,
-        );
+        _addCreativeTemplatePage(document, resume, profileImage: profileImage);
         break;
     }
 
@@ -2237,7 +2370,6 @@ class ResumePdfService {
     );
   }
 
-
   pw.Widget _corporateHeadingText(String value, {PdfColor? color}) {
     final style = pw.TextStyle(
       fontSize: ResumeTypography.darkHeaderSectionTitlePt,
@@ -2360,62 +2492,62 @@ class ResumePdfService {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
-            children: [
-              pw.Expanded(
-                child: _corporateRoleCompanyText(item.role, item.company),
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Expanded(
+              child: _corporateRoleCompanyText(item.role, item.company),
+            ),
+            if (item.startDate.trim().isNotEmpty ||
+                item.endDate.trim().isNotEmpty)
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Text(
+                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
+                  style: pw.TextStyle(
+                    color: PdfColor.fromHex('#666B71'),
+                    fontStyle: pw.FontStyle.italic,
+                    fontWeight: pw.FontWeight.normal,
+                    font: pw.Font.helveticaOblique(),
+                  ),
+                ),
               ),
-              if (item.startDate.trim().isNotEmpty ||
-                  item.endDate.trim().isNotEmpty)
-                pw.Align(
-                  alignment: pw.Alignment.centerRight,
-                  child: pw.Text(
-                    '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
-                    style: pw.TextStyle(
-                      color: PdfColor.fromHex('#666B71'),
-                      fontStyle: pw.FontStyle.italic,
-                      fontWeight: pw.FontWeight.normal,
-                      font: pw.Font.helveticaOblique(),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          pw.SizedBox(height: 4),
-          if (_workSummaryText(item).isNotEmpty) ...[
-            pw.SizedBox(height: 4),
-            pw.Text(_workSummaryText(item)),
           ],
-          ...(() {
-            final bullets = _workBulletLines(item);
-            return bullets.asMap().entries.map((entry) {
-              final index = entry.key;
-              final bullet = entry.value;
-              return pw.Padding(
-                padding: pw.EdgeInsets.only(top: index == 0 ? 0 : 4),
-                child: pw.Container(
-                  width: double.infinity,
-                  padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 3,
-                  ),
-                  color: highlightedBullets.contains(bullet)
-                      ? highlightColor
-                      : PdfColors.white,
-                  child: pw.Bullet(
-                    text: bullet,
-                    style: pw.TextStyle(
-                      color: PdfColors.black,
-                      fontSize: bodyFontPt,
-                    ),
+        ),
+        pw.SizedBox(height: 4),
+        if (_workSummaryText(item).isNotEmpty) ...[
+          pw.SizedBox(height: 4),
+          pw.Text(_workSummaryText(item)),
+        ],
+        ...(() {
+          final bullets = _workBulletLines(item);
+          return bullets.asMap().entries.map((entry) {
+            final index = entry.key;
+            final bullet = entry.value;
+            return pw.Padding(
+              padding: pw.EdgeInsets.only(top: index == 0 ? 0 : 4),
+              child: pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 3,
+                ),
+                color: highlightedBullets.contains(bullet)
+                    ? highlightColor
+                    : PdfColors.white,
+                child: pw.Bullet(
+                  text: bullet,
+                  style: pw.TextStyle(
+                    color: PdfColors.black,
+                    fontSize: bodyFontPt,
                   ),
                 ),
-              );
-            });
-          })(),
-          pw.SizedBox(height: 12),
+              ),
+            );
+          });
+        })(),
+        pw.SizedBox(height: 12),
       ],
     );
   }
@@ -2484,7 +2616,8 @@ class ResumePdfService {
                             horizontal: 4,
                             vertical: 2,
                           ),
-                          color: highlightedSkills.contains(cleaned[i + leftCount])
+                          color:
+                              highlightedSkills.contains(cleaned[i + leftCount])
                               ? highlightColor
                               : PdfColors.white,
                           child: pw.Bullet(
@@ -2504,13 +2637,12 @@ class ResumePdfService {
     );
   }
 
-
   pw.Widget _buildHighlightedCreativeExperience(
     WorkExperience item,
     Set<String> highlightedBullets,
-    PdfColor highlightColor,
-    {double bodyFontPt = ResumeTypography.bodyPt}
-  ) {
+    PdfColor highlightColor, {
+    double bodyFontPt = ResumeTypography.bodyPt,
+  }) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 10),
       child: pw.Column(
@@ -2528,13 +2660,18 @@ class ResumePdfService {
                       fontSize: bodyFontPt + 2,
                     ),
                     children: [
-                      pw.TextSpan(text: item.role.ifEmpty('Role').toUpperCase()),
-                      pw.TextSpan(text: ' / ${item.company.ifEmpty('Company')}'),
+                      pw.TextSpan(
+                        text: item.role.ifEmpty('Role').toUpperCase(),
+                      ),
+                      pw.TextSpan(
+                        text: ' / ${item.company.ifEmpty('Company')}',
+                      ),
                     ],
                   ),
                 ),
               ),
-              if (item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty)
+              if (item.startDate.trim().isNotEmpty ||
+                  item.endDate.trim().isNotEmpty)
                 pw.Text(
                   '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
                   style: pw.TextStyle(
@@ -2574,7 +2711,6 @@ class ResumePdfService {
     );
   }
 
-
   pw.Widget _buildCreativeExperience(
     WorkExperience item, {
     double bodyFontPt = ResumeTypography.bodyPt,
@@ -2596,13 +2732,18 @@ class ResumePdfService {
                       fontSize: bodyFontPt + 2,
                     ),
                     children: [
-                      pw.TextSpan(text: item.role.ifEmpty('Role').toUpperCase()),
-                      pw.TextSpan(text: ' / ${item.company.ifEmpty('Company')}'),
+                      pw.TextSpan(
+                        text: item.role.ifEmpty('Role').toUpperCase(),
+                      ),
+                      pw.TextSpan(
+                        text: ' / ${item.company.ifEmpty('Company')}',
+                      ),
                     ],
                   ),
                 ),
               ),
-              if (item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty)
+              if (item.startDate.trim().isNotEmpty ||
+                  item.endDate.trim().isNotEmpty)
                 pw.Text(
                   '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
                   style: pw.TextStyle(
@@ -2677,9 +2818,7 @@ class ResumePdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          _corporateStrokeLabelText(
-            item.title.ifEmpty('Project'),
-          ),
+          _corporateStrokeLabelText(item.title.ifEmpty('Project')),
           for (var i = 0; i < bullets.length; i++)
             pw.Padding(
               padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
@@ -2703,9 +2842,10 @@ class ResumePdfService {
     if (nonEmptyBullets.isNotEmpty) {
       return nonEmptyBullets;
     }
-    return [item.overview.trim(), item.impact.trim()]
-        .where((part) => part.isNotEmpty)
-        .toList();
+    return [
+      item.overview.trim(),
+      item.impact.trim(),
+    ].where((part) => part.isNotEmpty).toList();
   }
 
   Future<File> savePdfToDevice(ResumeData resume) async {
