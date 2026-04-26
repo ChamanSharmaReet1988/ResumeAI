@@ -137,8 +137,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     super.didChangeDependencies();
     if (!_prefsHydrated) {
       _prefsHydrated = true;
-      _resumeOrderNudgeDismissed =
-          context.read<AppPreferences>().resumeOrderNudgeDismissed;
+      _resumeOrderNudgeDismissed = context
+          .read<AppPreferences>()
+          .resumeOrderNudgeDismissed;
     }
     if (_didInitPageController) {
       return;
@@ -638,7 +639,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                 '$year',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w400,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -998,9 +1001,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       profileDir.createSync(recursive: true);
     }
     final extension = _fileExtension(picked.path);
-    final fileName = '${resumeId}_${
-        DateTime.now().millisecondsSinceEpoch
-      }$extension';
+    final fileName =
+        '${resumeId}_${DateTime.now().millisecondsSinceEpoch}$extension';
     final target = File('${profileDir.path}/$fileName');
     await File(picked.path).copy(target.path);
     return target.path;
@@ -1668,23 +1670,20 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                         _focusNodeForExtendedKeyboardField(
                                           'work-bullet-$index-$bulletIndex',
                                         ),
-                                    onChanged: (value) =>
-                                        viewModel.updateWorkExperience(
-                                      index,
-                                      (current) {
-                                        final updated = List<String>.from(
-                                          current.bullets,
-                                        );
-                                        if (bulletIndex < updated.length) {
-                                          updated[bulletIndex] = value;
-                                        }
-                                        return current.copyWith(
-                                          bullets: updated,
-                                          layoutMode:
-                                              WorkExperienceLayoutMode.bullets,
-                                        );
-                                      },
-                                    ),
+                                    onChanged: (value) => viewModel
+                                        .updateWorkExperience(index, (current) {
+                                          final updated = List<String>.from(
+                                            current.bullets,
+                                          );
+                                          if (bulletIndex < updated.length) {
+                                            updated[bulletIndex] = value;
+                                          }
+                                          return current.copyWith(
+                                            bullets: updated,
+                                            layoutMode: WorkExperienceLayoutMode
+                                                .bullets,
+                                          );
+                                        }),
                                   ),
                                 ),
                                 IconButton(
@@ -1702,15 +1701,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                                 (current) {
                                                   final updated =
                                                       List<String>.from(
-                                                    current.bullets,
-                                                  );
+                                                        current.bullets,
+                                                      );
                                                   if (bulletIndex >=
                                                       updated.length) {
                                                     return current;
                                                   }
-                                                  updated.removeAt(
-                                                    bulletIndex,
-                                                  );
+                                                  updated.removeAt(bulletIndex);
                                                   return current.copyWith(
                                                     bullets: updated,
                                                     layoutMode:
@@ -1858,8 +1855,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   Widget _buildEducationStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
       title: 'Education',
-      subtitle:
-          'Include your degree, institution, and study timeline.',
+      subtitle: 'Include your degree, institution, and study timeline.',
       titleTrailing: _resumeSectionVisibilityLead(
         viewModel: viewModel,
         included: viewModel.resume.includeEducationInResume,
@@ -2099,10 +2095,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       shrinkWrap: true,
                       padding: EdgeInsets.zero,
                       itemCount: list.length,
-                      separatorBuilder: (_, _) => Divider(
-                        height: 1,
-                        color: dividerColor,
-                      ),
+                      separatorBuilder: (_, _) =>
+                          Divider(height: 1, color: dividerColor),
                       itemBuilder: (context, index) {
                         final option = list[index];
                         return InkWell(
@@ -2142,8 +2136,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 ),
                 decoration: InputDecoration(
                   labelText: 'Add a skill',
-                  helperText:
-                      'Type to see suggestions or add your own skill',
+                  helperText: 'Type to see suggestions or add your own skill',
                   helperStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 11,
@@ -2336,26 +2329,24 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                     minLines: 1,
                                     maxLines: null,
                                     keyboardType: TextInputType.multiline,
-                                    focusNode: _focusNodeForExtendedKeyboardField(
-                                      'project-bullet-$index-$bi',
-                                    ),
-                                    onChanged: (value) =>
-                                        viewModel.updateProject(
-                                          index,
-                                          (current) {
-                                            final next = current.bullets.isEmpty
-                                                ? ['']
-                                                : List<String>.from(
-                                                    current.bullets,
-                                                  );
-                                            if (bi < next.length) {
-                                              next[bi] = value;
-                                            }
-                                            return current.copyWith(
-                                              bullets: next,
-                                            );
-                                          },
+                                    focusNode:
+                                        _focusNodeForExtendedKeyboardField(
+                                          'project-bullet-$index-$bi',
                                         ),
+                                    onChanged: (value) => viewModel
+                                        .updateProject(index, (current) {
+                                          final next = current.bullets.isEmpty
+                                              ? ['']
+                                              : List<String>.from(
+                                                  current.bullets,
+                                                );
+                                          if (bi < next.length) {
+                                            next[bi] = value;
+                                          }
+                                          return current.copyWith(
+                                            bullets: next,
+                                          );
+                                        }),
                                   ),
                                 ),
                                 IconButton(
@@ -2368,23 +2359,22 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                             message:
                                                 'This bullet will be removed from this project.',
                                             onConfirm: () {
-                                              viewModel.updateProject(
-                                                index,
-                                                (current) {
-                                                  final next =
-                                                      current.bullets.isEmpty
-                                                      ? <String>[]
-                                                      : List<String>.from(
-                                                          current.bullets,
-                                                        );
-                                                  if (bi < next.length) {
-                                                    next.removeAt(bi);
-                                                  }
-                                                  return current.copyWith(
-                                                    bullets: next,
-                                                  );
-                                                },
-                                              );
+                                              viewModel.updateProject(index, (
+                                                current,
+                                              ) {
+                                                final next =
+                                                    current.bullets.isEmpty
+                                                    ? <String>[]
+                                                    : List<String>.from(
+                                                        current.bullets,
+                                                      );
+                                                if (bi < next.length) {
+                                                  next.removeAt(bi);
+                                                }
+                                                return current.copyWith(
+                                                  bullets: next,
+                                                );
+                                              });
                                             },
                                           );
                                         },
@@ -2453,177 +2443,160 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             : () async {
                 await _confirmRemoveCustomSection(index);
               },
-        icon: const ImageIcon(
-          AssetImage('assets/fonts/delete.png'),
-        ),
+        icon: const ImageIcon(AssetImage('assets/fonts/delete.png')),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
           RadioGroup<CustomSectionLayoutMode>(
-                  groupValue: item.layoutMode,
-                  onChanged: (CustomSectionLayoutMode? value) {
-                    if (value == null || viewModel.isBusy) {
-                      return;
-                    }
-                    viewModel.updateCustomSection(
-                      index,
-                      (c) {
-                        if (value == CustomSectionLayoutMode.bullets &&
-                            c.bullets.isEmpty) {
-                          return c.copyWith(
-                            layoutMode: value,
-                            bullets: [''],
-                          );
-                        }
-                        return c.copyWith(layoutMode: value);
-                      },
-                    );
-                  },
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: RadioListTile<CustomSectionLayoutMode>(
-                          value: CustomSectionLayoutMode.summary,
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                          visualDensity: VisualDensity.compact,
-                          horizontalTitleGap: 4,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          title: Text(
-                            'Summary',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(fontWeight: FontWeight.w400),
-                          ),
-                        ),
+            groupValue: item.layoutMode,
+            onChanged: (CustomSectionLayoutMode? value) {
+              if (value == null || viewModel.isBusy) {
+                return;
+              }
+              viewModel.updateCustomSection(index, (c) {
+                if (value == CustomSectionLayoutMode.bullets &&
+                    c.bullets.isEmpty) {
+                  return c.copyWith(layoutMode: value, bullets: ['']);
+                }
+                return c.copyWith(layoutMode: value);
+              });
+            },
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: RadioListTile<CustomSectionLayoutMode>(
+                    value: CustomSectionLayoutMode.summary,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    horizontalTitleGap: 4,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    title: Text(
+                      'Summary',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w400,
                       ),
-                      Expanded(
-                        child: RadioListTile<CustomSectionLayoutMode>(
-                          value: CustomSectionLayoutMode.bullets,
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                          visualDensity: VisualDensity.compact,
-                          horizontalTitleGap: 4,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          title: Text(
-                            'Bullet points',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(fontWeight: FontWeight.w400),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                if (item.layoutMode == CustomSectionLayoutMode.summary)
-                  _ResponsiveFieldGroup(
-                    children: [
-                      _SyncTextField(
-                        key: Key('custom-section-content-$index'),
-                        label: 'Summary',
-                        value: item.content,
+                Expanded(
+                  child: RadioListTile<CustomSectionLayoutMode>(
+                    value: CustomSectionLayoutMode.bullets,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    horizontalTitleGap: 4,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    title: Text(
+                      'Bullet points',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (item.layoutMode == CustomSectionLayoutMode.summary)
+            _ResponsiveFieldGroup(
+              children: [
+                _SyncTextField(
+                  key: Key('custom-section-content-$index'),
+                  label: 'Summary',
+                  value: item.content,
+                  textCapitalization: TextCapitalization.sentences,
+                  hintText:
+                      'Write the section as a short paragraph for your resume.',
+                  minLines: 5,
+                  maxLines: null,
+                  fullWidth: true,
+                  focusNode: _focusNodeForExtendedKeyboardField(
+                    'custom-section-content-$index',
+                  ),
+                  onChanged: (value) => viewModel.updateCustomSection(
+                    index,
+                    (current) => current.copyWith(content: value),
+                  ),
+                ),
+              ],
+            )
+          else ...[
+            ...item.bullets.asMap().entries.map((entry) {
+              final bi = entry.key;
+              final text = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _SyncTextField(
+                        key: Key('custom-section-bullet-$index-$bi'),
+                        label: 'Bullet ${bi + 1}',
+                        value: text,
                         textCapitalization: TextCapitalization.sentences,
-                        hintText:
-                            'Write the section as a short paragraph for your resume.',
-                        minLines: 5,
-                        maxLines: null,
+                        hintText: 'Enter a bullet point',
                         fullWidth: true,
+                        minLines: 1,
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
                         focusNode: _focusNodeForExtendedKeyboardField(
-                          'custom-section-content-$index',
+                          'custom-section-bullet-$index-$bi',
                         ),
-                        onChanged: (value) => viewModel.updateCustomSection(
-                          index,
-                          (current) => current.copyWith(content: value),
-                        ),
+                        onChanged: (value) =>
+                            viewModel.updateCustomSection(index, (c) {
+                              final next = List<String>.from(c.bullets);
+                              if (bi < next.length) {
+                                next[bi] = value;
+                              }
+                              return c.copyWith(bullets: next);
+                            }),
                       ),
-                    ],
-                  )
-                else ...[
-                  ...item.bullets.asMap().entries.map((entry) {
-                    final bi = entry.key;
-                    final text = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _SyncTextField(
-                              key: Key('custom-section-bullet-$index-$bi'),
-                              label: 'Bullet ${bi + 1}',
-                              value: text,
-                              textCapitalization: TextCapitalization.sentences,
-                              hintText: 'Enter a bullet point',
-                              fullWidth: true,
-                              minLines: 1,
-                              maxLines: null,
-                              keyboardType: TextInputType.multiline,
-                              focusNode: _focusNodeForExtendedKeyboardField(
-                                'custom-section-bullet-$index-$bi',
-                              ),
-                              onChanged: (value) =>
-                                  viewModel.updateCustomSection(
-                                index,
-                                (c) {
-                                  final next = List<String>.from(c.bullets);
-                                  if (bi < next.length) {
-                                    next[bi] = value;
-                                  }
-                                  return c.copyWith(bullets: next);
-                                },
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Remove bullet',
-                            onPressed: viewModel.isBusy
-                                ? null
-                                : () {
-                                    viewModel.updateCustomSection(
-                                      index,
-                                      (c) {
-                                        final next = List<String>.from(
-                                          c.bullets,
-                                        )..removeAt(bi);
-                                        return c.copyWith(bullets: next);
-                                      },
-                                    );
-                                  },
-                            icon: const ImageIcon(
-                              AssetImage('assets/fonts/delete.png'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: FilledButton.icon(
+                    ),
+                    IconButton(
+                      tooltip: 'Remove bullet',
                       onPressed: viewModel.isBusy
                           ? null
                           : () {
-                              viewModel.updateCustomSection(
-                                index,
-                                (c) => c.copyWith(
-                                  bullets: [...c.bullets, ''],
-                                ),
-                              );
+                              viewModel.updateCustomSection(index, (c) {
+                                final next = List<String>.from(c.bullets)
+                                  ..removeAt(bi);
+                                return c.copyWith(bullets: next);
+                              });
                             },
-                      icon: const Icon(Icons.add_rounded),
-                      label: const Text('Add bullet point'),
+                      icon: const ImageIcon(
+                        AssetImage('assets/fonts/delete.png'),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              );
+            }),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: viewModel.isBusy
+                    ? null
+                    : () {
+                        viewModel.updateCustomSection(
+                          index,
+                          (c) => c.copyWith(bullets: [...c.bullets, '']),
+                        );
+                      },
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Add bullet point'),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -2721,9 +2694,9 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
     final denom = total <= 0 ? 1 : total;
     final progress = (widget.currentStep + 1) / denom;
 
-    final chipStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
-      fontWeight: FontWeight.w400,
-    );
+    final chipStyle = Theme.of(
+      context,
+    ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400);
 
     final rowChildren = <Widget>[];
 
@@ -3591,6 +3564,7 @@ class _PhoneWithCountryCodeFieldState
             child: DropdownButton<String>(
               value: _selectedCountryKey,
               isDense: true,
+              iconSize: 18,
               style: inputStyle,
               dropdownColor: Theme.of(context).cardColor,
               menuMaxHeight: 340,
@@ -3632,8 +3606,8 @@ class _PhoneWithCountryCodeFieldState
           ),
         ),
         prefixIconConstraints: const BoxConstraints(
-          minWidth: 101,
-          maxWidth: 101,
+          minWidth: 108,
+          maxWidth: 108,
         ),
         contentPadding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
       ),

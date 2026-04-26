@@ -499,12 +499,46 @@ class LocalAiResumeService {
     required String resumeText,
     required ResumeTemplate template,
     String sourceTitle = '',
+    List<String> candidateResumeTexts = const [],
   }) {
-    return _buildResumeFromImportedText(
-      resumeText: resumeText,
-      template: template,
-      sourceTitle: sourceTitle,
-    );
+    final normalizedCandidates = <String>[];
+    final seen = <String>{};
+
+    for (final candidate in [resumeText, ...candidateResumeTexts]) {
+      final normalized = candidate.trim();
+      if (normalized.isEmpty) {
+        continue;
+      }
+      final dedupeKey = normalized
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim()
+          .toLowerCase();
+      if (seen.add(dedupeKey)) {
+        normalizedCandidates.add(normalized);
+      }
+    }
+
+    ResumeData? bestResume;
+    var bestScore = -1;
+    for (final candidate in normalizedCandidates) {
+      final parsed = _buildResumeFromImportedText(
+        resumeText: candidate,
+        template: template,
+        sourceTitle: sourceTitle,
+      );
+      final score = _scoreImportedResumeParse(parsed, candidate);
+      if (score > bestScore) {
+        bestScore = score;
+        bestResume = parsed;
+      }
+    }
+
+    return bestResume ??
+        _buildResumeFromImportedText(
+          resumeText: resumeText,
+          template: template,
+          sourceTitle: sourceTitle,
+        );
   }
 
   Future<ResumeImprovementResult> improveResumeForAts({
@@ -1046,8 +1080,21 @@ class LocalAiResumeService {
     final headerLines = sections['header'] ?? const <String>[];
     final summaryLines = sections['summary'] ?? const <String>[];
     final skillsLines = sections['skills'] ?? const <String>[];
-    final experienceLines = sections['experience'] ?? const <String>[];
-    final educationLines = sections['education'] ?? const <String>[];
+    final experienceLines =
+        sections['experience']
+            ?.where((line) => line.trim().isNotEmpty)
+            .toList() ??
+        _fallbackImportedExperienceLines(lines);
+    final educationLines =
+        sections['education']
+            ?.where((line) => line.trim().isNotEmpty)
+            .toList() ??
+        _fallbackImportedEducationLines(lines);
+    final projectLines =
+        sections['projects']
+            ?.where((line) => line.trim().isNotEmpty)
+            .toList() ??
+        _fallbackImportedProjectLines(lines);
 
     final fallbackTitle = _cleanImportedTitle(sourceTitle);
     final fullName = _inferImportedFullName(headerLines, fallbackTitle);
@@ -1085,6 +1132,8 @@ class LocalAiResumeService {
         skillLines: skillsLines,
         resumeText: normalizedText,
       ).take(50).toList(),
+      projects: _extractImportedProjects(projectLines),
+      customSections: _extractImportedCustomSections(sections),
       githubLink: _extractImportedLink(normalizedText, 'github.com'),
       linkedinLink: _extractImportedLink(normalizedText, 'linkedin.com'),
       updatedAt: DateTime.now(),
@@ -1096,10 +1145,13 @@ class LocalAiResumeService {
     var currentSection = 'header';
 
     for (final line in lines) {
-      final heading = _matchImportedSectionHeading(line);
-      if (heading != null) {
-        currentSection = heading;
+      final headingData = _matchImportedSectionHeadingData(line);
+      if (headingData != null) {
+        currentSection = headingData.$1;
         sections.putIfAbsent(currentSection, () => <String>[]);
+        if (headingData.$2.isNotEmpty) {
+          sections[currentSection]!.add(headingData.$2);
+        }
         continue;
       }
 
@@ -1110,31 +1162,82 @@ class LocalAiResumeService {
   }
 
   String? _matchImportedSectionHeading(String line) {
-    final normalized = line
+    return _matchImportedSectionHeadingData(line)?.$1;
+  }
+
+  static const Map<String, String> _importedSectionHeadingMap = {
+    'professional summary': 'summary',
+    'career summary': 'summary',
+    'executive summary': 'summary',
+    'summary': 'summary',
+    'profile': 'summary',
+    'objective': 'summary',
+    'technical skills': 'skills',
+    'core competencies': 'skills',
+    'key competencies': 'skills',
+    'core skills': 'skills',
+    'key skills': 'skills',
+    'tools and technologies': 'skills',
+    'tools & technologies': 'skills',
+    'technologies': 'skills',
+    'skills': 'skills',
+    'professional experience': 'experience',
+    'project experience': 'experience',
+    'employment history': 'experience',
+    'work experience': 'experience',
+    'work history': 'experience',
+    'career history': 'experience',
+    'experience': 'experience',
+    'employment': 'experience',
+    'education and training': 'education',
+    'academic background': 'education',
+    'academic qualifications': 'education',
+    'education': 'education',
+    'selected projects': 'projects',
+    'personal projects': 'projects',
+    'academic projects': 'projects',
+    'projects': 'projects',
+    'project': 'projects',
+    'certifications': 'certifications',
+    'certification': 'certifications',
+    'licenses': 'certifications',
+    'languages': 'languages',
+    'awards': 'awards',
+    'honors': 'awards',
+    'publications': 'publications',
+    'volunteer experience': 'volunteer',
+    'volunteer': 'volunteer',
+    'activities': 'activities',
+  };
+
+  (String, String)? _matchImportedSectionHeadingData(String line) {
+    final trimmed = line.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    final normalized = trimmed
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z& ]'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
-    const headingMap = <String, String>{
-      'summary': 'summary',
-      'professional summary': 'summary',
-      'profile': 'summary',
-      'objective': 'summary',
-      'skills': 'skills',
-      'technical skills': 'skills',
-      'core skills': 'skills',
-      'key skills': 'skills',
-      'experience': 'experience',
-      'work experience': 'experience',
-      'professional experience': 'experience',
-      'employment': 'experience',
-      'employment history': 'experience',
-      'work history': 'experience',
-      'education': 'education',
-      'education and training': 'education',
-    };
 
-    return headingMap[normalized];
+    for (final entry in _importedSectionHeadingMap.entries) {
+      if (normalized == entry.key) {
+        return (entry.value, '');
+      }
+
+      final aliasPattern = entry.key.split(' ').map(RegExp.escape).join(r'\s+');
+      final prefixMatch = RegExp(
+        '^$aliasPattern(?:\\s*[:\\-–—|]\\s*|\\s{2,})(.+)\$',
+        caseSensitive: false,
+      ).firstMatch(trimmed);
+      if (prefixMatch != null) {
+        return (entry.value, prefixMatch.group(1)?.trim() ?? '');
+      }
+    }
+
+    return null;
   }
 
   String _inferImportedFullName(
@@ -1189,11 +1292,17 @@ class LocalAiResumeService {
 
   String _inferImportedLocation(List<String> headerLines) {
     for (final line in headerLines) {
-      if (_isImportedContactLine(line)) {
-        continue;
-      }
-      if (line.contains(',')) {
+      if (!_isImportedContactLine(line) && line.contains(',')) {
         return line.trim();
+      }
+
+      final segments = line.split('|').map((item) => item.trim());
+      for (final segment in segments) {
+        if (segment.contains(',') &&
+            !_isImportedContactLine(segment) &&
+            !segment.contains('@')) {
+          return segment;
+        }
       }
     }
     return '';
@@ -1266,37 +1375,47 @@ class LocalAiResumeService {
       return const [WorkExperience.empty()];
     }
 
-    final bulletLines = experienceLines
-        .where(_isImportedBulletLine)
-        .map(_stripImportedBullet)
-        .where((line) => line.isNotEmpty)
-        .take(6)
-        .toList();
-    final detailLines = experienceLines
-        .where((line) => !_isImportedBulletLine(line))
-        .toList();
-    final headerLine = detailLines.isNotEmpty
-        ? detailLines.first
-        : fallbackJobTitle;
-    final role = _extractImportedRole(headerLine).ifEmpty(fallbackJobTitle);
-    final company = _extractImportedCompany(headerLine);
-    final description = detailLines.skip(1).take(2).join(' ').trim();
+    final entries = <List<String>>[];
+    var current = <String>[];
+    var sawBullet = false;
 
-    final workExperience = WorkExperience(
-      role: role,
-      company: company,
-      startDate: '',
-      endDate: '',
-      description: description,
-      bullets: bulletLines,
-      layoutMode: bulletLines.isNotEmpty && description.isEmpty
-          ? WorkExperienceLayoutMode.bullets
-          : WorkExperienceLayoutMode.bullets,
-    );
+    for (final line in experienceLines) {
+      final isBullet = _isImportedBulletLine(line);
+      final currentHeaderCount = current
+          .where((item) => !_isImportedBulletLine(item))
+          .length;
 
-    return workExperience.isBlank
-        ? const [WorkExperience.empty()]
-        : [workExperience];
+      if (current.isNotEmpty &&
+          !isBullet &&
+          _looksLikeImportedExperienceHeader(line) &&
+          (sawBullet || currentHeaderCount >= 2)) {
+        entries.add(current);
+        current = <String>[line];
+        sawBullet = false;
+        continue;
+      }
+
+      current.add(line);
+      if (isBullet) {
+        sawBullet = true;
+      }
+    }
+
+    if (current.isNotEmpty) {
+      entries.add(current);
+    }
+
+    final items = entries
+        .map(
+          (entry) => _buildImportedWorkExperience(
+            entry,
+            fallbackJobTitle: fallbackJobTitle,
+          ),
+        )
+        .where((item) => !item.isBlank)
+        .toList();
+
+    return items.isEmpty ? const [WorkExperience.empty()] : items;
   }
 
   List<EducationItem> _extractImportedEducation(List<String> educationLines) {
@@ -1304,43 +1423,284 @@ class LocalAiResumeService {
       return const [EducationItem.empty()];
     }
 
-    final combined = educationLines.join(' | ');
-    final year =
-        _firstRegexMatch(combined, RegExp(r'\b(?:19|20)\d{2}\b')) ?? '';
-    final score =
-        _firstRegexMatch(
-          combined,
-          RegExp(
-            r'\b\d+(?:\.\d+)?\s*(?:cgpa|gpa|%|percent)\b',
-            caseSensitive: false,
-          ),
-        ) ??
-        '';
-    final degree = educationLines.firstWhere(
-      (line) => RegExp(
-        r'(bachelor|master|diploma|degree|b\.tech|btech|mba|bsc|msc|ba)\b',
-        caseSensitive: false,
-      ).hasMatch(line),
-      orElse: () => educationLines.first,
-    );
-    final institution = educationLines.firstWhere(
-      (line) => line != degree,
-      orElse: () => '',
-    );
+    final entries = <List<String>>[];
+    var current = <String>[];
 
-    final item = EducationItem(
-      institution: institution,
-      degree: degree,
-      startDate: '',
-      endDate: year,
-      score: score,
-    );
+    for (final line in educationLines) {
+      if (current.isNotEmpty &&
+          _looksLikeImportedEducationHeader(line) &&
+          _educationEntryLooksComplete(current)) {
+        entries.add(current);
+        current = <String>[line];
+        continue;
+      }
+      current.add(line);
+    }
 
-    return item.isBlank ? const [EducationItem.empty()] : [item];
+    if (current.isNotEmpty) {
+      entries.add(current);
+    }
+
+    final items = entries
+        .map(_buildImportedEducationItem)
+        .where((item) => !item.isBlank)
+        .toList();
+
+    return items.isEmpty ? const [EducationItem.empty()] : items;
+  }
+
+  List<ProjectItem> _extractImportedProjects(List<String> projectLines) {
+    if (projectLines.isEmpty) {
+      return const [ProjectItem.empty()];
+    }
+
+    final entries = <List<String>>[];
+    var current = <String>[];
+    var sawBullet = false;
+
+    for (final line in projectLines) {
+      final isBullet = _isImportedBulletLine(line);
+      if (current.isNotEmpty &&
+          !isBullet &&
+          _looksLikeImportedProjectHeader(line) &&
+          sawBullet) {
+        entries.add(current);
+        current = <String>[line];
+        sawBullet = false;
+        continue;
+      }
+
+      current.add(line);
+      if (isBullet) {
+        sawBullet = true;
+      }
+    }
+
+    if (current.isNotEmpty) {
+      entries.add(current);
+    }
+
+    final items = entries
+        .map(_buildImportedProjectItem)
+        .where((item) => !item.isBlank)
+        .toList();
+
+    return items.isEmpty ? const [ProjectItem.empty()] : items;
+  }
+
+  List<CustomSectionItem> _extractImportedCustomSections(
+    Map<String, List<String>> sections,
+  ) {
+    const customSectionTitles = <String, String>{
+      'certifications': 'Certifications',
+      'languages': 'Languages',
+      'awards': 'Awards',
+      'publications': 'Publications',
+      'volunteer': 'Volunteer Experience',
+      'activities': 'Activities',
+    };
+
+    final items = <CustomSectionItem>[];
+    for (final entry in customSectionTitles.entries) {
+      final lines = sections[entry.key] ?? const <String>[];
+      if (lines.isEmpty) {
+        continue;
+      }
+
+      final bullets = lines
+          .where(_isImportedBulletLine)
+          .map(_stripImportedBullet)
+          .where((line) => line.isNotEmpty)
+          .toList();
+      final content = lines
+          .where((line) => !_isImportedBulletLine(line))
+          .join('\n')
+          .trim();
+
+      final item = bullets.isNotEmpty
+          ? CustomSectionItem(
+              title: entry.value,
+              content: content,
+              layoutMode: CustomSectionLayoutMode.bullets,
+              bullets: bullets,
+            )
+          : CustomSectionItem(
+              title: entry.value,
+              content: content,
+              layoutMode: CustomSectionLayoutMode.summary,
+            );
+
+      if (!item.isBlank) {
+        items.add(item);
+      }
+    }
+
+    return items;
+  }
+
+  List<String> _fallbackImportedExperienceLines(List<String> lines) {
+    final collected = <String>[];
+    var started = false;
+
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) {
+        continue;
+      }
+
+      if (!started) {
+        if (_looksLikeImportedExperienceHeader(line) &&
+            _looksLikeExperienceEntryStart(lines, i)) {
+          started = true;
+          collected.add(line);
+        }
+        continue;
+      }
+
+      if (_isFallbackSectionBoundary(line, stopAtProjects: true) ||
+          _looksLikeEducationEntryStart(lines, i)) {
+        break;
+      }
+
+      collected.add(line);
+    }
+
+    return collected;
+  }
+
+  List<String> _fallbackImportedEducationLines(List<String> lines) {
+    final collected = <String>[];
+    var started = false;
+
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) {
+        continue;
+      }
+
+      if (!started) {
+        if (_looksLikeEducationEntryStart(lines, i)) {
+          started = true;
+          collected.add(line);
+        }
+        continue;
+      }
+
+      if (_isFallbackSectionBoundary(line, stopAtProjects: true)) {
+        break;
+      }
+
+      collected.add(line);
+    }
+
+    return collected;
+  }
+
+  List<String> _fallbackImportedProjectLines(List<String> lines) {
+    final collected = <String>[];
+    var started = false;
+
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) {
+        continue;
+      }
+
+      if (!started) {
+        final lower = line.toLowerCase();
+        if (lower.contains('project') &&
+            !_isImportedContactLine(line) &&
+            !_looksLikeImportedDateLine(line)) {
+          started = true;
+          collected.add(line);
+        }
+        continue;
+      }
+
+      if (_isFallbackSectionBoundary(line, stopAtProjects: false)) {
+        break;
+      }
+
+      collected.add(line);
+    }
+
+    return collected;
+  }
+
+  bool _looksLikeExperienceEntryStart(List<String> lines, int index) {
+    return _hasLookAheadMatch(lines, index, _looksLikeImportedDateLine, 2) ||
+        _hasLookAheadMatch(lines, index, _isImportedBulletLine, 3);
+  }
+
+  bool _looksLikeEducationEntryStart(List<String> lines, int index) {
+    final line = lines[index].trim();
+    final lower = line.toLowerCase();
+    final hasEducationKeyword = RegExp(
+      r'(bachelor|master|diploma|degree|b\.tech|btech|mba|bsc|msc|ba|bs|phd|certificate|certification|associate)',
+      caseSensitive: false,
+    ).hasMatch(line);
+
+    if (hasEducationKeyword) {
+      return _hasLookAheadMatch(lines, index, _looksLikeImportedDateLine, 3) ||
+          _hasLookAheadMatch(
+            lines,
+            index,
+            (candidate) =>
+                candidate.contains('University') ||
+                candidate.contains('College') ||
+                candidate.contains('Institute') ||
+                candidate.contains('School'),
+            2,
+          );
+    }
+
+    return (lower.contains('university') ||
+            lower.contains('college') ||
+            lower.contains('institute') ||
+            lower.contains('school')) &&
+        _hasLookAheadMatch(lines, index, _looksLikeImportedDateLine, 2);
+  }
+
+  bool _hasLookAheadMatch(
+    List<String> lines,
+    int startIndex,
+    bool Function(String line) predicate,
+    int lookAhead,
+  ) {
+    final end = math.min(lines.length, startIndex + lookAhead + 1);
+    for (var i = startIndex + 1; i < end; i++) {
+      if (predicate(lines[i].trim())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool _isFallbackSectionBoundary(String line, {required bool stopAtProjects}) {
+    final heading = _matchImportedSectionHeading(line);
+    if (heading == null) {
+      return false;
+    }
+
+    if (heading == 'summary' ||
+        heading == 'skills' ||
+        heading == 'experience') {
+      return false;
+    }
+
+    if (!stopAtProjects && heading == 'projects') {
+      return false;
+    }
+
+    return true;
   }
 
   String _cleanImportedTitle(String sourceTitle) {
-    return sourceTitle
+    final withoutExtension = sourceTitle.replaceFirst(
+      RegExp(r'\.[a-z0-9]+$', caseSensitive: false),
+      '',
+    );
+    return withoutExtension
         .replaceAll(RegExp(r'[_-]+'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
@@ -1363,6 +1723,108 @@ class LocalAiResumeService {
     return ResumeData.defaultTitle;
   }
 
+  int _scoreImportedResumeParse(ResumeData resume, String sourceText) {
+    var score = 0;
+
+    if (resume.fullName.trim().isNotEmpty &&
+        !resume.fullName.contains('@') &&
+        !RegExp(r'\d').hasMatch(resume.fullName)) {
+      score += 10;
+    }
+    if (resume.jobTitle.trim().isNotEmpty) {
+      score += 8;
+    }
+    if (resume.email.trim().isNotEmpty) {
+      score += 8;
+    }
+    if (resume.phone.trim().isNotEmpty) {
+      score += 6;
+    }
+    if (resume.location.trim().isNotEmpty) {
+      score += 4;
+    }
+    if (resume.website.trim().isNotEmpty) {
+      score += 3;
+    }
+    if (resume.githubLink.trim().isNotEmpty) {
+      score += 2;
+    }
+    if (resume.linkedinLink.trim().isNotEmpty) {
+      score += 2;
+    }
+    if (resume.summary.trim().length >= 60) {
+      score += 12;
+    } else if (resume.summary.trim().isNotEmpty) {
+      score += 5;
+    }
+
+    for (final item in resume.visibleWorkExperiences) {
+      score += 12;
+      if (item.role.trim().isNotEmpty) {
+        score += 4;
+      }
+      if (item.company.trim().isNotEmpty) {
+        score += 4;
+      }
+      if (item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty) {
+        score += 3;
+      }
+      score += math.min(
+        4,
+        item.bullets.where((b) => b.trim().isNotEmpty).length,
+      );
+    }
+
+    for (final item in resume.visibleEducation) {
+      score += 10;
+      if (item.degree.trim().isNotEmpty) {
+        score += 4;
+      }
+      if (item.institution.trim().isNotEmpty) {
+        score += 4;
+      }
+    }
+
+    score += math.min(20, resume.skills.length * 2);
+
+    for (final item in resume.visibleProjects) {
+      score += 8;
+      if (item.title.trim().isNotEmpty) {
+        score += 4;
+      }
+      score += math.min(
+        3,
+        item.bullets.where((b) => b.trim().isNotEmpty).length,
+      );
+    }
+
+    score += resume.visibleCustomSections.length * 3;
+
+    final lower = sourceText.toLowerCase();
+    if (_containsAny(lower, const ['experience', 'work experience']) &&
+        resume.visibleWorkExperiences.isEmpty) {
+      score -= 12;
+    }
+    if (_containsAny(lower, const ['education']) &&
+        resume.visibleEducation.isEmpty) {
+      score -= 10;
+    }
+    if (_containsAny(lower, const ['skills', 'core competencies']) &&
+        resume.skills.isEmpty) {
+      score -= 10;
+    }
+    if (_containsAny(lower, const ['projects', 'project']) &&
+        resume.visibleProjects.isEmpty) {
+      score -= 8;
+    }
+    if (_containsAny(lower, const ['summary', 'profile']) &&
+        resume.summary.trim().isEmpty) {
+      score -= 8;
+    }
+
+    return score;
+  }
+
   bool _isImportedContactLine(String line) {
     return line.contains('@') ||
         RegExp(r'(https?:\/\/|www\.)', caseSensitive: false).hasMatch(line) ||
@@ -1375,6 +1837,198 @@ class LocalAiResumeService {
 
   String _stripImportedBullet(String line) {
     return line.replaceFirst(RegExp(r'^\s*[\-\u2022\*]\s*'), '').trim();
+  }
+
+  bool _looksLikeImportedExperienceHeader(String line) {
+    final cleaned = line.trim();
+    if (cleaned.isEmpty ||
+        _isImportedBulletLine(cleaned) ||
+        _looksLikeImportedDateLine(cleaned)) {
+      return false;
+    }
+
+    final wordCount = cleaned.split(RegExp(r'\s+')).length;
+    if (cleaned.contains('|') || cleaned.contains(' / ')) {
+      return true;
+    }
+    if (RegExp(r'\bat\b', caseSensitive: false).hasMatch(cleaned)) {
+      return true;
+    }
+
+    return wordCount <= 8 && !cleaned.endsWith('.');
+  }
+
+  bool _looksLikeImportedProjectHeader(String line) {
+    final cleaned = line.trim();
+    if (cleaned.isEmpty ||
+        _isImportedBulletLine(cleaned) ||
+        _looksLikeImportedDateLine(cleaned)) {
+      return false;
+    }
+
+    return cleaned.split(RegExp(r'\s+')).length <= 10 && !cleaned.endsWith('.');
+  }
+
+  bool _looksLikeImportedEducationHeader(String line) {
+    final cleaned = line.trim();
+    if (cleaned.isEmpty || _looksLikeImportedDateLine(cleaned)) {
+      return false;
+    }
+
+    return RegExp(
+          r'(bachelor|master|diploma|degree|b\.tech|btech|mba|bsc|msc|ba|bs|phd|certificate|certification|associate)',
+          caseSensitive: false,
+        ).hasMatch(cleaned) ||
+        (cleaned.split(RegExp(r'\s+')).length <= 8 && !cleaned.endsWith('.'));
+  }
+
+  bool _educationEntryLooksComplete(List<String> lines) {
+    return lines.length >= 2 && lines.any(_looksLikeImportedDateLine);
+  }
+
+  WorkExperience _buildImportedWorkExperience(
+    List<String> entry, {
+    required String fallbackJobTitle,
+  }) {
+    final bulletLines = entry
+        .where(_isImportedBulletLine)
+        .map(_stripImportedBullet)
+        .where((line) => line.isNotEmpty)
+        .take(8)
+        .toList();
+    final detailLines = entry
+        .where((line) => !_isImportedBulletLine(line))
+        .toList();
+
+    var role = fallbackJobTitle;
+    var company = '';
+    var startDate = '';
+    var endDate = '';
+    final descriptionLines = <String>[];
+
+    for (final line in detailLines) {
+      if (_looksLikeImportedDateLine(line)) {
+        final dates = _extractImportedDates(line);
+        if (startDate.isEmpty && dates.$1.isNotEmpty) {
+          startDate = dates.$1;
+        }
+        if (endDate.isEmpty && dates.$2.isNotEmpty) {
+          endDate = dates.$2;
+        }
+        continue;
+      }
+
+      if (role == fallbackJobTitle || role.trim().isEmpty) {
+        role = _extractImportedRole(line).ifEmpty(fallbackJobTitle);
+        company = _extractImportedCompany(line);
+        continue;
+      }
+
+      if (company.isEmpty &&
+          line.split(RegExp(r'\s+')).length <= 8 &&
+          !line.endsWith('.')) {
+        company = line.trim();
+        continue;
+      }
+
+      descriptionLines.add(line);
+    }
+
+    final description = descriptionLines.take(2).join(' ').trim();
+    return WorkExperience(
+      role: role.ifEmpty(fallbackJobTitle),
+      company: company,
+      startDate: startDate,
+      endDate: endDate,
+      description: description,
+      bullets: bulletLines,
+      layoutMode: WorkExperienceLayoutMode.bullets,
+    );
+  }
+
+  EducationItem _buildImportedEducationItem(List<String> entry) {
+    final combined = entry.join(' | ');
+    final dates = _extractImportedDates(combined);
+    final score =
+        _firstRegexMatch(
+          combined,
+          RegExp(
+            r'\b\d+(?:\.\d+)?\s*(?:cgpa|gpa|%|percent)\b',
+            caseSensitive: false,
+          ),
+        ) ??
+        '';
+    final degree = entry.firstWhere(
+      (line) => RegExp(
+        r'(bachelor|master|diploma|degree|b\.tech|btech|mba|bsc|msc|ba|bs|phd|certificate|certification|associate)',
+        caseSensitive: false,
+      ).hasMatch(line),
+      orElse: () => entry.first,
+    );
+    final institution = entry.firstWhere(
+      (line) =>
+          line != degree && !_looksLikeImportedDateLine(line) && line != score,
+      orElse: () => '',
+    );
+
+    return EducationItem(
+      institution: institution,
+      degree: degree,
+      startDate: dates.$1,
+      endDate: dates.$2,
+      score: score,
+    );
+  }
+
+  ProjectItem _buildImportedProjectItem(List<String> entry) {
+    final bullets = entry
+        .where(_isImportedBulletLine)
+        .map(_stripImportedBullet)
+        .where((line) => line.isNotEmpty)
+        .take(6)
+        .toList();
+    final detailLines = entry
+        .where((line) => !_isImportedBulletLine(line))
+        .toList();
+    final title = detailLines.isNotEmpty ? detailLines.first.trim() : 'Project';
+    final overview = detailLines.skip(1).take(2).join(' ').trim();
+
+    return ProjectItem(title: title, overview: overview, bullets: bullets);
+  }
+
+  bool _looksLikeImportedDateLine(String line) {
+    return RegExp(
+      r'((?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{4}|\d{1,2}/\d{4}|\b(?:19|20)\d{2}\b|present|current)',
+      caseSensitive: false,
+    ).hasMatch(line);
+  }
+
+  (String, String) _extractImportedDates(String line) {
+    final matches = RegExp(
+      r'((?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{4}|\d{1,2}/\d{4}|\b(?:19|20)\d{2}\b|present|current)',
+      caseSensitive: false,
+    ).allMatches(line).map((match) => match.group(0)!.trim()).toList();
+
+    if (matches.isEmpty) {
+      return ('', '');
+    }
+
+    if (matches.length == 1) {
+      final only = matches.first;
+      final normalized =
+          RegExp(r'^(present|current)$', caseSensitive: false).hasMatch(only)
+          ? 'Present'
+          : only;
+      return ('', normalized);
+    }
+
+    final start = matches.first;
+    final rawEnd = matches[1];
+    final end =
+        RegExp(r'^(present|current)$', caseSensitive: false).hasMatch(rawEnd)
+        ? 'Present'
+        : rawEnd;
+    return (start, end);
   }
 
   String _extractImportedRole(String line) {
@@ -1436,7 +2090,7 @@ class LocalAiResumeService {
 
   String _extractImportedLink(String text, String domain) {
     final regex = RegExp(
-      '((?:https?:\\/\\/|www\\.)[^\\s]*${RegExp.escape(domain)}[^\\s]*)',
+      '((?:(?:https?:\\/\\/|www\\.)?[^\\s|]*${RegExp.escape(domain)}[^\\s|]*))',
       caseSensitive: false,
     );
     return _firstRegexMatch(text, regex) ?? '';

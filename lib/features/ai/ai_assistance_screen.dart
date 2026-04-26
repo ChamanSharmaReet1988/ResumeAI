@@ -131,6 +131,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
               resumeText: uploadedResume.resumeText,
               template: library.defaultTemplate,
               sourceTitle: uploadedResume.suggestedTitle,
+              candidateResumeTexts: uploadedResume.candidateResumeTexts,
             )
           : selectedResume!;
       final result = await aiService.improveResumeForAts(

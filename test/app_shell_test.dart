@@ -60,9 +60,7 @@ void main() {
           providers: [
             Provider<ResumeImportService>.value(value: ResumeImportService()),
             Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(
-              value: AppPreferences.inMemory(),
-            ),
+            Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
             Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
             Provider<ResumePdfService>.value(value: ResumePdfService()),
             ChangeNotifierProvider<ResumeLibraryViewModel>.value(
@@ -81,8 +79,6 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Create resume'));
       await tester.pumpAndSettle();
 
       expect(find.text('Resume title'), findsWidgets);
@@ -115,9 +111,7 @@ void main() {
           providers: [
             Provider<ResumeImportService>.value(value: ResumeImportService()),
             Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(
-              value: AppPreferences.inMemory(),
-            ),
+            Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
             Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
             Provider<ResumePdfService>.value(value: ResumePdfService()),
             ChangeNotifierProvider<ResumeLibraryViewModel>.value(
