@@ -399,6 +399,12 @@ class _ResumeSection extends StatelessWidget {
                             'Updated ${dateFormat.format(resume.updatedAt)}',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
+                                  fontSize:
+                                      ((Theme.of(context).textTheme.bodySmall
+                                                  ?.fontSize ??
+                                              12) -
+                                          2)
+                                          .toDouble(),
                                   color: Theme.of(
                                     context,
                                   ).colorScheme.onSurfaceVariant,
@@ -576,6 +582,12 @@ class _CoverLetterSection extends StatelessWidget {
                             'Updated ${dateFormat.format(coverLetter.updatedAt)}',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
+                                  fontSize:
+                                      ((Theme.of(context).textTheme.bodySmall
+                                                  ?.fontSize ??
+                                              12) -
+                                          2)
+                                          .toDouble(),
                                   color: Theme.of(
                                     context,
                                   ).colorScheme.onSurfaceVariant,
