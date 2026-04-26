@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -122,6 +123,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   void _handleSkillFocusChange() {
     if (_skillFocusNode.hasFocus && mounted) {
+      assert(() {
+        // ignore: invalid_use_of_visible_for_testing_member
+        HardwareKeyboard.instance.clearState();
+        return true;
+      }());
       _scheduleEnsureVisible(context);
     }
   }
@@ -1069,12 +1075,15 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   Widget _buildProfilePhotoPicker(ResumeEditorViewModel viewModel) {
     final imagePath = viewModel.resume.profileImagePath.trim();
     final hasImage = imagePath.isNotEmpty && File(imagePath).existsSync();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        color: isDark
+            ? Colors.transparent
+            : Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -1498,7 +1507,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               child: Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.transparent
+                      : Theme.of(context).colorScheme.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
@@ -1878,7 +1889,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               child: Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.transparent
+                      : Theme.of(context).colorScheme.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
@@ -2067,9 +2080,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 return const SizedBox.shrink();
               }
               final theme = Theme.of(context);
-              final onPopup = theme.brightness == Brightness.dark
-                  ? const Color(0xFF1C1B1F)
-                  : theme.colorScheme.onSurface;
+              final popupBg = theme.cardColor;
+              final onPopup = theme.colorScheme.onSurface;
+              final dividerColor = theme.colorScheme.outlineVariant.withValues(
+                alpha: 0.28,
+              );
               return Align(
                 alignment: Alignment.topLeft,
                 child: Material(
@@ -2077,7 +2092,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   shadowColor: Colors.black26,
                   surfaceTintColor: Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
-                  color: Colors.white,
+                  color: popupBg,
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 360),
                     child: ListView.separated(
@@ -2086,7 +2101,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       itemCount: list.length,
                       separatorBuilder: (_, _) => Divider(
                         height: 1,
-                        color: Colors.black.withValues(alpha: 0.08),
+                        color: dividerColor,
                       ),
                       itemBuilder: (context, index) {
                         final option = list[index];
@@ -2213,7 +2228,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               child: Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.transparent
+                      : Theme.of(context).colorScheme.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(

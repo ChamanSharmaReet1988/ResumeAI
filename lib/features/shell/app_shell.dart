@@ -4,7 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/services/resume_import_service.dart';
 import '../../core/services/resume_services.dart';
 import '../ai/ai_assistance_screen.dart';
 import '../builder/resume_builder_screen.dart';
@@ -84,6 +86,100 @@ class _AppShellState extends State<AppShell> {
 
     await context.read<ResumeRepository>().upsertResume(draft);
     await _openBuilder(seed: draft);
+  }
+
+  Future<void> _uploadResumeFromAddButton() async {
+    final importService = context.read<ResumeImportService>();
+    final aiService = context.read<LocalAiResumeService>();
+    final library = context.read<ResumeLibraryViewModel>();
+
+    try {
+      final importedFile = await importService.pickResumeFile();
+      if (!mounted || importedFile == null) {
+        return;
+      }
+
+      final parsedResume = aiService.parseImportedResumeText(
+        resumeText: importedFile.resumeText,
+        template: library.defaultTemplate,
+        sourceTitle: importedFile.suggestedTitle,
+      );
+
+      final enteredTitle = await _promptForResumeTitle(
+        initialTitle: parsedResume.title,
+      );
+      if (!mounted || enteredTitle == null) {
+        return;
+      }
+
+      final normalizedTitle = enteredTitle.trim();
+      final draft = parsedResume.copyWith(
+        title: normalizedTitle.isEmpty
+            ? parsedResume.title
+            : normalizedTitle,
+      );
+
+      await context.read<ResumeRepository>().upsertResume(draft);
+      await _openBuilder(seed: draft);
+    } on ResumeImportException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not upload resume right now. Please try again.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _showAddResumeOptions() async {
+    final action = await showModalBottomSheet<_AddResumeAction>(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      builder: (context) {
+        final primaryColor = Theme.of(context).colorScheme.primary;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: BottomSheetInsets.topSpacing),
+                ListTile(
+                  leading: Icon(Icons.add_card_rounded, color: primaryColor),
+                  title: const Text('Create resume'),
+                  onTap: () => Navigator.of(context).pop(_AddResumeAction.create),
+                ),
+                ListTile(
+                  leading: Icon(Icons.upload_file_rounded, color: primaryColor),
+                  title: const Text('Upload a resume'),
+                  onTap: () => Navigator.of(context).pop(_AddResumeAction.upload),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null) {
+      return;
+    }
+
+    switch (action) {
+      case _AddResumeAction.create:
+        await _createResumeFromAddButton();
+      case _AddResumeAction.upload:
+        await _uploadResumeFromAddButton();
+    }
   }
 
   Future<String?> _promptForResumeTitle({String initialTitle = ''}) async {
@@ -248,7 +344,7 @@ class _AppShellState extends State<AppShell> {
         backgroundColor: Theme.of(context).cardColor,
         shape: const CircleBorder(),
         onPressed: isResumeSegment
-            ? _createResumeFromAddButton
+            ? _showAddResumeOptions
             : _createCoverLetterFromAddButton,
         child: Icon(
           isResumeSegment ? Icons.add_card_rounded : Icons.note_add_rounded,
@@ -444,6 +540,8 @@ class _AppShellState extends State<AppShell> {
     ];
   }
 }
+
+enum _AddResumeAction { create, upload }
 
 class _ResumeTitleDialog extends StatefulWidget {
   const _ResumeTitleDialog({this.initialTitle = ''});

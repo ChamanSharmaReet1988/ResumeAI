@@ -82,6 +82,8 @@ void main() {
 
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Create resume'));
+      await tester.pumpAndSettle();
 
       expect(find.text('Resume title'), findsWidgets);
       await tester.enterText(

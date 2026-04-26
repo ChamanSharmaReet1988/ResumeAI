@@ -263,7 +263,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             : Theme.of(context).appBarTheme.titleTextStyle;
         final titleStyle = baseTitleStyle;
         final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
-        const barBg = Colors.white;
+        final barBg = Theme.of(context).cardColor;
 
         return PopScope(
           canPop: false,
@@ -421,7 +421,7 @@ class _ResumePreviewBottomBar extends StatelessWidget {
                 onTap: onTemplate,
               ),
               _PreviewBottomAction(
-                icon: Icons.share_outlined,
+                icon: Icons.ios_share_rounded,
                 label: 'Share',
                 onTap: onShare,
               ),
