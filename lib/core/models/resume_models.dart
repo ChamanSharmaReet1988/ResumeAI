@@ -5,6 +5,8 @@ import '../resume_text_font.dart';
 /// Maps stored template ids; legacy removed layouts default to [ResumeTemplate.corporate].
 ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
   switch (raw?.toString()) {
+    case 'classicSidebar':
+      return ResumeTemplate.classicSidebar;
     case 'creative':
       return ResumeTemplate.creative;
     case 'corporate':
@@ -14,16 +16,14 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
   }
 }
 
-enum ResumeTemplate {
-  corporate,
-  creative,
-}
+enum ResumeTemplate { corporate, creative, classicSidebar }
 
 enum CoverLetterTemplate { executiveNote, minimalLetter, sidebarLetter }
 
 const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.corporate,
   ResumeTemplate.creative,
+  ResumeTemplate.classicSidebar,
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
@@ -32,6 +32,7 @@ extension ResumeTemplateX on ResumeTemplate {
   String get label => switch (userFacingTemplate) {
     ResumeTemplate.corporate => 'Dark Header',
     ResumeTemplate.creative => 'Profile Sidebar',
+    ResumeTemplate.classicSidebar => 'Classic Sidebar',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -39,22 +40,27 @@ extension ResumeTemplateX on ResumeTemplate {
       'Dark top header with a strong structured layout and compact sections.',
     ResumeTemplate.creative =>
       'Profile-led layout with bold side accents and editorial-style sections.',
+    ResumeTemplate.classicSidebar =>
+      'Soft sidebar layout with a profile photo, skills rail, and clean resume blocks.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
     ResumeTemplate.corporate => const Color(0xFF0F766E),
     ResumeTemplate.creative => const Color(0xFFE85D04),
+    ResumeTemplate.classicSidebar => const Color(0xFF344054),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
     ResumeTemplate.corporate => const Color(0xFFE4FBF6),
     ResumeTemplate.creative => const Color(0xFFFFE9D8),
+    ResumeTemplate.classicSidebar => const Color(0xFFF2F4F7),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
   String get fontStyleLabel => switch (userFacingTemplate) {
     ResumeTemplate.corporate => 'Sans · dark header',
     ResumeTemplate.creative => 'Sans · profile sidebar',
+    ResumeTemplate.classicSidebar => 'Sans · classic sidebar',
   };
 }
 
@@ -180,7 +186,8 @@ class ResumeData {
         json['resumeTextFont'] as String?,
       ),
       includeWorkInResume: json['includeWorkInResume'] as bool? ?? true,
-      includeEducationInResume: json['includeEducationInResume'] as bool? ?? true,
+      includeEducationInResume:
+          json['includeEducationInResume'] as bool? ?? true,
       includeSkillsInResume: json['includeSkillsInResume'] as bool? ?? true,
       includeProjectsInResume: json['includeProjectsInResume'] as bool? ?? true,
       bodyFontPt: (json['bodyFontPt'] as num?)?.toInt() ?? 13,
@@ -220,20 +227,17 @@ class ResumeData {
   /// Index 0–4 for Dark Header title + top bar colors (see `corporate_resume_style.dart`).
   final int corporateColorPresetIndex;
 
-  List<WorkExperience> get visibleWorkExperiences =>
-      includeWorkInResume
-          ? workExperiences.where((item) => !item.isBlank).toList()
-          : const <WorkExperience>[];
+  List<WorkExperience> get visibleWorkExperiences => includeWorkInResume
+      ? workExperiences.where((item) => !item.isBlank).toList()
+      : const <WorkExperience>[];
 
-  List<EducationItem> get visibleEducation =>
-      includeEducationInResume
-          ? education.where((item) => !item.isBlank).toList()
-          : const <EducationItem>[];
+  List<EducationItem> get visibleEducation => includeEducationInResume
+      ? education.where((item) => !item.isBlank).toList()
+      : const <EducationItem>[];
 
-  List<ProjectItem> get visibleProjects =>
-      includeProjectsInResume
-          ? projects.where((item) => !item.isBlank).toList()
-          : const <ProjectItem>[];
+  List<ProjectItem> get visibleProjects => includeProjectsInResume
+      ? projects.where((item) => !item.isBlank).toList()
+      : const <ProjectItem>[];
 
   /// Skills shown on preview/PDF when the section is included.
   List<String> get skillsForResume =>
@@ -324,7 +328,8 @@ class ResumeData {
       includeWorkInResume: includeWorkInResume ?? this.includeWorkInResume,
       includeEducationInResume:
           includeEducationInResume ?? this.includeEducationInResume,
-      includeSkillsInResume: includeSkillsInResume ?? this.includeSkillsInResume,
+      includeSkillsInResume:
+          includeSkillsInResume ?? this.includeSkillsInResume,
       includeProjectsInResume:
           includeProjectsInResume ?? this.includeProjectsInResume,
       bodyFontPt: bodyFontPt ?? this.bodyFontPt,
@@ -566,10 +571,7 @@ class WorkExperience {
   }
 }
 
-enum WorkExperienceLayoutMode {
-  summary,
-  bullets,
-}
+enum WorkExperienceLayoutMode { summary, bullets }
 
 class EducationItem {
   const EducationItem({
@@ -592,8 +594,7 @@ class EducationItem {
       institution: json['institution'] as String? ?? '',
       degree: json['degree'] as String? ?? '',
       startDate: json['startDate'] as String? ?? '',
-      endDate:
-          json['endDate'] as String? ?? (json['year'] as String? ?? ''),
+      endDate: json['endDate'] as String? ?? (json['year'] as String? ?? ''),
       score: json['score'] as String? ?? '',
     );
   }
@@ -655,8 +656,9 @@ String corporateEducationTitleLine(
   String endDate, {
   String institutionFallback = 'Institution',
 }) {
-  final inst =
-      institution.trim().isEmpty ? institutionFallback : institution.trim();
+  final inst = institution.trim().isEmpty
+      ? institutionFallback
+      : institution.trim();
   final range = educationDateRangeLabel(startDate, endDate);
   if (range.isEmpty) return inst;
   return '$inst  |  $range';
@@ -728,10 +730,7 @@ class ProjectItem {
   }
 }
 
-enum CustomSectionLayoutMode {
-  summary,
-  bullets,
-}
+enum CustomSectionLayoutMode { summary, bullets }
 
 class CustomSectionItem {
   const CustomSectionItem({

@@ -54,7 +54,7 @@ void main() {
           gridView.childrenDelegate as SliverChildBuilderDelegate;
 
       expect(delegate.crossAxisCount, 2);
-      expect(childrenDelegate.childCount, 2);
+      expect(childrenDelegate.childCount, 3);
       expect(
         find.byKey(const Key('template-segmented-button')),
         findsOneWidget,
@@ -68,10 +68,33 @@ void main() {
         findsOneWidget,
       );
       expect(
+        find.byKey(const Key('template-image-classic-sidebar')),
+        findsOneWidget,
+      );
+      expect(
         find.byKey(const Key('template-image-executive-note')),
         findsNothing,
       );
 
+      final profileSidebarTile = find.byKey(
+        const Key('template-tile-profile-sidebar'),
+      );
+      await tester.ensureVisible(profileSidebarTile);
+      await tester.tap(profileSidebarTile);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Profile Sidebar'), findsOneWidget);
+      expect(
+        find.byKey(const Key('template-detail-preview-profile-sidebar')),
+        findsOneWidget,
+      );
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(
+        find.byKey(const Key('template-segmented-button')),
+      );
       await tester.tap(find.text('Cover Letter'));
       await tester.pumpAndSettle();
 

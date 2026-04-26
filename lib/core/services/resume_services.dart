@@ -98,8 +98,16 @@ const double _creativeMainColumnInsetPt =
 const double _creativeSectionGapPt = 20.0;
 const double _creativeHeadingBodyGapPt = 8.0;
 const double _creativeSidebarDividerGapPt = 20.0;
-const double _creativeNameFontPt = 34.0;
+const double _creativeNameFontPt = 30.0;
 const double _creativeAvatarBackgroundOpacity = 0.4;
+
+const double _classicSidebarRailWidthPt = 145.0;
+const double _classicSidebarContentWidthPt = 112.0;
+const double _classicSidebarMainInsetPt = 159.0;
+const double _classicSidebarAvatarSizePt = 88.0;
+const double _classicSidebarSectionGapPt = 18.0;
+const double _classicSidebarHeadingGapPt = 6.0;
+const double _classicSidebarSectionBottomPt = 14.0;
 
 PdfColor _creativeSidebarRailColorPdf(ResumeData resume) =>
     _pdfRgb(resume.creativeRailColor);
@@ -113,6 +121,27 @@ PdfColor _creativeTitleColorPdf(ResumeData resume) =>
 PdfColor _creativeSidebarLineColorPdf() => PdfColor.fromHex('#CDBAAC');
 
 PdfColor _creativeSidebarMutedColorPdf() => PdfColor.fromHex('#5F656C');
+
+PdfColor _classicSidebarRailColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.classicSidebarRailColor);
+
+PdfColor _classicSidebarAccentColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.classicSidebarAccentColor);
+
+PdfColor _classicSidebarTitleColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.classicSidebarTitleColor);
+
+PdfColor _classicSidebarMutedColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.classicSidebarMutedColor);
+
+PdfColor _classicSidebarDividerColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.classicSidebarDividerColor);
+
+PdfColor _classicSidebarSectionBorderPdf(ResumeData resume) =>
+    _pdfRgb(resume.classicSidebarSectionBorderColor);
+
+PdfColor _classicSidebarAvatarFillPdf(ResumeData resume) =>
+    _pdfRgb(resume.classicSidebarAvatarFillColor);
 
 pw.PageTheme _creativeSidebarPageTheme({
   required PdfColor railColor,
@@ -173,12 +202,17 @@ pw.Widget _creativeMainColumnChild(pw.Widget child) {
   return _CreativePageAwareInset(child: child);
 }
 
+pw.Widget _classicSidebarMainColumnChild(pw.Widget child) {
+  return _ClassicSidebarPageAwareInset(child: child);
+}
+
 class _CreativePageAwareInset extends pw.SingleChildWidget {
   _CreativePageAwareInset({required pw.Widget child}) : super(child: child);
 
   double _leftInsetFor(pw.Context context) =>
       context.pageNumber == 1 ? _creativeMainColumnInsetPt : 0;
 
+  // ignore: must_call_super
   @override
   void layout(
     pw.Context context,
@@ -222,6 +256,60 @@ class _CreativePageAwareInset extends pw.SingleChildWidget {
   }
 }
 
+class _ClassicSidebarPageAwareInset extends pw.SingleChildWidget {
+  _ClassicSidebarPageAwareInset({required pw.Widget child}) : super(child: child);
+
+  double _leftInsetFor(pw.Context context) =>
+      context.pageNumber == 1 ? _classicSidebarMainInsetPt : 0;
+
+  @override
+  void layout(
+    pw.Context context,
+    pw.BoxConstraints constraints, {
+    bool parentUsesSize = false,
+  }) {
+    final leftInset = _leftInsetFor(context);
+
+    if (child != null) {
+      final childConstraints = constraints.deflate(
+        pw.EdgeInsets.only(left: leftInset),
+      );
+      child!.layout(context, childConstraints, parentUsesSize: parentUsesSize);
+      assert(child!.box != null);
+      box = constraints.constrainRect(
+        width: child!.box!.width + leftInset,
+        height: child!.box!.height,
+      );
+      return;
+    }
+
+    box = constraints.constrainRect(width: leftInset, height: 0);
+  }
+
+  // ignore: must_call_super
+  @override
+  void paint(pw.Context context) {
+    final leftInset = _leftInsetFor(context);
+
+    if (child == null) {
+      return;
+    }
+
+    if (leftInset == 0) {
+      super.paint(context);
+      return;
+    }
+
+    final mat = context.canvas.getTransform();
+    mat.translateByDouble(box!.x + leftInset, box!.y, 0, 1);
+    context.canvas
+      ..saveContext()
+      ..setTransform(mat);
+    child!.paint(context);
+    context.canvas.restoreContext();
+  }
+}
+
 pw.Widget _creativeSidebarContactRow(
   String value, {
   required PdfColor iconColor,
@@ -251,6 +339,287 @@ pw.Widget _creativeSidebarContactRow(
       ],
     ),
   );
+}
+
+pw.PageTheme _classicSidebarPageTheme({
+  required ResumeData resume,
+  required PdfColor railColor,
+  required PdfColor dividerColor,
+  required PdfColor accentColor,
+  required PdfColor titleColor,
+  required PdfColor mutedColor,
+  required double bodyPt,
+  pw.MemoryImage? profileImage,
+  Set<String> highlightedSkills = const <String>{},
+  PdfColor? highlightColor,
+  PdfPageFormat pageFormat = PdfPageFormat.a4,
+}) {
+  return pw.PageTheme(
+    pageFormat: pageFormat,
+    margin: const pw.EdgeInsets.fromLTRB(24, 20, 24, 28),
+    buildBackground: (context) => pw.FullPage(
+      ignoreMargins: true,
+      child: context.pageNumber == 1
+          ? pw.Stack(
+              children: [
+                pw.Positioned(
+                  left: 24,
+                  top: 20,
+                  bottom: 28,
+                  child: pw.Container(
+                    width: _classicSidebarRailWidthPt,
+                    color: railColor,
+                  ),
+                ),
+                pw.Positioned(
+                  left: 40,
+                  top: 32,
+                  child: _classicSidebarPanel(
+                    resume: resume,
+                    accentColor: accentColor,
+                    dividerColor: dividerColor,
+                    titleColor: titleColor,
+                    mutedColor: mutedColor,
+                    bodyPt: bodyPt,
+                    profileImage: profileImage,
+                    highlightedSkills: highlightedSkills,
+                    highlightColor: highlightColor,
+                    pageNumber: context.pageNumber,
+                  ),
+                ),
+              ],
+            )
+          : pw.SizedBox(),
+    ),
+  );
+}
+
+pw.Widget _classicSidebarPanel({
+  required ResumeData resume,
+  required PdfColor accentColor,
+  required PdfColor dividerColor,
+  required PdfColor titleColor,
+  required PdfColor mutedColor,
+  required double bodyPt,
+  pw.MemoryImage? profileImage,
+  Set<String> highlightedSkills = const <String>{},
+  PdfColor? highlightColor,
+  int pageNumber = 1,
+}) {
+  const skillsPerPage = 6;
+  final allSkills = resume.skillsForResume
+      .where((item) => item.trim().isNotEmpty)
+      .toList();
+  final start = ((pageNumber - 1).clamp(0, 1000000)) * skillsPerPage;
+  final skills = start < allSkills.length
+      ? allSkills.skip(start).take(skillsPerPage).toList()
+      : const <String>[];
+  final isFirstPage = pageNumber <= 1;
+  final languages = _classicSidebarLanguageLines(resume).take(4).toList();
+
+  return pw.SizedBox(
+    width: _classicSidebarContentWidthPt,
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        if (isFirstPage && profileImage != null)
+          pw.ClipOval(
+            child: pw.SizedBox(
+              width: _classicSidebarAvatarSizePt,
+              height: _classicSidebarAvatarSizePt,
+              child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+            ),
+          )
+        else if (isFirstPage)
+          pw.Container(
+            width: _classicSidebarAvatarSizePt,
+            height: _classicSidebarAvatarSizePt,
+            decoration: pw.BoxDecoration(
+              color: _classicSidebarAvatarFillPdf(resume),
+              shape: pw.BoxShape.circle,
+            ),
+            alignment: pw.Alignment.center,
+            child: pw.Text(
+              _classicSidebarInitials(resume),
+              style: pw.TextStyle(
+                color: titleColor,
+                fontSize: 24,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+          ),
+        if (isFirstPage) pw.SizedBox(height: _classicSidebarSectionGapPt),
+        if (isFirstPage)
+          pw.Container(height: 1.2, color: dividerColor),
+        if (isFirstPage) pw.SizedBox(height: 10),
+        if (skills.isNotEmpty)
+          _classicSidebarListSection(
+            title: 'Skills',
+            items: skills,
+            titleColor: titleColor,
+            bulletColor: accentColor,
+            textColor: titleColor,
+            fontSize: bodyPt,
+            highlightedItems: highlightedSkills,
+            highlightColor: highlightColor,
+            showTitle: isFirstPage,
+            itemBottom: 0,
+          ),
+        if (isFirstPage && languages.isNotEmpty) ...[
+          pw.SizedBox(height: _classicSidebarSectionGapPt),
+          pw.Container(height: 1.2, color: dividerColor),
+          pw.SizedBox(height: 10),
+          _classicSidebarListSection(
+            title: 'Languages',
+            items: languages,
+            titleColor: titleColor,
+            bulletColor: accentColor,
+            textColor: mutedColor,
+            fontSize: bodyPt,
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+pw.Widget _classicSidebarListSection({
+  required String title,
+  required List<String> items,
+  required PdfColor titleColor,
+  required PdfColor bulletColor,
+  required PdfColor textColor,
+  required double fontSize,
+  Set<String> highlightedItems = const <String>{},
+  PdfColor? highlightColor,
+  bool showTitle = true,
+  double itemBottom = 8,
+}) {
+  final visibleItems = items.where((item) => item.trim().isNotEmpty).toList();
+  return pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      if (showTitle)
+        pw.Text(
+          title.toUpperCase(),
+          style: pw.TextStyle(
+            color: titleColor,
+            fontSize: ResumeTypography.darkHeaderSectionTitlePt,
+            fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+      if (showTitle) pw.SizedBox(height: 8),
+      if (visibleItems.isEmpty)
+        pw.Text(
+          'Add items',
+          style: pw.TextStyle(color: textColor, fontSize: fontSize),
+        )
+      else
+        for (final item in visibleItems)
+          pw.Padding(
+            padding: pw.EdgeInsets.only(bottom: itemBottom),
+            child: _classicBulletRow(
+              text: item,
+              bulletColor: bulletColor,
+              textColor: textColor,
+              fontSize: fontSize,
+              backgroundColor: highlightedItems.contains(item)
+                  ? highlightColor
+                  : null,
+            ),
+          ),
+    ],
+  );
+}
+
+pw.Widget _classicBulletRow({
+  required String text,
+  required PdfColor bulletColor,
+  required PdfColor textColor,
+  required double fontSize,
+  PdfColor? backgroundColor,
+}) {
+  final row = pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      pw.Text(
+        '•',
+        style: pw.TextStyle(
+          color: bulletColor,
+          fontSize: fontSize,
+          fontWeight: pw.FontWeight.bold,
+        ),
+      ),
+      pw.SizedBox(width: 6),
+      pw.Expanded(
+        child: pw.Text(
+          text,
+          style: pw.TextStyle(color: textColor, fontSize: fontSize),
+        ),
+      ),
+    ],
+  );
+
+  if (backgroundColor == null) {
+    return row;
+  }
+  return pw.Container(
+    width: double.infinity,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+    color: backgroundColor,
+    child: row,
+  );
+}
+
+List<String> _classicSidebarLanguageLines(ResumeData resume) {
+  final section = _classicSidebarLanguagesSection(resume);
+  if (section == null) {
+    return const <String>[];
+  }
+  if (section.layoutMode == CustomSectionLayoutMode.bullets) {
+    return section.bullets.where((item) => item.trim().isNotEmpty).toList();
+  }
+  return section.content
+      .split(RegExp(r'[\n,]+'))
+      .map((item) => item.trim())
+      .where((item) => item.isNotEmpty)
+      .toList();
+}
+
+String _classicSidebarInitials(ResumeData resume) {
+  final name = resume.fullName.trim().isEmpty
+      ? 'Your Name'
+      : resume.fullName.trim();
+  final words = name
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .take(2)
+      .toList();
+  if (words.isEmpty) {
+    return 'DA';
+  }
+  return words.map((part) => part[0].toUpperCase()).join();
+}
+
+CustomSectionItem? _classicSidebarLanguagesSection(ResumeData resume) {
+  for (final item in resume.visibleCustomSections) {
+    if (item.title.trim().toLowerCase() == 'languages') {
+      return item;
+    }
+  }
+  return null;
+}
+
+List<CustomSectionItem> _classicSidebarMainCustomSections(ResumeData resume) {
+  final languages = _classicSidebarLanguagesSection(resume);
+  var skippedLanguages = false;
+  return resume.visibleCustomSections.where((item) {
+    if (!skippedLanguages && identical(item, languages)) {
+      skippedLanguages = true;
+      return false;
+    }
+    return true;
+  }).toList();
 }
 
 pw.Widget _creativeSidebarEducationEntry(
@@ -2566,6 +2935,13 @@ class ResumePdfService {
       case ResumeTemplate.creative:
         _addCreativeTemplatePage(document, resume, profileImage: profileImage);
         break;
+      case ResumeTemplate.classicSidebar:
+        _addClassicSidebarTemplatePage(
+          document,
+          resume,
+          profileImage: profileImage,
+        );
+        break;
     }
 
     return document.save();
@@ -2597,6 +2973,15 @@ class ResumePdfService {
         break;
       case ResumeTemplate.creative:
         _addHighlightedCreativeTemplatePage(
+          document,
+          resume,
+          highlightSummary: highlightSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
+        break;
+      case ResumeTemplate.classicSidebar:
+        _addHighlightedClassicSidebarTemplatePage(
           document,
           resume,
           highlightSummary: highlightSummary,

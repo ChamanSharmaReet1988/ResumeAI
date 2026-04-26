@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/resume_services.dart';
 
@@ -110,7 +111,13 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     return renamed;
   }
 
-  ResumeData newDraft() => ResumeData.empty(template: _defaultTemplate);
+  ResumeData newDraft() => ResumeData.empty(
+    template: _defaultTemplate,
+  ).copyWith(
+    corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+      _defaultTemplate,
+    ),
+  );
 
   String _duplicateTitle(String title) {
     final trimmed = title.trim();

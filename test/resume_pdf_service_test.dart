@@ -41,17 +41,14 @@ void main() {
         title: 'Resume Platform ${index + 1}',
         overview:
             'Delivered candidate-facing improvements for resume creation, AI suggestions, PDF export, and recruiter review flows.',
-        impact:
-            'Flutter, Dart, PDF, Provider, Accessibility, ATS optimization',
+        impact: 'Flutter, Dart, PDF, Provider, Accessibility, ATS optimization',
         bullets: const [
           'Created reusable editing flows and preview pipelines for large structured documents.',
         ],
       ),
     );
 
-    return ResumeData.empty(
-      template: ResumeTemplate.creative,
-    ).copyWith(
+    return ResumeData.empty(template: ResumeTemplate.creative).copyWith(
       title: 'Creative Template Overflow Test',
       fullName: 'Diya Agarwal',
       jobTitle: 'Senior Product Engineer',
@@ -78,12 +75,83 @@ void main() {
     );
   }
 
-  test('creative template PDF paginates long resumes without overflow', () async {
-    final service = ResumePdfService();
-    final pdfBytes = await service.buildPdf(buildLongCreativeResume());
+  ResumeData buildClassicSidebarResume() {
+    return ResumeData.empty(template: ResumeTemplate.classicSidebar).copyWith(
+      title: 'Classic Sidebar Test',
+      fullName: 'Avery Brooks',
+      jobTitle: 'Financial Analyst',
+      email: 'avery@example.com',
+      phone: '+1 617 555 0142',
+      location: 'Boston, MA',
+      summary:
+          'Financial analyst with experience supporting budgets, planning reviews, and operational reporting across cross-functional teams.',
+      workExperiences: const [
+        WorkExperience(
+          role: 'Financial Analyst',
+          company: 'GEO Advisory',
+          startDate: 'Apr 2018',
+          endDate: 'Present',
+          description: '',
+          bullets: [
+            'Built operating budget models that reduced quarterly variance across business units.',
+            'Prepared financial summaries for leadership reviews and monthly planning cycles.',
+          ],
+        ),
+        WorkExperience(
+          role: 'Analyst',
+          company: 'North Harbor Group',
+          startDate: 'Sep 2014',
+          endDate: 'Mar 2018',
+          description: '',
+          bullets: [
+            'Tracked revenue, forecast updates, and project spend across finance and operations.',
+          ],
+        ),
+      ],
+      education: const [
+        EducationItem(
+          institution: 'Boston University',
+          degree: 'B.S. Finance',
+          startDate: '2010',
+          endDate: '2014',
+          score: '3.8 GPA • Graduated magna cum laude.',
+        ),
+      ],
+      skills: const [
+        'Financial Analysis',
+        'Strategic Planning',
+        'Trend Analysis',
+        'Budget Tracking',
+        'Team Leadership',
+      ],
+      projects: const [
+        ProjectItem(
+          title: 'Budget Reporting Framework',
+          bullets: [
+            'Standardized monthly reporting decks used in leadership finance reviews.',
+          ],
+        ),
+      ],
+      customSections: const [
+        CustomSectionItem(
+          title: 'Languages',
+          content: '',
+          layoutMode: CustomSectionLayoutMode.bullets,
+          bullets: ['English', 'German'],
+        ),
+      ],
+    );
+  }
 
-    expect(pdfBytes, isNotEmpty);
-  });
+  test(
+    'creative template PDF paginates long resumes without overflow',
+    () async {
+      final service = ResumePdfService();
+      final pdfBytes = await service.buildPdf(buildLongCreativeResume());
+
+      expect(pdfBytes, isNotEmpty);
+    },
+  );
 
   test(
     'highlighted creative template PDF paginates long resumes without overflow',
@@ -104,4 +172,28 @@ void main() {
       expect(pdfBytes, isNotEmpty);
     },
   );
+
+  test('classic sidebar template PDF renders successfully', () async {
+    final service = ResumePdfService();
+    final pdfBytes = await service.buildPdf(buildClassicSidebarResume());
+
+    expect(pdfBytes, isNotEmpty);
+  });
+
+  test('highlighted classic sidebar template PDF renders successfully', () async {
+    final service = ResumePdfService();
+    final resume = buildClassicSidebarResume();
+    final pdfBytes = await service.buildHighlightedResumePdf(
+      resume: resume,
+      highlightSummary: true,
+      highlightedSkills: const {'Financial Analysis'},
+      highlightedBulletsByExperience: const {
+        0: {
+          'Prepared financial summaries for leadership reviews and monthly planning cycles.',
+        },
+      },
+    );
+
+    expect(pdfBytes, isNotEmpty);
+  });
 }

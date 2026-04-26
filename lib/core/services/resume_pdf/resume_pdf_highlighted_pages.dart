@@ -173,7 +173,6 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     );
   }
 
-
   pw.Widget _highlightedCorporateNameText(String value) {
     final style = pw.TextStyle(
       color: PdfColors.white,
@@ -290,8 +289,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               _creativeMainColumnChild(
                 _buildHighlightedCreativeExperience(
                   resume.visibleWorkExperiences[index],
-                  highlightedBulletsByExperience[index] ??
-                      const <String>{},
+                  highlightedBulletsByExperience[index] ?? const <String>{},
                   highlightColor,
                   bodyFontPt: bodyPt,
                 ),
@@ -348,10 +346,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
             for (final item in resume.visibleProjects)
               _creativeMainColumnChild(
-                _buildCompactProject(
-                  item,
-                  bodyFontPt: bodyPt,
-                ),
+                _buildCompactProject(item, bodyFontPt: bodyPt),
               ),
           ],
           for (final item in resume.visibleCustomSections) ...[
@@ -371,6 +366,233 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     );
   }
 
+  void _addHighlightedClassicSidebarTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    required bool highlightSummary,
+    required Set<String> highlightedSkills,
+    required Map<int, Set<String>> highlightedBulletsByExperience,
+  }) {
+    final titleColor = _classicSidebarTitleColorPdf(resume);
+    final mutedColor = _classicSidebarMutedColorPdf(resume);
+    final accentColor = _classicSidebarAccentColorPdf(resume);
+    final dividerColor = _classicSidebarDividerColorPdf(resume);
+    final borderColor = _classicSidebarSectionBorderPdf(resume);
+    final highlightColor = PdfColor.fromHex('#FFF0A8');
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final customSections = _classicSidebarMainCustomSections(resume);
 
+    document.addPage(
+      pw.MultiPage(
+        pageTheme: _classicSidebarPageTheme(
+          resume: resume,
+          railColor: _classicSidebarRailColorPdf(resume),
+          dividerColor: dividerColor,
+          accentColor: accentColor,
+          titleColor: titleColor,
+          mutedColor: mutedColor,
+          bodyPt: bodyPt,
+          highlightedSkills: highlightedSkills,
+          highlightColor: highlightColor,
+        ),
+        header: _continuedPageTopGap,
+        build: (context) => [
+          _classicSidebarMainColumnChild(
+            _buildClassicSidebarHeader(
+              resume,
+              titleColor: titleColor,
+              mutedColor: mutedColor,
+              accentColor: accentColor,
+              borderColor: borderColor,
+              bodyPt: bodyPt,
+            ),
+          ),
+          _classicSidebarMainColumnChild(
+            _highlightedAtsNoticeBar(highlightColor),
+          ),
+          _classicSidebarMainColumnChild(
+            _buildClassicSidebarSection(
+              title: 'Summary',
+              titleColor: titleColor,
+              borderColor: borderColor,
+              child: pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
+                ),
+                color: highlightSummary ? highlightColor : PdfColors.white,
+                child: pw.Text(
+                  resume.summary.trim().ifEmpty(
+                    'Add a short summary to position your experience and strengths.',
+                  ),
+                  style: pw.TextStyle(
+                    color: mutedColor,
+                    fontSize: bodyPt,
+                    lineSpacing: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (resume.includeWorkInResume)
+            _classicSidebarMainColumnChild(
+              _buildClassicSidebarSection(
+                title: 'Experience',
+                titleColor: titleColor,
+                borderColor: borderColor,
+                child: resume.visibleWorkExperiences.isEmpty
+                    ? pw.Text(
+                        'Add your work experience details.',
+                        style: pw.TextStyle(
+                          color: mutedColor,
+                          fontSize: bodyPt,
+                        ),
+                      )
+                    : pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          for (
+                            var index = 0;
+                            index < resume.visibleWorkExperiences.length;
+                            index++
+                          )
+                            _buildHighlightedClassicSidebarExperience(
+                              resume.visibleWorkExperiences[index],
+                              highlightedBulletsByExperience[index] ??
+                                  const <String>{},
+                              highlightColor,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                              accentColor: accentColor,
+                              bodyPt: bodyPt,
+                            ),
+                        ],
+                      ),
+              ),
+            ),
+          if (resume.includeEducationInResume)
+            _classicSidebarMainColumnChild(
+              _buildClassicSidebarSection(
+                title: 'Education',
+                titleColor: titleColor,
+                borderColor: borderColor,
+                child: resume.visibleEducation.isEmpty
+                    ? pw.Text(
+                        'Add your education details.',
+                        style: pw.TextStyle(
+                          color: mutedColor,
+                          fontSize: bodyPt,
+                        ),
+                      )
+                    : pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          for (final item in resume.visibleEducation)
+                            _buildClassicSidebarEducation(
+                              item,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                              bodyPt: bodyPt,
+                            ),
+                        ],
+                      ),
+              ),
+            ),
+          if (resume.includeProjectsInResume &&
+              resume.visibleProjects.isNotEmpty)
+            _classicSidebarMainColumnChild(
+              _buildClassicSidebarSection(
+                title: 'Projects',
+                titleColor: titleColor,
+                borderColor: borderColor,
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    for (final item in resume.visibleProjects)
+                      _buildClassicSidebarProject(
+                        item,
+                        titleColor: titleColor,
+                        mutedColor: mutedColor,
+                        accentColor: accentColor,
+                        bodyPt: bodyPt,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          for (final section in customSections)
+            _classicSidebarMainColumnChild(
+              _buildClassicSidebarSection(
+                title: section.title.ifEmpty('Custom Section'),
+                titleColor: titleColor,
+                borderColor: borderColor,
+                child: _buildClassicSidebarCustomSection(
+                  section,
+                  mutedColor: mutedColor,
+                  accentColor: accentColor,
+                  bodyPt: bodyPt,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
+  pw.Widget _buildHighlightedClassicSidebarExperience(
+    WorkExperience item,
+    Set<String> highlightedBullets,
+    PdfColor highlightColor, {
+    required PdfColor titleColor,
+    required PdfColor mutedColor,
+    required PdfColor accentColor,
+    required double bodyPt,
+  }) {
+    final bullets = _workBulletLines(item);
+    final dates = [
+      item.startDate.trim(),
+      item.endDate.trim(),
+    ].where((value) => value.isNotEmpty).join(' - ');
+
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 10),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            '${item.role.ifEmpty('Role')}, ${item.company.ifEmpty('Company')}',
+            style: pw.TextStyle(
+              color: titleColor,
+              fontSize: bodyPt + 1.2,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+          if (dates.isNotEmpty) ...[
+            pw.SizedBox(height: 2),
+            pw.Text(
+              dates,
+              style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+            ),
+          ],
+          if (bullets.isNotEmpty) ...[
+            pw.SizedBox(height: 5),
+            for (final bullet in bullets)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 4),
+                child: _classicBulletRow(
+                  text: bullet,
+                  bulletColor: accentColor,
+                  textColor: titleColor,
+                  fontSize: bodyPt,
+                  backgroundColor: highlightedBullets.contains(bullet)
+                      ? highlightColor
+                      : null,
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
 }

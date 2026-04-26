@@ -46,6 +46,17 @@ const kCorporateColorPresets = <CorporateColorPreset>[
   ),
 ];
 
+/// Virtual preset index used by template 2/3 to keep their native accent color.
+final int kTemplateDefaultColorPresetIndex = kCorporateColorPresets.length;
+
+int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
+  return switch (template) {
+    ResumeTemplate.corporate => 0,
+    ResumeTemplate.creative => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.classicSidebar => kTemplateDefaultColorPresetIndex,
+  };
+}
+
 extension ResumeCorporateStyleX on ResumeData {
   /// Clamped 11–15 for preview + PDF body text (Dark Header).
   int get effectiveBodyFontPt {
@@ -56,6 +67,12 @@ extension ResumeCorporateStyleX on ResumeData {
   }
 
   CorporateColorPreset get corporateColorPreset {
+    if (corporateColorPresetIndex == kTemplateDefaultColorPresetIndex) {
+      return CorporateColorPreset(
+        titleColor: const Color(0xFF2E3135),
+        headerColor: template.accentColor,
+      );
+    }
     final i = corporateColorPresetIndex
         .clamp(0, kCorporateColorPresets.length - 1)
         .toInt();
@@ -76,4 +93,28 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get creativeMutedColor => const Color(0xFF5F656C);
 
   Color get creativeLineColor => const Color(0xFFCDBAAC);
+
+  Color get classicSidebarRailColor =>
+      Color.lerp(
+        const Color(0xFFF2F4F7),
+        corporateColorPreset.headerColor,
+        0.08,
+      ) ??
+      const Color(0xFFF2F4F7);
+
+  Color get classicSidebarAccentColor =>
+      Color.lerp(corporateColorPreset.headerColor, Colors.black, 0.12) ??
+      corporateColorPreset.headerColor;
+
+  Color get classicSidebarAvatarFillColor =>
+      Color.lerp(classicSidebarAccentColor, Colors.white, 0.38) ??
+      classicSidebarAccentColor;
+
+  Color get classicSidebarTitleColor => const Color(0xFF111827);
+
+  Color get classicSidebarMutedColor => const Color(0xFF475467);
+
+  Color get classicSidebarDividerColor => const Color(0xFF344054);
+
+  Color get classicSidebarSectionBorderColor => const Color(0xFFE5E7EB);
 }

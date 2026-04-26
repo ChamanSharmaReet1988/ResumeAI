@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
@@ -130,6 +132,9 @@ class ResumePreviewCanvas extends StatelessWidget {
             child: switch (previewTemplate) {
               ResumeTemplate.corporate => _DarkHeaderPreview(resume: resume),
               ResumeTemplate.creative => _CreativePreview(resume: resume),
+              ResumeTemplate.classicSidebar => _ClassicSidebarPreview(
+                resume: resume,
+              ),
             },
           ),
           if (showDebugLabel)
@@ -729,6 +734,7 @@ class _CreativePreview extends StatelessWidget {
     final mutedColor = resume.creativeMutedColor;
     final lineColor = resume.creativeLineColor;
     final bodyStyle = TextStyle(
+      fontFamily: 'Calibri',
       color: textColor,
       fontSize: resume.effectiveBodyFontPt.toDouble(),
       height: ResumeTypography.textLineHeight,
@@ -746,73 +752,75 @@ class _CreativePreview extends StatelessWidget {
     const sidebarRailWidth = 125.0;
     const sidebarContentWidth = 101.0;
     const mainContentInset = 123.0;
-    const nameFontSize = 34.0;
+    const nameFontSize = 30.0;
     final firstProjectLine = projects.isNotEmpty
         ? (_projectBulletLines(projects.first).isNotEmpty
               ? _projectBulletLines(projects.first).first
               : 'Add project details.')
         : '';
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Row(
-            children: [
-              Container(width: sidebarRailWidth, color: railColor),
-              const Expanded(child: SizedBox()),
-            ],
-          ),
-        ),
-        Positioned(
-          left: 16,
-          top: 16,
-          child: SizedBox(
-            width: sidebarContentWidth,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return DefaultTextStyle.merge(
+      style: const TextStyle(fontFamily: 'Calibri'),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Row(
               children: [
-                Container(
-                  width: _avatarWidth,
-                  height: _avatarHeight,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: avatarBackgroundColor.withValues(
-                      alpha: _avatarBackgroundOpacity,
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    _pdfAlignedInitials(resume),
-                    style: TextStyle(
-                      color: accentColor,
-                      fontSize: 28.6,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                if (contacts.isNotEmpty) ...[
-                  const SizedBox(height: sectionGap),
-                  Container(height: 1.1, color: lineColor),
-                  const SizedBox(height: sidebarDividerGap),
-                  ...contacts.map(
-                    (line) => Padding(
-                      padding: const EdgeInsets.only(bottom: 5),
-                      child: _CreativeSidebarMetaItem(
-                        text: line,
-                        iconColor: accentColor,
-                        style: bodyStyle.copyWith(
-                          color: mutedColor,
-                          fontSize: bodyStyle.fontSize! - 0.4,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                Container(width: sidebarRailWidth, color: railColor),
+                const Expanded(child: SizedBox()),
               ],
             ),
           ),
-        ),
-        Padding(
+          Positioned(
+            left: 16,
+            top: 16,
+            child: SizedBox(
+              width: sidebarContentWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: _avatarWidth,
+                    height: _avatarHeight,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      color: avatarBackgroundColor.withValues(
+                        alpha: _avatarBackgroundOpacity,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _pdfAlignedInitials(resume),
+                      style: TextStyle(
+                        color: accentColor,
+                        fontSize: 28.6,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  if (contacts.isNotEmpty) ...[
+                    const SizedBox(height: sectionGap),
+                    Container(height: 1.1, color: lineColor),
+                    const SizedBox(height: sidebarDividerGap),
+                    ...contacts.map(
+                      (line) => Padding(
+                        padding: const EdgeInsets.only(bottom: 5),
+                        child: _CreativeSidebarMetaItem(
+                          text: line,
+                          iconColor: accentColor,
+                          style: bodyStyle.copyWith(
+                            color: mutedColor,
+                            fontSize: bodyStyle.fontSize! - 0.4,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -997,10 +1005,727 @@ class _CreativePreview extends StatelessWidget {
               ),
             ],
           ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ClassicSidebarPreview extends StatelessWidget {
+  const _ClassicSidebarPreview({required this.resume});
+
+  final ResumeData resume;
+
+  static const double _sidebarWidth = 96;
+  static const double _avatarSize = 74;
+  static const double _sectionGap = 18;
+  static const double _contentSectionGap = 16;
+  static const double _sectionHeadingGap = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact =
+            constraints.maxWidth < 190 || constraints.maxHeight < 250;
+        final railColor = resume.classicSidebarRailColor;
+        final accentColor = resume.classicSidebarAccentColor;
+        final titleColor = resume.classicSidebarTitleColor;
+        final mutedColor = resume.classicSidebarMutedColor;
+        final dividerColor = resume.classicSidebarDividerColor;
+        final sectionBorderColor = resume.classicSidebarSectionBorderColor;
+        final sidebarWidth = compact ? 74.0 : _sidebarWidth;
+        final avatarSize = compact ? 54.0 : _avatarSize;
+        final bodySize = compact
+            ? (resume.effectiveBodyFontPt * 0.74).clamp(6.4, 9.2).toDouble()
+            : resume.effectiveBodyFontPt.toDouble();
+        final bodyStyle = TextStyle(
+          color: titleColor,
+          fontSize: bodySize,
+          height: compact ? 1.18 : ResumeTypography.textLineHeight,
+        );
+        final experiences = resume.visibleWorkExperiences
+            .take(compact ? 1 : 2)
+            .toList();
+        final education = resume.visibleEducation
+            .take(compact ? 1 : 2)
+            .toList();
+        final projects = resume.visibleProjects.take(compact ? 1 : 2).toList();
+        final skills = _pdfAlignedSkills(resume).take(compact ? 3 : 5).toList();
+        final languages = _classicSidebarLanguages(
+          resume,
+        ).take(compact ? 2 : 4).toList();
+        final remainingCustomSections = _classicSidebarMainCustomSections(
+          resume,
+        );
+        final avatarPath = resume.profileImagePath.trim();
+        final hasProfileImage =
+            avatarPath.isNotEmpty && File(avatarPath).existsSync();
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              width: sidebarWidth,
+              color: railColor,
+              padding: EdgeInsets.fromLTRB(
+                compact ? 7 : 10,
+                compact ? 10 : 14,
+                compact ? 7 : 10,
+                compact ? 10 : 14,
+              ),
+              child: DefaultTextStyle(
+                style: bodyStyle.copyWith(fontSize: bodyStyle.fontSize! - 0.5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: ClipOval(
+                        child: SizedBox(
+                          width: avatarSize,
+                          height: avatarSize,
+                          child: hasProfileImage
+                              ? Image.file(
+                                  File(avatarPath),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) =>
+                                      _ClassicSidebarAvatarPlaceholder(
+                                        resume: resume,
+                                        fontSize: compact ? 16 : 22,
+                                      ),
+                                )
+                              : _ClassicSidebarAvatarPlaceholder(
+                                  resume: resume,
+                                  fontSize: compact ? 16 : 22,
+                                ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: compact ? 10 : _sectionGap),
+                    Container(height: 1.1, color: dividerColor),
+                    SizedBox(height: compact ? 6 : 10),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _ClassicSidebarListSection(
+                              title: 'SKILLS',
+                              items: skills,
+                              bulletColor: accentColor,
+                              textStyle: bodyStyle.copyWith(
+                                fontSize: bodyStyle.fontSize! - 0.2,
+                              ),
+                              maxLines: compact ? 1 : 2,
+                            ),
+                            if (languages.isNotEmpty) ...[
+                              SizedBox(height: compact ? 10 : _sectionGap),
+                              Container(height: 1.1, color: dividerColor),
+                              SizedBox(height: compact ? 6 : 10),
+                              _ClassicSidebarListSection(
+                                title: 'LANGUAGES',
+                                items: languages,
+                                bulletColor: accentColor,
+                                textStyle: bodyStyle.copyWith(
+                                  fontSize: bodyStyle.fontSize! - 0.2,
+                                ),
+                                maxLines: 1,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  compact ? 8 : 12,
+                  compact ? 10 : 14,
+                  compact ? 8 : 12,
+                  compact ? 10 : 14,
+                ),
+                child: DefaultTextStyle(
+                  style: bodyStyle,
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _pdfAlignedDisplayName(resume).toUpperCase(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: bodyStyle.copyWith(
+                            fontSize: compact ? 12 : 18,
+                            fontWeight: FontWeight.w900,
+                            height: 1.0,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        if (resume.jobTitle.trim().isNotEmpty) ...[
+                          SizedBox(height: compact ? 3 : 5),
+                          Text(
+                            resume.jobTitle.trim(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: bodyStyle.copyWith(
+                              color: mutedColor,
+                              fontSize: compact
+                                  ? bodyStyle.fontSize
+                                  : bodyStyle.fontSize! + 0.2,
+                            ),
+                          ),
+                        ],
+                        SizedBox(height: compact ? 5 : 7),
+                        ..._classicSidebarContactRows(
+                          resume,
+                          mutedColor: mutedColor,
+                          iconColor: titleColor,
+                          baseStyle: bodyStyle.copyWith(
+                            fontSize: bodyStyle.fontSize! - 0.2,
+                          ),
+                          maxItems: compact ? 3 : 4,
+                        ),
+                        SizedBox(height: compact ? 7 : 10),
+                        Container(height: 1.1, color: sectionBorderColor),
+                        SizedBox(height: compact ? 8 : _contentSectionGap),
+                        _ClassicContentSection(
+                          title: 'SUMMARY',
+                          borderColor: sectionBorderColor,
+                          child: Text(
+                            resume.summary.trim().ifBlank(
+                              'Add a short summary to position your experience and strengths.',
+                            ),
+                            maxLines: compact ? 3 : 4,
+                            overflow: TextOverflow.ellipsis,
+                            style: bodyStyle.copyWith(color: mutedColor),
+                          ),
+                        ),
+                        _ClassicContentSection(
+                          title: 'EXPERIENCE',
+                          borderColor: sectionBorderColor,
+                          child: experiences.isEmpty
+                              ? Text(
+                                  'Add your work experience details.',
+                                  style: bodyStyle.copyWith(color: mutedColor),
+                                )
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    for (final item in experiences)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom: compact ? 6 : 10,
+                                        ),
+                                        child: _ClassicExperienceBlock(
+                                          item: item,
+                                          bodyStyle: bodyStyle,
+                                          mutedColor: mutedColor,
+                                          bulletColor: titleColor,
+                                          maxBulletLines: compact ? 1 : 2,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                        ),
+                        _ClassicContentSection(
+                          title: 'EDUCATION',
+                          borderColor: sectionBorderColor,
+                          child: education.isEmpty
+                              ? Text(
+                                  'Add your education details.',
+                                  style: bodyStyle.copyWith(color: mutedColor),
+                                )
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    for (final item in education)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom: compact ? 6 : 8,
+                                        ),
+                                        child: _ClassicEducationBlock(
+                                          item: item,
+                                          bodyStyle: bodyStyle,
+                                          mutedColor: mutedColor,
+                                          compact: compact,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                        ),
+                        if (!compact && projects.isNotEmpty)
+                          _ClassicContentSection(
+                            title: 'PROJECTS',
+                            borderColor: sectionBorderColor,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                for (final item in projects)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: _ClassicProjectBlock(
+                                      item: item,
+                                      bodyStyle: bodyStyle,
+                                      mutedColor: mutedColor,
+                                      bulletColor: titleColor,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        if (!compact)
+                          for (final section in remainingCustomSections.take(2))
+                            _ClassicContentSection(
+                              title: section.title.trim().toUpperCase(),
+                              borderColor: sectionBorderColor,
+                              child: _ClassicCustomSectionBlock(
+                                item: section,
+                                bodyStyle: bodyStyle,
+                                mutedColor: mutedColor,
+                                bulletColor: titleColor,
+                              ),
+                            ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ClassicSidebarAvatarPlaceholder extends StatelessWidget {
+  const _ClassicSidebarAvatarPlaceholder({
+    required this.resume,
+    required this.fontSize,
+  });
+
+  final ResumeData resume;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(color: resume.classicSidebarAvatarFillColor),
+      child: Center(
+        child: Text(
+          _pdfAlignedInitials(resume),
+          style: TextStyle(
+            color: resume.classicSidebarTitleColor,
+            fontSize: fontSize,
+            fontWeight: FontWeight.w800,
+            height: 1,
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _ClassicSidebarListSection extends StatelessWidget {
+  const _ClassicSidebarListSection({
+    required this.title,
+    required this.items,
+    required this.bulletColor,
+    required this.textStyle,
+    this.maxLines = 2,
+  });
+
+  final String title;
+  final List<String> items;
+  final Color bulletColor;
+  final TextStyle textStyle;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleItems = items.where((item) => item.trim().isNotEmpty).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: textStyle.copyWith(fontWeight: FontWeight.w900)),
+        const SizedBox(height: 8),
+        if (visibleItems.isEmpty)
+          Text('Add items', style: textStyle)
+        else
+          for (final item in visibleItems)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '•',
+                    style: textStyle.copyWith(
+                      color: bulletColor,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      item,
+                      maxLines: maxLines,
+                      overflow: TextOverflow.ellipsis,
+                      style: textStyle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
       ],
     );
   }
+}
+
+class _ClassicContentSection extends StatelessWidget {
+  const _ClassicContentSection({
+    required this.title,
+    required this.borderColor,
+    required this.child,
+  });
+
+  final String title;
+  final Color borderColor;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: borderColor, width: 1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: ResumeTypography.darkHeaderSectionTitlePt,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.15,
+              ),
+            ),
+            const SizedBox(height: _ClassicSidebarPreview._sectionHeadingGap),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ClassicExperienceBlock extends StatelessWidget {
+  const _ClassicExperienceBlock({
+    required this.item,
+    required this.bodyStyle,
+    required this.mutedColor,
+    required this.bulletColor,
+    this.maxBulletLines = 2,
+  });
+
+  final WorkExperience item;
+  final TextStyle bodyStyle;
+  final Color mutedColor;
+  final Color bulletColor;
+  final int maxBulletLines;
+
+  @override
+  Widget build(BuildContext context) {
+    final bullets = _workBulletLines(item).take(2).toList();
+    final dates = [
+      item.startDate.trim(),
+      item.endDate.trim(),
+    ].where((value) => value.isNotEmpty).join(' - ');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${item.role.ifBlank('Role')}, ${item.company.ifBlank('Company')}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: bodyStyle.copyWith(fontWeight: FontWeight.w800),
+        ),
+        if (dates.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(dates, style: bodyStyle.copyWith(color: mutedColor)),
+          ),
+        if (bullets.isNotEmpty) ...[
+          const SizedBox(height: 5),
+          _ClassicBulletList(
+            items: bullets,
+            textStyle: bodyStyle.copyWith(color: bodyStyle.color),
+            bulletColor: bulletColor,
+            maxLines: maxBulletLines,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ClassicEducationBlock extends StatelessWidget {
+  const _ClassicEducationBlock({
+    required this.item,
+    required this.bodyStyle,
+    required this.mutedColor,
+    this.compact = false,
+  });
+
+  final EducationItem item;
+  final TextStyle bodyStyle;
+  final Color mutedColor;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final dates = [
+      item.startDate.trim(),
+      item.endDate.trim(),
+    ].where((value) => value.isNotEmpty).join(' - ');
+    final details = item.score.trim();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${item.degree.ifBlank('Degree')}, ${item.institution.ifBlank('Institution')}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: bodyStyle.copyWith(fontWeight: FontWeight.w800),
+        ),
+        if (dates.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(dates, style: bodyStyle.copyWith(color: mutedColor)),
+          ),
+        if (details.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 3),
+            child: Text(
+              details,
+              maxLines: compact ? 1 : 2,
+              overflow: TextOverflow.ellipsis,
+              style: bodyStyle.copyWith(color: mutedColor),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ClassicProjectBlock extends StatelessWidget {
+  const _ClassicProjectBlock({
+    required this.item,
+    required this.bodyStyle,
+    required this.mutedColor,
+    required this.bulletColor,
+  });
+
+  final ProjectItem item;
+  final TextStyle bodyStyle;
+  final Color mutedColor;
+  final Color bulletColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final bullets = _projectBulletLines(item).take(2).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          item.title.ifBlank('Project'),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: bodyStyle.copyWith(fontWeight: FontWeight.w800),
+        ),
+        if (bullets.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          _ClassicBulletList(
+            items: bullets,
+            textStyle: bodyStyle.copyWith(color: mutedColor),
+            bulletColor: bulletColor,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ClassicCustomSectionBlock extends StatelessWidget {
+  const _ClassicCustomSectionBlock({
+    required this.item,
+    required this.bodyStyle,
+    required this.mutedColor,
+    required this.bulletColor,
+  });
+
+  final CustomSectionItem item;
+  final TextStyle bodyStyle;
+  final Color mutedColor;
+  final Color bulletColor;
+
+  @override
+  Widget build(BuildContext context) {
+    if (item.layoutMode == CustomSectionLayoutMode.bullets) {
+      return _ClassicBulletList(
+        items: item.bullets.take(3).toList(),
+        textStyle: bodyStyle.copyWith(color: mutedColor),
+        bulletColor: bulletColor,
+      );
+    }
+    return Text(
+      item.content.trim().ifBlank('Add content'),
+      maxLines: 4,
+      overflow: TextOverflow.ellipsis,
+      style: bodyStyle.copyWith(color: mutedColor),
+    );
+  }
+}
+
+class _ClassicBulletList extends StatelessWidget {
+  const _ClassicBulletList({
+    required this.items,
+    required this.textStyle,
+    required this.bulletColor,
+    this.maxLines = 2,
+  });
+
+  final List<String> items;
+  final TextStyle textStyle;
+  final Color bulletColor;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleItems = items.where((item) => item.trim().isNotEmpty).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final item in visibleItems)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '•',
+                  style: textStyle.copyWith(
+                    color: bulletColor,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    item,
+                    maxLines: maxLines,
+                    overflow: TextOverflow.ellipsis,
+                    style: textStyle,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+List<Widget> _classicSidebarContactRows(
+  ResumeData resume, {
+  required Color mutedColor,
+  required Color iconColor,
+  required TextStyle baseStyle,
+  int maxItems = 4,
+}) {
+  final rows = <({IconData icon, String text})>[
+    if (resume.email.trim().isNotEmpty)
+      (icon: Icons.email_rounded, text: resume.email.trim()),
+    if (resume.location.trim().isNotEmpty)
+      (icon: Icons.place_rounded, text: resume.location.trim()),
+    if (resume.phone.trim().isNotEmpty)
+      (icon: Icons.call_rounded, text: resume.phone.trim()),
+    if (resume.website.trim().isNotEmpty)
+      (icon: Icons.language_rounded, text: resume.website.trim()),
+  ];
+
+  return rows
+      .take(maxItems)
+      .map(
+        (row) => Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(row.icon, size: 11, color: iconColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  row.text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: baseStyle.copyWith(color: mutedColor),
+                ),
+              ),
+            ],
+          ),
+        ),
+      )
+      .toList();
+}
+
+CustomSectionItem? _classicSidebarLanguagesSection(ResumeData resume) {
+  for (final item in resume.visibleCustomSections) {
+    if (item.title.trim().toLowerCase() == 'languages') {
+      return item;
+    }
+  }
+  return null;
+}
+
+List<String> _classicSidebarLanguages(ResumeData resume) {
+  final section = _classicSidebarLanguagesSection(resume);
+  if (section == null) {
+    return const <String>[];
+  }
+  if (section.layoutMode == CustomSectionLayoutMode.bullets) {
+    return section.bullets.where((item) => item.trim().isNotEmpty).toList();
+  }
+  return section.content
+      .split(RegExp(r'[\n,]+'))
+      .map((item) => item.trim())
+      .where((item) => item.isNotEmpty)
+      .toList();
+}
+
+List<CustomSectionItem> _classicSidebarMainCustomSections(ResumeData resume) {
+  final languages = _classicSidebarLanguagesSection(resume);
+  var skippedLanguages = false;
+  return resume.visibleCustomSections.where((item) {
+    if (!skippedLanguages && identical(item, languages)) {
+      skippedLanguages = true;
+      return false;
+    }
+    return true;
+  }).toList();
 }
 
 class _CreativeSidebarHeading extends StatelessWidget {

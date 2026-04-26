@@ -100,7 +100,9 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
       (resume) => resume.copyWith(
         template: selectedTemplate,
         bodyFontPt: 13,
-        corporateColorPresetIndex: 0,
+        corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+          selectedTemplate,
+        ),
       ),
     );
     await viewModel.saveResume();
@@ -148,8 +150,15 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             final theme = Theme.of(sheetContext);
             final muted = theme.colorScheme.onSurfaceVariant;
             final resume = viewModel.resume;
-            final presetIndex = resume.corporateColorPresetIndex
-                .clamp(0, kCorporateColorPresets.length - 1);
+            final selectedTemplateDefault =
+                resume.corporateColorPresetIndex ==
+                kTemplateDefaultColorPresetIndex;
+            final presetIndex = selectedTemplateDefault
+                ? 0
+                : resume.corporateColorPresetIndex.clamp(
+                    0,
+                    kCorporateColorPresets.length - 1,
+                  );
 
             return Padding(
               padding: EdgeInsets.only(bottom: bottomInset),
@@ -217,8 +226,9 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
                         children: [
                           for (var i = 0; i < kCorporateColorPresets.length; i++)
                             _CorporateColorPresetCircle(
@@ -231,6 +241,21 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 );
                               },
                             ),
+                          _CorporateColorPresetCircle(
+                            preset: CorporateColorPreset(
+                              titleColor: const Color(0xFF2E3135),
+                              headerColor: resume.template.accentColor,
+                            ),
+                            selected: selectedTemplateDefault,
+                            onTap: () {
+                              viewModel.updateResume(
+                                (r) => r.copyWith(
+                                  corporateColorPresetIndex:
+                                      kTemplateDefaultColorPresetIndex,
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),

@@ -242,13 +242,15 @@ class _TemplateDetailScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(2),
                     child: KeyedSubtree(
                       key: Key('template-detail-preview-${item.id}'),
-                      child: _TemplatePreviewArt(
-                        item: item,
-                        showPremiumBadgeOnPage: true,
-                        premiumBadgeRightPadding: 10,
-                        premiumBadgeSize: 18,
-                        badgeMetricsInScreenPixels: true,
-                      ),
+                      child: item.resumeTemplate != null
+                          ? _ResumeTemplateDetailPreview(item: item)
+                          : _TemplatePreviewArt(
+                              item: item,
+                              showPremiumBadgeOnPage: true,
+                              premiumBadgeRightPadding: 10,
+                              premiumBadgeSize: 18,
+                              badgeMetricsInScreenPixels: true,
+                            ),
                     ),
                   ),
                 ),
@@ -381,6 +383,14 @@ const _templateCards = <_TemplateTileData>[
     caption: 'Profile-led layout with strong visual anchors.',
     isPremium: true,
   ),
+  _TemplateTileData(
+    id: 'classic-sidebar',
+    resumeTemplate: ResumeTemplate.classicSidebar,
+    previewKind: _TemplatePreviewKind.classicSidebarResume,
+    headline: 'Classic Sidebar',
+    caption: 'Soft left rail with photo-led identity and structured sections.',
+    isPremium: true,
+  ),
 ];
 
 const _resumeTemplateCards = _templateCards;
@@ -435,6 +445,7 @@ class _TemplateTileData {
 enum _TemplatePreviewKind {
   darkHeaderResume,
   profileSidebarResume,
+  classicSidebarResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
   sidebarCoverLetter,
@@ -463,6 +474,9 @@ class _TemplatePreviewArt extends StatelessWidget {
         showPremiumBadgeOnPage
             ? _ResumeTemplatePreviewArt(resume: _profileSidebarTemplateResume)
             : const _ProfileSidebarTemplateArtCompact(),
+      _TemplatePreviewKind.classicSidebarResume => _ResumeTemplatePreviewArt(
+        resume: _classicSidebarTemplateResume,
+      ),
       _TemplatePreviewKind.executiveNoteCoverLetter =>
         const _ExecutiveNoteCoverLetterArt(),
       _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
@@ -506,19 +520,13 @@ class _TemplatePreviewArt extends StatelessWidget {
                 ),
                 if (showPremiumBadgeOnPage && item.isPremium)
                   Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: badgeRightPadding,
-                        bottom: badgeBottomPadding,
-                      ),
-                      child: Image.asset(
-                        'assets/premium_badge.png',
-                        width: badgeSize,
-                        height: badgeSize,
-                        fit: BoxFit.contain,
-                      ),
+                    right: badgeRightPadding,
+                    bottom: badgeBottomPadding,
+                    child: Image.asset(
+                      'assets/premium_badge.png',
+                      width: badgeSize,
+                      height: badgeSize,
+                      fit: BoxFit.contain,
                     ),
                   ),
               ],
@@ -530,17 +538,159 @@ class _TemplatePreviewArt extends StatelessWidget {
   }
 }
 
+class _ResumeTemplateDetailPreview extends StatelessWidget {
+  const _ResumeTemplateDetailPreview({required this.item});
+
+  final _TemplateTileData item;
+
+  @override
+  Widget build(BuildContext context) {
+    final template = item.resumeTemplate!;
+    if (template == ResumeTemplate.corporate) {
+      return const _LargeTemplateArtPreview(child: _DarkHeaderTemplateArt());
+    }
+    if (template == ResumeTemplate.creative) {
+      return const _LargeTemplateArtPreview(
+        showPremiumBadge: true,
+        child: _ProfileSidebarTemplateArtCompact(),
+      );
+    }
+
+    final sampleResume = switch (template) {
+      ResumeTemplate.corporate => _darkHeaderTemplateResume,
+      ResumeTemplate.creative => _profileSidebarTemplateResume,
+      ResumeTemplate.classicSidebar => _classicSidebarTemplateResume,
+    };
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: _ResumeTemplatePreviewArt(resume: sampleResume),
+      ),
+    );
+  }
+}
+
+class _LargeTemplateArtPreview extends StatelessWidget {
+  const _LargeTemplateArtPreview({
+    required this.child,
+    this.showPremiumBadge = false,
+  });
+
+  final Widget child;
+  final bool showPremiumBadge;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scaleX = constraints.maxWidth / 240;
+        final scaleY = constraints.maxHeight / 360;
+        final scale = math.min(scaleX, scaleY).toDouble();
+        final safeScale = (scale.isFinite && scale > 0) ? scale : 1.0;
+        final badgeSize = 18.0 / safeScale;
+        final badgeInset = 12.0 / safeScale;
+
+        return FittedBox(
+          fit: BoxFit.contain,
+          child: SizedBox(
+            width: 240,
+            height: 360,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ColoredBox(color: Colors.white, child: child),
+                ),
+                if (showPremiumBadge)
+                  Positioned(
+                    right: badgeInset,
+                    bottom: badgeInset,
+                    child: Image.asset(
+                      'assets/premium_badge.png',
+                      width: badgeSize,
+                      height: badgeSize,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+final ResumeData _darkHeaderTemplateResume = ResumeData(
+  id: 'template-dark-header',
+  title: 'Dark Header Template',
+  fullName: 'Maya Lopez',
+  jobTitle: 'Client Success Manager',
+  email: 'maya@sample.in',
+  phone: '+1 512 555 0148',
+  location: 'Austin, TX',
+  website: 'portfolio.dev/maya',
+  summary:
+      'Client success manager focused on renewals, onboarding, and long-term account health for B2B software customers.',
+  template: ResumeTemplate.corporate,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Client Success Lead',
+      company: 'Ember Cloud',
+      startDate: '2021',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Lifted renewal rate by 14% through proactive risk reviews and structured customer check-ins.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Northeastern University',
+      degree: 'BBA, Communication Strategy',
+      startDate: '2014',
+      endDate: '2018',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'Renewal strategy',
+    'CRM operations',
+    'Lifecycle emails',
+    'Churn analysis',
+  ],
+  projects: const [
+    ProjectItem(
+      title: 'Customer Health Dashboard',
+      bullets: ['Shipped dashboard for weekly customer health reviews.'],
+    ),
+  ],
+  customSections: const [],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: 'github.com/mayalopez',
+  linkedinLink: 'linkedin.com/in/mayalopez',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.calibri,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: true,
+  bodyFontPt: 13,
+  corporateColorPresetIndex: 0,
+);
+
 final ResumeData _profileSidebarTemplateResume = ResumeData(
   id: 'template-profile-sidebar',
   title: 'Profile Sidebar Template',
-  fullName: 'Mateo Vargas',
+  fullName: '',
   jobTitle: 'Project Coordinator',
   email: 'mateo@sample.in',
   phone: '+1 206 555 0117',
   location: 'Seattle, WA',
   website: 'mateovargas.dev',
   summary:
-      'Project coordinator with a sharp eye for handoffs, meeting cadence, and stakeholder updates across marketing and product teams.',
+      'Project coordinator focused on team handoffs, timeline tracking, and stakeholder updates.',
   template: ResumeTemplate.creative,
   workExperiences: const [
     WorkExperience(
@@ -549,10 +699,7 @@ final ResumeData _profileSidebarTemplateResume = ResumeData(
       startDate: '2021',
       endDate: 'Present',
       description: '',
-      bullets: [
-        'Managed creative timelines for 25+ campaign deliverables.',
-        'Published weekly status updates and stakeholder summaries.',
-      ],
+      bullets: ['Managed creative timelines for campaign deliverables.'],
     ),
   ],
   education: const [
@@ -564,17 +711,11 @@ final ResumeData _profileSidebarTemplateResume = ResumeData(
       score: '',
     ),
   ],
-  skills: const [
-    'Timeline tracking',
-    'Meeting notes',
-    'Cross-team briefs',
-    'Status reports',
-    'Client updates',
-  ],
+  skills: const ['Timeline tracking', 'Meeting notes', 'Status reports'],
   projects: const [
     ProjectItem(
-      title: 'Campaign Launch Dashboard',
-      bullets: ['Built rollout tracker for weekly stakeholder reviews.'],
+      title: 'Campaign Launch Tracker',
+      bullets: ['Built tracker for campaign milestones and owner handoffs.'],
     ),
   ],
   customSections: const [],
@@ -589,6 +730,86 @@ final ResumeData _profileSidebarTemplateResume = ResumeData(
   includeProjectsInResume: true,
   bodyFontPt: 13,
   corporateColorPresetIndex: 3,
+);
+
+final ResumeData _classicSidebarTemplateResume = ResumeData(
+  id: 'template-classic-sidebar',
+  title: 'Classic Sidebar Template',
+  fullName: 'Avery Brooks',
+  jobTitle: 'Financial Analyst',
+  email: 'avery@sample.in',
+  phone: '+1 617 555 0142',
+  location: 'Boston, MA 02101',
+  website: 'averybrooks.dev',
+  summary:
+      'Financial analyst with experience supporting budgets, planning reviews, and decision-making through clear reporting and grounded operational analysis.',
+  template: ResumeTemplate.classicSidebar,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Financial Analyst',
+      company: 'GEO Advisory',
+      startDate: 'Apr 2018',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Built operating budget models that reduced quarterly variance across business units.',
+        'Prepared financial summaries for leadership reviews and monthly planning cycles.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Analyst',
+      company: 'North Harbor Group',
+      startDate: 'Sep 2014',
+      endDate: 'Mar 2018',
+      description: '',
+      bullets: [
+        'Tracked revenue, forecast updates, and project spend across finance and operations.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Boston University',
+      degree: 'B.S. Finance',
+      startDate: '2010',
+      endDate: '2014',
+      score: 'Magna cum laude',
+    ),
+  ],
+  skills: const [
+    'Financial analysis',
+    'Strategic planning',
+    'Trend analysis',
+    'Budget tracking',
+    'Team leadership',
+  ],
+  projects: const [
+    ProjectItem(
+      title: 'Budget Reporting Framework',
+      bullets: [
+        'Standardized monthly reporting decks used in leadership finance reviews.',
+      ],
+    ),
+  ],
+  customSections: const [
+    CustomSectionItem(
+      title: 'Languages',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: ['English', 'German'],
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: 'linkedin.com/in/averybrooks',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.calibri,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: true,
+  bodyFontPt: 13,
+  corporateColorPresetIndex: 2,
 );
 
 class _ResumeTemplatePreviewArt extends StatelessWidget {
@@ -704,7 +925,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Austin, TX 78701  |  +1 512 555 0148',
+                            'Austin, TX 78701 | +1 512 555 0148',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -714,7 +935,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'portfolio.dev/maya  |  github.com/mayalopez  |  linkedin.com/in/mayalopez',
+                            'portfolio.dev/maya | github.com/mayalopez | linkedin.com/in/mayalopez',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -769,7 +990,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Northeastern University  |  2014 - 2018',
+                        'Northeastern University | 2014 - 2018',
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 2),
@@ -846,7 +1067,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
             Container(
               width: 48,
               color: rail,
-              padding: const EdgeInsets.fromLTRB(6, 9, 6, 8),
+              padding: const EdgeInsets.fromLTRB(0, 9, 0, 8),
               child: DefaultTextStyle(
                 style: const TextStyle(
                   fontSize: 3.8,
@@ -856,44 +1077,37 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _MiniAvatarBlock(
-                      backgroundColor: avatarBackground,
-                      textColor: const Color(0xFFE17A3B),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'MATEO',
-                      style: TextStyle(
-                        fontSize: 5.6,
-                        fontWeight: FontWeight.w800,
-                        color: dark,
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      child: _MiniAvatarBlock(
+                        backgroundColor: avatarBackground,
+                        textColor: Color(0xFFE17A3B),
                       ),
                     ),
-                    const Text(
-                      'VARGAS',
-                      style: TextStyle(
-                        fontSize: 5.6,
-                        fontWeight: FontWeight.w800,
-                        color: dark,
+                    const SizedBox(height: 4),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(6, 0, 4, 0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 1,
+                        child: ColoredBox(color: line),
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    const _MiniAccentDotLine(text: 'Seattle, WA'),
+                    const SizedBox(height: 4),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      child: const _MiniAccentDotLine(text: 'Seattle, WA'),
+                    ),
                     const SizedBox(height: 2),
-                    const _MiniAccentDotLine(text: '+1 206 555 0117'),
-                    const SizedBox(height: 2),
-                    const _MiniAccentDotLine(text: 'mateo@sample.in'),
-                    const SizedBox(height: 7),
-                    const Text(
-                      'EDUCATION',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: dark,
-                      ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      child: const _MiniAccentDotLine(text: '+1 206 555 0117'),
                     ),
-                    const SizedBox(height: 3),
-                    const Text('B.A. Media Studies'),
-                    const Text('2021', style: TextStyle(color: muted)),
+                    const SizedBox(height: 2),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      child: const _MiniAccentDotLine(text: 'mateo@sample.in'),
+                    ),
                   ],
                 ),
               ),
@@ -956,7 +1170,38 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                         const _MiniBulletColumn(
                           items: [
                             'Managed creative timelines for 25+ campaign deliverables.',
-                            'Published weekly status updates and stakeholder summaries.',
+                          ],
+                        ),
+                        const SizedBox(height: 7),
+                        const _MiniSidebarHeading(
+                          title: 'EDUCATION',
+                          lineColor: line,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'B.A. MEDIA STUDIES, 2021',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const Text(
+                          'University of Washington',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        const _MiniSidebarHeading(
+                          title: 'PROJECTS',
+                          lineColor: line,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'CAMPAIGN LAUNCH TRACKER',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const _MiniBulletColumn(
+                          items: [
+                            'Built tracker for campaign milestones and owner handoffs.',
                           ],
                         ),
                         const SizedBox(height: 7),
@@ -970,17 +1215,13 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                           children: [
                             Expanded(
                               child: _MiniBulletColumn(
-                                items: ['Timeline tracking', 'Meeting notes'],
+                                items: ['Timeline tracking'],
                               ),
                             ),
                             SizedBox(width: 10),
                             Expanded(
                               child: _MiniBulletColumn(
-                                items: [
-                                  'Cross-team briefs',
-                                  'Status reports',
-                                  'Client updates',
-                                ],
+                                items: ['Cross-team briefs', 'Status reports'],
                               ),
                             ),
                           ],
@@ -1433,7 +1674,7 @@ class _MiniAccentDotLine extends StatelessWidget {
         Container(
           width: 4,
           height: 4,
-          margin: const EdgeInsets.only(top: 3, right: 4),
+          margin: const EdgeInsets.only(top: 0, right: 4),
           decoration: BoxDecoration(
             color: const Color(0xFFE17A3B),
             borderRadius: BorderRadius.circular(1),
