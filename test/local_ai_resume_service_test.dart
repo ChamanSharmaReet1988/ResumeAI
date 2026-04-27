@@ -254,4 +254,72 @@ Oxford Software Institute
       expect(resume.education.first.degree, 'Diploma in Financial Accounting');
     },
   );
+
+  test(
+    'improveResumeForAts rewrites existing summary and work bullets from the pasted job description',
+    () async {
+      final service = LocalAiResumeService();
+      final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
+        fullName: 'Alex Johnson',
+        title: 'Mobile Resume',
+        jobTitle: 'Flutter Developer',
+        summary:
+            'Builds mobile features for consumer apps and helps support releases.',
+        skills: const ['Flutter', 'Dart'],
+        workExperiences: const [
+          WorkExperience(
+            role: 'Flutter Developer',
+            company: 'Acme',
+            startDate: 'Jan 2024',
+            endDate: 'Present',
+            description:
+                'Built onboarding flows for a consumer app. Improved analytics instrumentation and partnered with product stakeholders to streamline releases.',
+            bullets: ['Maintained mobile app features and bug fixes.'],
+          ),
+        ],
+      );
+
+      final result = await service.improveResumeForAts(
+        resume: resume,
+        jobDescription:
+            'Hiring a Flutter developer with Firebase, analytics, REST APIs, and stakeholder communication experience.',
+      );
+
+      expect(result.resume.summary, isNot(equals(resume.summary)));
+      expect(
+        result.resume.summary,
+        contains('Well aligned to opportunities requiring'),
+      );
+      expect(
+        result.resume.summary,
+        anyOf(
+          contains('Firebase'),
+          contains('analytics'),
+          contains('REST'),
+          contains('stakeholder'),
+        ),
+      );
+      expect(
+        result.resume.workExperiences.first.bullets.join(' '),
+        anyOf(
+          contains('Firebase'),
+          contains('analytics'),
+          contains('REST'),
+          contains('stakeholder'),
+        ),
+      );
+      expect(
+        result.appliedChanges,
+        contains(
+          'Tailored the summary to match the pasted job description more directly.',
+        ),
+      );
+      expect(
+        result.appliedChanges,
+        contains(
+          'Rewrote work experience bullets to reflect the target job description more directly.',
+        ),
+      );
+    },
+  );
 }

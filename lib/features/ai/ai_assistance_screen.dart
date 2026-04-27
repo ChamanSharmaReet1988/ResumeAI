@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/resume_models.dart';
-import '../../core/services/resume_import_service.dart';
 import '../../core/services/resume_services.dart';
+import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
 
@@ -22,12 +21,14 @@ class AiAssistanceScreen extends ResumeAnalyserScreen {
   const AiAssistanceScreen({super.key, required super.onOpenResumeBuilder});
 }
 
+enum _OptimizedResumeSaveChoice { newCopy, existingResume }
+
 class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
+  static const double _fieldHorizontalPadding = 12;
   final _jobDescriptionController = TextEditingController();
 
   bool _isBusy = false;
   List<String> _appliedChanges = const [];
-  ImportedResumeFile? _uploadedResume;
   _ResumeHighlightPreviewData? _previewData;
 
   @override
@@ -45,8 +46,13 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
 
   void _handleInputChanged() {
     if (mounted) {
-      setState(() {});
+      setState(_resetOptimizationPreview);
     }
+  }
+
+  void _resetOptimizationPreview() {
+    _appliedChanges = const [];
+    _previewData = null;
   }
 
   Future<void> _runTask(Future<void> Function() task) async {
@@ -64,49 +70,11 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
     }
   }
 
-  Future<void> _pickResumeFile(ResumeImportService importService) async {
-    try {
-      final importedResume = await importService.pickResumeFile();
-      if (!mounted || importedResume == null) {
-        return;
-      }
-
-      setState(() {
-        _uploadedResume = importedResume;
-        _appliedChanges = const [];
-        _previewData = null;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${importedResume.fileName} uploaded.')),
-      );
-    } on ResumeImportException catch (error) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not upload that resume file right now.'),
-        ),
-      );
-    }
-  }
-
   Future<void> _applyAtsFixes({
     required LocalAiResumeService aiService,
-    required ResumeRepository repository,
-    required ResumeLibraryViewModel library,
     required ResumeData? selectedResume,
   }) async {
     final jobDescription = _jobDescriptionController.text.trim();
-    final uploadedResume = _uploadedResume;
 
     if (jobDescription.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -115,117 +83,217 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
       return;
     }
 
-    if (uploadedResume == null &&
-        (selectedResume == null || !selectedResume.hasMeaningfulContent)) {
+    if (selectedResume == null || !selectedResume.hasMeaningfulContent) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Upload a resume or select a saved one first.'),
+          content: Text('Select a saved resume with content first.'),
         ),
       );
       return;
     }
 
     await _runTask(() async {
-      final beforeResume = uploadedResume != null
-          ? aiService.parseImportedResumeText(
-              resumeText: uploadedResume.resumeText,
-              template: library.defaultTemplate,
-              sourceTitle: uploadedResume.suggestedTitle,
-              candidateResumeTexts: uploadedResume.candidateResumeTexts,
-            )
-          : selectedResume!;
+      final beforeResume = selectedResume;
       final result = await aiService.improveResumeForAts(
         resume: beforeResume,
         jobDescription: jobDescription,
       );
       final improvedResume = result.resume.copyWith(updatedAt: DateTime.now());
 
-      await repository.upsertResume(improvedResume);
-      await library.loadResumes();
-      library.selectResume(improvedResume.id);
-
       if (!mounted) {
         return;
       }
 
-      final beforeSummary = beforeResume.summary.trim();
-      final afterSummary = improvedResume.summary.trim();
-      final highlightedSkills = improvedResume.skills
-          .where((skill) => !beforeResume.skills.contains(skill))
-          .toSet();
-      final highlightedBulletsByExperience = <int, Set<String>>{};
-      for (
-        var index = 0;
-        index < improvedResume.workExperiences.length;
-        index++
-      ) {
-        final updatedExperience = improvedResume.workExperiences[index];
-        final originalExperience = index < beforeResume.workExperiences.length
-            ? beforeResume.workExperiences[index]
-            : const WorkExperience.empty();
-        final newBullets = updatedExperience.bullets
-            .where((bullet) => !originalExperience.bullets.contains(bullet))
-            .toSet();
-        if (newBullets.isNotEmpty) {
-          highlightedBulletsByExperience[index] = newBullets;
-        }
-      }
-
       setState(() {
         _appliedChanges = result.appliedChanges;
-        _previewData = _ResumeHighlightPreviewData(
+        _previewData = _buildPreviewData(
           beforeResume: beforeResume,
           afterResume: improvedResume,
-          highlightSummary: beforeSummary != afterSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
         );
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            uploadedResume != null
-                ? 'Uploaded resume imported and improved.'
-                : 'AI improvements applied to the selected resume.',
-          ),
-        ),
-      );
     });
+  }
+
+  _ResumeHighlightPreviewData _buildPreviewData({
+    required ResumeData beforeResume,
+    required ResumeData afterResume,
+  }) {
+    final beforeSummary = beforeResume.summary.trim();
+    final afterSummary = afterResume.summary.trim();
+    final highlightedSkills = afterResume.skills
+        .where((skill) => !beforeResume.skills.contains(skill))
+        .toSet();
+    final highlightedBulletsByExperience = <int, Set<String>>{};
+    for (var index = 0; index < afterResume.workExperiences.length; index++) {
+      final updatedExperience = afterResume.workExperiences[index];
+      final originalExperience = index < beforeResume.workExperiences.length
+          ? beforeResume.workExperiences[index]
+          : const WorkExperience.empty();
+      final newBullets = updatedExperience.bullets
+          .where((bullet) => !originalExperience.bullets.contains(bullet))
+          .toSet();
+      if (newBullets.isNotEmpty) {
+        highlightedBulletsByExperience[index] = newBullets;
+      }
+    }
+
+    return _ResumeHighlightPreviewData(
+      beforeResume: beforeResume,
+      afterResume: afterResume,
+      highlightSummary: beforeSummary != afterSummary,
+      highlightedSkills: highlightedSkills,
+      highlightedBulletsByExperience: highlightedBulletsByExperience,
+    );
+  }
+
+  Future<void> _openOptimizedResumePreview({
+    required ResumeData sourceResume,
+  }) async {
+    final previewData = _previewData;
+    if (previewData == null) {
+      return;
+    }
+
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => _OptimizedResumePreviewScreen(
+          sourceResume: sourceResume,
+          previewData: previewData,
+        ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    _jobDescriptionController.clear();
+    setState(_resetOptimizationPreview);
   }
 
   @override
   Widget build(BuildContext context) {
     final aiService = context.read<LocalAiResumeService>();
-    final importService = context.read<ResumeImportService>();
-    final repository = context.read<ResumeRepository>();
-    final pdfService = context.read<ResumePdfService>();
     final library = context.watch<ResumeLibraryViewModel>();
+    final resumes = library.resumes;
     final selectedResume = library.selectedResume;
     final hasSelectedResume = selectedResume?.hasMeaningfulContent ?? false;
     final canImprove =
-        (_uploadedResume != null || hasSelectedResume) &&
-        _jobDescriptionController.text.trim().isNotEmpty;
+        hasSelectedResume && _jobDescriptionController.text.trim().isNotEmpty;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Resume analyser',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Upload a resume, paste the target job description, and let AI improve the resume for that role. Uploaded files open through the system file picker, so this uses Files on iPhone and Drive-enabled pickers on Android.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          if (resumes.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _fieldHorizontalPadding,
+              ),
+              child: Text(
+                'Select resume',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
+            const SizedBox(height: 8),
+            KeyedSubtree(
+              key: const Key('tailor-resume-selector'),
+              child: DropdownButtonFormField<String>(
+                key: ValueKey(
+                  'tailor-resume-selector-${selectedResume?.id ?? resumes.first.id}',
+                ),
+                initialValue: selectedResume?.id ?? resumes.first.id,
+                isExpanded: true,
+                borderRadius: BorderRadius.circular(12),
+                alignment: AlignmentDirectional.centerStart,
+                dropdownColor: Theme.of(context).cardColor,
+                elevation: 6,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                menuMaxHeight: 360,
+                icon: Icon(
+                  Icons.arrow_drop_down_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                decoration: const InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: _fieldHorizontalPadding,
+                    vertical: 14,
+                  ),
+                ),
+                selectedItemBuilder: (context) {
+                  return resumes.map((resume) {
+                    final title = resume.title.trim().isEmpty
+                        ? ResumeData.defaultTitle
+                        : resume.title;
+                    return Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }).toList();
+                },
+                items: resumes
+                    .map(
+                      (resume) => DropdownMenuItem<String>(
+                        value: resume.id,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: _fieldHorizontalPadding,
+                            vertical: 12,
+                          ),
+                          child: Text(
+                            resume.title.trim().isEmpty
+                                ? ResumeData.defaultTitle
+                                : resume.title,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value == null) {
+                    return;
+                  }
+                  library.selectResume(value);
+                  setState(_resetOptimizationPreview);
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _fieldHorizontalPadding,
+              ),
+              child: Text(
+                'Select a saved resume, paste the target job description, and let AI rewrite the resume for that role automatically.',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           TextField(
             controller: _jobDescriptionController,
             minLines: 5,
@@ -237,29 +305,19 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
               alignLabelWithHint: true,
             ),
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              FilledButton.tonalIcon(
-                key: const Key('upload-resume-button'),
-                onPressed: () => _pickResumeFile(importService),
-                icon: const Icon(Icons.upload_file_outlined),
-                label: const Text('Upload resume'),
-              ),
-              FilledButton.icon(
-                key: const Key('improve-resume-ai-button'),
+              FilledButton(
+                key: const Key('tailor-resume-ai-button'),
                 onPressed: canImprove
                     ? () => _applyAtsFixes(
                         aiService: aiService,
-                        repository: repository,
-                        library: library,
                         selectedResume: selectedResume,
                       )
                     : null,
-                icon: const Icon(Icons.auto_fix_high_outlined),
-                label: const Text('Improve resume by AI'),
+                child: const Text('Optimized'),
               ),
             ],
           ),
@@ -269,10 +327,10 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
               child: LinearProgressIndicator(),
             ),
           const SizedBox(height: 20),
-          if (!hasSelectedResume && _uploadedResume == null)
+          if (resumes.isEmpty)
             FilledButton.tonal(
               onPressed: widget.onOpenResumeBuilder,
-              child: const Text('Open builder'),
+              child: const Text('Create a resume'),
             ),
           if (_appliedChanges.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -296,76 +354,23 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
                 ),
               ),
             ),
-          ],
-          if (_previewData != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: _AnalyserCard(
-                title: 'Improved resume PDF',
-                subtitle:
-                    'The improved PDF below highlights AI changes in yellow so you can see exactly what was updated.',
-                icon: Icons.picture_as_pdf_outlined,
-                child: SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.82,
-                  child: _HighlightedResumePdfPreview(
-                    pdfService: pdfService,
-                    previewData: _previewData!,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AnalyserCard extends StatelessWidget {
-  const _AnalyserCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.child,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+            if (_previewData != null && selectedResume != null) ...[
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FilledButton.tonal(
+                    key: const Key('show-optimized-resume-button'),
+                    onPressed: () => _openOptimizedResumePreview(
+                      sourceResume: selectedResume,
                     ),
+                    child: const Text('Show resume'),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            child,
+            ],
           ],
-        ),
+        ],
       ),
     );
   }
@@ -387,6 +392,265 @@ class _ResumeHighlightPreviewData {
   final Map<int, Set<String>> highlightedBulletsByExperience;
 }
 
+class _OptimizedResumeTitleDialog extends StatefulWidget {
+  const _OptimizedResumeTitleDialog({required this.initialTitle});
+
+  final String initialTitle;
+
+  @override
+  State<_OptimizedResumeTitleDialog> createState() =>
+      _OptimizedResumeTitleDialogState();
+}
+
+class _OptimizedResumeTitleDialogState
+    extends State<_OptimizedResumeTitleDialog> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialTitle);
+    _focusNode = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNode.requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Theme.of(context).cardColor,
+      title: const Text('Resume title'),
+      content: TextField(
+        key: const Key('optimized-resume-title-dialog-field'),
+        controller: _controller,
+        focusNode: _focusNode,
+        textCapitalization: TextCapitalization.words,
+        decoration: const InputDecoration(labelText: 'Resume title'),
+        onSubmitted: (value) => Navigator.of(context).pop(value),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const Key('optimized-resume-title-dialog-save-button'),
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
+class _OptimizedResumePreviewScreen extends StatefulWidget {
+  const _OptimizedResumePreviewScreen({
+    required this.sourceResume,
+    required this.previewData,
+  });
+
+  final ResumeData sourceResume;
+  final _ResumeHighlightPreviewData previewData;
+
+  @override
+  State<_OptimizedResumePreviewScreen> createState() =>
+      _OptimizedResumePreviewScreenState();
+}
+
+class _OptimizedResumePreviewScreenState
+    extends State<_OptimizedResumePreviewScreen> {
+  bool _isSaving = false;
+
+  Future<_OptimizedResumeSaveChoice?> _promptSaveChoice() {
+    final sourceTitle = widget.sourceResume.title.trim().isEmpty
+        ? ResumeData.defaultTitle
+        : widget.sourceResume.title.trim();
+    return showModalBottomSheet<_OptimizedResumeSaveChoice>(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Save optimized resume',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Do you want to save this as a new copy or replace "$sourceTitle"?',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonal(
+                  key: const Key('save-optimized-new-copy-button'),
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pop(_OptimizedResumeSaveChoice.newCopy),
+                  child: const Text('New copy'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  key: const Key('save-optimized-existing-button'),
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pop(_OptimizedResumeSaveChoice.existingResume),
+                  child: const Text('Existing resume'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _optimizedCopyTitle(String title) {
+    final trimmed = title.trim();
+    final baseTitle = trimmed.isEmpty ? ResumeData.defaultTitle : trimmed;
+    return baseTitle.endsWith(' (Optimized)')
+        ? baseTitle
+        : '$baseTitle (Optimized)';
+  }
+
+  Future<String?> _promptNewCopyTitle() {
+    final suggestedTitle = _optimizedCopyTitle(widget.sourceResume.title);
+    return showDialog<String>(
+      context: context,
+      builder: (context) =>
+          _OptimizedResumeTitleDialog(initialTitle: suggestedTitle),
+    );
+  }
+
+  Future<void> _saveResume() async {
+    if (_isSaving) {
+      return;
+    }
+
+    final choice = await _promptSaveChoice();
+    if (!mounted || choice == null) {
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      final repository = context.read<ResumeRepository>();
+      final library = context.read<ResumeLibraryViewModel>();
+      final pendingOptimizedResume = widget.previewData.afterResume;
+      String? copyTitle;
+      if (choice == _OptimizedResumeSaveChoice.newCopy) {
+        copyTitle = await _promptNewCopyTitle();
+        if (!mounted || copyTitle == null) {
+          return;
+        }
+      }
+      final savedResume = switch (choice) {
+        _OptimizedResumeSaveChoice.newCopy => pendingOptimizedResume.copyWith(
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          title: copyTitle!.trim().isEmpty
+              ? ResumeData.defaultTitle
+              : copyTitle.trim(),
+          updatedAt: DateTime.now(),
+        ),
+        _OptimizedResumeSaveChoice.existingResume =>
+          pendingOptimizedResume.copyWith(
+            id: widget.sourceResume.id,
+            title: widget.sourceResume.title,
+            updatedAt: DateTime.now(),
+          ),
+      };
+
+      await repository.upsertResume(savedResume);
+      await library.loadResumes();
+      library.selectResume(savedResume.id);
+
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).pop(true);
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pdfService = context.read<ResumePdfService>();
+
+    return Scaffold(
+      appBar: AppBar(
+        leadingWidth: 56,
+        titleSpacing: 2,
+        title: const Text('Resume preview'),
+      ),
+      body: Column(
+        children: [
+          if (_isSaving) const LinearProgressIndicator(),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: _HighlightedResumePdfPreview(
+                pdfService: pdfService,
+                previewData: widget.previewData,
+              ),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  key: const Key('save-optimized-resume-button'),
+                  onPressed: _isSaving ? null : _saveResume,
+                  child: const Text('Save'),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HighlightedResumePdfPreview extends StatelessWidget {
   const _HighlightedResumePdfPreview({
     required this.pdfService,
@@ -401,6 +665,7 @@ class _HighlightedResumePdfPreview extends StatelessWidget {
     final isTestBinding = WidgetsBinding.instance.runtimeType
         .toString()
         .contains('TestWidgetsFlutterBinding');
+    final viewerBackground = Theme.of(context).scaffoldBackgroundColor;
 
     if (isTestBinding) {
       return Column(
@@ -422,146 +687,18 @@ class _HighlightedResumePdfPreview extends StatelessWidget {
       );
     }
 
-    return PdfPreview.builder(
+    return NativePdfPreview(
       key: ValueKey(previewData.afterResume.updatedAt.microsecondsSinceEpoch),
-      build: (_) => pdfService.buildHighlightedResumePdf(
+      documentKey:
+          '${previewData.afterResume.id}-${previewData.afterResume.updatedAt.microsecondsSinceEpoch}',
+      viewerBackground: viewerBackground,
+      bytesFuture: pdfService.buildHighlightedResumePdf(
         resume: previewData.afterResume,
         highlightSummary: previewData.highlightSummary,
         highlightedSkills: previewData.highlightedSkills,
         highlightedBulletsByExperience:
             previewData.highlightedBulletsByExperience,
       ),
-      allowPrinting: false,
-      allowSharing: false,
-      useActions: false,
-      canChangeOrientation: false,
-      canChangePageFormat: false,
-      canDebug: false,
-      shouldRepaint: true,
-      dpi: 220,
-      pagesBuilder: (context, pages) {
-        return _ZoomablePdfPageViewer(pages: pages);
-      },
-      previewPageMargin: EdgeInsets.zero,
-      padding: EdgeInsets.zero,
-      scrollViewDecoration: const BoxDecoration(color: Colors.white),
-      pdfPreviewPageDecoration: const BoxDecoration(color: Colors.white),
-      loadingWidget: const Center(child: CircularProgressIndicator()),
-    );
-  }
-}
-
-class _ZoomablePdfPageViewer extends StatefulWidget {
-  const _ZoomablePdfPageViewer({required this.pages});
-
-  final List<PdfPreviewPageData> pages;
-
-  @override
-  State<_ZoomablePdfPageViewer> createState() => _ZoomablePdfPageViewerState();
-}
-
-class _ZoomablePdfPageViewerState extends State<_ZoomablePdfPageViewer> {
-  late final PageController _pageController;
-  final List<TransformationController> _controllers = [];
-  int _currentPage = 0;
-  bool _isCurrentPageZoomed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-    _syncControllers();
-  }
-
-  @override
-  void didUpdateWidget(covariant _ZoomablePdfPageViewer oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _syncControllers();
-    if (_currentPage >= widget.pages.length && widget.pages.isNotEmpty) {
-      _currentPage = widget.pages.length - 1;
-    }
-    _refreshZoomState();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  void _syncControllers() {
-    while (_controllers.length < widget.pages.length) {
-      _controllers.add(TransformationController());
-    }
-    while (_controllers.length > widget.pages.length) {
-      _controllers.removeLast().dispose();
-    }
-  }
-
-  void _refreshZoomState() {
-    if (!mounted || widget.pages.isEmpty) {
-      return;
-    }
-
-    final isZoomed =
-        _controllers[_currentPage].value.getMaxScaleOnAxis() > 1.01;
-    if (isZoomed != _isCurrentPageZoomed) {
-      setState(() {
-        _isCurrentPageZoomed = isZoomed;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.pages.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return PageView.builder(
-      controller: _pageController,
-      scrollDirection: Axis.vertical,
-      physics: _isCurrentPageZoomed
-          ? const NeverScrollableScrollPhysics()
-          : const BouncingScrollPhysics(parent: PageScrollPhysics()),
-      itemCount: widget.pages.length,
-      onPageChanged: (index) {
-        setState(() {
-          _currentPage = index;
-          _isCurrentPageZoomed =
-              _controllers[index].value.getMaxScaleOnAxis() > 1.01;
-        });
-      },
-      itemBuilder: (context, index) {
-        final page = widget.pages[index];
-        final controller = _controllers[index];
-
-        return InteractiveViewer(
-          transformationController: controller,
-          minScale: 1,
-          maxScale: 5,
-          boundaryMargin: const EdgeInsets.all(64),
-          trackpadScrollCausesScale: true,
-          clipBehavior: Clip.none,
-          onInteractionUpdate: (_) => _refreshZoomState(),
-          onInteractionEnd: (_) => _refreshZoomState(),
-          child: SizedBox.expand(
-            child: Center(
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: SizedBox(
-                  width: page.width.toDouble(),
-                  height: page.height.toDouble(),
-                  child: Image(image: page.image, fit: BoxFit.fill),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

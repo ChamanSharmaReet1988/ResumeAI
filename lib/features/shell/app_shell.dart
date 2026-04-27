@@ -6,13 +6,13 @@ import 'package:provider/provider.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/services/resume_services.dart';
+import '../ai/ai_assistance_screen.dart';
 import '../builder/resume_builder_screen.dart';
 import '../builder/resume_preview_screen.dart';
 import '../cover_letters/cover_letter_content_screen.dart';
 import '../cover_letters/cover_letter_editor_screen.dart';
 import '../cover_letters/cover_letter_preview_screen.dart';
 import '../home/home_screen.dart';
-import '../jobs/jobs_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shared/view_models.dart';
 import '../templates/templates_screen.dart';
@@ -277,7 +277,7 @@ class _AppShellState extends State<AppShell> {
             _openCoverLetterContent(seed: coverLetter),
       ),
       TemplatesScreen(onCreateResume: () => _openBuilder()),
-      const JobsScreen(),
+      ResumeAnalyserScreen(onOpenResumeBuilder: () => _openBuilder()),
       const SettingsScreen(),
     ];
 
@@ -410,9 +410,9 @@ class _AppShellState extends State<AppShell> {
           selectedIcon: CupertinoIcons.rectangle_stack_fill,
         ),
         _ShellDestination(
-          label: 'Job',
-          icon: CupertinoIcons.chart_bar,
-          selectedIcon: CupertinoIcons.chart_bar_fill,
+          label: 'Optimize',
+          icon: CupertinoIcons.checkmark_seal,
+          selectedIcon: CupertinoIcons.checkmark_seal_fill,
         ),
         _ShellDestination(
           label: 'Settings',
@@ -434,9 +434,9 @@ class _AppShellState extends State<AppShell> {
         selectedIcon: Icons.dashboard_customize_rounded,
       ),
       _ShellDestination(
-        label: 'Job',
-        icon: Icons.analytics_outlined,
-        selectedIcon: Icons.analytics_rounded,
+        label: 'Optimize',
+        icon: Icons.track_changes_outlined,
+        selectedIcon: Icons.track_changes,
       ),
       _ShellDestination(
         label: 'Settings',

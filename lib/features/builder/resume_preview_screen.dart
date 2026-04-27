@@ -1,22 +1,17 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
+import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../templates/templates_screen.dart';
 import '../shared/view_models.dart';
 
 class ResumePreviewScreen extends StatefulWidget {
-  const ResumePreviewScreen({
-    super.key,
-    this.backPopsToHome = false,
-  });
+  const ResumePreviewScreen({super.key, this.backPopsToHome = false});
 
   /// When `true` (e.g. opened from home via preview action), the system/back
   /// control pops with `null` so only the home screen remains. When `false`
@@ -230,7 +225,11 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                         spacing: 12,
                         runSpacing: 12,
                         children: [
-                          for (var i = 0; i < kCorporateColorPresets.length; i++)
+                          for (
+                            var i = 0;
+                            i < kCorporateColorPresets.length;
+                            i++
+                          )
                             _CorporateColorPresetCircle(
                               preset: kCorporateColorPresets[i],
                               selected: presetIndex == i,
@@ -344,7 +343,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                         resume: viewModel.resume,
                                       ),
                                     )
-                                  : _NativePdfPreview(
+                                  : NativePdfPreview(
                                       key: ValueKey(
                                         '${viewModel.resume.template.name}-${viewModel.resume.bodyFontPt}-${viewModel.resume.corporateColorPresetIndex}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                                       ),
@@ -508,134 +507,4 @@ class _PreviewBottomAction extends StatelessWidget {
 
 extension on String {
   String ifBlank(String fallback) => trim().isEmpty ? fallback : this;
-}
-
-class _NativePdfPreview extends StatefulWidget {
-  const _NativePdfPreview({
-    super.key,
-    required this.bytesFuture,
-    required this.documentKey,
-    required this.viewerBackground,
-  });
-
-  final Future<Uint8List> bytesFuture;
-
-  /// Stable id for [PdfViewer.data] `sourceName` (must change when the PDF bytes change).
-  final String documentKey;
-  final Color viewerBackground;
-
-  @override
-  State<_NativePdfPreview> createState() => _NativePdfPreviewState();
-}
-
-class _NativePdfPreviewState extends State<_NativePdfPreview> {
-  int _currentPage = 1;
-  int _totalPages = 1;
-  late Future<Uint8List> _cachedBytesFuture;
-
-  late PdfViewerParams _viewerParams;
-
-  @override
-  void initState() {
-    super.initState();
-    _cachedBytesFuture = widget.bytesFuture;
-  }
-
-  @override
-  void didUpdateWidget(covariant _NativePdfPreview oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Regenerate bytes only when the caller signals a new PDF document.
-    if (oldWidget.documentKey != widget.documentKey) {
-      _cachedBytesFuture = widget.bytesFuture;
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _viewerParams = PdfViewerParams(
-      margin: 10,
-      backgroundColor: widget.viewerBackground,
-      pageDropShadow: BoxShadow(
-        color: Colors.black.withValues(alpha: 0.07),
-        blurRadius: 8,
-        spreadRadius: 0,
-        offset: const Offset(0, 2),
-      ),
-      scrollPhysics: PdfViewerParams.getScrollPhysics(context),
-      onPageChanged: _onPdfPageChanged,
-      onViewerReady: _onPdfViewerReady,
-    );
-  }
-
-  void _onPdfPageChanged(int? pageNumber) {
-    if (!mounted) {
-      return;
-    }
-    setState(() => _currentPage = pageNumber ?? 1);
-  }
-
-  void _onPdfViewerReady(PdfDocument document, PdfViewerController controller) {
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _totalPages = document.pages.length;
-      _currentPage = controller.pageNumber ?? 1;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<Uint8List>(
-      future: _cachedBytesFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError || !snapshot.hasData) {
-          return const Center(
-            child: Text('Unable to load PDF preview right now.'),
-          );
-        }
-
-        final theme = Theme.of(context);
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          child: Stack(
-            children: [
-              PdfViewer.data(
-                snapshot.data!,
-                sourceName: widget.documentKey,
-                params: _viewerParams,
-              ),
-              Positioned(
-                top: 14,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Text(
-                    '$_currentPage / $_totalPages',
-                    style: TextStyle(
-                      color: theme.colorScheme.onPrimary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }

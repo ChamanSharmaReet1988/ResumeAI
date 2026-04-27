@@ -16,7 +16,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final sectionTitleColor = _corporateTitlePdf(resume);
     final headerColor = _corporateHeaderPdf(resume);
     final lineColor = PdfColor.fromHex('#D7DCE2');
-    final highlightColor = PdfColor.fromHex('#FFF0A8');
+    final highlightColor = PdfColor.fromHex('#FFE67A');
 
     document.addPage(
       pw.MultiPage(
@@ -69,7 +69,6 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               ],
             ),
           ),
-          _highlightedAtsNoticeBar(highlightColor),
           pw.SizedBox(height: 18),
           _corporateSection(
             title: 'Summary',
@@ -194,7 +193,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final lineColor = _creativeSidebarLineColorPdf();
     final muted = _creativeSidebarMutedColorPdf();
     final railColor = _creativeSidebarRailColorPdf(resume);
-    final highlightColor = PdfColor.fromHex('#FFF0A8');
+    final highlightColor = PdfColor.fromHex('#FFE67A');
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final contactItems = _resumeContactItems(resume);
     final educationItems = resume.includeEducationInResume
@@ -269,8 +268,6 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               ),
             ),
           ),
-          pw.SizedBox(height: _creativeSectionGapPt),
-          _creativeMainColumnChild(_highlightedAtsNoticeBar(highlightColor)),
           if (resume.includeWorkInResume) ...[
             pw.SizedBox(height: _creativeSectionGapPt),
             _creativeMainColumnChild(
@@ -378,7 +375,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final accentColor = _classicSidebarAccentColorPdf(resume);
     final dividerColor = _classicSidebarDividerColorPdf(resume);
     final borderColor = _classicSidebarSectionBorderPdf(resume);
-    final highlightColor = PdfColor.fromHex('#FFF0A8');
+    final highlightColor = PdfColor.fromHex('#FFE67A');
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final customSections = _classicSidebarMainCustomSections(resume);
 
@@ -406,9 +403,6 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               borderColor: borderColor,
               bodyPt: bodyPt,
             ),
-          ),
-          _classicSidebarMainColumnChild(
-            _highlightedAtsNoticeBar(highlightColor),
           ),
           _classicSidebarMainColumnChild(
             _buildClassicSidebarSection(
