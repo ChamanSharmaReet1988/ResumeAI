@@ -415,25 +415,28 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             ),
           ),
           sidebarWrap(
-            _buildClassicSidebarSection(
-              title: 'Summary',
-              titleColor: titleColor,
-              borderColor: borderColor,
-              child: pw.Container(
-                width: double.infinity,
-                padding: const pw.EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 6,
-                ),
-                color: highlightSummary ? highlightColor : PdfColors.white,
-                child: pw.Text(
-                  resume.summary.trim().ifEmpty(
-                    'Add a short summary to position your experience and strengths.',
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: _classicSidebarSectionBottomPt),
+              child: _buildClassicSidebarSection(
+                title: 'Summary',
+                titleColor: titleColor,
+                borderColor: borderColor,
+                child: pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
                   ),
-                  style: pw.TextStyle(
-                    color: mutedColor,
-                    fontSize: bodyPt,
-                    lineSpacing: 2,
+                  color: highlightSummary ? highlightColor : PdfColors.white,
+                  child: pw.Text(
+                    resume.summary.trim().ifEmpty(
+                      'Add a short summary to position your experience and strengths.',
+                    ),
+                    style: pw.TextStyle(
+                      color: mutedColor,
+                      fontSize: bodyPt,
+                      lineSpacing: 2,
+                    ),
                   ),
                 ),
               ),
@@ -525,20 +528,28 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: titleColor,
               ),
             ),
-            for (var index = 0; index < resume.visibleProjects.length; index++)
-              sidebarWrap(
-                _buildClassicSidebarSectionBodyBlock(
-                  borderColor: borderColor,
-                  showBottomBorder: index == resume.visibleProjects.length - 1,
-                  child: _buildClassicSidebarProject(
-                    resume.visibleProjects[index],
-                    titleColor: titleColor,
-                    mutedColor: mutedColor,
-                    accentColor: accentColor,
-                    bodyPt: bodyPt,
-                  ),
+            sidebarWrap(
+              _buildClassicSidebarSectionBodyBlock(
+                borderColor: borderColor,
+                showBottomBorder: customSections.isNotEmpty,
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    for (var i = 0; i < resume.visibleProjects.length; i++) ...[
+                      if (i > 0)
+                        pw.SizedBox(height: _classicSidebarSectionBottomPt),
+                      _buildClassicSidebarProject(
+                        resume.visibleProjects[i],
+                        titleColor: titleColor,
+                        mutedColor: mutedColor,
+                        accentColor: accentColor,
+                        bodyPt: bodyPt,
+                      ),
+                    ],
+                  ],
                 ),
               ),
+            ),
           ],
           for (var index = 0; index < customSections.length; index++) ...[
             sidebarWrap(
@@ -550,7 +561,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             sidebarWrap(
               _buildClassicSidebarSectionBodyBlock(
                 borderColor: borderColor,
-                showBottomBorder: true,
+                showBottomBorder: index < customSections.length - 1,
                 child: _buildClassicSidebarCustomSection(
                   customSections[index],
                   mutedColor: mutedColor,

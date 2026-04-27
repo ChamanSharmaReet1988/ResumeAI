@@ -1020,289 +1020,261 @@ class _ClassicSidebarPreview extends StatelessWidget {
   final ResumeData resume;
 
   static const double _sidebarWidth = 96;
-  static const double _avatarSize = 74;
+  static const double _avatarSize = 89;
   static const double _sectionGap = 18;
   static const double _contentSectionGap = 16;
+  /// Matches PDF `_classicSidebarSectionBottomPt` spacing before section titles.
+  static const double _sectionBlockTopGap = 14;
   static const double _sectionHeadingGap = 6;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact =
-            constraints.maxWidth < 190 || constraints.maxHeight < 250;
-        final railColor = resume.classicSidebarRailColor;
-        final accentColor = resume.classicSidebarAccentColor;
-        final titleColor = resume.classicSidebarTitleColor;
-        final mutedColor = resume.classicSidebarMutedColor;
-        final dividerColor = resume.classicSidebarDividerColor;
-        final sectionBorderColor = resume.classicSidebarSectionBorderColor;
-        final sidebarWidth = compact ? 74.0 : _sidebarWidth;
-        final avatarSize = compact ? 54.0 : _avatarSize;
-        final bodySize = compact
-            ? (resume.effectiveBodyFontPt * 0.74).clamp(6.4, 9.2).toDouble()
-            : resume.effectiveBodyFontPt.toDouble();
-        final bodyStyle = TextStyle(
-          color: titleColor,
-          fontSize: bodySize,
-          height: compact ? 1.18 : ResumeTypography.textLineHeight,
-        );
-        final experiences = resume.visibleWorkExperiences
-            .take(compact ? 1 : 2)
-            .toList();
-        final education = resume.visibleEducation
-            .take(compact ? 1 : 2)
-            .toList();
-        final projects = resume.visibleProjects.take(compact ? 1 : 2).toList();
-        final skills = _pdfAlignedSkills(resume).take(compact ? 3 : 5).toList();
-        final languages = _classicSidebarLanguages(
-          resume,
-        ).take(compact ? 2 : 4).toList();
-        final remainingCustomSections = _classicSidebarMainCustomSections(
-          resume,
-        );
-        final avatarPath = resume.profileImagePath.trim();
-        final hasProfileImage =
-            avatarPath.isNotEmpty && File(avatarPath).existsSync();
+    final railColor = resume.classicSidebarRailColor;
+    final accentColor = resume.classicSidebarAccentColor;
+    final titleColor = resume.classicSidebarTitleColor;
+    final mutedColor = resume.classicSidebarMutedColor;
+    final dividerColor = resume.classicSidebarDividerColor;
+    final sectionBorderColor = resume.classicSidebarSectionBorderColor;
+    final bodySize = resume.effectiveBodyFontPt.toDouble();
+    final bodyStyle = TextStyle(
+      color: titleColor,
+      fontSize: bodySize,
+      height: ResumeTypography.textLineHeight,
+    );
+    final experiences =
+        resume.visibleWorkExperiences.take(2).toList();
+    final education = resume.visibleEducation.take(2).toList();
+    final projects = resume.visibleProjects.take(2).toList();
+    final skills = _pdfAlignedSkills(resume).take(5).toList();
+    final languages =
+        _classicSidebarLanguages(resume).take(4).toList();
+    final remainingCustomSections =
+        _classicSidebarMainCustomSections(resume);
+    final avatarPath = resume.profileImagePath.trim();
+    final hasProfileImage =
+        avatarPath.isNotEmpty && File(avatarPath).existsSync();
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: sidebarWidth,
-              color: railColor,
-              padding: EdgeInsets.fromLTRB(
-                compact ? 7 : 10,
-                compact ? 10 : 14,
-                compact ? 7 : 10,
-                compact ? 10 : 14,
-              ),
-              child: DefaultTextStyle(
-                style: bodyStyle.copyWith(fontSize: bodyStyle.fontSize! - 0.5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: ClipOval(
-                        child: SizedBox(
-                          width: avatarSize,
-                          height: avatarSize,
-                          child: hasProfileImage
-                              ? Image.file(
-                                  File(avatarPath),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) =>
-                                      _ClassicSidebarAvatarPlaceholder(
-                                        resume: resume,
-                                        fontSize: compact ? 16 : 22,
-                                      ),
-                                )
-                              : _ClassicSidebarAvatarPlaceholder(
-                                  resume: resume,
-                                  fontSize: compact ? 16 : 22,
-                                ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: compact ? 10 : _sectionGap),
-                    Container(height: 1.1, color: dividerColor),
-                    SizedBox(height: compact ? 6 : 10),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        physics: const NeverScrollableScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _ClassicSidebarListSection(
-                              title: 'SKILLS',
-                              items: skills,
-                              bulletColor: accentColor,
-                              textStyle: bodyStyle.copyWith(
-                                fontSize: bodyStyle.fontSize! - 0.2,
-                              ),
-                              maxLines: compact ? 1 : 2,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          width: _sidebarWidth,
+          color: railColor,
+          padding: const EdgeInsets.fromLTRB(10, 14, 10, 14),
+          child: DefaultTextStyle(
+            style: bodyStyle.copyWith(fontSize: bodyStyle.fontSize! - 0.5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: ClipOval(
+                    child: SizedBox(
+                      width: _avatarSize,
+                      height: _avatarSize,
+                      child: hasProfileImage
+                          ? Image.file(
+                              File(avatarPath),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  _ClassicSidebarAvatarPlaceholder(
+                                    resume: resume,
+                                    fontSize: 22,
+                                  ),
+                            )
+                          : _ClassicSidebarAvatarPlaceholder(
+                              resume: resume,
+                              fontSize: 22,
                             ),
-                            if (languages.isNotEmpty) ...[
-                              SizedBox(height: compact ? 10 : _sectionGap),
-                              Container(height: 1.1, color: dividerColor),
-                              SizedBox(height: compact ? 6 : 10),
-                              _ClassicSidebarListSection(
-                                title: 'LANGUAGES',
-                                items: languages,
-                                bulletColor: accentColor,
-                                textStyle: bodyStyle.copyWith(
-                                  fontSize: bodyStyle.fontSize! - 0.2,
-                                ),
-                                maxLines: 1,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  compact ? 8 : 12,
-                  compact ? 10 : 14,
-                  compact ? 8 : 12,
-                  compact ? 10 : 14,
-                ),
-                child: DefaultTextStyle(
-                  style: bodyStyle,
+                SizedBox(height: _sectionGap),
+                Container(height: 1.1, color: dividerColor),
+                const SizedBox(height: 10),
+                Expanded(
                   child: SingleChildScrollView(
                     physics: const NeverScrollableScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _pdfAlignedDisplayName(resume).toUpperCase(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: bodyStyle.copyWith(
-                            fontSize: compact ? 12 : 18,
-                            fontWeight: FontWeight.w900,
-                            height: 1.0,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        if (resume.jobTitle.trim().isNotEmpty) ...[
-                          SizedBox(height: compact ? 3 : 5),
-                          Text(
-                            resume.jobTitle.trim(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: bodyStyle.copyWith(
-                              color: mutedColor,
-                              fontSize: compact
-                                  ? bodyStyle.fontSize
-                                  : bodyStyle.fontSize! + 0.2,
-                            ),
-                          ),
-                        ],
-                        SizedBox(height: compact ? 5 : 7),
-                        ..._classicSidebarContactRows(
-                          resume,
-                          mutedColor: mutedColor,
-                          iconColor: titleColor,
-                          baseStyle: bodyStyle.copyWith(
+                        _ClassicSidebarListSection(
+                          title: 'SKILLS',
+                          items: skills,
+                          bulletColor: accentColor,
+                          textStyle: bodyStyle.copyWith(
                             fontSize: bodyStyle.fontSize! - 0.2,
                           ),
-                          maxItems: compact ? 3 : 4,
+                          maxLines: 2,
                         ),
-                        SizedBox(height: compact ? 7 : 10),
-                        Container(height: 1.1, color: sectionBorderColor),
-                        SizedBox(height: compact ? 8 : _contentSectionGap),
-                        _ClassicContentSection(
-                          title: 'SUMMARY',
-                          borderColor: sectionBorderColor,
-                          child: Text(
-                            resume.summary.trim().ifBlank(
-                              'Add a short summary to position your experience and strengths.',
+                        if (languages.isNotEmpty) ...[
+                          SizedBox(height: _sectionGap),
+                          Container(height: 1.1, color: dividerColor),
+                          const SizedBox(height: 10),
+                          _ClassicSidebarListSection(
+                            title: 'LANGUAGES',
+                            items: languages,
+                            bulletColor: accentColor,
+                            textStyle: bodyStyle.copyWith(
+                              fontSize: bodyStyle.fontSize! - 0.2,
                             ),
-                            maxLines: compact ? 3 : 4,
-                            overflow: TextOverflow.ellipsis,
-                            style: bodyStyle.copyWith(color: mutedColor),
+                            maxLines: 1,
                           ),
-                        ),
-                        _ClassicContentSection(
-                          title: 'EXPERIENCE',
-                          borderColor: sectionBorderColor,
-                          child: experiences.isEmpty
-                              ? Text(
-                                  'Add your work experience details.',
-                                  style: bodyStyle.copyWith(color: mutedColor),
-                                )
-                              : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    for (final item in experiences)
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                          bottom: compact ? 6 : 10,
-                                        ),
-                                        child: _ClassicExperienceBlock(
-                                          item: item,
-                                          bodyStyle: bodyStyle,
-                                          mutedColor: mutedColor,
-                                          bulletColor: titleColor,
-                                          maxBulletLines: compact ? 1 : 2,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                        ),
-                        _ClassicContentSection(
-                          title: 'EDUCATION',
-                          borderColor: sectionBorderColor,
-                          child: education.isEmpty
-                              ? Text(
-                                  'Add your education details.',
-                                  style: bodyStyle.copyWith(color: mutedColor),
-                                )
-                              : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    for (final item in education)
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                          bottom: compact ? 6 : 8,
-                                        ),
-                                        child: _ClassicEducationBlock(
-                                          item: item,
-                                          bodyStyle: bodyStyle,
-                                          mutedColor: mutedColor,
-                                          compact: compact,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                        ),
-                        if (!compact && projects.isNotEmpty)
-                          _ClassicContentSection(
-                            title: 'PROJECTS',
-                            borderColor: sectionBorderColor,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                for (final item in projects)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: _ClassicProjectBlock(
-                                      item: item,
-                                      bodyStyle: bodyStyle,
-                                      mutedColor: mutedColor,
-                                      bulletColor: titleColor,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        if (!compact)
-                          for (final section in remainingCustomSections.take(2))
-                            _ClassicContentSection(
-                              title: section.title.trim().toUpperCase(),
-                              borderColor: sectionBorderColor,
-                              child: _ClassicCustomSectionBlock(
-                                item: section,
-                                bodyStyle: bodyStyle,
-                                mutedColor: mutedColor,
-                                bulletColor: titleColor,
-                              ),
-                            ),
+                        ],
                       ],
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
+            child: DefaultTextStyle(
+              style: bodyStyle,
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _pdfAlignedDisplayName(resume).toUpperCase(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: bodyStyle.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        height: 1.0,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    if (resume.jobTitle.trim().isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        resume.jobTitle.trim(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: bodyStyle.copyWith(
+                          color: mutedColor,
+                          fontSize: bodyStyle.fontSize! + 0.2,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 7),
+                    ..._classicSidebarContactRows(
+                      resume,
+                      mutedColor: mutedColor,
+                      iconColor: titleColor,
+                      baseStyle: bodyStyle.copyWith(
+                        fontSize: bodyStyle.fontSize! - 0.2,
+                      ),
+                      maxItems: 4,
+                    ),
+                    const SizedBox(height: 10),
+                    Container(height: 1.1, color: sectionBorderColor),
+                    SizedBox(height: _contentSectionGap),
+                    Padding(
+                      padding: const EdgeInsets.only(top: _sectionBlockTopGap),
+                      child: _ClassicContentSection(
+                        title: 'SUMMARY',
+                        borderColor: sectionBorderColor,
+                        child: Text(
+                          resume.summary.trim().ifBlank(
+                            'Add a short summary to position your experience and strengths.',
+                          ),
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                          style: bodyStyle.copyWith(color: mutedColor),
+                        ),
+                      ),
+                    ),
+                    _ClassicContentSection(
+                      title: 'EXPERIENCE',
+                      borderColor: sectionBorderColor,
+                      child: experiences.isEmpty
+                          ? Text(
+                              'Add your work experience details.',
+                              style: bodyStyle.copyWith(color: mutedColor),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                for (final item in experiences)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: _ClassicExperienceBlock(
+                                      item: item,
+                                      bodyStyle: bodyStyle,
+                                      mutedColor: mutedColor,
+                                      bulletColor: titleColor,
+                                      maxBulletLines: 2,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                    ),
+                    _ClassicContentSection(
+                      title: 'EDUCATION',
+                      borderColor: sectionBorderColor,
+                      child: education.isEmpty
+                          ? Text(
+                              'Add your education details.',
+                              style: bodyStyle.copyWith(color: mutedColor),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                for (final item in education)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: _ClassicEducationBlock(
+                                      item: item,
+                                      bodyStyle: bodyStyle,
+                                      mutedColor: mutedColor,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                    ),
+                    if (projects.isNotEmpty)
+                      _ClassicContentSection(
+                        title: 'PROJECTS',
+                        borderColor: sectionBorderColor,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final item in projects)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _ClassicProjectBlock(
+                                  item: item,
+                                  bodyStyle: bodyStyle,
+                                  mutedColor: mutedColor,
+                                  bulletColor: titleColor,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    for (final section in remainingCustomSections.take(2))
+                      _ClassicContentSection(
+                        title: section.title.trim().toUpperCase(),
+                        borderColor: sectionBorderColor,
+                        child: _ClassicCustomSectionBlock(
+                          item: section,
+                          bodyStyle: bodyStyle,
+                          mutedColor: mutedColor,
+                          bulletColor: titleColor,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1488,13 +1460,11 @@ class _ClassicEducationBlock extends StatelessWidget {
     required this.item,
     required this.bodyStyle,
     required this.mutedColor,
-    this.compact = false,
   });
 
   final EducationItem item;
   final TextStyle bodyStyle;
   final Color mutedColor;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -1523,7 +1493,7 @@ class _ClassicEducationBlock extends StatelessWidget {
             padding: const EdgeInsets.only(top: 3),
             child: Text(
               details,
-              maxLines: compact ? 1 : 2,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: bodyStyle.copyWith(color: mutedColor),
             ),

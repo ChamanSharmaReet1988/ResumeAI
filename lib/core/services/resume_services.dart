@@ -101,15 +101,15 @@ const double _creativeSidebarDividerGapPt = 20.0;
 const double _creativeNameFontPt = 30.0;
 const double _creativeAvatarBackgroundOpacity = 0.4;
 
-const double _classicSidebarRailWidthPt = 145.0;
+const double _classicSidebarRailWidthPt = 165.0;
 const double _classicSidebarContentWidthPt = 112.0;
 const double _classicSidebarMainInsetPt = 159.0;
-const double _classicSidebarAvatarSizePt = 88.0;
+const double _classicSidebarAvatarSizePt = 103.0;
 const double _classicSidebarSectionGapPt = 18.0;
 const double _classicSidebarHeadingGapPt = 6.0;
 const double _classicSidebarSectionBottomPt = 14.0;
-const double _classicSidebarPanelTopPt = 32.0;
-const double _classicSidebarPanelBottomPt = 28.0;
+const double _classicSidebarPanelTopPt = 24.0;
+const double _classicSidebarPanelBottomPt = 0.0;
 
 enum _ClassicSidebarSectionType { skills, languages }
 
@@ -118,11 +118,15 @@ class _ClassicSidebarPageSection {
     required this.type,
     required this.items,
     this.highlightedItems = const <String>{},
+    this.showSectionTitle = true,
   });
 
   final _ClassicSidebarSectionType type;
   final List<String> items;
   final Set<String> highlightedItems;
+
+  /// False for continued Skills lists on page 2+ (title shown only once).
+  final bool showSectionTitle;
 }
 
 class _ClassicSidebarPageSlice {
@@ -428,16 +432,16 @@ pw.PageTheme _classicSidebarPageTheme({
           ? pw.Stack(
               children: [
                 pw.Positioned(
-                  left: pageLeftMargin,
-                  top: pageTopMargin,
-                  bottom: pageBottomMargin,
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
                   child: pw.Container(
                     width: _classicSidebarRailWidthPt,
                     color: railColor,
                   ),
                 ),
                 pw.Positioned(
-                  left: pageLeftMargin + 16,
+                  left: 16,
                   top: _classicSidebarPanelTopPt,
                   child: _classicSidebarPanel(
                     resume: resume,
@@ -492,6 +496,7 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
   final pageTwoSections = <_ClassicSidebarPageSection>[];
   final pages = [pageOneSections, pageTwoSections];
   var pageIndex = 0;
+  var skillsSectionTitleUsed = false;
   final availableHeights = <double>[
     _classicSidebarAvailablePanelHeight(pageFormat) -
         _classicSidebarFirstPageHeaderHeight(),
@@ -539,13 +544,22 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
       }
 
       if (pageItems.isNotEmpty) {
+        final showSkillsHeading = section.type !=
+                _ClassicSidebarSectionType.skills ||
+            !skillsSectionTitleUsed;
         pageSections.add(
           _ClassicSidebarPageSection(
             type: section.type,
             items: pageItems,
             highlightedItems: section.highlightedItems,
+            showSectionTitle: section.type == _ClassicSidebarSectionType.skills
+                ? showSkillsHeading
+                : true,
           ),
         );
+        if (section.type == _ClassicSidebarSectionType.skills) {
+          skillsSectionTitleUsed = true;
+        }
       }
     }
   }
@@ -635,28 +649,32 @@ pw.Widget _classicSidebarPanel({
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         if (pageSlice.showAvatar && profileImage != null)
-          pw.ClipOval(
-            child: pw.SizedBox(
-              width: _classicSidebarAvatarSizePt,
-              height: _classicSidebarAvatarSizePt,
-              child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+          pw.Center(
+            child: pw.ClipOval(
+              child: pw.SizedBox(
+                width: _classicSidebarAvatarSizePt,
+                height: _classicSidebarAvatarSizePt,
+                child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+              ),
             ),
           )
         else if (pageSlice.showAvatar)
-          pw.Container(
-            width: _classicSidebarAvatarSizePt,
-            height: _classicSidebarAvatarSizePt,
-            decoration: pw.BoxDecoration(
-              color: _classicSidebarAvatarFillPdf(resume),
-              shape: pw.BoxShape.circle,
-            ),
-            alignment: pw.Alignment.center,
-            child: pw.Text(
-              _classicSidebarInitials(resume),
-              style: pw.TextStyle(
-                color: titleColor,
-                fontSize: 24,
-                fontWeight: pw.FontWeight.bold,
+          pw.Center(
+            child: pw.Container(
+              width: _classicSidebarAvatarSizePt,
+              height: _classicSidebarAvatarSizePt,
+              decoration: pw.BoxDecoration(
+                color: _classicSidebarAvatarFillPdf(resume),
+                shape: pw.BoxShape.circle,
+              ),
+              alignment: pw.Alignment.center,
+              child: pw.Text(
+                _classicSidebarInitials(resume),
+                style: pw.TextStyle(
+                  color: titleColor,
+                  fontSize: 26,
+                  fontWeight: pw.FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -689,6 +707,7 @@ pw.Widget _classicSidebarPanel({
             fontSize: bodyPt,
             highlightedItems: pageSlice.sections[index].highlightedItems,
             highlightColor: highlightColor,
+            showTitle: pageSlice.sections[index].showSectionTitle,
             itemBottom:
                 pageSlice.sections[index].type ==
                     _ClassicSidebarSectionType.skills
