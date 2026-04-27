@@ -159,103 +159,147 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
               padding: EdgeInsets.only(bottom: bottomInset),
               child: SafeArea(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    20 + BottomSheetInsets.leftPadding,
-                    8 + BottomSheetInsets.topSpacing,
-                    20,
-                    28,
+                  padding: EdgeInsets.only(
+                    top: BottomSheetInsets.topSpacing,
+                    bottom: 28,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Font size',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Font size',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  child: Text(
+                                    '11',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: muted,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Slider(
+                                    value: resume.effectiveBodyFontPt
+                                        .toDouble(),
+                                    min: 11,
+                                    max: 15,
+                                    divisions: 4,
+                                    label: '${resume.effectiveBodyFontPt}',
+                                    onChanged: (v) {
+                                      viewModel.updateResume(
+                                        (r) =>
+                                            r.copyWith(bodyFontPt: v.round()),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 24,
+                                  child: Text(
+                                    '15',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: muted,
+                                    ),
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 24,
-                            child: Text(
-                              '11',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: muted,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Slider(
-                              value: resume.effectiveBodyFontPt.toDouble(),
-                              min: 11,
-                              max: 15,
-                              divisions: 4,
-                              label: '${resume.effectiveBodyFontPt}',
-                              onChanged: (v) {
-                                viewModel.updateResume(
-                                  (r) => r.copyWith(bodyFontPt: v.round()),
-                                );
-                              },
-                            ),
-                          ),
-                          SizedBox(
-                            width: 24,
-                            child: Text(
-                              '15',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: muted,
-                              ),
-                              textAlign: TextAlign.end,
-                            ),
-                          ),
-                        ],
                       ),
                       const SizedBox(height: 30),
-                      Text(
-                        'Color',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                        child: Text(
+                          'Color',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          for (
-                            var i = 0;
-                            i < kCorporateColorPresets.length;
-                            i++
-                          )
+                      const SizedBox(height: 20),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          const outerLeftMargin = 20.0;
+                          const outerRightMargin = 20.0;
+                          const itemGap = 12.0;
+                          final items = <Widget>[
+                            for (
+                              var i = 0;
+                              i < kCorporateColorPresets.length;
+                              i++
+                            )
+                              _CorporateColorPresetCircle(
+                                preset: kCorporateColorPresets[i],
+                                selected: presetIndex == i,
+                                onTap: () {
+                                  viewModel.updateResume(
+                                    (r) => r.copyWith(
+                                      corporateColorPresetIndex: i,
+                                    ),
+                                  );
+                                },
+                              ),
                             _CorporateColorPresetCircle(
-                              preset: kCorporateColorPresets[i],
-                              selected: presetIndex == i,
+                              preset: CorporateColorPreset(
+                                titleColor: const Color(0xFF2E3135),
+                                headerColor: resume.template.accentColor,
+                              ),
+                              selected: selectedTemplateDefault,
                               onTap: () {
                                 viewModel.updateResume(
-                                  (r) =>
-                                      r.copyWith(corporateColorPresetIndex: i),
+                                  (r) => r.copyWith(
+                                    corporateColorPresetIndex:
+                                        kTemplateDefaultColorPresetIndex,
+                                  ),
                                 );
                               },
                             ),
-                          _CorporateColorPresetCircle(
-                            preset: CorporateColorPreset(
-                              titleColor: const Color(0xFF2E3135),
-                              headerColor: resume.template.accentColor,
+                          ];
+                          final lastIndex = items.length - 1;
+
+                          return SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: EdgeInsets.zero,
+                            physics: const BouncingScrollPhysics(
+                              parent: AlwaysScrollableScrollPhysics(),
                             ),
-                            selected: selectedTemplateDefault,
-                            onTap: () {
-                              viewModel.updateResume(
-                                (r) => r.copyWith(
-                                  corporateColorPresetIndex:
-                                      kTemplateDefaultColorPresetIndex,
-                                ),
-                              );
-                            },
-                          ),
-                        ],
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minWidth: constraints.maxWidth,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  for (var i = 0; i < items.length; i++)
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                        left: i == 0 ? outerLeftMargin : 0,
+                                        right: i == lastIndex
+                                            ? outerRightMargin
+                                            : itemGap,
+                                      ),
+                                      child: items[i],
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
                     ],

@@ -39,6 +39,13 @@ class _AppShellState extends State<AppShell> {
     setState(() => _currentIndex = index);
   }
 
+  String get _activeHeaderTitle {
+    return switch (_currentIndex) {
+      2 => 'Optimize Resume',
+      _ => _destinations[_currentIndex].label,
+    };
+  }
+
   Future<void> _openBuilder({ResumeData? seed}) async {
     final repository = context.read<ResumeRepository>();
     final aiService = context.read<LocalAiResumeService>();
@@ -264,7 +271,6 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final destinations = _destinations;
-    final activeDestination = destinations[_currentIndex];
     final pages = [
       HomeScreen(
         currentSegment: _homeSegment,
@@ -324,7 +330,7 @@ class _AppShellState extends State<AppShell> {
           body: _isCupertino
               ? CupertinoPageScaffold(
                   navigationBar: CupertinoNavigationBar(
-                    middle: Text(activeDestination.label),
+                    middle: Text(_activeHeaderTitle),
                     transitionBetweenRoutes: false,
                     backgroundColor: Theme.of(
                       context,
