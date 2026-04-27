@@ -134,10 +134,106 @@ void main() {
       ],
       customSections: const [
         CustomSectionItem(
-          title: 'Languages',
+          title: 'Language',
           content: '',
           layoutMode: CustomSectionLayoutMode.bullets,
           bullets: ['English', 'German'],
+        ),
+      ],
+    );
+  }
+
+  ResumeData buildLongClassicSidebarResume() {
+    final workItems = List<WorkExperience>.generate(
+      10,
+      (index) => WorkExperience(
+        role: 'Financial Analyst ${index + 1}',
+        company: 'GEO Advisory',
+        startDate: 'Apr 20${10 + index}',
+        endDate: index == 0 ? 'Present' : 'Mar 20${11 + index}',
+        description:
+            'Supported financial planning, operating reviews, monthly reporting, forecast updates, and stakeholder presentations across multiple business units.',
+        bullets: const [
+          'Built planning models that improved monthly forecast accuracy and reduced reporting turnaround time.',
+          'Prepared finance summaries, board-ready reporting, and variance commentary for leadership reviews.',
+          'Partnered with operations and business stakeholders to align budgets, cash flow planning, and resource decisions.',
+        ],
+      ),
+    );
+
+    final educationItems = List<EducationItem>.generate(
+      4,
+      (index) => EducationItem(
+        institution: 'Boston University ${index + 1}',
+        degree: 'Bachelor of Science in Finance',
+        startDate: '200$index',
+        endDate: '200${index + 4}',
+        score: '3.${7 + (index % 2)} GPA',
+      ),
+    );
+
+    final projects = List<ProjectItem>.generate(
+      3,
+      (index) => ProjectItem(
+        title: 'Finance Transformation ${index + 1}',
+        overview:
+            'Improved budget controls, executive reporting, and forecasting workflows across distributed teams.',
+        bullets: const [
+          'Created standardized reporting templates that improved consistency across planning cycles.',
+          'Delivered operating reviews with clearer KPI trends, risk commentary, and action tracking.',
+        ],
+      ),
+    );
+
+    return ResumeData.empty(template: ResumeTemplate.classicSidebar).copyWith(
+      title: 'Classic Sidebar Overflow Test',
+      fullName: 'Avery Brooks',
+      jobTitle: 'Senior Financial Analyst',
+      email: 'avery@example.com',
+      phone: '+1 617 555 0142',
+      location: 'Boston, MA',
+      summary:
+          'Senior financial analyst with experience leading budget planning, performance reporting, and executive-ready analysis across multi-team business operations.',
+      workExperiences: workItems,
+      education: educationItems,
+      skills: const [
+        'Financial Analysis',
+        'Strategic Planning',
+        'Trend Analysis',
+        'Budget Tracking',
+        'Forecasting',
+        'Board Reporting',
+        'Cash Flow Planning',
+        'Stakeholder Management',
+        'Variance Analysis',
+        'Quarterly Planning',
+        'Executive Dashboards',
+        'Decision Support',
+        'Budget Governance',
+        'Operating Models',
+        'Scenario Planning',
+        'Business Reviews',
+        'Spreadsheet Modeling',
+        'Capital Planning',
+        'Process Improvement',
+        'Leadership Updates',
+        'Vendor Analysis',
+        'Cost Controls',
+      ],
+      projects: projects,
+      customSections: const [
+        CustomSectionItem(
+          title: 'Langueages',
+          content: '',
+          layoutMode: CustomSectionLayoutMode.bullets,
+          bullets: [
+            'English',
+            'German',
+            'French',
+            'Spanish',
+            'Italian',
+            'Hindi',
+          ],
         ),
       ],
     );
@@ -196,4 +292,34 @@ void main() {
 
     expect(pdfBytes, isNotEmpty);
   });
+
+  test(
+    'classic sidebar template paginates long resumes without dropping later-page content',
+    () async {
+      final service = ResumePdfService();
+      final pdfBytes = await service.buildPdf(buildLongClassicSidebarResume());
+
+      expect(pdfBytes, isNotEmpty);
+    },
+  );
+
+  test(
+    'highlighted classic sidebar template paginates long resumes without dropping later-page content',
+    () async {
+      final service = ResumePdfService();
+      final resume = buildLongClassicSidebarResume();
+      final pdfBytes = await service.buildHighlightedResumePdf(
+        resume: resume,
+        highlightSummary: true,
+        highlightedSkills: const {'Financial Analysis', 'Forecasting'},
+        highlightedBulletsByExperience: const {
+          0: {
+            'Prepared finance summaries, board-ready reporting, and variance commentary for leadership reviews.',
+          },
+        },
+      );
+
+      expect(pdfBytes, isNotEmpty);
+    },
+  );
 }

@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -123,11 +122,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   void _handleSkillFocusChange() {
     if (_skillFocusNode.hasFocus && mounted) {
-      assert(() {
-        // ignore: invalid_use_of_visible_for_testing_member
-        HardwareKeyboard.instance.clearState();
-        return true;
-      }());
       _scheduleEnsureVisible(context);
     }
   }
@@ -268,14 +262,33 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   void _addSkillFromInput() {
-    final viewModel = context.read<ResumeEditorViewModel>();
-    final rawValue = _skillController.text;
-    final added = viewModel.addSkill(rawValue);
-
-    if (added) {
-      _skillController.clear();
+    if (!mounted) {
       return;
     }
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final trimmed = _skillController.text.trim();
+    if (trimmed.isEmpty) {
+      return;
+    }
+    if (viewModel.resume.skills.contains(trimmed)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This skill is already in your list.')),
+      );
+      return;
+    }
+    final added = viewModel.addSkill(_skillController.text);
+    if (added) {
+      _skillController.clear();
+    }
+  }
+
+  void _showDuplicateSkillMessage() {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('This skill is already in your list.')),
+    );
   }
 
   Future<void> _confirmRemoval({
@@ -2052,101 +2065,103 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          RawAutocomplete<String>(
-            focusNode: _skillFocusNode,
-            textEditingController: _skillController,
-            displayStringForOption: (skill) => skill,
-            optionsBuilder: (textEditingValue) {
-              return skillSuggestionsForQuery(
-                textEditingValue.text,
+          Builder(
+            builder: (context) {
+              final inset = MediaQuery.viewInsetsOf(context).bottom;
+              final skillSuggestions = skillSuggestionsForQuery(
+                _skillController.text,
                 excludeLowercase: viewModel.resume.skills
                     .map((s) => s.toLowerCase())
                     .toSet(),
-              );
-            },
-            onSelected: (selection) {
-              final added = viewModel.addSkill(selection);
-              if (added) {
-                _skillController.clear();
-              }
-            },
-            optionsViewBuilder: (context, onSelected, options) {
-              final list = options.toList();
-              if (list.isEmpty) {
-                return const SizedBox.shrink();
-              }
+              ).toList();
               final theme = Theme.of(context);
-              final popupBg = theme.cardColor;
-              final onPopup = theme.colorScheme.onSurface;
               final dividerColor = theme.colorScheme.outlineVariant.withValues(
                 alpha: 0.28,
               );
-              return Align(
-                alignment: Alignment.topLeft,
-                child: Material(
-                  elevation: 6,
-                  shadowColor: Colors.black26,
-                  surfaceTintColor: Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  color: popupBg,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 360),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      padding: EdgeInsets.zero,
-                      itemCount: list.length,
-                      separatorBuilder: (_, _) =>
-                          Divider(height: 1, color: dividerColor),
-                      itemBuilder: (context, index) {
-                        final option = list[index];
-                        return InkWell(
-                          onTap: () => onSelected(option),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            child: Text(
-                              option,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: onPopup,
-                                fontWeight: FontWeight.w600,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _skillController,
+                    focusNode: _skillFocusNode,
+                    textInputAction: TextInputAction.done,
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) => _addSkillFromInput(),
+                    scrollPadding: EdgeInsets.only(
+                      left: 20,
+                      top: 20,
+                      right: 20,
+                      bottom: inset + 120,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Add a skill',
+                      helperText:
+                          'Type to see suggestions or add your own skill',
+                      helperStyle:
+                          Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontSize: 11,
+                                height: 1.35,
                               ),
-                            ),
-                          ),
-                        );
-                      },
+                      suffixIcon: IconButton(
+                        onPressed: _addSkillFromInput,
+                        icon: const Icon(Icons.add_rounded),
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-            fieldViewBuilder: (context, textEditingController, focusNode, _) {
-              final inset = MediaQuery.viewInsetsOf(context).bottom;
-              return TextField(
-                controller: textEditingController,
-                focusNode: focusNode,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _addSkillFromInput(),
-                scrollPadding: EdgeInsets.only(
-                  left: 20,
-                  top: 20,
-                  right: 20,
-                  bottom: inset + 120,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Add a skill',
-                  helperText: 'Type to see suggestions or add your own skill',
-                  helperStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 11,
-                    height: 1.35,
-                  ),
-                  suffixIcon: IconButton(
-                    onPressed: _addSkillFromInput,
-                    icon: const Icon(Icons.add_rounded),
-                  ),
-                ),
+                  if (_skillFocusNode.hasFocus && skillSuggestions.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Material(
+                        elevation: 6,
+                        shadowColor: Colors.black26,
+                        surfaceTintColor: Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        color: theme.cardColor,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 360),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            padding: EdgeInsets.zero,
+                            itemCount: skillSuggestions.length,
+                            separatorBuilder: (_, _) =>
+                                Divider(height: 1, color: dividerColor),
+                            itemBuilder: (context, index) {
+                              final option = skillSuggestions[index];
+                              return InkWell(
+                                onTap: () {
+                                  final added = viewModel.addSkill(option);
+                                  if (added) {
+                                    _skillController.clear();
+                                    setState(() {});
+                                  } else {
+                                    _showDuplicateSkillMessage();
+                                  }
+                                  _skillFocusNode.unfocus();
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Text(
+                                    option,
+                                    style:
+                                        theme.textTheme.bodyLarge?.copyWith(
+                                      color: theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               );
             },
           ),

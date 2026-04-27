@@ -108,6 +108,34 @@ const double _classicSidebarAvatarSizePt = 88.0;
 const double _classicSidebarSectionGapPt = 18.0;
 const double _classicSidebarHeadingGapPt = 6.0;
 const double _classicSidebarSectionBottomPt = 14.0;
+const double _classicSidebarPanelTopPt = 32.0;
+const double _classicSidebarPanelBottomPt = 28.0;
+
+enum _ClassicSidebarSectionType { skills, languages }
+
+class _ClassicSidebarPageSection {
+  const _ClassicSidebarPageSection({
+    required this.type,
+    required this.items,
+    this.highlightedItems = const <String>{},
+  });
+
+  final _ClassicSidebarSectionType type;
+  final List<String> items;
+  final Set<String> highlightedItems;
+}
+
+class _ClassicSidebarPageSlice {
+  const _ClassicSidebarPageSlice({
+    required this.showAvatar,
+    required this.sections,
+  });
+
+  final bool showAvatar;
+  final List<_ClassicSidebarPageSection> sections;
+
+  bool get hasContent => showAvatar || sections.isNotEmpty;
+}
 
 PdfColor _creativeSidebarRailColorPdf(ResumeData resume) =>
     _pdfRgb(resume.creativeRailColor);
@@ -202,8 +230,14 @@ pw.Widget _creativeMainColumnChild(pw.Widget child) {
   return _CreativePageAwareInset(child: child);
 }
 
-pw.Widget _classicSidebarMainColumnChild(pw.Widget child) {
-  return _ClassicSidebarPageAwareInset(child: child);
+pw.Widget _classicSidebarMainColumnChild(
+  pw.Widget child, {
+  required int sidebarPageCount,
+}) {
+  return _ClassicSidebarDynamicInset(
+    child: child,
+    sidebarPageCount: sidebarPageCount,
+  );
 }
 
 class _CreativePageAwareInset extends pw.SingleChildWidget {
@@ -237,6 +271,9 @@ class _CreativePageAwareInset extends pw.SingleChildWidget {
     box = constraints.constrainRect(width: leftInset, height: 0);
   }
 
+  // ignore: must_call_super
+  // ignore: must_call_super
+  // ignore: must_call_super
   @override
   void paint(pw.Context context) {
     super.paint(context);
@@ -256,12 +293,18 @@ class _CreativePageAwareInset extends pw.SingleChildWidget {
   }
 }
 
-class _ClassicSidebarPageAwareInset extends pw.SingleChildWidget {
-  _ClassicSidebarPageAwareInset({required pw.Widget child})
-    : super(child: child);
+class _ClassicSidebarDynamicInset extends pw.Widget with pw.SpanningWidget {
+  _ClassicSidebarDynamicInset({
+    required this.child,
+    required this.sidebarPageCount,
+  });
+
+  final pw.Widget child;
+  final int sidebarPageCount;
+  pw.Widget? _wrapped;
 
   double _leftInsetFor(pw.Context context) =>
-      context.pageNumber == 1 ? _classicSidebarMainInsetPt : 0;
+      context.pageNumber <= sidebarPageCount ? _classicSidebarMainInsetPt : 0;
 
   @override
   void layout(
@@ -269,45 +312,51 @@ class _ClassicSidebarPageAwareInset extends pw.SingleChildWidget {
     pw.BoxConstraints constraints, {
     bool parentUsesSize = false,
   }) {
-    final leftInset = _leftInsetFor(context);
-
-    if (child != null) {
-      final childConstraints = constraints.deflate(
-        pw.EdgeInsets.only(left: leftInset),
-      );
-      child!.layout(context, childConstraints, parentUsesSize: parentUsesSize);
-      assert(child!.box != null);
-      box = constraints.constrainRect(
-        width: child!.box!.width + leftInset,
-        height: child!.box!.height,
-      );
-      return;
-    }
-
-    box = constraints.constrainRect(width: leftInset, height: 0);
+    _wrapped = pw.Padding(
+      padding: pw.EdgeInsets.only(left: _leftInsetFor(context)),
+      child: child,
+    );
+    _wrapped!.layout(context, constraints, parentUsesSize: parentUsesSize);
+    box = _wrapped!.box;
   }
 
-  // ignore: must_call_super
   @override
   void paint(pw.Context context) {
-    final leftInset = _leftInsetFor(context);
-
-    if (child == null) {
-      return;
-    }
-
-    if (leftInset == 0) {
-      super.paint(context);
+    super.paint(context);
+    if (_wrapped == null) {
       return;
     }
 
     final mat = context.canvas.getTransform();
-    mat.translateByDouble(box!.x + leftInset, box!.y, 0, 1);
+    mat.translateByDouble(box!.x, box!.y, 0, 1);
     context.canvas
       ..saveContext()
       ..setTransform(mat);
-    child!.paint(context);
+    _wrapped!.paint(context);
     context.canvas.restoreContext();
+  }
+
+  @override
+  bool get canSpan =>
+      child is pw.SpanningWidget && (child as pw.SpanningWidget).canSpan;
+
+  @override
+  bool get hasMoreWidgets =>
+      child is pw.SpanningWidget && (child as pw.SpanningWidget).hasMoreWidgets;
+
+  @override
+  void restoreContext(covariant pw.WidgetContext context) {
+    if (child is pw.SpanningWidget) {
+      (child as pw.SpanningWidget).restoreContext(context);
+    }
+  }
+
+  @override
+  pw.WidgetContext saveContext() {
+    if (child is pw.SpanningWidget) {
+      return (child as pw.SpanningWidget).saveContext();
+    }
+    throw UnimplementedError();
   }
 }
 
@@ -355,26 +404,41 @@ pw.PageTheme _classicSidebarPageTheme({
   PdfColor? highlightColor,
   PdfPageFormat pageFormat = PdfPageFormat.a4,
 }) {
+  const pageLeftMargin = 20.0;
+  const pageTopMargin = 20.0;
+  const pageRightMargin = 24.0;
+  const pageBottomMargin = 28.0;
+  final sidebarPages = _classicSidebarPageSlices(
+    resume: resume,
+    bodyPt: bodyPt,
+    highlightedSkills: highlightedSkills,
+    pageFormat: pageFormat,
+  );
   return pw.PageTheme(
     pageFormat: pageFormat,
-    margin: const pw.EdgeInsets.fromLTRB(24, 20, 24, 28),
+    margin: const pw.EdgeInsets.fromLTRB(
+      pageLeftMargin,
+      pageTopMargin,
+      pageRightMargin,
+      pageBottomMargin,
+    ),
     buildBackground: (context) => pw.FullPage(
       ignoreMargins: true,
-      child: context.pageNumber == 1
+      child: context.pageNumber <= sidebarPages.length
           ? pw.Stack(
               children: [
                 pw.Positioned(
-                  left: 24,
-                  top: 20,
-                  bottom: 28,
+                  left: pageLeftMargin,
+                  top: pageTopMargin,
+                  bottom: pageBottomMargin,
                   child: pw.Container(
                     width: _classicSidebarRailWidthPt,
                     color: railColor,
                   ),
                 ),
                 pw.Positioned(
-                  left: 40,
-                  top: 32,
+                  left: pageLeftMargin + 16,
+                  top: _classicSidebarPanelTopPt,
                   child: _classicSidebarPanel(
                     resume: resume,
                     accentColor: accentColor,
@@ -383,9 +447,8 @@ pw.PageTheme _classicSidebarPageTheme({
                     mutedColor: mutedColor,
                     bodyPt: bodyPt,
                     profileImage: profileImage,
-                    highlightedSkills: highlightedSkills,
                     highlightColor: highlightColor,
-                    pageNumber: context.pageNumber,
+                    pageSlice: sidebarPages[context.pageNumber - 1],
                   ),
                 ),
               ],
@@ -395,6 +458,166 @@ pw.PageTheme _classicSidebarPageTheme({
   );
 }
 
+List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
+  required ResumeData resume,
+  required double bodyPt,
+  required Set<String> highlightedSkills,
+  required PdfPageFormat pageFormat,
+}) {
+  final sections =
+      <
+        ({
+          _ClassicSidebarSectionType type,
+          List<String> items,
+          Set<String> highlightedItems,
+        })
+      >[
+        if (resume.skillsForResume.isNotEmpty)
+          (
+            type: _ClassicSidebarSectionType.skills,
+            items: resume.skillsForResume
+                .where((item) => item.trim().isNotEmpty)
+                .toList(),
+            highlightedItems: highlightedSkills,
+          ),
+        if (_classicSidebarLanguageLines(resume).isNotEmpty)
+          (
+            type: _ClassicSidebarSectionType.languages,
+            items: _classicSidebarLanguageLines(resume),
+            highlightedItems: const <String>{},
+          ),
+      ];
+
+  final pageOneSections = <_ClassicSidebarPageSection>[];
+  final pageTwoSections = <_ClassicSidebarPageSection>[];
+  final pages = [pageOneSections, pageTwoSections];
+  var pageIndex = 0;
+  final availableHeights = <double>[
+    _classicSidebarAvailablePanelHeight(pageFormat) -
+        _classicSidebarFirstPageHeaderHeight(),
+    _classicSidebarAvailablePanelHeight(pageFormat),
+  ];
+
+  for (final section in sections) {
+    var itemIndex = 0;
+
+    while (itemIndex < section.items.length && pageIndex < pages.length) {
+      final pageSections = pages[pageIndex];
+      final sectionOverhead =
+          (pageSections.isNotEmpty ? _classicSidebarInterSectionHeight() : 0) +
+          _classicSidebarSectionTitleHeight();
+      if (availableHeights[pageIndex] <=
+          sectionOverhead + _classicSidebarMinItemHeight(bodyPt)) {
+        pageIndex++;
+        continue;
+      }
+
+      if (pageSections.isNotEmpty) {
+        availableHeights[pageIndex] -= _classicSidebarInterSectionHeight();
+      }
+      availableHeights[pageIndex] -= _classicSidebarSectionTitleHeight();
+
+      final pageItems = <String>[];
+      while (itemIndex < section.items.length) {
+        final item = section.items[itemIndex];
+        final itemHeight = _classicSidebarEstimatedItemHeight(
+          item,
+          bodyPt,
+          itemBottom: section.type == _ClassicSidebarSectionType.skills ? 0 : 8,
+        );
+        if (pageItems.isNotEmpty && availableHeights[pageIndex] < itemHeight) {
+          break;
+        }
+        if (pageItems.isEmpty && availableHeights[pageIndex] < itemHeight) {
+          pageIndex++;
+          break;
+        }
+
+        pageItems.add(item);
+        availableHeights[pageIndex] -= itemHeight;
+        itemIndex++;
+      }
+
+      if (pageItems.isNotEmpty) {
+        pageSections.add(
+          _ClassicSidebarPageSection(
+            type: section.type,
+            items: pageItems,
+            highlightedItems: section.highlightedItems,
+          ),
+        );
+      }
+    }
+  }
+
+  final slices = <_ClassicSidebarPageSlice>[
+    _ClassicSidebarPageSlice(showAvatar: true, sections: pageOneSections),
+  ];
+  if (pageTwoSections.isNotEmpty) {
+    slices.add(
+      _ClassicSidebarPageSlice(showAvatar: false, sections: pageTwoSections),
+    );
+  }
+  return slices;
+}
+
+double _classicSidebarAvailablePanelHeight(PdfPageFormat pageFormat) =>
+    pageFormat.height -
+    _classicSidebarPanelTopPt -
+    _classicSidebarPanelBottomPt;
+
+double _classicSidebarFirstPageHeaderHeight() =>
+    _classicSidebarAvatarSizePt + _classicSidebarSectionGapPt + 1.2 + 10;
+
+double _classicSidebarInterSectionHeight() =>
+    _classicSidebarSectionGapPt + 1.2 + 10;
+
+double _classicSidebarSectionTitleHeight() =>
+    ResumeTypography.darkHeaderSectionTitlePt + 8;
+
+double _classicSidebarMinItemHeight(double bodyPt) =>
+    bodyPt * ResumeTypography.textLineHeight;
+
+double _classicSidebarEstimatedItemHeight(
+  String text,
+  double fontSize, {
+  required double itemBottom,
+}) {
+  final lines = _classicSidebarEstimatedLineCount(text, fontSize);
+  return (lines * fontSize * ResumeTypography.textLineHeight) + itemBottom;
+}
+
+int _classicSidebarEstimatedLineCount(String text, double fontSize) {
+  final normalized = text.trim().replaceAll(RegExp(r'\s+'), ' ');
+  if (normalized.isEmpty) {
+    return 1;
+  }
+
+  final usableWidth = _classicSidebarContentWidthPt - 14;
+  final maxCharsPerLine = math.max(
+    8,
+    (usableWidth / (fontSize * 0.56)).floor(),
+  );
+  var currentLineLength = 0;
+  var lineCount = 1;
+
+  for (final word in normalized.split(' ')) {
+    final wordLength = word.length;
+    if (currentLineLength == 0) {
+      currentLineLength = wordLength;
+      continue;
+    }
+    if (currentLineLength + 1 + wordLength > maxCharsPerLine) {
+      lineCount++;
+      currentLineLength = wordLength;
+    } else {
+      currentLineLength += 1 + wordLength;
+    }
+  }
+
+  return lineCount;
+}
+
 pw.Widget _classicSidebarPanel({
   required ResumeData resume,
   required PdfColor accentColor,
@@ -402,28 +625,16 @@ pw.Widget _classicSidebarPanel({
   required PdfColor titleColor,
   required PdfColor mutedColor,
   required double bodyPt,
+  required _ClassicSidebarPageSlice pageSlice,
   pw.MemoryImage? profileImage,
-  Set<String> highlightedSkills = const <String>{},
   PdfColor? highlightColor,
-  int pageNumber = 1,
 }) {
-  const skillsPerPage = 6;
-  final allSkills = resume.skillsForResume
-      .where((item) => item.trim().isNotEmpty)
-      .toList();
-  final start = ((pageNumber - 1).clamp(0, 1000000)) * skillsPerPage;
-  final skills = start < allSkills.length
-      ? allSkills.skip(start).take(skillsPerPage).toList()
-      : const <String>[];
-  final isFirstPage = pageNumber <= 1;
-  final languages = _classicSidebarLanguageLines(resume).take(4).toList();
-
   return pw.SizedBox(
     width: _classicSidebarContentWidthPt,
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        if (isFirstPage && profileImage != null)
+        if (pageSlice.showAvatar && profileImage != null)
           pw.ClipOval(
             child: pw.SizedBox(
               width: _classicSidebarAvatarSizePt,
@@ -431,7 +642,7 @@ pw.Widget _classicSidebarPanel({
               child: pw.Image(profileImage, fit: pw.BoxFit.cover),
             ),
           )
-        else if (isFirstPage)
+        else if (pageSlice.showAvatar)
           pw.Container(
             width: _classicSidebarAvatarSizePt,
             height: _classicSidebarAvatarSizePt,
@@ -449,33 +660,40 @@ pw.Widget _classicSidebarPanel({
               ),
             ),
           ),
-        if (isFirstPage) pw.SizedBox(height: _classicSidebarSectionGapPt),
-        if (isFirstPage) pw.Container(height: 1.2, color: dividerColor),
-        if (isFirstPage) pw.SizedBox(height: 10),
-        if (skills.isNotEmpty)
-          _classicSidebarListSection(
-            title: 'Skills',
-            items: skills,
-            titleColor: titleColor,
-            bulletColor: accentColor,
-            textColor: titleColor,
-            fontSize: bodyPt,
-            highlightedItems: highlightedSkills,
-            highlightColor: highlightColor,
-            showTitle: isFirstPage,
-            itemBottom: 0,
-          ),
-        if (isFirstPage && languages.isNotEmpty) ...[
+        if (pageSlice.showAvatar)
           pw.SizedBox(height: _classicSidebarSectionGapPt),
+        if (pageSlice.showAvatar && pageSlice.sections.isNotEmpty)
           pw.Container(height: 1.2, color: dividerColor),
+        if (pageSlice.showAvatar && pageSlice.sections.isNotEmpty)
           pw.SizedBox(height: 10),
+        for (var index = 0; index < pageSlice.sections.length; index++) ...[
+          if (index > 0) ...[
+            pw.SizedBox(height: _classicSidebarSectionGapPt),
+            pw.Container(height: 1.2, color: dividerColor),
+            pw.SizedBox(height: 10),
+          ],
           _classicSidebarListSection(
-            title: 'Languages',
-            items: languages,
+            title:
+                pageSlice.sections[index].type ==
+                    _ClassicSidebarSectionType.skills
+                ? 'Skills'
+                : 'Languages',
+            items: pageSlice.sections[index].items,
             titleColor: titleColor,
             bulletColor: accentColor,
-            textColor: mutedColor,
+            textColor:
+                pageSlice.sections[index].type ==
+                    _ClassicSidebarSectionType.skills
+                ? titleColor
+                : mutedColor,
             fontSize: bodyPt,
+            highlightedItems: pageSlice.sections[index].highlightedItems,
+            highlightColor: highlightColor,
+            itemBottom:
+                pageSlice.sections[index].type ==
+                    _ClassicSidebarSectionType.skills
+                ? 0
+                : 8,
           ),
         ],
       ],
@@ -603,11 +821,22 @@ String _classicSidebarInitials(ResumeData resume) {
 
 CustomSectionItem? _classicSidebarLanguagesSection(ResumeData resume) {
   for (final item in resume.visibleCustomSections) {
-    if (item.title.trim().toLowerCase() == 'languages') {
+    if (_isClassicSidebarLanguagesTitle(item.title)) {
       return item;
     }
   }
   return null;
+}
+
+bool _isClassicSidebarLanguagesTitle(String title) {
+  final normalized = title.trim().toLowerCase().replaceAll(
+    RegExp(r'[^a-z]'),
+    '',
+  );
+  return normalized == 'language' ||
+      normalized == 'languages' ||
+      normalized == 'langueage' ||
+      normalized == 'langueages';
 }
 
 List<CustomSectionItem> _classicSidebarMainCustomSections(ResumeData resume) {

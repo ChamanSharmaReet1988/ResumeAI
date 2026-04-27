@@ -821,190 +821,192 @@ class _CreativePreview extends StatelessWidget {
             ),
           ),
           Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: mainContentInset),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _pdfAlignedDisplayName(resume).toUpperCase(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: bodyStyle.copyWith(
-                        fontSize: nameFontSize,
-                        fontWeight: FontWeight.w900,
-                        height: 1.0,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    if (resume.jobTitle.trim().isNotEmpty) ...[
-                      const SizedBox(height: 5),
+            padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: mainContentInset),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        resume.jobTitle.trim(),
-                        maxLines: 1,
+                        _pdfAlignedDisplayName(resume).toUpperCase(),
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: bodyStyle.copyWith(
-                          color: mutedColor,
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.w700,
+                          fontSize: nameFontSize,
+                          fontWeight: FontWeight.w900,
+                          height: 1.0,
+                          letterSpacing: 0.2,
                         ),
                       ),
-                    ],
-                    const SizedBox(height: sectionGap),
-                    _CreativeSidebarHeading(
-                      title: 'SUMMARY',
-                      lineColor: lineColor,
-                    ),
-                    const SizedBox(height: headingGap),
-                    Text(
-                      summary.ifBlank(
-                        'Add a short summary to position your experience and strengths.',
-                      ),
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                      style: bodyStyle.copyWith(color: mutedColor),
-                    ),
-                    const SizedBox(height: sectionGap),
-                    _CreativeSidebarHeading(
-                      title: 'EXPERIENCE',
-                      lineColor: lineColor,
-                    ),
-                    const SizedBox(height: headingGap),
-                    if (experiences.isNotEmpty)
-                      ...experiences.take(2).map((item) {
-                        final title = [
-                          item.role.trim(),
-                          item.startDate.trim(),
-                          item.endDate.trim(),
-                        ].where((s) => s.isNotEmpty).join(' • ');
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title.ifBlank('Role'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: bodyStyle.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              Text(
-                                item.company.ifBlank('Company'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: bodyStyle.copyWith(
-                                  color: mutedColor,
-                                  fontStyle: FontStyle.italic,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              _CreativeBulletColumn(
-                                items: _workBulletLines(item).take(1).toList(),
-                                bodyStyle: bodyStyle,
-                              ),
-                            ],
-                          ),
-                        );
-                      })
-                    else
-                      Text(
-                        'Add your work experience details.',
-                        style: bodyStyle.copyWith(color: mutedColor),
-                      ),
-                    if (education.isNotEmpty) ...[
-                      const SizedBox(height: sectionGap),
-                      _CreativeSidebarHeading(
-                        title: 'EDUCATION',
-                        lineColor: lineColor,
-                      ),
-                      const SizedBox(height: headingGap),
-                      ...education
-                          .take(2)
-                          .map(
-                            (item) => Padding(
-                              padding: const EdgeInsets.only(bottom: 7),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.degree.ifBlank('Degree'),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: bodyStyle.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 1),
-                                  Text(
-                                    item.institution.ifBlank('Institution'),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: bodyStyle.copyWith(
-                                      color: mutedColor,
-                                      fontSize: bodyStyle.fontSize! - 0.4,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                    ],
-                    const SizedBox(height: sectionGap),
-                    _CreativeSidebarHeading(
-                      title: 'SKILLS',
-                      lineColor: lineColor,
-                    ),
-                    const SizedBox(height: headingGap),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _CreativeBulletColumn(
-                            items: skills.take(midpoint).toList(),
-                            bodyStyle: bodyStyle,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _CreativeBulletColumn(
-                            items: skills.skip(midpoint).toList(),
-                            bodyStyle: bodyStyle,
+                      if (resume.jobTitle.trim().isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          resume.jobTitle.trim(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: bodyStyle.copyWith(
+                            color: mutedColor,
+                            fontStyle: FontStyle.italic,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: sectionGap),
-                    _CreativeSidebarHeading(
-                      title: 'PROJECTS',
-                      lineColor: lineColor,
-                    ),
-                    const SizedBox(height: headingGap),
-                    Text(
-                      projects.isNotEmpty
-                          ? projects.first.title.ifBlank('Project')
-                          : 'Add projects',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: bodyStyle.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    if (projects.isNotEmpty)
+                      const SizedBox(height: sectionGap),
+                      _CreativeSidebarHeading(
+                        title: 'SUMMARY',
+                        lineColor: lineColor,
+                      ),
+                      const SizedBox(height: headingGap),
                       Text(
-                        firstProjectLine,
-                        maxLines: 2,
+                        summary.ifBlank(
+                          'Add a short summary to position your experience and strengths.',
+                        ),
+                        maxLines: 5,
                         overflow: TextOverflow.ellipsis,
                         style: bodyStyle.copyWith(color: mutedColor),
                       ),
-                  ],
+                      const SizedBox(height: sectionGap),
+                      _CreativeSidebarHeading(
+                        title: 'EXPERIENCE',
+                        lineColor: lineColor,
+                      ),
+                      const SizedBox(height: headingGap),
+                      if (experiences.isNotEmpty)
+                        ...experiences.take(2).map((item) {
+                          final title = [
+                            item.role.trim(),
+                            item.startDate.trim(),
+                            item.endDate.trim(),
+                          ].where((s) => s.isNotEmpty).join(' • ');
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title.ifBlank('Role'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: bodyStyle.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                Text(
+                                  item.company.ifBlank('Company'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: bodyStyle.copyWith(
+                                    color: mutedColor,
+                                    fontStyle: FontStyle.italic,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                _CreativeBulletColumn(
+                                  items: _workBulletLines(
+                                    item,
+                                  ).take(1).toList(),
+                                  bodyStyle: bodyStyle,
+                                ),
+                              ],
+                            ),
+                          );
+                        })
+                      else
+                        Text(
+                          'Add your work experience details.',
+                          style: bodyStyle.copyWith(color: mutedColor),
+                        ),
+                      if (education.isNotEmpty) ...[
+                        const SizedBox(height: sectionGap),
+                        _CreativeSidebarHeading(
+                          title: 'EDUCATION',
+                          lineColor: lineColor,
+                        ),
+                        const SizedBox(height: headingGap),
+                        ...education
+                            .take(2)
+                            .map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.only(bottom: 7),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.degree.ifBlank('Degree'),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: bodyStyle.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      item.institution.ifBlank('Institution'),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: bodyStyle.copyWith(
+                                        color: mutedColor,
+                                        fontSize: bodyStyle.fontSize! - 0.4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                      ],
+                      const SizedBox(height: sectionGap),
+                      _CreativeSidebarHeading(
+                        title: 'SKILLS',
+                        lineColor: lineColor,
+                      ),
+                      const SizedBox(height: headingGap),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _CreativeBulletColumn(
+                              items: skills.take(midpoint).toList(),
+                              bodyStyle: bodyStyle,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _CreativeBulletColumn(
+                              items: skills.skip(midpoint).toList(),
+                              bodyStyle: bodyStyle,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: sectionGap),
+                      _CreativeSidebarHeading(
+                        title: 'PROJECTS',
+                        lineColor: lineColor,
+                      ),
+                      const SizedBox(height: headingGap),
+                      Text(
+                        projects.isNotEmpty
+                            ? projects.first.title.ifBlank('Project')
+                            : 'Add projects',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: bodyStyle.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      if (projects.isNotEmpty)
+                        Text(
+                          firstProjectLine,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: bodyStyle.copyWith(color: mutedColor),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1694,7 +1696,14 @@ List<Widget> _classicSidebarContactRows(
 
 CustomSectionItem? _classicSidebarLanguagesSection(ResumeData resume) {
   for (final item in resume.visibleCustomSections) {
-    if (item.title.trim().toLowerCase() == 'languages') {
+    final normalized = item.title.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z]'),
+      '',
+    );
+    if (normalized == 'language' ||
+        normalized == 'languages' ||
+        normalized == 'langueage' ||
+        normalized == 'langueages') {
       return item;
     }
   }

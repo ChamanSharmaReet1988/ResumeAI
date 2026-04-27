@@ -378,6 +378,16 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final highlightColor = PdfColor.fromHex('#FFE67A');
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final customSections = _classicSidebarMainCustomSections(resume);
+    final sidebarPageCount = _classicSidebarPageSlices(
+      resume: resume,
+      bodyPt: bodyPt,
+      highlightedSkills: highlightedSkills,
+      pageFormat: PdfPageFormat.a4,
+    ).length;
+    pw.Widget sidebarWrap(pw.Widget child) => _classicSidebarMainColumnChild(
+      child,
+      sidebarPageCount: sidebarPageCount,
+    );
 
     document.addPage(
       pw.MultiPage(
@@ -394,7 +404,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         ),
         header: _continuedPageTopGap,
         build: (context) => [
-          _classicSidebarMainColumnChild(
+          sidebarWrap(
             _buildClassicSidebarHeader(
               resume,
               titleColor: titleColor,
@@ -404,7 +414,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               bodyPt: bodyPt,
             ),
           ),
-          _classicSidebarMainColumnChild(
+          sidebarWrap(
             _buildClassicSidebarSection(
               title: 'Summary',
               titleColor: titleColor,
@@ -429,106 +439,127 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               ),
             ),
           ),
-          if (resume.includeWorkInResume)
-            _classicSidebarMainColumnChild(
+          if (resume.includeWorkInResume &&
+              resume.visibleWorkExperiences.isEmpty)
+            sidebarWrap(
               _buildClassicSidebarSection(
                 title: 'Experience',
                 titleColor: titleColor,
                 borderColor: borderColor,
-                child: resume.visibleWorkExperiences.isEmpty
-                    ? pw.Text(
-                        'Add your work experience details.',
-                        style: pw.TextStyle(
-                          color: mutedColor,
-                          fontSize: bodyPt,
-                        ),
-                      )
-                    : pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          for (
-                            var index = 0;
-                            index < resume.visibleWorkExperiences.length;
-                            index++
-                          )
-                            _buildHighlightedClassicSidebarExperience(
-                              resume.visibleWorkExperiences[index],
-                              highlightedBulletsByExperience[index] ??
-                                  const <String>{},
-                              highlightColor,
-                              titleColor: titleColor,
-                              mutedColor: mutedColor,
-                              accentColor: accentColor,
-                              bodyPt: bodyPt,
-                            ),
-                        ],
-                      ),
+                child: pw.Text(
+                  'Add your work experience details.',
+                  style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+                ),
               ),
             ),
-          if (resume.includeEducationInResume)
-            _classicSidebarMainColumnChild(
+          if (resume.includeWorkInResume &&
+              resume.visibleWorkExperiences.isNotEmpty) ...[
+            sidebarWrap(
+              _buildClassicSidebarSectionHeading(
+                title: 'Experience',
+                titleColor: titleColor,
+              ),
+            ),
+            for (
+              var index = 0;
+              index < resume.visibleWorkExperiences.length;
+              index++
+            )
+              sidebarWrap(
+                _buildClassicSidebarSectionBodyBlock(
+                  borderColor: borderColor,
+                  showBottomBorder:
+                      index == resume.visibleWorkExperiences.length - 1,
+                  child: _buildHighlightedClassicSidebarExperience(
+                    resume.visibleWorkExperiences[index],
+                    highlightedBulletsByExperience[index] ?? const <String>{},
+                    highlightColor,
+                    titleColor: titleColor,
+                    mutedColor: mutedColor,
+                    accentColor: accentColor,
+                    bodyPt: bodyPt,
+                  ),
+                ),
+              ),
+          ],
+          if (resume.includeEducationInResume &&
+              resume.visibleEducation.isEmpty)
+            sidebarWrap(
               _buildClassicSidebarSection(
                 title: 'Education',
                 titleColor: titleColor,
                 borderColor: borderColor,
-                child: resume.visibleEducation.isEmpty
-                    ? pw.Text(
-                        'Add your education details.',
-                        style: pw.TextStyle(
-                          color: mutedColor,
-                          fontSize: bodyPt,
-                        ),
-                      )
-                    : pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          for (final item in resume.visibleEducation)
-                            _buildClassicSidebarEducation(
-                              item,
-                              titleColor: titleColor,
-                              mutedColor: mutedColor,
-                              bodyPt: bodyPt,
-                            ),
-                        ],
-                      ),
-              ),
-            ),
-          if (resume.includeProjectsInResume &&
-              resume.visibleProjects.isNotEmpty)
-            _classicSidebarMainColumnChild(
-              _buildClassicSidebarSection(
-                title: 'Projects',
-                titleColor: titleColor,
-                borderColor: borderColor,
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    for (final item in resume.visibleProjects)
-                      _buildClassicSidebarProject(
-                        item,
-                        titleColor: titleColor,
-                        mutedColor: mutedColor,
-                        accentColor: accentColor,
-                        bodyPt: bodyPt,
-                      ),
-                  ],
+                child: pw.Text(
+                  'Add your education details.',
+                  style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
                 ),
               ),
             ),
-          for (final section in customSections)
-            _classicSidebarMainColumnChild(
-              _buildClassicSidebarSection(
-                title: section.title.ifEmpty('Custom Section'),
+          if (resume.includeEducationInResume &&
+              resume.visibleEducation.isNotEmpty) ...[
+            sidebarWrap(
+              _buildClassicSidebarSectionHeading(
+                title: 'Education',
                 titleColor: titleColor,
+              ),
+            ),
+            for (var index = 0; index < resume.visibleEducation.length; index++)
+              sidebarWrap(
+                _buildClassicSidebarSectionBodyBlock(
+                  borderColor: borderColor,
+                  showBottomBorder: index == resume.visibleEducation.length - 1,
+                  child: _buildClassicSidebarEducation(
+                    resume.visibleEducation[index],
+                    titleColor: titleColor,
+                    mutedColor: mutedColor,
+                    bodyPt: bodyPt,
+                  ),
+                ),
+              ),
+          ],
+          if (resume.includeProjectsInResume &&
+              resume.visibleProjects.isNotEmpty) ...[
+            sidebarWrap(
+              _buildClassicSidebarSectionHeading(
+                title: 'Projects',
+                titleColor: titleColor,
+              ),
+            ),
+            for (var index = 0; index < resume.visibleProjects.length; index++)
+              sidebarWrap(
+                _buildClassicSidebarSectionBodyBlock(
+                  borderColor: borderColor,
+                  showBottomBorder: index == resume.visibleProjects.length - 1,
+                  child: _buildClassicSidebarProject(
+                    resume.visibleProjects[index],
+                    titleColor: titleColor,
+                    mutedColor: mutedColor,
+                    accentColor: accentColor,
+                    bodyPt: bodyPt,
+                  ),
+                ),
+              ),
+          ],
+          for (var index = 0; index < customSections.length; index++) ...[
+            sidebarWrap(
+              _buildClassicSidebarSectionHeading(
+                title: customSections[index].title.ifEmpty('Custom Section'),
+                titleColor: titleColor,
+              ),
+            ),
+            sidebarWrap(
+              _buildClassicSidebarSectionBodyBlock(
                 borderColor: borderColor,
+                showBottomBorder: true,
                 child: _buildClassicSidebarCustomSection(
-                  section,
+                  customSections[index],
                   mutedColor: mutedColor,
                   accentColor: accentColor,
                   bodyPt: bodyPt,
                 ),
               ),
             ),
+          ],
         ],
       ),
     );
