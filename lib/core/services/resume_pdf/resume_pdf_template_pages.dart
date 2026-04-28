@@ -85,11 +85,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             ),
           ),
           pw.SizedBox(height: 18),
-          _darkHeaderSection(
-            title: 'Summary',
-            lineColor: lineColor,
-            sectionTitleColor: sectionTitleColor,
-            child: pw.Text(resume.summary.trim()),
+          ..._darkHeaderSummarySectionWidgets(
+            resume.summary.trim(),
+            lineColor,
+            sectionTitleColor,
           ),
           if (resume.includeWorkInResume)
             ..._darkHeaderExperienceSectionWidgets(
@@ -99,87 +98,170 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               bodyPt,
             ),
           if (resume.includeEducationInResume)
-            _darkHeaderSection(
-              title: 'Education',
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  for (final item in resume.visibleEducation)
-                    _buildCorporateEducation(item, bodyFontPt: bodyPt),
-                ],
-              ),
+            ..._darkHeaderEducationSectionWidgets(
+              resume.visibleEducation,
+              lineColor,
+              sectionTitleColor,
+              bodyPt,
             ),
           if (resume.includeSkillsInResume)
-            _darkHeaderSection(
-              title: 'Skills',
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: _twoColumnBulletList(
-                _skillsForDisplay(resume),
-                columnGap: 24,
-                itemBottom: 5,
-                fontSize: bodyPt,
-              ),
+            ..._darkHeaderSkillsSectionWidgets(
+              _skillsForDisplay(resume),
+              lineColor,
+              sectionTitleColor,
+              bodyPt,
             ),
           if (resume.includeProjectsInResume)
-            _darkHeaderSection(
-              title: 'Projects',
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: pw.Column(
-                children: [
-                  for (final item in resume.visibleProjects)
-                    _buildCompactProject(item, bodyFontPt: bodyPt),
-                ],
-              ),
+            ..._darkHeaderProjectsSectionWidgets(
+              resume.visibleProjects,
+              lineColor,
+              sectionTitleColor,
+              bodyPt,
             ),
           for (final item in resume.visibleCustomSections)
-            _darkHeaderSection(
-              title: item.title.ifEmpty('Custom Section'),
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: _pwCustomSectionBody(item),
+            ..._darkHeaderCustomSectionWidgets(
+              item,
+              lineColor,
+              sectionTitleColor,
             ),
         ],
       ),
     );
   }
 
-  pw.Widget _darkHeaderSection({
+  List<pw.Widget> _darkHeaderSectionPrefixWidgets({
     required String title,
     required PdfColor lineColor,
     required PdfColor sectionTitleColor,
-    required pw.Widget child,
   }) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
+    return [
+      pw.Padding(
+        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        child: _darkHeaderHeadingText(
+          title.toUpperCase(),
+          color: sectionTitleColor,
+        ),
+      ),
+      pw.SizedBox(height: 7),
+      pw.Padding(
+        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        child: pw.Container(height: 2, color: lineColor),
+      ),
+      pw.SizedBox(height: 12),
+    ];
+  }
+
+  List<pw.Widget> _darkHeaderSectionSuffixWidgets() {
+    return [pw.SizedBox(height: ResumeTypography.sectionGapPdfPt)];
+  }
+
+  List<pw.Widget> _darkHeaderSummarySectionWidgets(
+    String summary,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+  ) {
+    return [
+      ..._darkHeaderSectionPrefixWidgets(
+        title: 'Summary',
+        lineColor: lineColor,
+        sectionTitleColor: sectionTitleColor,
+      ),
+      pw.Padding(
+        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        child: pw.Text(summary),
+      ),
+      ..._darkHeaderSectionSuffixWidgets(),
+    ];
+  }
+
+  List<pw.Widget> _darkHeaderEducationSectionWidgets(
+    List<EducationItem> items,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+    double bodyPt,
+  ) {
+    return [
+      ..._darkHeaderSectionPrefixWidgets(
+        title: 'Education',
+        lineColor: lineColor,
+        sectionTitleColor: sectionTitleColor,
+      ),
+      for (final item in items)
         pw.Padding(
           padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
-          child: _darkHeaderHeadingText(
-            title.toUpperCase(),
-            color: sectionTitleColor,
-          ),
+          child: _buildCorporateEducation(item, bodyFontPt: bodyPt),
         ),
-        pw.SizedBox(height: 7),
+      ..._darkHeaderSectionSuffixWidgets(),
+    ];
+  }
+
+  List<pw.Widget> _darkHeaderSkillsSectionWidgets(
+    List<String> skills,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+    double bodyPt,
+  ) {
+    return [
+      ..._darkHeaderSectionPrefixWidgets(
+        title: 'Skills',
+        lineColor: lineColor,
+        sectionTitleColor: sectionTitleColor,
+      ),
+      for (final row in _twoColumnBulletRows(
+        skills,
+        columnGap: 24,
+        itemBottom: 5,
+        fontSize: bodyPt,
+      ))
         pw.Padding(
           padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
-          child: pw.Container(height: 2, color: lineColor),
+          child: row,
         ),
-        pw.SizedBox(height: 12),
-        pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(
-            30,
-            0,
-            30,
-            ResumeTypography.sectionGapPdfPt,
+      ..._darkHeaderSectionSuffixWidgets(),
+    ];
+  }
+
+  List<pw.Widget> _darkHeaderProjectsSectionWidgets(
+    List<ProjectItem> items,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+    double bodyPt,
+  ) {
+    return [
+      ..._darkHeaderSectionPrefixWidgets(
+        title: 'Projects',
+        lineColor: lineColor,
+        sectionTitleColor: sectionTitleColor,
+      ),
+      for (final item in items)
+        ..._buildCompactProjectWidgets(item, bodyFontPt: bodyPt).map(
+          (widget) => pw.Padding(
+            padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+            child: widget,
           ),
-          child: child,
         ),
-      ],
-    );
+      ..._darkHeaderSectionSuffixWidgets(),
+    ];
+  }
+
+  List<pw.Widget> _darkHeaderCustomSectionWidgets(
+    CustomSectionItem item,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+  ) {
+    return [
+      ..._darkHeaderSectionPrefixWidgets(
+        title: item.title.ifEmpty('Custom Section'),
+        lineColor: lineColor,
+        sectionTitleColor: sectionTitleColor,
+      ),
+      for (final widget in _pwCustomSectionBodyWidgets(item))
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: widget,
+        ),
+      ..._darkHeaderSectionSuffixWidgets(),
+    ];
   }
 
   List<pw.Widget> _darkHeaderExperienceSectionWidgets(

@@ -276,6 +276,42 @@ void main() {
     );
   }
 
+  ResumeData buildLongCorporateResume() {
+    return buildLongClassicSidebarSectionResume().copyWith(
+      template: ResumeTemplate.corporate,
+      title: 'Corporate Template Overflow Test',
+      fullName: 'Chaman Sharma',
+      jobTitle: 'iOS Tech Lead',
+      email: 'chaman@example.com',
+      phone: '+91 433423423',
+      location: 'Bengaluru, India',
+      summary:
+          'Chaman Sharma is an iOS Tech Lead with delivery, collaboration, and measurable execution across resume tooling, mobile development, and recruiter-facing workflows.',
+      skills: const [
+        'bhfchgchngcngcv',
+        'Communication',
+        'Communication',
+        'Cross-functional Collaboration',
+        'Cross-functional Collaboration',
+        'Documentation',
+        'Documentation',
+        'dsadasd',
+        'Execution',
+        'Execution',
+        'Mobile App Development',
+        'Mobile App Development',
+        'Presentation Skills',
+        'Presentation Skills',
+        'Problem Solving',
+        'Project Management',
+        'Project Management',
+        'Stakeholder Management',
+        'Stakeholder Management',
+        'swift',
+      ],
+    );
+  }
+
   test(
     'creative template PDF paginates long resumes without overflow',
     () async {
@@ -366,6 +402,36 @@ void main() {
       final service = ResumePdfService();
       final pdfBytes = await service.buildPdf(
         buildLongClassicSidebarSectionResume(),
+      );
+
+      expect(pdfBytes, isNotEmpty);
+    },
+  );
+
+  test(
+    'corporate template PDF renders long resumes without crashing',
+    () async {
+      final service = ResumePdfService();
+      final pdfBytes = await service.buildPdf(buildLongCorporateResume());
+
+      expect(pdfBytes, isNotEmpty);
+    },
+  );
+
+  test(
+    'highlighted corporate template PDF renders long resumes without crashing',
+    () async {
+      final service = ResumePdfService();
+      final resume = buildLongCorporateResume();
+      final pdfBytes = await service.buildHighlightedResumePdf(
+        resume: resume,
+        highlightSummary: true,
+        highlightedSkills: const {'Communication', 'swift'},
+        highlightedBulletsByExperience: const {
+          0: {
+            'Built planning models that improved monthly forecast accuracy and reduced reporting turnaround time.',
+          },
+        },
       );
 
       expect(pdfBytes, isNotEmpty);

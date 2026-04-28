@@ -55,6 +55,35 @@ pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
   }
 }
 
+List<pw.Widget> _pwCustomSectionBodyWidgets(CustomSectionItem item) {
+  switch (item.layoutMode) {
+    case CustomSectionLayoutMode.summary:
+      final content = item.content.trim();
+      if (content.isEmpty) {
+        return const <pw.Widget>[];
+      }
+      return [pw.Text(content)];
+    case CustomSectionLayoutMode.bullets:
+      final lines = item.bullets.where((b) => b.trim().isNotEmpty).toList();
+      if (lines.isEmpty) {
+        return const <pw.Widget>[];
+      }
+      return [
+        for (var i = 0; i < lines.length; i++)
+          pw.Padding(
+            padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
+            child: pw.Bullet(
+              text: lines[i].trim(),
+              style: pw.TextStyle(
+                color: PdfColors.black,
+                fontSize: ResumeTypography.bodyPt,
+              ),
+            ),
+          ),
+      ];
+  }
+}
+
 pw.Widget _creativeAvatarIconPlaceholder({
   double width = 96,
   double height = 112,
@@ -544,8 +573,8 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
       }
 
       if (pageItems.isNotEmpty) {
-        final showSkillsHeading = section.type !=
-                _ClassicSidebarSectionType.skills ||
+        final showSkillsHeading =
+            section.type != _ClassicSidebarSectionType.skills ||
             !skillsSectionTitleUsed;
         pageSections.add(
           _ClassicSidebarPageSection(
@@ -3871,41 +3900,6 @@ class ResumePdfService {
     return const <String>[];
   }
 
-  pw.Widget _corporateSection({
-    required String title,
-    required PdfColor lineColor,
-    required pw.Widget child,
-    PdfColor? sectionTitleColor,
-  }) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
-          child: _corporateHeadingText(
-            title.toUpperCase(),
-            color: sectionTitleColor,
-          ),
-        ),
-        pw.SizedBox(height: 8),
-        pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
-          child: child,
-        ),
-        pw.SizedBox(height: 10),
-        pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(
-            30,
-            0,
-            30,
-            ResumeTypography.sectionGapPdfPt,
-          ),
-          child: pw.Container(height: 2, color: lineColor),
-        ),
-      ],
-    );
-  }
-
   pw.Widget _corporateHeadingText(String value, {PdfColor? color}) {
     final style = pw.TextStyle(
       fontSize: ResumeTypography.darkHeaderSectionTitlePt,
@@ -3958,27 +3952,6 @@ class ResumePdfService {
           ),
         ),
     ];
-  }
-
-  pw.Widget _twoColumnBulletList(
-    List<String> items, {
-    double columnGap = 20,
-    double itemBottom = 3,
-    double fontSize = ResumeTypography.bodyPt,
-  }) {
-    final rows = _twoColumnBulletRows(
-      items,
-      columnGap: columnGap,
-      itemBottom: itemBottom,
-      fontSize: fontSize,
-    );
-    if (rows.isEmpty) {
-      return pw.SizedBox();
-    }
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: rows,
-    );
   }
 
   String _workSummaryText(WorkExperience item) {
@@ -4155,6 +4128,74 @@ class ResumePdfService {
           ),
       ],
     );
+  }
+
+  List<pw.Widget> _twoColumnBulletRowsWithHighlights(
+    List<String> items,
+    Set<String> highlightedSkills,
+    PdfColor highlightColor, {
+    double columnGap = 20,
+    double itemBottom = 3,
+    double fontSize = ResumeTypography.bodyPt,
+  }) {
+    final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
+    if (cleaned.isEmpty) {
+      return const <pw.Widget>[];
+    }
+    final leftCount = (cleaned.length / 2).ceil();
+    return [
+      for (var i = 0; i < leftCount; i++)
+        pw.Padding(
+          padding: pw.EdgeInsets.only(bottom: itemBottom),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  color: highlightedSkills.contains(cleaned[i])
+                      ? highlightColor
+                      : PdfColors.white,
+                  child: pw.Bullet(
+                    text: cleaned[i],
+                    style: pw.TextStyle(
+                      color: PdfColors.black,
+                      fontSize: fontSize,
+                    ),
+                  ),
+                ),
+              ),
+              pw.SizedBox(width: columnGap),
+              pw.Expanded(
+                child: i + leftCount < cleaned.length
+                    ? pw.Container(
+                        width: double.infinity,
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        color:
+                            highlightedSkills.contains(cleaned[i + leftCount])
+                            ? highlightColor
+                            : PdfColors.white,
+                        child: pw.Bullet(
+                          text: cleaned[i + leftCount],
+                          style: pw.TextStyle(
+                            color: PdfColors.black,
+                            fontSize: fontSize,
+                          ),
+                        ),
+                      )
+                    : pw.SizedBox(),
+              ),
+            ],
+          ),
+        ),
+    ];
   }
 
   pw.Widget _buildHighlightedCreativeExperience(
@@ -4353,6 +4394,25 @@ class ResumePdfService {
         ],
       ),
     );
+  }
+
+  List<pw.Widget> _buildCompactProjectWidgets(
+    ProjectItem item, {
+    double bodyFontPt = ResumeTypography.bodyPt,
+  }) {
+    final bullets = _projectBulletLines(item);
+    return [
+      _corporateStrokeLabelText(item.title.ifEmpty('Project')),
+      for (var i = 0; i < bullets.length; i++)
+        pw.Padding(
+          padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
+          child: pw.Bullet(
+            text: bullets[i],
+            style: pw.TextStyle(color: PdfColors.black, fontSize: bodyFontPt),
+          ),
+        ),
+      pw.SizedBox(height: 8),
+    ];
   }
 
   List<String> _projectBulletLines(ProjectItem item) {

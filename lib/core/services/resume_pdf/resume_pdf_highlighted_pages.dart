@@ -70,102 +70,49 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             ),
           ),
           pw.SizedBox(height: 18),
-          _corporateSection(
-            title: 'Summary',
-            lineColor: lineColor,
-            sectionTitleColor: sectionTitleColor,
-            child: pw.Container(
-              width: double.infinity,
-              padding: const pw.EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 6,
-              ),
-              color: highlightSummary ? highlightColor : PdfColors.white,
-              child: pw.Text(resume.summary.trim()),
-            ),
+          ..._highlightedCorporateSummarySectionWidgets(
+            resume.summary.trim(),
+            lineColor,
+            sectionTitleColor,
+            highlightColor,
+            highlightSummary: highlightSummary,
           ),
           if (resume.includeWorkInResume)
-            _corporateSection(
-              title: 'Experience',
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: pw.Column(
-                children: [
-                  for (
-                    var index = 0;
-                    index < resume.visibleWorkExperiences.length;
-                    index++
-                  )
-                    _buildHighlightedCorporateExperience(
-                      resume.visibleWorkExperiences[index],
-                      highlightedBulletsByExperience[index] ?? const <String>{},
-                      highlightColor,
-                      bodyFontPt: bodyPt,
-                    ),
-                ],
-              ),
+            ..._highlightedCorporateExperienceSectionWidgets(
+              resume.visibleWorkExperiences,
+              highlightedBulletsByExperience,
+              lineColor,
+              sectionTitleColor,
+              highlightColor,
+              bodyPt,
             ),
           if (resume.includeEducationInResume)
-            _corporateSection(
-              title: 'Education',
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  for (final item in resume.visibleEducation)
-                    _buildCorporateEducation(item, bodyFontPt: bodyPt),
-                ],
-              ),
+            ..._highlightedCorporateEducationSectionWidgets(
+              resume.visibleEducation,
+              lineColor,
+              sectionTitleColor,
+              bodyPt,
             ),
           if (resume.includeSkillsInResume)
-            _corporateSection(
-              title: 'Skills',
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: pw.Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: _skillsForDisplay(resume)
-                    .map(
-                      (skill) => pw.Container(
-                        padding: const pw.EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 5,
-                        ),
-                        decoration: pw.BoxDecoration(
-                          color: highlightedSkills.contains(skill)
-                              ? highlightColor
-                              : PdfColor.fromHex('#F4F6F8'),
-                          borderRadius: pw.BorderRadius.circular(12),
-                        ),
-                        child: pw.Text(
-                          skill,
-                          style: const pw.TextStyle(fontSize: 9),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
+            ..._highlightedCorporateSkillsSectionWidgets(
+              _skillsForDisplay(resume),
+              highlightedSkills,
+              lineColor,
+              sectionTitleColor,
+              highlightColor,
             ),
           if (resume.includeProjectsInResume)
-            _corporateSection(
-              title: 'Projects',
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: pw.Column(
-                children: [
-                  for (final item in resume.visibleProjects)
-                    _buildCompactProject(item, bodyFontPt: bodyPt),
-                ],
-              ),
+            ..._highlightedCorporateProjectsSectionWidgets(
+              resume.visibleProjects,
+              lineColor,
+              sectionTitleColor,
+              bodyPt,
             ),
           for (final item in resume.visibleCustomSections)
-            _corporateSection(
-              title: item.title.ifEmpty('Custom Section'),
-              lineColor: lineColor,
-              sectionTitleColor: sectionTitleColor,
-              child: _pwCustomSectionBody(item),
+            ..._highlightedCorporateCustomSectionWidgets(
+              item,
+              lineColor,
+              sectionTitleColor,
             ),
         ],
       ),
@@ -179,6 +126,177 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
       fontWeight: pw.FontWeight.bold,
     );
     return pw.Text(value, style: style);
+  }
+
+  List<pw.Widget> _highlightedCorporateSectionPrefixWidgets({
+    required String title,
+    required PdfColor sectionTitleColor,
+  }) {
+    return [
+      pw.Padding(
+        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        child: _corporateHeadingText(
+          title.toUpperCase(),
+          color: sectionTitleColor,
+        ),
+      ),
+      pw.SizedBox(height: 8),
+    ];
+  }
+
+  List<pw.Widget> _highlightedCorporateSectionSuffixWidgets(
+    PdfColor lineColor,
+  ) {
+    return [
+      pw.SizedBox(height: 10),
+      pw.Padding(
+        padding: const pw.EdgeInsets.fromLTRB(
+          30,
+          0,
+          30,
+          ResumeTypography.sectionGapPdfPt,
+        ),
+        child: pw.Container(height: 2, color: lineColor),
+      ),
+    ];
+  }
+
+  List<pw.Widget> _highlightedCorporateSummarySectionWidgets(
+    String summary,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+    PdfColor highlightColor, {
+    required bool highlightSummary,
+  }) {
+    return [
+      ..._highlightedCorporateSectionPrefixWidgets(
+        title: 'Summary',
+        sectionTitleColor: sectionTitleColor,
+      ),
+      pw.Padding(
+        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        child: pw.Container(
+          width: double.infinity,
+          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          color: highlightSummary ? highlightColor : PdfColors.white,
+          child: pw.Text(summary),
+        ),
+      ),
+      ..._highlightedCorporateSectionSuffixWidgets(lineColor),
+    ];
+  }
+
+  List<pw.Widget> _highlightedCorporateExperienceSectionWidgets(
+    List<WorkExperience> items,
+    Map<int, Set<String>> highlightedBulletsByExperience,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+    PdfColor highlightColor,
+    double bodyPt,
+  ) {
+    return [
+      ..._highlightedCorporateSectionPrefixWidgets(
+        title: 'Experience',
+        sectionTitleColor: sectionTitleColor,
+      ),
+      for (var index = 0; index < items.length; index++)
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: _buildHighlightedCorporateExperience(
+            items[index],
+            highlightedBulletsByExperience[index] ?? const <String>{},
+            highlightColor,
+            bodyFontPt: bodyPt,
+          ),
+        ),
+      ..._highlightedCorporateSectionSuffixWidgets(lineColor),
+    ];
+  }
+
+  List<pw.Widget> _highlightedCorporateEducationSectionWidgets(
+    List<EducationItem> items,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+    double bodyPt,
+  ) {
+    return [
+      ..._highlightedCorporateSectionPrefixWidgets(
+        title: 'Education',
+        sectionTitleColor: sectionTitleColor,
+      ),
+      for (final item in items)
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: _buildCorporateEducation(item, bodyFontPt: bodyPt),
+        ),
+      ..._highlightedCorporateSectionSuffixWidgets(lineColor),
+    ];
+  }
+
+  List<pw.Widget> _highlightedCorporateSkillsSectionWidgets(
+    List<String> skills,
+    Set<String> highlightedSkills,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+    PdfColor highlightColor,
+  ) {
+    return [
+      ..._highlightedCorporateSectionPrefixWidgets(
+        title: 'Skills',
+        sectionTitleColor: sectionTitleColor,
+      ),
+      for (final row in _twoColumnBulletRowsWithHighlights(
+        skills,
+        highlightedSkills,
+        highlightColor,
+      ))
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: row,
+        ),
+      ..._highlightedCorporateSectionSuffixWidgets(lineColor),
+    ];
+  }
+
+  List<pw.Widget> _highlightedCorporateProjectsSectionWidgets(
+    List<ProjectItem> items,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+    double bodyPt,
+  ) {
+    return [
+      ..._highlightedCorporateSectionPrefixWidgets(
+        title: 'Projects',
+        sectionTitleColor: sectionTitleColor,
+      ),
+      for (final item in items)
+        ..._buildCompactProjectWidgets(item, bodyFontPt: bodyPt).map(
+          (widget) => pw.Padding(
+            padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+            child: widget,
+          ),
+        ),
+      ..._highlightedCorporateSectionSuffixWidgets(lineColor),
+    ];
+  }
+
+  List<pw.Widget> _highlightedCorporateCustomSectionWidgets(
+    CustomSectionItem item,
+    PdfColor lineColor,
+    PdfColor sectionTitleColor,
+  ) {
+    return [
+      ..._highlightedCorporateSectionPrefixWidgets(
+        title: item.title.ifEmpty('Custom Section'),
+        sectionTitleColor: sectionTitleColor,
+      ),
+      for (final widget in _pwCustomSectionBodyWidgets(item))
+        pw.Padding(
+          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          child: widget,
+        ),
+      ..._highlightedCorporateSectionSuffixWidgets(lineColor),
+    ];
   }
 
   void _addHighlightedCreativeTemplatePage(
