@@ -239,6 +239,43 @@ void main() {
     );
   }
 
+  ResumeData buildLongClassicSidebarSectionResume() {
+    final projects = List<ProjectItem>.generate(
+      8,
+      (index) => ProjectItem(
+        title: 'Finance Systems Rollout ${index + 1}',
+        overview:
+            'Coordinated reporting changes, stakeholder updates, rollout plans, and recurring review checkpoints across distributed teams.',
+        bullets: const [
+          'Documented rollout milestones, ownership maps, reporting dependencies, and executive checkpoints for monthly governance reviews.',
+          'Prepared narrative updates that connected financial impact, execution risks, delivery blockers, and next-step decisions.',
+          'Aligned implementation details with operations, finance partners, and leadership stakeholders across multiple handoff moments.',
+        ],
+      ),
+    );
+
+    final customSections = List<CustomSectionItem>.generate(
+      3,
+      (index) => CustomSectionItem(
+        title: index == 0 ? 'AI Tools' : 'Certifications ${index + 1}',
+        content: '',
+        layoutMode: CustomSectionLayoutMode.bullets,
+        bullets: const [
+          'Created detailed operational playbooks, reporting templates, and reusable checklists for repeatable delivery.',
+          'Built structured update packs with stakeholder context, risk summaries, decision points, and action tracking.',
+          'Maintained weekly coordination notes, retrospective summaries, and process-improvement recommendations.',
+          'Tracked rollout dependencies, communication plans, and follow-up actions across multiple internal partners.',
+          'Prepared concise written summaries that translated complex project status into business-facing language.',
+        ],
+      ),
+    );
+
+    return buildLongClassicSidebarResume().copyWith(
+      projects: projects,
+      customSections: customSections,
+    );
+  }
+
   test(
     'creative template PDF paginates long resumes without overflow',
     () async {
@@ -317,6 +354,18 @@ void main() {
             'Prepared finance summaries, board-ready reporting, and variance commentary for leadership reviews.',
           },
         },
+      );
+
+      expect(pdfBytes, isNotEmpty);
+    },
+  );
+
+  test(
+    'classic sidebar template handles long project and custom sections without too many pages',
+    () async {
+      final service = ResumePdfService();
+      final pdfBytes = await service.buildPdf(
+        buildLongClassicSidebarSectionResume(),
       );
 
       expect(pdfBytes, isNotEmpty);

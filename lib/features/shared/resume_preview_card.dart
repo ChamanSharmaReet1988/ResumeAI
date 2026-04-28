@@ -1178,7 +1178,6 @@ class _ClassicSidebarPreview extends StatelessWidget {
                       padding: const EdgeInsets.only(top: _sectionBlockTopGap),
                       child: _ClassicContentSection(
                         title: 'SUMMARY',
-                        borderColor: sectionBorderColor,
                         child: Text(
                           resume.summary.trim().ifBlank(
                             'Add a short summary to position your experience and strengths.',
@@ -1191,7 +1190,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
                     ),
                     _ClassicContentSection(
                       title: 'EXPERIENCE',
-                      borderColor: sectionBorderColor,
+                      topDividerColor: sectionBorderColor,
                       child: experiences.isEmpty
                           ? Text(
                               'Add your work experience details.',
@@ -1216,7 +1215,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
                     ),
                     _ClassicContentSection(
                       title: 'EDUCATION',
-                      borderColor: sectionBorderColor,
+                      topDividerColor: sectionBorderColor,
                       child: education.isEmpty
                           ? Text(
                               'Add your education details.',
@@ -1240,7 +1239,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
                     if (projects.isNotEmpty)
                       _ClassicContentSection(
                         title: 'PROJECTS',
-                        borderColor: sectionBorderColor,
+                        topDividerColor: sectionBorderColor,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -1260,7 +1259,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
                     for (final section in remainingCustomSections.take(2))
                       _ClassicContentSection(
                         title: section.title.trim().toUpperCase(),
-                        borderColor: sectionBorderColor,
+                        topDividerColor: sectionBorderColor,
                         child: _ClassicCustomSectionBlock(
                           item: section,
                           bodyStyle: bodyStyle,
@@ -1366,39 +1365,37 @@ class _ClassicSidebarListSection extends StatelessWidget {
 class _ClassicContentSection extends StatelessWidget {
   const _ClassicContentSection({
     required this.title,
-    required this.borderColor,
     required this.child,
+    this.topDividerColor,
   });
 
   final String title;
-  final Color borderColor;
   final Widget child;
+  final Color? topDividerColor;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: borderColor, width: 1)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: ResumeTypography.darkHeaderSectionTitlePt,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.15,
-              ),
-            ),
-            const SizedBox(height: _ClassicSidebarPreview._sectionHeadingGap),
-            child,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (topDividerColor != null) ...[
+            Container(height: 1, color: topDividerColor),
+            const SizedBox(height: 12),
           ],
-        ),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: ResumeTypography.darkHeaderSectionTitlePt,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.15,
+            ),
+          ),
+          const SizedBox(height: _ClassicSidebarPreview._sectionHeadingGap),
+          child,
+          const SizedBox(height: 12),
+        ],
       ),
     );
   }

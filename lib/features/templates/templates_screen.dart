@@ -474,9 +474,12 @@ class _TemplatePreviewArt extends StatelessWidget {
         showPremiumBadgeOnPage
             ? _ResumeTemplatePreviewArt(resume: _profileSidebarTemplateResume)
             : const _ProfileSidebarTemplateArtCompact(),
-      _TemplatePreviewKind.classicSidebarResume => _ResumeTemplatePreviewArt(
-        resume: _classicSidebarTemplateResume,
-      ),
+      _TemplatePreviewKind.classicSidebarResume =>
+        showPremiumBadgeOnPage
+            ? _ResumeTemplatePreviewArt(resume: _classicSidebarTemplateResume)
+            : _ClassicSidebarTemplateArtCompact(
+                resume: _classicSidebarTemplateResume,
+              ),
       _TemplatePreviewKind.executiveNoteCoverLetter =>
         const _ExecutiveNoteCoverLetterArt(),
       _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
@@ -553,6 +556,15 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       return const _LargeTemplateArtPreview(
         showPremiumBadge: true,
         child: _ProfileSidebarTemplateArtCompact(),
+      );
+    }
+    if (template == ResumeTemplate.classicSidebar) {
+      return _LargeTemplateArtPreview(
+        showPremiumBadge: true,
+        child: _ClassicSidebarTemplateArtCompact(
+          resume: _classicSidebarTemplateResume,
+          detailed: true,
+        ),
       );
     }
 
@@ -775,6 +787,13 @@ final ResumeData _classicSidebarTemplateResume = ResumeData(
       endDate: '2014',
       score: 'Magna cum laude',
     ),
+    EducationItem(
+      institution: 'Camden High School',
+      degree: 'High School Diploma',
+      startDate: '2006',
+      endDate: '2010',
+      score: 'Honor roll',
+    ),
   ],
   skills: const [
     'Financial analysis',
@@ -788,6 +807,12 @@ final ResumeData _classicSidebarTemplateResume = ResumeData(
       title: 'Budget Reporting Framework',
       bullets: [
         'Standardized monthly reporting decks used in leadership finance reviews.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Forecast Planning Dashboard',
+      bullets: [
+        'Built a finance dashboard that gave leaders clearer monthly forecast and variance visibility.',
       ],
     ),
   ],
@@ -1239,6 +1264,315 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
   }
 }
 
+class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
+  const _ClassicSidebarTemplateArtCompact({
+    required this.resume,
+    this.detailed = false,
+  });
+
+  final ResumeData resume;
+  final bool detailed;
+
+  @override
+  Widget build(BuildContext context) {
+    const rail = Color(0xFFF2F4F7);
+    const avatar = Color(0xFF8CB4D6);
+    const title = Color(0xFF1F2937);
+    const text = Color(0xFF344054);
+    const muted = Color(0xFF667085);
+    const line = Color(0xFFD8DDE4);
+    final skills = resume.skills.take(detailed ? 3 : 2).toList();
+    final languages = resume.customSections
+        .where((item) => item.title.trim().toLowerCase() == 'languages')
+        .expand(
+          (item) => item.layoutMode == CustomSectionLayoutMode.bullets
+              ? item.bullets
+              : item.content.split(RegExp(r'[\n,]+')),
+        )
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .take(detailed ? 2 : 1)
+        .toList();
+    final experiences = resume.workExperiences.where((item) => !item.isBlank).take(1).toList();
+    final education = resume.education
+        .where((item) => !item.isBlank)
+        .take(detailed ? 2 : 1)
+        .toList();
+    final projects = resume.projects
+        .where((item) => !item.isBlank)
+        .take(detailed ? 2 : 1)
+        .toList();
+    final nameLine = _miniClassicNameLine(resume.fullName);
+    final summary = resume.summary.trim();
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: ClipRRect(
+        borderRadius: BorderRadius.zero,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              width: 58,
+              color: rail,
+              padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+              child: DefaultTextStyle(
+                style: const TextStyle(
+                  fontSize: 4.6,
+                  height: 1.28,
+                  color: text,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: const BoxDecoration(
+                          color: avatar,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          _miniClassicInitials(resume.fullName),
+                          style: TextStyle(
+                            color: title,
+                            fontSize: 8.6,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(height: 1, color: line),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'SKILLS',
+                      style: TextStyle(
+                        fontSize: 5.7,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.15,
+                        color: title,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    _MiniBulletColumn(items: skills),
+                      SizedBox(height: detailed ? 8 : 4),
+                      Container(height: 1, color: line),
+                      SizedBox(height: detailed ? 5 : 3),
+                      const Text(
+                        'LANGUAGES',
+                      style: TextStyle(
+                        fontSize: 5.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.15,
+                        color: title,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    _MiniBulletColumn(items: languages),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(9, 10, 9, 9),
+                child: DefaultTextStyle(
+                  style: const TextStyle(
+                    fontSize: 4.6,
+                    height: 1.28,
+                    color: text,
+                  ),
+                  child: ClipRect(
+                    child: SingleChildScrollView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            nameLine,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 8.4,
+                              height: 0.96,
+                              fontWeight: FontWeight.w900,
+                              color: title,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            resume.jobTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: muted),
+                          ),
+                          SizedBox(height: detailed ? 5 : 3),
+                          _MiniClassicInfoLine(text: resume.email),
+                          SizedBox(height: detailed ? 2 : 1),
+                          _MiniClassicInfoLine(text: resume.location),
+                          SizedBox(height: detailed ? 2 : 1),
+                          _MiniClassicInfoLine(text: resume.phone),
+                          SizedBox(height: detailed ? 7 : 4),
+                          Container(height: 1, color: line),
+                          SizedBox(height: detailed ? 6 : 4),
+                          const Text(
+                            'SUMMARY',
+                            style: TextStyle(
+                              fontSize: 5.6,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.15,
+                              color: title,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            summary,
+                            maxLines: detailed ? 5 : 2,
+                            overflow: TextOverflow.clip,
+                            style: const TextStyle(color: muted),
+                          ),
+                          SizedBox(height: detailed ? 7 : 4),
+                          Container(height: 1, color: line),
+                          SizedBox(height: detailed ? 6 : 4),
+                          const Text(
+                            'EXPERIENCE',
+                            style: TextStyle(
+                              fontSize: 5.6,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.15,
+                              color: title,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          if (experiences.isNotEmpty) ...[
+                            Text(
+                              experiences.first.role,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: title,
+                              ),
+                            ),
+                            Text(
+                              '${experiences.first.company} · ${experiences.first.startDate}-${experiences.first.endDate}',
+                              style: const TextStyle(color: muted),
+                            ),
+                            const SizedBox(height: 3),
+                            _MiniBulletColumn(
+                              items: [
+                                ...experiences.first.bullets.take(1),
+                                if (experiences.first.bullets.isEmpty &&
+                                    experiences.first.description.trim().isNotEmpty)
+                                  experiences.first.description.trim(),
+                              ],
+                            ),
+                          ],
+                          SizedBox(height: detailed ? 7 : 4),
+                          Container(height: 1, color: line),
+                          SizedBox(height: detailed ? 6 : 4),
+                          const Text(
+                            'EDUCATION',
+                            style: TextStyle(
+                              fontSize: 5.6,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.15,
+                              color: title,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          for (final item in education) ...[
+                            Text(
+                              item.degree,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: title,
+                              ),
+                            ),
+                            Text(
+                              '${item.institution} · ${item.endDate}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: muted),
+                            ),
+                            SizedBox(height: detailed ? 3 : 1),
+                          ],
+                          SizedBox(height: detailed ? 5 : 3),
+                          Container(height: 1, color: line),
+                          SizedBox(height: detailed ? 6 : 4),
+                          const Text(
+                            'PROJECTS',
+                            style: TextStyle(
+                              fontSize: 5.6,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.15,
+                              color: title,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          for (final item in projects) ...[
+                            Text(
+                              item.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: title,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            _MiniBulletColumn(
+                              items: [
+                                ...item.bullets.take(1),
+                                if (item.bullets.isEmpty &&
+                                    item.overview.trim().isNotEmpty)
+                                  item.overview.trim(),
+                              ],
+                            ),
+                            SizedBox(height: detailed ? 3 : 1),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _miniClassicInitials(String name) {
+  final parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((item) => item.isNotEmpty)
+      .take(2)
+      .toList();
+  if (parts.isEmpty) {
+    return 'AB';
+  }
+  return parts.map((item) => item[0].toUpperCase()).join();
+}
+
+String _miniClassicNameLine(String name) {
+  final parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((item) => item.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) {
+    return 'AVERY BROOKS';
+  }
+  return parts.join(' ').toUpperCase();
+}
+
 class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
   const _ExecutiveNoteCoverLetterArt();
 
@@ -1682,6 +2016,38 @@ class _MiniAccentDotLine extends StatelessWidget {
         ),
         Expanded(
           child: Text(text, style: const TextStyle(color: Color(0xFF6E747B))),
+        ),
+      ],
+    );
+  }
+}
+
+class _MiniClassicInfoLine extends StatelessWidget {
+  const _MiniClassicInfoLine({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 4,
+          height: 4,
+          margin: const EdgeInsets.only(top: 1.2, right: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF344054),
+            borderRadius: BorderRadius.circular(1),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Color(0xFF667085)),
+          ),
         ),
       ],
     );

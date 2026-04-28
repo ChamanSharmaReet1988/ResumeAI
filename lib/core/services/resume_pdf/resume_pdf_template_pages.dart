@@ -514,11 +514,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
           ),
           sidebarWrap(
             pw.Padding(
-              padding: const pw.EdgeInsets.only(top: _classicSidebarSectionBottomPt),
+              padding: const pw.EdgeInsets.only(
+                top: _classicSidebarSectionBottomPt,
+              ),
               child: _buildClassicSidebarSection(
                 title: 'Summary',
                 titleColor: titleColor,
-                borderColor: borderColor,
                 child: pw.Text(
                   resume.summary.trim().ifEmpty(
                     'Add a short summary to position your experience and strengths.',
@@ -538,7 +539,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               _buildClassicSidebarSection(
                 title: 'Experience',
                 titleColor: titleColor,
-                borderColor: borderColor,
+                topDividerColor: borderColor,
                 child: pw.Text(
                   'Add your work experience details.',
                   style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
@@ -551,6 +552,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               _buildClassicSidebarSectionHeading(
                 title: 'Experience',
                 titleColor: titleColor,
+                topDividerColor: borderColor,
               ),
             ),
             for (
@@ -560,7 +562,6 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             )
               sidebarWrap(
                 _buildClassicSidebarSectionBodyBlock(
-                  borderColor: borderColor,
                   showBottomBorder:
                       index == resume.visibleWorkExperiences.length - 1,
                   child: _buildClassicSidebarExperience(
@@ -579,7 +580,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               _buildClassicSidebarSection(
                 title: 'Education',
                 titleColor: titleColor,
-                borderColor: borderColor,
+                topDividerColor: borderColor,
                 child: pw.Text(
                   'Add your education details.',
                   style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
@@ -592,12 +593,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               _buildClassicSidebarSectionHeading(
                 title: 'Education',
                 titleColor: titleColor,
+                topDividerColor: borderColor,
               ),
             ),
             for (var index = 0; index < resume.visibleEducation.length; index++)
               sidebarWrap(
                 _buildClassicSidebarSectionBodyBlock(
-                  borderColor: borderColor,
                   showBottomBorder: index == resume.visibleEducation.length - 1,
                   child: _buildClassicSidebarEducation(
                     resume.visibleEducation[index],
@@ -614,50 +615,71 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               _buildClassicSidebarSectionHeading(
                 title: 'Projects',
                 titleColor: titleColor,
+                topDividerColor: borderColor,
               ),
             ),
-            sidebarWrap(
-              _buildClassicSidebarSectionBodyBlock(
-                borderColor: borderColor,
-                showBottomBorder: customSections.isNotEmpty,
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    for (var i = 0; i < resume.visibleProjects.length; i++) ...[
-                      if (i > 0)
-                        pw.SizedBox(height: _classicSidebarSectionBottomPt),
-                      _buildClassicSidebarProject(
-                        resume.visibleProjects[i],
-                        titleColor: titleColor,
-                        mutedColor: mutedColor,
-                        accentColor: accentColor,
-                        bodyPt: bodyPt,
-                      ),
-                    ],
-                  ],
+            for (var index = 0; index < resume.visibleProjects.length; index++)
+              sidebarWrap(
+                _buildClassicSidebarSectionBodyBlock(
+                  showBottomBorder: index == resume.visibleProjects.length - 1,
+                  child: _buildClassicSidebarProject(
+                    resume.visibleProjects[index],
+                    titleColor: titleColor,
+                    mutedColor: mutedColor,
+                    accentColor: accentColor,
+                    bodyPt: bodyPt,
+                  ),
                 ),
               ),
-            ),
           ],
           for (var index = 0; index < customSections.length; index++) ...[
             sidebarWrap(
               _buildClassicSidebarSectionHeading(
                 title: customSections[index].title.ifEmpty('Custom Section'),
                 titleColor: titleColor,
+                topDividerColor: borderColor,
               ),
             ),
-            sidebarWrap(
-              _buildClassicSidebarSectionBodyBlock(
-                borderColor: borderColor,
-                showBottomBorder: index < customSections.length - 1,
-                child: _buildClassicSidebarCustomSection(
-                  customSections[index],
-                  mutedColor: mutedColor,
-                  accentColor: accentColor,
-                  bodyPt: bodyPt,
+            if (customSections[index].layoutMode ==
+                CustomSectionLayoutMode.bullets)
+              for (
+                var bulletIndex = 0;
+                bulletIndex <
+                    customSections[index].bullets
+                        .where((bullet) => bullet.trim().isNotEmpty)
+                        .length;
+                bulletIndex++
+              )
+                sidebarWrap(
+                  _buildClassicSidebarSectionBodyBlock(
+                    showBottomBorder:
+                        bulletIndex ==
+                        customSections[index].bullets
+                                .where((bullet) => bullet.trim().isNotEmpty)
+                                .length -
+                            1,
+                    child: _classicBulletRow(
+                      text: customSections[index].bullets
+                          .where((bullet) => bullet.trim().isNotEmpty)
+                          .elementAt(bulletIndex),
+                      bulletColor: accentColor,
+                      textColor: mutedColor,
+                      fontSize: bodyPt,
+                    ),
+                  ),
+                )
+            else
+              sidebarWrap(
+                _buildClassicSidebarSectionBodyBlock(
+                  showBottomBorder: true,
+                  child: _buildClassicSidebarCustomSection(
+                    customSections[index],
+                    mutedColor: mutedColor,
+                    accentColor: accentColor,
+                    bodyPt: bodyPt,
+                  ),
                 ),
               ),
-            ),
           ],
         ],
       ),
@@ -754,23 +776,58 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   pw.Widget _buildClassicSidebarSection({
     required String title,
     required PdfColor titleColor,
-    required PdfColor borderColor,
+    PdfColor? topDividerColor,
     bool showBottomBorder = true,
     required pw.Widget child,
   }) {
-    return pw.Container(
-      width: double.infinity,
-      padding: const pw.EdgeInsets.only(bottom: 12),
-      margin: const pw.EdgeInsets.only(bottom: _classicSidebarSectionBottomPt),
-      decoration: pw.BoxDecoration(
-        border: showBottomBorder
-            ? pw.Border(bottom: pw.BorderSide(color: borderColor, width: 1))
-            : null,
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        if (topDividerColor != null) ...[
+          pw.Container(
+            height: 1,
+            width: double.infinity,
+            color: topDividerColor,
+          ),
+          pw.SizedBox(height: 12),
+        ],
+        pw.Text(
+          title.toUpperCase(),
+          style: pw.TextStyle(
+            color: titleColor,
+            fontSize: ResumeTypography.darkHeaderSectionTitlePt,
+            fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+        pw.SizedBox(height: _classicSidebarHeadingGapPt),
+        child,
+        if (showBottomBorder) pw.SizedBox(height: 12),
+        pw.SizedBox(height: _classicSidebarSectionBottomPt),
+      ],
+    );
+  }
+
+  pw.Widget _buildClassicSidebarSectionHeading({
+    required String title,
+    required PdfColor titleColor,
+    PdfColor? topDividerColor,
+  }) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        if (topDividerColor != null) ...[
+          pw.Container(
+            height: 1,
+            width: double.infinity,
+            color: topDividerColor,
+          ),
+          pw.SizedBox(height: 12),
+        ],
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(
+            bottom: _classicSidebarHeadingGapPt,
+          ),
+          child: pw.Text(
             title.toUpperCase(),
             style: pw.TextStyle(
               color: titleColor,
@@ -778,45 +835,22 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               fontWeight: pw.FontWeight.bold,
             ),
           ),
-          pw.SizedBox(height: _classicSidebarHeadingGapPt),
-          child,
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildClassicSidebarSectionHeading({
-    required String title,
-    required PdfColor titleColor,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: _classicSidebarHeadingGapPt),
-      child: pw.Text(
-        title.toUpperCase(),
-        style: pw.TextStyle(
-          color: titleColor,
-          fontSize: ResumeTypography.darkHeaderSectionTitlePt,
-          fontWeight: pw.FontWeight.bold,
         ),
-      ),
+      ],
     );
   }
 
   pw.Widget _buildClassicSidebarSectionBodyBlock({
-    required PdfColor borderColor,
     bool showBottomBorder = true,
     required pw.Widget child,
   }) {
-    return pw.Container(
-      width: double.infinity,
-      padding: const pw.EdgeInsets.only(bottom: 12),
-      margin: const pw.EdgeInsets.only(bottom: _classicSidebarSectionBottomPt),
-      decoration: pw.BoxDecoration(
-        border: showBottomBorder
-            ? pw.Border(bottom: pw.BorderSide(color: borderColor, width: 1))
-            : null,
-      ),
-      child: child,
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        child,
+        if (showBottomBorder) pw.SizedBox(height: 12),
+        pw.SizedBox(height: _classicSidebarSectionBottomPt),
+      ],
     );
   }
 
