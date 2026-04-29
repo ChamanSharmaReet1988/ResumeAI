@@ -1304,13 +1304,12 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accentBlue = Color(0xFF2E7CB3);
-    final rail = Color.lerp(Colors.white, accentBlue, 0.14)!;
-    final avatar = Color.lerp(accentBlue, Colors.white, 0.45)!;
+    const rail = Color(0xFFF2F4F7);
+    const avatar = Color(0xFF8CB4D6);
     const title = Color(0xFF1F2937);
     const text = Color(0xFF344054);
     const muted = Color(0xFF667085);
-    final line = Color.lerp(accentBlue, Colors.white, 0.7)!;
+    const line = Color(0xFFD8DDE4);
     final skills = resume.skills.take(detailed ? 3 : 2).toList();
     final languages = resume.customSections
         .where((item) => item.title.trim().toLowerCase() == 'languages')
