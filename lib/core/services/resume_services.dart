@@ -958,11 +958,13 @@ List<String> _detailsSidebarInfoItems(ResumeData resume) {
 class _DetailsSidebarPageSlice {
   const _DetailsSidebarPageSlice({
     required this.showIdentity,
+    required this.showSkillsHeading,
     required this.skills,
     required this.highlightedSkills,
   });
 
   final bool showIdentity;
+  final bool showSkillsHeading;
   final List<String> skills;
   final Set<String> highlightedSkills;
 }
@@ -981,7 +983,10 @@ List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
 
   const panelTop = 24.0;
   const pageBottomMargin = 30.0;
-  final availableHeight = pageFormat.height - panelTop - pageBottomMargin;
+  const bottomSafetyMargin = 20.0;
+  const skillsBottomGap = 12.0;
+  final availableHeight =
+      pageFormat.height - panelTop - pageBottomMargin - bottomSafetyMargin;
 
   final headingBlockHeight =
       ResumeTypography.darkHeaderSectionTitlePt + 8 + 1 + 12;
@@ -996,8 +1001,9 @@ List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
   final firstPageFixedHeight =
       nameBlockHeight + headingBlockHeight + infoItemsHeight + 20;
   final firstPageSkillsAvailable =
-      availableHeight - firstPageFixedHeight - headingBlockHeight;
-  final continuedPageSkillsAvailable = availableHeight - headingBlockHeight;
+      availableHeight - firstPageFixedHeight - headingBlockHeight - skillsBottomGap;
+  final continuedPageSkillsAvailable =
+      availableHeight - headingBlockHeight - skillsBottomGap;
 
   double skillHeight(String item) {
     final lines = _detailsSidebarEstimatedLineCount(item, bodyPt);
@@ -1026,6 +1032,7 @@ List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
     return const [
       _DetailsSidebarPageSlice(
         showIdentity: true,
+        showSkillsHeading: true,
         skills: <String>[],
         highlightedSkills: <String>{},
       ),
@@ -1039,10 +1046,12 @@ List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
     skills.skip(index),
     firstPageSkillsAvailable > 0 ? firstPageSkillsAvailable : 0,
   );
+  final firstShowsSkills = firstChunk.isNotEmpty;
   index += firstChunk.length;
   slices.add(
     _DetailsSidebarPageSlice(
       showIdentity: true,
+      showSkillsHeading: firstShowsSkills,
       skills: firstChunk,
       highlightedSkills: highlightedSkills.intersection(firstChunk.toSet()),
     ),
@@ -1060,6 +1069,7 @@ List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
     slices.add(
       _DetailsSidebarPageSlice(
         showIdentity: false,
+        showSkillsHeading: true,
         skills: chunk,
         highlightedSkills: highlightedSkills.intersection(chunk.toSet()),
       ),
@@ -1217,31 +1227,33 @@ pw.Widget _detailsSidebarPanel({
               ),
           pw.SizedBox(height: 20),
         ],
-        _detailsSidebarSidebarHeading(
-          title: 'SKILLS',
-          titleColor: titleColor,
-          dividerColor: dividerColor,
-        ),
-        pw.SizedBox(height: 12),
-        if (pageSlice.skills.isEmpty)
-          pw.Text(
-            pageSlice.showIdentity ? 'Add skills' : '',
-            style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
-          )
-        else
-          for (final skill in pageSlice.skills)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 11),
-              child: _detailsSidebarSkillRow(
-                text: skill,
-                accentColor: accentColor,
-                textColor: mutedColor,
-                fontSize: bodyPt,
-                backgroundColor: pageSlice.highlightedSkills.contains(skill)
-                    ? highlightColor
-                    : null,
+        if (pageSlice.showSkillsHeading) ...[
+          _detailsSidebarSidebarHeading(
+            title: 'SKILLS',
+            titleColor: titleColor,
+            dividerColor: dividerColor,
+          ),
+          pw.SizedBox(height: 12),
+          if (pageSlice.skills.isEmpty)
+            pw.Text(
+              pageSlice.showIdentity ? 'Add skills' : '',
+              style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+            )
+          else
+            for (final skill in pageSlice.skills)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 11),
+                child: _detailsSidebarSkillRow(
+                  text: skill,
+                  accentColor: accentColor,
+                  textColor: mutedColor,
+                  fontSize: bodyPt,
+                  backgroundColor: pageSlice.highlightedSkills.contains(skill)
+                      ? highlightColor
+                      : null,
+                ),
               ),
-            ),
+        ],
       ],
     ),
   );
