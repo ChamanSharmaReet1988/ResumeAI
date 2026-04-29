@@ -53,16 +53,17 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
   return switch (template) {
     ResumeTemplate.corporate => 0,
     ResumeTemplate.creative => kTemplateDefaultColorPresetIndex,
-    ResumeTemplate.classicSidebar => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.classicSidebar => 2,
+    ResumeTemplate.detailsSidebar => kTemplateDefaultColorPresetIndex,
   };
 }
 
 extension ResumeCorporateStyleX on ResumeData {
-  /// Clamped 11–15 for preview + PDF body text (Dark Header).
+  /// Clamped 11–14 for preview + PDF body text (Dark Header).
   int get effectiveBodyFontPt {
     final v = bodyFontPt;
     if (v < 11) return 11;
-    if (v > 15) return 15;
+    if (v > 14) return 14;
     return v;
   }
 
@@ -117,4 +118,14 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get classicSidebarDividerColor => const Color(0xFF344054);
 
   Color get classicSidebarSectionBorderColor => const Color(0xFFE5E7EB);
+
+  Color get detailsSidebarAccentColor => corporateColorPreset.headerColor;
+
+  Color get detailsSidebarRailColor => const Color(0xFFF3F4F6);
+
+  Color get detailsSidebarTitleColor => const Color(0xFF344054);
+
+  Color get detailsSidebarMutedColor => const Color(0xFF475467);
+
+  Color get detailsSidebarDividerColor => const Color(0xFF98A2B3);
 }

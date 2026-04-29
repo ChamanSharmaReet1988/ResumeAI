@@ -143,6 +143,48 @@ void main() {
     );
   }
 
+  ResumeData buildDetailsSidebarResume() {
+    return ResumeData.empty(template: ResumeTemplate.detailsSidebar).copyWith(
+      title: 'Details Sidebar Test',
+      fullName: 'Kelly Blackwell',
+      jobTitle: 'Administrative Assistant',
+      email: 'kelly.blackwell@example.com',
+      phone: '(210) 286-1624',
+      location: 'Weston, FL',
+      summary:
+          'Administrative assistant with experience organizing presentations, preparing reports, and coordinating schedules across busy leadership teams.',
+      workExperiences: const [
+        WorkExperience(
+          role: 'Administrative Assistant',
+          company: 'Redford & Sons',
+          startDate: 'Sep 2017',
+          endDate: 'Current',
+          description: '',
+          bullets: [
+            'Scheduled and coordinated meetings, appointments, and travel arrangements for supervisors and executives.',
+            'Prepared reports and maintained confidential records across office operations.',
+          ],
+        ),
+      ],
+      education: const [
+        EducationItem(
+          institution: 'Brown University',
+          degree: 'Bachelor of Arts in Finance',
+          startDate: '2004',
+          endDate: '2009',
+          score: '',
+        ),
+      ],
+      skills: const [
+        'Analytical Thinking',
+        'Organization & Prioritization',
+        'Strong Communication',
+      ],
+      includeProjectsInResume: false,
+      projects: const [],
+    );
+  }
+
   ResumeData buildLongClassicSidebarResume() {
     final workItems = List<WorkExperience>.generate(
       10,
@@ -359,6 +401,30 @@ void main() {
       highlightedBulletsByExperience: const {
         0: {
           'Prepared financial summaries for leadership reviews and monthly planning cycles.',
+        },
+      },
+    );
+
+    expect(pdfBytes, isNotEmpty);
+  });
+
+  test('details sidebar template PDF renders successfully', () async {
+    final service = ResumePdfService();
+    final pdfBytes = await service.buildPdf(buildDetailsSidebarResume());
+
+    expect(pdfBytes, isNotEmpty);
+  });
+
+  test('highlighted details sidebar template PDF renders successfully', () async {
+    final service = ResumePdfService();
+    final resume = buildDetailsSidebarResume();
+    final pdfBytes = await service.buildHighlightedResumePdf(
+      resume: resume,
+      highlightSummary: true,
+      highlightedSkills: const {'Analytical Thinking'},
+      highlightedBulletsByExperience: const {
+        0: {
+          'Prepared reports and maintained confidential records across office operations.',
         },
       },
     );

@@ -27,6 +27,19 @@ PdfColor _corporateTitlePdf(ResumeData resume) =>
 PdfColor _corporateHeaderPdf(ResumeData resume) =>
     _pdfRgb(resume.corporateColorPreset.headerColor);
 
+List<String> _corporateHeaderContactLines(List<String> items) {
+  final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
+  if (cleaned.isEmpty) {
+    return const <String>[];
+  }
+  if (cleaned.length <= 2) {
+    return <String>[cleaned.join(' | ')];
+  }
+  final firstLine = cleaned.take(2).join(' | ');
+  final secondLine = cleaned.skip(2).join(' | ');
+  return <String>[firstLine, if (secondLine.isNotEmpty) secondLine];
+}
+
 pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
   switch (item.layoutMode) {
     case CustomSectionLayoutMode.summary:
@@ -142,6 +155,12 @@ const double _classicSidebarPanelTopPt = 24.0;
 const double _classicSidebarPanelBottomPt = 0.0;
 const double _classicSidebarPanelLeftInsetPt =
     (_classicSidebarRailWidthPt - _classicSidebarContentWidthPt) / 2;
+const double _detailsSidebarRailWidthPt = 164.0;
+const double _detailsSidebarPanelWidthPt = 118.0;
+const double _detailsSidebarPanelLeftInsetPt = 28.0;
+const double _detailsSidebarMainInsetPt = 170.0;
+const double _detailsSidebarSectionGapPt = 18.0;
+const double _detailsSidebarHeadingGapPt = 6.0;
 
 enum _ClassicSidebarSectionType { skills, languages }
 
@@ -206,6 +225,21 @@ PdfColor _classicSidebarSectionBorderPdf(ResumeData resume) =>
 
 PdfColor _classicSidebarAvatarFillPdf(ResumeData resume) =>
     _pdfRgb(resume.classicSidebarAvatarFillColor);
+
+PdfColor _detailsSidebarRailColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.detailsSidebarRailColor);
+
+PdfColor _detailsSidebarAccentColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.detailsSidebarAccentColor);
+
+PdfColor _detailsSidebarTitleColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.detailsSidebarTitleColor);
+
+PdfColor _detailsSidebarMutedColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.detailsSidebarMutedColor);
+
+PdfColor _detailsSidebarDividerColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.detailsSidebarDividerColor);
 
 pw.PageTheme _creativeSidebarPageTheme({
   required PdfColor railColor,
@@ -749,6 +783,11 @@ pw.Widget _classicSidebarPanel({
                     _ClassicSidebarSectionType.skills
                 ? 0
                 : 8,
+            titleBottomGap:
+                pageSlice.sections[index].type ==
+                    _ClassicSidebarSectionType.skills
+                ? 11
+                : 8,
           ),
         ],
       ],
@@ -767,6 +806,7 @@ pw.Widget _classicSidebarListSection({
   PdfColor? highlightColor,
   bool showTitle = true,
   double itemBottom = 8,
+  double titleBottomGap = 8,
 }) {
   final visibleItems = items.where((item) => item.trim().isNotEmpty).toList();
   return pw.Column(
@@ -781,7 +821,7 @@ pw.Widget _classicSidebarListSection({
             fontWeight: pw.FontWeight.bold,
           ),
         ),
-      if (showTitle) pw.SizedBox(height: 8),
+      if (showTitle) pw.SizedBox(height: titleBottomGap),
       if (visibleItems.isEmpty)
         pw.Text(
           'Add items',
@@ -904,6 +944,278 @@ List<CustomSectionItem> _classicSidebarMainCustomSections(ResumeData resume) {
     }
     return true;
   }).toList();
+}
+
+List<String> _detailsSidebarInfoItems(ResumeData resume) {
+  return [
+    resume.email.trim(),
+    resume.phone.trim(),
+    resume.location.trim(),
+    resume.website.trim(),
+  ].where((item) => item.isNotEmpty).toList();
+}
+
+pw.Widget _detailsSidebarMainColumnChild(pw.Widget child) {
+  return pw.Padding(
+    padding: const pw.EdgeInsets.only(left: _detailsSidebarMainInsetPt),
+    child: child,
+  );
+}
+
+pw.PageTheme _detailsSidebarPageTheme({
+  required ResumeData resume,
+  required PdfColor railColor,
+  required PdfColor accentColor,
+  required PdfColor titleColor,
+  required PdfColor mutedColor,
+  required PdfColor dividerColor,
+  required double bodyPt,
+  Set<String> highlightedSkills = const <String>{},
+  PdfColor? highlightColor,
+  PdfPageFormat pageFormat = PdfPageFormat.a4,
+}) {
+  return pw.PageTheme(
+    pageFormat: pageFormat,
+    margin: const pw.EdgeInsets.fromLTRB(24, 18, 24, 30),
+    buildBackground: (context) => pw.FullPage(
+      ignoreMargins: true,
+      child: pw.Stack(
+        children: [
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+            children: [
+              pw.Container(width: _detailsSidebarRailWidthPt, color: railColor),
+              pw.Expanded(child: pw.Container(color: PdfColors.white)),
+            ],
+          ),
+          if (context.pageNumber == 1)
+            pw.Positioned(
+              left: _detailsSidebarPanelLeftInsetPt,
+              top: 24,
+              child: _detailsSidebarPanel(
+                resume: resume,
+                accentColor: accentColor,
+                titleColor: titleColor,
+                mutedColor: mutedColor,
+                dividerColor: dividerColor,
+                bodyPt: bodyPt,
+                highlightedSkills: highlightedSkills,
+                highlightColor: highlightColor,
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+pw.Widget _detailsSidebarPanel({
+  required ResumeData resume,
+  required PdfColor accentColor,
+  required PdfColor titleColor,
+  required PdfColor mutedColor,
+  required PdfColor dividerColor,
+  required double bodyPt,
+  Set<String> highlightedSkills = const <String>{},
+  PdfColor? highlightColor,
+}) {
+  final skills = resume.includeSkillsInResume
+      ? resume.skills
+      : const <String>[];
+  final infoItems = _detailsSidebarInfoItems(resume);
+  final displayName = resume.fullName.trim().isEmpty
+      ? 'Your Name'
+      : resume.fullName.trim();
+
+  return pw.SizedBox(
+    width: _detailsSidebarPanelWidthPt,
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          displayName.toUpperCase(),
+          style: pw.TextStyle(
+            color: titleColor,
+            fontSize: 24,
+            fontWeight: pw.FontWeight.bold,
+            lineSpacing: 1.1,
+          ),
+        ),
+        if (resume.jobTitle.trim().isNotEmpty) ...[
+          pw.SizedBox(height: 14),
+          pw.Text(
+            resume.jobTitle.trim(),
+            style: pw.TextStyle(
+              color: titleColor,
+              fontSize: bodyPt + 1.3,
+              fontWeight: pw.FontWeight.normal,
+            ),
+          ),
+        ],
+        pw.SizedBox(height: 26),
+        _detailsSidebarSidebarHeading(
+          title: 'DETAILS',
+          titleColor: titleColor,
+          dividerColor: dividerColor,
+        ),
+        pw.SizedBox(height: 12),
+        if (infoItems.isEmpty)
+          pw.Text(
+            'Add contact details',
+            style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+          )
+        else
+          for (final item in infoItems)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(bottom: 10),
+              child: _detailsSidebarInfoRow(
+                text: item,
+                accentColor: accentColor,
+                textColor: mutedColor,
+                fontSize: bodyPt,
+              ),
+            ),
+        pw.SizedBox(height: 20),
+        _detailsSidebarSidebarHeading(
+          title: 'SKILLS',
+          titleColor: titleColor,
+          dividerColor: dividerColor,
+        ),
+        pw.SizedBox(height: 12),
+        if (skills.isEmpty)
+          pw.Text(
+            'Add skills',
+            style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+          )
+        else
+          for (final skill in skills)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(bottom: 8),
+              child: _detailsSidebarSkillRow(
+                text: skill,
+                accentColor: accentColor,
+                textColor: mutedColor,
+                fontSize: bodyPt,
+                backgroundColor: highlightedSkills.contains(skill)
+                    ? highlightColor
+                    : null,
+              ),
+            ),
+      ],
+    ),
+  );
+}
+
+pw.Widget _detailsSidebarSidebarHeading({
+  required String title,
+  required PdfColor titleColor,
+  required PdfColor dividerColor,
+}) {
+  return pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      pw.Text(
+        title,
+        style: pw.TextStyle(
+          color: titleColor,
+          fontSize: ResumeTypography.darkHeaderSectionTitlePt,
+          fontWeight: pw.FontWeight.normal,
+          letterSpacing: 0.6,
+        ),
+      ),
+      pw.SizedBox(height: 8),
+      pw.Container(height: 1, color: dividerColor),
+    ],
+  );
+}
+
+pw.Widget _detailsSidebarInfoRow({
+  required String text,
+  required PdfColor accentColor,
+  required PdfColor textColor,
+  required double fontSize,
+}) {
+  return pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      pw.Container(
+        width: 12,
+        height: 12,
+        margin: const pw.EdgeInsets.only(top: 1, right: 7),
+        decoration: pw.BoxDecoration(
+          color: accentColor,
+          borderRadius: pw.BorderRadius.circular(6),
+        ),
+      ),
+      pw.Expanded(
+        child: pw.Text(
+          text,
+          style: pw.TextStyle(color: textColor, fontSize: fontSize),
+        ),
+      ),
+    ],
+  );
+}
+
+pw.Widget _detailsSidebarSkillRow({
+  required String text,
+  required PdfColor accentColor,
+  required PdfColor textColor,
+  required double fontSize,
+  PdfColor? backgroundColor,
+}) {
+  final row = pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      pw.Text(
+        '·',
+        style: pw.TextStyle(
+          color: accentColor,
+          fontSize: fontSize + 2,
+          fontWeight: pw.FontWeight.bold,
+        ),
+      ),
+      pw.SizedBox(width: 6),
+      pw.Expanded(
+        child: pw.Text(
+          text,
+          style: pw.TextStyle(color: textColor, fontSize: fontSize),
+        ),
+      ),
+    ],
+  );
+  if (backgroundColor == null) {
+    return row;
+  }
+  return pw.Container(
+    width: double.infinity,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+    color: backgroundColor,
+    child: row,
+  );
+}
+
+pw.Widget _detailsSidebarHeadingRow({
+  required String title,
+  required PdfColor titleColor,
+  required PdfColor dividerColor,
+}) {
+  return pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.center,
+    children: [
+      pw.Text(
+        title,
+        style: pw.TextStyle(
+          color: titleColor,
+          fontSize: ResumeTypography.darkHeaderSectionTitlePt,
+          fontWeight: pw.FontWeight.normal,
+          letterSpacing: 0.6,
+        ),
+      ),
+      pw.SizedBox(width: 12),
+      pw.Expanded(child: pw.Container(height: 1, color: dividerColor)),
+    ],
+  );
 }
 
 pw.Widget _creativeSidebarEducationEntry(
@@ -3485,6 +3797,9 @@ class ResumePdfService {
           profileImage: profileImage,
         );
         break;
+      case ResumeTemplate.detailsSidebar:
+        _addDetailsSidebarTemplatePage(document, resume);
+        break;
     }
 
     return document.save();
@@ -3525,6 +3840,15 @@ class ResumePdfService {
         break;
       case ResumeTemplate.classicSidebar:
         _addHighlightedClassicSidebarTemplatePage(
+          document,
+          resume,
+          highlightSummary: highlightSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
+        break;
+      case ResumeTemplate.detailsSidebar:
+        _addHighlightedDetailsSidebarTemplatePage(
           document,
           resume,
           highlightSummary: highlightSummary,

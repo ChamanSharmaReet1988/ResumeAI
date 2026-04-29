@@ -12,11 +12,16 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     required Map<int, Set<String>> highlightedBulletsByExperience,
   }) {
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final headerContactFontPt = bodyPt + 2;
+    final headerContactFontPt = bodyPt + 1;
     final sectionTitleColor = _corporateTitlePdf(resume);
     final headerColor = _corporateHeaderPdf(resume);
     final lineColor = PdfColor.fromHex('#D7DCE2');
     final highlightColor = PdfColor.fromHex('#FFE67A');
+    final headerContactLines = _corporateHeaderContactLines(
+      _resumeContactItems(resume),
+    );
+    const avatarSize = 95.0;
+    const avatarBorderWidth = 2.1;
 
     document.addPage(
       pw.MultiPage(
@@ -26,22 +31,25 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         build: (context) => [
           pw.Container(
             color: headerColor,
-            padding: const pw.EdgeInsets.fromLTRB(30, 28, 30, 22),
+            padding: const pw.EdgeInsets.fromLTRB(30, 28, 30, 26),
             child: pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
                 pw.Container(
-                  width: 75,
-                  height: 75,
+                  width: avatarSize,
+                  height: avatarSize,
                   alignment: pw.Alignment.center,
                   decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfColors.white, width: 1.9),
+                    border: pw.Border.all(
+                      color: PdfColors.white,
+                      width: avatarBorderWidth,
+                    ),
                   ),
                   child: pw.Text(
                     _resumeInitials(resume),
                     style: pw.TextStyle(
                       color: PdfColors.white,
-                      fontSize: 30,
+                      fontSize: 38,
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
@@ -49,20 +57,33 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 pw.SizedBox(width: 25),
                 pw.Expanded(
                   child: pw.Column(
+                    mainAxisSize: pw.MainAxisSize.min,
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       _highlightedCorporateNameText(
                         _displayName(resume).toUpperCase(),
                       ),
-                      pw.SizedBox(height: 10),
-                      pw.Text(
-                        _resumeContactItems(resume).join(' | '),
-                        style: pw.TextStyle(
-                          color: PdfColors.white,
-                          fontSize: headerContactFontPt,
-                          lineSpacing: 2.0,
-                        ),
-                      ),
+                      if (headerContactLines.isNotEmpty) ...[
+                        pw.SizedBox(height: 8),
+                        for (
+                          var index = 0;
+                          index < headerContactLines.length;
+                          index++
+                        )
+                          pw.Padding(
+                            padding: pw.EdgeInsets.only(
+                              top: index == 0 ? 0 : 3,
+                            ),
+                            child: pw.Text(
+                              headerContactLines[index],
+                              style: pw.TextStyle(
+                                color: PdfColors.white,
+                                fontSize: headerContactFontPt,
+                                lineSpacing: 1.6,
+                              ),
+                            ),
+                          ),
+                      ],
                     ],
                   ),
                 ),
@@ -773,6 +794,244 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           ],
         ],
       ),
+    );
+  }
+
+  void _addHighlightedDetailsSidebarTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    required bool highlightSummary,
+    required Set<String> highlightedSkills,
+    required Map<int, Set<String>> highlightedBulletsByExperience,
+  }) {
+    final titleColor = _detailsSidebarTitleColorPdf(resume);
+    final mutedColor = _detailsSidebarMutedColorPdf(resume);
+    final accentColor = _detailsSidebarAccentColorPdf(resume);
+    final dividerColor = _detailsSidebarDividerColorPdf(resume);
+    final highlightColor = PdfColor.fromHex('#FFE67A');
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+
+    document.addPage(
+      pw.MultiPage(
+        pageTheme: _detailsSidebarPageTheme(
+          resume: resume,
+          railColor: _detailsSidebarRailColorPdf(resume),
+          accentColor: accentColor,
+          titleColor: titleColor,
+          mutedColor: mutedColor,
+          dividerColor: dividerColor,
+          bodyPt: bodyPt,
+          highlightedSkills: highlightedSkills,
+          highlightColor: highlightColor,
+        ),
+        header: _continuedPageTopGap,
+        build: (context) => [
+          _detailsSidebarMainColumnChild(
+            _detailsSidebarHeadingRow(
+              title: 'SUMMARY',
+              titleColor: titleColor,
+              dividerColor: dividerColor,
+            ),
+          ),
+          pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+          _detailsSidebarMainColumnChild(
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 5,
+              ),
+              color: highlightSummary ? highlightColor : PdfColors.white,
+              child: pw.Text(
+                resume.summary.trim().ifEmpty(
+                  'Add a short summary to position your experience and strengths.',
+                ),
+                style: pw.TextStyle(
+                  color: mutedColor,
+                  fontSize: bodyPt,
+                  lineSpacing: 2,
+                ),
+              ),
+            ),
+          ),
+          pw.SizedBox(height: _detailsSidebarSectionGapPt),
+          _detailsSidebarMainColumnChild(
+            _detailsSidebarHeadingRow(
+              title: 'EXPERIENCE',
+              titleColor: titleColor,
+              dividerColor: dividerColor,
+            ),
+          ),
+          pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+          if (resume.includeWorkInResume &&
+              resume.visibleWorkExperiences.isNotEmpty)
+            for (
+              var index = 0;
+              index < resume.visibleWorkExperiences.length;
+              index++
+            )
+              _detailsSidebarMainColumnChild(
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 14),
+                  child: _buildHighlightedDetailsSidebarExperience(
+                    resume.visibleWorkExperiences[index],
+                    highlightedBulletsByExperience[index] ?? const <String>{},
+                    highlightColor,
+                    titleColor: titleColor,
+                    mutedColor: mutedColor,
+                    accentColor: accentColor,
+                    bodyPt: bodyPt,
+                  ),
+                ),
+              )
+          else
+            _detailsSidebarMainColumnChild(
+              pw.Text(
+                'Add your work experience details.',
+                style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+              ),
+            ),
+          if (resume.includeEducationInResume) ...[
+            pw.SizedBox(height: _detailsSidebarSectionGapPt),
+            _detailsSidebarMainColumnChild(
+              _detailsSidebarHeadingRow(
+                title: 'EDUCATION',
+                titleColor: titleColor,
+                dividerColor: dividerColor,
+              ),
+            ),
+            pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+            if (resume.visibleEducation.isNotEmpty)
+              for (final item in resume.visibleEducation)
+                _detailsSidebarMainColumnChild(
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(bottom: 12),
+                    child: _buildDetailsSidebarEducation(
+                      item,
+                      titleColor: titleColor,
+                      mutedColor: mutedColor,
+                      bodyPt: bodyPt,
+                    ),
+                  ),
+                )
+            else
+              _detailsSidebarMainColumnChild(
+                pw.Text(
+                  'Add your education details.',
+                  style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+                ),
+              ),
+          ],
+          if (resume.includeProjectsInResume &&
+              resume.visibleProjects.isNotEmpty) ...[
+            pw.SizedBox(height: _detailsSidebarSectionGapPt),
+            _detailsSidebarMainColumnChild(
+              _detailsSidebarHeadingRow(
+                title: 'PROJECTS',
+                titleColor: titleColor,
+                dividerColor: dividerColor,
+              ),
+            ),
+            pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+            for (final item in resume.visibleProjects)
+              _detailsSidebarMainColumnChild(
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 12),
+                  child: _buildDetailsSidebarProject(
+                    item,
+                    titleColor: titleColor,
+                    mutedColor: mutedColor,
+                    accentColor: accentColor,
+                    bodyPt: bodyPt,
+                  ),
+                ),
+              ),
+          ],
+          for (final item in resume.visibleCustomSections) ...[
+            pw.SizedBox(height: _detailsSidebarSectionGapPt),
+            _detailsSidebarMainColumnChild(
+              _detailsSidebarHeadingRow(
+                title: item.title.ifEmpty('CUSTOM SECTION').toUpperCase(),
+                titleColor: titleColor,
+                dividerColor: dividerColor,
+              ),
+            ),
+            pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+            _detailsSidebarMainColumnChild(
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 12),
+                child: _buildDetailsSidebarCustomSection(
+                  item,
+                  mutedColor: mutedColor,
+                  accentColor: accentColor,
+                  bodyPt: bodyPt,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildHighlightedDetailsSidebarExperience(
+    WorkExperience item,
+    Set<String> highlightedBullets,
+    PdfColor highlightColor, {
+    required PdfColor titleColor,
+    required PdfColor mutedColor,
+    required PdfColor accentColor,
+    required double bodyPt,
+  }) {
+    final bullets = _workBulletLines(item);
+    final dates = [
+      item.startDate.trim(),
+      item.endDate.trim(),
+    ].where((value) => value.isNotEmpty).join(' — ');
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        if (dates.isNotEmpty)
+          pw.Text(
+            dates,
+            style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+          ),
+        if (item.role.trim().isNotEmpty) ...[
+          pw.SizedBox(height: 4),
+          pw.Text(
+            item.role.trim(),
+            style: pw.TextStyle(
+              color: titleColor,
+              fontSize: bodyPt + 1.3,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+        ],
+        if (item.company.trim().isNotEmpty) ...[
+          pw.SizedBox(height: 3),
+          pw.Text(
+            item.company.trim(),
+            style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+          ),
+        ],
+        if (bullets.isNotEmpty) ...[
+          pw.SizedBox(height: 8),
+          for (final bullet in bullets)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(bottom: 5),
+              child: _detailsSidebarSkillRow(
+                text: bullet,
+                accentColor: accentColor,
+                textColor: mutedColor,
+                fontSize: bodyPt,
+                backgroundColor: highlightedBullets.contains(bullet)
+                    ? highlightColor
+                    : null,
+              ),
+            ),
+        ],
+      ],
     );
   }
 }

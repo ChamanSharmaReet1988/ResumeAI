@@ -5,6 +5,8 @@ import '../resume_text_font.dart';
 /// Maps stored template ids; legacy removed layouts default to [ResumeTemplate.corporate].
 ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
   switch (raw?.toString()) {
+    case 'detailsSidebar':
+      return ResumeTemplate.detailsSidebar;
     case 'classicSidebar':
       return ResumeTemplate.classicSidebar;
     case 'creative':
@@ -16,7 +18,7 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
   }
 }
 
-enum ResumeTemplate { corporate, creative, classicSidebar }
+enum ResumeTemplate { corporate, creative, classicSidebar, detailsSidebar }
 
 enum CoverLetterTemplate { executiveNote, minimalLetter, sidebarLetter }
 
@@ -24,6 +26,7 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.corporate,
   ResumeTemplate.creative,
   ResumeTemplate.classicSidebar,
+  ResumeTemplate.detailsSidebar,
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
@@ -33,6 +36,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.corporate => 'Dark Header',
     ResumeTemplate.creative => 'Profile Sidebar',
     ResumeTemplate.classicSidebar => 'Classic Sidebar',
+    ResumeTemplate.detailsSidebar => 'Details Sidebar',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -42,18 +46,22 @@ extension ResumeTemplateX on ResumeTemplate {
       'Profile-led layout with bold side accents and editorial-style sections.',
     ResumeTemplate.classicSidebar =>
       'Soft sidebar layout with a profile photo, skills rail, and clean resume blocks.',
+    ResumeTemplate.detailsSidebar =>
+      'Minimal left details rail with clean section lines and balanced content blocks.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
     ResumeTemplate.corporate => const Color(0xFF0F766E),
     ResumeTemplate.creative => const Color(0xFFE85D04),
     ResumeTemplate.classicSidebar => const Color(0xFF344054),
+    ResumeTemplate.detailsSidebar => const Color(0xFF344054),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
     ResumeTemplate.corporate => const Color(0xFFE4FBF6),
     ResumeTemplate.creative => const Color(0xFFFFE9D8),
     ResumeTemplate.classicSidebar => const Color(0xFFF2F4F7),
+    ResumeTemplate.detailsSidebar => const Color(0xFFF2F4F7),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -61,6 +69,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.corporate => 'Sans · dark header',
     ResumeTemplate.creative => 'Sans · profile sidebar',
     ResumeTemplate.classicSidebar => 'Sans · classic sidebar',
+    ResumeTemplate.detailsSidebar => 'Sans · details sidebar',
   };
 }
 

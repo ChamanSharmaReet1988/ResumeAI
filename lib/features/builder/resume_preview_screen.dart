@@ -193,10 +193,11 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 Expanded(
                                   child: Slider(
                                     value: resume.effectiveBodyFontPt
+                                        .clamp(11, 14)
                                         .toDouble(),
                                     min: 11,
-                                    max: 15,
-                                    divisions: 4,
+                                    max: 14,
+                                    divisions: 3,
                                     label: '${resume.effectiveBodyFontPt}',
                                     onChanged: (v) {
                                       viewModel.updateResume(
@@ -209,7 +210,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 SizedBox(
                                   width: 24,
                                   child: Text(
-                                    '15',
+                                    '14',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: muted,
                                     ),

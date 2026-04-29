@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
 import '../shared/resume_preview_card.dart';
@@ -407,6 +408,14 @@ const _templateCards = <_TemplateTileData>[
     caption: 'Soft left rail with photo-led identity and structured sections.',
     isPremium: true,
   ),
+  _TemplateTileData(
+    id: 'details-sidebar',
+    resumeTemplate: ResumeTemplate.detailsSidebar,
+    previewKind: _TemplatePreviewKind.detailsSidebarResume,
+    headline: 'Details Sidebar',
+    caption: 'Minimal left details rail with structured content on the right.',
+    isPremium: true,
+  ),
 ];
 
 const _resumeTemplateCards = _templateCards;
@@ -462,6 +471,7 @@ enum _TemplatePreviewKind {
   darkHeaderResume,
   profileSidebarResume,
   classicSidebarResume,
+  detailsSidebarResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
   sidebarCoverLetter,
@@ -508,6 +518,20 @@ class _TemplatePreviewArt extends StatelessWidget {
             : _ClassicSidebarTemplateArtCompact(
                 resume: _applyTemplatePreviewPalette(
                   _classicSidebarTemplateResume,
+                  paletteSeed,
+                ),
+              ),
+      _TemplatePreviewKind.detailsSidebarResume =>
+        showPremiumBadgeOnPage
+            ? _ResumeTemplatePreviewArt(
+                resume: _applyTemplatePreviewPalette(
+                  _detailsSidebarTemplateResume,
+                  paletteSeed,
+                ),
+              )
+            : _DetailsSidebarTemplateArtCompact(
+                resume: _applyTemplatePreviewPalette(
+                  _detailsSidebarTemplateResume,
                   paletteSeed,
                 ),
               ),
@@ -573,10 +597,7 @@ class _TemplatePreviewArt extends StatelessWidget {
 }
 
 class _ResumeTemplateDetailPreview extends StatelessWidget {
-  const _ResumeTemplateDetailPreview({
-    required this.item,
-    this.paletteSeed,
-  });
+  const _ResumeTemplateDetailPreview({required this.item, this.paletteSeed});
 
   final _TemplateTileData item;
   final ResumeData? paletteSeed;
@@ -605,6 +626,18 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
         ),
       );
     }
+    if (template == ResumeTemplate.detailsSidebar) {
+      return _LargeTemplateArtPreview(
+        showPremiumBadge: true,
+        child: _DetailsSidebarTemplateArtCompact(
+          resume: _applyTemplatePreviewPalette(
+            _detailsSidebarTemplateResume,
+            paletteSeed,
+          ),
+          detailed: true,
+        ),
+      );
+    }
 
     final sampleResume = switch (template) {
       ResumeTemplate.corporate => _darkHeaderTemplateResume,
@@ -614,6 +647,10 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ),
       ResumeTemplate.classicSidebar => _applyTemplatePreviewPalette(
         _classicSidebarTemplateResume,
+        paletteSeed,
+      ),
+      ResumeTemplate.detailsSidebar => _applyTemplatePreviewPalette(
+        _detailsSidebarTemplateResume,
         paletteSeed,
       ),
     };
@@ -892,6 +929,74 @@ final ResumeData _classicSidebarTemplateResume = ResumeData(
   includeProjectsInResume: true,
   bodyFontPt: 13,
   corporateColorPresetIndex: 2,
+);
+
+final ResumeData _detailsSidebarTemplateResume = ResumeData(
+  id: 'template-details-sidebar',
+  title: 'Details Sidebar Template',
+  fullName: 'Kelly Blackwell',
+  jobTitle: 'Administrative Assistant',
+  email: 'kelly.blackwell@example.com',
+  phone: '(210) 286-1624',
+  location: '1685 N Commerce Island Pkwy, Weston, FL 33326, United States',
+  website: '',
+  summary:
+      'Administrative assistant with 9+ years of experience organizing presentations, preparing facility reports, and maintaining the utmost confidentiality. Possesses a B.A. in history and expertise in Microsoft Excel.',
+  template: ResumeTemplate.detailsSidebar,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Administrative Assistant',
+      company: 'Redford & Sons, Boston, MA',
+      startDate: 'Sep 2017',
+      endDate: 'Current',
+      description: '',
+      bullets: [
+        'Scheduled and coordinated meetings, appointments, and travel arrangements for supervisors and C-level executives.',
+        'Trained 2 administrative assistants during a period of company expansion to ensure attention to detail and adherence to company standards.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Secretary',
+      company: 'Bright Spot Ltd., Boston',
+      startDate: 'Jun 2016',
+      endDate: 'Aug 2017',
+      description: '',
+      bullets: [
+        'Typed documents such as correspondence, drafts, memos, and emails, and prepared 3 reports weekly for management.',
+        'Opened, sorted, and distributed incoming messages and correspondence to the appropriate personnel.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Brown University, Providence, RI',
+      degree: 'Bachelor of Arts in Finance',
+      startDate: '2004',
+      endDate: '2009',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'Analytical Thinking',
+    'Tolerant & Flexible',
+    'Team Leadership',
+    'Organization & Prioritization',
+    'Strong Communication',
+    'Microsoft Excel',
+  ],
+  projects: const [],
+  customSections: const [],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.calibri,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: 13,
+  corporateColorPresetIndex: 4,
 );
 
 class _ResumeTemplatePreviewArt extends StatelessWidget {
@@ -1277,9 +1382,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                           lineColor: line,
                         ),
                         const SizedBox(height: 4),
-                        const _MiniBulletColumn(
-                          items: ['Timeline tracking'],
-                        ),
+                        const _MiniBulletColumn(items: ['Timeline tracking']),
                       ],
                     ),
                   ),
@@ -1304,12 +1407,13 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const rail = Color(0xFFF2F4F7);
-    const avatar = Color(0xFF8CB4D6);
+    const accent = Color(0xFF2E7CB3);
+    final rail = Color.lerp(Colors.white, accent, 0.14)!;
+    final avatar = Color.lerp(accent, Colors.white, 0.45)!;
     const title = Color(0xFF1F2937);
     const text = Color(0xFF344054);
     const muted = Color(0xFF667085);
-    const line = Color(0xFFD8DDE4);
+    final line = Color.lerp(accent, Colors.white, 0.7)!;
     final skills = resume.skills.take(detailed ? 3 : 2).toList();
     final languages = resume.customSections
         .where((item) => item.title.trim().toLowerCase() == 'languages')
@@ -1349,7 +1453,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
               color: rail,
               padding: const EdgeInsets.fromLTRB(6, 10, 6, 8),
               child: DefaultTextStyle(
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 4.6,
                   height: 1.28,
                   color: text,
@@ -1380,7 +1484,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                     const SizedBox(height: 8),
                     Container(height: 1, color: line),
                     const SizedBox(height: 6),
-                    const Text(
+                    Text(
                       'SKILLS',
                       style: TextStyle(
                         fontSize: 5.7,
@@ -1389,12 +1493,12 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                         color: title,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    _MiniBulletColumn(items: skills),
+                    const SizedBox(height: 7),
+                    _MiniBulletColumn(items: skills, bulletColor: accent),
                     SizedBox(height: detailed ? 8 : 4),
                     Container(height: 1, color: line),
                     SizedBox(height: detailed ? 5 : 3),
-                    const Text(
+                    Text(
                       'LANGUAGES',
                       style: TextStyle(
                         fontSize: 5.5,
@@ -1404,7 +1508,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    _MiniBulletColumn(items: languages),
+                    _MiniBulletColumn(items: languages, bulletColor: accent),
                   ],
                 ),
               ),
@@ -1413,7 +1517,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(9, 10, 9, 9),
                 child: DefaultTextStyle(
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 4.6,
                     height: 1.28,
                     color: text,
@@ -1428,7 +1532,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                             nameLine,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 8.4,
                               height: 0.96,
                               fontWeight: FontWeight.w900,
@@ -1440,7 +1544,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                             resume.jobTitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: muted),
+                            style: TextStyle(color: muted),
                           ),
                           SizedBox(height: detailed ? 5 : 3),
                           _MiniClassicInfoLine(text: resume.email),
@@ -1451,7 +1555,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           SizedBox(height: detailed ? 7 : 4),
                           Container(height: 1, color: line),
                           SizedBox(height: detailed ? 6 : 4),
-                          const Text(
+                          Text(
                             'SUMMARY',
                             style: TextStyle(
                               fontSize: 5.6,
@@ -1465,12 +1569,12 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                             summary,
                             maxLines: detailed ? 5 : 2,
                             overflow: TextOverflow.clip,
-                            style: const TextStyle(color: muted),
+                            style: TextStyle(color: muted),
                           ),
                           SizedBox(height: detailed ? 7 : 4),
                           Container(height: 1, color: line),
                           SizedBox(height: detailed ? 6 : 4),
-                          const Text(
+                          Text(
                             'EXPERIENCE',
                             style: TextStyle(
                               fontSize: 5.6,
@@ -1483,14 +1587,14 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           if (experiences.isNotEmpty) ...[
                             Text(
                               experiences.first.role,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w800,
                                 color: title,
                               ),
                             ),
                             Text(
                               '${experiences.first.company} · ${experiences.first.startDate}-${experiences.first.endDate}',
-                              style: const TextStyle(color: muted),
+                              style: TextStyle(color: muted),
                             ),
                             const SizedBox(height: 3),
                             _MiniBulletColumn(
@@ -1502,12 +1606,13 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                                         .isNotEmpty)
                                   experiences.first.description.trim(),
                               ],
+                              bulletColor: accent,
                             ),
                           ],
                           SizedBox(height: detailed ? 7 : 4),
                           Container(height: 1, color: line),
                           SizedBox(height: detailed ? 6 : 4),
-                          const Text(
+                          Text(
                             'EDUCATION',
                             style: TextStyle(
                               fontSize: 5.6,
@@ -1522,7 +1627,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                               item.degree,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w800,
                                 color: title,
                               ),
@@ -1531,14 +1636,14 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                               '${item.institution} · ${item.endDate}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: muted),
+                              style: TextStyle(color: muted),
                             ),
                             SizedBox(height: detailed ? 3 : 1),
                           ],
                           SizedBox(height: detailed ? 5 : 3),
                           Container(height: 1, color: line),
                           SizedBox(height: detailed ? 6 : 4),
-                          const Text(
+                          Text(
                             'PROJECTS',
                             style: TextStyle(
                               fontSize: 5.6,
@@ -1551,7 +1656,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           for (final item in projects) ...[
                             Text(
                               item.title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w800,
                                 color: title,
                               ),
@@ -1565,11 +1670,220 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                                     item.overview.trim().isNotEmpty)
                                   item.overview.trim(),
                               ],
+                              bulletColor: accent,
                             ),
                             SizedBox(height: detailed ? 3 : 1),
                           ],
                         ],
                       ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailsSidebarTemplateArtCompact extends StatelessWidget {
+  const _DetailsSidebarTemplateArtCompact({
+    required this.resume,
+    this.detailed = false,
+  });
+
+  final ResumeData resume;
+  final bool detailed;
+
+  @override
+  Widget build(BuildContext context) {
+    const rail = Color(0xFFF3F4F6);
+    const title = Color(0xFF344054);
+    const text = Color(0xFF475467);
+    const line = Color(0xFF98A2B3);
+    final accent = resume.corporateColorPreset.headerColor;
+    final experiences = resume.workExperiences
+        .where((item) => !item.isBlank)
+        .take(2)
+        .toList();
+    final education = resume.education
+        .where((item) => !item.isBlank)
+        .take(1)
+        .toList();
+    final skills = resume.skills.take(detailed ? 6 : 4).toList();
+    final summary = resume.summary.trim();
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: ClipRRect(
+        borderRadius: BorderRadius.zero,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              width: 64,
+              color: rail,
+              padding: const EdgeInsets.fromLTRB(7, 10, 7, 8),
+              child: DefaultTextStyle(
+                style: const TextStyle(
+                  fontSize: 4.6,
+                  height: 1.32,
+                  color: text,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _miniClassicNameLine(resume.fullName),
+                      maxLines: detailed ? 3 : 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 8.0,
+                        height: 0.98,
+                        fontWeight: FontWeight.w800,
+                        color: title,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      resume.jobTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: title, fontSize: 5.1),
+                    ),
+                    const SizedBox(height: 11),
+                    const Text(
+                      'DETAILS',
+                      style: TextStyle(
+                        fontSize: 5.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                        color: title,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Container(height: 1, color: line),
+                    const SizedBox(height: 6),
+                    _MiniDetailsLine(
+                      text: resume.email,
+                      color: title,
+                      textColor: text,
+                    ),
+                    const SizedBox(height: 4),
+                    _MiniDetailsLine(
+                      text: resume.phone,
+                      color: title,
+                      textColor: text,
+                    ),
+                    const SizedBox(height: 4),
+                    _MiniDetailsLine(
+                      text: resume.location,
+                      color: title,
+                      textColor: text,
+                      maxLines: detailed ? 4 : 3,
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'SKILLS',
+                      style: TextStyle(
+                        fontSize: 5.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                        color: title,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Container(height: 1, color: line),
+                    const SizedBox(height: 6),
+                    _MiniBulletColumn(items: skills, bulletColor: accent),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+                child: DefaultTextStyle(
+                  style: const TextStyle(
+                    fontSize: 4.65,
+                    height: 1.32,
+                    color: text,
+                  ),
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _MiniSidebarHeading(
+                          title: 'SUMMARY',
+                          lineColor: line,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          summary,
+                          maxLines: detailed ? 5 : 3,
+                          overflow: TextOverflow.clip,
+                        ),
+                        const SizedBox(height: 8),
+                        const _MiniSidebarHeading(
+                          title: 'EXPERIENCE',
+                          lineColor: line,
+                        ),
+                        const SizedBox(height: 4),
+                        for (final item in experiences) ...[
+                          Text(
+                            '${item.startDate} — ${item.endDate}',
+                            style: const TextStyle(color: text),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.role,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: title,
+                            ),
+                          ),
+                          Text(
+                            item.company,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          _MiniBulletColumn(
+                            items: item.bullets.take(detailed ? 2 : 1).toList(),
+                            bulletColor: accent,
+                          ),
+                          const SizedBox(height: 6),
+                        ],
+                        const _MiniSidebarHeading(
+                          title: 'EDUCATION',
+                          lineColor: line,
+                        ),
+                        const SizedBox(height: 4),
+                        for (final item in education) ...[
+                          Text(
+                            '${item.startDate} — ${item.endDate}',
+                            style: const TextStyle(color: text),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.degree,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: title,
+                            ),
+                          ),
+                          Text(
+                            item.institution,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ),
@@ -2088,10 +2402,54 @@ class _MiniClassicInfoLine extends StatelessWidget {
   }
 }
 
+class _MiniDetailsLine extends StatelessWidget {
+  const _MiniDetailsLine({
+    required this.text,
+    required this.color,
+    required this.textColor,
+    this.maxLines = 2,
+  });
+
+  final String text;
+  final Color color;
+  final Color textColor;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 4,
+          height: 4,
+          margin: const EdgeInsets.only(top: 1.3, right: 4),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(1),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: textColor),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _MiniBulletColumn extends StatelessWidget {
-  const _MiniBulletColumn({required this.items});
+  const _MiniBulletColumn({
+    required this.items,
+    this.bulletColor = const Color(0xFF344054),
+  });
 
   final List<String> items;
+  final Color bulletColor;
 
   @override
   Widget build(BuildContext context) {
@@ -2104,7 +2462,13 @@ class _MiniBulletColumn extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('• ', style: TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  '• ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: bulletColor,
+                  ),
+                ),
                 Expanded(child: Text(item)),
               ],
             ),
