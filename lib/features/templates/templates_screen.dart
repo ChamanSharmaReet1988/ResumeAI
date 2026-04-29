@@ -723,7 +723,7 @@ final ResumeData _profileSidebarTemplateResume = ResumeData(
       score: '',
     ),
   ],
-  skills: const ['Timeline tracking', 'Meeting notes', 'Status reports'],
+  skills: const ['Timeline tracking'],
   projects: const [
     ProjectItem(
       title: 'Campaign Launch Tracker',
@@ -1026,21 +1026,8 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                         lineColor: line,
                       ),
                       const SizedBox(height: 4),
-                      const Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _MiniBulletColumn(
-                              items: ['Renewal strategy', 'CRM operations'],
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: _MiniBulletColumn(
-                              items: ['Lifecycle emails', 'Churn analysis'],
-                            ),
-                          ),
-                        ],
+                      const _MiniBulletColumn(
+                        items: ['Renewal strategy', 'CRM operations'],
                       ),
                       const SizedBox(height: 4),
                       const _MiniSectionHeading(
@@ -1108,7 +1095,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                         textColor: Color(0xFFE17A3B),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     const Center(
                       child: SizedBox(
                         width: 55,
@@ -1116,7 +1103,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                         child: ColoredBox(color: line),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 6),
                       child: const _MiniAccentDotLine(text: 'Seattle, WA'),
@@ -1233,21 +1220,8 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                           lineColor: line,
                         ),
                         const SizedBox(height: 4),
-                        const Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _MiniBulletColumn(
-                                items: ['Timeline tracking'],
-                              ),
-                            ),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: _MiniBulletColumn(
-                                items: ['Cross-team briefs', 'Status reports'],
-                              ),
-                            ),
-                          ],
+                        const _MiniBulletColumn(
+                          items: ['Timeline tracking'],
                         ),
                       ],
                     ),

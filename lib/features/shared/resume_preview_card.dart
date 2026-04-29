@@ -740,7 +740,10 @@ class _CreativePreview extends StatelessWidget {
       height: ResumeTypography.textLineHeight,
     );
     final summary = resume.summary.trim();
-    final skills = resume.skillsForResume;
+    final allSkills = _pdfAlignedSkills(resume);
+    final skills = allSkills.length > 2
+        ? allSkills.sublist(0, allSkills.length - 2)
+        : const <String>[];
     final experiences = resume.visibleWorkExperiences;
     final education = resume.visibleEducation;
     final projects = resume.visibleProjects;

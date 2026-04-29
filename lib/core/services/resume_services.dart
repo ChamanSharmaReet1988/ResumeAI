@@ -119,13 +119,12 @@ pw.Widget _creativeAvatarIconPlaceholder({
 
 const double _creativeSidebarRailWidthPt = 176.0;
 const double _creativeSidebarContentWidthPt = 150.0;
-const double _creativeSidebarGapPt = 21.0;
 const double _creativeAvatarWidthPt = 150.0;
 const double _creativeAvatarHeightPt = 175.0;
 const double _creativeSidebarPanelLeftInsetPt =
     (_creativeSidebarRailWidthPt - _creativeSidebarContentWidthPt) / 2;
-const double _creativeMainColumnInsetPt =
-    _creativeSidebarContentWidthPt + _creativeSidebarGapPt;
+// Ensure Template 2 body starts to the right of sidebar rail.
+const double _creativeMainColumnInsetPt = _creativeSidebarRailWidthPt + 8.0;
 const double _creativeSectionGapPt = 20.0;
 const double _creativeHeadingBodyGapPt = 8.0;
 const double _creativeSidebarDividerGapPt = 20.0;

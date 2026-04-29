@@ -398,6 +398,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     final railColor = _creativeSidebarRailColorPdf(resume);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final contactItems = _resumeContactItems(resume);
+    final allSkills = _skillsForDisplay(resume);
+    final template2Skills = allSkills.length > 2
+        ? allSkills.sublist(0, allSkills.length - 2)
+        : const <String>[];
     final educationItems = resume.includeEducationInResume
         ? resume.visibleEducation
         : const <EducationItem>[];
@@ -499,7 +503,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                 ),
               ),
           ],
-          if (resume.includeSkillsInResume) ...[
+          if (resume.includeSkillsInResume && template2Skills.isNotEmpty) ...[
             pw.SizedBox(height: _creativeSectionGapPt),
             _creativeMainColumnChild(
               _creativeSectionHeadingRow(

@@ -314,6 +314,10 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final highlightColor = PdfColor.fromHex('#FFE67A');
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final contactItems = _resumeContactItems(resume);
+    final allSkills = _skillsForDisplay(resume);
+    final template2Skills = allSkills.length > 2
+        ? allSkills.sublist(0, allSkills.length - 2)
+        : const <String>[];
     final educationItems = resume.includeEducationInResume
         ? resume.visibleEducation
         : const <EducationItem>[];
@@ -430,7 +434,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 ),
               ),
           ],
-          if (resume.includeSkillsInResume) ...[
+          if (resume.includeSkillsInResume && template2Skills.isNotEmpty) ...[
             pw.SizedBox(height: _creativeSectionGapPt),
             _creativeMainColumnChild(
               _creativeSectionHeadingRow(
@@ -442,7 +446,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
             _creativeMainColumnChild(
               _twoColumnBulletListWithHighlights(
-                _skillsForDisplay(resume),
+                template2Skills,
                 highlightedSkills,
                 highlightColor,
                 fontSize: bodyPt,
