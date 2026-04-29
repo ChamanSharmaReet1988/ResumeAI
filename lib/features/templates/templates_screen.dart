@@ -1090,7 +1090,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              width: 48,
+              width: 72,
               color: rail,
               padding: const EdgeInsets.fromLTRB(0, 9, 0, 8),
               child: DefaultTextStyle(
@@ -1102,18 +1102,16 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6),
+                    Center(
                       child: _MiniAvatarBlock(
                         backgroundColor: avatarBackground,
                         textColor: Color(0xFFE17A3B),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(6, 0, 4, 0),
+                    const Center(
                       child: SizedBox(
-                        width: double.infinity,
+                        width: 55,
                         height: 1,
                         child: ColoredBox(color: line),
                       ),
@@ -1123,12 +1121,12 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                       padding: EdgeInsets.symmetric(horizontal: 6),
                       child: const _MiniAccentDotLine(text: 'Seattle, WA'),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 6),
                       child: const _MiniAccentDotLine(text: '+1 206 555 0117'),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 6),
                       child: const _MiniAccentDotLine(text: 'mateo@sample.in'),
@@ -1415,9 +1413,9 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           ),
                           SizedBox(height: detailed ? 5 : 3),
                           _MiniClassicInfoLine(text: resume.email),
-                          SizedBox(height: detailed ? 2 : 1),
+                          SizedBox(height: detailed ? 4 : 3),
                           _MiniClassicInfoLine(text: resume.location),
-                          SizedBox(height: detailed ? 2 : 1),
+                          SizedBox(height: detailed ? 4 : 3),
                           _MiniClassicInfoLine(text: resume.phone),
                           SizedBox(height: detailed ? 7 : 4),
                           Container(height: 1, color: line),
@@ -1981,8 +1979,8 @@ class _MiniAvatarBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 35.2,
-      height: 44,
+      width: 55,
+      height: 70,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(2),
         color: backgroundColor,
@@ -1992,7 +1990,7 @@ class _MiniAvatarBlock extends StatelessWidget {
         'MV',
         style: TextStyle(
           color: textColor,
-          fontSize: 9.5,
+          fontSize: 13.6,
           fontWeight: FontWeight.w800,
         ),
       ),

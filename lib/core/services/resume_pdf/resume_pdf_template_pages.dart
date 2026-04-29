@@ -829,7 +829,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     return rows
         .map(
           (text) => pw.Padding(
-            padding: const pw.EdgeInsets.only(bottom: 4),
+            padding: const pw.EdgeInsets.only(bottom: 8),
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [

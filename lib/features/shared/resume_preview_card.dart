@@ -722,8 +722,8 @@ class _CreativePreview extends StatelessWidget {
 
   final ResumeData resume;
   static const double _avatarBackgroundOpacity = 0.4;
-  static const double _avatarWidth = 94.6;
-  static const double _avatarHeight = 110.0;
+  static const double _avatarWidth = 138.0;
+  static const double _avatarHeight = 161.0;
 
   @override
   Widget build(BuildContext context) {
@@ -749,9 +749,10 @@ class _CreativePreview extends StatelessWidget {
     const sectionGap = 20.0;
     const headingGap = 6.0;
     const sidebarDividerGap = 20.0;
-    const sidebarRailWidth = 125.0;
-    const sidebarContentWidth = 101.0;
-    const mainContentInset = 123.0;
+    const sidebarRailWidth = 160.0;
+    const sidebarContentWidth = 150.0;
+    const sidebarContentLeft = (sidebarRailWidth - sidebarContentWidth) / 2;
+    const mainContentInset = 165.0;
     const nameFontSize = 30.0;
     final firstProjectLine = projects.isNotEmpty
         ? (_projectBulletLines(projects.first).isNotEmpty
@@ -772,39 +773,47 @@ class _CreativePreview extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 16,
+            left: sidebarContentLeft,
             top: 16,
             child: SizedBox(
               width: sidebarContentWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: _avatarWidth,
-                    height: _avatarHeight,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      color: avatarBackgroundColor.withValues(
-                        alpha: _avatarBackgroundOpacity,
+                  Center(
+                    child: Container(
+                      width: _avatarWidth,
+                      height: _avatarHeight,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: avatarBackgroundColor.withValues(
+                          alpha: _avatarBackgroundOpacity,
+                        ),
                       ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      _pdfAlignedInitials(resume),
-                      style: TextStyle(
-                        color: accentColor,
-                        fontSize: 28.6,
-                        fontWeight: FontWeight.w800,
+                      alignment: Alignment.center,
+                      child: Text(
+                        _pdfAlignedInitials(resume),
+                        style: TextStyle(
+                          color: accentColor,
+                          fontSize: 36.0,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ),
                   if (contacts.isNotEmpty) ...[
                     const SizedBox(height: sectionGap),
-                    Container(height: 1.1, color: lineColor),
+                    Center(
+                      child: Container(
+                        width: _avatarWidth,
+                        height: 1.1,
+                        color: lineColor,
+                      ),
+                    ),
                     const SizedBox(height: sidebarDividerGap),
                     ...contacts.map(
                       (line) => Padding(
-                        padding: const EdgeInsets.only(bottom: 5),
+                        padding: const EdgeInsets.only(bottom: 8),
                         child: _CreativeSidebarMetaItem(
                           text: line,
                           iconColor: accentColor,
@@ -1588,7 +1597,7 @@ class _ClassicBulletList extends StatelessWidget {
       children: [
         for (final item in visibleItems)
           Padding(
-            padding: const EdgeInsets.only(bottom: 4),
+            padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1638,7 +1647,7 @@ List<Widget> _classicSidebarContactRows(
       .take(maxItems)
       .map(
         (row) => Padding(
-          padding: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.only(bottom: 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

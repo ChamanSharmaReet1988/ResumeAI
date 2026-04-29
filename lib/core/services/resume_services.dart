@@ -117,11 +117,13 @@ pw.Widget _creativeAvatarIconPlaceholder({
   );
 }
 
-const double _creativeSidebarRailWidthPt = 161.0;
-const double _creativeSidebarContentWidthPt = 123.0;
-const double _creativeSidebarGapPt = 28.0;
-const double _creativeAvatarWidthPt = 105.6;
-const double _creativeAvatarHeightPt = 123.2;
+const double _creativeSidebarRailWidthPt = 176.0;
+const double _creativeSidebarContentWidthPt = 150.0;
+const double _creativeSidebarGapPt = 21.0;
+const double _creativeAvatarWidthPt = 150.0;
+const double _creativeAvatarHeightPt = 175.0;
+const double _creativeSidebarPanelLeftInsetPt =
+    (_creativeSidebarRailWidthPt - _creativeSidebarContentWidthPt) / 2;
 const double _creativeMainColumnInsetPt =
     _creativeSidebarContentWidthPt + _creativeSidebarGapPt;
 const double _creativeSectionGapPt = 20.0;
@@ -230,7 +232,11 @@ pw.PageTheme _creativeSidebarPageTheme({
                   ],
                 ),
                 if (firstPageSidebar != null)
-                  pw.Positioned(left: 24, top: 18, child: firstPageSidebar),
+                  pw.Positioned(
+                    left: _creativeSidebarPanelLeftInsetPt,
+                    top: 18,
+                    child: firstPageSidebar,
+                  ),
               ],
             )
           : pw.Container(color: PdfColors.white),
@@ -402,7 +408,7 @@ pw.Widget _creativeSidebarContactRow(
   double fontSize = 10.5,
 }) {
   return pw.Padding(
-    padding: const pw.EdgeInsets.only(bottom: 5),
+    padding: const pw.EdgeInsets.only(bottom: 8),
     child: pw.Row(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -956,22 +962,32 @@ pw.Widget _creativeFirstPageSidebar({
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        profileImage != null
-            ? pw.Container(
-                width: _creativeAvatarWidthPt,
-                height: _creativeAvatarHeightPt,
-                child: pw.Image(profileImage, fit: pw.BoxFit.cover),
-              )
-            : _creativeAvatarIconPlaceholder(
-                width: _creativeAvatarWidthPt,
-                height: _creativeAvatarHeightPt,
-                initials: _creativeSidebarInitials(resume),
-                backgroundColor: _pdfRgb(resume.creativeAvatarBackgroundColor),
-                textColor: accentColor,
-              ),
+        pw.Center(
+          child: profileImage != null
+              ? pw.Container(
+                  width: _creativeAvatarWidthPt,
+                  height: _creativeAvatarHeightPt,
+                  child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                )
+              : _creativeAvatarIconPlaceholder(
+                  width: _creativeAvatarWidthPt,
+                  height: _creativeAvatarHeightPt,
+                  initials: _creativeSidebarInitials(resume),
+                  backgroundColor: _pdfRgb(
+                    resume.creativeAvatarBackgroundColor,
+                  ),
+                  textColor: accentColor,
+                ),
+        ),
         if (contactItems.isNotEmpty) ...[
           pw.SizedBox(height: _creativeSectionGapPt),
-          pw.Container(height: 1.2, color: lineColor),
+          pw.Center(
+            child: pw.Container(
+              width: _creativeAvatarWidthPt,
+              height: 1.2,
+              color: lineColor,
+            ),
+          ),
           pw.SizedBox(height: _creativeSidebarDividerGapPt),
           for (final item in contactItems)
             _creativeSidebarContactRow(
