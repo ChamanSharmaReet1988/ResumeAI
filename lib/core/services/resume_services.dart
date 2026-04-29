@@ -955,6 +955,148 @@ List<String> _detailsSidebarInfoItems(ResumeData resume) {
   ].where((item) => item.isNotEmpty).toList();
 }
 
+class _DetailsSidebarPageSlice {
+  const _DetailsSidebarPageSlice({
+    required this.showIdentity,
+    required this.skills,
+    required this.highlightedSkills,
+  });
+
+  final bool showIdentity;
+  final List<String> skills;
+  final Set<String> highlightedSkills;
+}
+
+List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
+  required ResumeData resume,
+  required double bodyPt,
+  required Set<String> highlightedSkills,
+  required PdfPageFormat pageFormat,
+}) {
+  final skills = resume.includeSkillsInResume
+      ? resume.skills.where((item) => item.trim().isNotEmpty).toList()
+      : const <String>[];
+  final infoItems = _detailsSidebarInfoItems(resume);
+  final hasJobTitle = resume.jobTitle.trim().isNotEmpty;
+
+  const panelTop = 24.0;
+  const pageBottomMargin = 30.0;
+  final availableHeight = pageFormat.height - panelTop - pageBottomMargin;
+
+  final headingBlockHeight =
+      ResumeTypography.darkHeaderSectionTitlePt + 8 + 1 + 12;
+  final infoItemsHeight = infoItems.isEmpty
+      ? (bodyPt * ResumeTypography.textLineHeight)
+      : infoItems.fold<double>(
+          0,
+          (sum, _) => sum + (bodyPt * ResumeTypography.textLineHeight) + 10,
+        );
+  final nameBlockHeight = 30 + (hasJobTitle ? (14 + bodyPt + 4) : 0) + 26;
+
+  final firstPageFixedHeight =
+      nameBlockHeight + headingBlockHeight + infoItemsHeight + 20;
+  final firstPageSkillsAvailable =
+      availableHeight - firstPageFixedHeight - headingBlockHeight;
+  final continuedPageSkillsAvailable = availableHeight - headingBlockHeight;
+
+  double skillHeight(String item) {
+    final lines = _detailsSidebarEstimatedLineCount(item, bodyPt);
+    return (lines * bodyPt * ResumeTypography.textLineHeight) + 11;
+  }
+
+  List<String> takeChunk(Iterable<String> source, double maxHeight) {
+    final chunk = <String>[];
+    var used = 0.0;
+    for (final item in source) {
+      final height = skillHeight(item);
+      if (chunk.isNotEmpty && used + height > maxHeight) {
+        break;
+      }
+      if (chunk.isEmpty && height > maxHeight) {
+        chunk.add(item);
+        break;
+      }
+      chunk.add(item);
+      used += height;
+    }
+    return chunk;
+  }
+
+  if (skills.isEmpty) {
+    return const [
+      _DetailsSidebarPageSlice(
+        showIdentity: true,
+        skills: <String>[],
+        highlightedSkills: <String>{},
+      ),
+    ];
+  }
+
+  final slices = <_DetailsSidebarPageSlice>[];
+  var index = 0;
+
+  final firstChunk = takeChunk(
+    skills.skip(index),
+    firstPageSkillsAvailable > 0 ? firstPageSkillsAvailable : 0,
+  );
+  index += firstChunk.length;
+  slices.add(
+    _DetailsSidebarPageSlice(
+      showIdentity: true,
+      skills: firstChunk,
+      highlightedSkills: highlightedSkills.intersection(firstChunk.toSet()),
+    ),
+  );
+
+  while (index < skills.length) {
+    final chunk = takeChunk(
+      skills.skip(index),
+      continuedPageSkillsAvailable > 0 ? continuedPageSkillsAvailable : 0,
+    );
+    if (chunk.isEmpty) {
+      break;
+    }
+    index += chunk.length;
+    slices.add(
+      _DetailsSidebarPageSlice(
+        showIdentity: false,
+        skills: chunk,
+        highlightedSkills: highlightedSkills.intersection(chunk.toSet()),
+      ),
+    );
+  }
+
+  return slices;
+}
+
+int _detailsSidebarEstimatedLineCount(String text, double fontSize) {
+  final normalized = text.trim().replaceAll(RegExp(r'\s+'), ' ');
+  if (normalized.isEmpty) {
+    return 1;
+  }
+  final usableWidth = _detailsSidebarPanelWidthPt - 18;
+  final maxCharsPerLine = math.max(
+    8,
+    (usableWidth / (fontSize * 0.56)).floor(),
+  );
+  var currentLineLength = 0;
+  var lineCount = 1;
+  for (final word in normalized.split(' ')) {
+    final wordLength = word.length;
+    if (currentLineLength == 0) {
+      currentLineLength = wordLength;
+      continue;
+    }
+    if (currentLineLength + 1 + wordLength > maxCharsPerLine) {
+      lineCount++;
+      currentLineLength = wordLength;
+    } else {
+      currentLineLength += 1 + wordLength;
+    }
+  }
+  return lineCount;
+}
+
 pw.Widget _detailsSidebarMainColumnChild(pw.Widget child) {
   return pw.Padding(
     padding: const pw.EdgeInsets.only(left: _detailsSidebarMainInsetPt),
@@ -970,7 +1112,7 @@ pw.PageTheme _detailsSidebarPageTheme({
   required PdfColor mutedColor,
   required PdfColor dividerColor,
   required double bodyPt,
-  Set<String> highlightedSkills = const <String>{},
+  required List<_DetailsSidebarPageSlice> sidebarSlices,
   PdfColor? highlightColor,
   PdfPageFormat pageFormat = PdfPageFormat.a4,
 }) {
@@ -988,7 +1130,7 @@ pw.PageTheme _detailsSidebarPageTheme({
               pw.Expanded(child: pw.Container(color: PdfColors.white)),
             ],
           ),
-          if (context.pageNumber == 1)
+          if (context.pageNumber <= sidebarSlices.length)
             pw.Positioned(
               left: _detailsSidebarPanelLeftInsetPt,
               top: 24,
@@ -999,7 +1141,7 @@ pw.PageTheme _detailsSidebarPageTheme({
                 mutedColor: mutedColor,
                 dividerColor: dividerColor,
                 bodyPt: bodyPt,
-                highlightedSkills: highlightedSkills,
+                pageSlice: sidebarSlices[context.pageNumber - 1],
                 highlightColor: highlightColor,
               ),
             ),
@@ -1016,12 +1158,9 @@ pw.Widget _detailsSidebarPanel({
   required PdfColor mutedColor,
   required PdfColor dividerColor,
   required double bodyPt,
-  Set<String> highlightedSkills = const <String>{},
+  required _DetailsSidebarPageSlice pageSlice,
   PdfColor? highlightColor,
 }) {
-  final skills = resume.includeSkillsInResume
-      ? resume.skills
-      : const <String>[];
   final infoItems = _detailsSidebarInfoItems(resume);
   final displayName = resume.fullName.trim().isEmpty
       ? 'Your Name'
@@ -1032,71 +1171,73 @@ pw.Widget _detailsSidebarPanel({
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text(
-          displayName.toUpperCase(),
-          style: pw.TextStyle(
-            color: titleColor,
-            fontSize: 24,
-            fontWeight: pw.FontWeight.bold,
-            lineSpacing: 1.1,
-          ),
-        ),
-        if (resume.jobTitle.trim().isNotEmpty) ...[
-          pw.SizedBox(height: 14),
+        if (pageSlice.showIdentity) ...[
           pw.Text(
-            resume.jobTitle.trim(),
+            displayName.toUpperCase(),
             style: pw.TextStyle(
               color: titleColor,
-              fontSize: bodyPt + 1.3,
-              fontWeight: pw.FontWeight.normal,
+              fontSize: 24,
+              fontWeight: pw.FontWeight.bold,
+              lineSpacing: 1.1,
             ),
           ),
-        ],
-        pw.SizedBox(height: 26),
-        _detailsSidebarSidebarHeading(
-          title: 'DETAILS',
-          titleColor: titleColor,
-          dividerColor: dividerColor,
-        ),
-        pw.SizedBox(height: 12),
-        if (infoItems.isEmpty)
-          pw.Text(
-            'Add contact details',
-            style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
-          )
-        else
-          for (final item in infoItems)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 10),
-              child: _detailsSidebarInfoRow(
-                text: item,
-                accentColor: accentColor,
-                textColor: mutedColor,
-                fontSize: bodyPt,
+          if (resume.jobTitle.trim().isNotEmpty) ...[
+            pw.SizedBox(height: 14),
+            pw.Text(
+              resume.jobTitle.trim(),
+              style: pw.TextStyle(
+                color: titleColor,
+                fontSize: bodyPt + 1.3,
+                fontWeight: pw.FontWeight.normal,
               ),
             ),
-        pw.SizedBox(height: 20),
+          ],
+          pw.SizedBox(height: 26),
+          _detailsSidebarSidebarHeading(
+            title: 'DETAILS',
+            titleColor: titleColor,
+            dividerColor: dividerColor,
+          ),
+          pw.SizedBox(height: 12),
+          if (infoItems.isEmpty)
+            pw.Text(
+              'Add contact details',
+              style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+            )
+          else
+            for (final item in infoItems)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 10),
+                child: _detailsSidebarInfoRow(
+                  text: item,
+                  accentColor: accentColor,
+                  textColor: mutedColor,
+                  fontSize: bodyPt,
+                ),
+              ),
+          pw.SizedBox(height: 20),
+        ],
         _detailsSidebarSidebarHeading(
           title: 'SKILLS',
           titleColor: titleColor,
           dividerColor: dividerColor,
         ),
         pw.SizedBox(height: 12),
-        if (skills.isEmpty)
+        if (pageSlice.skills.isEmpty)
           pw.Text(
-            'Add skills',
+            pageSlice.showIdentity ? 'Add skills' : '',
             style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
           )
         else
-          for (final skill in skills)
+          for (final skill in pageSlice.skills)
             pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 8),
+              padding: const pw.EdgeInsets.only(bottom: 11),
               child: _detailsSidebarSkillRow(
                 text: skill,
                 accentColor: accentColor,
                 textColor: mutedColor,
                 fontSize: bodyPt,
-                backgroundColor: highlightedSkills.contains(skill)
+                backgroundColor: pageSlice.highlightedSkills.contains(skill)
                     ? highlightColor
                     : null,
               ),

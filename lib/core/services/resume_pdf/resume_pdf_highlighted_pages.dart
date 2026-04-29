@@ -810,6 +810,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final dividerColor = _detailsSidebarDividerColorPdf(resume);
     final highlightColor = PdfColor.fromHex('#FFE67A');
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final sidebarSlices = _detailsSidebarPageSlices(
+      resume: resume,
+      bodyPt: bodyPt,
+      highlightedSkills: highlightedSkills,
+      pageFormat: PdfPageFormat.a4,
+    );
 
     document.addPage(
       pw.MultiPage(
@@ -821,7 +827,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           mutedColor: mutedColor,
           dividerColor: dividerColor,
           bodyPt: bodyPt,
-          highlightedSkills: highlightedSkills,
+          sidebarSlices: sidebarSlices,
           highlightColor: highlightColor,
         ),
         header: _continuedPageTopGap,
@@ -969,6 +975,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               ),
             ),
           ],
+          for (var i = 1; i < sidebarSlices.length; i++) pw.NewPage(),
         ],
       ),
     );

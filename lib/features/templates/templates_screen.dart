@@ -152,6 +152,18 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   ),
             const SizedBox(height: 20),
           ],
+          if ((isResumeTemplatePicker ||
+                  (!isCoverLetterTemplatePicker &&
+                      _selectedSegment == _TemplateSegment.resume)) &&
+              visibleItems.isNotEmpty) ...[
+            Text(
+              'Professional',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           GridView.builder(
             key: const Key('template-grid'),
             shrinkWrap: true,
@@ -315,6 +327,10 @@ class _TemplateTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.zero,
         onTap: onTap,
+        splashFactory: NoSplash.splashFactory,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
         child: Ink(
           decoration: const BoxDecoration(),
           child: Stack(

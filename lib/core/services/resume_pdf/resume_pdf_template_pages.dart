@@ -1125,6 +1125,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     final accentColor = _detailsSidebarAccentColorPdf(resume);
     final dividerColor = _detailsSidebarDividerColorPdf(resume);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final sidebarSlices = _detailsSidebarPageSlices(
+      resume: resume,
+      bodyPt: bodyPt,
+      highlightedSkills: const <String>{},
+      pageFormat: PdfPageFormat.a4,
+    );
 
     document.addPage(
       pw.MultiPage(
@@ -1136,6 +1142,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
           mutedColor: mutedColor,
           dividerColor: dividerColor,
           bodyPt: bodyPt,
+          sidebarSlices: sidebarSlices,
         ),
         header: _continuedPageTopGap,
         build: (context) => [
@@ -1268,6 +1275,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               ),
             ),
           ],
+          for (var i = 1; i < sidebarSlices.length; i++) pw.NewPage(),
         ],
       ),
     );
