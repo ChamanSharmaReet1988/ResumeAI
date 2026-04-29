@@ -934,7 +934,7 @@ final ResumeData _classicSidebarTemplateResume = ResumeData(
 final ResumeData _detailsSidebarTemplateResume = ResumeData(
   id: 'template-details-sidebar',
   title: 'Details Sidebar Template',
-  fullName: 'Kelly Blackwell',
+  fullName: 'MAYA LPEZ',
   jobTitle: 'Administrative Assistant',
   email: 'kelly.blackwell@example.com',
   phone: '(210) 286-1624',
