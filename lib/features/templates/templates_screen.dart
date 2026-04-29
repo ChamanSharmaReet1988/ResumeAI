@@ -175,6 +175,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
               return _TemplateTile(
                 item: item,
                 selected: selected,
+                paletteSeed: library?.selectedResume,
                 onTap: () {
                   if (widget.onTemplateSelected != null &&
                       item.resumeTemplate != null) {
@@ -193,6 +194,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                     MaterialPageRoute<void>(
                       builder: (_) => _TemplateDetailScreen(
                         item: item,
+                        paletteSeed: library?.selectedResume,
                         onUseTemplate: item.resumeTemplate == null
                             ? null
                             : () {
@@ -216,10 +218,15 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 }
 
 class _TemplateDetailScreen extends StatelessWidget {
-  const _TemplateDetailScreen({required this.item, this.onUseTemplate});
+  const _TemplateDetailScreen({
+    required this.item,
+    this.onUseTemplate,
+    this.paletteSeed,
+  });
 
   final _TemplateTileData item;
   final VoidCallback? onUseTemplate;
+  final ResumeData? paletteSeed;
 
   @override
   Widget build(BuildContext context) {
@@ -243,9 +250,13 @@ class _TemplateDetailScreen extends StatelessWidget {
                     child: KeyedSubtree(
                       key: Key('template-detail-preview-${item.id}'),
                       child: item.resumeTemplate != null
-                          ? _ResumeTemplateDetailPreview(item: item)
+                          ? _ResumeTemplateDetailPreview(
+                              item: item,
+                              paletteSeed: paletteSeed,
+                            )
                           : _TemplatePreviewArt(
                               item: item,
+                              paletteSeed: paletteSeed,
                               showPremiumBadgeOnPage: true,
                               premiumBadgeRightPadding: 10,
                               premiumBadgeSize: 18,
@@ -276,11 +287,13 @@ class _TemplateTile extends StatelessWidget {
     required this.item,
     required this.selected,
     required this.onTap,
+    this.paletteSeed,
   });
 
   final _TemplateTileData item;
   final bool selected;
   final VoidCallback onTap;
+  final ResumeData? paletteSeed;
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +329,10 @@ class _TemplateTile extends StatelessWidget {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            _TemplatePreviewArt(item: item),
+                            _TemplatePreviewArt(
+                              item: item,
+                              paletteSeed: paletteSeed,
+                            ),
                             if (item.isPremium)
                               Positioned(
                                 right: 0,
@@ -454,6 +470,7 @@ enum _TemplatePreviewKind {
 class _TemplatePreviewArt extends StatelessWidget {
   const _TemplatePreviewArt({
     required this.item,
+    this.paletteSeed,
     this.showPremiumBadgeOnPage = false,
     this.premiumBadgeRightPadding = 20,
     this.premiumBadgeSize = 18,
@@ -461,6 +478,7 @@ class _TemplatePreviewArt extends StatelessWidget {
   });
 
   final _TemplateTileData item;
+  final ResumeData? paletteSeed;
   final bool showPremiumBadgeOnPage;
   final double premiumBadgeRightPadding;
   final double premiumBadgeSize;
@@ -472,13 +490,26 @@ class _TemplatePreviewArt extends StatelessWidget {
       _TemplatePreviewKind.darkHeaderResume => const _DarkHeaderTemplateArt(),
       _TemplatePreviewKind.profileSidebarResume =>
         showPremiumBadgeOnPage
-            ? _ResumeTemplatePreviewArt(resume: _profileSidebarTemplateResume)
+            ? _ResumeTemplatePreviewArt(
+                resume: _applyTemplatePreviewPalette(
+                  _profileSidebarTemplateResume,
+                  paletteSeed,
+                ),
+              )
             : const _ProfileSidebarTemplateArtCompact(),
       _TemplatePreviewKind.classicSidebarResume =>
         showPremiumBadgeOnPage
-            ? _ResumeTemplatePreviewArt(resume: _classicSidebarTemplateResume)
+            ? _ResumeTemplatePreviewArt(
+                resume: _applyTemplatePreviewPalette(
+                  _classicSidebarTemplateResume,
+                  paletteSeed,
+                ),
+              )
             : _ClassicSidebarTemplateArtCompact(
-                resume: _classicSidebarTemplateResume,
+                resume: _applyTemplatePreviewPalette(
+                  _classicSidebarTemplateResume,
+                  paletteSeed,
+                ),
               ),
       _TemplatePreviewKind.executiveNoteCoverLetter =>
         const _ExecutiveNoteCoverLetterArt(),
@@ -542,9 +573,13 @@ class _TemplatePreviewArt extends StatelessWidget {
 }
 
 class _ResumeTemplateDetailPreview extends StatelessWidget {
-  const _ResumeTemplateDetailPreview({required this.item});
+  const _ResumeTemplateDetailPreview({
+    required this.item,
+    this.paletteSeed,
+  });
 
   final _TemplateTileData item;
+  final ResumeData? paletteSeed;
 
   @override
   Widget build(BuildContext context) {
@@ -562,7 +597,10 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       return _LargeTemplateArtPreview(
         showPremiumBadge: true,
         child: _ClassicSidebarTemplateArtCompact(
-          resume: _classicSidebarTemplateResume,
+          resume: _applyTemplatePreviewPalette(
+            _classicSidebarTemplateResume,
+            paletteSeed,
+          ),
           detailed: true,
         ),
       );
@@ -570,8 +608,14 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
 
     final sampleResume = switch (template) {
       ResumeTemplate.corporate => _darkHeaderTemplateResume,
-      ResumeTemplate.creative => _profileSidebarTemplateResume,
-      ResumeTemplate.classicSidebar => _classicSidebarTemplateResume,
+      ResumeTemplate.creative => _applyTemplatePreviewPalette(
+        _profileSidebarTemplateResume,
+        paletteSeed,
+      ),
+      ResumeTemplate.classicSidebar => _applyTemplatePreviewPalette(
+        _classicSidebarTemplateResume,
+        paletteSeed,
+      ),
     };
 
     return Center(
@@ -631,6 +675,19 @@ class _LargeTemplateArtPreview extends StatelessWidget {
       },
     );
   }
+}
+
+ResumeData _applyTemplatePreviewPalette(
+  ResumeData sample,
+  ResumeData? paletteSeed,
+) {
+  if (paletteSeed == null) {
+    return sample;
+  }
+
+  return sample.copyWith(
+    corporateColorPresetIndex: paletteSeed.corporateColorPresetIndex,
+  );
 }
 
 final ResumeData _darkHeaderTemplateResume = ResumeData(
@@ -1247,12 +1304,13 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const rail = Color(0xFFF2F4F7);
-    const avatar = Color(0xFF8CB4D6);
+    const accentBlue = Color(0xFF2E7CB3);
+    final rail = Color.lerp(Colors.white, accentBlue, 0.14)!;
+    final avatar = Color.lerp(accentBlue, Colors.white, 0.45)!;
     const title = Color(0xFF1F2937);
     const text = Color(0xFF344054);
     const muted = Color(0xFF667085);
-    const line = Color(0xFFD8DDE4);
+    final line = Color.lerp(accentBlue, Colors.white, 0.7)!;
     final skills = resume.skills.take(detailed ? 3 : 2).toList();
     final languages = resume.customSections
         .where((item) => item.title.trim().toLowerCase() == 'languages')
@@ -1304,7 +1362,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                       child: Container(
                         width: 52,
                         height: 52,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: avatar,
                           shape: BoxShape.circle,
                         ),
