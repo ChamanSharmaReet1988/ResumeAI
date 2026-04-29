@@ -1019,10 +1019,11 @@ class _ClassicSidebarPreview extends StatelessWidget {
 
   final ResumeData resume;
 
-  static const double _sidebarWidth = 96;
-  static const double _avatarSize = 89;
+  static const double _sidebarWidth = 122;
+  static const double _avatarSize = 114;
   static const double _sectionGap = 18;
   static const double _contentSectionGap = 16;
+
   /// Matches PDF `_classicSidebarSectionBottomPt` spacing before section titles.
   static const double _sectionBlockTopGap = 14;
   static const double _sectionHeadingGap = 6;
@@ -1041,15 +1042,12 @@ class _ClassicSidebarPreview extends StatelessWidget {
       fontSize: bodySize,
       height: ResumeTypography.textLineHeight,
     );
-    final experiences =
-        resume.visibleWorkExperiences.take(2).toList();
+    final experiences = resume.visibleWorkExperiences.take(2).toList();
     final education = resume.visibleEducation.take(2).toList();
     final projects = resume.visibleProjects.take(2).toList();
     final skills = _pdfAlignedSkills(resume).take(5).toList();
-    final languages =
-        _classicSidebarLanguages(resume).take(4).toList();
-    final remainingCustomSections =
-        _classicSidebarMainCustomSections(resume);
+    final languages = _classicSidebarLanguages(resume).take(4).toList();
+    final remainingCustomSections = _classicSidebarMainCustomSections(resume);
     final avatarPath = resume.profileImagePath.trim();
     final hasProfileImage =
         avatarPath.isNotEmpty && File(avatarPath).existsSync();
@@ -1060,7 +1058,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
         Container(
           width: _sidebarWidth,
           color: railColor,
-          padding: const EdgeInsets.fromLTRB(10, 14, 10, 14),
+          padding: const EdgeInsets.fromLTRB(0, 14, 0, 14),
           child: DefaultTextStyle(
             style: bodyStyle.copyWith(fontSize: bodyStyle.fontSize! - 0.5),
             child: Column(
@@ -1078,12 +1076,12 @@ class _ClassicSidebarPreview extends StatelessWidget {
                               errorBuilder: (_, _, _) =>
                                   _ClassicSidebarAvatarPlaceholder(
                                     resume: resume,
-                                    fontSize: 22,
+                                    fontSize: 29,
                                   ),
                             )
                           : _ClassicSidebarAvatarPlaceholder(
                               resume: resume,
-                              fontSize: 22,
+                              fontSize: 29,
                             ),
                     ),
                   ),

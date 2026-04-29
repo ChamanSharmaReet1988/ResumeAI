@@ -131,14 +131,16 @@ const double _creativeNameFontPt = 30.0;
 const double _creativeAvatarBackgroundOpacity = 0.4;
 
 const double _classicSidebarRailWidthPt = 165.0;
-const double _classicSidebarContentWidthPt = 112.0;
+const double _classicSidebarContentWidthPt = 134.0;
 const double _classicSidebarMainInsetPt = 159.0;
-const double _classicSidebarAvatarSizePt = 103.0;
+const double _classicSidebarAvatarSizePt = 130.0;
 const double _classicSidebarSectionGapPt = 18.0;
 const double _classicSidebarHeadingGapPt = 6.0;
 const double _classicSidebarSectionBottomPt = 14.0;
 const double _classicSidebarPanelTopPt = 24.0;
 const double _classicSidebarPanelBottomPt = 0.0;
+const double _classicSidebarPanelLeftInsetPt =
+    (_classicSidebarRailWidthPt - _classicSidebarContentWidthPt) / 2;
 
 enum _ClassicSidebarSectionType { skills, languages }
 
@@ -470,7 +472,7 @@ pw.PageTheme _classicSidebarPageTheme({
                   ),
                 ),
                 pw.Positioned(
-                  left: 16,
+                  left: _classicSidebarPanelLeftInsetPt,
                   top: _classicSidebarPanelTopPt,
                   child: _classicSidebarPanel(
                     resume: resume,
@@ -701,7 +703,7 @@ pw.Widget _classicSidebarPanel({
                 _classicSidebarInitials(resume),
                 style: pw.TextStyle(
                   color: titleColor,
-                  fontSize: 26,
+                  fontSize: 34,
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),

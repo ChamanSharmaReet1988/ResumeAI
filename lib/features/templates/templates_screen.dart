@@ -1293,7 +1293,10 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
         .where((item) => item.isNotEmpty)
         .take(detailed ? 2 : 1)
         .toList();
-    final experiences = resume.workExperiences.where((item) => !item.isBlank).take(1).toList();
+    final experiences = resume.workExperiences
+        .where((item) => !item.isBlank)
+        .take(1)
+        .toList();
     final education = resume.education
         .where((item) => !item.isBlank)
         .take(detailed ? 2 : 1)
@@ -1313,9 +1316,9 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              width: 58,
+              width: 60,
               color: rail,
-              padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+              padding: const EdgeInsets.fromLTRB(6, 10, 6, 8),
               child: DefaultTextStyle(
                 style: const TextStyle(
                   fontSize: 4.6,
@@ -1327,8 +1330,8 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                   children: [
                     Center(
                       child: Container(
-                        width: 30,
-                        height: 30,
+                        width: 52,
+                        height: 52,
                         decoration: const BoxDecoration(
                           color: avatar,
                           shape: BoxShape.circle,
@@ -1338,7 +1341,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           _miniClassicInitials(resume.fullName),
                           style: TextStyle(
                             color: title,
-                            fontSize: 8.6,
+                            fontSize: 12.6,
                             fontWeight: FontWeight.w800,
                             height: 1,
                           ),
@@ -1359,11 +1362,11 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     _MiniBulletColumn(items: skills),
-                      SizedBox(height: detailed ? 8 : 4),
-                      Container(height: 1, color: line),
-                      SizedBox(height: detailed ? 5 : 3),
-                      const Text(
-                        'LANGUAGES',
+                    SizedBox(height: detailed ? 8 : 4),
+                    Container(height: 1, color: line),
+                    SizedBox(height: detailed ? 5 : 3),
+                    const Text(
+                      'LANGUAGES',
                       style: TextStyle(
                         fontSize: 5.5,
                         fontWeight: FontWeight.w800,
@@ -1465,7 +1468,9 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                               items: [
                                 ...experiences.first.bullets.take(1),
                                 if (experiences.first.bullets.isEmpty &&
-                                    experiences.first.description.trim().isNotEmpty)
+                                    experiences.first.description
+                                        .trim()
+                                        .isNotEmpty)
                                   experiences.first.description.trim(),
                               ],
                             ),
