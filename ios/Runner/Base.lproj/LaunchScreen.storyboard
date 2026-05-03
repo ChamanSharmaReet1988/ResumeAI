@@ -20,15 +20,15 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleAspectFit" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4">
-                                <rect key="frame" x="51.666666666666657" y="281" width="290" height="290"/>
+                                <rect key="frame" x="71.666666666666686" y="301" width="250" height="250"/>
                             </imageView>
                         </subviews>
                         <color key="backgroundColor" red="0.998046875" green="0.9887695312" blue="0.9741210938" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                         <constraints>
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="1a2-6s-vTC"/>
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="4X2-HB-R7a"/>
-                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="width" constant="290" id="h6F-v2-D0H"/>
-                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="height" constant="290" id="j2N-b4-E2g"/>
+                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="width" constant="250" id="h6F-v2-D0H"/>
+                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="height" constant="250" id="j2N-b4-E2g"/>
                         </constraints>
                     </view>
                 </viewController>

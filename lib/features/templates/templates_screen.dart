@@ -442,12 +442,12 @@ class _TemplateTile extends StatelessWidget {
               ),
               if (selected)
                 Positioned(
-                  top: 7,
-                  right: 19,
+                  top: 4,
+                  right: 14,
                   child: Icon(
                     Icons.check_circle_rounded,
                     color: selectedColor,
-                    size: 20,
+                    size: 30,
                   ),
                 ),
             ],

@@ -4,8 +4,7 @@ pw.Widget _atsMultiPageHeaderGap(pw.Context context) =>
     context.pageNumber > 1 ? pw.SizedBox(height: 40) : pw.SizedBox();
 
 /// Slightly smaller than body text so keyword lists read lighter than paragraphs.
-double _atsPdfSkillsBodyPt(double bodyPt) =>
-    math.max(9.0, bodyPt - 1.35);
+double _atsPdfSkillsBodyPt(double bodyPt) => math.max(9.0, bodyPt - 1.35);
 
 /// Single-column ATS PDF layouts (no sidebars, minimal decoration).
 extension _ResumePdfAtsPages on ResumePdfService {
@@ -53,7 +52,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     return pw.Container(
       width: double.infinity,
       color: _atsGrayBand,
-      padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 6),
+      padding: const pw.EdgeInsets.symmetric(vertical: 12, horizontal: 6),
       child: pw.Center(
         child: pw.Text(
           title.toUpperCase(),
@@ -716,7 +715,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 w.add(pw.SizedBox(height: 2));
                 w.add(pw.Text(line, style: pw.TextStyle(fontSize: bodyPt)));
                 if (item.score.trim().isNotEmpty) {
-                  w.add(pw.Text(item.score, style: pw.TextStyle(fontSize: bodyPt)));
+                  w.add(
+                    pw.Text(item.score, style: pw.TextStyle(fontSize: bodyPt)),
+                  );
                 }
                 w.add(pw.SizedBox(height: 8));
               }
@@ -934,7 +935,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
             if (items.isEmpty) {
               w.add(pw.Text('Add leadership and core responsibilities.'));
             } else {
-              w.addAll(_atsExperienceEntries(items, bodyPt, usePipeRoleCompany: true));
+              w.addAll(
+                _atsExperienceEntries(items, bodyPt, usePipeRoleCompany: true),
+              );
             }
           }
           w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
@@ -975,10 +978,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 ].join(' | ');
                 if (detailLine.isNotEmpty) {
                   w.add(
-                    pw.Text(
-                      detailLine,
-                      style: pw.TextStyle(fontSize: bodyPt),
-                    ),
+                    pw.Text(detailLine, style: pw.TextStyle(fontSize: bodyPt)),
                   );
                 }
                 w.add(pw.SizedBox(height: 8));
@@ -1010,7 +1010,8 @@ extension _ResumePdfAtsPages on ResumePdfService {
             w.add(pw.Text('Add keywords from target job descriptions.'));
           }
 
-          if (resume.includeProjectsInResume && resume.visibleProjects.isNotEmpty) {
+          if (resume.includeProjectsInResume &&
+              resume.visibleProjects.isNotEmpty) {
             w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
             w.add(
               pw.Text(
