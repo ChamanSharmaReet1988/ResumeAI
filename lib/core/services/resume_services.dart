@@ -18,6 +18,7 @@ import 'resume_pdf/resume_pdf_theme.dart';
 
 part 'resume_pdf/resume_pdf_template_pages.dart';
 part 'resume_pdf/resume_pdf_highlighted_pages.dart';
+part 'resume_pdf/resume_pdf_ats_pages.dart';
 
 PdfColor _pdfRgb(Color c) => PdfColor(c.r, c.g, c.b);
 
@@ -3953,6 +3954,18 @@ class ResumePdfService {
       case ResumeTemplate.detailsSidebar:
         _addDetailsSidebarTemplatePage(document, resume);
         break;
+      case ResumeTemplate.atsStructured:
+        _addAtsStructuredTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.atsSerifRules:
+        _addAtsSerifRulesTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.atsModernFlow:
+        _addAtsModernFlowTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.atsExecutive:
+        _addAtsExecutiveTemplatePage(document, resume);
+        break;
     }
 
     return document.save();
@@ -4008,6 +4021,18 @@ class ResumePdfService {
           highlightedSkills: highlightedSkills,
           highlightedBulletsByExperience: highlightedBulletsByExperience,
         );
+        break;
+      case ResumeTemplate.atsStructured:
+        _addAtsStructuredTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.atsSerifRules:
+        _addAtsSerifRulesTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.atsModernFlow:
+        _addAtsModernFlowTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.atsExecutive:
+        _addAtsExecutiveTemplatePage(document, resume);
         break;
     }
 

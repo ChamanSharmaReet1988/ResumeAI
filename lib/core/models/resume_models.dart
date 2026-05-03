@@ -13,12 +13,33 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.creative;
     case 'corporate':
       return ResumeTemplate.corporate;
+    case 'atsStructured':
+      return ResumeTemplate.atsStructured;
+    case 'atsSerifRules':
+      return ResumeTemplate.atsSerifRules;
+    case 'atsModernFlow':
+      return ResumeTemplate.atsModernFlow;
+    case 'atsExecutive':
+      return ResumeTemplate.atsExecutive;
     default:
       return ResumeTemplate.corporate;
   }
 }
 
-enum ResumeTemplate { corporate, creative, classicSidebar, detailsSidebar }
+enum ResumeTemplate {
+  corporate,
+  creative,
+  classicSidebar,
+  detailsSidebar,
+  /// Centered header, gray section bands (ATS-friendly).
+  atsStructured,
+  /// Serif-style rules, email aligned right (ATS-friendly).
+  atsSerifRules,
+  /// Centered contact, summary → education → skills → experience flow.
+  atsModernFlow,
+  /// Uppercase headings, strong hierarchy, two-column skills.
+  atsExecutive,
+}
 
 enum CoverLetterTemplate { executiveNote, minimalLetter, sidebarLetter }
 
@@ -27,6 +48,10 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.creative,
   ResumeTemplate.classicSidebar,
   ResumeTemplate.detailsSidebar,
+  ResumeTemplate.atsStructured,
+  ResumeTemplate.atsSerifRules,
+  ResumeTemplate.atsModernFlow,
+  ResumeTemplate.atsExecutive,
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
@@ -37,6 +62,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.creative => 'Profile Sidebar',
     ResumeTemplate.classicSidebar => 'Classic Sidebar',
     ResumeTemplate.detailsSidebar => 'Details Sidebar',
+    ResumeTemplate.atsStructured => 'Structured ATS',
+    ResumeTemplate.atsSerifRules => 'Serif Rules ATS',
+    ResumeTemplate.atsModernFlow => 'Modern Flow ATS',
+    ResumeTemplate.atsExecutive => 'Executive ATS',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -48,6 +77,14 @@ extension ResumeTemplateX on ResumeTemplate {
       'Soft sidebar layout with a profile photo, skills rail, and clean resume blocks.',
     ResumeTemplate.detailsSidebar =>
       'Minimal left details rail with clean section lines and balanced content blocks.',
+    ResumeTemplate.atsStructured =>
+      'Single column with banded section titles—optimized for keyword parsing.',
+    ResumeTemplate.atsSerifRules =>
+      'Classic rules and hierarchy with clear contact and date alignment.',
+    ResumeTemplate.atsModernFlow =>
+      'Centered header and a logical section flow for scanners and recruiters.',
+    ResumeTemplate.atsExecutive =>
+      'Strong uppercase headings and scannable two-column skills.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -55,6 +92,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.creative => const Color(0xFFE85D04),
     ResumeTemplate.classicSidebar => const Color(0xFF344054),
     ResumeTemplate.detailsSidebar => const Color(0xFF344054),
+    ResumeTemplate.atsStructured => const Color(0xFF374151),
+    ResumeTemplate.atsSerifRules => const Color(0xFF374151),
+    ResumeTemplate.atsModernFlow => const Color(0xFF2563EB),
+    ResumeTemplate.atsExecutive => const Color(0xFF1F2937),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -62,6 +103,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.creative => const Color(0xFFFFE9D8),
     ResumeTemplate.classicSidebar => const Color(0xFFF2F4F7),
     ResumeTemplate.detailsSidebar => const Color(0xFFF2F4F7),
+    ResumeTemplate.atsStructured => const Color(0xFFF3F4F6),
+    ResumeTemplate.atsSerifRules => const Color(0xFFF9FAFB),
+    ResumeTemplate.atsModernFlow => const Color(0xFFEFF6FF),
+    ResumeTemplate.atsExecutive => const Color(0xFFF3F4F6),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -70,6 +115,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.creative => 'Sans · profile sidebar',
     ResumeTemplate.classicSidebar => 'Sans · classic sidebar',
     ResumeTemplate.detailsSidebar => 'Sans · details sidebar',
+    ResumeTemplate.atsStructured => 'Sans · banded ATS',
+    ResumeTemplate.atsSerifRules => 'Sans · rules ATS',
+    ResumeTemplate.atsModernFlow => 'Sans · flow ATS',
+    ResumeTemplate.atsExecutive => 'Sans · executive ATS',
   };
 }
 

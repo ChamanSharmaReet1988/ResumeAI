@@ -55,6 +55,10 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.creative => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.classicSidebar => 2,
     ResumeTemplate.detailsSidebar => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.atsStructured => 0,
+    ResumeTemplate.atsSerifRules => 0,
+    ResumeTemplate.atsModernFlow => 0,
+    ResumeTemplate.atsExecutive => 0,
   };
 }
 

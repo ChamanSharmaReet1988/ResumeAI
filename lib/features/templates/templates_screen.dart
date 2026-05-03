@@ -62,6 +62,9 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         : _selectedSegment == _TemplateSegment.resume
         ? _resumeTemplateCards
         : _coverLetterTemplateCards;
+    final showResumeTemplatesSection = isResumeTemplatePicker ||
+        (!isCoverLetterTemplatePicker &&
+            _selectedSegment == _TemplateSegment.resume);
     final isCupertino = Theme.of(context).platform == TargetPlatform.iOS;
     final blue = Theme.of(context).colorScheme.primary;
     final inactiveColor = Theme.of(context).colorScheme.onSurfaceVariant;
@@ -152,10 +155,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   ),
             const SizedBox(height: 20),
           ],
-          if ((isResumeTemplatePicker ||
-                  (!isCoverLetterTemplatePicker &&
-                      _selectedSegment == _TemplateSegment.resume)) &&
-              visibleItems.isNotEmpty) ...[
+          if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
             Text(
               'Professional',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -224,6 +224,65 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
               );
             },
           ),
+          if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
+            const SizedBox(height: 28),
+            Text(
+              'ATS',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 20),
+            GridView.builder(
+              key: const Key('template-grid-ats'),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _atsResumeCards.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.66,
+              ),
+              itemBuilder: (context, index) {
+                final item = _atsResumeCards[index];
+                final selected = isResumeTemplatePicker &&
+                    item.resumeTemplate != null &&
+                    item.resumeTemplate == activeTemplate;
+
+                return _TemplateTile(
+                  item: item,
+                  selected: selected,
+                  paletteSeed: library?.selectedResume,
+                  onTap: () {
+                    if (widget.onTemplateSelected != null &&
+                        item.resumeTemplate != null) {
+                      widget.onTemplateSelected!(item.resumeTemplate!);
+                      return;
+                    }
+
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => _TemplateDetailScreen(
+                          item: item,
+                          paletteSeed: library?.selectedResume,
+                          onUseTemplate: item.resumeTemplate == null
+                              ? null
+                              : () {
+                                  library?.setDefaultTemplate(
+                                    item.resumeTemplate!,
+                                  );
+                                  Navigator.of(context).pop();
+                                  widget.onCreateResume?.call();
+                                },
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -399,7 +458,7 @@ class _TemplateTile extends StatelessWidget {
   }
 }
 
-const _templateCards = <_TemplateTileData>[
+const _professionalResumeCards = <_TemplateTileData>[
   _TemplateTileData(
     id: 'dark-header',
     resumeTemplate: ResumeTemplate.corporate,
@@ -434,7 +493,42 @@ const _templateCards = <_TemplateTileData>[
   ),
 ];
 
-const _resumeTemplateCards = _templateCards;
+const _resumeTemplateCards = _professionalResumeCards;
+
+const _atsResumeCards = <_TemplateTileData>[
+  _TemplateTileData(
+    id: 'ats-structured',
+    resumeTemplate: ResumeTemplate.atsStructured,
+    previewKind: _TemplatePreviewKind.atsStructuredResume,
+    headline: 'Structured ATS',
+    caption: 'Gray section bands and a centered header for parsers.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'ats-serif-rules',
+    resumeTemplate: ResumeTemplate.atsSerifRules,
+    previewKind: _TemplatePreviewKind.atsSerifRulesResume,
+    headline: 'Serif Rules ATS',
+    caption: 'Classic rules, bold headings, and aligned dates.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'ats-modern-flow',
+    resumeTemplate: ResumeTemplate.atsModernFlow,
+    previewKind: _TemplatePreviewKind.atsModernFlowResume,
+    headline: 'Modern Flow ATS',
+    caption: 'Centered contact row with a logical section sequence.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'ats-executive',
+    resumeTemplate: ResumeTemplate.atsExecutive,
+    previewKind: _TemplatePreviewKind.atsExecutiveResume,
+    headline: 'Executive ATS',
+    caption: 'Uppercase headings and two-column keyword skills.',
+    isPremium: false,
+  ),
+];
 
 const _coverLetterTemplateCards = <_TemplateTileData>[
   _TemplateTileData(
@@ -488,6 +582,10 @@ enum _TemplatePreviewKind {
   profileSidebarResume,
   classicSidebarResume,
   detailsSidebarResume,
+  atsStructuredResume,
+  atsSerifRulesResume,
+  atsModernFlowResume,
+  atsExecutiveResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
   sidebarCoverLetter,
@@ -551,6 +649,30 @@ class _TemplatePreviewArt extends StatelessWidget {
                   paletteSeed,
                 ),
               ),
+      _TemplatePreviewKind.atsStructuredResume => _AtsStructuredTemplateArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsStructured),
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.atsSerifRulesResume => _AtsSerifRulesTemplateArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsSerifRules),
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.atsModernFlowResume => _AtsModernFlowTemplateArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsModernFlow),
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.atsExecutiveResume => _AtsExecutiveTemplateArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsExecutive),
+          paletteSeed,
+        ),
+      ),
       _TemplatePreviewKind.executiveNoteCoverLetter =>
         const _ExecutiveNoteCoverLetterArt(),
       _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
@@ -654,29 +776,52 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
         ),
       );
     }
+    if (template == ResumeTemplate.atsStructured) {
+      return _LargeTemplateArtPreview(
+        child: _AtsStructuredTemplateArt(
+          resume: _applyTemplatePreviewPalette(
+            _atsSampleFor(ResumeTemplate.atsStructured),
+            paletteSeed,
+          ),
+          detailed: true,
+        ),
+      );
+    }
+    if (template == ResumeTemplate.atsSerifRules) {
+      return _LargeTemplateArtPreview(
+        child: _AtsSerifRulesTemplateArt(
+          resume: _applyTemplatePreviewPalette(
+            _atsSampleFor(ResumeTemplate.atsSerifRules),
+            paletteSeed,
+          ),
+          detailed: true,
+        ),
+      );
+    }
+    if (template == ResumeTemplate.atsModernFlow) {
+      return _LargeTemplateArtPreview(
+        child: _AtsModernFlowTemplateArt(
+          resume: _applyTemplatePreviewPalette(
+            _atsSampleFor(ResumeTemplate.atsModernFlow),
+            paletteSeed,
+          ),
+          detailed: true,
+        ),
+      );
+    }
+    if (template == ResumeTemplate.atsExecutive) {
+      return _LargeTemplateArtPreview(
+        child: _AtsExecutiveTemplateArt(
+          resume: _applyTemplatePreviewPalette(
+            _atsSampleFor(ResumeTemplate.atsExecutive),
+            paletteSeed,
+          ),
+          detailed: true,
+        ),
+      );
+    }
 
-    final sampleResume = switch (template) {
-      ResumeTemplate.corporate => _darkHeaderTemplateResume,
-      ResumeTemplate.creative => _applyTemplatePreviewPalette(
-        _profileSidebarTemplateResume,
-        paletteSeed,
-      ),
-      ResumeTemplate.classicSidebar => _applyTemplatePreviewPalette(
-        _classicSidebarTemplateResume,
-        paletteSeed,
-      ),
-      ResumeTemplate.detailsSidebar => _applyTemplatePreviewPalette(
-        _detailsSidebarTemplateResume,
-        paletteSeed,
-      ),
-    };
-
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: _ResumeTemplatePreviewArt(resume: sampleResume),
-      ),
-    );
+    throw StateError('Unhandled resume template in detail preview: $template');
   }
 }
 
@@ -743,55 +888,93 @@ ResumeData _applyTemplatePreviewPalette(
   );
 }
 
-final ResumeData _darkHeaderTemplateResume = ResumeData(
-  id: 'template-dark-header',
-  title: 'Dark Header Template',
-  fullName: 'Maya Lopez',
-  jobTitle: 'Client Success Manager',
-  email: 'maya@sample.in',
-  phone: '+1 512 555 0148',
-  location: 'Austin, TX',
-  website: 'portfolio.dev/maya',
+/// Rich sample used for all four ATS template card arts and detail previews.
+final ResumeData _atsFullSampleResume = ResumeData(
+  id: 'template-ats-full-sample',
+  title: 'ATS Sample Resume',
+  fullName: 'Morgan A. Lee',
+  jobTitle: 'Senior Program Manager',
+  email: 'morgan.lee@professional.example.com',
+  phone: '(415) 555-0192',
+  location: 'San Francisco, CA 94105',
+  website: 'morganlee.dev',
   summary:
-      'Client success manager focused on renewals, onboarding, and long-term account health for B2B software customers.',
-  template: ResumeTemplate.corporate,
+      'Delivery-focused program manager with 8+ years aligning engineering, design, and business stakeholders. Known for turning ambiguous goals into phased roadmaps, measurable KPIs, and predictable releases in regulated and high-growth environments.',
+  template: ResumeTemplate.atsStructured,
   workExperiences: const [
     WorkExperience(
-      role: 'Client Success Lead',
-      company: 'Ember Cloud',
-      startDate: '2021',
+      role: 'Senior Program Manager',
+      company: 'Northwind Analytics',
+      startDate: 'Jan 2019',
       endDate: 'Present',
       description: '',
       bullets: [
-        'Lifted renewal rate by 14% through proactive risk reviews and structured customer check-ins.',
+        'Directed portfolio planning for three product lines with an \$18M annual budget and quarterly executive reviews.',
+        'Reduced cross-team dependency delays by 27% through shared milestone dashboards and clearer RACI ownership.',
+        'Led vendor selection and contract renewals for analytics and data-pipeline partners.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Project Lead',
+      company: 'Harbor Systems LLC — Oakland, CA',
+      startDate: 'Jun 2015',
+      endDate: 'Dec 2018',
+      description: '',
+      bullets: [
+        'Led ERP rollout for 120 users; completed UAT two weeks early with zero Sev-1 defects.',
+        'Standardized project intake and status reporting for a 25-person delivery group.',
       ],
     ),
   ],
   education: const [
     EducationItem(
-      institution: 'Northeastern University',
-      degree: 'BBA, Communication Strategy',
-      startDate: '2014',
-      endDate: '2018',
-      score: '',
+      institution: 'University of California, Berkeley',
+      degree: 'MBA, Technology Strategy',
+      startDate: '2013',
+      endDate: '2015',
+      score: "Dean's List",
+    ),
+    EducationItem(
+      institution: 'San José State University',
+      degree: 'BS, Industrial Engineering',
+      startDate: '2009',
+      endDate: '2013',
+      score: 'cum laude',
     ),
   ],
   skills: const [
-    'Renewal strategy',
-    'CRM operations',
-    'Lifecycle emails',
-    'Churn analysis',
+    'Program governance',
+    'SQL & Excel modeling',
+    'Agile / Scrum',
+    'Stakeholder communication',
+    'Risk & dependency tracking',
+    'Vendor management',
   ],
   projects: const [
     ProjectItem(
-      title: 'Customer Health Dashboard',
-      bullets: ['Shipped dashboard for weekly customer health reviews.'],
+      title: 'Forecast Automation Toolkit',
+      overview: 'Finance forecasting workflow',
+      impact: 'SQL, Python, Airflow',
+      bullets: [
+        'Partnered with finance to replace spreadsheet forecasts with auditable, versioned pipelines.',
+        'Cut monthly close prep from five days to two through automated variance checks.',
+      ],
     ),
   ],
-  customSections: const [],
+  customSections: const [
+    CustomSectionItem(
+      title: 'Certifications',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: [
+        'PMP — Project Management Institute (2016)',
+        'Agile PM Certificate — Berkeley Extension (2014)',
+      ],
+    ),
+  ],
   updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
-  githubLink: 'github.com/mayalopez',
-  linkedinLink: 'linkedin.com/in/mayalopez',
+  githubLink: 'github.com/malee',
+  linkedinLink: 'linkedin.com/in/morganalee',
   profileImagePath: '',
   resumeTextFont: ResumeTextFont.calibri,
   includeWorkInResume: true,
@@ -801,6 +984,9 @@ final ResumeData _darkHeaderTemplateResume = ResumeData(
   bodyFontPt: 13,
   corporateColorPresetIndex: 0,
 );
+
+ResumeData _atsSampleFor(ResumeTemplate template) =>
+    _atsFullSampleResume.copyWith(template: template);
 
 final ResumeData _profileSidebarTemplateResume = ResumeData(
   id: 'template-profile-sidebar',
@@ -1223,6 +1409,911 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                   ),
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+List<String> _templateArtProjectBullets(ProjectItem p) {
+  final lines = p.bullets.where((b) => b.trim().isNotEmpty).toList();
+  if (lines.isNotEmpty) {
+    return lines;
+  }
+  return [p.overview.trim(), p.impact.trim()]
+      .where((s) => s.isNotEmpty)
+      .toList();
+}
+
+class _AtsStructuredTemplateArt extends StatelessWidget {
+  const _AtsStructuredTemplateArt({
+    required this.resume,
+    this.detailed = false,
+  });
+
+  final ResumeData resume;
+  final bool detailed;
+
+  static const Color _ink = Color(0xFF1F2937);
+  static const Color _band = Color(0xFFE5E7EB);
+
+  @override
+  Widget build(BuildContext context) {
+    final fs = detailed ? 4.75 : 4.35;
+    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final works = resume.visibleWorkExperiences;
+    final edu = resume.visibleEducation;
+    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final projects = resume.visibleProjects;
+    final contactLine = [
+      if (resume.email.trim().isNotEmpty && resume.phone.trim().isNotEmpty)
+        '${resume.email.trim()}    ${resume.phone.trim()}'
+      else if (resume.email.trim().isNotEmpty)
+        resume.email.trim()
+      else if (resume.phone.trim().isNotEmpty)
+        resume.phone.trim(),
+    ];
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                resume.fullName.trim().toUpperCase(),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _ink,
+                  fontSize: detailed ? 8.2 : 7.6,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              if (resume.jobTitle.trim().isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  resume.jobTitle.trim(),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: body.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: fs + 0.35,
+                  ),
+                ),
+              ],
+              if (resume.location.trim().isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Text(
+                  resume.location.trim(),
+                  textAlign: TextAlign.center,
+                  maxLines: detailed ? 3 : 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: body,
+                ),
+              ],
+              if (contactLine.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  contactLine.first,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: body,
+                ),
+              ],
+              const SizedBox(height: 5),
+              Container(height: 1, color: _ink.withValues(alpha: 0.85)),
+              _atsGrayBandLabel('SUMMARY'),
+              Text(
+                resume.summary.trim(),
+                maxLines: detailed ? 12 : 5,
+                overflow: TextOverflow.ellipsis,
+                style: body,
+              ),
+              _atsGrayBandLabel('EXPERIENCE'),
+              ..._atsStructuredJobs(works, body),
+              _atsGrayBandLabel('EDUCATION'),
+              ..._atsStructuredSchools(edu, body),
+              _atsGrayBandLabel('SKILLS'),
+              _MiniBulletColumn(
+                items: skills.take(detailed ? 8 : 5).toList(),
+              ),
+              if (detailed && projects.isNotEmpty) ...[
+                _atsGrayBandLabel('PROJECTS'),
+                Text(
+                  projects.first.title.trim(),
+                  style: body.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (_templateArtProjectBullets(projects.first).isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _templateArtProjectBullets(projects.first).first,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: body,
+                  ),
+                ],
+              ],
+              if (detailed && resume.visibleCustomSections.isNotEmpty) ...[
+                for (final section in resume.visibleCustomSections.take(1)) ...[
+                  _atsGrayBandLabel(section.title.trim().toUpperCase()),
+                  if (section.layoutMode == CustomSectionLayoutMode.bullets)
+                    ...section.bullets
+                        .where((b) => b.trim().isNotEmpty)
+                        .take(3)
+                        .map(
+                          (b) => Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Text(
+                              b,
+                              style: body,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                  else
+                    Text(
+                      section.content.trim(),
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                      style: body,
+                    ),
+                ],
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _atsGrayBandLabel(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 5),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            color: _band,
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 4.75,
+                fontWeight: FontWeight.w800,
+                decoration: TextDecoration.underline,
+                color: _ink,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _atsStructuredJobs(List<WorkExperience> works, TextStyle body) {
+    if (works.isEmpty) {
+      return [Text('Add experience.', style: body), const SizedBox(height: 4)];
+    }
+    final out = <Widget>[];
+    final slice = works.take(detailed ? 2 : 1);
+    for (final w in slice) {
+      final dr = educationDateRangeLabel(w.startDate, w.endDate);
+      out.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                '* ${w.role.trim()}, ${w.company.trim()}',
+                style: body.copyWith(fontWeight: FontWeight.w700),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (dr.isNotEmpty)
+              Flexible(
+                child: Text(
+                  dr,
+                  textAlign: TextAlign.right,
+                  style: body.copyWith(fontSize: (body.fontSize ?? 4.5) - 0.25),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+        ),
+      );
+      final bullets = w.bullets.where((b) => b.trim().isNotEmpty).toList();
+      final limit = detailed ? 3 : 1;
+      for (var i = 0; i < bullets.length && i < limit; i++) {
+        out.add(
+          Padding(
+            padding: const EdgeInsets.only(left: 4, top: 2),
+            child: Text(
+              '• ${bullets[i]}',
+              style: body,
+              maxLines: detailed ? 4 : 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        );
+      }
+      out.add(const SizedBox(height: 5));
+    }
+    return out;
+  }
+
+  List<Widget> _atsStructuredSchools(List<EducationItem> items, TextStyle body) {
+    if (items.isEmpty) {
+      return [Text('Add education.', style: body), const SizedBox(height: 4)];
+    }
+    final out = <Widget>[];
+    for (final e in items.take(detailed ? 2 : 1)) {
+      final dr = educationDateRangeLabel(e.startDate, e.endDate);
+      out.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                '* ${e.institution.trim()}',
+                style: body.copyWith(fontWeight: FontWeight.w700),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (dr.isNotEmpty)
+              Flexible(
+                child: Text(
+                  dr,
+                  textAlign: TextAlign.right,
+                  style: body.copyWith(fontSize: (body.fontSize ?? 4.5) - 0.25),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+        ),
+      );
+      out.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            e.degree.trim(),
+            style: body.copyWith(fontStyle: FontStyle.italic),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      );
+      out.add(const SizedBox(height: 4));
+    }
+    return out;
+  }
+}
+
+class _AtsSerifRulesTemplateArt extends StatelessWidget {
+  const _AtsSerifRulesTemplateArt({
+    required this.resume,
+    this.detailed = false,
+  });
+
+  final ResumeData resume;
+  final bool detailed;
+
+  static const Color _ink = Color(0xFF111827);
+
+  @override
+  Widget build(BuildContext context) {
+    final fs = detailed ? 4.75 : 4.45;
+    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final works = resume.visibleWorkExperiences;
+    final edu = resume.visibleEducation;
+    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          resume.fullName.trim(),
+                          style: TextStyle(
+                            fontSize: detailed ? 9 : 8.2,
+                            fontWeight: FontWeight.w800,
+                            color: _ink,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (resume.jobTitle.trim().isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            resume.jobTitle.trim(),
+                            style: body.copyWith(fontWeight: FontWeight.w700),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        const SizedBox(height: 3),
+                        if (resume.location.trim().isNotEmpty)
+                          Text(
+                            resume.location.trim(),
+                            style: body,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if (resume.phone.trim().isNotEmpty)
+                          Text(
+                            resume.phone.trim(),
+                            style: body,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (resume.email.trim().isNotEmpty)
+                    Flexible(
+                      child: Text(
+                        resume.email.trim(),
+                        style: body.copyWith(fontStyle: FontStyle.italic),
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 7),
+              Text('Summary', style: body.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 3),
+              Container(height: 1, color: _ink.withValues(alpha: 0.35)),
+              const SizedBox(height: 5),
+              Text(
+                resume.summary.trim(),
+                style: body,
+                maxLines: detailed ? 10 : 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (works.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Experience',
+                  style: body.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 3),
+                Container(height: 1, color: _ink.withValues(alpha: 0.35)),
+                const SizedBox(height: 5),
+                for (final w in works.take(detailed ? 2 : 1)) ...[
+                  Text(
+                    w.role.trim(),
+                    style: body.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: fs + 0.35,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          w.company.trim(),
+                          style: body.copyWith(fontStyle: FontStyle.italic),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (educationDateRangeLabel(w.startDate, w.endDate)
+                          .isNotEmpty)
+                        Flexible(
+                          child: Text(
+                            educationDateRangeLabel(w.startDate, w.endDate),
+                            textAlign: TextAlign.right,
+                            style: body.copyWith(
+                              fontStyle: FontStyle.italic,
+                              color: _ink.withValues(alpha: 0.72),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  for (
+                    var i = 0;
+                    i <
+                        w.bullets
+                            .where((b) => b.trim().isNotEmpty)
+                            .length
+                            .clamp(0, detailed ? 3 : 1);
+                    i++
+                  )
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Text(
+                        '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
+                        style: body,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  const SizedBox(height: 5),
+                ],
+              ],
+              if (edu.isNotEmpty) ...[
+                Text(
+                  'Education',
+                  style: body.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 3),
+                Container(height: 1, color: _ink.withValues(alpha: 0.35)),
+                const SizedBox(height: 5),
+                for (final e in edu.take(detailed ? 2 : 1)) ...[
+                  Text(
+                    '${e.degree.trim()} · ${educationDateRangeLabel(e.startDate, e.endDate)}',
+                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    e.institution.trim(),
+                    style: body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 5),
+                ],
+              ],
+              if (skills.isNotEmpty) ...[
+                Text('Skills', style: body.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 3),
+                Container(height: 1, color: _ink.withValues(alpha: 0.35)),
+                const SizedBox(height: 5),
+                _MiniBulletColumn(items: skills.take(detailed ? 8 : 5).toList()),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AtsModernFlowTemplateArt extends StatelessWidget {
+  const _AtsModernFlowTemplateArt({
+    required this.resume,
+    this.detailed = false,
+  });
+
+  final ResumeData resume;
+  final bool detailed;
+
+  static const Color _ink = Color(0xFF111827);
+
+  @override
+  Widget build(BuildContext context) {
+    final fs = detailed ? 4.75 : 4.45;
+    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final pipes = [
+      if (resume.location.trim().isNotEmpty) resume.location.trim(),
+      if (resume.email.trim().isNotEmpty) resume.email.trim(),
+      if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
+    ].join('  |  ');
+    final edu = resume.visibleEducation;
+    final works = resume.visibleWorkExperiences;
+    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final projects = resume.visibleProjects;
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                resume.fullName.trim(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: detailed ? 9 : 8.2,
+                  fontWeight: FontWeight.w800,
+                  color: _ink,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (pipes.isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Text(
+                  pipes,
+                  textAlign: TextAlign.center,
+                  style: body.copyWith(color: _ink.withValues(alpha: 0.92)),
+                  maxLines: detailed ? 4 : 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              const SizedBox(height: 6),
+              Container(height: 1, color: _ink.withValues(alpha: 0.42)),
+              const SizedBox(height: 7),
+              Text(
+                'Professional Summary',
+                style: body.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                resume.summary.trim(),
+                style: body,
+                maxLines: detailed ? 10 : 5,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Container(height: 1, color: _ink.withValues(alpha: 0.22)),
+              const SizedBox(height: 7),
+              Text(
+                'Education',
+                style: body.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 5),
+              if (edu.isEmpty)
+                Text('Add education.', style: body)
+              else
+                for (final e in edu.take(detailed ? 2 : 1)) ...[
+                  Text(
+                    e.degree.trim(),
+                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${e.institution.trim()}'
+                    '${educationDateRangeLabel(e.startDate, e.endDate).isNotEmpty ? '  |  Graduated: ${educationDateRangeLabel(e.startDate, e.endDate)}' : ''}',
+                    style: body,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (e.score.trim().isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      e.score.trim(),
+                      style: body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                ],
+              Container(height: 1, color: _ink.withValues(alpha: 0.22)),
+              const SizedBox(height: 7),
+              Text('Skills', style: body.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 5),
+              _MiniBulletColumn(items: skills.take(detailed ? 7 : 4).toList()),
+              const SizedBox(height: 6),
+              Container(height: 1, color: _ink.withValues(alpha: 0.22)),
+              const SizedBox(height: 7),
+              Text(
+                'Experience',
+                style: body.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 5),
+              if (works.isEmpty)
+                Text('Add roles.', style: body)
+              else
+                for (final w in works.take(detailed ? 2 : 1)) ...[
+                  Text(
+                    '${w.role.trim()} — ${w.company.trim()}',
+                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
+                    Text(
+                      educationDateRangeLabel(w.startDate, w.endDate),
+                      style: body,
+                    ),
+                  for (
+                    var i = 0;
+                    i <
+                        w.bullets
+                            .where((b) => b.trim().isNotEmpty)
+                            .length
+                            .clamp(0, detailed ? 3 : 1);
+                    i++
+                  )
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
+                        style: body,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                ],
+              if (detailed && projects.isNotEmpty) ...[
+                Container(height: 1, color: _ink.withValues(alpha: 0.22)),
+                const SizedBox(height: 7),
+                Text(
+                  'Projects',
+                  style: body.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 5),
+                for (final p in projects.take(1)) ...[
+                  Text(
+                    p.title.trim(),
+                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (_templateArtProjectBullets(p).isNotEmpty)
+                    Text(
+                      _templateArtProjectBullets(p).first,
+                      style: body,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AtsExecutiveTemplateArt extends StatelessWidget {
+  const _AtsExecutiveTemplateArt({
+    required this.resume,
+    this.detailed = false,
+  });
+
+  final ResumeData resume;
+  final bool detailed;
+
+  static const Color _ink = Color(0xFF111827);
+
+  @override
+  Widget build(BuildContext context) {
+    final fs = detailed ? 4.75 : 4.45;
+    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final works = resume.visibleWorkExperiences;
+    final edu = resume.visibleEducation;
+    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final mid = skills.length ~/ 2;
+    final left = skills.take(mid == 0 ? skills.length : mid).toList();
+    final right = mid == 0
+        ? const <String>[]
+        : skills.skip(mid).toList();
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (resume.jobTitle.trim().isNotEmpty)
+                Text(
+                  resume.jobTitle.trim().toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: body.copyWith(fontWeight: FontWeight.w800),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              if (resume.jobTitle.trim().isNotEmpty) const SizedBox(height: 3),
+              Text(
+                resume.fullName.trim(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: detailed ? 9.5 : 8.8,
+                  fontWeight: FontWeight.w900,
+                  color: _ink,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (resume.location.trim().isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Text(
+                  resume.location.trim(),
+                  textAlign: TextAlign.center,
+                  style: body,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              if (resume.email.trim().isNotEmpty ||
+                  resume.phone.trim().isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Text(
+                  [
+                    if (resume.email.trim().isNotEmpty) resume.email.trim(),
+                    if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
+                  ].join('   '),
+                  textAlign: TextAlign.center,
+                  style: body,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              const SizedBox(height: 6),
+              Container(height: 1, color: _ink.withValues(alpha: 0.85)),
+              const SizedBox(height: 7),
+              Text(
+                'SUMMARY',
+                style: body.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                resume.summary.trim(),
+                style: body,
+                maxLines: detailed ? 10 : 5,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 7),
+              Text(
+                'EXPERIENCE',
+                style: body.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 5),
+              if (works.isEmpty)
+                Text('Add experience.', style: body)
+              else
+                for (final w in works.take(detailed ? 2 : 1)) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          w.role.trim().toUpperCase(),
+                          style: body.copyWith(fontWeight: FontWeight.w700),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (educationDateRangeLabel(w.startDate, w.endDate)
+                          .isNotEmpty)
+                        Flexible(
+                          child: Text(
+                            educationDateRangeLabel(w.startDate, w.endDate),
+                            textAlign: TextAlign.right,
+                            style: body.copyWith(fontWeight: FontWeight.w700),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    w.company.trim(),
+                    style: body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  for (
+                    var i = 0;
+                    i <
+                        w.bullets
+                            .where((b) => b.trim().isNotEmpty)
+                            .length
+                            .clamp(0, detailed ? 3 : 1);
+                    i++
+                  )
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
+                        style: body,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                ],
+              Text(
+                'EDUCATION',
+                style: body.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 5),
+              if (edu.isEmpty)
+                Text('Add education.', style: body)
+              else
+                for (final e in edu.take(detailed ? 2 : 1)) ...[
+                  Text(
+                    '${e.institution.trim()} | ${e.degree.trim()}',
+                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    [
+                      if (e.score.trim().isNotEmpty) e.score.trim(),
+                      if (educationDateRangeLabel(e.startDate, e.endDate)
+                          .isNotEmpty)
+                        educationDateRangeLabel(e.startDate, e.endDate),
+                    ].join(' | '),
+                    style: body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 5),
+                ],
+              Text(
+                'SKILLS',
+                style: body.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 5),
+              if (skills.isEmpty)
+                Text('Add skills.', style: body)
+              else
+                for (var r = 0; r < math.max(left.length, right.length); r++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: r < left.length
+                              ? Text(
+                                  '• ${left[r]}',
+                                  style: body,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                )
+                              : const SizedBox(),
+                        ),
+                        Expanded(
+                          child: r < right.length
+                              ? Text(
+                                  '• ${right[r]}',
+                                  style: body,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                )
+                              : const SizedBox(),
+                        ),
+                      ],
+                    ),
+                  ),
             ],
           ),
         ),

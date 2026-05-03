@@ -69,9 +69,18 @@ class ResumePreviewCanvas extends StatelessWidget {
     final base = theme.textTheme;
     final ff = ResumeTextFont.calibri.flutterFontFamily;
     final onSurface = theme.colorScheme.onSurface;
-    final bodyPx = previewTemplate == ResumeTemplate.corporate
-        ? resume.effectiveBodyFontPt.toDouble()
-        : ResumeTypography.bodyPt.toDouble();
+    final bodyPx = switch (previewTemplate) {
+      ResumeTemplate.corporate ||
+      ResumeTemplate.atsStructured ||
+      ResumeTemplate.atsSerifRules ||
+      ResumeTemplate.atsModernFlow ||
+      ResumeTemplate.atsExecutive =>
+        resume.effectiveBodyFontPt.toDouble(),
+      ResumeTemplate.creative ||
+      ResumeTemplate.classicSidebar ||
+      ResumeTemplate.detailsSidebar =>
+        ResumeTypography.bodyPt.toDouble(),
+    };
     final resumeBodyTheme = theme.copyWith(
       textTheme: base
           .apply(fontFamily: ff, bodyColor: onSurface, displayColor: onSurface)
@@ -138,6 +147,14 @@ class ResumePreviewCanvas extends StatelessWidget {
               ResumeTemplate.detailsSidebar => _DetailsSidebarPreview(
                 resume: resume,
               ),
+              ResumeTemplate.atsStructured =>
+                _AtsStructuredPreview(resume: resume),
+              ResumeTemplate.atsSerifRules =>
+                _AtsSerifRulesPreview(resume: resume),
+              ResumeTemplate.atsModernFlow =>
+                _AtsModernFlowPreview(resume: resume),
+              ResumeTemplate.atsExecutive =>
+                _AtsExecutivePreview(resume: resume),
             },
           ),
           if (showDebugLabel)
@@ -1523,6 +1540,354 @@ class _DetailsSidebarPreview extends StatelessWidget {
       ],
     );
   }
+}
+
+class _AtsStructuredPreview extends StatelessWidget {
+  const _AtsStructuredPreview({required this.resume});
+
+  final ResumeData resume;
+
+  static const Color _band = Color(0xFFE6E6E6);
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final body = resume.effectiveBodyFontPt.toDouble();
+    final style = TextStyle(
+      color: onSurface,
+      fontSize: body,
+      height: ResumeTypography.textLineHeight,
+    );
+    final contact = _atsPreviewContactLines(resume);
+
+    return ColoredBox(
+      color: Colors.white,
+      child: Padding(
+        padding: _CorporatePdfMetrics.sectionOuter(),
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                _pdfAlignedDisplayName(resume).toUpperCase(),
+                textAlign: TextAlign.center,
+                style: style.copyWith(fontSize: body + 6, fontWeight: FontWeight.w900),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (resume.jobTitle.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  resume.jobTitle.trim(),
+                  textAlign: TextAlign.center,
+                  style: style.copyWith(fontWeight: FontWeight.w600),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              if (contact.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                for (final line in contact)
+                  Text(
+                    line,
+                    textAlign: TextAlign.center,
+                    style: style.copyWith(fontSize: body - 0.5),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+              const SizedBox(height: 8),
+              Container(height: 1, color: onSurface.withValues(alpha: 0.85)),
+              const SizedBox(height: 10),
+              _atsBandTitle('SUMMARY'),
+              const SizedBox(height: 6),
+              Text(
+                resume.summary.trim().ifBlank(
+                  'Concise summary tailored to your target roles.',
+                ),
+                style: style,
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _atsBandTitle(String title) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      color: _band,
+      child: Text(
+        title,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          decoration: TextDecoration.underline,
+        ),
+      ),
+    );
+  }
+}
+
+class _AtsSerifRulesPreview extends StatelessWidget {
+  const _AtsSerifRulesPreview({required this.resume});
+
+  final ResumeData resume;
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final body = resume.effectiveBodyFontPt.toDouble();
+    final style = TextStyle(
+      color: onSurface,
+      fontSize: body,
+      height: ResumeTypography.textLineHeight,
+    );
+
+    return ColoredBox(
+      color: Colors.white,
+      child: Padding(
+        padding: _CorporatePdfMetrics.sectionOuter(),
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _pdfAlignedDisplayName(resume),
+                          style: style.copyWith(
+                            fontSize: body + 5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (resume.jobTitle.trim().isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            resume.jobTitle.trim(),
+                            style: style.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                        const SizedBox(height: 4),
+                        if (resume.location.trim().isNotEmpty)
+                          Text(resume.location.trim(), style: style),
+                        if (resume.phone.trim().isNotEmpty)
+                          Text(resume.phone.trim(), style: style),
+                      ],
+                    ),
+                  ),
+                  if (resume.email.trim().isNotEmpty)
+                    Text(
+                      resume.email.trim(),
+                      style: style.copyWith(
+                        fontStyle: FontStyle.italic,
+                        fontSize: body - 0.5,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Summary',
+                style: style.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Container(height: 1, color: onSurface.withValues(alpha: 0.35)),
+              const SizedBox(height: 6),
+              Text(
+                resume.summary.trim().ifBlank(
+                  'Two to four sentences on scope and impact.',
+                ),
+                style: style,
+                maxLines: 8,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AtsModernFlowPreview extends StatelessWidget {
+  const _AtsModernFlowPreview({required this.resume});
+
+  final ResumeData resume;
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final body = resume.effectiveBodyFontPt.toDouble();
+    final style = TextStyle(
+      color: onSurface,
+      fontSize: body,
+      height: ResumeTypography.textLineHeight,
+    );
+    final parts = <String>[
+      if (resume.location.trim().isNotEmpty) resume.location.trim(),
+      if (resume.email.trim().isNotEmpty) resume.email.trim(),
+      if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
+    ];
+
+    return ColoredBox(
+      color: Colors.white,
+      child: Padding(
+        padding: _CorporatePdfMetrics.sectionOuter(),
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                _pdfAlignedDisplayName(resume),
+                textAlign: TextAlign.center,
+                style: style.copyWith(
+                  fontSize: body + 4,
+                  fontWeight: FontWeight.w800,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (parts.isNotEmpty) ...[
+                const SizedBox(height: 5),
+                Text(
+                  parts.join('  |  '),
+                  textAlign: TextAlign.center,
+                  style: style.copyWith(fontSize: body - 0.5),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              const SizedBox(height: 8),
+              Container(height: 1, color: onSurface.withValues(alpha: 0.45)),
+              const SizedBox(height: 10),
+              Text(
+                'Professional Summary',
+                style: style.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                resume.summary.trim().ifBlank(
+                  'Highlight strengths and domains with measurable outcomes.',
+                ),
+                style: style,
+                maxLines: 7,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AtsExecutivePreview extends StatelessWidget {
+  const _AtsExecutivePreview({required this.resume});
+
+  final ResumeData resume;
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final body = resume.effectiveBodyFontPt.toDouble();
+    final style = TextStyle(
+      color: onSurface,
+      fontSize: body,
+      height: ResumeTypography.textLineHeight,
+    );
+
+    return ColoredBox(
+      color: Colors.white,
+      child: Padding(
+        padding: _CorporatePdfMetrics.sectionOuter(),
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (resume.jobTitle.trim().isNotEmpty)
+                Text(
+                  resume.jobTitle.trim().toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: style.copyWith(fontWeight: FontWeight.w800),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              if (resume.jobTitle.trim().isNotEmpty) const SizedBox(height: 4),
+              Text(
+                _pdfAlignedDisplayName(resume),
+                textAlign: TextAlign.center,
+                style: style.copyWith(
+                  fontSize: body + 5,
+                  fontWeight: FontWeight.w900,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (resume.location.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  resume.location.trim(),
+                  textAlign: TextAlign.center,
+                  style: style,
+                ),
+              ],
+              const SizedBox(height: 8),
+              Container(height: 1, color: onSurface.withValues(alpha: 0.85)),
+              const SizedBox(height: 10),
+              Text(
+                'SUMMARY',
+                style: style.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                resume.summary.trim().ifBlank(
+                  'Lead with domains, scope, and measurable results.',
+                ),
+                style: style,
+                maxLines: 7,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+List<String> _atsPreviewContactLines(ResumeData resume) {
+  final email = resume.email.trim();
+  final phone = resume.phone.trim();
+  final loc = resume.location.trim();
+  final lines = <String>[];
+  if (loc.isNotEmpty) {
+    lines.add(loc);
+  }
+  if (email.isNotEmpty && phone.isNotEmpty) {
+    lines.add('$email    $phone');
+  } else if (email.isNotEmpty) {
+    lines.add(email);
+  } else if (phone.isNotEmpty) {
+    lines.add(phone);
+  }
+  return lines;
 }
 
 class _ClassicSidebarAvatarPlaceholder extends StatelessWidget {

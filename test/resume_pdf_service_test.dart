@@ -503,4 +503,39 @@ void main() {
       expect(pdfBytes, isNotEmpty);
     },
   );
+
+  test('ATS template PDFs build for all four layouts', () async {
+    final service = ResumePdfService();
+    final base = ResumeData.empty(
+      template: ResumeTemplate.atsStructured,
+    ).copyWith(
+      fullName: 'ATS Sample',
+      jobTitle: 'Engineer',
+      email: 'a@b.com',
+      phone: '555-0100',
+      location: 'Remote',
+      summary: 'Builder focused on clean exports.',
+      workExperiences: const [
+        WorkExperience(
+          role: 'Engineer',
+          company: 'Acme',
+          startDate: '2020',
+          endDate: 'Present',
+          description: '',
+          bullets: ['Shipped features with measurable impact.'],
+        ),
+      ],
+    );
+    for (final template in <ResumeTemplate>[
+      ResumeTemplate.atsStructured,
+      ResumeTemplate.atsSerifRules,
+      ResumeTemplate.atsModernFlow,
+      ResumeTemplate.atsExecutive,
+    ]) {
+      final bytes = await service.buildPdf(
+        base.copyWith(template: template),
+      );
+      expect(bytes, isNotEmpty, reason: template.toString());
+    }
+  });
 }
