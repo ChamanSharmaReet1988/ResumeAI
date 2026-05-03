@@ -502,7 +502,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsStructuredResume,
     headline: 'Structured ATS',
     caption: 'Gray section bands and a centered header for parsers.',
-    isPremium: false,
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'ats-serif-rules',
@@ -510,7 +510,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsSerifRulesResume,
     headline: 'Serif Rules ATS',
     caption: 'Classic rules, bold headings, and aligned dates.',
-    isPremium: false,
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'ats-modern-flow',
@@ -518,7 +518,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsModernFlowResume,
     headline: 'Modern Flow ATS',
     caption: 'Centered contact row with a logical section sequence.',
-    isPremium: false,
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'ats-executive',
@@ -526,7 +526,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsExecutiveResume,
     headline: 'Executive ATS',
     caption: 'Uppercase headings and two-column keyword skills.',
-    isPremium: false,
+    isPremium: true,
   ),
 ];
 
@@ -553,6 +553,15 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.sidebarCoverLetter,
     headline: 'Sidebar Letter',
     caption: 'A bolder cover letter with a left rail for contact details.',
+    isPremium: true,
+  ),
+  _TemplateTileData(
+    id: 'classic-business-letter',
+    coverLetterTemplate: CoverLetterTemplate.classicBusinessLetter,
+    previewKind: _TemplatePreviewKind.classicBusinessCoverLetter,
+    headline: 'Classic Business',
+    caption:
+        'Traditional business letter: date, recipient block, and left-aligned body.',
     isPremium: true,
   ),
 ];
@@ -589,6 +598,7 @@ enum _TemplatePreviewKind {
   executiveNoteCoverLetter,
   minimalCoverLetter,
   sidebarCoverLetter,
+  classicBusinessCoverLetter,
 }
 
 class _TemplatePreviewArt extends StatelessWidget {
@@ -677,6 +687,8 @@ class _TemplatePreviewArt extends StatelessWidget {
         const _ExecutiveNoteCoverLetterArt(),
       _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
       _TemplatePreviewKind.sidebarCoverLetter => const _SidebarCoverLetterArt(),
+      _TemplatePreviewKind.classicBusinessCoverLetter =>
+        const _ClassicBusinessCoverLetterArt(),
     };
 
     return LayoutBuilder(
@@ -778,6 +790,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
     }
     if (template == ResumeTemplate.atsStructured) {
       return _LargeTemplateArtPreview(
+        showPremiumBadge: true,
         child: _AtsStructuredTemplateArt(
           resume: _applyTemplatePreviewPalette(
             _atsSampleFor(ResumeTemplate.atsStructured),
@@ -789,6 +802,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
     }
     if (template == ResumeTemplate.atsSerifRules) {
       return _LargeTemplateArtPreview(
+        showPremiumBadge: true,
         child: _AtsSerifRulesTemplateArt(
           resume: _applyTemplatePreviewPalette(
             _atsSampleFor(ResumeTemplate.atsSerifRules),
@@ -800,6 +814,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
     }
     if (template == ResumeTemplate.atsModernFlow) {
       return _LargeTemplateArtPreview(
+        showPremiumBadge: true,
         child: _AtsModernFlowTemplateArt(
           resume: _applyTemplatePreviewPalette(
             _atsSampleFor(ResumeTemplate.atsModernFlow),
@@ -811,6 +826,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
     }
     if (template == ResumeTemplate.atsExecutive) {
       return _LargeTemplateArtPreview(
+        showPremiumBadge: true,
         child: _AtsExecutiveTemplateArt(
           resume: _applyTemplatePreviewPalette(
             _atsSampleFor(ResumeTemplate.atsExecutive),
@@ -1457,13 +1473,10 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
         resume.phone.trim(),
     ];
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.white),
-      child: SingleChildScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        child: Padding(
+    final pageContent = Padding(
           padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
@@ -1575,8 +1588,20 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
               ],
             ],
           ),
-        ),
-      ),
+        );
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: detailed
+          ? FittedBox(
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter,
+              child: SizedBox(width: 240, child: pageContent),
+            )
+          : SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: pageContent,
+            ),
     );
   }
 
@@ -1728,13 +1753,10 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
     final edu = resume.visibleEducation;
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.white),
-      child: SingleChildScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        child: Padding(
+    final pageContent = Padding(
           padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -1910,8 +1932,20 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
               ],
             ],
           ),
-        ),
-      ),
+        );
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: detailed
+          ? FittedBox(
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter,
+              child: SizedBox(width: 240, child: pageContent),
+            )
+          : SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: pageContent,
+            ),
     );
   }
 }
@@ -1942,13 +1976,10 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
     final projects = resume.visibleProjects;
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.white),
-      child: SingleChildScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        child: Padding(
+    final pageContent = Padding(
           padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
@@ -2100,8 +2131,20 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
               ],
             ],
           ),
-        ),
-      ),
+        );
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: detailed
+          ? FittedBox(
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter,
+              child: SizedBox(width: 240, child: pageContent),
+            )
+          : SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: pageContent,
+            ),
     );
   }
 }
@@ -2131,13 +2174,10 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
         ? const <String>[]
         : skills.skip(mid).toList();
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.white),
-      child: SingleChildScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        child: Padding(
+    final pageContent = Padding(
           padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (resume.jobTitle.trim().isNotEmpty)
@@ -2327,8 +2367,20 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                   ),
             ],
           ),
-        ),
-      ),
+        );
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: detailed
+          ? FittedBox(
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter,
+              child: SizedBox(width: 240, child: pageContent),
+            )
+          : SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: pageContent,
+            ),
     );
   }
 }
@@ -3037,6 +3089,79 @@ String _miniClassicNameLine(String name) {
     return 'AVERY BROOKS';
   }
   return parts.join(' ').toUpperCase();
+}
+
+class _ClassicBusinessCoverLetterArt extends StatelessWidget {
+  const _ClassicBusinessCoverLetterArt();
+
+  @override
+  Widget build(BuildContext context) {
+    const text = Color(0xFF1F2328);
+    const muted = Color(0xFF5C6370);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.zero,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.zero,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
+          child: DefaultTextStyle(
+            style: const TextStyle(fontSize: 4.35, height: 1.34, color: text),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'October 6, 2026',
+                  style: TextStyle(color: muted),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'Christine Smith\n'
+                  'VP Technical Services\n'
+                  'Computers Forever\n'
+                  '1224 Main Street, Allentown, PA 55555',
+                  style: TextStyle(color: muted, height: 1.38),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Dear Ms. Smith:',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                const _MiniCoverLetterParagraph(
+                  text:
+                      'I am writing to apply for the software engineer position at Computers Forever. I am eager to contribute to your technical innovations and support initiatives that keep products reliable and customer-focused.',
+                ),
+                const SizedBox(height: 4),
+                const _MiniCoverLetterParagraph(
+                  text:
+                      'Since 2019 at Action Company, I have delivered full-lifecycle development across requirements, implementation, and release support—partnering closely with stakeholders to ship predictable improvements.',
+                ),
+                const SizedBox(height: 4),
+                const _MiniCoverLetterParagraph(
+                  text:
+                      'I combine excellent client-facing skills with clear proposals and presentations, and I translate complex constraints into practical design solutions.',
+                ),
+                const Spacer(),
+                const Text(
+                  'Sincerely,',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Martin Stein',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ExecutiveNoteCoverLetterArt extends StatelessWidget {

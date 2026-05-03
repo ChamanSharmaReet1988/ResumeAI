@@ -1542,6 +1542,10 @@ class _DetailsSidebarPreview extends StatelessWidget {
   }
 }
 
+/// Fixed type scale for ATS template previews (in-app card only).
+const double _atsPreviewNameFontSize = 24;
+const double _atsPreviewTitleFontSize = 18;
+
 class _AtsStructuredPreview extends StatelessWidget {
   const _AtsStructuredPreview({required this.resume});
 
@@ -1572,7 +1576,10 @@ class _AtsStructuredPreview extends StatelessWidget {
               Text(
                 _pdfAlignedDisplayName(resume).toUpperCase(),
                 textAlign: TextAlign.center,
-                style: style.copyWith(fontSize: body + 6, fontWeight: FontWeight.w900),
+                style: style.copyWith(
+                  fontSize: _atsPreviewNameFontSize,
+                  fontWeight: FontWeight.w900,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1581,7 +1588,10 @@ class _AtsStructuredPreview extends StatelessWidget {
                 Text(
                   resume.jobTitle.trim(),
                   textAlign: TextAlign.center,
-                  style: style.copyWith(fontWeight: FontWeight.w600),
+                  style: style.copyWith(
+                    fontSize: _atsPreviewTitleFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1669,7 +1679,7 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                         Text(
                           _pdfAlignedDisplayName(resume),
                           style: style.copyWith(
-                            fontSize: body + 5,
+                            fontSize: _atsPreviewNameFontSize,
                             fontWeight: FontWeight.w800,
                           ),
                           maxLines: 2,
@@ -1679,7 +1689,10 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             resume.jobTitle.trim(),
-                            style: style.copyWith(fontWeight: FontWeight.w700),
+                            style: style.copyWith(
+                              fontSize: _atsPreviewTitleFontSize,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                         const SizedBox(height: 4),
@@ -1757,12 +1770,25 @@ class _AtsModernFlowPreview extends StatelessWidget {
                 _pdfAlignedDisplayName(resume),
                 textAlign: TextAlign.center,
                 style: style.copyWith(
-                  fontSize: body + 4,
+                  fontSize: _atsPreviewNameFontSize,
                   fontWeight: FontWeight.w800,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (resume.jobTitle.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  resume.jobTitle.trim(),
+                  textAlign: TextAlign.center,
+                  style: style.copyWith(
+                    fontSize: _atsPreviewTitleFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
               if (parts.isNotEmpty) ...[
                 const SizedBox(height: 5),
                 Text(
@@ -1825,7 +1851,10 @@ class _AtsExecutivePreview extends StatelessWidget {
                 Text(
                   resume.jobTitle.trim().toUpperCase(),
                   textAlign: TextAlign.center,
-                  style: style.copyWith(fontWeight: FontWeight.w800),
+                  style: style.copyWith(
+                    fontSize: _atsPreviewTitleFontSize,
+                    fontWeight: FontWeight.w800,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1834,7 +1863,7 @@ class _AtsExecutivePreview extends StatelessWidget {
                 _pdfAlignedDisplayName(resume),
                 textAlign: TextAlign.center,
                 style: style.copyWith(
-                  fontSize: body + 5,
+                  fontSize: _atsPreviewNameFontSize,
                   fontWeight: FontWeight.w900,
                 ),
                 maxLines: 2,

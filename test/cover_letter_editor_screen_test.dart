@@ -128,7 +128,11 @@ void main() {
       await tester.tap(find.text('Choose template'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Minimal Letter'));
+      final minimalLetterTile = find.byKey(
+        const Key('template-tile-minimal-letter'),
+      );
+      await tester.ensureVisible(minimalLetterTile);
+      await tester.tap(minimalLetterTile);
       await tester.pumpAndSettle();
 
       expect(viewModel.coverLetter.template, CoverLetterTemplate.minimalLetter);

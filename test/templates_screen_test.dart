@@ -107,7 +107,7 @@ void main() {
       );
       final coverLetterChildrenDelegate =
           coverLetterGrid.childrenDelegate as SliverChildBuilderDelegate;
-      expect(coverLetterChildrenDelegate.childCount, 3);
+      expect(coverLetterChildrenDelegate.childCount, 4);
       expect(
         find.byKey(const Key('template-image-executive-note')),
         findsOneWidget,
@@ -118,6 +118,10 @@ void main() {
       );
       expect(
         find.byKey(const Key('template-image-sidebar-letter')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('template-image-classic-business-letter')),
         findsOneWidget,
       );
 

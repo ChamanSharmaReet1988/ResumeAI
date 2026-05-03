@@ -41,7 +41,13 @@ enum ResumeTemplate {
   atsExecutive,
 }
 
-enum CoverLetterTemplate { executiveNote, minimalLetter, sidebarLetter }
+enum CoverLetterTemplate {
+  executiveNote,
+  minimalLetter,
+  sidebarLetter,
+  /// Traditional left-aligned letter: date, recipient block, body (ATS-friendly).
+  classicBusinessLetter,
+}
 
 const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.corporate,
@@ -127,6 +133,7 @@ extension CoverLetterTemplateX on CoverLetterTemplate {
     CoverLetterTemplate.executiveNote => 'Executive Note',
     CoverLetterTemplate.minimalLetter => 'Minimal Letter',
     CoverLetterTemplate.sidebarLetter => 'Sidebar Letter',
+    CoverLetterTemplate.classicBusinessLetter => 'Classic Business',
   };
 }
 

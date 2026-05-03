@@ -4055,6 +4055,9 @@ class ResumePdfService {
       case CoverLetterTemplate.sidebarLetter:
         _addSidebarCoverLetterPage(document, parsed);
         break;
+      case CoverLetterTemplate.classicBusinessLetter:
+        _addClassicBusinessCoverLetterPage(document, parsed);
+        break;
     }
 
     return document.save();
@@ -4127,6 +4130,74 @@ class ResumePdfService {
         ],
       ),
     );
+  }
+
+  void _addClassicBusinessCoverLetterPage(
+    pw.Document document,
+    _ParsedCoverLetterContent parsed,
+  ) {
+    final (dateLine, _) = _classicLetterDatePrefix(parsed.senderLines);
+    final bodyStyle = pw.TextStyle(
+      fontSize: 11,
+      height: 1.38,
+      color: PdfColor.fromHex('#1A1D21'),
+    );
+    final metaStyle = pw.TextStyle(
+      fontSize: 11,
+      height: 1.38,
+      color: PdfColor.fromHex('#3D4349'),
+    );
+
+    document.addPage(
+      pw.MultiPage(
+        margin: const pw.EdgeInsets.fromLTRB(40, 40, 40, 44),
+        build: (context) => [
+          if (dateLine != null)
+            pw.Text(dateLine, style: metaStyle),
+          if (dateLine != null) pw.SizedBox(height: 18),
+          pw.Text(
+            parsed.recipientLines.join('\n'),
+            style: metaStyle,
+          ),
+          pw.SizedBox(height: 18),
+          pw.Text(
+            parsed.greeting,
+            style: bodyStyle.copyWith(fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 14),
+          for (final paragraph in parsed.bodyParagraphs) ...[
+            pw.Text(paragraph, style: bodyStyle),
+            pw.SizedBox(height: 12),
+          ],
+          pw.Text(parsed.closing, style: bodyStyle),
+          pw.SizedBox(height: 28),
+          pw.Text(
+            parsed.signature,
+            style: bodyStyle.copyWith(fontWeight: pw.FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Pulls a trailing `"Month D, YYYY"` line from [senderLines] for the letter date line.
+  (String?, List<String>) _classicLetterDatePrefix(List<String> senderLines) {
+    if (senderLines.isEmpty) {
+      return (null, senderLines);
+    }
+    final last = senderLines.last.trim();
+    if (!_coverLetterLineLooksLikeFormattedDate(last)) {
+      return (null, senderLines);
+    }
+    final rest = senderLines.sublist(0, senderLines.length - 1);
+    return (last, rest);
+  }
+
+  bool _coverLetterLineLooksLikeFormattedDate(String line) {
+    final t = line.trim();
+    return RegExp(
+      r'^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}$',
+    ).hasMatch(t);
   }
 
   void _addMinimalCoverLetterPage(
