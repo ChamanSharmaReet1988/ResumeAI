@@ -3,6 +3,10 @@ part of 'package:resume_app/core/services/resume_services.dart';
 pw.Widget _atsMultiPageHeaderGap(pw.Context context) =>
     context.pageNumber > 1 ? pw.SizedBox(height: 40) : pw.SizedBox();
 
+/// Slightly smaller than body text so keyword lists read lighter than paragraphs.
+double _atsPdfSkillsBodyPt(double bodyPt) =>
+    math.max(9.0, bodyPt - 1.35);
+
 /// Single-column ATS PDF layouts (no sidebars, minimal decoration).
 extension _ResumePdfAtsPages on ResumePdfService {
   PdfColor get _atsGrayBand => PdfColor.fromHex('#E6E6E6');
@@ -290,7 +294,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 skills,
                 columnGap: 22,
                 itemBottom: 4,
-                fontSize: bodyPt,
+                fontSize: _atsPdfSkillsBodyPt(bodyPt),
               )) {
                 w.add(row);
               }
@@ -553,7 +557,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     padding: const pw.EdgeInsets.only(bottom: 3),
                     child: pw.Bullet(
                       text: s,
-                      style: pw.TextStyle(fontSize: bodyPt),
+                      style: pw.TextStyle(
+                        fontSize: _atsPdfSkillsBodyPt(bodyPt),
+                      ),
                     ),
                   ),
                 );
@@ -740,7 +746,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     padding: const pw.EdgeInsets.only(bottom: 3),
                     child: pw.Bullet(
                       text: s,
-                      style: pw.TextStyle(fontSize: bodyPt),
+                      style: pw.TextStyle(
+                        fontSize: _atsPdfSkillsBodyPt(bodyPt),
+                      ),
                     ),
                   ),
                 );
@@ -994,7 +1002,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               skills,
               columnGap: 18,
               itemBottom: 3,
-              fontSize: bodyPt,
+              fontSize: _atsPdfSkillsBodyPt(bodyPt),
             )) {
               w.add(row);
             }

@@ -1443,6 +1443,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
   Widget build(BuildContext context) {
     final fs = detailed ? 4.75 : 4.35;
     final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final skillsBody = body.copyWith(fontSize: math.max(3.25, fs - 0.85));
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
@@ -1525,6 +1526,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
               _atsGrayBandLabel('SKILLS'),
               _MiniBulletColumn(
                 items: skills.take(detailed ? 8 : 5).toList(),
+                textStyle: skillsBody,
               ),
               if (detailed && projects.isNotEmpty) ...[
                 _atsGrayBandLabel('PROJECTS'),
@@ -1721,6 +1723,7 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
   Widget build(BuildContext context) {
     final fs = detailed ? 4.75 : 4.45;
     final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final skillsBody = body.copyWith(fontSize: math.max(3.25, fs - 0.85));
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
@@ -1900,7 +1903,10 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                 const SizedBox(height: 3),
                 Container(height: 1, color: _ink.withValues(alpha: 0.35)),
                 const SizedBox(height: 5),
-                _MiniBulletColumn(items: skills.take(detailed ? 8 : 5).toList()),
+                _MiniBulletColumn(
+                  items: skills.take(detailed ? 8 : 5).toList(),
+                  textStyle: skillsBody,
+                ),
               ],
             ],
           ),
@@ -1925,6 +1931,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
   Widget build(BuildContext context) {
     final fs = detailed ? 4.75 : 4.45;
     final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final skillsBody = body.copyWith(fontSize: math.max(3.25, fs - 0.85));
     final pipes = [
       if (resume.location.trim().isNotEmpty) resume.location.trim(),
       if (resume.email.trim().isNotEmpty) resume.email.trim(),
@@ -2020,7 +2027,10 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
               const SizedBox(height: 7),
               Text('Skills', style: body.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 5),
-              _MiniBulletColumn(items: skills.take(detailed ? 7 : 4).toList()),
+              _MiniBulletColumn(
+                items: skills.take(detailed ? 7 : 4).toList(),
+                textStyle: skillsBody,
+              ),
               const SizedBox(height: 6),
               Container(height: 1, color: _ink.withValues(alpha: 0.22)),
               const SizedBox(height: 7),
@@ -2111,6 +2121,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
   Widget build(BuildContext context) {
     final fs = detailed ? 4.75 : 4.45;
     final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final skillsBody = body.copyWith(fontSize: math.max(3.25, fs - 0.85));
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
@@ -2283,7 +2294,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               if (skills.isEmpty)
-                Text('Add skills.', style: body)
+                Text('Add skills.', style: skillsBody)
               else
                 for (var r = 0; r < math.max(left.length, right.length); r++)
                   Padding(
@@ -2295,7 +2306,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                           child: r < left.length
                               ? Text(
                                   '• ${left[r]}',
-                                  style: body,
+                                  style: skillsBody,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 )
@@ -2305,7 +2316,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                           child: r < right.length
                               ? Text(
                                   '• ${right[r]}',
-                                  style: body,
+                                  style: skillsBody,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 )
@@ -3553,13 +3564,19 @@ class _MiniBulletColumn extends StatelessWidget {
   const _MiniBulletColumn({
     required this.items,
     this.bulletColor = const Color(0xFF344054),
+    this.textStyle,
   });
 
   final List<String> items;
   final Color bulletColor;
 
+  /// When omitted, inherits [DefaultTextStyle] (template arts should pass a small style).
+  final TextStyle? textStyle;
+
   @override
   Widget build(BuildContext context) {
+    final base =
+        textStyle ?? DefaultTextStyle.of(context).style;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3571,12 +3588,14 @@ class _MiniBulletColumn extends StatelessWidget {
               children: [
                 Text(
                   '• ',
-                  style: TextStyle(
+                  style: base.copyWith(
                     fontWeight: FontWeight.w700,
                     color: bulletColor,
                   ),
                 ),
-                Expanded(child: Text(item)),
+                Expanded(
+                  child: Text(item, style: base),
+                ),
               ],
             ),
           ),
