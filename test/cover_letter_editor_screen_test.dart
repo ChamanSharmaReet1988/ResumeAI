@@ -111,7 +111,7 @@ void main() {
     final languageDropdown = tester.widget<DropdownButtonFormField<String>>(
       find.byKey(const Key('cover-letter-language-dropdown')),
     );
-    languageDropdown.onChanged?.call('English');
+    languageDropdown.onChanged?.call('Hindi (हिन्दी)');
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Create cover letter'));
@@ -126,15 +126,16 @@ void main() {
     expect(saved.company, 'Acme Labs');
     expect(saved.role, 'Senior Product Designer');
     expect(saved.skillToHighlight, 'UX research, Prototyping');
-    expect(saved.language, 'English');
+    expect(saved.language, 'Hindi (हिन्दी)');
     expect(_textFieldByLabel('Cover letter content'), findsOneWidget);
     expect(saved.content, contains('[Your Name]'));
-    expect(saved.content, contains('Hiring Manager'));
+    expect(saved.content, contains('भर्ती प्रबंधक'));
     expect(saved.content, contains('Acme Labs'));
-    expect(saved.content, contains('Senior Product Designer position'));
-    expect(saved.content, contains('UX research and Prototyping'));
-    expect(saved.content, contains('English'));
-    expect(saved.content, contains('Dear Hiring Manager,'));
+    expect(saved.content, contains('Senior Product Designer'));
+    expect(saved.content, contains('UX research और Prototyping'));
+    expect(saved.content, contains('हिन्दी'));
+    expect(saved.content, contains('आदरणीय भर्ती प्रबंधक,'));
+    expect(saved.content, isNot(contains('Dear Hiring Manager,')));
     expect(saved.content, isNot(contains('Avery Lee')));
     expect(
       saved.content,
@@ -155,7 +156,7 @@ void main() {
       find.byKey(const Key('cover-letter-preview-screen')),
       findsOneWidget,
     );
-    expect(find.textContaining('Dear Hiring Manager,'), findsOneWidget);
+    expect(find.textContaining('आदरणीय भर्ती प्रबंधक,'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Menu'));
     await tester.pumpAndSettle();

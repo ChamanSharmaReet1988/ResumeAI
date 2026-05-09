@@ -545,10 +545,7 @@ class _CoverLetterTitleDialogState extends State<_CoverLetterTitleDialog> {
         controller: _controller,
         textCapitalization: TextCapitalization.words,
         autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'Cover letter title',
-          hintText: 'Product Designer Application',
-        ),
+        decoration: const InputDecoration(labelText: 'Cover letter title'),
         onSubmitted: (value) => Navigator.of(context).pop(value),
       ),
       actions: [

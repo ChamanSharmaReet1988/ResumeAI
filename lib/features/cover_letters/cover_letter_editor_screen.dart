@@ -6,15 +6,23 @@ import 'cover_letter_content_screen.dart';
 import '../shared/view_models.dart';
 
 const List<String> _coverLetterLanguageOptions = [
-  'English',
-  'Hindi',
-  'Spanish',
-  'French',
-  'German',
-  'Arabic',
-  'Mandarin',
-  'Portuguese',
-  'Japanese',
+  'English (English)',
+  'Arabic (العربية)',
+  'Bengali (বাংলা)',
+  'Chinese, Mandarin (中文)',
+  'Dutch (Nederlands)',
+  'French (Français)',
+  'German (Deutsch)',
+  'Hindi (हिन्दी)',
+  'Italian (Italiano)',
+  'Japanese (日本語)',
+  'Korean (한국어)',
+  'Portuguese (Português)',
+  'Russian (Русский)',
+  'Spanish (Español)',
+  'Turkish (Türkçe)',
+  'Urdu (اردو)',
+  'Vietnamese (Tiếng Việt)',
 ];
 
 List<String> _coverLetterSkillsFromValue(String value) {
@@ -138,7 +146,6 @@ class CoverLetterEditorScreen extends StatelessWidget {
                           const SizedBox(height: 20),
                           _SyncTextField(
                             label: 'Company name',
-                            hintText: 'Acme Labs',
                             value: viewModel.coverLetter.company,
                             textCapitalization: TextCapitalization.words,
                             onChanged: (value) => viewModel.updateCoverLetter(
@@ -148,7 +155,6 @@ class CoverLetterEditorScreen extends StatelessWidget {
                           const SizedBox(height: 16),
                           _SyncTextField(
                             label: 'Job position name',
-                            hintText: 'Product Designer',
                             value: viewModel.coverLetter.role,
                             textCapitalization: TextCapitalization.words,
                             onChanged: (value) => viewModel.updateCoverLetter(
@@ -250,14 +256,12 @@ class _SyncTextField extends StatefulWidget {
     required this.label,
     required this.value,
     required this.onChanged,
-    this.hintText,
     this.textCapitalization = TextCapitalization.none,
   });
 
   final String label;
   final String value;
   final ValueChanged<String> onChanged;
-  final String? hintText;
   final TextCapitalization textCapitalization;
 
   @override
@@ -305,10 +309,7 @@ class _SyncTextFieldState extends State<_SyncTextField> {
       focusNode: _focusNode,
       textCapitalization: widget.textCapitalization,
       onChanged: widget.onChanged,
-      decoration: InputDecoration(
-        labelText: widget.label,
-        hintText: widget.hintText,
-      ),
+      decoration: InputDecoration(labelText: widget.label),
     );
   }
 }
@@ -330,7 +331,16 @@ class _SyncDropdownField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final normalizedItems = items.toSet().toList()..sort();
+    final normalizedItems = <String>[];
+    final seen = <String>{};
+    for (final item in items) {
+      final trimmed = item.trim();
+      final key = trimmed.toLowerCase();
+      if (trimmed.isEmpty || !seen.add(key)) {
+        continue;
+      }
+      normalizedItems.add(trimmed);
+    }
     final initialValue = normalizedItems.contains(value) ? value : null;
     final fieldTextStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
       fontWeight: FontWeight.w400,
@@ -509,8 +519,7 @@ class _SkillSuggestionFieldState extends State<_SkillSuggestionField> {
                 label: Text(
                   skill,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize:
-                        (theme.textTheme.bodySmall?.fontSize ?? 12) - 1,
+                    fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 1,
                     fontWeight: FontWeight.w400,
                   ),
                 ),

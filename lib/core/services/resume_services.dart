@@ -1799,7 +1799,13 @@ class LocalAiResumeService {
       final cityLine = '[City, State, Zip Code]';
       final emailLine = '[Email Address]';
       final phoneLine = '[Phone Number]';
-      final currentDate = _formatCoverLetterDate(DateTime.now());
+      final languageBase = _coverLetterLanguageName(language);
+      final languageNative = _coverLetterLanguageNativeName(language);
+      final locale = _coverLetterLocaleFor(languageBase);
+      final currentDate = _formatCoverLetterDate(
+        DateTime.now(),
+        languageBase: languageBase,
+      );
       final companyName = company.trim().isEmpty ? 'Dekh Company' : company;
       final roleName = role.trim().isEmpty ? 'Heheh' : role;
       final highlightedSkills = skillToHighlight
@@ -1808,14 +1814,14 @@ class LocalAiResumeService {
           .where((item) => item.isNotEmpty)
           .toList();
       final highlightedSkill = highlightedSkills.isNotEmpty
-          ? _joinNaturalList(highlightedSkills)
+          ? _joinNaturalListLocalized(highlightedSkills, languageBase)
           : roleName;
       final primarySkill = highlightedSkill.isEmpty
           ? roleName
           : highlightedSkill;
       final languageSentence = language.trim().isEmpty
           ? ''
-          : ' I can also communicate effectively in ${language.trim()}, which would help me collaborate clearly in this role.';
+          : locale.languageSentence(languageNative);
 
       return '$fullName\n'
           '$addressLine\n'
@@ -1823,21 +1829,26 @@ class LocalAiResumeService {
           '$emailLine\n'
           '$phoneLine\n'
           '$currentDate\n\n'
-          'Hiring Manager\n'
+          '${locale.hiringManager}\n'
           '$companyName\n'
           '[Company Address]\n'
           '[City, State, Zip Code]\n\n'
-          'Dear Hiring Manager,\n\n'
-          'I am writing to express my interest in the $roleName position at $companyName. I am interested in this opportunity because it appears to value professionalism, reliability, and the ability to contribute meaningfully from day one.\n\n'
-          'I believe I would be a strong fit for this role because I can bring a focused approach to $primarySkill, along with a willingness to learn quickly, adapt to team needs, and support high-quality work in a consistent way.\n\n'
-          'I would bring strong communication, organization, and problem-solving skills to the role, and I would approach the responsibilities of this position with care, accountability, and attention to detail.$languageSentence\n\n'
-          'I would welcome the opportunity to contribute to $companyName as a $roleName. Thank you for considering my application. I look forward to the possibility of discussing how I can support your team.\n\n'
-          'Sincerely,\n\n'
+          '${locale.greeting}\n\n'
+          '${locale.opening(roleName, companyName)}\n\n'
+          '${locale.fit(roleName, primarySkill)}\n\n'
+          '${locale.strengths(languageSentence)}\n\n'
+          '${locale.closing(companyName, roleName)}\n\n'
+          '${locale.sincerely}\n\n'
           '$fullName';
     });
   }
 
-  String _formatCoverLetterDate(DateTime date) {
+  String _formatCoverLetterDate(DateTime date, {required String languageBase}) {
+    if (languageBase != 'English') {
+      final day = date.day.toString().padLeft(2, '0');
+      final month = date.month.toString().padLeft(2, '0');
+      return '$day/$month/${date.year}';
+    }
     const monthNames = <String>[
       'January',
       'February',
@@ -1856,7 +1867,7 @@ class LocalAiResumeService {
     return '${monthNames[date.month - 1]} ${date.day}, ${date.year}';
   }
 
-  String _joinNaturalList(List<String> items) {
+  String _joinNaturalListLocalized(List<String> items, String languageBase) {
     final cleaned = items
         .map((item) => item.trim())
         .where((item) => item.isNotEmpty)
@@ -1867,10 +1878,300 @@ class LocalAiResumeService {
     if (cleaned.length == 1) {
       return cleaned.first;
     }
+    final conjunction = switch (languageBase) {
+      'Arabic' => 'و',
+      'Bengali' => 'এবং',
+      'Chinese, Mandarin' => '和',
+      'Dutch' => 'en',
+      'French' => 'et',
+      'German' => 'und',
+      'Hindi' => 'और',
+      'Italian' => 'e',
+      'Japanese' => 'と',
+      'Korean' => '및',
+      'Portuguese' => 'e',
+      'Russian' => 'и',
+      'Spanish' => 'y',
+      'Turkish' => 've',
+      'Urdu' => 'اور',
+      'Vietnamese' => 'và',
+      _ => 'and',
+    };
     if (cleaned.length == 2) {
-      return '${cleaned.first} and ${cleaned.last}';
+      return '${cleaned.first} $conjunction ${cleaned.last}';
     }
-    return '${cleaned.sublist(0, cleaned.length - 1).join(', ')}, and ${cleaned.last}';
+    return '${cleaned.sublist(0, cleaned.length - 1).join(', ')}, $conjunction ${cleaned.last}';
+  }
+
+  String _coverLetterLanguageName(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+    final bracketIndex = trimmed.indexOf(' (');
+    if (bracketIndex <= 0) {
+      return trimmed;
+    }
+    return trimmed.substring(0, bracketIndex).trim();
+  }
+
+  String _coverLetterLanguageNativeName(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+    final start = trimmed.indexOf('(');
+    final end = trimmed.lastIndexOf(')');
+    if (start >= 0 && end > start) {
+      return trimmed.substring(start + 1, end).trim();
+    }
+    return _coverLetterLanguageName(trimmed);
+  }
+
+  _CoverLetterLocale _coverLetterLocaleFor(String languageBase) {
+    return switch (languageBase) {
+      'Arabic' => _CoverLetterLocale(
+        hiringManager: 'مدير التوظيف',
+        greeting: 'السيد/السيدة مدير التوظيف المحترم/ة،',
+        opening: (role, company) =>
+            'أكتب للتعبير عن اهتمامي بمنصب $role في $company. تجذبني هذه الفرصة لأنها تبدو قائمة على المهنية والموثوقية والقدرة على تقديم قيمة حقيقية منذ اليوم الأول.',
+        fit: (role, skill) =>
+            'أعتقد أنني سأكون مناسبًا/مناسبة لهذا المنصب لأنني أستطيع تقديم تركيز قوي على $skill، إلى جانب الاستعداد للتعلم بسرعة والتكيف مع احتياجات الفريق والحفاظ على جودة العمل بشكل مستمر.',
+        strengths: (languageSentence) =>
+            'سأقدم إلى هذا الدور مهارات قوية في التواصل والتنظيم وحل المشكلات، وسأتعامل مع مسؤولياته بعناية ومسؤولية واهتمام بالتفاصيل.$languageSentence',
+        closing: (company, role) =>
+            'سأرحب بفرصة المساهمة في $company بصفتي $role. شكرًا لكم على النظر في طلبي، وأتطلع إلى فرصة مناقشة كيفية دعمي لفريقكم.',
+        sincerely: 'مع خالص التقدير،',
+        languageSentence: (language) =>
+            ' كما أنني أستطيع التواصل بفاعلية باللغة $language، مما يساعدني على التعاون بوضوح في هذا الدور.',
+      ),
+      'Bengali' => _CoverLetterLocale(
+        hiringManager: 'নিয়োগ ব্যবস্থাপক',
+        greeting: 'সম্মানিত নিয়োগ ব্যবস্থাপক,',
+        opening: (role, company) =>
+            'আমি $company-এ $role পদের প্রতি আমার আগ্রহ প্রকাশ করতে লিখছি। এই সুযোগটি আমাকে আকর্ষণ করছে, কারণ এখানে পেশাদারিত্ব, নির্ভরযোগ্যতা এবং প্রথম দিন থেকেই অর্থপূর্ণ অবদানকে গুরুত্ব দেওয়া হয় বলে মনে হচ্ছে।',
+        fit: (role, skill) =>
+            'আমি বিশ্বাস করি এই পদে আমি ভালোভাবে মানিয়ে নিতে পারব, কারণ আমি $skill-এ একটি কেন্দ্রীভূত দৃষ্টিভঙ্গি, দ্রুত শেখার মানসিকতা এবং দলের প্রয়োজন অনুযায়ী নিজেকে মানিয়ে নেওয়ার সক্ষমতা নিয়ে আসতে পারি।',
+        strengths: (languageSentence) =>
+            'আমি এই ভূমিকায় শক্তিশালী যোগাযোগ, সংগঠন এবং সমস্যা সমাধানের দক্ষতা নিয়ে আসব এবং দায়িত্বগুলি যত্ন, জবাবদিহি এবং সূক্ষ্ম বিষয়ে মনোযোগ দিয়ে পালন করব।$languageSentence',
+        closing: (company, role) =>
+            '$company-এ $role হিসেবে অবদান রাখার সুযোগ পেলে আমি আনন্দিত হব। আমার আবেদন বিবেচনা করার জন্য ধন্যবাদ। আমি আপনার দলের সহায়তায় কীভাবে কাজ করতে পারি, তা নিয়ে আলোচনার সুযোগের অপেক্ষায় থাকব।',
+        sincerely: 'শুভেচ্ছান্তে,',
+        languageSentence: (language) =>
+            ' আমি $language ভাষাতেও কার্যকরভাবে যোগাযোগ করতে পারি, যা এই ভূমিকায় স্পষ্টভাবে সহযোগিতা করতে সহায়তা করবে।',
+      ),
+      'Chinese, Mandarin' => _CoverLetterLocale(
+        hiringManager: '招聘经理',
+        greeting: '尊敬的招聘经理：',
+        opening: (role, company) =>
+            '您好！我写信是想表达我对 $company 的 $role 职位的浓厚兴趣。这个机会吸引我的原因在于，它看起来非常重视专业性、可靠性以及从第一天起就能带来实际贡献的能力。',
+        fit: (role, skill) =>
+            '我相信自己能够胜任这一职位，因为我能够在 $skill 方面投入专注，同时也愿意快速学习、适应团队需求，并持续保持高质量的工作标准。',
+        strengths: (languageSentence) =>
+            '我能够为这一岗位带来良好的沟通能力、组织能力和解决问题的能力，并会以认真、负责和注重细节的方式承担相关职责。$languageSentence',
+        closing: (company, role) =>
+            '如果有机会以 $role 的身份为 $company 做出贡献，我将十分荣幸。感谢您考虑我的申请，期待有机会进一步交流我如何支持贵团队。',
+        sincerely: '此致，敬礼',
+        languageSentence: (language) =>
+            ' 此外，我也能够使用$language进行有效沟通，这将有助于我在这一岗位中更清晰地协作。',
+      ),
+      'Dutch' => _CoverLetterLocale(
+        hiringManager: 'Recruitmentmanager',
+        greeting: 'Geachte recruitmentmanager,',
+        opening: (role, company) =>
+            'Met deze brief wil ik mijn interesse kenbaar maken voor de functie van $role bij $company. Deze kans spreekt mij aan omdat zij professionaliteit, betrouwbaarheid en de mogelijkheid om vanaf dag één betekenisvol bij te dragen lijkt te waarderen.',
+        fit: (role, skill) =>
+            'Ik geloof dat ik goed bij deze functie pas, omdat ik een gerichte aanpak op het gebied van $skill meebreng, samen met de bereidheid om snel te leren, mij aan te passen aan de behoeften van het team en consequent werk van hoge kwaliteit te leveren.',
+        strengths: (languageSentence) =>
+            'Ik zou sterke communicatieve, organisatorische en probleemoplossende vaardigheden in deze rol meebrengen en de verantwoordelijkheden met zorg, verantwoordelijkheid en oog voor detail oppakken.$languageSentence',
+        closing: (company, role) =>
+            'Ik zou de kans verwelkomen om als $role bij te dragen aan $company. Dank u voor uw overweging. Ik kijk uit naar de mogelijkheid om te bespreken hoe ik uw team kan ondersteunen.',
+        sincerely: 'Met vriendelijke groet,',
+        languageSentence: (language) =>
+            ' Ik kan ook effectief communiceren in het $language, wat mij zou helpen om in deze rol helder samen te werken.',
+      ),
+      'French' => _CoverLetterLocale(
+        hiringManager: 'Responsable du recrutement',
+        greeting: 'Madame, Monsieur,',
+        opening: (role, company) =>
+            'Je vous écris afin d’exprimer mon intérêt pour le poste de $role chez $company. Cette opportunité m’intéresse, car elle semble valoriser le professionnalisme, la fiabilité et la capacité à contribuer de manière concrète dès le premier jour.',
+        fit: (role, skill) =>
+            'Je pense pouvoir être un bon profil pour ce poste, car j’apporte une approche solide en $skill, ainsi qu’une grande capacité d’apprentissage, d’adaptation aux besoins de l’équipe et de maintien d’un travail de qualité constante.',
+        strengths: (languageSentence) =>
+            'J’apporterais à ce poste de solides compétences en communication, en organisation et en résolution de problèmes, tout en assumant les responsabilités avec rigueur, sens des responsabilités et attention aux détails.$languageSentence',
+        closing: (company, role) =>
+            'Je serais ravi(e) d’avoir l’opportunité de contribuer à $company en tant que $role. Merci de l’attention portée à ma candidature. Je serais heureux/heureuse d’échanger sur la manière dont je pourrais soutenir votre équipe.',
+        sincerely: 'Cordialement,',
+        languageSentence: (language) =>
+            ' Je peux également communiquer efficacement en $language, ce qui m’aiderait à collaborer avec clarté dans ce poste.',
+      ),
+      'German' => _CoverLetterLocale(
+        hiringManager: 'Personalverantwortliche/r',
+        greeting: 'Sehr geehrte Damen und Herren,',
+        opening: (role, company) =>
+            'hiermit möchte ich mein Interesse an der Position $role bei $company zum Ausdruck bringen. Diese Gelegenheit spricht mich an, weil sie Professionalität, Zuverlässigkeit und die Fähigkeit zu einem wertvollen Beitrag vom ersten Tag an zu schätzen scheint.',
+        fit: (role, skill) =>
+            'Ich bin überzeugt, dass ich gut zu dieser Position passe, da ich einen klaren Schwerpunkt auf $skill mitbringe und zugleich bereit bin, schnell zu lernen, mich an die Bedürfnisse des Teams anzupassen und konstant hochwertige Arbeit zu leisten.',
+        strengths: (languageSentence) =>
+            'Ich würde starke Kommunikations-, Organisations- und Problemlösungskompetenzen in diese Rolle einbringen und die Aufgaben mit Sorgfalt, Verantwortungsbewusstsein und Liebe zum Detail übernehmen.$languageSentence',
+        closing: (company, role) =>
+            'Ich würde mich über die Gelegenheit freuen, als $role zu $company beizutragen. Vielen Dank für die Berücksichtigung meiner Bewerbung. Ich freue mich auf die Möglichkeit, zu besprechen, wie ich Ihr Team unterstützen kann.',
+        sincerely: 'Mit freundlichen Grüßen',
+        languageSentence: (language) =>
+            ' Ich kann zudem effektiv auf $language kommunizieren, was mir helfen würde, in dieser Rolle klar zusammenzuarbeiten.',
+      ),
+      'Hindi' => _CoverLetterLocale(
+        hiringManager: 'भर्ती प्रबंधक',
+        greeting: 'आदरणीय भर्ती प्रबंधक,',
+        opening: (role, company) =>
+            'मैं $company में $role पद के लिए अपनी रुचि व्यक्त करने हेतु यह पत्र लिख रहा/रही हूँ। यह अवसर मुझे इसलिए आकर्षित करता है क्योंकि यहाँ पेशेवरता, विश्वसनीयता और पहले दिन से सार्थक योगदान देने की क्षमता को महत्व दिया जाता है।',
+        fit: (role, skill) =>
+            'मुझे विश्वास है कि मैं इस भूमिका के लिए उपयुक्त रहूँगा/रहूँगी, क्योंकि मैं $skill पर केंद्रित दृष्टिकोण, तेज़ी से सीखने की इच्छा, टीम की ज़रूरतों के अनुसार स्वयं को ढालने की क्षमता और लगातार उच्च गुणवत्ता वाला काम करने की प्रतिबद्धता लेकर आ सकता/सकती हूँ।',
+        strengths: (languageSentence) =>
+            'मैं इस भूमिका में मजबूत संचार, संगठन और समस्या-समाधान कौशल लाऊँगा/लाऊँगी तथा जिम्मेदारियों को सावधानी, जवाबदेही और सूक्ष्म विवरणों पर ध्यान के साथ निभाऊँगा/निभाऊँगी।$languageSentence',
+        closing: (company, role) =>
+            '$company में $role के रूप में योगदान देने का अवसर मिलना मेरे लिए प्रसन्नता की बात होगी। मेरे आवेदन पर विचार करने के लिए धन्यवाद। आपके दल का मैं किस प्रकार सहयोग कर सकता/सकती हूँ, इस पर आगे चर्चा का अवसर मिलने की प्रतीक्षा रहेगी।',
+        sincerely: 'सादर,',
+        languageSentence: (language) =>
+            ' मैं $language में भी प्रभावी रूप से संवाद कर सकता/सकती हूँ, जिससे इस भूमिका में स्पष्ट सहयोग करने में सहायता मिलेगी।',
+      ),
+      'Italian' => _CoverLetterLocale(
+        hiringManager: 'Responsabile delle assunzioni',
+        greeting: 'Gentile Responsabile delle assunzioni,',
+        opening: (role, company) =>
+            'Le scrivo per esprimere il mio interesse per il ruolo di $role presso $company. Questa opportunità mi interessa perché sembra valorizzare professionalità, affidabilità e la capacità di contribuire in modo concreto fin dal primo giorno.',
+        fit: (role, skill) =>
+            'Ritengo di poter essere adatto/a a questo ruolo perché posso offrire un approccio solido a $skill, insieme alla disponibilità ad apprendere rapidamente, adattarmi alle esigenze del team e mantenere uno standard di lavoro costantemente elevato.',
+        strengths: (languageSentence) =>
+            'Porterei nel ruolo solide capacità di comunicazione, organizzazione e risoluzione dei problemi, affrontando le responsabilità con cura, senso di responsabilità e attenzione ai dettagli.$languageSentence',
+        closing: (company, role) =>
+            'Accoglierei con piacere l’opportunità di contribuire a $company come $role. La ringrazio per l’attenzione alla mia candidatura. Sarei lieto/a di discutere come potrei supportare il vostro team.',
+        sincerely: 'Cordiali saluti,',
+        languageSentence: (language) =>
+            ' Posso inoltre comunicare efficacemente in $language, il che mi aiuterebbe a collaborare con chiarezza in questo ruolo.',
+      ),
+      'Japanese' => _CoverLetterLocale(
+        hiringManager: '採用ご担当者様',
+        greeting: '採用ご担当者様',
+        opening: (role, company) =>
+            '$company の $role 職に応募したく、ご連絡いたしました。この機会に関心を持ったのは、貴社が専門性、信頼性、そして初日から価値を発揮できる力を重視していると感じたためです。',
+        fit: (role, skill) =>
+            '私は、この職務に適していると考えております。$skill にしっかりと取り組む姿勢に加え、素早く学び、チームのニーズに柔軟に対応し、安定して高品質な仕事を進めることができるためです。',
+        strengths: (languageSentence) =>
+            'この役割において、私は高いコミュニケーション力、整理力、問題解決力を発揮し、責任感と細部への配慮を持って業務に取り組みます。$languageSentence',
+        closing: (company, role) =>
+            '$company において $role として貢献できる機会をいただければ幸いです。ご検討いただきありがとうございます。どのように御社のチームを支援できるか、さらにお話しできる機会を楽しみにしております。',
+        sincerely: '何卒よろしくお願いいたします。',
+        languageSentence: (language) =>
+            ' また、$language による円滑なコミュニケーションも可能であり、この役割で明確に連携するうえで役立ちます。',
+      ),
+      'Korean' => _CoverLetterLocale(
+        hiringManager: '채용 담당자',
+        greeting: '채용 담당자님께,',
+        opening: (role, company) =>
+            '$company의 $role 직무에 지원하고자 이렇게 글을 드립니다. 이 기회가 첫날부터 의미 있는 기여를 할 수 있는 전문성, 신뢰성, 책임감을 중요하게 여기는 역할로 보여 큰 관심을 갖게 되었습니다.',
+        fit: (role, skill) =>
+            '저는 $skill에 대한 집중된 접근 방식과 빠른 학습 태도, 팀의 요구에 유연하게 적응하는 능력, 그리고 꾸준히 높은 품질의 결과를 만들어내는 자세를 바탕으로 이 역할에 잘 맞는다고 생각합니다.',
+        strengths: (languageSentence) =>
+            '저는 이 역할에 강한 커뮤니케이션 능력, 조직력, 문제 해결 능력을 더할 수 있으며, 세심함과 책임감을 가지고 업무를 수행하겠습니다.$languageSentence',
+        closing: (company, role) =>
+            '$company에서 $role로 기여할 기회를 얻게 된다면 기쁘겠습니다. 제 지원서를 검토해 주셔서 감사합니다. 제가 팀에 어떻게 도움이 될 수 있을지 더 이야기 나눌 기회를 기대합니다.',
+        sincerely: '감사합니다.',
+        languageSentence: (language) =>
+            ' 또한 $language로도 효과적으로 소통할 수 있어 이 역할에서 보다 명확하게 협업할 수 있습니다.',
+      ),
+      'Portuguese' => _CoverLetterLocale(
+        hiringManager: 'Gerente de Contratação',
+        greeting: 'Prezado(a) Gerente de Contratação,',
+        opening: (role, company) =>
+            'Escrevo para expressar meu interesse pela posição de $role na $company. Esta oportunidade me atrai porque parece valorizar profissionalismo, confiabilidade e a capacidade de contribuir de forma significativa desde o primeiro dia.',
+        fit: (role, skill) =>
+            'Acredito que eu seria uma boa escolha para esta função, pois posso oferecer uma abordagem focada em $skill, aliada à disposição para aprender rapidamente, adaptar-me às necessidades da equipe e manter um trabalho de alta qualidade de forma consistente.',
+        strengths: (languageSentence) =>
+            'Eu levaria para a função fortes habilidades de comunicação, organização e resolução de problemas, assumindo as responsabilidades com cuidado, responsabilidade e atenção aos detalhes.$languageSentence',
+        closing: (company, role) =>
+            'Ficaria feliz em ter a oportunidade de contribuir com a $company como $role. Obrigado por considerar minha candidatura. Aguardo a oportunidade de conversar sobre como posso apoiar sua equipe.',
+        sincerely: 'Atenciosamente,',
+        languageSentence: (language) =>
+            ' Também consigo me comunicar de forma eficaz em $language, o que me ajudaria a colaborar com clareza nesta função.',
+      ),
+      'Russian' => _CoverLetterLocale(
+        hiringManager: 'Менеджер по подбору персонала',
+        greeting: 'Уважаемый менеджер по подбору персонала,',
+        opening: (role, company) =>
+            'Я пишу, чтобы выразить свой интерес к позиции $role в компании $company. Эта возможность привлекла меня, поскольку, как мне кажется, она ценит профессионализм, надежность и способность вносить значимый вклад с первого дня.',
+        fit: (role, skill) =>
+            'Я считаю, что хорошо подхожу для этой роли, потому что могу предложить уверенный подход в области $skill, а также готовность быстро учиться, адаптироваться к потребностям команды и стабильно поддерживать высокое качество работы.',
+        strengths: (languageSentence) =>
+            'Я привнесу в эту роль сильные навыки коммуникации, организации и решения проблем, а также буду выполнять обязанности внимательно, ответственно и с большим вниманием к деталям.$languageSentence',
+        closing: (company, role) =>
+            'Я был(а) бы рад(а) возможности внести вклад в $company в роли $role. Спасибо за рассмотрение моей кандидатуры. Буду признателен(льна) за возможность обсудить, как я могу поддержать вашу команду.',
+        sincerely: 'С уважением,',
+        languageSentence: (language) =>
+            ' Я также могу эффективно общаться на $language, что поможет мне ясно взаимодействовать в рамках этой роли.',
+      ),
+      'Spanish' => _CoverLetterLocale(
+        hiringManager: 'Gerente de Contratación',
+        greeting: 'Estimado/a Gerente de Contratación:',
+        opening: (role, company) =>
+            'Le escribo para expresar mi interés en el puesto de $role en $company. Me interesa esta oportunidad porque parece valorar el profesionalismo, la confiabilidad y la capacidad de contribuir de manera significativa desde el primer día.',
+        fit: (role, skill) =>
+            'Considero que podría encajar bien en este puesto porque puedo aportar un enfoque sólido en $skill, además de la disposición para aprender con rapidez, adaptarme a las necesidades del equipo y mantener un trabajo de alta calidad de manera constante.',
+        strengths: (languageSentence) =>
+            'Aportaría sólidas habilidades de comunicación, organización y resolución de problemas, y asumiría las responsabilidades de este puesto con cuidado, responsabilidad y atención al detalle.$languageSentence',
+        closing: (company, role) =>
+            'Me gustaría tener la oportunidad de contribuir a $company como $role. Gracias por considerar mi candidatura. Quedo a su disposición para conversar sobre cómo puedo apoyar a su equipo.',
+        sincerely: 'Atentamente,',
+        languageSentence: (language) =>
+            ' También puedo comunicarme eficazmente en $language, lo que me permitiría colaborar con claridad en este puesto.',
+      ),
+      'Turkish' => _CoverLetterLocale(
+        hiringManager: 'İşe Alım Yöneticisi',
+        greeting: 'Sayın İşe Alım Yöneticisi,',
+        opening: (role, company) =>
+            '$company bünyesindeki $role pozisyonuna olan ilgimi ifade etmek için yazıyorum. Bu fırsatın profesyonellik, güvenilirlik ve ilk günden itibaren anlamlı katkı sunma becerisini önemseyen bir yapıya sahip olması beni özellikle çekiyor.',
+        fit: (role, skill) =>
+            'Bu rol için güçlü bir aday olduğuma inanıyorum; çünkü $skill konusunda odaklı bir yaklaşım sunabilir, hızlı öğrenebilir, ekibin ihtiyaçlarına uyum sağlayabilir ve sürekli olarak yüksek kaliteli işler ortaya koyabilirim.',
+        strengths: (languageSentence) =>
+            'Bu role güçlü iletişim, organizasyon ve problem çözme becerileri getirir; sorumlulukları özen, hesap verebilirlik ve ayrıntılara dikkat ile yerine getiririm.$languageSentence',
+        closing: (company, role) =>
+            '$company bünyesinde $role olarak katkı sunma fırsatını memnuniyetle karşılarım. Başvurumu değerlendirdiğiniz için teşekkür ederim. Ekibinizi nasıl destekleyebileceğimi görüşme fırsatını sabırsızlıkla bekliyorum.',
+        sincerely: 'Saygılarımla,',
+        languageSentence: (language) =>
+            ' Ayrıca $language dilinde de etkili şekilde iletişim kurabiliyorum; bu da bu rolde açık ve net iş birliği yapmama yardımcı olur.',
+      ),
+      'Urdu' => _CoverLetterLocale(
+        hiringManager: 'بھرتی مینیجر',
+        greeting: 'محترم بھرتی مینیجر،',
+        opening: (role, company) =>
+            'میں $company میں $role کے عہدے کے لیے اپنی دلچسپی ظاہر کرنے کے لیے یہ خط لکھ رہا/رہی ہوں۔ یہ موقع مجھے اس لیے پسند آیا کیونکہ اس میں پیشہ ورانہ طرزِ عمل، اعتماد اور پہلے دن سے بامعنی کردار ادا کرنے کی صلاحیت کو اہمیت دی جاتی ہے۔',
+        fit: (role, skill) =>
+            'مجھے یقین ہے کہ میں اس کردار کے لیے موزوں ہوں، کیونکہ میں $skill پر مضبوط توجہ، جلد سیکھنے کی آمادگی، ٹیم کی ضروریات کے مطابق خود کو ڈھالنے کی صلاحیت اور مسلسل معیاری کام فراہم کرنے کا رجحان رکھتا/رکھتی ہوں۔',
+        strengths: (languageSentence) =>
+            'میں اس کردار میں مضبوط ابلاغی، تنظیمی اور مسئلہ حل کرنے کی صلاحیتیں لا سکتا/سکتی ہوں اور ذمہ داریوں کو احتیاط، جوابدہی اور باریکیوں پر توجہ کے ساتھ نبھاؤں گا/گی۔$languageSentence',
+        closing: (company, role) =>
+            '$company میں $role کے طور پر کردار ادا کرنے کا موقع میرے لیے باعثِ خوشی ہوگا۔ میری درخواست پر غور کرنے کا شکریہ۔ میں اس امکان پر مزید گفتگو کے موقع کا منتظر/منتظرہ رہوں گا/گی کہ میں آپ کی ٹیم کی کس طرح مدد کر سکتا/سکتی ہوں۔',
+        sincerely: 'مخلص،',
+        languageSentence: (language) =>
+            ' میں $language میں بھی مؤثر انداز میں بات چیت کر سکتا/سکتی ہوں، جس سے اس کردار میں واضح تعاون ممکن ہوگا۔',
+      ),
+      'Vietnamese' => _CoverLetterLocale(
+        hiringManager: 'Quản lý tuyển dụng',
+        greeting: 'Kính gửi Quản lý tuyển dụng,',
+        opening: (role, company) =>
+            'Tôi viết thư này để bày tỏ sự quan tâm của mình đối với vị trí $role tại $company. Cơ hội này thu hút tôi vì dường như đề cao tính chuyên nghiệp, sự tin cậy và khả năng đóng góp có ý nghĩa ngay từ ngày đầu tiên.',
+        fit: (role, skill) =>
+            'Tôi tin rằng mình sẽ phù hợp với vị trí này vì tôi có thể mang đến cách tiếp cận tập trung vào $skill, cùng với tinh thần học hỏi nhanh, khả năng thích nghi với nhu cầu của nhóm và duy trì chất lượng công việc một cách ổn định.',
+        strengths: (languageSentence) =>
+            'Tôi sẽ mang đến cho vai trò này khả năng giao tiếp, tổ chức và giải quyết vấn đề tốt, đồng thời đảm nhận trách nhiệm với sự cẩn trọng, tinh thần trách nhiệm và chú ý đến chi tiết.$languageSentence',
+        closing: (company, role) =>
+            'Tôi rất mong có cơ hội được đóng góp cho $company với vai trò $role. Cảm ơn quý công ty đã xem xét hồ sơ của tôi. Tôi mong có cơ hội trao đổi thêm về cách tôi có thể hỗ trợ đội ngũ của quý công ty.',
+        sincerely: 'Trân trọng,',
+        languageSentence: (language) =>
+            ' Tôi cũng có thể giao tiếp hiệu quả bằng $language, điều này sẽ giúp tôi phối hợp rõ ràng hơn trong vai trò này.',
+      ),
+      _ => const _CoverLetterLocale.english(),
+    };
   }
 
   Future<JobDescriptionInsights> analyzeJobDescription({
@@ -3913,6 +4214,58 @@ class LocalAiResumeService {
   Future<T> _simulate<T>(T Function() action) async {
     await Future<void>.delayed(const Duration(milliseconds: 450));
     return action();
+  }
+}
+
+class _CoverLetterLocale {
+  const _CoverLetterLocale({
+    required this.hiringManager,
+    required this.greeting,
+    required this.opening,
+    required this.fit,
+    required this.strengths,
+    required this.closing,
+    required this.sincerely,
+    required this.languageSentence,
+  });
+
+  const _CoverLetterLocale.english()
+    : hiringManager = 'Hiring Manager',
+      greeting = 'Dear Hiring Manager,',
+      opening = _englishOpening,
+      fit = _englishFit,
+      strengths = _englishStrengths,
+      closing = _englishClosing,
+      sincerely = 'Sincerely,',
+      languageSentence = _englishLanguageSentence;
+
+  final String hiringManager;
+  final String greeting;
+  final String Function(String role, String company) opening;
+  final String Function(String role, String primarySkill) fit;
+  final String Function(String languageSentence) strengths;
+  final String Function(String company, String role) closing;
+  final String sincerely;
+  final String Function(String language) languageSentence;
+
+  static String _englishOpening(String role, String company) {
+    return 'I am writing to express my interest in the $role position at $company. I am interested in this opportunity because it appears to value professionalism, reliability, and the ability to contribute meaningfully from day one.';
+  }
+
+  static String _englishFit(String role, String primarySkill) {
+    return 'I believe I would be a strong fit for this role because I can bring a focused approach to $primarySkill, along with a willingness to learn quickly, adapt to team needs, and support high-quality work in a consistent way.';
+  }
+
+  static String _englishStrengths(String languageSentence) {
+    return 'I would bring strong communication, organization, and problem-solving skills to the role, and I would approach the responsibilities of this position with care, accountability, and attention to detail.$languageSentence';
+  }
+
+  static String _englishClosing(String company, String role) {
+    return 'I would welcome the opportunity to contribute to $company as a $role. Thank you for considering my application. I look forward to the possibility of discussing how I can support your team.';
+  }
+
+  static String _englishLanguageSentence(String language) {
+    return ' I can also communicate effectively in $language, which would help me collaborate clearly in this role.';
   }
 }
 
