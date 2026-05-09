@@ -157,16 +157,10 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('आदरणीय भर्ती प्रबंधक,'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Menu'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Choose template'), findsOneWidget);
-    expect(find.text('Download PDF'), findsOneWidget);
     expect(find.text('Share'), findsOneWidget);
-    expect(find.text('Print'), findsOneWidget);
+    expect(find.text('Template'), findsOneWidget);
 
-    await tester.tap(find.text('Choose template'));
+    await tester.tap(find.text('Template'));
     await tester.pumpAndSettle();
 
     final minimalLetterTile = find.byKey(
