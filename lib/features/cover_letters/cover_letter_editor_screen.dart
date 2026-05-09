@@ -520,7 +520,12 @@ class _SkillSuggestionFieldState extends State<_SkillSuggestionField> {
                 ),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 labelPadding: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                padding: const EdgeInsets.only(
+                  left: 14,
+                  right: 6,
+                  top: 0,
+                  bottom: 0,
+                ),
                 deleteIcon: const Icon(Icons.close_rounded, size: 16),
                 onDeleted: () {
                   final updated = currentSkills
