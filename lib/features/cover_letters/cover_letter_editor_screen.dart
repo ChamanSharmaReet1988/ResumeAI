@@ -502,16 +502,26 @@ class _SkillSuggestionFieldState extends State<_SkillSuggestionField> {
         if (currentSkills.isNotEmpty) ...[
           const SizedBox(height: 12),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: currentSkills.map((skill) {
               return InputChip(
                 label: Text(
                   skill,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize:
+                        (theme.textTheme.bodySmall?.fontSize ?? 12) - 1,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
+                visualDensity: const VisualDensity(
+                  horizontal: -2,
+                  vertical: -2,
+                ),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                deleteIcon: const Icon(Icons.close_rounded, size: 16),
                 onDeleted: () {
                   final updated = currentSkills
                       .where(
