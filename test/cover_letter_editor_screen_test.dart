@@ -39,103 +39,142 @@ Finder _textFieldByLabel(String label) {
 }
 
 void main() {
-  testWidgets(
-    'create cover letter opens the content screen with generated content',
-    (tester) async {
-      final repository = _FakeCoverLetterRepository();
-      final viewModel = CoverLetterEditorViewModel(
-        repository: repository,
-        aiService: LocalAiResumeService(),
-        resumeContext: ResumeData.empty(template: ResumeTemplate.corporate)
-            .copyWith(
-              fullName: 'Avery Lee',
-              jobTitle: 'Product Designer',
-              skills: const [
-                'UX research',
-                'Prototyping',
-                'Stakeholder management',
-              ],
-            ),
-        seedCoverLetter: CoverLetterData.empty(),
-      );
+  testWidgets('create cover letter opens the content screen with generated content', (
+    tester,
+  ) async {
+    final repository = _FakeCoverLetterRepository();
+    final viewModel = CoverLetterEditorViewModel(
+      repository: repository,
+      aiService: LocalAiResumeService(),
+      resumeContext: ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
+        fullName: 'Avery Lee',
+        jobTitle: 'Product Designer',
+        summary:
+            'This exact summary text should not be copied directly into the cover letter body.',
+        skills: const ['UX research', 'Prototyping', 'Stakeholder management'],
+        workExperiences: const [
+          WorkExperience(
+            role: 'Product Designer',
+            company: 'North Studio',
+            startDate: '2023',
+            endDate: 'Present',
+            description:
+                'Led cross-functional design work and research planning for web and mobile products.',
+            bullets: [
+              'Worked with product managers and engineers to improve onboarding flows.',
+            ],
+          ),
+        ],
+      ),
+      seedCoverLetter: CoverLetterData.empty(),
+    );
 
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            Provider<ResumePdfService>.value(value: ResumePdfService()),
-            ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
-              value: viewModel,
-            ),
-          ],
-          child: const MaterialApp(home: CoverLetterEditorScreen()),
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<ResumePdfService>.value(value: ResumePdfService()),
+          ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
+            value: viewModel,
+          ),
+        ],
+        child: const MaterialApp(home: CoverLetterEditorScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(_textFieldByLabel('Company name'), findsOneWidget);
+    expect(_textFieldByLabel('Job position name'), findsOneWidget);
+    expect(_textFieldByLabel('Skill to highlight'), findsOneWidget);
+    expect(
+      find.byKey(const Key('cover-letter-language-dropdown')),
+      findsOneWidget,
+    );
+    expect(_textFieldByLabel('Cover letter content'), findsNothing);
+
+    await tester.enterText(_textFieldByLabel('Company name'), 'Acme Labs');
+    await tester.enterText(
+      _textFieldByLabel('Job position name'),
+      'Senior Product Designer',
+    );
+    await tester.enterText(
+      _textFieldByLabel('Skill to highlight'),
+      'UX research',
+    );
+    await tester.tap(find.byKey(const Key('cover-letter-skill-add-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      _textFieldByLabel('Skill to highlight'),
+      'Prototyping',
+    );
+    await tester.tap(find.byKey(const Key('cover-letter-skill-add-button')));
+    await tester.pumpAndSettle();
+    final languageDropdown = tester.widget<DropdownButtonFormField<String>>(
+      find.byKey(const Key('cover-letter-language-dropdown')),
+    );
+    languageDropdown.onChanged?.call('English');
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Create cover letter'));
+    await tester.tap(find.text('Create cover letter'));
+    await tester.pump();
+    expect(find.byKey(const Key('create-cover-letter-loader')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+
+    expect(repository.savedCoverLetters, hasLength(1));
+    final saved = repository.savedCoverLetters.single;
+    expect(saved.company, 'Acme Labs');
+    expect(saved.role, 'Senior Product Designer');
+    expect(saved.skillToHighlight, 'UX research, Prototyping');
+    expect(saved.language, 'English');
+    expect(_textFieldByLabel('Cover letter content'), findsOneWidget);
+    expect(saved.content, contains('[Your Name]'));
+    expect(saved.content, contains('Hiring Manager'));
+    expect(saved.content, contains('Acme Labs'));
+    expect(saved.content, contains('Senior Product Designer position'));
+    expect(saved.content, contains('UX research and Prototyping'));
+    expect(saved.content, contains('English'));
+    expect(saved.content, contains('Dear Hiring Manager,'));
+    expect(saved.content, isNot(contains('Avery Lee')));
+    expect(
+      saved.content,
+      isNot(
+        contains(
+          'This exact summary text should not be copied directly into the cover letter body.',
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
 
-      expect(_textFieldByLabel('Company name'), findsOneWidget);
-      expect(_textFieldByLabel('Job position name'), findsOneWidget);
-      expect(_textFieldByLabel('Skill to highlight'), findsOneWidget);
-      expect(_textFieldByLabel('Language'), findsOneWidget);
-      expect(_textFieldByLabel('Cover letter content'), findsNothing);
+    await tester.ensureVisible(
+      find.byKey(const Key('preview-cover-letter-button')),
+    );
+    await tester.tap(find.byKey(const Key('preview-cover-letter-button')));
+    await tester.pumpAndSettle();
 
-      await tester.enterText(_textFieldByLabel('Company name'), 'Acme Labs');
-      await tester.enterText(
-        _textFieldByLabel('Job position name'),
-        'Senior Product Designer',
-      );
-      await tester.enterText(
-        _textFieldByLabel('Skill to highlight'),
-        'UX research',
-      );
-      await tester.enterText(_textFieldByLabel('Language'), 'English');
+    expect(
+      find.byKey(const Key('cover-letter-preview-screen')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Dear Hiring Manager,'), findsOneWidget);
 
-      await tester.ensureVisible(find.text('Create cover letter'));
-      await tester.tap(find.text('Create cover letter'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Menu'));
+    await tester.pumpAndSettle();
 
-      expect(repository.savedCoverLetters, hasLength(1));
-      final saved = repository.savedCoverLetters.single;
-      expect(saved.company, 'Acme Labs');
-      expect(saved.role, 'Senior Product Designer');
-      expect(saved.skillToHighlight, 'UX research');
-      expect(saved.language, 'English');
-      expect(_textFieldByLabel('Cover letter content'), findsOneWidget);
-      expect(saved.content, contains('Avery Lee'));
-      expect(saved.content, contains('Hiring Manager'));
-      expect(saved.content, contains('Acme Labs'));
-      expect(saved.content, contains('Senior Product Designer position'));
-      expect(saved.content, contains('UX research'));
-      expect(saved.content, contains('English'));
-      expect(saved.content, contains('Dear Hiring Manager,'));
+    expect(find.text('Choose template'), findsOneWidget);
+    expect(find.text('Download PDF'), findsOneWidget);
+    expect(find.text('Share'), findsOneWidget);
+    expect(find.text('Print'), findsOneWidget);
 
-      await tester.ensureVisible(find.byKey(const Key('preview-cover-letter-button')));
-      await tester.tap(find.byKey(const Key('preview-cover-letter-button')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Choose template'));
+    await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('cover-letter-preview-screen')), findsOneWidget);
-      expect(find.textContaining('Dear Hiring Manager,'), findsOneWidget);
+    final minimalLetterTile = find.byKey(
+      const Key('template-tile-minimal-letter'),
+    );
+    await tester.ensureVisible(minimalLetterTile);
+    await tester.tap(minimalLetterTile);
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Menu'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Choose template'), findsOneWidget);
-      expect(find.text('Download PDF'), findsOneWidget);
-      expect(find.text('Share'), findsOneWidget);
-      expect(find.text('Print'), findsOneWidget);
-
-      await tester.tap(find.text('Choose template'));
-      await tester.pumpAndSettle();
-
-      final minimalLetterTile = find.byKey(
-        const Key('template-tile-minimal-letter'),
-      );
-      await tester.ensureVisible(minimalLetterTile);
-      await tester.tap(minimalLetterTile);
-      await tester.pumpAndSettle();
-
-      expect(viewModel.coverLetter.template, CoverLetterTemplate.minimalLetter);
-    },
-  );
+    expect(viewModel.coverLetter.template, CoverLetterTemplate.minimalLetter);
+  });
 }

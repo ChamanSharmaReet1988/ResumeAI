@@ -1002,7 +1002,10 @@ List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
   final firstPageFixedHeight =
       nameBlockHeight + headingBlockHeight + infoItemsHeight + 20;
   final firstPageSkillsAvailable =
-      availableHeight - firstPageFixedHeight - headingBlockHeight - skillsBottomGap;
+      availableHeight -
+      firstPageFixedHeight -
+      headingBlockHeight -
+      skillsBottomGap;
   final continuedPageSkillsAvailable =
       availableHeight - headingBlockHeight - skillsBottomGap;
 
@@ -1791,56 +1794,28 @@ class LocalAiResumeService {
     String language = '',
   }) async {
     return _simulate(() {
-      final fullName = resume.fullName.trim().isEmpty
-          ? '[Your Name]'
-          : resume.fullName.trim();
+      final fullName = '[Your Name]';
       final addressLine = '[Your Address]';
-      final cityLine = resume.location.trim().isEmpty
-          ? '[City, State, Zip Code]'
-          : resume.location.trim();
-      final emailLine = resume.email.trim().isEmpty
-          ? '[Email Address]'
-          : resume.email.trim();
-      final phoneLine = resume.phone.trim().isEmpty
-          ? '[Phone Number]'
-          : resume.phone.trim();
+      final cityLine = '[City, State, Zip Code]';
+      final emailLine = '[Email Address]';
+      final phoneLine = '[Phone Number]';
       final currentDate = _formatCoverLetterDate(DateTime.now());
       final companyName = company.trim().isEmpty ? 'Dekh Company' : company;
       final roleName = role.trim().isEmpty ? 'Heheh' : role;
-      final highlightedSkill = skillToHighlight.trim().isNotEmpty
-          ? skillToHighlight.trim()
-          : resume.skills.take(1).join();
+      final highlightedSkills = skillToHighlight
+          .split(',')
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+      final highlightedSkill = highlightedSkills.isNotEmpty
+          ? _joinNaturalList(highlightedSkills)
+          : roleName;
       final primarySkill = highlightedSkill.isEmpty
           ? roleName
           : highlightedSkill;
-      final resumeStrength = resume.summary.trim().isNotEmpty
-          ? resume.summary.trim()
-          : 'I bring a thoughtful, reliable approach to planning, communication, and execution.';
-      final firstExperience = resume.visibleWorkExperiences.isNotEmpty
-          ? resume.visibleWorkExperiences.first
-          : null;
-      final experienceLabel = [
-        firstExperience?.role.trim() ?? '',
-        firstExperience?.company.trim() ?? '',
-      ].where((item) => item.isNotEmpty).join(' at ');
-      final experienceSource = experienceLabel.isEmpty
-          ? 'my previous work experience'
-          : 'my work as $experienceLabel';
-      var experienceBullet = '';
-      if (firstExperience != null) {
-        for (final bullet in firstExperience.bullets) {
-          if (bullet.trim().isNotEmpty) {
-            experienceBullet = bullet.trim();
-            break;
-          }
-        }
-      }
-      final experienceSentence = experienceBullet.isEmpty
-          ? 'I have a proven track record of delivering thoughtful work, adapting quickly, and contributing positively to team goals.'
-          : 'For example, $experienceBullet';
-      final languageParagraph = language.trim().isEmpty
+      final languageSentence = language.trim().isEmpty
           ? ''
-          : '\n\nI can also collaborate confidently in ${language.trim()}, which helps me communicate clearly across teams and deliver a strong candidate experience.';
+          : ' I can also communicate effectively in ${language.trim()}, which would help me collaborate clearly in this role.';
 
       return '$fullName\n'
           '$addressLine\n'
@@ -1853,11 +1828,10 @@ class LocalAiResumeService {
           '[Company Address]\n'
           '[City, State, Zip Code]\n\n'
           'Dear Hiring Manager,\n\n'
-          'I am writing to express my interest in the $roleName position at $companyName. I believe that my skills and experience make me a strong fit for this role.\n\n'
-          'With a strong background in $primarySkill, I am confident in my ability to contribute positively to the team at $companyName. Through $experienceSource, I have developed practical experience, sound judgment, and a clear understanding of how to deliver results. $experienceSentence\n\n'
-          '$resumeStrength\n\n'
-          'I possess strong communication, problem-solving, and analytical skills, and I enjoy working in collaborative environments where I can learn quickly and add value from day one.$languageParagraph\n\n'
-          'I am excited about the opportunity to bring my experience in $primarySkill to $companyName and contribute to the continued success of the team. Thank you for considering my application. I look forward to the possibility of discussing my application further.\n\n'
+          'I am writing to express my interest in the $roleName position at $companyName. I am interested in this opportunity because it appears to value professionalism, reliability, and the ability to contribute meaningfully from day one.\n\n'
+          'I believe I would be a strong fit for this role because I can bring a focused approach to $primarySkill, along with a willingness to learn quickly, adapt to team needs, and support high-quality work in a consistent way.\n\n'
+          'I would bring strong communication, organization, and problem-solving skills to the role, and I would approach the responsibilities of this position with care, accountability, and attention to detail.$languageSentence\n\n'
+          'I would welcome the opportunity to contribute to $companyName as a $roleName. Thank you for considering my application. I look forward to the possibility of discussing how I can support your team.\n\n'
           'Sincerely,\n\n'
           '$fullName';
     });
@@ -1880,6 +1854,23 @@ class LocalAiResumeService {
     ];
 
     return '${monthNames[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  String _joinNaturalList(List<String> items) {
+    final cleaned = items
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    if (cleaned.isEmpty) {
+      return '';
+    }
+    if (cleaned.length == 1) {
+      return cleaned.first;
+    }
+    if (cleaned.length == 2) {
+      return '${cleaned.first} and ${cleaned.last}';
+    }
+    return '${cleaned.sublist(0, cleaned.length - 1).join(', ')}, and ${cleaned.last}';
   }
 
   Future<JobDescriptionInsights> analyzeJobDescription({
@@ -4152,13 +4143,9 @@ class ResumePdfService {
       pw.MultiPage(
         margin: const pw.EdgeInsets.fromLTRB(40, 40, 40, 44),
         build: (context) => [
-          if (dateLine != null)
-            pw.Text(dateLine, style: metaStyle),
+          if (dateLine != null) pw.Text(dateLine, style: metaStyle),
           if (dateLine != null) pw.SizedBox(height: 18),
-          pw.Text(
-            parsed.recipientLines.join('\n'),
-            style: metaStyle,
-          ),
+          pw.Text(parsed.recipientLines.join('\n'), style: metaStyle),
           pw.SizedBox(height: 18),
           pw.Text(
             parsed.greeting,
