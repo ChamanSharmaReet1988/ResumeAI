@@ -282,7 +282,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                           _pdfAlignedInitials(resume),
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 24,
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
                             height: ResumeTypography.textLineHeight,
                           ),

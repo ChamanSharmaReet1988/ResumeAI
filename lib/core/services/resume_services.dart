@@ -4384,10 +4384,22 @@ class ResumePdfService {
   }
 
   Future<Uint8List> buildCoverLetterPdf(CoverLetterData coverLetter) async {
-    final document = pw.Document(
-      theme: await resumePdfThemeForBodyFont(ResumeTextFont.inter),
-    );
     final parsed = _parseCoverLetterContent(coverLetter.content);
+    final baseTheme = await resumePdfThemeForBodyFont(ResumeTextFont.inter);
+    // Embed Noto fallbacks for non-Latin scripts so Arabic, Hindi,
+    // Bengali, CJK, etc. render in the PDF preview/export.
+    final fallbacks = await _coverLetterFontFallbacks(parsed);
+    final theme = fallbacks.isEmpty
+        ? baseTheme
+        : baseTheme.copyWith(
+            defaultTextStyle: baseTheme.defaultTextStyle.copyWith(
+              fontFallback: fallbacks,
+            ),
+            bulletStyle: baseTheme.bulletStyle.copyWith(
+              fontFallback: fallbacks,
+            ),
+          );
+    final document = pw.Document(theme: theme);
 
     switch (coverLetter.template) {
       case CoverLetterTemplate.executiveNote:
@@ -4405,6 +4417,137 @@ class ResumePdfService {
     }
 
     return document.save();
+  }
+
+  /// Inspects [parsed] to detect non-Latin scripts (Arabic, Devanagari, Bengali,
+  /// CJK, etc.) and downloads matching Noto fonts via the `printing` package so
+  /// the cover letter PDF preview/export can render them. Failures are
+  /// swallowed so the export never blocks on font fetching.
+  Future<List<pw.Font>> _coverLetterFontFallbacks(
+    _ParsedCoverLetterContent parsed,
+  ) async {
+    final scripts = _detectCoverLetterScripts(parsed);
+    if (scripts.isEmpty) {
+      return const <pw.Font>[];
+    }
+    final fonts = <pw.Font>[];
+    for (final script in scripts) {
+      try {
+        final font = await _loadCoverLetterFallbackFont(script);
+        if (font != null) {
+          fonts.add(font);
+        }
+      } catch (_) {
+        // Swallow; we still emit the PDF using the default Inter typeface.
+      }
+    }
+    return fonts;
+  }
+
+  Set<_CoverLetterScript> _detectCoverLetterScripts(
+    _ParsedCoverLetterContent parsed,
+  ) {
+    final scripts = <_CoverLetterScript>{};
+    void scan(String text) {
+      if (text.isEmpty) {
+        return;
+      }
+      for (final rune in text.runes) {
+        final script = _scriptForRune(rune);
+        if (script != null) {
+          scripts.add(script);
+        }
+      }
+    }
+
+    parsed.senderLines.forEach(scan);
+    parsed.recipientLines.forEach(scan);
+    scan(parsed.greeting);
+    parsed.bodyParagraphs.forEach(scan);
+    scan(parsed.closing);
+    scan(parsed.signature);
+    return scripts;
+  }
+
+  _CoverLetterScript? _scriptForRune(int code) {
+    // Arabic + Arabic Supplement/Extended.
+    if ((code >= 0x0600 && code <= 0x06FF) ||
+        (code >= 0x0750 && code <= 0x077F) ||
+        (code >= 0x08A0 && code <= 0x08FF) ||
+        (code >= 0xFB50 && code <= 0xFDFF) ||
+        (code >= 0xFE70 && code <= 0xFEFF)) {
+      return _CoverLetterScript.arabic;
+    }
+    // Devanagari (Hindi).
+    if (code >= 0x0900 && code <= 0x097F) {
+      return _CoverLetterScript.devanagari;
+    }
+    // Bengali.
+    if (code >= 0x0980 && code <= 0x09FF) {
+      return _CoverLetterScript.bengali;
+    }
+    // Hebrew.
+    if (code >= 0x0590 && code <= 0x05FF) {
+      return _CoverLetterScript.hebrew;
+    }
+    // Thai.
+    if (code >= 0x0E00 && code <= 0x0E7F) {
+      return _CoverLetterScript.thai;
+    }
+    // Hiragana / Katakana / Japanese punctuation.
+    if ((code >= 0x3040 && code <= 0x30FF) ||
+        (code >= 0x31F0 && code <= 0x31FF)) {
+      return _CoverLetterScript.japanese;
+    }
+    // Hangul (Korean).
+    if ((code >= 0xAC00 && code <= 0xD7AF) ||
+        (code >= 0x1100 && code <= 0x11FF) ||
+        (code >= 0x3130 && code <= 0x318F)) {
+      return _CoverLetterScript.korean;
+    }
+    // CJK Unified Ideographs (Chinese; also covers most kanji).
+    if ((code >= 0x3400 && code <= 0x4DBF) ||
+        (code >= 0x4E00 && code <= 0x9FFF) ||
+        (code >= 0xF900 && code <= 0xFAFF)) {
+      return _CoverLetterScript.chinese;
+    }
+    // Cyrillic (Russian, etc.).
+    if (code >= 0x0400 && code <= 0x04FF) {
+      return _CoverLetterScript.cyrillic;
+    }
+    // Greek.
+    if (code >= 0x0370 && code <= 0x03FF) {
+      return _CoverLetterScript.greek;
+    }
+    return null;
+  }
+
+  Future<pw.Font?> _loadCoverLetterFallbackFont(
+    _CoverLetterScript script,
+  ) async {
+    switch (script) {
+      case _CoverLetterScript.arabic:
+        return PdfGoogleFonts.notoSansArabicRegular();
+      case _CoverLetterScript.devanagari:
+        return PdfGoogleFonts.notoSansDevanagariRegular();
+      case _CoverLetterScript.bengali:
+        return PdfGoogleFonts.notoSansBengaliRegular();
+      case _CoverLetterScript.hebrew:
+        return PdfGoogleFonts.notoSansHebrewRegular();
+      case _CoverLetterScript.thai:
+        return PdfGoogleFonts.notoSansThaiRegular();
+      case _CoverLetterScript.japanese:
+        return PdfGoogleFonts.notoSansJPRegular();
+      case _CoverLetterScript.korean:
+        return PdfGoogleFonts.notoSansKRRegular();
+      case _CoverLetterScript.chinese:
+        return PdfGoogleFonts.notoSansSCRegular();
+      case _CoverLetterScript.cyrillic:
+      case _CoverLetterScript.greek:
+        // Inter already covers Latin Extended + Cyrillic + Greek glyphs, but
+        // load Noto Sans as a safety net for older font subsets.
+        return PdfGoogleFonts.notoSansRegular();
+    }
   }
 
   Future<pw.MemoryImage?> _loadProfileImage(String path) async {
@@ -5436,6 +5579,19 @@ class ResumePdfService {
         .replaceAll(RegExp(r'^_|_$'), '')
         .ifEmpty('resume');
   }
+}
+
+enum _CoverLetterScript {
+  arabic,
+  devanagari,
+  bengali,
+  hebrew,
+  thai,
+  japanese,
+  korean,
+  chinese,
+  cyrillic,
+  greek,
 }
 
 class _ParsedCoverLetterContent {

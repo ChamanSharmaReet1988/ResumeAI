@@ -58,7 +58,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                           _resumeInitials(resume),
                           style: pw.TextStyle(
                             color: PdfColors.white,
-                            fontSize: 38,
+                            fontSize: 48,
                             fontWeight: pw.FontWeight.bold,
                           ),
                         ),

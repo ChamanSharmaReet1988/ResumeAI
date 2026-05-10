@@ -1307,7 +1307,7 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                         'ML',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 7.2,
+                          fontSize: 17,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
