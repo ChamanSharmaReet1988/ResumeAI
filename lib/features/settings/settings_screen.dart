@@ -9,19 +9,17 @@ import '../shared/view_models.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
   static final Uri _privacyPolicyUri = Uri.parse(
-    'https://resumeai.app/privacy-policy',
+    'https://sites.google.com/mindplexapp.com/resumeapp/privacy-policy',
   );
   static final Uri _termsOfUseUri = Uri.parse(
-    'https://resumeai.app/terms-of-use',
+    'https://sites.google.com/mindplexapp.com/resumeapp/terms',
   );
   static final Uri _backupUri = Uri.parse('https://resumeai.app/backup');
   static final Uri _goPremiumUri = Uri.parse('https://resumeai.app/premium');
 
   Uri _buildFeedbackMailtoUri() {
     final subject = Uri.encodeComponent('ResumeAI App Feedback');
-    return Uri.parse(
-      'mailto:swiftdeveloper1988@gmail.com?subject=$subject',
-    );
+    return Uri.parse('mailto:hello@mindplexapp.com?subject=$subject');
   }
 
   Future<void> _openFeedbackComposer(BuildContext context) async {
@@ -102,10 +100,7 @@ class SettingsScreen extends StatelessWidget {
       width: 2,
       height: 2,
     );
-    await Share.share(
-      'Check out ResumeAI app.',
-      sharePositionOrigin: origin,
-    );
+    await Share.share('Check out ResumeAI app.', sharePositionOrigin: origin);
   }
 
   @override
@@ -137,12 +132,7 @@ class SettingsScreen extends StatelessWidget {
                         color: colorScheme.primary,
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Appearance',
-                          style: rowLabelStyle,
-                        ),
-                      ),
+                      Expanded(child: Text('Appearance', style: rowLabelStyle)),
                       DropdownButtonHideUnderline(
                         child: Theme(
                           data: theme.copyWith(
@@ -204,9 +194,7 @@ class SettingsScreen extends StatelessWidget {
                           color: colorScheme.primary,
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Text('Backup', style: rowLabelStyle),
-                        ),
+                        Expanded(child: Text('Backup', style: rowLabelStyle)),
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,
@@ -266,9 +254,7 @@ class SettingsScreen extends StatelessWidget {
                           color: colorScheme.primary,
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Text('Feedback', style: rowLabelStyle),
-                        ),
+                        Expanded(child: Text('Feedback', style: rowLabelStyle)),
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,
@@ -297,9 +283,7 @@ class SettingsScreen extends StatelessWidget {
                           color: colorScheme.primary,
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Text('Rate app', style: rowLabelStyle),
-                        ),
+                        Expanded(child: Text('Rate app', style: rowLabelStyle)),
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,
@@ -390,9 +374,7 @@ class SettingsScreen extends StatelessWidget {
                           color: colorScheme.primary,
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Text('Share', style: rowLabelStyle),
-                        ),
+                        Expanded(child: Text('Share', style: rowLabelStyle)),
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,

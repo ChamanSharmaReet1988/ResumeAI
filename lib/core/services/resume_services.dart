@@ -4409,7 +4409,7 @@ class ResumePdfService {
         _addMinimalCoverLetterPage(document, parsed);
         break;
       case CoverLetterTemplate.sidebarLetter:
-        _addSidebarCoverLetterPage(document, parsed);
+        _addSidebarCoverLetterPage(document, coverLetter, parsed);
         break;
       case CoverLetterTemplate.classicBusinessLetter:
         _addClassicBusinessCoverLetterPage(document, parsed);
@@ -4730,86 +4730,170 @@ class ResumePdfService {
 
   void _addSidebarCoverLetterPage(
     pw.Document document,
+    CoverLetterData coverLetter,
     _ParsedCoverLetterContent parsed,
   ) {
-    final accent = PdfColor.fromHex('#E39A3A');
-    final dark = PdfColor.fromHex('#161616');
+    final rail = PdfColor.fromHex('#262A31');
+    final accent = PdfColor.fromHex('#D5923B');
+    final text = PdfColor.fromHex('#2E3238');
+    final muted = PdfColor.fromHex('#717880');
+    final line = PdfColor.fromHex('#D8DDE3');
+    final senderDetails = _sidebarCoverLetterSenderDetails(parsed);
+    final roleTitle = coverLetter.role.trim().isEmpty
+        ? 'COVER LETTER'
+        : coverLetter.role.trim().toUpperCase();
+    final metaLine = _sidebarCoverLetterMetaLine(coverLetter, parsed);
 
     document.addPage(
-      pw.MultiPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.letter,
         margin: const pw.EdgeInsets.fromLTRB(24, 24, 24, 28),
-        build: (context) => [
-          pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Container(
-                width: 150,
-                padding: const pw.EdgeInsets.fromLTRB(14, 14, 14, 18),
-                decoration: pw.BoxDecoration(
-                  color: PdfColor.fromHex('#FAF4EB'),
-                  borderRadius: pw.BorderRadius.circular(16),
-                  border: pw.Border.all(color: accent, width: 0.8),
+        build: (context) => pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Container(
+              width: 128,
+              color: rail,
+              padding: const pw.EdgeInsets.fromLTRB(16, 22, 16, 22),
+              child: pw.DefaultTextStyle(
+                style: pw.TextStyle(
+                  fontSize: 10,
+                  height: 1.45,
+                  color: PdfColor.fromHex('#E7EDF6'),
                 ),
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Container(
-                      width: 44,
-                      height: 44,
-                      alignment: pw.Alignment.center,
-                      decoration: pw.BoxDecoration(
-                        color: dark,
-                        borderRadius: pw.BorderRadius.circular(12),
-                      ),
-                      child: pw.Text(
-                        parsed.senderInitial,
-                        style: pw.TextStyle(
-                          color: accent,
-                          fontSize: 24,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    pw.SizedBox(height: 14),
                     pw.Text(
-                      parsed.senderName,
+                      parsed.senderInitial,
                       style: pw.TextStyle(
-                        fontSize: 19,
-                        fontWeight: pw.FontWeight.bold,
                         color: accent,
+                        fontSize: 27,
+                        fontWeight: pw.FontWeight.bold,
                       ),
                     ),
                     pw.SizedBox(height: 12),
-                    for (final line in parsed.senderDetails)
+                    pw.Text(
+                      parsed.senderName,
+                      style: pw.TextStyle(
+                        color: PdfColors.white,
+                        fontSize: 13,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 12),
+                    for (final detail in senderDetails)
                       pw.Padding(
-                        padding: const pw.EdgeInsets.only(bottom: 6),
-                        child: pw.Text(
-                          line,
-                          style: pw.TextStyle(
-                            fontSize: 10,
-                            color: PdfColor.fromHex('#4B4F55'),
-                          ),
-                        ),
+                        padding: const pw.EdgeInsets.only(bottom: 8),
+                        child: pw.Text(detail),
                       ),
                   ],
                 ),
               ),
-              pw.SizedBox(width: 20),
-              pw.Expanded(
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    _buildCoverLetterRecipientBlock(parsed),
-                    pw.SizedBox(height: 16),
-                    ..._buildCoverLetterBody(parsed),
+            ),
+            pw.SizedBox(width: 26),
+            pw.Expanded(
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    roleTitle,
+                    style: pw.TextStyle(
+                      fontSize: 18,
+                      fontWeight: pw.FontWeight.bold,
+                      color: text,
+                    ),
+                  ),
+                  if (metaLine.isNotEmpty) ...[
+                    pw.SizedBox(height: 6),
+                    pw.Text(
+                      metaLine,
+                      style: pw.TextStyle(fontSize: 10, color: muted),
+                    ),
                   ],
-                ),
+                  pw.SizedBox(height: 12),
+                  pw.Container(height: 1, color: line),
+                  pw.SizedBox(height: 12),
+                  ..._buildCoverLetterBody(parsed),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  List<String> _sidebarCoverLetterSenderDetails(
+    _ParsedCoverLetterContent parsed,
+  ) {
+    return parsed.senderDetails
+        .where((line) => !_sidebarCoverLetterLineLooksLikeDate(line))
+        .toList();
+  }
+
+  String _sidebarCoverLetterMetaLine(
+    CoverLetterData coverLetter,
+    _ParsedCoverLetterContent parsed,
+  ) {
+    final fallbackDate = _pdfCoverLetterDateLabel(
+      coverLetter.updatedAt,
+      language: coverLetter.language,
+    );
+    final parsedDate = parsed.senderDetails.cast<String?>().firstWhere(
+      (line) => line != null && _sidebarCoverLetterLineLooksLikeDate(line),
+      orElse: () => null,
+    );
+    final company = coverLetter.company.trim().isEmpty
+        ? parsed.recipientLines
+              .skip(1)
+              .firstWhere(
+                (line) => !line.trim().startsWith('['),
+                orElse: () => '',
+              )
+        : coverLetter.company.trim();
+    final location = parsed.recipientLines.reversed
+        .firstWhere((line) => !line.trim().startsWith('['), orElse: () => '')
+        .trim();
+
+    final parts = <String>[
+      (parsedDate ?? fallbackDate).trim(),
+      if (company.isNotEmpty) company,
+      if (location.isNotEmpty && location != company) location,
+    ];
+    return parts.join('  |  ');
+  }
+
+  bool _sidebarCoverLetterLineLooksLikeDate(String line) {
+    final trimmed = line.trim();
+    return trimmed == '[Date]' ||
+        _coverLetterLineLooksLikeFormattedDate(trimmed) ||
+        RegExp(r'^\d{2}/\d{2}/\d{4}$').hasMatch(trimmed);
+  }
+
+  String _pdfCoverLetterDateLabel(DateTime date, {required String language}) {
+    final normalized = language.trim().toLowerCase();
+    if (!normalized.startsWith('english')) {
+      final day = date.day.toString().padLeft(2, '0');
+      final month = date.month.toString().padLeft(2, '0');
+      return '$day/$month/${date.year}';
+    }
+
+    const monthNames = <String>[
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${monthNames[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   pw.Widget _buildCoverLetterRecipientBlock(_ParsedCoverLetterContent parsed) {
@@ -5619,7 +5703,10 @@ class _ParsedCoverLetterContent {
 
   String get senderInitial {
     final normalized = senderName.trim();
-    return normalized.isEmpty ? 'A' : normalized.substring(0, 1).toUpperCase();
+    if (normalized.isEmpty || normalized.startsWith('[')) {
+      return '';
+    }
+    return normalized.substring(0, 1).toUpperCase();
   }
 }
 
