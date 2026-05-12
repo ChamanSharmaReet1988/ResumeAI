@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/services/app_preferences.dart';
+import '../core/services/firebase_app_services.dart';
 import '../core/services/job_search_service.dart';
 import '../core/services/resume_import_service.dart';
 import '../core/services/resume_services.dart';
@@ -16,10 +17,12 @@ class ResumeApp extends StatelessWidget {
     super.key,
     required this.repository,
     required this.appPreferences,
+    required this.firebaseServices,
   });
 
   final ResumeRepository repository;
   final AppPreferences appPreferences;
+  final FirebaseAppServices firebaseServices;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +32,7 @@ class ResumeApp extends StatelessWidget {
       providers: [
         Provider<ResumeRepository>.value(value: repository),
         Provider<AppPreferences>.value(value: appPreferences),
+        Provider<FirebaseAppServices>.value(value: firebaseServices),
         Provider<ResumeImportService>(
           create: (_) => const ResumeImportService(),
         ),
@@ -53,6 +57,10 @@ class ResumeApp extends StatelessWidget {
           return MaterialApp(
             title: 'ResumeAI',
             debugShowCheckedModeBanner: false,
+            navigatorObservers: [
+              if (firebaseServices.analyticsObserver != null)
+                firebaseServices.analyticsObserver!,
+            ],
             scrollBehavior: const VerticalEdgeBounceScrollBehavior(),
             themeMode: settings.themeMode,
             theme: AppTheme.lightTheme(platform),
