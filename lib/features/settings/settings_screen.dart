@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/bottom_sheet_insets.dart';
 import '../shared/view_models.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -14,7 +15,6 @@ class SettingsScreen extends StatelessWidget {
   static final Uri _termsOfUseUri = Uri.parse(
     'https://sites.google.com/mindplexapp.com/resumeapp/terms',
   );
-  static final Uri _backupUri = Uri.parse('https://resumeai.app/backup');
   static final Uri _goPremiumUri = Uri.parse('https://resumeai.app/premium');
 
   Uri _buildFeedbackMailtoUri() {
@@ -103,6 +103,51 @@ class SettingsScreen extends StatelessWidget {
     await Share.share('Check out ResumeAI app.', sharePositionOrigin: origin);
   }
 
+  Future<void> _showBackupOptions(BuildContext context) async {
+    final destination = await showModalBottomSheet<_BackupDestination>(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: BottomSheetInsets.topSpacing),
+                _SettingsSheetAction(
+                  icon: Icons.cloud_queue_outlined,
+                  label: 'Google Drive',
+                  onTap: () =>
+                      Navigator.of(context).pop(_BackupDestination.googleDrive),
+                ),
+                _SettingsSheetAction(
+                  icon: Icons.cloud_done_outlined,
+                  label: 'iCloud',
+                  onTap: () =>
+                      Navigator.of(context).pop(_BackupDestination.iCloud),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!context.mounted || destination == null) {
+      return;
+    }
+
+    final label = switch (destination) {
+      _BackupDestination.googleDrive => 'Google Drive',
+      _BackupDestination.iCloud => 'iCloud',
+    };
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$label backup is coming soon.')));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<SettingsViewModel>(
@@ -180,7 +225,7 @@ class SettingsScreen extends StatelessWidget {
               Card(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _openExternalUrl(context, _backupUri),
+                  onTap: () => _showBackupOptions(context),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -389,6 +434,35 @@ class SettingsScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+enum _BackupDestination { googleDrive, iCloud }
+
+class _SettingsSheetAction extends StatelessWidget {
+  const _SettingsSheetAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListTile(
+      leading: Icon(icon, size: 22, color: theme.colorScheme.primary),
+      title: Text(
+        label,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+      onTap: onTap,
     );
   }
 }

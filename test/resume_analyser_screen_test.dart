@@ -45,6 +45,52 @@ Finder _fieldByLabel(String label) {
 
 void main() {
   testWidgets(
+    'resume analyser shows a no-resume nudge and routes to home when tapped',
+    (tester) async {
+      final repository = _FakeAnalyserRepository(resumes: []);
+      final library = ResumeLibraryViewModel(repository: repository);
+      await library.loadResumes();
+
+      var wentHome = false;
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ResumeRepository>.value(value: repository),
+            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
+            Provider<ResumePdfService>.value(value: ResumePdfService()),
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+              value: library,
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: ResumeAnalyserScreen(
+                onOpenResumeBuilder: () {},
+                onGoToHomeTab: () => wentHome = true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('No resume available right now.'), findsOneWidget);
+      expect(
+        find.byKey(const Key('optimize-empty-go-home-button')),
+        findsOneWidget,
+      );
+      expect(find.text('Create a resume'), findsNothing);
+      expect(find.text('Go to Home'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('optimize-empty-go-home-button')));
+      await tester.pumpAndSettle();
+
+      expect(wentHome, isTrue);
+    },
+  );
+
+  testWidgets(
     'resume analyser opens preview, asks for a title on new copy, and clears the optimize screen on return',
     (tester) async {
       final untouchedResume =

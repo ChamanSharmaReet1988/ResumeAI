@@ -8,9 +8,14 @@ import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
 
 class ResumeAnalyserScreen extends StatefulWidget {
-  const ResumeAnalyserScreen({super.key, required this.onOpenResumeBuilder});
+  const ResumeAnalyserScreen({
+    super.key,
+    required this.onOpenResumeBuilder,
+    this.onGoToHomeTab,
+  });
 
   final VoidCallback onOpenResumeBuilder;
+  final VoidCallback? onGoToHomeTab;
 
   @override
   State<ResumeAnalyserScreen> createState() => _ResumeAnalyserScreenState();
@@ -18,7 +23,11 @@ class ResumeAnalyserScreen extends StatefulWidget {
 
 @Deprecated('Use ResumeAnalyserScreen instead.')
 class AiAssistanceScreen extends ResumeAnalyserScreen {
-  const AiAssistanceScreen({super.key, required super.onOpenResumeBuilder});
+  const AiAssistanceScreen({
+    super.key,
+    required super.onOpenResumeBuilder,
+    super.onGoToHomeTab,
+  });
 }
 
 enum _OptimizedResumeSaveChoice { newCopy, existingResume }
@@ -186,6 +195,40 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (resumes.isEmpty) ...[
+            Card(
+              child: InkWell(
+                key: const Key('optimize-empty-go-home-button'),
+                borderRadius: BorderRadius.circular(12),
+                onTap: widget.onGoToHomeTab,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 14, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'No resume available right now.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Create a resume first, then come back here to optimize it for a job description.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (resumes.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -327,11 +370,6 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
               child: LinearProgressIndicator(),
             ),
           const SizedBox(height: 20),
-          if (resumes.isEmpty)
-            FilledButton.tonal(
-              onPressed: widget.onOpenResumeBuilder,
-              child: const Text('Create a resume'),
-            ),
           if (_appliedChanges.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(

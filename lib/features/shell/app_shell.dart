@@ -39,6 +39,13 @@ class _AppShellState extends State<AppShell> {
     setState(() => _currentIndex = index);
   }
 
+  void _goToHomeResumeTab() {
+    setState(() {
+      _currentIndex = 0;
+      _homeSegment = HomeSegment.resumes;
+    });
+  }
+
   String get _activeHeaderTitle {
     return switch (_currentIndex) {
       2 => 'Optimize Resume',
@@ -283,7 +290,10 @@ class _AppShellState extends State<AppShell> {
             _openCoverLetterContent(seed: coverLetter),
       ),
       TemplatesScreen(onCreateResume: () => _openBuilder()),
-      ResumeAnalyserScreen(onOpenResumeBuilder: () => _openBuilder()),
+      ResumeAnalyserScreen(
+        onOpenResumeBuilder: () => _openBuilder(),
+        onGoToHomeTab: _goToHomeResumeTab,
+      ),
       const SettingsScreen(),
     ];
 
