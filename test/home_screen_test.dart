@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/home/home_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
@@ -12,6 +14,12 @@ class _FakeHomeRepository implements ResumeRepository {
 
   final List<ResumeData> resumes;
   final List<CoverLetterData> coverLetters;
+
+  @override
+  void configureICloudAutoSync({
+    required AppPreferences appPreferences,
+    required ICloudResumeService service,
+  }) {}
 
   @override
   Future<void> deleteCoverLetter(String id) async {
@@ -33,7 +41,10 @@ class _FakeHomeRepository implements ResumeRepository {
   Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {}
 
   @override
-  Future<void> upsertResume(ResumeData resume) async {
+  Future<void> upsertResume(
+    ResumeData resume, {
+    bool scheduleAutoSync = true,
+  }) async {
     resumes.removeWhere((item) => item.id == resume.id);
     resumes.add(resume);
   }
@@ -43,12 +54,13 @@ void main() {
   testWidgets('resume card opens actions and preview uses the open option', (
     tester,
   ) async {
-    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
-      id: 'resume-1',
-      title: 'Product Designer Resume',
-      fullName: 'Avery Lee',
-      jobTitle: 'Product Designer',
-    );
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate)
+        .copyWith(
+          id: 'resume-1',
+          title: 'Product Designer Resume',
+          fullName: 'Avery Lee',
+          jobTitle: 'Product Designer',
+        );
     final repository = _FakeHomeRepository(resumes: [resume]);
     final resumeLibrary = ResumeLibraryViewModel(repository: repository);
     final coverLetterLibrary = CoverLetterLibraryViewModel(
@@ -107,12 +119,13 @@ void main() {
   testWidgets('resume card rename option updates the saved title', (
     tester,
   ) async {
-    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
-      id: 'resume-1',
-      title: 'Product Designer Resume',
-      fullName: 'Avery Lee',
-      jobTitle: 'Product Designer',
-    );
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate)
+        .copyWith(
+          id: 'resume-1',
+          title: 'Product Designer Resume',
+          fullName: 'Avery Lee',
+          jobTitle: 'Product Designer',
+        );
     final repository = _FakeHomeRepository(resumes: [resume]);
     final resumeLibrary = ResumeLibraryViewModel(repository: repository);
     final coverLetterLibrary = CoverLetterLibraryViewModel(
@@ -162,78 +175,83 @@ void main() {
     await tester.tap(find.text('Rename'));
     await tester.pumpAndSettle();
 
-    expect(resumeLibrary.resumes.single.title, 'Senior Product Designer Resume');
+    expect(
+      resumeLibrary.resumes.single.title,
+      'Senior Product Designer Resume',
+    );
     expect(find.text('Senior Product Designer Resume'), findsOneWidget);
     expect(find.text('Resume renamed.'), findsOneWidget);
   });
 
-  testWidgets('resume card duplicate option asks for title and creates a copy', (
-    tester,
-  ) async {
-    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
-      id: 'resume-1',
-      title: 'Product Designer Resume',
-      fullName: 'Avery Lee',
-      jobTitle: 'Product Designer',
-    );
-    final repository = _FakeHomeRepository(resumes: [resume]);
-    final resumeLibrary = ResumeLibraryViewModel(repository: repository);
-    final coverLetterLibrary = CoverLetterLibraryViewModel(
-      repository: repository,
-    );
-    await resumeLibrary.loadResumes();
-    await coverLetterLibrary.loadCoverLetters();
+  testWidgets(
+    'resume card duplicate option asks for title and creates a copy',
+    (tester) async {
+      final resume = ResumeData.empty(template: ResumeTemplate.corporate)
+          .copyWith(
+            id: 'resume-1',
+            title: 'Product Designer Resume',
+            fullName: 'Avery Lee',
+            jobTitle: 'Product Designer',
+          );
+      final repository = _FakeHomeRepository(resumes: [resume]);
+      final resumeLibrary = ResumeLibraryViewModel(repository: repository);
+      final coverLetterLibrary = CoverLetterLibraryViewModel(
+        repository: repository,
+      );
+      await resumeLibrary.loadResumes();
+      await coverLetterLibrary.loadCoverLetters();
 
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-            value: resumeLibrary,
-          ),
-          ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
-            value: coverLetterLibrary,
-          ),
-        ],
-        child: MaterialApp(
-          home: Scaffold(
-            body: HomeScreen(
-              currentSegment: HomeSegment.resumes,
-              onSegmentChanged: (_) {},
-              onOpenResume: (_) {},
-              onPreviewResume: (_) {},
-              onPreviewCoverLetter: (_) {},
-              onEditCoverLetter: (_) {},
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+              value: resumeLibrary,
+            ),
+            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
+              value: coverLetterLibrary,
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: HomeScreen(
+                currentSegment: HomeSegment.resumes,
+                onSegmentChanged: (_) {},
+                onOpenResume: (_) {},
+                onPreviewResume: (_) {},
+                onPreviewCoverLetter: (_) {},
+                onEditCoverLetter: (_) {},
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Product Designer Resume'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Product Designer Resume'));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Duplicate'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Duplicate'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Duplicate resume'), findsOneWidget);
+      expect(find.text('Duplicate resume'), findsOneWidget);
 
-    await tester.enterText(
-      find.byKey(const Key('duplicate-resume-title-field')),
-      'Senior Product Designer Resume Copy',
-    );
-    await tester.tap(find.text('Duplicate'));
-    await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('duplicate-resume-title-field')),
+        'Senior Product Designer Resume Copy',
+      );
+      await tester.tap(find.text('Duplicate'));
+      await tester.pumpAndSettle();
 
-    expect(resumeLibrary.resumes, hasLength(2));
-    expect(
-      resumeLibrary.resumes.any(
-        (item) => item.title == 'Senior Product Designer Resume Copy',
-      ),
-      isTrue,
-    );
-    expect(find.text('Resume duplicated.'), findsOneWidget);
-  });
+      expect(resumeLibrary.resumes, hasLength(2));
+      expect(
+        resumeLibrary.resumes.any(
+          (item) => item.title == 'Senior Product Designer Resume Copy',
+        ),
+        isTrue,
+      );
+      expect(find.text('Resume duplicated.'), findsOneWidget);
+    },
+  );
 
   testWidgets('cover letter card routes open to preview and edit to content', (
     tester,
@@ -319,12 +337,13 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
-      id: 'resume-1',
-      title: 'Product Designer Resume',
-      fullName: 'Avery Lee',
-      jobTitle: 'Product Designer',
-    );
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate)
+        .copyWith(
+          id: 'resume-1',
+          title: 'Product Designer Resume',
+          fullName: 'Avery Lee',
+          jobTitle: 'Product Designer',
+        );
     final repository = _FakeHomeRepository(resumes: [resume]);
     final resumeLibrary = ResumeLibraryViewModel(repository: repository);
     final coverLetterLibrary = CoverLetterLibraryViewModel(

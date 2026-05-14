@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/builder/resume_builder_screen.dart';
 import 'package:resume_app/features/builder/resume_preview_screen.dart';
@@ -12,6 +13,12 @@ import 'package:resume_app/features/shared/view_models.dart';
 class _FakeResumeRepository implements ResumeRepository {
   final List<ResumeData> savedResumes = [];
   final List<CoverLetterData> savedCoverLetters = [];
+
+  @override
+  void configureICloudAutoSync({
+    required AppPreferences appPreferences,
+    required ICloudResumeService service,
+  }) {}
 
   @override
   Future<void> deleteCoverLetter(String id) async {}
@@ -31,7 +38,10 @@ class _FakeResumeRepository implements ResumeRepository {
   }
 
   @override
-  Future<void> upsertResume(ResumeData resume) async {
+  Future<void> upsertResume(
+    ResumeData resume, {
+    bool scheduleAutoSync = true,
+  }) async {
     savedResumes.add(resume);
   }
 }
@@ -88,9 +98,7 @@ void main() {
           ChangeNotifierProvider<ResumeEditorViewModel>(
             create: (_) => viewModel,
           ),
-          Provider<AppPreferences>.value(
-            value: AppPreferences.inMemory(),
-          ),
+          Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
         ],
         child: const MaterialApp(home: ResumeBuilderScreen()),
       ),
@@ -117,8 +125,7 @@ void main() {
 
   Finder textFieldByLabel(String label) {
     return find.byWidgetPredicate(
-      (widget) =>
-          widget is TextField && widget.decoration?.labelText == label,
+      (widget) => widget is TextField && widget.decoration?.labelText == label,
       description: 'TextField with label $label',
     );
   }
@@ -229,9 +236,7 @@ void main() {
     expect(find.text('Beta Institute'), findsWidgets);
   });
 
-  testWidgets('projects show bullet points input only', (
-    tester,
-  ) async {
+  testWidgets('projects show bullet points input only', (tester) async {
     viewModel.setStep(4);
 
     await pumpBuilder(tester);
@@ -311,32 +316,33 @@ void main() {
     expect(find.text('OK'), findsOneWidget);
   });
 
-  testWidgets(
-    'custom section category saves title and content on the resume',
-    (tester) async {
-      viewModel.addCustomSectionWithTitle('Certifications');
-      viewModel.setStep(5);
+  testWidgets('custom section category saves title and content on the resume', (
+    tester,
+  ) async {
+    viewModel.addCustomSectionWithTitle('Certifications');
+    viewModel.setStep(5);
 
-      await pumpBuilder(tester);
+    await pumpBuilder(tester);
 
-      expect(find.text('Resume Preview'), findsNothing);
+    expect(find.text('Resume Preview'), findsNothing);
 
-      await tester.enterText(
-        find.byKey(const Key('custom-section-content-0')),
-        'Google UX Certificate, AWS Cloud Practitioner',
-      );
-      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+    await tester.enterText(
+      find.byKey(const Key('custom-section-content-0')),
+      'Google UX Certificate, AWS Cloud Practitioner',
+    );
+    await tester.pumpAndSettle(const Duration(milliseconds: 300));
 
-      expect(viewModel.resume.customSections, hasLength(1));
-      expect(viewModel.resume.customSections.first.title, 'Certifications');
-      expect(
-        viewModel.resume.customSections.first.content,
-        'Google UX Certificate, AWS Cloud Practitioner',
-      );
-    },
-  );
+    expect(viewModel.resume.customSections, hasLength(1));
+    expect(viewModel.resume.customSections.first.title, 'Certifications');
+    expect(
+      viewModel.resume.customSections.first.content,
+      'Google UX Certificate, AWS Cloud Practitioner',
+    );
+  });
 
-  testWidgets('custom sections can be reordered via view model', (tester) async {
+  testWidgets('custom sections can be reordered via view model', (
+    tester,
+  ) async {
     viewModel.updateResume(
       (resume) => resume.copyWith(
         customSections: const [
@@ -428,12 +434,8 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<ResumeEditorViewModel>.value(
-            value: viewModel,
-          ),
-          Provider<AppPreferences>.value(
-            value: AppPreferences.inMemory(),
-          ),
+          ChangeNotifierProvider<ResumeEditorViewModel>.value(value: viewModel),
+          Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
         ],
         child: MaterialApp(
           home: Builder(

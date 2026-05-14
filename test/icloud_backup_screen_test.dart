@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/settings/icloud_backup_screen.dart';
@@ -12,6 +13,12 @@ class _FakeICloudRepository implements ResumeRepository {
   _FakeICloudRepository({required this.resumes});
 
   final List<ResumeData> resumes;
+
+  @override
+  void configureICloudAutoSync({
+    required AppPreferences appPreferences,
+    required ICloudResumeService service,
+  }) {}
 
   @override
   Future<void> deleteCoverLetter(String id) async {}
@@ -25,34 +32,36 @@ class _FakeICloudRepository implements ResumeRepository {
   Future<List<CoverLetterData>> loadCoverLetters() async => const [];
 
   @override
-  Future<List<ResumeData>> loadResumes() async => List<ResumeData>.from(resumes);
+  Future<List<ResumeData>> loadResumes() async =>
+      List<ResumeData>.from(resumes);
 
   @override
   Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {}
 
   @override
-  Future<void> upsertResume(ResumeData resume) async {
+  Future<void> upsertResume(
+    ResumeData resume, {
+    bool scheduleAutoSync = true,
+  }) async {
     resumes.removeWhere((item) => item.id == resume.id);
     resumes.add(resume);
   }
 }
 
 class _FakeICloudResumeService implements ICloudResumeService {
-  _FakeICloudResumeService({
-    required this.cloudPayloads,
-    bool available = true,
-  }) : cloudSummaries = cloudPayloads.values
-           .map(
-             (resume) => ICloudResumeSummary(
-               id: resume.id,
-               title: resume.title,
-               createdAt: resume.createdAt,
-               updatedAt: resume.updatedAt,
-               isDownloaded: true,
-             ),
-           )
-           .toList(),
-       _available = available;
+  _FakeICloudResumeService({required this.cloudPayloads, bool available = true})
+    : cloudSummaries = cloudPayloads.values
+          .map(
+            (resume) => ICloudResumeSummary(
+              id: resume.id,
+              title: resume.title,
+              createdAt: resume.createdAt,
+              updatedAt: resume.updatedAt,
+              isDownloaded: true,
+            ),
+          )
+          .toList(),
+      _available = available;
 
   final bool _available;
   final Map<String, ResumeData> cloudPayloads;
@@ -97,14 +106,13 @@ void main() {
   testWidgets('downloads newer iCloud resume into local storage', (
     tester,
   ) async {
-    final localResume = ResumeData.empty(
-      template: ResumeTemplate.corporate,
-    ).copyWith(
-      id: 'resume-1',
-      title: 'Local Resume',
-      summary: 'Local summary',
-      updatedAt: DateTime(2026, 5, 10),
-    );
+    final localResume = ResumeData.empty(template: ResumeTemplate.corporate)
+        .copyWith(
+          id: 'resume-1',
+          title: 'Local Resume',
+          summary: 'Local summary',
+          updatedAt: DateTime(2026, 5, 10),
+        );
     final cloudResume = localResume.copyWith(
       title: 'Cloud Resume',
       summary: 'Cloud summary',
@@ -120,6 +128,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
           Provider<ResumeRepository>.value(value: repository),
           Provider<ICloudResumeService>.value(value: service),
           ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
@@ -129,7 +138,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Update available'), findsOneWidget);
     await tester.tap(find.text('Download'));
     await tester.pumpAndSettle();
 
@@ -138,48 +146,77 @@ void main() {
     expect(repository.resumes.single.lastSyncedAt, isNotNull);
   });
 
-  testWidgets('sync uploads only local resumes that are not older than iCloud', (
-    tester,
-  ) async {
-    final localNewer = ResumeData.empty(
-      template: ResumeTemplate.corporate,
-    ).copyWith(
-      id: 'resume-1',
-      title: 'Newer Local',
-      updatedAt: DateTime(2026, 5, 12),
-    );
-    final localOnly = ResumeData.empty(
-      template: ResumeTemplate.corporate,
-    ).copyWith(
-      id: 'resume-2',
-      title: 'Local Only',
-      updatedAt: DateTime(2026, 5, 11),
-    );
-    final localOlder = ResumeData.empty(
-      template: ResumeTemplate.corporate,
-    ).copyWith(
-      id: 'resume-3',
-      title: 'Older Local',
-      updatedAt: DateTime(2026, 5, 10),
-    );
-    final cloudNewer = localOlder.copyWith(updatedAt: DateTime(2026, 5, 13));
-    final cloudOlder = localNewer.copyWith(updatedAt: DateTime(2026, 5, 9));
+  testWidgets(
+    'sync uploads only local resumes that are not older than iCloud',
+    (tester) async {
+      final localNewer = ResumeData.empty(template: ResumeTemplate.corporate)
+          .copyWith(
+            id: 'resume-1',
+            title: 'Newer Local',
+            updatedAt: DateTime(2026, 5, 12),
+          );
+      final localOnly = ResumeData.empty(template: ResumeTemplate.corporate)
+          .copyWith(
+            id: 'resume-2',
+            title: 'Local Only',
+            updatedAt: DateTime(2026, 5, 11),
+          );
+      final localOlder = ResumeData.empty(template: ResumeTemplate.corporate)
+          .copyWith(
+            id: 'resume-3',
+            title: 'Older Local',
+            updatedAt: DateTime(2026, 5, 10),
+          );
+      final cloudNewer = localOlder.copyWith(updatedAt: DateTime(2026, 5, 13));
+      final cloudOlder = localNewer.copyWith(updatedAt: DateTime(2026, 5, 9));
 
-    final repository = _FakeICloudRepository(
-      resumes: [localNewer, localOnly, localOlder],
-    );
+      final repository = _FakeICloudRepository(
+        resumes: [localNewer, localOnly, localOlder],
+      );
+      final library = ResumeLibraryViewModel(repository: repository);
+      await library.loadResumes();
+      final service = _FakeICloudResumeService(
+        cloudPayloads: {cloudNewer.id: cloudNewer, cloudOlder.id: cloudOlder},
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
+            Provider<ResumeRepository>.value(value: repository),
+            Provider<ICloudResumeService>.value(value: service),
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+              value: library,
+            ),
+          ],
+          child: const MaterialApp(home: ICloudBackupScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Sync'));
+      await tester.pumpAndSettle();
+
+      expect(service.uploadedBatches, hasLength(1));
+      expect(
+        service.uploadedBatches.single,
+        containsAll(['resume-1', 'resume-2']),
+      );
+      expect(service.uploadedBatches.single, isNot(contains('resume-3')));
+    },
+  );
+
+  testWidgets('auto sync switch persists to app preferences', (tester) async {
+    final repository = _FakeICloudRepository(resumes: const []);
     final library = ResumeLibraryViewModel(repository: repository);
     await library.loadResumes();
-    final service = _FakeICloudResumeService(
-      cloudPayloads: {
-        cloudNewer.id: cloudNewer,
-        cloudOlder.id: cloudOlder,
-      },
-    );
+    final service = _FakeICloudResumeService(cloudPayloads: const {});
+    final preferences = AppPreferences.inMemory();
 
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          Provider<AppPreferences>.value(value: preferences),
           Provider<ResumeRepository>.value(value: repository),
           Provider<ICloudResumeService>.value(value: service),
           ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
@@ -189,11 +226,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Sync to iCloud'));
+    expect(preferences.iCloudAutoSyncEnabled, isFalse);
+
+    await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
 
-    expect(service.uploadedBatches, hasLength(1));
-    expect(service.uploadedBatches.single, containsAll(['resume-1', 'resume-2']));
-    expect(service.uploadedBatches.single, isNot(contains('resume-3')));
+    expect(preferences.iCloudAutoSyncEnabled, isTrue);
   });
 }

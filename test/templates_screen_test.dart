@@ -3,11 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/shared/view_models.dart';
 import 'package:resume_app/features/templates/templates_screen.dart';
 
 class _FakeTemplatesRepository implements ResumeRepository {
+  @override
+  void configureICloudAutoSync({
+    required AppPreferences appPreferences,
+    required ICloudResumeService service,
+  }) {}
+
   @override
   Future<void> deleteCoverLetter(String id) async {}
 
@@ -24,7 +32,10 @@ class _FakeTemplatesRepository implements ResumeRepository {
   Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {}
 
   @override
-  Future<void> upsertResume(ResumeData resume) async {}
+  Future<void> upsertResume(
+    ResumeData resume, {
+    bool scheduleAutoSync = true,
+  }) async {}
 }
 
 void main() {

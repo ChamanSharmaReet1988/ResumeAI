@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/job_search_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/jobs/jobs_screen.dart';
@@ -12,6 +14,12 @@ class _FakeJobsRepository implements ResumeRepository {
   _FakeJobsRepository({required this.resumes});
 
   final List<ResumeData> resumes;
+
+  @override
+  void configureICloudAutoSync({
+    required AppPreferences appPreferences,
+    required ICloudResumeService service,
+  }) {}
 
   @override
   Future<void> deleteCoverLetter(String id) async {}
@@ -29,7 +37,10 @@ class _FakeJobsRepository implements ResumeRepository {
   Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {}
 
   @override
-  Future<void> upsertResume(ResumeData resume) async {}
+  Future<void> upsertResume(
+    ResumeData resume, {
+    bool scheduleAutoSync = true,
+  }) async {}
 }
 
 class _FakeJobSearchService extends JobSearchService {
@@ -46,7 +57,8 @@ class _FakeJobSearchService extends JobSearchService {
         title: query,
         company: 'Example Co',
         location: normalizedLocation,
-        applyUrl: 'https://example.com/jobs/${query.toLowerCase().replaceAll(' ', '-')}',
+        applyUrl:
+            'https://example.com/jobs/${query.toLowerCase().replaceAll(' ', '-')}',
         source: 'Remotive',
         postedAt: DateTime.now().toUtc(),
         tags: {query.toLowerCase()},

@@ -3,12 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/cover_letters/cover_letter_editor_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
 
 class _FakeCoverLetterRepository implements ResumeRepository {
   final List<CoverLetterData> savedCoverLetters = [];
+
+  @override
+  void configureICloudAutoSync({
+    required AppPreferences appPreferences,
+    required ICloudResumeService service,
+  }) {}
 
   @override
   Future<void> deleteCoverLetter(String id) async {}
@@ -28,7 +36,10 @@ class _FakeCoverLetterRepository implements ResumeRepository {
   }
 
   @override
-  Future<void> upsertResume(ResumeData resume) async {}
+  Future<void> upsertResume(
+    ResumeData resume, {
+    bool scheduleAutoSync = true,
+  }) async {}
 }
 
 Finder _textFieldByLabel(String label) {

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_import_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/shell/app_shell.dart';
@@ -12,6 +13,12 @@ import 'package:resume_app/features/shared/view_models.dart';
 class _FakeAppShellRepository implements ResumeRepository {
   final List<ResumeData> resumes = [];
   final List<CoverLetterData> coverLetters = [];
+
+  @override
+  void configureICloudAutoSync({
+    required AppPreferences appPreferences,
+    required ICloudResumeService service,
+  }) {}
 
   @override
   Future<void> deleteCoverLetter(String id) async {
@@ -36,7 +43,10 @@ class _FakeAppShellRepository implements ResumeRepository {
   }
 
   @override
-  Future<void> upsertResume(ResumeData resume) async {
+  Future<void> upsertResume(
+    ResumeData resume, {
+    bool scheduleAutoSync = true,
+  }) async {
     resumes.removeWhere((item) => item.id == resume.id);
     resumes.add(resume);
   }

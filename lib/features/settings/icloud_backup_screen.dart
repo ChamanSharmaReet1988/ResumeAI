@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/resume_models.dart';
+import '../../core/services/app_preferences.dart';
 import '../../core/services/icloud_resume_service.dart';
 import '../../core/services/resume_services.dart';
 import '../shared/view_models.dart';
@@ -18,15 +19,26 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
   bool _isLoading = true;
   bool _isAvailable = false;
   bool _isSyncing = false;
+  bool _autoSyncEnabled = false;
   Set<String> _downloadingIds = <String>{};
   List<ICloudResumeSummary> _cloudResumes = const [];
 
   ICloudResumeService get _service => context.read<ICloudResumeService>();
+  AppPreferences get _preferences => context.read<AppPreferences>();
 
   @override
   void initState() {
     super.initState();
+    _autoSyncEnabled = _preferences.iCloudAutoSyncEnabled;
     _loadCloudResumes();
+  }
+
+  Future<void> _setAutoSyncEnabled(bool value) async {
+    await _preferences.setICloudAutoSyncEnabled(value);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _autoSyncEnabled = value);
   }
 
   Future<void> _loadCloudResumes() async {
@@ -88,7 +100,10 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
         if (!uploadedIds.contains(resume.id)) {
           continue;
         }
-        await repository.upsertResume(resume.copyWith(lastSyncedAt: syncedAt));
+        await repository.upsertResume(
+          resume.copyWith(lastSyncedAt: syncedAt),
+          scheduleAutoSync: false,
+        );
       }
 
       await library.loadResumes();
@@ -125,6 +140,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
       final downloaded = await _service.downloadResume(item.id);
       await repository.upsertResume(
         downloaded.copyWith(lastSyncedAt: DateTime.now()),
+        scheduleAutoSync: false,
       );
       await library.loadResumes();
       await _loadCloudResumes();
@@ -162,6 +178,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
           : RefreshIndicator(
               onRefresh: _loadCloudResumes,
               child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
                 children: [
                   Card(
@@ -187,18 +204,71 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                             ),
                           ),
                           FilledButton(
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size(0, 34),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              textStyle: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                             onPressed: !_isAvailable || _isSyncing
                                 ? null
                                 : _syncToICloud,
                             child: _isSyncing
                                 ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
+                                    width: 14,
+                                    height: 14,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                     ),
                                   )
                                 : const Text('Sync'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Auto Sync',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Sync resumes to iCloud after create and edit.',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize:
+                                        (theme.textTheme.bodySmall?.fontSize ??
+                                            12) -
+                                        1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: _autoSyncEnabled,
+                            onChanged:
+                                _isAvailable ? _setAutoSyncEnabled : null,
                           ),
                         ],
                       ),
@@ -297,15 +367,21 @@ class _CloudResumeRow extends StatelessWidget {
     final title = summary.title.trim().isEmpty
         ? ResumeData.defaultTitle
         : summary.title.trim();
-    final subtitleStyle = theme.textTheme.bodySmall;
+    final metadataStyle = theme.textTheme.bodySmall?.copyWith(
+      fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 2,
+      height: 1.2,
+    );
 
     final (statusText, buttonText, isDownloadEnabled) = switch (status) {
       _CloudResumeStatus.cloudOnly => ('Cloud only', 'Download', true),
       _CloudResumeStatus.cloudNewer => ('Update available', 'Download', true),
-      _CloudResumeStatus.localNewer => ('Local newer', 'Up to date', false),
-      _CloudResumeStatus.synced => ('Synced', 'Up to date', false),
+      _CloudResumeStatus.localNewer => (
+        'Local changes found',
+        'Downloaded',
+        false,
+      ),
+      _CloudResumeStatus.synced => ('In sync', 'Downloaded', false),
     };
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -316,26 +392,32 @@ class _CloudResumeRow extends StatelessWidget {
               Text(title, style: theme.textTheme.titleSmall),
               const SizedBox(height: 6),
               Text(
-                'Created ${dateFormat.format(summary.createdAt)}',
-                style: subtitleStyle,
+                'Updated: ${dateFormat.format(summary.updatedAt)}',
+                style: metadataStyle,
               ),
-              const SizedBox(height: 2),
-              Text(
-                'Updated ${dateFormat.format(summary.updatedAt)}',
-                style: subtitleStyle,
-              ),
-              const SizedBox(height: 8),
-              Text(statusText, style: subtitleStyle),
+              if (statusText.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(statusText, style: metadataStyle),
+              ],
             ],
           ),
         ),
         const SizedBox(width: 12),
         FilledButton(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            textStyle: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           onPressed: !isDownloadEnabled || isBusy ? null : onDownload,
           child: isBusy
               ? const SizedBox(
-                  width: 16,
-                  height: 16,
+                  width: 14,
+                  height: 14,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : Text(buttonText),

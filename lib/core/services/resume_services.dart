@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -11,9 +12,11 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'app_preferences.dart';
 import '../corporate_resume_style.dart';
 import '../models/resume_models.dart';
 import '../resume_text_font.dart';
+import 'icloud_resume_service.dart';
 import 'resume_pdf/resume_pdf_theme.dart';
 
 part 'resume_pdf/resume_pdf_template_pages.dart';
@@ -1490,12 +1493,27 @@ class ResumeRepository {
 
   final Box<dynamic> _resumeBox;
   final Box<dynamic> _coverLetterBox;
+  AppPreferences? _appPreferences;
+  ICloudResumeService? _iCloudResumeService;
+  Timer? _iCloudAutoSyncTimer;
+  bool _isFlushingICloudAutoSync = false;
+  final Set<String> _pendingICloudResumeIds = <String>{};
+
+  static const Duration _iCloudAutoSyncDebounce = Duration(seconds: 2);
 
   static Future<ResumeRepository> create() async {
     await Hive.initFlutter();
     final resumeBox = await Hive.openBox<dynamic>('resume_library');
     final coverLetterBox = await Hive.openBox<dynamic>('cover_letter_library');
     return ResumeRepository._(resumeBox, coverLetterBox);
+  }
+
+  void configureICloudAutoSync({
+    required AppPreferences appPreferences,
+    required ICloudResumeService service,
+  }) {
+    _appPreferences = appPreferences;
+    _iCloudResumeService = service;
   }
 
   Future<List<ResumeData>> loadResumes() async {
@@ -1508,12 +1526,98 @@ class ResumeRepository {
     return items;
   }
 
-  Future<void> upsertResume(ResumeData resume) async {
+  Future<void> upsertResume(
+    ResumeData resume, {
+    bool scheduleAutoSync = true,
+  }) async {
     await _resumeBox.put(resume.id, resume.toJson());
+    if (scheduleAutoSync) {
+      _scheduleICloudAutoSync(resume.id);
+    }
   }
 
   Future<void> deleteResume(String id) async {
     await _resumeBox.delete(id);
+  }
+
+  void _scheduleICloudAutoSync(String resumeId) {
+    if (!(_appPreferences?.iCloudAutoSyncEnabled ?? false)) {
+      return;
+    }
+
+    _pendingICloudResumeIds.add(resumeId);
+    _iCloudAutoSyncTimer?.cancel();
+    _iCloudAutoSyncTimer = Timer(_iCloudAutoSyncDebounce, () {
+      unawaited(_flushPendingICloudAutoSync());
+    });
+  }
+
+  Future<void> _flushPendingICloudAutoSync() async {
+    if (_isFlushingICloudAutoSync) {
+      return;
+    }
+
+    final appPreferences = _appPreferences;
+    final service = _iCloudResumeService;
+    if (appPreferences == null || service == null) {
+      return;
+    }
+
+    _isFlushingICloudAutoSync = true;
+    try {
+      while (_pendingICloudResumeIds.isNotEmpty) {
+        if (!appPreferences.iCloudAutoSyncEnabled) {
+          _pendingICloudResumeIds.clear();
+          return;
+        }
+
+        final pendingIds = Set<String>.from(_pendingICloudResumeIds);
+        _pendingICloudResumeIds.clear();
+
+        if (!await service.isAvailable()) {
+          return;
+        }
+
+        final localResumes = await loadResumes();
+        final resumesToConsider = localResumes
+            .where((resume) => pendingIds.contains(resume.id))
+            .toList();
+        if (resumesToConsider.isEmpty) {
+          continue;
+        }
+
+        final cloudById = {
+          for (final item in await service.listResumes()) item.id: item,
+        };
+        final resumesToUpload = resumesToConsider.where((resume) {
+          final cloud = cloudById[resume.id];
+          return cloud == null || !cloud.updatedAt.isAfter(resume.updatedAt);
+        }).toList();
+        if (resumesToUpload.isEmpty) {
+          continue;
+        }
+
+        final uploadedIds = await service.uploadResumes(resumesToUpload);
+        if (uploadedIds.isEmpty) {
+          continue;
+        }
+
+        final syncedAt = DateTime.now();
+        for (final resume in resumesToUpload) {
+          if (!uploadedIds.contains(resume.id)) {
+            continue;
+          }
+          await upsertResume(
+            resume.copyWith(lastSyncedAt: syncedAt),
+            scheduleAutoSync: false,
+          );
+        }
+      }
+    } catch (_) {
+      // Keep local writes resilient; iCloud sync failures should not break saves.
+    } finally {
+      _isFlushingICloudAutoSync = false;
+    }
   }
 
   Future<List<CoverLetterData>> loadCoverLetters() async {

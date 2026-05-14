@@ -10,6 +10,7 @@ import '../shared/view_models.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+  static const String _appStoreId = '6768385894';
   static final Uri _privacyPolicyUri = Uri.parse(
     'https://sites.google.com/mindplexapp.com/resumeapp/privacy-policy',
   );
@@ -17,9 +18,16 @@ class SettingsScreen extends StatelessWidget {
     'https://sites.google.com/mindplexapp.com/resumeapp/terms',
   );
   static final Uri _goPremiumUri = Uri.parse('https://resumeai.app/premium');
+  static final Uri _appStoreUri = Uri.parse(
+    'https://apps.apple.com/us/app/resume-builder/id6768385894',
+  );
+  static const String _shareSubject = 'ResumeApp';
+  static String get _shareMessage =>
+      'Check out ResumeApp to create, optimize, and share professional resumes on iPhone. '
+      'Get it on the App Store: ${_appStoreUri.toString()}';
 
   Uri _buildFeedbackMailtoUri() {
-    final subject = Uri.encodeComponent('ResumeAI App Feedback');
+    final subject = Uri.encodeComponent('ResumeApp Feedback');
     return Uri.parse('mailto:hello@mindplexapp.com?subject=$subject');
   }
 
@@ -53,18 +61,14 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _rateApp(BuildContext context) async {
     final review = InAppReview.instance;
-    final available = await review.isAvailable();
-    if (!context.mounted) {
-      return;
+    try {
+      await review.openStoreListing(appStoreId: _appStoreId);
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+      await _openExternalUrl(context, _appStoreUri);
     }
-    if (!available) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Rating is not available right now.')),
-      );
-      return;
-    }
-
-    await review.requestReview();
   }
 
   Future<void> _openExternalUrl(BuildContext context, Uri uri) async {
@@ -101,7 +105,11 @@ class SettingsScreen extends StatelessWidget {
       width: 2,
       height: 2,
     );
-    await Share.share('Check out ResumeAI app.', sharePositionOrigin: origin);
+    await Share.share(
+      _shareMessage,
+      subject: _shareSubject,
+      sharePositionOrigin: origin,
+    );
   }
 
   Future<void> _showBackupOptions(BuildContext context) async {
