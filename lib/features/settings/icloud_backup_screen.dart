@@ -189,6 +189,61 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                       ),
                       child: Row(
                         children: [
+                          Expanded(
+                            child: Text(
+                              'Auto sync',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Theme(
+                            data: theme.copyWith(
+                              switchTheme: SwitchThemeData(
+                                thumbColor:
+                                    WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return theme.colorScheme.onPrimary;
+                                  }
+                                  return theme.colorScheme.outline;
+                                }),
+                                trackColor:
+                                    WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return theme.colorScheme.primary;
+                                  }
+                                  return theme.colorScheme
+                                      .surfaceContainerHighest;
+                                }),
+                                trackOutlineColor:
+                                    WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return Colors.transparent;
+                                  }
+                                  return theme.colorScheme.outlineVariant;
+                                }),
+                              ),
+                            ),
+                            child: Switch(
+                              value: _autoSyncEnabled,
+                              onChanged: _isAvailable
+                                  ? _setAutoSyncEnabled
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        children: [
                           Icon(
                             Icons.cloud_done_outlined,
                             size: 22,
@@ -228,47 +283,6 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                                     ),
                                   )
                                 : const Text('Sync'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Auto Sync',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Sync resumes to iCloud after create and edit.',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    fontSize:
-                                        (theme.textTheme.bodySmall?.fontSize ??
-                                            12) -
-                                        1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch.adaptive(
-                            value: _autoSyncEnabled,
-                            onChanged:
-                                _isAvailable ? _setAutoSyncEnabled : null,
                           ),
                         ],
                       ),
@@ -380,10 +394,10 @@ class _CloudResumeRow extends StatelessWidget {
         'Downloaded',
         false,
       ),
-      _CloudResumeStatus.synced => ('In sync', 'Downloaded', false),
+      _CloudResumeStatus.synced => ('', 'Downloaded', false),
     };
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
           child: Column(
