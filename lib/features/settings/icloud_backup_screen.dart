@@ -235,59 +235,61 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 14,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.cloud_done_outlined,
-                            size: 22,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Sync to iCloud',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w400,
+                  if (!_autoSyncEnabled) ...[
+                    const SizedBox(height: 12),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 14,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.cloud_done_outlined,
+                              size: 22,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Sync to iCloud',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w400,
+                                ),
                               ),
                             ),
-                          ),
-                          FilledButton(
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size(0, 34),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size(0, 34),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                textStyle: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              textStyle: theme.textTheme.bodySmall?.copyWith(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              onPressed: !_isAvailable || _isSyncing
+                                  ? null
+                                  : _syncToICloud,
+                              child: _isSyncing
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text('Sync'),
                             ),
-                            onPressed: !_isAvailable || _isSyncing
-                                ? null
-                                : _syncToICloud,
-                            child: _isSyncing
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Sync'),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 16),
                   if (!_isAvailable)
                     Card(
@@ -386,15 +388,11 @@ class _CloudResumeRow extends StatelessWidget {
       height: 1.2,
     );
 
-    final (statusText, buttonText, isDownloadEnabled) = switch (status) {
-      _CloudResumeStatus.cloudOnly => ('Cloud only', 'Download', true),
-      _CloudResumeStatus.cloudNewer => ('Update available', 'Download', true),
-      _CloudResumeStatus.localNewer => (
-        'Local changes found',
-        'Downloaded',
-        false,
-      ),
-      _CloudResumeStatus.synced => ('', 'Downloaded', false),
+    final (buttonText, isDownloadEnabled) = switch (status) {
+      _CloudResumeStatus.cloudOnly => ('Download', true),
+      _CloudResumeStatus.cloudNewer => ('Download', true),
+      _CloudResumeStatus.localNewer => ('Downloaded', false),
+      _CloudResumeStatus.synced => ('Downloaded', false),
     };
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -409,10 +407,6 @@ class _CloudResumeRow extends StatelessWidget {
                 'Updated: ${dateFormat.format(summary.updatedAt)}',
                 style: metadataStyle,
               ),
-              if (statusText.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(statusText, style: metadataStyle),
-              ],
             ],
           ),
         ),

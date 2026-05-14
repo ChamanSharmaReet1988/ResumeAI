@@ -19,10 +19,16 @@ class AppPreferences {
 
   static Future<AppPreferences> open() async {
     final box = await Hive.openBox<dynamic>('app_prefs');
+    if (!box.containsKey(_iCloudAutoSyncEnabledKey)) {
+      await box.put(_iCloudAutoSyncEnabledKey, false);
+    }
     return AppPreferences._(
       () => (box.get(_resumeOrderNudgeDismissedKey) as bool?) ?? false,
       (value) async => box.put(_resumeOrderNudgeDismissedKey, value),
-      () => (box.get(_iCloudAutoSyncEnabledKey) as bool?) ?? false,
+      () {
+        final v = box.get(_iCloudAutoSyncEnabledKey);
+        return v is bool ? v : false;
+      },
       (value) async => box.put(_iCloudAutoSyncEnabledKey, value),
     );
   }
