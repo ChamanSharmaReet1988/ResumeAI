@@ -52,6 +52,9 @@ dependencies:
   pdfrx: ^2.0.0
   in_app_review: ^2.0.11
   http: ^1.6.0
+  google_sign_in: ^7.2.0
+  googleapis: ^16.0.0
+  extension_google_sign_in_as_googleapis_auth: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -80,6 +83,7 @@ flutter:
   assets:
     - assets/fonts/delete.png
     - assets/premium_badge.png
+    - assets/images/google_drive_permission_example.png
     - assets/templates/
     # Bundled for PDF export ([resumePdfThemeForBodyFont]); also declared under fonts.
     - assets/fonts/inter/Inter-Variable.ttf

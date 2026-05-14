@@ -459,6 +459,8 @@ class ResumeData {
 
 const Object _resumeDateSentinel = Object();
 
+const Object _coverLetterDateSentinel = Object();
+
 class CoverLetterData {
   const CoverLetterData({
     required this.id,
@@ -470,6 +472,7 @@ class CoverLetterData {
     required this.language,
     required this.content,
     required this.updatedAt,
+    this.lastSyncedAt,
   });
 
   factory CoverLetterData.empty() {
@@ -483,6 +486,7 @@ class CoverLetterData {
       language: '',
       content: '',
       updatedAt: DateTime.now(),
+      lastSyncedAt: null,
     );
   }
 
@@ -502,6 +506,7 @@ class CoverLetterData {
       updatedAt:
           DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
           DateTime.now(),
+      lastSyncedAt: DateTime.tryParse(json['lastSyncedAt'] as String? ?? ''),
     );
   }
 
@@ -514,6 +519,7 @@ class CoverLetterData {
   final String language;
   final String content;
   final DateTime updatedAt;
+  final DateTime? lastSyncedAt;
 
   bool get hasMeaningfulContent =>
       title.trim().isNotEmpty ||
@@ -546,6 +552,7 @@ class CoverLetterData {
     String? language,
     String? content,
     DateTime? updatedAt,
+    Object? lastSyncedAt = _coverLetterDateSentinel,
   }) {
     return CoverLetterData(
       id: id ?? this.id,
@@ -557,6 +564,9 @@ class CoverLetterData {
       language: language ?? this.language,
       content: content ?? this.content,
       updatedAt: updatedAt ?? this.updatedAt,
+      lastSyncedAt: identical(lastSyncedAt, _coverLetterDateSentinel)
+          ? this.lastSyncedAt
+          : lastSyncedAt as DateTime?,
     );
   }
 
@@ -571,6 +581,7 @@ class CoverLetterData {
       'language': language,
       'content': content,
       'updatedAt': updatedAt.toIso8601String(),
+      'lastSyncedAt': lastSyncedAt?.toIso8601String(),
     };
   }
 }

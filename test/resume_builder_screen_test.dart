@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/builder/resume_builder_screen.dart';
@@ -13,6 +14,12 @@ import 'package:resume_app/features/shared/view_models.dart';
 class _FakeResumeRepository implements ResumeRepository {
   final List<ResumeData> savedResumes = [];
   final List<CoverLetterData> savedCoverLetters = [];
+
+  @override
+  void configureGoogleDriveAutoSync({
+    required AppPreferences appPreferences,
+    required GoogleDriveResumeService service,
+  }) {}
 
   @override
   void configureICloudAutoSync({
@@ -33,7 +40,10 @@ class _FakeResumeRepository implements ResumeRepository {
   Future<List<ResumeData>> loadResumes() async => const [];
 
   @override
-  Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {
+  Future<void> upsertCoverLetter(
+    CoverLetterData coverLetter, {
+    bool scheduleAutoSync = true,
+  }) async {
     savedCoverLetters.add(coverLetter);
   }
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../core/services/app_preferences.dart';
 import '../core/services/firebase_app_services.dart';
+import '../core/services/google_drive_resume_service.dart';
 import '../core/services/icloud_resume_service.dart';
 import '../core/services/job_search_service.dart';
 import '../core/services/resume_import_service.dart';
@@ -19,11 +20,13 @@ class ResumeApp extends StatelessWidget {
     required this.repository,
     required this.appPreferences,
     required this.firebaseServices,
+    required this.googleDriveResumeService,
   });
 
   final ResumeRepository repository;
   final AppPreferences appPreferences;
   final FirebaseAppServices firebaseServices;
+  final GoogleDriveResumeService googleDriveResumeService;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +39,9 @@ class ResumeApp extends StatelessWidget {
         Provider<FirebaseAppServices>.value(value: firebaseServices),
         Provider<ICloudResumeService>(
           create: (_) => const MethodChannelICloudResumeService(),
+        ),
+        Provider<GoogleDriveResumeService>.value(
+          value: googleDriveResumeService,
         ),
         Provider<ResumeImportService>(
           create: (_) => const ResumeImportService(),

@@ -4,15 +4,41 @@ import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/settings/icloud_backup_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
 
+Widget _icloudTestApp({
+  required ResumeRepository repository,
+  required ICloudResumeService service,
+  required ResumeLibraryViewModel resumeLibrary,
+}) {
+  return MultiProvider(
+    providers: [
+      Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
+      Provider<ResumeRepository>.value(value: repository),
+      Provider<ICloudResumeService>.value(value: service),
+      ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: resumeLibrary),
+      ChangeNotifierProvider<CoverLetterLibraryViewModel>(
+        create: (_) => CoverLetterLibraryViewModel(repository: repository),
+      ),
+    ],
+    child: const MaterialApp(home: ICloudBackupScreen()),
+  );
+}
+
 class _FakeICloudRepository implements ResumeRepository {
   _FakeICloudRepository({required this.resumes});
 
   final List<ResumeData> resumes;
+
+  @override
+  void configureGoogleDriveAutoSync({
+    required AppPreferences appPreferences,
+    required GoogleDriveResumeService service,
+  }) {}
 
   @override
   void configureICloudAutoSync({
@@ -36,7 +62,10 @@ class _FakeICloudRepository implements ResumeRepository {
       List<ResumeData>.from(resumes);
 
   @override
-  Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {}
+  Future<void> upsertCoverLetter(
+    CoverLetterData coverLetter, {
+    bool scheduleAutoSync = true,
+  }) async {}
 
   @override
   Future<void> upsertResume(
@@ -58,6 +87,7 @@ class _FakeICloudResumeService implements ICloudResumeService {
               createdAt: resume.createdAt,
               updatedAt: resume.updatedAt,
               isDownloaded: true,
+              isCoverLetter: false,
             ),
           )
           .toList(),
@@ -70,6 +100,11 @@ class _FakeICloudResumeService implements ICloudResumeService {
 
   @override
   Future<ResumeData> downloadResume(String id) async => cloudPayloads[id]!;
+
+  @override
+  Future<CoverLetterData> downloadCoverLetter(String id) async {
+    throw UnimplementedError();
+  }
 
   @override
   Future<bool> isAvailable() async => _available;
@@ -95,11 +130,16 @@ class _FakeICloudResumeService implements ICloudResumeService {
             createdAt: resume.createdAt,
             updatedAt: resume.updatedAt,
             isDownloaded: true,
+            isCoverLetter: false,
           ),
         )
         .toList();
     return ids;
   }
+
+  @override
+  Future<List<String>> uploadCoverLetters(List<CoverLetterData> coverLetters) async =>
+      coverLetters.map((c) => c.id).toList();
 }
 
 void main() {
@@ -126,14 +166,10 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
-          Provider<ResumeRepository>.value(value: repository),
-          Provider<ICloudResumeService>.value(value: service),
-          ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
-        ],
-        child: const MaterialApp(home: ICloudBackupScreen()),
+      _icloudTestApp(
+        repository: repository,
+        service: service,
+        resumeLibrary: library,
       ),
     );
     await tester.pumpAndSettle();
@@ -180,16 +216,10 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
-            Provider<ResumeRepository>.value(value: repository),
-            Provider<ICloudResumeService>.value(value: service),
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: library,
-            ),
-          ],
-          child: const MaterialApp(home: ICloudBackupScreen()),
+        _icloudTestApp(
+          repository: repository,
+          service: service,
+          resumeLibrary: library,
         ),
       );
       await tester.pumpAndSettle();
@@ -220,6 +250,9 @@ void main() {
           Provider<ResumeRepository>.value(value: repository),
           Provider<ICloudResumeService>.value(value: service),
           ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
+          ChangeNotifierProvider<CoverLetterLibraryViewModel>(
+            create: (_) => CoverLetterLibraryViewModel(repository: repository),
+          ),
         ],
         child: const MaterialApp(home: ICloudBackupScreen()),
       ),

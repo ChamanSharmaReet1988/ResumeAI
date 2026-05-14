@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/bottom_sheet_insets.dart';
+import 'google_drive_backup_screen.dart';
 import 'icloud_backup_screen.dart';
 import '../shared/view_models.dart';
 
@@ -112,50 +113,20 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _showBackupOptions(BuildContext context) async {
-    final destination = await showModalBottomSheet<_BackupDestination>(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: BottomSheetInsets.topSpacing),
-                _SettingsSheetAction(
-                  icon: Icons.cloud_queue_outlined,
-                  label: 'Google Drive',
-                  onTap: () =>
-                      Navigator.of(context).pop(_BackupDestination.googleDrive),
-                ),
-                _SettingsSheetAction(
-                  icon: Icons.cloud_done_outlined,
-                  label: 'iCloud',
-                  onTap: () =>
-                      Navigator.of(context).pop(_BackupDestination.iCloud),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (!context.mounted || destination == null) {
+  Future<void> _openBackup(BuildContext context) async {
+    if (!context.mounted) {
       return;
     }
-
-    if (destination == _BackupDestination.iCloud) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => const ICloudBackupScreen()),
       );
       return;
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google Drive backup is coming soon.')),
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const GoogleDriveBackupScreen(),
+      ),
     );
   }
 
@@ -165,6 +136,11 @@ class SettingsScreen extends StatelessWidget {
       builder: (context, settings, _) {
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
+        final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+        final backupLabel =
+            isIos ? 'iCloud Backup' : 'Google Drive Backup';
+        final backupIcon =
+            isIos ? Icons.cloud_done_outlined : Icons.cloud_queue_outlined;
         final rowLabelStyle = theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w400,
         );
@@ -236,7 +212,7 @@ class SettingsScreen extends StatelessWidget {
               Card(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _showBackupOptions(context),
+                  onTap: () => _openBackup(context),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -245,12 +221,14 @@ class SettingsScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.cloud_upload_outlined,
+                          backupIcon,
                           size: 22,
                           color: colorScheme.primary,
                         ),
                         const SizedBox(width: 12),
-                        Expanded(child: Text('Backup', style: rowLabelStyle)),
+                        Expanded(
+                          child: Text(backupLabel, style: rowLabelStyle),
+                        ),
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,
@@ -445,35 +423,6 @@ class SettingsScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-enum _BackupDestination { googleDrive, iCloud }
-
-class _SettingsSheetAction extends StatelessWidget {
-  const _SettingsSheetAction({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ListTile(
-      leading: Icon(icon, size: 22, color: theme.colorScheme.primary),
-      title: Text(
-        label,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-      onTap: onTap,
     );
   }
 }

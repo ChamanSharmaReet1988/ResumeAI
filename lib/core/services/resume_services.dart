@@ -16,6 +16,7 @@ import 'app_preferences.dart';
 import '../corporate_resume_style.dart';
 import '../models/resume_models.dart';
 import '../resume_text_font.dart';
+import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
 import 'resume_pdf/resume_pdf_theme.dart';
 
@@ -1498,8 +1499,15 @@ class ResumeRepository {
   Timer? _iCloudAutoSyncTimer;
   bool _isFlushingICloudAutoSync = false;
   final Set<String> _pendingICloudResumeIds = <String>{};
+  final Set<String> _pendingICloudCoverLetterIds = <String>{};
+
+  GoogleDriveResumeService? _googleDriveResumeService;
+  Timer? _googleDriveAutoSyncTimer;
+  bool _isFlushingGoogleDriveAutoSync = false;
+  final Set<String> _pendingGoogleDriveResumeIds = <String>{};
 
   static const Duration _iCloudAutoSyncDebounce = Duration(seconds: 2);
+  static const Duration _googleDriveAutoSyncDebounce = Duration(seconds: 2);
 
   static Future<ResumeRepository> create() async {
     await Hive.initFlutter();
@@ -1514,6 +1522,14 @@ class ResumeRepository {
   }) {
     _appPreferences = appPreferences;
     _iCloudResumeService = service;
+  }
+
+  void configureGoogleDriveAutoSync({
+    required AppPreferences appPreferences,
+    required GoogleDriveResumeService service,
+  }) {
+    _appPreferences = appPreferences;
+    _googleDriveResumeService = service;
   }
 
   Future<List<ResumeData>> loadResumes() async {
@@ -1532,7 +1548,8 @@ class ResumeRepository {
   }) async {
     await _resumeBox.put(resume.id, resume.toJson());
     if (scheduleAutoSync) {
-      _scheduleICloudAutoSync(resume.id);
+      _scheduleICloudAutoSyncResume(resume.id);
+      _scheduleGoogleDriveAutoSync(resume.id);
     }
   }
 
@@ -1540,12 +1557,24 @@ class ResumeRepository {
     await _resumeBox.delete(id);
   }
 
-  void _scheduleICloudAutoSync(String resumeId) {
+  void _scheduleICloudAutoSyncResume(String resumeId) {
     if (!(_appPreferences?.iCloudAutoSyncEnabled ?? false)) {
       return;
     }
 
     _pendingICloudResumeIds.add(resumeId);
+    _iCloudAutoSyncTimer?.cancel();
+    _iCloudAutoSyncTimer = Timer(_iCloudAutoSyncDebounce, () {
+      unawaited(_flushPendingICloudAutoSync());
+    });
+  }
+
+  void _scheduleICloudAutoSyncCoverLetter(String coverLetterId) {
+    if (!(_appPreferences?.iCloudAutoSyncEnabled ?? false)) {
+      return;
+    }
+
+    _pendingICloudCoverLetterIds.add(coverLetterId);
     _iCloudAutoSyncTimer?.cancel();
     _iCloudAutoSyncTimer = Timer(_iCloudAutoSyncDebounce, () {
       unawaited(_flushPendingICloudAutoSync());
@@ -1568,6 +1597,7 @@ class ResumeRepository {
       while (_pendingICloudResumeIds.isNotEmpty) {
         if (!appPreferences.iCloudAutoSyncEnabled) {
           _pendingICloudResumeIds.clear();
+          _pendingICloudCoverLetterIds.clear();
           return;
         }
 
@@ -1575,6 +1605,139 @@ class ResumeRepository {
         _pendingICloudResumeIds.clear();
 
         if (!await service.isAvailable()) {
+          return;
+        }
+
+        final localResumes = await loadResumes();
+        final resumesToConsider = localResumes
+            .where((resume) => pendingIds.contains(resume.id))
+            .toList();
+        if (resumesToConsider.isEmpty) {
+          continue;
+        }
+
+        final cloudById = {
+          for (final item in await service.listResumes())
+            if (!item.isCoverLetter) item.id: item,
+        };
+        final resumesToUpload = resumesToConsider.where((resume) {
+          final cloud = cloudById[resume.id];
+          return cloud == null || !cloud.updatedAt.isAfter(resume.updatedAt);
+        }).toList();
+        if (resumesToUpload.isEmpty) {
+          continue;
+        }
+
+        final uploadedIds = await service.uploadResumes(resumesToUpload);
+        if (uploadedIds.isEmpty) {
+          continue;
+        }
+
+        final syncedAt = DateTime.now();
+        for (final resume in resumesToUpload) {
+          if (!uploadedIds.contains(resume.id)) {
+            continue;
+          }
+          await upsertResume(
+            resume.copyWith(lastSyncedAt: syncedAt),
+            scheduleAutoSync: false,
+          );
+        }
+      }
+
+      while (_pendingICloudCoverLetterIds.isNotEmpty) {
+        if (!appPreferences.iCloudAutoSyncEnabled) {
+          _pendingICloudCoverLetterIds.clear();
+          _pendingICloudResumeIds.clear();
+          return;
+        }
+
+        final pendingLetterIds = Set<String>.from(_pendingICloudCoverLetterIds);
+        _pendingICloudCoverLetterIds.clear();
+
+        if (!await service.isAvailable()) {
+          return;
+        }
+
+        final localLetters = await loadCoverLetters();
+        final lettersToConsider = localLetters
+            .where((letter) => pendingLetterIds.contains(letter.id))
+            .toList();
+        if (lettersToConsider.isEmpty) {
+          continue;
+        }
+
+        final cloudLettersById = {
+          for (final item in await service.listResumes())
+            if (item.isCoverLetter) item.id: item,
+        };
+        final lettersToUpload = lettersToConsider.where((letter) {
+          final cloud = cloudLettersById[letter.id];
+          return cloud == null || !cloud.updatedAt.isAfter(letter.updatedAt);
+        }).toList();
+        if (lettersToUpload.isEmpty) {
+          continue;
+        }
+
+        final uploadedLetterIds =
+            await service.uploadCoverLetters(lettersToUpload);
+        if (uploadedLetterIds.isEmpty) {
+          continue;
+        }
+
+        final letterSyncedAt = DateTime.now();
+        for (final letter in lettersToUpload) {
+          if (!uploadedLetterIds.contains(letter.id)) {
+            continue;
+          }
+          await upsertCoverLetter(
+            letter.copyWith(lastSyncedAt: letterSyncedAt),
+            scheduleAutoSync: false,
+          );
+        }
+      }
+    } catch (_) {
+      // Keep local writes resilient; iCloud sync failures should not break saves.
+    } finally {
+      _isFlushingICloudAutoSync = false;
+    }
+  }
+
+  void _scheduleGoogleDriveAutoSync(String resumeId) {
+    if (!(_appPreferences?.googleDriveAutoSyncEnabled ?? false)) {
+      return;
+    }
+
+    _pendingGoogleDriveResumeIds.add(resumeId);
+    _googleDriveAutoSyncTimer?.cancel();
+    _googleDriveAutoSyncTimer = Timer(_googleDriveAutoSyncDebounce, () {
+      unawaited(_flushPendingGoogleDriveAutoSync());
+    });
+  }
+
+  Future<void> _flushPendingGoogleDriveAutoSync() async {
+    if (_isFlushingGoogleDriveAutoSync) {
+      return;
+    }
+
+    final appPreferences = _appPreferences;
+    final service = _googleDriveResumeService;
+    if (appPreferences == null || service == null) {
+      return;
+    }
+
+    _isFlushingGoogleDriveAutoSync = true;
+    try {
+      while (_pendingGoogleDriveResumeIds.isNotEmpty) {
+        if (!appPreferences.googleDriveAutoSyncEnabled) {
+          _pendingGoogleDriveResumeIds.clear();
+          return;
+        }
+
+        final pendingIds = Set<String>.from(_pendingGoogleDriveResumeIds);
+        _pendingGoogleDriveResumeIds.clear();
+
+        if (!await service.hasAuthorizedSession()) {
           return;
         }
 
@@ -1614,9 +1777,9 @@ class ResumeRepository {
         }
       }
     } catch (_) {
-      // Keep local writes resilient; iCloud sync failures should not break saves.
+      // Keep local writes resilient; Drive sync failures should not break saves.
     } finally {
-      _isFlushingICloudAutoSync = false;
+      _isFlushingGoogleDriveAutoSync = false;
     }
   }
 
@@ -1633,8 +1796,14 @@ class ResumeRepository {
     return items;
   }
 
-  Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {
+  Future<void> upsertCoverLetter(
+    CoverLetterData coverLetter, {
+    bool scheduleAutoSync = true,
+  }) async {
     await _coverLetterBox.put(coverLetter.id, coverLetter.toJson());
+    if (scheduleAutoSync) {
+      _scheduleICloudAutoSyncCoverLetter(coverLetter.id);
+    }
   }
 
   Future<void> deleteCoverLetter(String id) async {

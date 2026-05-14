@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +23,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
   bool _isSyncing = false;
   bool _autoSyncEnabled = false;
   Set<String> _downloadingIds = <String>{};
-  List<ICloudResumeSummary> _cloudResumes = const [];
+  List<ICloudResumeSummary> _cloudItems = const [];
 
   ICloudResumeService get _service => context.read<ICloudResumeService>();
   AppPreferences get _preferences => context.read<AppPreferences>();
@@ -31,6 +33,13 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
     super.initState();
     _autoSyncEnabled = _preferences.iCloudAutoSyncEnabled;
     _loadCloudResumes();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(
+          context.read<CoverLetterLibraryViewModel>().loadCoverLetters(),
+        );
+      }
+    });
   }
 
   Future<void> _setAutoSyncEnabled(bool value) async {
@@ -53,7 +62,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
       }
       setState(() {
         _isAvailable = isAvailable;
-        _cloudResumes = items;
+        _cloudItems = items;
       });
     } on Exception catch (error) {
       if (!mounted) {
@@ -61,9 +70,9 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
       }
       setState(() {
         _isAvailable = false;
-        _cloudResumes = const [];
+        _cloudItems = const [];
       });
-      _showMessage('Could not load iCloud resumes: $error');
+      _showMessage('Could not load iCloud items: $error');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -72,32 +81,57 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
   }
 
   Future<void> _syncToICloud() async {
-    final library = context.read<ResumeLibraryViewModel>();
+    final resumeLibrary = context.read<ResumeLibraryViewModel>();
+    final coverLibrary = context.read<CoverLetterLibraryViewModel>();
     final repository = context.read<ResumeRepository>();
-    final localResumes = library.resumes;
-    if (localResumes.isEmpty) {
-      _showMessage('No local resumes available to sync.');
+    final localResumes = resumeLibrary.resumes;
+    await coverLibrary.loadCoverLetters();
+    final localCoverLetters = coverLibrary.coverLetters;
+
+    if (localResumes.isEmpty && localCoverLetters.isEmpty) {
+      _showMessage('No local resumes or cover letters available to sync.');
       return;
     }
 
     setState(() => _isSyncing = true);
     try {
-      final cloudById = {for (final item in _cloudResumes) item.id: item};
+      final cloudResumeById = {
+        for (final item in _cloudItems)
+          if (!item.isCoverLetter) item.id: item,
+      };
+      final cloudCoverById = {
+        for (final item in _cloudItems)
+          if (item.isCoverLetter) item.id: item,
+      };
+
       final resumesToUpload = localResumes.where((resume) {
-        final cloud = cloudById[resume.id];
+        final cloud = cloudResumeById[resume.id];
         return cloud == null || !cloud.updatedAt.isAfter(resume.updatedAt);
       }).toList();
-      final skippedCount = localResumes.length - resumesToUpload.length;
+      final lettersToUpload = localCoverLetters.where((letter) {
+        final cloud = cloudCoverById[letter.id];
+        return cloud == null || !cloud.updatedAt.isAfter(letter.updatedAt);
+      }).toList();
 
-      if (resumesToUpload.isEmpty) {
-        _showMessage('All resumes are already up to date in iCloud.');
+      final resumeSkipped = localResumes.length - resumesToUpload.length;
+      final letterSkipped =
+          localCoverLetters.length - lettersToUpload.length;
+
+      if (resumesToUpload.isEmpty && lettersToUpload.isEmpty) {
+        _showMessage('Everything is already up to date in iCloud.');
         return;
       }
 
-      final uploadedIds = await _service.uploadResumes(resumesToUpload);
+      final uploadedResumeIds = resumesToUpload.isEmpty
+          ? const <String>[]
+          : await _service.uploadResumes(resumesToUpload);
+      final uploadedLetterIds = lettersToUpload.isEmpty
+          ? const <String>[]
+          : await _service.uploadCoverLetters(lettersToUpload);
+
       final syncedAt = DateTime.now();
       for (final resume in localResumes) {
-        if (!uploadedIds.contains(resume.id)) {
+        if (!uploadedResumeIds.contains(resume.id)) {
           continue;
         }
         await repository.upsertResume(
@@ -105,21 +139,45 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
           scheduleAutoSync: false,
         );
       }
+      for (final letter in localCoverLetters) {
+        if (!uploadedLetterIds.contains(letter.id)) {
+          continue;
+        }
+        await repository.upsertCoverLetter(
+          letter.copyWith(lastSyncedAt: syncedAt),
+          scheduleAutoSync: false,
+        );
+      }
 
-      await library.loadResumes();
+      await resumeLibrary.loadResumes();
+      await coverLibrary.loadCoverLetters();
       await _loadCloudResumes();
 
       if (!mounted) {
         return;
       }
 
-      final uploadedCount = uploadedIds.length;
-      if (skippedCount > 0) {
+      final resumeCount = uploadedResumeIds.length;
+      final letterCount = uploadedLetterIds.length;
+      final parts = <String>[];
+      if (resumeCount > 0) {
+        parts.add(
+          '$resumeCount resume${resumeCount == 1 ? '' : 's'}',
+        );
+      }
+      if (letterCount > 0) {
+        parts.add(
+          '$letterCount cover letter${letterCount == 1 ? '' : 's'}',
+        );
+      }
+      final uploadedSummary = parts.join(' and ');
+      final skipped = resumeSkipped + letterSkipped;
+      if (skipped > 0) {
         _showMessage(
-          'Synced $uploadedCount resumes. $skippedCount newer iCloud version${skippedCount == 1 ? '' : 's'} left untouched.',
+          'Synced $uploadedSummary. $skipped newer iCloud item${skipped == 1 ? '' : 's'} left untouched.',
         );
       } else {
-        _showMessage('Synced $uploadedCount resumes to iCloud.');
+        _showMessage('Synced $uploadedSummary to iCloud.');
       }
     } on Exception catch (error) {
       if (mounted) {
@@ -132,24 +190,35 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
     }
   }
 
-  Future<void> _downloadResume(ICloudResumeSummary item) async {
+  Future<void> _downloadItem(ICloudResumeSummary item) async {
     setState(() => _downloadingIds = {..._downloadingIds, item.id});
     try {
       final repository = context.read<ResumeRepository>();
-      final library = context.read<ResumeLibraryViewModel>();
-      final downloaded = await _service.downloadResume(item.id);
-      await repository.upsertResume(
-        downloaded.copyWith(lastSyncedAt: DateTime.now()),
-        scheduleAutoSync: false,
-      );
-      await library.loadResumes();
+      final resumeLibrary = context.read<ResumeLibraryViewModel>();
+      final coverLibrary = context.read<CoverLetterLibraryViewModel>();
+
+      if (item.isCoverLetter) {
+        final downloaded = await _service.downloadCoverLetter(item.id);
+        await repository.upsertCoverLetter(
+          downloaded.copyWith(lastSyncedAt: DateTime.now()),
+          scheduleAutoSync: false,
+        );
+        await coverLibrary.loadCoverLetters();
+      } else {
+        final downloaded = await _service.downloadResume(item.id);
+        await repository.upsertResume(
+          downloaded.copyWith(lastSyncedAt: DateTime.now()),
+          scheduleAutoSync: false,
+        );
+        await resumeLibrary.loadResumes();
+      }
       await _loadCloudResumes();
       if (mounted) {
         _showMessage('Downloaded ${item.title}.');
       }
     } on Exception catch (error) {
       if (mounted) {
-        _showMessage('Could not download resume: $error');
+        _showMessage('Could not download: $error');
       }
     } finally {
       if (mounted) {
@@ -168,15 +237,27 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('MMM d, y');
-    final library = context.watch<ResumeLibraryViewModel>();
-    final localById = {for (final item in library.resumes) item.id: item};
+    final resumeLibrary = context.watch<ResumeLibraryViewModel>();
+    final coverLibrary = context.watch<CoverLetterLibraryViewModel>();
+    final localResumeById = {for (final r in resumeLibrary.resumes) r.id: r};
+    final localCoverById = {
+      for (final c in coverLibrary.coverLetters) c.id: c,
+    };
+
+    final cloudResumes =
+        _cloudItems.where((e) => !e.isCoverLetter).toList(growable: false);
+    final cloudCoverLetters =
+        _cloudItems.where((e) => e.isCoverLetter).toList(growable: false);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('iCloud Backup')),
+      appBar: AppBar(title: const Text('iCloud backup')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: _loadCloudResumes,
+              onRefresh: () async {
+                await context.read<CoverLetterLibraryViewModel>().loadCoverLetters();
+                await _loadCloudResumes();
+              },
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -301,41 +382,70 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                         ),
                       ),
                     )
-                  else if (_cloudResumes.isEmpty)
+                  else if (cloudResumes.isEmpty && cloudCoverLetters.isEmpty)
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Text(
-                          'No resumes are stored in iCloud yet.',
+                          'No resumes or cover letters are stored in iCloud yet.',
                           style: theme.textTheme.bodyMedium,
                         ),
                       ),
                     )
                   else ...[
-                    Text(
-                      'Resumes in iCloud',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    for (final item in _cloudResumes)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(14),
-                            child: _CloudResumeRow(
-                              summary: item,
-                              status: _statusFor(
-                                localResume: localById[item.id],
-                                cloudResume: item,
+                    if (cloudResumes.isNotEmpty) ...[
+                      Text(
+                        'Resumes in iCloud',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      for (final item in cloudResumes)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: _ICloudItemRow(
+                                summary: item,
+                                status: _statusForResume(
+                                  localResume: localResumeById[item.id],
+                                  cloudResume: item,
+                                ),
+                                dateFormat: dateFormat,
+                                isBusy: _downloadingIds.contains(item.id),
+                                onDownload: () => _downloadItem(item),
                               ),
-                              dateFormat: dateFormat,
-                              isBusy: _downloadingIds.contains(item.id),
-                              onDownload: () => _downloadResume(item),
                             ),
                           ),
                         ),
+                      if (cloudCoverLetters.isNotEmpty) const SizedBox(height: 8),
+                    ],
+                    if (cloudCoverLetters.isNotEmpty) ...[
+                      Text(
+                        'Cover letters in iCloud',
+                        style: theme.textTheme.titleMedium,
                       ),
+                      const SizedBox(height: 12),
+                      for (final item in cloudCoverLetters)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: _ICloudItemRow(
+                                summary: item,
+                                status: _statusForCoverLetter(
+                                  localLetter: localCoverById[item.id],
+                                  cloudItem: item,
+                                ),
+                                dateFormat: dateFormat,
+                                isBusy: _downloadingIds.contains(item.id),
+                                onDownload: () => _downloadItem(item),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ],
                 ],
               ),
@@ -343,27 +453,43 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
     );
   }
 
-  _CloudResumeStatus _statusFor({
+  _ICloudItemStatus _statusForResume({
     required ResumeData? localResume,
     required ICloudResumeSummary cloudResume,
   }) {
     if (localResume == null) {
-      return _CloudResumeStatus.cloudOnly;
+      return _ICloudItemStatus.cloudOnly;
     }
     if (cloudResume.updatedAt.isAfter(localResume.updatedAt)) {
-      return _CloudResumeStatus.cloudNewer;
+      return _ICloudItemStatus.cloudNewer;
     }
     if (localResume.updatedAt.isAfter(cloudResume.updatedAt)) {
-      return _CloudResumeStatus.localNewer;
+      return _ICloudItemStatus.localNewer;
     }
-    return _CloudResumeStatus.synced;
+    return _ICloudItemStatus.synced;
+  }
+
+  _ICloudItemStatus _statusForCoverLetter({
+    required CoverLetterData? localLetter,
+    required ICloudResumeSummary cloudItem,
+  }) {
+    if (localLetter == null) {
+      return _ICloudItemStatus.cloudOnly;
+    }
+    if (cloudItem.updatedAt.isAfter(localLetter.updatedAt)) {
+      return _ICloudItemStatus.cloudNewer;
+    }
+    if (localLetter.updatedAt.isAfter(cloudItem.updatedAt)) {
+      return _ICloudItemStatus.localNewer;
+    }
+    return _ICloudItemStatus.synced;
   }
 }
 
-enum _CloudResumeStatus { cloudOnly, cloudNewer, localNewer, synced }
+enum _ICloudItemStatus { cloudOnly, cloudNewer, localNewer, synced }
 
-class _CloudResumeRow extends StatelessWidget {
-  const _CloudResumeRow({
+class _ICloudItemRow extends StatelessWidget {
+  const _ICloudItemRow({
     required this.summary,
     required this.status,
     required this.dateFormat,
@@ -372,7 +498,7 @@ class _CloudResumeRow extends StatelessWidget {
   });
 
   final ICloudResumeSummary summary;
-  final _CloudResumeStatus status;
+  final _ICloudItemStatus status;
   final DateFormat dateFormat;
   final bool isBusy;
   final VoidCallback onDownload;
@@ -381,7 +507,9 @@ class _CloudResumeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final title = summary.title.trim().isEmpty
-        ? ResumeData.defaultTitle
+        ? (summary.isCoverLetter
+            ? 'Untitled Cover Letter'
+            : ResumeData.defaultTitle)
         : summary.title.trim();
     final metadataStyle = theme.textTheme.bodySmall?.copyWith(
       fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 2,
@@ -389,10 +517,10 @@ class _CloudResumeRow extends StatelessWidget {
     );
 
     final (buttonText, isDownloadEnabled) = switch (status) {
-      _CloudResumeStatus.cloudOnly => ('Download', true),
-      _CloudResumeStatus.cloudNewer => ('Download', true),
-      _CloudResumeStatus.localNewer => ('Downloaded', false),
-      _CloudResumeStatus.synced => ('Downloaded', false),
+      _ICloudItemStatus.cloudOnly => ('Download', true),
+      _ICloudItemStatus.cloudNewer => ('Download', true),
+      _ICloudItemStatus.localNewer => ('Downloaded', false),
+      _ICloudItemStatus.synced => ('Downloaded', false),
     };
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,

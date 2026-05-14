@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/job_search_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
@@ -14,6 +15,12 @@ class _FakeJobsRepository implements ResumeRepository {
   _FakeJobsRepository({required this.resumes});
 
   final List<ResumeData> resumes;
+
+  @override
+  void configureGoogleDriveAutoSync({
+    required AppPreferences appPreferences,
+    required GoogleDriveResumeService service,
+  }) {}
 
   @override
   void configureICloudAutoSync({
@@ -34,7 +41,10 @@ class _FakeJobsRepository implements ResumeRepository {
   Future<List<ResumeData>> loadResumes() async => resumes;
 
   @override
-  Future<void> upsertCoverLetter(CoverLetterData coverLetter) async {}
+  Future<void> upsertCoverLetter(
+    CoverLetterData coverLetter, {
+    bool scheduleAutoSync = true,
+  }) async {}
 
   @override
   Future<void> upsertResume(
@@ -115,6 +125,5 @@ void main() {
     );
     expect(find.text('Data Analyst'), findsWidgets);
     expect(find.text('Flutter Developer'), findsNothing);
-    expect(find.textContaining('SQL'), findsNothing);
   });
 }

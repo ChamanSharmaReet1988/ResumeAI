@@ -53,10 +53,15 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
           let arguments = call.arguments as? [String: Any]
           let resumeMaps = arguments?["resumes"] as? [[String: Any]] ?? []
           self.finish(result, value: try self.uploadResumes(resumeMaps))
+        case "uploadCoverLetters":
+          let arguments = call.arguments as? [String: Any]
+          let maps = arguments?["coverLetters"] as? [[String: Any]] ?? []
+          self.finish(result, value: try self.uploadCoverLetters(maps))
         case "downloadResume":
           let arguments = call.arguments as? [String: Any]
           let id = arguments?["id"] as? String ?? ""
-          self.finish(result, value: try self.downloadResume(id: id))
+          let isCoverLetter = arguments?["isCoverLetter"] as? Bool ?? false
+          self.finish(result, value: try self.downloadResume(id: id, isCoverLetter: isCoverLetter))
         default:
           self.finish(result, notImplemented: true)
         }
@@ -79,10 +84,17 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
   }
 
   private func listResumes() throws -> [[String: Any]] {
-    guard let directoryURL = resumeDirectoryURL(createIfNeeded: false) else {
-      return []
+    var rows: [[String: Any]] = []
+    if let url = resumeDirectoryURL(createIfNeeded: false), fileManager.fileExists(atPath: url.path) {
+      rows.append(contentsOf: try listJSONSummaries(in: url, isCoverLetter: false))
     }
+    if let url = coverLetterDirectoryURL(createIfNeeded: false), fileManager.fileExists(atPath: url.path) {
+      rows.append(contentsOf: try listJSONSummaries(in: url, isCoverLetter: true))
+    }
+    return rows
+  }
 
+  private func listJSONSummaries(in directoryURL: URL, isCoverLetter: Bool) throws -> [[String: Any]] {
     let urls = try fileManager.contentsOfDirectory(
       at: directoryURL,
       includingPropertiesForKeys: [.ubiquitousItemDownloadingStatusKey],
@@ -92,7 +104,12 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
     return urls.compactMap { url in
       let payload = try? readJSON(from: url, waitForDownload: false)
       let id = (payload?["id"] as? String) ?? url.deletingPathExtension().lastPathComponent
-      let title = (payload?["title"] as? String) ?? "Untitled Resume"
+      let title: String
+      if isCoverLetter {
+        title = coverLetterDisplayTitle(from: payload)
+      } else {
+        title = (payload?["title"] as? String) ?? "Untitled Resume"
+      }
       let updatedAt = (payload?["updatedAt"] as? String) ?? isoFormatter.string(from: Date())
       let createdAt = (payload?["createdAt"] as? String) ?? updatedAt
       let isDownloaded = isFileDownloaded(url)
@@ -102,9 +119,23 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
         "title": title,
         "createdAt": createdAt,
         "updatedAt": updatedAt,
-        "isDownloaded": isDownloaded
+        "isDownloaded": isDownloaded,
+        "isCoverLetter": isCoverLetter
       ]
     }
+  }
+
+  private func coverLetterDisplayTitle(from payload: [String: Any]?) -> String {
+    guard let payload else {
+      return "Untitled Cover Letter"
+    }
+    if let t = payload["title"] as? String, !t.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      return t
+    }
+    let role = (payload["role"] as? String) ?? ""
+    let company = (payload["company"] as? String) ?? ""
+    let joined = [role, company].filter { !$0.isEmpty }.joined(separator: " · ")
+    return joined.isEmpty ? "Untitled Cover Letter" : joined
   }
 
   private func uploadResumes(_ resumeMaps: [[String: Any]]) throws -> [String] {
@@ -128,11 +159,35 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
     return uploadedIds
   }
 
-  private func downloadResume(id: String) throws -> [String: Any] {
+  private func uploadCoverLetters(_ maps: [[String: Any]]) throws -> [String] {
+    guard let directoryURL = coverLetterDirectoryURL(createIfNeeded: true) else {
+      throw ICloudResumePluginError.unavailable
+    }
+
+    var uploadedIds: [String] = []
+    for map in maps {
+      guard let id = map["id"] as? String, !id.isEmpty else {
+        continue
+      }
+      let fileURL = directoryURL.appendingPathComponent("\(id).json")
+      let data = try JSONSerialization.data(
+        withJSONObject: map,
+        options: [.prettyPrinted, .sortedKeys]
+      )
+      try data.write(to: fileURL, options: .atomic)
+      uploadedIds.append(id)
+    }
+    return uploadedIds
+  }
+
+  private func downloadResume(id: String, isCoverLetter: Bool) throws -> [String: Any] {
     guard !id.isEmpty else {
       throw ICloudResumePluginError.missingResumeID
     }
-    guard let directoryURL = resumeDirectoryURL(createIfNeeded: false) else {
+    let directoryURL = isCoverLetter
+      ? coverLetterDirectoryURL(createIfNeeded: false)
+      : resumeDirectoryURL(createIfNeeded: false)
+    guard let directoryURL else {
       throw ICloudResumePluginError.unavailable
     }
     let fileURL = directoryURL.appendingPathComponent("\(id).json")
@@ -190,6 +245,29 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
     let directoryURL = containerURL
       .appendingPathComponent("Documents", isDirectory: true)
       .appendingPathComponent("Resumes", isDirectory: true)
+
+    if createIfNeeded, !fileManager.fileExists(atPath: directoryURL.path) {
+      try? fileManager.createDirectory(
+        at: directoryURL,
+        withIntermediateDirectories: true
+      )
+    }
+
+    return directoryURL
+  }
+
+  private func coverLetterDirectoryURL(createIfNeeded: Bool) -> URL? {
+    guard
+      let containerURL = fileManager.url(
+        forUbiquityContainerIdentifier: Self.containerIdentifier
+      )
+    else {
+      return nil
+    }
+
+    let directoryURL = containerURL
+      .appendingPathComponent("Documents", isDirectory: true)
+      .appendingPathComponent("CoverLetters", isDirectory: true)
 
     if createIfNeeded, !fileManager.fileExists(atPath: directoryURL.path) {
       try? fileManager.createDirectory(

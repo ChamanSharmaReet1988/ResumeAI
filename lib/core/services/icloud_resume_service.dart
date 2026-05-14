@@ -11,18 +11,25 @@ class ICloudResumeSummary {
     required this.createdAt,
     required this.updatedAt,
     required this.isDownloaded,
+    required this.isCoverLetter,
   });
 
   factory ICloudResumeSummary.fromMap(Map<Object?, Object?> map) {
     final updatedAt =
         DateTime.tryParse(map['updatedAt'] as String? ?? '') ?? DateTime.now();
+    final isCoverLetter = map['isCoverLetter'] as bool? ?? false;
+    final rawTitle = map['title'] as String? ?? '';
+    final title = rawTitle.trim().isNotEmpty
+        ? rawTitle.trim()
+        : (isCoverLetter ? 'Untitled Cover Letter' : ResumeData.defaultTitle);
     return ICloudResumeSummary(
       id: map['id'] as String? ?? '',
-      title: map['title'] as String? ?? ResumeData.defaultTitle,
+      title: title,
       createdAt:
           DateTime.tryParse(map['createdAt'] as String? ?? '') ?? updatedAt,
       updatedAt: updatedAt,
       isDownloaded: map['isDownloaded'] as bool? ?? false,
+      isCoverLetter: isCoverLetter,
     );
   }
 
@@ -31,6 +38,9 @@ class ICloudResumeSummary {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDownloaded;
+
+  /// When true, this row refers to a cover letter JSON in iCloud `CoverLetters/`.
+  final bool isCoverLetter;
 }
 
 abstract class ICloudResumeService {
@@ -38,11 +48,16 @@ abstract class ICloudResumeService {
 
   Future<bool> isAvailable();
 
+  /// Resumes and cover letters stored under iCloud (native merges both folders).
   Future<List<ICloudResumeSummary>> listResumes();
 
   Future<List<String>> uploadResumes(List<ResumeData> resumes);
 
+  Future<List<String>> uploadCoverLetters(List<CoverLetterData> coverLetters);
+
   Future<ResumeData> downloadResume(String id);
+
+  Future<CoverLetterData> downloadCoverLetter(String id);
 }
 
 class MethodChannelICloudResumeService implements ICloudResumeService {
@@ -108,16 +123,49 @@ class MethodChannelICloudResumeService implements ICloudResumeService {
   }
 
   @override
+  Future<List<String>> uploadCoverLetters(List<CoverLetterData> coverLetters) async {
+    if (!Platform.isIOS || coverLetters.isEmpty) {
+      return const [];
+    }
+
+    final raw =
+        await _channel.invokeListMethod<dynamic>(
+          'uploadCoverLetters',
+          <String, Object?>{
+            'coverLetters': coverLetters.map((c) => c.toJson()).toList(),
+          },
+        ) ??
+        const <dynamic>[];
+
+    return raw.map((item) => item.toString()).toList();
+  }
+
+  @override
   Future<ResumeData> downloadResume(String id) async {
     final raw = await _channel.invokeMapMethod<Object?, Object?>(
       'downloadResume',
-      <String, Object?>{'id': id},
+      <String, Object?>{'id': id, 'isCoverLetter': false},
     );
     if (raw == null) {
       throw const FormatException('No resume payload returned from iCloud.');
     }
 
     return ResumeData.fromJson(
+      raw.map((key, value) => MapEntry(key.toString(), value)),
+    );
+  }
+
+  @override
+  Future<CoverLetterData> downloadCoverLetter(String id) async {
+    final raw = await _channel.invokeMapMethod<Object?, Object?>(
+      'downloadResume',
+      <String, Object?>{'id': id, 'isCoverLetter': true},
+    );
+    if (raw == null) {
+      throw const FormatException('No cover letter payload returned from iCloud.');
+    }
+
+    return CoverLetterData.fromJson(
       raw.map((key, value) => MapEntry(key.toString(), value)),
     );
   }

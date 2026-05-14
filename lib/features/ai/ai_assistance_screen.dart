@@ -360,7 +360,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
                         selectedResume: selectedResume,
                       )
                     : null,
-                child: const Text('Optimized'),
+                child: const Text('Optimize resume'),
               ),
             ],
           ),
