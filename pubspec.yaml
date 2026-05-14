@@ -49,7 +49,6 @@ dependencies:
   xml: ^6.5.0
   image_picker: ^1.2.1
   url_launcher: ^6.3.2
-  pdfrx: ^2.0.0
   in_app_review: ^2.0.11
   http: ^1.6.0
   google_sign_in: ^7.2.0

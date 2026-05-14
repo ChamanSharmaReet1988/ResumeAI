@@ -39,6 +39,8 @@
 	<string>48903946368-qbqg3as76gkf99cbbi4b59ji8474tnso.apps.googleusercontent.com</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>Allow camera access to capture your profile photo.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
