@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/bottom_sheet_insets.dart';
+import 'icloud_backup_screen.dart';
 import '../shared/view_models.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -138,14 +139,16 @@ class SettingsScreen extends StatelessWidget {
       return;
     }
 
-    final label = switch (destination) {
-      _BackupDestination.googleDrive => 'Google Drive',
-      _BackupDestination.iCloud => 'iCloud',
-    };
+    if (destination == _BackupDestination.iCloud) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const ICloudBackupScreen()),
+      );
+      return;
+    }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$label backup is coming soon.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Google Drive backup is coming soon.')),
+    );
   }
 
   @override

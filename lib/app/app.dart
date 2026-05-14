@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../core/services/app_preferences.dart';
 import '../core/services/firebase_app_services.dart';
+import '../core/services/icloud_resume_service.dart';
 import '../core/services/job_search_service.dart';
 import '../core/services/resume_import_service.dart';
 import '../core/services/resume_services.dart';
@@ -33,6 +34,9 @@ class ResumeApp extends StatelessWidget {
         Provider<ResumeRepository>.value(value: repository),
         Provider<AppPreferences>.value(value: appPreferences),
         Provider<FirebaseAppServices>.value(value: firebaseServices),
+        Provider<ICloudResumeService>(
+          create: (_) => const MethodChannelICloudResumeService(),
+        ),
         Provider<ResumeImportService>(
           create: (_) => const ResumeImportService(),
         ),

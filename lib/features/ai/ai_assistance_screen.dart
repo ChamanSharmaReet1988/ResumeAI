@@ -622,7 +622,9 @@ class _OptimizedResumePreviewScreenState
           title: copyTitle!.trim().isEmpty
               ? ResumeData.defaultTitle
               : copyTitle.trim(),
+          createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
+          lastSyncedAt: null,
         ),
         _OptimizedResumeSaveChoice.existingResume =>
           pendingOptimizedResume.copyWith(

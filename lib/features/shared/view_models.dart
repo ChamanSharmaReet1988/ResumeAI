@@ -81,16 +81,15 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     await loadResumes();
   }
 
-  Future<ResumeData> duplicateResume(
-    ResumeData source, {
-    String? title,
-  }) async {
+  Future<ResumeData> duplicateResume(ResumeData source, {String? title}) async {
     final duplicated = source.copyWith(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       title: title == null
           ? _duplicateTitle(source.title)
           : _normalizeResumeTitle(title),
+      createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      lastSyncedAt: null,
     );
 
     await repository.upsertResume(duplicated);
@@ -111,13 +110,12 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     return renamed;
   }
 
-  ResumeData newDraft() => ResumeData.empty(
-    template: _defaultTemplate,
-  ).copyWith(
-    corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
-      _defaultTemplate,
-    ),
-  );
+  ResumeData newDraft() =>
+      ResumeData.empty(template: _defaultTemplate).copyWith(
+        corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+          _defaultTemplate,
+        ),
+      );
 
   String _duplicateTitle(String title) {
     final trimmed = title.trim();

@@ -31,12 +31,16 @@ enum ResumeTemplate {
   creative,
   classicSidebar,
   detailsSidebar,
+
   /// Centered header, gray section bands (ATS-friendly).
   atsStructured,
+
   /// Serif-style rules, email aligned right (ATS-friendly).
   atsSerifRules,
+
   /// Centered contact, summary → education → skills → experience flow.
   atsModernFlow,
+
   /// Uppercase headings, strong hierarchy, two-column skills.
   atsExecutive,
 }
@@ -45,6 +49,7 @@ enum CoverLetterTemplate {
   executiveNote,
   minimalLetter,
   sidebarLetter,
+
   /// Traditional left-aligned letter: date, recipient block, body (ATS-friendly).
   classicBusinessLetter,
 }
@@ -157,6 +162,8 @@ class ResumeData {
     required this.projects,
     required this.customSections,
     required this.updatedAt,
+    DateTime? createdAt,
+    this.lastSyncedAt,
     required this.githubLink,
     required this.linkedinLink,
     required this.profileImagePath,
@@ -167,7 +174,7 @@ class ResumeData {
     required this.includeProjectsInResume,
     required this.bodyFontPt,
     required this.corporateColorPresetIndex,
-  });
+  }) : createdAt = createdAt ?? updatedAt;
 
   factory ResumeData.empty({required ResumeTemplate template}) {
     return ResumeData(
@@ -186,7 +193,9 @@ class ResumeData {
       skills: const [],
       projects: const [ProjectItem.empty()],
       customSections: const [],
+      createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      lastSyncedAt: null,
       githubLink: '',
       linkedinLink: '',
       profileImagePath: '',
@@ -201,6 +210,8 @@ class ResumeData {
   }
 
   factory ResumeData.fromJson(Map<String, dynamic> json) {
+    final updatedAt =
+        DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now();
     return ResumeData(
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? defaultTitle,
@@ -241,9 +252,10 @@ class ResumeData {
             ),
           )
           .toList(),
-      updatedAt:
-          DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
-          DateTime.now(),
+      updatedAt: updatedAt,
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ?? updatedAt,
+      lastSyncedAt: DateTime.tryParse(json['lastSyncedAt'] as String? ?? ''),
       githubLink: json['githubLink'] as String? ?? '',
       linkedinLink: json['linkedinLink'] as String? ?? '',
       profileImagePath: json['profileImagePath'] as String? ?? '',
@@ -276,7 +288,9 @@ class ResumeData {
   final List<String> skills;
   final List<ProjectItem> projects;
   final List<CustomSectionItem> customSections;
+  final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? lastSyncedAt;
   final String githubLink;
   final String linkedinLink;
   final String profileImagePath;
@@ -357,7 +371,9 @@ class ResumeData {
     List<String>? skills,
     List<ProjectItem>? projects,
     List<CustomSectionItem>? customSections,
+    DateTime? createdAt,
     DateTime? updatedAt,
+    Object? lastSyncedAt = _resumeDateSentinel,
     String? githubLink,
     String? linkedinLink,
     String? profileImagePath,
@@ -385,7 +401,11 @@ class ResumeData {
       skills: skills ?? this.skills,
       projects: projects ?? this.projects,
       customSections: customSections ?? this.customSections,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      lastSyncedAt: identical(lastSyncedAt, _resumeDateSentinel)
+          ? this.lastSyncedAt
+          : lastSyncedAt as DateTime?,
       githubLink: githubLink ?? this.githubLink,
       linkedinLink: linkedinLink ?? this.linkedinLink,
       profileImagePath: profileImagePath ?? this.profileImagePath,
@@ -420,7 +440,9 @@ class ResumeData {
       'skills': skills,
       'projects': projects.map((item) => item.toJson()).toList(),
       'customSections': customSections.map((item) => item.toJson()).toList(),
+      'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'lastSyncedAt': lastSyncedAt?.toIso8601String(),
       'githubLink': githubLink,
       'linkedinLink': linkedinLink,
       'profileImagePath': profileImagePath,
@@ -434,6 +456,8 @@ class ResumeData {
     };
   }
 }
+
+const Object _resumeDateSentinel = Object();
 
 class CoverLetterData {
   const CoverLetterData({
