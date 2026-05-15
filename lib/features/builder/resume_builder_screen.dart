@@ -438,7 +438,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               },
         icon: Icon(
           included ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-          size: 22,
+          size: 24,
         ),
       ),
     );
