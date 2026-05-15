@@ -328,6 +328,25 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
+  Widget _buildAddBulletPointButton({required VoidCallback? onPressed}) {
+    final theme = Theme.of(context);
+    return FilledButton.icon(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        minimumSize: const Size(0, 34),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textStyle: theme.textTheme.labelSmall?.copyWith(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          height: 1.2,
+        ),
+      ),
+      icon: const Icon(Icons.add_rounded, size: 17),
+      label: const Text('Add bullet point'),
+    );
+  }
+
   String _resumeOrderLabel(int index) {
     if (index == 0) {
       return 'Appears first on your resume';
@@ -1648,18 +1667,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     ),
                     const SizedBox(height: 14),
                     ...(() {
-                      final displayBullets = List<String>.from(item.bullets);
+                      final displayBullets = item.bullets.isEmpty
+                          ? <String>['']
+                          : List<String>.from(item.bullets);
                       return <Widget>[
-                        if (displayBullets.isEmpty)
-                          Text(
-                            'Add bullet points for this experience.',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                          ),
                         ...displayBullets.asMap().entries.map((bulletEntry) {
                           final bulletIndex = bulletEntry.key;
                           final bullet = bulletEntry.value;
@@ -1685,9 +1696,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                         ),
                                     onChanged: (value) => viewModel
                                         .updateWorkExperience(index, (current) {
-                                          final updated = List<String>.from(
-                                            current.bullets,
-                                          );
+                                          final updated =
+                                              current.bullets.isEmpty
+                                              ? ['']
+                                              : List<String>.from(
+                                                  current.bullets,
+                                                );
                                           if (bulletIndex < updated.length) {
                                             updated[bulletIndex] = value;
                                           }
@@ -1742,21 +1756,24 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         }),
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: FilledButton.icon(
+                          child: _buildAddBulletPointButton(
                             onPressed: viewModel.isBusy
                                 ? null
                                 : () {
                                     viewModel.updateWorkExperience(
                                       index,
                                       (current) => current.copyWith(
-                                        bullets: [...current.bullets, ''],
+                                        bullets: [
+                                          ...(current.bullets.isEmpty
+                                              ? ['']
+                                              : current.bullets),
+                                          '',
+                                        ],
                                         layoutMode:
                                             WorkExperienceLayoutMode.bullets,
                                       ),
                                     );
                                   },
-                            icon: const Icon(Icons.add_rounded),
-                            label: const Text('Add bullet point'),
                           ),
                         ),
                       ];
@@ -2403,19 +2420,22 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         })),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: FilledButton.icon(
+                      child: _buildAddBulletPointButton(
                         onPressed: viewModel.isBusy
                             ? null
                             : () {
                                 viewModel.updateProject(
                                   index,
                                   (current) => current.copyWith(
-                                    bullets: [...current.bullets, ''],
+                                    bullets: [
+                                      ...(current.bullets.isEmpty
+                                          ? ['']
+                                          : current.bullets),
+                                      '',
+                                    ],
                                   ),
                                 );
                               },
-                        icon: const Icon(Icons.add_rounded),
-                        label: const Text('Add bullet point'),
                       ),
                     ),
                   ],
