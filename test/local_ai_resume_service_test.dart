@@ -322,4 +322,58 @@ Oxford Software Institute
       );
     },
   );
+
+  test(
+    'improveResumeForAts avoids repeating the same keyword boilerplate on every role',
+    () async {
+      final service = LocalAiResumeService();
+      const jobDescription =
+          'Hiring a Flutter developer with Firebase, analytics, REST APIs, and stakeholder communication experience.';
+      final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
+        jobTitle: 'Flutter Developer',
+        workExperiences: const [
+          WorkExperience(
+            role: 'Flutter Developer',
+            company: 'Acme',
+            startDate: '2022',
+            endDate: '2024',
+            description:
+                'Built onboarding flows and analytics dashboards for a consumer app.',
+            bullets: ['Shipped Flutter features for iOS and Android releases.'],
+          ),
+          WorkExperience(
+            role: 'Junior Developer',
+            company: 'Beta Labs',
+            startDate: '2020',
+            endDate: '2022',
+            description:
+                'Supported API integrations and internal tooling for operations teams.',
+            bullets: ['Maintained REST endpoints and unit tests for backend services.'],
+          ),
+        ],
+      );
+
+      final result = await service.improveResumeForAts(
+        resume: resume,
+        jobDescription: jobDescription,
+      );
+
+      final firstBullets = result.resume.workExperiences[0].bullets.join(' ');
+      final secondBullets = result.resume.workExperiences[1].bullets.join(' ');
+
+      expect(firstBullets, isNot(equals(secondBullets)));
+      expect(
+        firstBullets.toLowerCase(),
+        isNot(contains('applied firebase and analytics in')),
+      );
+      expect(
+        secondBullets.toLowerCase(),
+        isNot(contains('applied firebase and analytics in')),
+      );
+      expect(
+        secondBullets.toLowerCase(),
+        isNot(contains('improved alignment with firebase')),
+      );
+    },
+  );
 }

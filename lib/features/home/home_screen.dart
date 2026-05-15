@@ -381,7 +381,7 @@ class _ResumeSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
               onTap: () => _showResumeActions(context, resume),
               child: Padding(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.fromLTRB(18, 13, 18, 14),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -392,9 +392,9 @@ class _ResumeSection extends StatelessWidget {
                           Text(
                             resume.title,
                             style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                                ?.copyWith(fontWeight: FontWeight.w500),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 9),
                           Text(
                             'Updated ${dateFormat.format(resume.updatedAt)}',
                             style: Theme.of(context).textTheme.bodySmall
@@ -403,7 +403,7 @@ class _ResumeSection extends StatelessWidget {
                                       ((Theme.of(context).textTheme.bodySmall
                                                   ?.fontSize ??
                                               12) -
-                                          2)
+                                          3)
                                           .toDouble(),
                                   color: Theme.of(
                                     context,
@@ -564,7 +564,7 @@ class _CoverLetterSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
               onTap: () => _showCoverLetterActions(context, coverLetter),
               child: Padding(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.fromLTRB(18, 13, 18, 14),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -575,9 +575,9 @@ class _CoverLetterSection extends StatelessWidget {
                           Text(
                             coverLetter.displayTitle,
                             style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                                ?.copyWith(fontWeight: FontWeight.w500),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 9),
                           Text(
                             'Updated ${dateFormat.format(coverLetter.updatedAt)}',
                             style: Theme.of(context).textTheme.bodySmall
@@ -586,7 +586,7 @@ class _CoverLetterSection extends StatelessWidget {
                                       ((Theme.of(context).textTheme.bodySmall
                                                   ?.fontSize ??
                                               12) -
-                                          2)
+                                          3)
                                           .toDouble(),
                                   color: Theme.of(
                                     context,

@@ -62,6 +62,12 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
           let id = arguments?["id"] as? String ?? ""
           let isCoverLetter = arguments?["isCoverLetter"] as? Bool ?? false
           self.finish(result, value: try self.downloadResume(id: id, isCoverLetter: isCoverLetter))
+        case "deleteFromICloud":
+          let arguments = call.arguments as? [String: Any]
+          let id = arguments?["id"] as? String ?? ""
+          let isCoverLetter = arguments?["isCoverLetter"] as? Bool ?? false
+          try self.deleteFromICloud(id: id, isCoverLetter: isCoverLetter)
+          self.finish(result, value: nil)
         default:
           self.finish(result, notImplemented: true)
         }
@@ -178,6 +184,23 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
       uploadedIds.append(id)
     }
     return uploadedIds
+  }
+
+  private func deleteFromICloud(id: String, isCoverLetter: Bool) throws {
+    guard !id.isEmpty else {
+      throw ICloudResumePluginError.missingResumeID
+    }
+    let directoryURL = isCoverLetter
+      ? coverLetterDirectoryURL(createIfNeeded: false)
+      : resumeDirectoryURL(createIfNeeded: false)
+    guard let directoryURL else {
+      throw ICloudResumePluginError.unavailable
+    }
+    let fileURL = directoryURL.appendingPathComponent("\(id).json")
+    guard fileManager.fileExists(atPath: fileURL.path) else {
+      throw ICloudResumePluginError.resumeNotFound
+    }
+    try fileManager.removeItem(at: fileURL)
   }
 
   private func downloadResume(id: String, isCoverLetter: Bool) throws -> [String: Any] {

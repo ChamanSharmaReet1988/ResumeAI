@@ -850,6 +850,13 @@ pw.Widget _classicSidebarListSection({
   );
 }
 
+pw.Widget _highlightedPdfLineText(
+  String text, {
+  required pw.TextStyle style,
+}) {
+  return pw.Text(text, style: style);
+}
+
 pw.Widget _classicBulletRow({
   required String text,
   required PdfColor bulletColor,
@@ -1963,19 +1970,39 @@ class LocalAiResumeService {
       jobDescription: normalizedJobDescription,
     );
     final missingKeywords = analysis.missingSkills;
-    final targetKeywords = _prepareTargetKeywords(
-      missingKeywords.isNotEmpty
-          ? missingKeywords
-          : _extractKeywords(normalizedJobDescription),
-    ).take(6).toList();
+    final targetKeywords = normalizedJobDescription.isEmpty
+        ? _prepareTargetKeywords(_extractKeywords(normalizedJobDescription))
+            .take(6)
+            .toList()
+        : _atsKeywordsFromJobDescription(
+            jobDescription: normalizedJobDescription,
+            missingFromResume: missingKeywords,
+          );
     final appliedChanges = <String>[];
+
+    var optimizedJobTitle = resume.jobTitle;
+    if (normalizedJobDescription.isNotEmpty) {
+      final jobTitleFromPosting =
+          _jobTitleFromJobDescription(normalizedJobDescription);
+      if (jobTitleFromPosting != null &&
+          (resume.jobTitle.trim().isEmpty ||
+              resume.jobTitle.trim().length < 4)) {
+        optimizedJobTitle = jobTitleFromPosting;
+        appliedChanges.add(
+          'Aligned the job title with the pasted job description for ATS matching.',
+        );
+      }
+    }
 
     var updatedSummary = normalizedSummary;
     if (normalizedJobDescription.isNotEmpty) {
       updatedSummary = _buildTailoredSummary(
         resume: resume,
-        targetJobTitle: targetJobTitle,
+        targetJobTitle: optimizedJobTitle.trim().isEmpty
+            ? targetJobTitle
+            : optimizedJobTitle,
         keywords: targetKeywords,
+        jobDescription: normalizedJobDescription,
       );
       appliedChanges.add(
         'Tailored the summary to match the pasted job description more directly.',
@@ -1994,41 +2021,90 @@ class LocalAiResumeService {
     final suggestedSkills = {
       ..._resumeSkillSuggestions(
         resume: resume,
-        targetJobTitle: targetJobTitle,
+        targetJobTitle: optimizedJobTitle.trim().isEmpty
+            ? targetJobTitle
+            : optimizedJobTitle,
       ),
-      ...missingKeywords.take(4),
+      if (normalizedJobDescription.isEmpty) ...missingKeywords.take(4),
+      if (normalizedJobDescription.isNotEmpty) ...targetKeywords.take(8),
     };
     final mergedSkills = [...currentSkills, ...suggestedSkills]
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    final cappedSkills = mergedSkills.take(50).toList();
-    if (cappedSkills.length > resume.skills.length) {
+    final cappedSkills = _orderSkillsForAts(
+      skills: mergedSkills.take(50).toList(),
+      priorityKeywords: targetKeywords,
+    );
+    final addedAtsSkills = cappedSkills.where(
+      (skill) => !resume.skills.any(
+        (existing) => existing.toLowerCase() == skill.toLowerCase(),
+      ),
+    );
+    if (addedAtsSkills.isNotEmpty) {
       appliedChanges.add(
         'Added relevant skills and missing keywords from the target role.',
       );
     }
 
     var workChanged = false;
-    final updatedWork = resume.workExperiences.map((item) {
+    int? primaryWorkIndex;
+    for (var i = 0; i < resume.workExperiences.length; i++) {
+      if (!resume.workExperiences[i].isBlank) {
+        primaryWorkIndex = i;
+        break;
+      }
+    }
+
+    final updatedWork = resume.workExperiences.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+      final nonEmptyBullets = item.bullets
+          .map((bullet) => bullet.trim())
+          .where((bullet) => bullet.isNotEmpty)
+          .toList();
       final hasWeakBullets =
-          item.bullets.where((bullet) => bullet.trim().length > 45).length < 2;
-      final needsBulletSupport =
-          !item.isBlank &&
-          (normalizedJobDescription.isNotEmpty ||
-              item.bullets.isEmpty ||
-              hasWeakBullets);
+          nonEmptyBullets.where((bullet) => bullet.length > 45).length < 2;
+      final needsBulletSupport = !item.isBlank &&
+          (nonEmptyBullets.isEmpty ||
+              hasWeakBullets ||
+              (item.description.trim().isNotEmpty && nonEmptyBullets.length < 2));
       if (!needsBulletSupport) {
-        return item;
+        if (normalizedJobDescription.isEmpty || item.isBlank) {
+          return item;
+        }
+        final roleKeywords = _keywordsForWorkEntry(
+          entryIndex: index,
+          primaryIndex: primaryWorkIndex,
+          allKeywords: targetKeywords,
+        );
+        final polished = nonEmptyBullets
+            .map(
+              (bullet) => _polishBulletForAts(
+                bullet,
+                keywords: roleKeywords,
+              ),
+            )
+            .take(4)
+            .toList();
+        if (_unorderedListEquals(nonEmptyBullets, polished)) {
+          return item;
+        }
+        workChanged = true;
+        return item.copyWith(bullets: polished);
       }
 
       final improvedBullets = _tailorWorkExperienceBullets(
         item: item,
-        targetJobTitle: targetJobTitle,
-        keywords: targetKeywords,
+        targetJobTitle: optimizedJobTitle.trim().isEmpty
+            ? targetJobTitle
+            : optimizedJobTitle,
+        keywords: _keywordsForWorkEntry(
+          entryIndex: index,
+          primaryIndex: primaryWorkIndex,
+          allKeywords: targetKeywords,
+        ),
+        weaveJobKeywords: normalizedJobDescription.isNotEmpty,
       );
-      final cleanedExistingBullets = item.bullets
-          .where((bullet) => bullet.trim().isNotEmpty)
-          .toList();
-      if (_unorderedListEquals(cleanedExistingBullets, improvedBullets)) {
+      if (_unorderedListEquals(nonEmptyBullets, improvedBullets)) {
         return item;
       }
       workChanged = true;
@@ -2050,6 +2126,7 @@ class LocalAiResumeService {
 
     return ResumeImprovementResult(
       resume: resume.copyWith(
+        jobTitle: optimizedJobTitle,
         summary: updatedSummary,
         skills: cappedSkills,
         workExperiences: updatedWork,
@@ -3846,28 +3923,42 @@ class LocalAiResumeService {
     required ResumeData resume,
     required String targetJobTitle,
     required List<String> keywords,
+    String jobDescription = '',
   }) {
     final name = resume.fullName.trim().isEmpty
         ? 'This candidate'
         : resume.fullName.trim();
-    final role = targetJobTitle.trim().isEmpty
+    final roleFromPosting = jobDescription.trim().isEmpty
+        ? null
+        : _jobTitleFromJobDescription(jobDescription);
+    final role = (roleFromPosting ?? targetJobTitle).trim().isEmpty
         ? 'professional candidate'
-        : targetJobTitle.trim();
+        : (roleFromPosting ?? targetJobTitle).trim();
     final primarySkills = resume.skills.take(4).join(', ');
+    final atsSkillLine = keywords.take(5).join(', ');
     final existingSummaryPhrase = _firstMeaningfulSentence(resume.summary);
     final workEvidence = resume.visibleWorkExperiences
         .expand((item) => [item.description, ...item.bullets])
         .map(_firstMeaningfulSentence)
-        .firstWhere((item) => item.isNotEmpty, orElse: () => '');
-    final keywordPhrase = keywords.take(3).join(', ');
+        .where((item) => item.isNotEmpty)
+        .take(2)
+        .map(_normalizeSentenceForResume)
+        .join(' ');
+    final keywordPhrase = keywords.take(4).join(', ');
     final experiencePhrase = workEvidence.isNotEmpty
         ? workEvidence
         : existingSummaryPhrase;
     final evidenceClause = experiencePhrase.isNotEmpty
-        ? 'Backed by experience in ${_normalizeResumeFragment(experiencePhrase)}.'
-        : 'Backed by delivery, collaboration, and measurable execution.';
+        ? _normalizeSentenceForResume(experiencePhrase)
+        : 'Delivered measurable results through cross-functional collaboration.';
 
-    return '$name is a $role with hands-on experience in ${primarySkills.isEmpty ? 'delivery, collaboration, and execution' : primarySkills}. '
+    final skillsClause = atsSkillLine.isNotEmpty
+        ? atsSkillLine
+        : (primarySkills.isEmpty
+            ? 'delivery, collaboration, and execution'
+            : primarySkills);
+
+    return '$name is a $role with hands-on experience in $skillsClause. '
         '${keywordPhrase.isEmpty ? '' : 'Well aligned to opportunities requiring $keywordPhrase. '}'
         '$evidenceClause';
   }
@@ -3877,54 +3968,129 @@ class LocalAiResumeService {
     required String company,
     required String targetJobTitle,
   }) {
-    final focus = _jobTitleSkillSuggestions(targetJobTitle).take(3).join(', ');
+    final focus = _jobTitleSkillSuggestions(targetJobTitle).take(2).join(' and ');
     final normalizedRole = role.trim().isEmpty
         ? 'team member'
         : role.trim().toLowerCase();
     final normalizedCompany = company.trim().isEmpty
-        ? 'the company'
+        ? 'the organization'
         : company.trim();
+    final roleText = role.trim().isEmpty ? 'Contributor' : role.trim();
+
+    final isTechnical = RegExp(
+      r'developer|engineer|programmer|architect|devops|data|analyst|mobile|flutter|ios|android',
+      caseSensitive: false,
+    ).hasMatch(roleText);
+    final isDesign = RegExp(
+      r'design|designer|ux|ui|product',
+      caseSensitive: false,
+    ).hasMatch(roleText);
+
+    if (isTechnical) {
+      return [
+        'Delivered scoped features and fixes as $normalizedRole at $normalizedCompany, improving release quality and maintainability.',
+        focus.isEmpty
+            ? 'Collaborated with product and QA to ship roadmap work on schedule.'
+            : 'Used $focus to build reliable solutions and support cross-functional delivery.',
+      ];
+    }
+    if (isDesign) {
+      return [
+        'Created user-centered deliverables as $normalizedRole at $normalizedCompany, from discovery through handoff.',
+        focus.isEmpty
+            ? 'Partnered with engineering and product to iterate on flows and UI quality.'
+            : 'Applied $focus to improve usability and design consistency across releases.',
+      ];
+    }
 
     return [
-      'Led $normalizedRole initiatives at $normalizedCompany, improving delivery quality through clearer prioritization and faster stakeholder alignment.',
-      'Translated business needs into repeatable workflows and documentation, helping the team move faster with fewer revision cycles.',
-      'Partnered cross-functionally to launch customer-facing improvements, using $focus to strengthen outcomes and communicate impact.',
+      'Owned key deliverables as $normalizedRole at $normalizedCompany, improving team throughput and stakeholder visibility.',
+      focus.isEmpty
+          ? 'Coordinated cross-functional work to meet deadlines with clear communication.'
+          : 'Applied $focus to drive measurable outcomes for the business.',
     ];
+  }
+
+  String _polishBulletForAts(
+    String bullet, {
+    List<String> keywords = const [],
+  }) {
+    final polished = _normalizeSentenceForResume(
+      bullet,
+      prefix: _atsActionPrefixForBullet(bullet),
+    );
+    if (keywords.isEmpty) {
+      return polished;
+    }
+
+    final lower = polished.toLowerCase();
+    final missing = keywords
+        .map((keyword) => keyword.trim())
+        .where((keyword) => keyword.isNotEmpty)
+        .where((keyword) => !lower.contains(keyword.toLowerCase()))
+        .toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    if (missing.isEmpty) {
+      return polished;
+    }
+    missing.removeRange(1, missing.length);
+    final keyword = missing.first;
+    final body = polished.replaceAll(RegExp(r'[.!?]+$'), '');
+    if (RegExp(r'\b(led|built|delivered|implemented|improved|managed)\b',
+            caseSensitive: false)
+        .hasMatch(body)) {
+      return '$body, applying $keyword to improve outcomes.';
+    }
+    return '$body, with demonstrated experience in $keyword.';
   }
 
   List<String> _tailorWorkExperienceBullets({
     required WorkExperience item,
     required String targetJobTitle,
     required List<String> keywords,
+    bool weaveJobKeywords = false,
   }) {
     final existingBullets = item.bullets
         .map((bullet) => bullet.trim())
         .where((bullet) => bullet.isNotEmpty)
         .toList();
-    final generatedBullets = _buildJobBullets(
-      role: item.role,
-      company: item.company,
-      targetJobTitle: targetJobTitle,
-    );
+    final keywordsToWeave = weaveJobKeywords ? keywords : const <String>[];
+
+    if (existingBullets.length >= 2 &&
+        existingBullets.where((bullet) => bullet.length > 40).length >= 2) {
+      return existingBullets
+          .map((bullet) => _polishBulletForAts(bullet, keywords: keywordsToWeave))
+          .take(4)
+          .toList();
+    }
+
     final descriptionBullets = _descriptionDrivenBullets(
       description: item.description,
       role: item.role,
       company: item.company,
       keywords: keywords,
+      weaveKeywords: weaveJobKeywords,
     );
+    final polishedExisting = existingBullets
+        .map((bullet) => _polishBulletForAts(bullet, keywords: keywordsToWeave))
+        .toList();
 
-    final keywordPhrase = keywords.take(2).join(' and ');
-    final targetedBullets = <String>[
-      if (keywordPhrase.isNotEmpty)
-        'Applied $keywordPhrase in ${item.role.trim().isEmpty ? 'day-to-day delivery' : item.role.trim().toLowerCase()} work to improve execution quality and align outcomes with business priorities.',
+    final merged = <String>[
       ...descriptionBullets,
-      ...generatedBullets,
-      ...existingBullets,
+      ...polishedExisting,
     ];
+
+    if (merged.isEmpty) {
+      return _buildJobBullets(
+        role: item.role,
+        company: item.company,
+        targetJobTitle: targetJobTitle,
+      );
+    }
 
     final seen = <String>{};
     final normalized = <String>[];
-    for (final bullet in targetedBullets) {
+    for (final bullet in merged) {
       final key = bullet.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
       if (key.isEmpty || !seen.add(key)) {
         continue;
@@ -3955,38 +4121,203 @@ class LocalAiResumeService {
     required String role,
     required String company,
     required List<String> keywords,
+    bool weaveKeywords = false,
   }) {
     final cleanedDescription = description.trim();
     if (cleanedDescription.isEmpty) {
       return const [];
     }
 
-    final normalizedRole = role.trim().isEmpty ? 'team' : role.trim();
-    final keywordPhrase = keywords.take(2).join(' and ');
     final sentences = cleanedDescription
         .split(RegExp(r'(?<=[.!?])\s+'))
         .map(_firstMeaningfulSentence)
         .where((item) => item.isNotEmpty)
+        .take(3)
         .toList();
 
-    final bullets = <String>[];
-    if (sentences.isNotEmpty) {
-      bullets.add(_normalizeSentenceForResume(sentences.first));
-    }
-    if (sentences.length > 1) {
-      final secondSentenceFragment = _normalizeResumeFragment(sentences[1]);
-      bullets.add(
-        keywordPhrase.isEmpty
-            ? _normalizeSentenceForResume(sentences[1])
-            : 'Improved alignment with $keywordPhrase by $secondSentenceFragment.',
-      );
-    } else if (keywordPhrase.isNotEmpty) {
-      bullets.add(
-        'Improved alignment with $keywordPhrase in ${normalizedRole.toLowerCase()} work to better reflect target-role expectations and measurable impact.',
-      );
+    final bullets = sentences
+        .map(_normalizeSentenceForResume)
+        .where((bullet) => bullet.isNotEmpty)
+        .toList();
+
+    if (!weaveKeywords || keywords.isEmpty || bullets.isEmpty) {
+      return bullets;
     }
 
+    final combined = bullets.join(' ').toLowerCase();
+    final missing = keywords
+        .map((keyword) => keyword.trim())
+        .where((keyword) => keyword.isNotEmpty)
+        .where((keyword) => !combined.contains(keyword.toLowerCase()))
+        .toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    if (missing.isEmpty) {
+      return bullets;
+    }
+    missing.removeRange(1, missing.length);
+    final lastIndex = bullets.length - 1;
+    final body = bullets[lastIndex].replaceAll(RegExp(r'[.!?]+$'), '');
+    bullets[lastIndex] = '$body, applying ${missing.first} in production delivery.';
     return bullets;
+  }
+
+  String? _jobTitleFromJobDescription(String jobDescription) {
+    final normalized = jobDescription.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (normalized.isEmpty) {
+      return null;
+    }
+
+    final patterns = <RegExp>[
+      RegExp(
+        r'(?:hiring|seeking|looking for|need)\s+(?:a|an)?\s*([A-Za-z][A-Za-z0-9 /,&+\-]{2,55}?)(?:\s+with\b|\s+who\b|\.|,|\s+to\b)',
+        caseSensitive: false,
+      ),
+      RegExp(
+        r'(?:job title|position|role)\s*[:.\-]\s*([^\n.]{3,60})',
+        caseSensitive: false,
+      ),
+    ];
+
+    for (final pattern in patterns) {
+      final match = pattern.firstMatch(normalized);
+      if (match == null) {
+        continue;
+      }
+      var title = match.group(1)!.trim();
+      title = title.replaceAll(RegExp(r'\s+'), ' ');
+      if (title.length < 3 || title.split(' ').length > 8) {
+        continue;
+      }
+      return title[0].toUpperCase() + title.substring(1);
+    }
+    return null;
+  }
+
+  List<String> _atsKeywordsFromJobDescription({
+    required String jobDescription,
+    required List<String> missingFromResume,
+  }) {
+    final ordered = <String>[];
+    final seen = <String>{};
+
+    void add(String value) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return;
+      }
+      if (seen.add(trimmed.toLowerCase())) {
+        ordered.add(trimmed);
+      }
+    }
+
+    for (final keyword in missingFromResume) {
+      add(keyword);
+    }
+
+    final phrasePatterns = <RegExp>[
+      RegExp(r'\bREST\s*/?\s*APIs?\b', caseSensitive: false),
+      RegExp(r'\bstakeholder\s+communication\b', caseSensitive: false),
+      RegExp(r'\bcross[- ]functional\b', caseSensitive: false),
+      RegExp(r'\bcontinuous\s+integration\b', caseSensitive: false),
+      RegExp(r'\bCI/?CD\b', caseSensitive: false),
+      RegExp(r'\bagile(?:\s+methodology)?\b', caseSensitive: false),
+      RegExp(r'\bunit\s+tests?\b', caseSensitive: false),
+      RegExp(r'\bversion\s+control\b', caseSensitive: false),
+      RegExp(r'\bproblem[- ]solving\b', caseSensitive: false),
+      RegExp(r'\btime\s+management\b', caseSensitive: false),
+    ];
+    for (final pattern in phrasePatterns) {
+      final match = pattern.firstMatch(jobDescription);
+      if (match != null) {
+        add(match.group(0)!.replaceAll(RegExp(r'\s+'), ' ').trim());
+      }
+    }
+
+    for (final keyword
+        in _prepareTargetKeywords(_extractKeywords(jobDescription))) {
+      if (keyword.length < 4 &&
+          ordered.any((item) => item.toLowerCase().contains(keyword.toLowerCase()))) {
+        continue;
+      }
+      add(keyword);
+    }
+
+    return _preferLongerKeywordPhrases(ordered.take(10).toList());
+  }
+
+  List<String> _preferLongerKeywordPhrases(List<String> keywords) {
+    return keywords.where((keyword) {
+      final lower = keyword.toLowerCase();
+      if (lower == 'rest' || lower == 'api' || lower == 'apis') {
+        return !keywords.any(
+          (item) => item.toLowerCase().contains('rest api'),
+        );
+      }
+      return true;
+    }).toList();
+  }
+
+  List<String> _keywordsForWorkEntry({
+    required int entryIndex,
+    required int? primaryIndex,
+    required List<String> allKeywords,
+  }) {
+    if (allKeywords.isEmpty) {
+      return const [];
+    }
+    final start = entryIndex == primaryIndex ? 0 : 1;
+    return [
+      allKeywords[start % allKeywords.length],
+      if (allKeywords.length > 1)
+        allKeywords[(start + 1) % allKeywords.length],
+    ];
+  }
+
+  List<String> _orderSkillsForAts({
+    required List<String> skills,
+    required List<String> priorityKeywords,
+  }) {
+    final priority = <String>[];
+    final rest = <String>[];
+    final seen = <String>{};
+
+    for (final keyword in priorityKeywords) {
+      for (final skill in skills) {
+        if (skill.toLowerCase().contains(keyword.toLowerCase()) &&
+            seen.add(skill.toLowerCase())) {
+          priority.add(skill);
+          break;
+        }
+      }
+    }
+
+    for (final skill in skills) {
+      if (seen.add(skill.toLowerCase())) {
+        rest.add(skill);
+      }
+    }
+
+    return [...priority, ...rest];
+  }
+
+  String? _atsActionPrefixForBullet(String bullet) {
+    final trimmed = bullet.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    if (RegExp(
+      r'^(built|delivered|led|managed|implemented|designed|developed|created|improved|reduced|increased|launched|optimized|automated|coordinated|partnered)\b',
+      caseSensitive: false,
+    ).hasMatch(trimmed)) {
+      return null;
+    }
+    if (RegExp(
+      r'^(maintained|supported|helped|worked|assisted|participated)\b',
+      caseSensitive: false,
+    ).hasMatch(trimmed)) {
+      return null;
+    }
+    return 'Led';
   }
 
   String _firstMeaningfulSentence(String input) {
@@ -4008,7 +4339,7 @@ class LocalAiResumeService {
     normalized = normalized.replaceFirst(RegExp(r'^[•\-–]+\s*'), '');
     normalized = normalized.replaceFirst(
       RegExp(
-        r'^(responsible for|worked on|handled|managed)\s+',
+        r'^(responsible for|worked on|handled|helped with|assisted with|involved in)\s+',
         caseSensitive: false,
       ),
       '',
@@ -4058,6 +4389,31 @@ class LocalAiResumeService {
       }
       if (currentLower == 'stakeholder' && nextLower == 'communication') {
         prepared.add('stakeholder communication');
+        index++;
+        continue;
+      }
+      if (currentLower == 'cross' && nextLower == 'functional') {
+        prepared.add('cross-functional');
+        index++;
+        continue;
+      }
+      if (currentLower == 'project' && nextLower == 'management') {
+        prepared.add('project management');
+        index++;
+        continue;
+      }
+      if (currentLower == 'data' && nextLower == 'analysis') {
+        prepared.add('data analysis');
+        index++;
+        continue;
+      }
+      if (currentLower == 'machine' && nextLower == 'learning') {
+        prepared.add('machine learning');
+        index++;
+        continue;
+      }
+      if (currentLower == 'problem' && nextLower == 'solving') {
+        prepared.add('problem-solving');
         index++;
         continue;
       }
@@ -4640,16 +4996,40 @@ class ResumePdfService {
         );
         break;
       case ResumeTemplate.atsStructured:
-        _addAtsStructuredTemplatePage(document, resume);
+        _addAtsStructuredTemplatePage(
+          document,
+          resume,
+          highlightSummary: highlightSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
         break;
       case ResumeTemplate.atsSerifRules:
-        _addAtsSerifRulesTemplatePage(document, resume);
+        _addAtsSerifRulesTemplatePage(
+          document,
+          resume,
+          highlightSummary: highlightSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
         break;
       case ResumeTemplate.atsModernFlow:
-        _addAtsModernFlowTemplatePage(document, resume);
+        _addAtsModernFlowTemplatePage(
+          document,
+          resume,
+          highlightSummary: highlightSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
         break;
       case ResumeTemplate.atsExecutive:
-        _addAtsExecutiveTemplatePage(document, resume);
+        _addAtsExecutiveTemplatePage(
+          document,
+          resume,
+          highlightSummary: highlightSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
         break;
     }
 
@@ -5475,8 +5855,8 @@ class ResumePdfService {
                 color: highlightedBullets.contains(bullet)
                     ? highlightColor
                     : PdfColors.white,
-                child: pw.Bullet(
-                  text: bullet,
+                child: _highlightedPdfLineText(
+                  bullet,
                   style: pw.TextStyle(
                     color: PdfColors.black,
                     fontSize: bodyFontPt,
@@ -5521,8 +5901,8 @@ class ResumePdfService {
                     color: highlightedSkills.contains(cleaned[i])
                         ? highlightColor
                         : PdfColors.white,
-                    child: pw.Bullet(
-                      text: cleaned[i],
+                    child: _highlightedPdfLineText(
+                      cleaned[i],
                       style: pw.TextStyle(
                         color: PdfColors.black,
                         fontSize: fontSize,
@@ -5543,8 +5923,8 @@ class ResumePdfService {
                               highlightedSkills.contains(cleaned[i + leftCount])
                               ? highlightColor
                               : PdfColors.white,
-                          child: pw.Bullet(
-                            text: cleaned[i + leftCount],
+                          child: _highlightedPdfLineText(
+                            cleaned[i + leftCount],
                             style: pw.TextStyle(
                               color: PdfColors.black,
                               fontSize: fontSize,
@@ -5590,8 +5970,8 @@ class ResumePdfService {
                   color: highlightedSkills.contains(cleaned[i])
                       ? highlightColor
                       : PdfColors.white,
-                  child: pw.Bullet(
-                    text: cleaned[i],
+                  child: _highlightedPdfLineText(
+                    cleaned[i],
                     style: pw.TextStyle(
                       color: PdfColors.black,
                       fontSize: fontSize,
@@ -5612,8 +5992,8 @@ class ResumePdfService {
                             highlightedSkills.contains(cleaned[i + leftCount])
                             ? highlightColor
                             : PdfColors.white,
-                        child: pw.Bullet(
-                          text: cleaned[i + leftCount],
+                        child: _highlightedPdfLineText(
+                          cleaned[i + leftCount],
                           style: pw.TextStyle(
                             color: PdfColors.black,
                             fontSize: fontSize,
@@ -5688,8 +6068,8 @@ class ResumePdfService {
                 color: highlightedBullets.contains(bullet)
                     ? highlightColor
                     : PdfColors.white,
-                child: pw.Bullet(
-                  text: bullet,
+                child: _highlightedPdfLineText(
+                  bullet,
                   style: pw.TextStyle(
                     color: PdfColors.black,
                     fontSize: bodyFontPt,

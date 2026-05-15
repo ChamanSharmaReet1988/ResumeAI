@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/app_preferences.dart';
 import '../../core/services/icloud_resume_service.dart';
@@ -23,6 +24,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
   bool _isSyncing = false;
   bool _autoSyncEnabled = false;
   Set<String> _downloadingIds = <String>{};
+  Set<String> _deletingIds = <String>{};
   List<ICloudResumeSummary> _cloudItems = const [];
 
   ICloudResumeService get _service => context.read<ICloudResumeService>();
@@ -190,6 +192,57 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
     }
   }
 
+  Future<void> _confirmDeleteFromICloud(ICloudResumeSummary item) async {
+    final label = item.isCoverLetter ? 'cover letter' : 'resume';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Delete from iCloud?'),
+          content: Text(
+            'Remove "${item.title}" from iCloud? This will not delete the copy on this device.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text('Delete $label'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+    await _deleteFromICloud(item);
+  }
+
+  Future<void> _deleteFromICloud(ICloudResumeSummary item) async {
+    setState(() => _deletingIds = {..._deletingIds, item.id});
+    try {
+      await _service.deleteFromICloud(
+        id: item.id,
+        isCoverLetter: item.isCoverLetter,
+      );
+      await _loadCloudResumes();
+      if (mounted) {
+        _showMessage('Removed ${item.title} from iCloud.');
+      }
+    } on Exception catch (error) {
+      if (mounted) {
+        _showMessage('Could not delete from iCloud: $error');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _deletingIds = {..._deletingIds}..remove(item.id));
+      }
+    }
+  }
+
   Future<void> _downloadItem(ICloudResumeSummary item) async {
     setState(() => _downloadingIds = {..._downloadingIds, item.id});
     try {
@@ -231,6 +284,110 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _showICloudItemActions({
+    required ICloudResumeSummary item,
+    required _ICloudItemStatus status,
+  }) async {
+    final canDownload = switch (status) {
+      _ICloudItemStatus.cloudOnly => true,
+      _ICloudItemStatus.cloudNewer => true,
+      _ICloudItemStatus.localNewer => false,
+      _ICloudItemStatus.synced => false,
+    };
+
+    final action = await showModalBottomSheet<_ICloudItemAction>(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      builder: (sheetContext) {
+        final sheetTheme = Theme.of(sheetContext);
+        final primaryColor = sheetTheme.colorScheme.primary;
+        final mutedColor = sheetTheme.colorScheme.onSurfaceVariant;
+        final downloadColor = canDownload ? primaryColor : mutedColor;
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: BottomSheetInsets.topSpacing),
+                ListTile(
+                  leading: Icon(
+                    Icons.download_rounded,
+                    color: downloadColor,
+                  ),
+                  title: Text(
+                    canDownload ? 'Download' : 'Already downloaded',
+                    style: sheetTheme.textTheme.bodyLarge?.copyWith(
+                      color: downloadColor,
+                    ),
+                  ),
+                  enabled: canDownload,
+                  onTap: canDownload
+                      ? () => Navigator.of(
+                          sheetContext,
+                        ).pop(_ICloudItemAction.download)
+                      : null,
+                ),
+                ListTile(
+                  leading: IconTheme(
+                    data: IconThemeData(color: primaryColor),
+                    child: const ImageIcon(
+                      AssetImage('assets/fonts/delete.png'),
+                    ),
+                  ),
+                  title: const Text('Delete from iCloud'),
+                  onTap: () =>
+                      Navigator.of(sheetContext).pop(_ICloudItemAction.delete),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null) {
+      return;
+    }
+
+    switch (action) {
+      case _ICloudItemAction.download:
+        await _downloadItem(item);
+      case _ICloudItemAction.delete:
+        await _confirmDeleteFromICloud(item);
+    }
+  }
+
+  Widget _buildICloudItemCard({
+    required ICloudResumeSummary item,
+    required _ICloudItemStatus status,
+    required DateFormat dateFormat,
+  }) {
+    final isBusy =
+        _downloadingIds.contains(item.id) || _deletingIds.contains(item.id);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: isBusy
+              ? null
+              : () => _showICloudItemActions(item: item, status: status),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+            child: _ICloudItemContent(
+              summary: item,
+              dateFormat: dateFormat,
+              showProgress: isBusy,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -400,23 +557,13 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                       ),
                       const SizedBox(height: 12),
                       for (final item in cloudResumes)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: _ICloudItemRow(
-                                summary: item,
-                                status: _statusForResume(
-                                  localResume: localResumeById[item.id],
-                                  cloudResume: item,
-                                ),
-                                dateFormat: dateFormat,
-                                isBusy: _downloadingIds.contains(item.id),
-                                onDownload: () => _downloadItem(item),
-                              ),
-                            ),
+                        _buildICloudItemCard(
+                          item: item,
+                          status: _statusForResume(
+                            localResume: localResumeById[item.id],
+                            cloudResume: item,
                           ),
+                          dateFormat: dateFormat,
                         ),
                       if (cloudCoverLetters.isNotEmpty) const SizedBox(height: 8),
                     ],
@@ -427,23 +574,13 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                       ),
                       const SizedBox(height: 12),
                       for (final item in cloudCoverLetters)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: _ICloudItemRow(
-                                summary: item,
-                                status: _statusForCoverLetter(
-                                  localLetter: localCoverById[item.id],
-                                  cloudItem: item,
-                                ),
-                                dateFormat: dateFormat,
-                                isBusy: _downloadingIds.contains(item.id),
-                                onDownload: () => _downloadItem(item),
-                              ),
-                            ),
+                        _buildICloudItemCard(
+                          item: item,
+                          status: _statusForCoverLetter(
+                            localLetter: localCoverById[item.id],
+                            cloudItem: item,
                           ),
+                          dateFormat: dateFormat,
                         ),
                     ],
                   ],
@@ -488,20 +625,18 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
 
 enum _ICloudItemStatus { cloudOnly, cloudNewer, localNewer, synced }
 
-class _ICloudItemRow extends StatelessWidget {
-  const _ICloudItemRow({
+enum _ICloudItemAction { download, delete }
+
+class _ICloudItemContent extends StatelessWidget {
+  const _ICloudItemContent({
     required this.summary,
-    required this.status,
     required this.dateFormat,
-    required this.isBusy,
-    required this.onDownload,
+    required this.showProgress,
   });
 
   final ICloudResumeSummary summary;
-  final _ICloudItemStatus status;
   final DateFormat dateFormat;
-  final bool isBusy;
-  final VoidCallback onDownload;
+  final bool showProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -512,16 +647,10 @@ class _ICloudItemRow extends StatelessWidget {
             : ResumeData.defaultTitle)
         : summary.title.trim();
     final metadataStyle = theme.textTheme.bodySmall?.copyWith(
-      fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 2,
+      fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 3,
       height: 1.2,
     );
 
-    final (buttonText, isDownloadEnabled) = switch (status) {
-      _ICloudItemStatus.cloudOnly => ('Download', true),
-      _ICloudItemStatus.cloudNewer => ('Download', true),
-      _ICloudItemStatus.localNewer => ('Downloaded', false),
-      _ICloudItemStatus.synced => ('Downloaded', false),
-    };
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -529,7 +658,12 @@ class _ICloudItemRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: theme.textTheme.titleSmall),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(height: 6),
               Text(
                 'Updated: ${dateFormat.format(summary.updatedAt)}',
@@ -538,26 +672,20 @@ class _ICloudItemRow extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 12),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(0, 32),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            textStyle: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-            ),
+        const SizedBox(width: 8),
+        if (showProgress)
+          const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        else
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            key: Key('icloud-card-arrow-${summary.id}'),
+            size: 20,
+            color: theme.colorScheme.primary,
           ),
-          onPressed: !isDownloadEnabled || isBusy ? null : onDownload,
-          child: isBusy
-              ? const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(buttonText),
-        ),
       ],
     );
   }

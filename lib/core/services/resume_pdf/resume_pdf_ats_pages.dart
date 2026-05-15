@@ -6,6 +6,47 @@ pw.Widget _atsMultiPageHeaderGap(pw.Context context) =>
 /// Slightly smaller than body text so keyword lists read lighter than paragraphs.
 double _atsPdfSkillsBodyPt(double bodyPt) => math.max(9.0, bodyPt - 1.35);
 
+pw.Widget _atsHighlightedSummaryText(
+  String summary, {
+  required double bodyPt,
+  required bool highlightSummary,
+  required PdfColor highlightColor,
+}) {
+  final style = pw.TextStyle(fontSize: bodyPt, lineSpacing: 2);
+  if (!highlightSummary) {
+    return pw.Text(summary, style: style);
+  }
+  return pw.Container(
+    width: double.infinity,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+    color: highlightColor,
+    child: pw.Text(summary, style: style),
+  );
+}
+
+pw.Widget _atsHighlightedBulletLine(
+  String text, {
+  required pw.TextStyle style,
+  required bool isHighlighted,
+  required PdfColor highlightColor,
+}) {
+  if (!isHighlighted) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(top: 2),
+      child: pw.Text(text, style: style),
+    );
+  }
+  return pw.Padding(
+    padding: const pw.EdgeInsets.only(top: 2),
+    child: pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      color: highlightColor,
+      child: pw.Text(text, style: style),
+    ),
+  );
+}
+
 /// Single-column ATS PDF layouts (no sidebars, minimal decoration).
 extension _ResumePdfAtsPages on ResumePdfService {
   PdfColor get _atsGrayBand => PdfColor.fromHex('#E6E6E6');
@@ -67,10 +108,14 @@ extension _ResumePdfAtsPages on ResumePdfService {
     );
   }
 
+  static final PdfColor _atsHighlightColor = PdfColor.fromHex('#FFE67A');
+
   List<pw.Widget> _atsExperienceEntries(
     List<WorkExperience> items,
     double bodyPt, {
     bool usePipeRoleCompany = false,
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+    PdfColor? highlightColor,
   }) {
     final out = <pw.Widget>[];
     for (var i = 0; i < items.length; i++) {
@@ -135,14 +180,26 @@ extension _ResumePdfAtsPages on ResumePdfService {
         );
       }
       out.add(pw.SizedBox(height: 4));
+      final highlightedBullets =
+          highlightedBulletsByExperience[i] ?? const <String>{};
       for (final b in _workBulletLines(item)) {
+        final lineStyle = pw.TextStyle(color: PdfColors.black, fontSize: bodyPt);
+        final isHighlighted =
+            highlightColor != null && highlightedBullets.contains(b);
         out.add(
           pw.Padding(
             padding: const pw.EdgeInsets.only(left: 2, top: 2),
-            child: pw.Bullet(
-              text: b,
-              style: pw.TextStyle(color: PdfColors.black, fontSize: bodyPt),
-            ),
+            child: isHighlighted
+                ? pw.Container(
+                    width: double.infinity,
+                    padding: const pw.EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
+                    color: highlightColor,
+                    child: pw.Text(b, style: lineStyle),
+                  )
+                : pw.Text(b, style: lineStyle),
           ),
         );
       }
@@ -153,7 +210,14 @@ extension _ResumePdfAtsPages on ResumePdfService {
     return out;
   }
 
-  void _addAtsStructuredTemplatePage(pw.Document document, ResumeData resume) {
+  void _addAtsStructuredTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) {
+    final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final name = _displayName(resume).toUpperCase();
     final job = resume.jobTitle.trim();
@@ -207,11 +271,13 @@ extension _ResumePdfAtsPages on ResumePdfService {
             pw.SizedBox(height: 12),
             _atsGraySectionTitle('Summary'),
             pw.SizedBox(height: 6),
-            pw.Text(
+            _atsHighlightedSummaryText(
               resume.summary.trim().ifEmpty(
                 'Add a concise summary aligned to your target roles.',
               ),
-              style: pw.TextStyle(fontSize: bodyPt, lineSpacing: 2),
+              bodyPt: bodyPt,
+              highlightSummary: highlightSummary,
+              highlightColor: highlightColor,
             ),
             pw.SizedBox(height: ResumeTypography.sectionGapPdfPt),
           ];
@@ -223,7 +289,15 @@ extension _ResumePdfAtsPages on ResumePdfService {
             if (items.isEmpty) {
               w.add(pw.Text('Add your professional experience.'));
             } else {
-              w.addAll(_atsExperienceEntries(items, bodyPt));
+              w.addAll(
+                _atsExperienceEntries(
+                  items,
+                  bodyPt,
+                  highlightedBulletsByExperience:
+                      highlightedBulletsByExperience,
+                  highlightColor: highlightColor,
+                ),
+              );
             }
             w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
           }
@@ -288,6 +362,15 @@ extension _ResumePdfAtsPages on ResumePdfService {
             w.add(pw.SizedBox(height: 6));
             if (skills.isEmpty) {
               w.add(pw.Text('List relevant tools and competencies.'));
+            } else if (highlightedSkills.isNotEmpty) {
+              w.add(
+                _twoColumnBulletListWithHighlights(
+                  skills,
+                  highlightedSkills,
+                  highlightColor,
+                  fontSize: _atsPdfSkillsBodyPt(bodyPt),
+                ),
+              );
             } else {
               for (final row in _twoColumnBulletRows(
                 skills,
@@ -332,7 +415,14 @@ extension _ResumePdfAtsPages on ResumePdfService {
     );
   }
 
-  void _addAtsSerifRulesTemplatePage(pw.Document document, ResumeData resume) {
+  void _addAtsSerifRulesTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) {
+    final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final name = _displayName(resume);
     final job = resume.jobTitle.trim();
@@ -400,11 +490,13 @@ extension _ResumePdfAtsPages on ResumePdfService {
             pw.SizedBox(height: 4),
             _atsSolidRule(),
             pw.SizedBox(height: 8),
-            pw.Text(
+            _atsHighlightedSummaryText(
               resume.summary.trim().ifEmpty(
                 'Summarize impact and scope in two to four sentences.',
               ),
-              style: pw.TextStyle(fontSize: bodyPt, lineSpacing: 2),
+              bodyPt: bodyPt,
+              highlightSummary: highlightSummary,
+              highlightColor: highlightColor,
             ),
             pw.SizedBox(height: ResumeTypography.sectionGapPdfPt),
           ];
@@ -466,17 +558,18 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   ),
                 );
                 w.add(pw.SizedBox(height: 4));
+                final highlightedBullets =
+                    highlightedBulletsByExperience[i] ?? const <String>{};
                 for (final b in _workBulletLines(item)) {
                   w.add(
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.only(top: 2),
-                      child: pw.Bullet(
-                        text: b,
-                        style: pw.TextStyle(
-                          color: PdfColors.black,
-                          fontSize: bodyPt,
-                        ),
+                    _atsHighlightedBulletLine(
+                      b,
+                      style: pw.TextStyle(
+                        color: PdfColors.black,
+                        fontSize: bodyPt,
                       ),
+                      isHighlighted: highlightedBullets.contains(b),
+                      highlightColor: highlightColor,
                     ),
                   );
                 }
@@ -549,13 +642,22 @@ extension _ResumePdfAtsPages on ResumePdfService {
             final skills = _skillsForDisplay(resume);
             if (skills.isEmpty) {
               w.add(pw.Text('Add targeted skills.'));
+            } else if (highlightedSkills.isNotEmpty) {
+              w.add(
+                _twoColumnBulletListWithHighlights(
+                  skills,
+                  highlightedSkills,
+                  highlightColor,
+                  fontSize: _atsPdfSkillsBodyPt(bodyPt),
+                ),
+              );
             } else {
               for (final s in skills) {
                 w.add(
                   pw.Padding(
                     padding: const pw.EdgeInsets.only(bottom: 3),
-                    child: pw.Bullet(
-                      text: s,
+                    child: pw.Text(
+                      s,
                       style: pw.TextStyle(
                         fontSize: _atsPdfSkillsBodyPt(bodyPt),
                       ),
@@ -611,7 +713,14 @@ extension _ResumePdfAtsPages on ResumePdfService {
     );
   }
 
-  void _addAtsModernFlowTemplatePage(pw.Document document, ResumeData resume) {
+  void _addAtsModernFlowTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) {
+    final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final name = _displayName(resume);
     final email = resume.email.trim();
@@ -669,11 +778,13 @@ extension _ResumePdfAtsPages on ResumePdfService {
               ),
             ),
             pw.SizedBox(height: 6),
-            pw.Text(
+            _atsHighlightedSummaryText(
               resume.summary.trim().ifEmpty(
                 'Describe strengths and focus areas clearly.',
               ),
-              style: pw.TextStyle(fontSize: bodyPt, lineSpacing: 2),
+              bodyPt: bodyPt,
+              highlightSummary: highlightSummary,
+              highlightColor: highlightColor,
             ),
             pw.SizedBox(height: ResumeTypography.sectionGapPdfPt),
             _atsSolidRule(color: PdfColor.fromHex('#CCCCCC')),
@@ -740,13 +851,22 @@ extension _ResumePdfAtsPages on ResumePdfService {
             w.add(pw.SizedBox(height: 6));
             if (skills.isEmpty) {
               w.add(pw.Text('Add skills that mirror job postings.'));
+            } else if (highlightedSkills.isNotEmpty) {
+              w.add(
+                _twoColumnBulletListWithHighlights(
+                  skills,
+                  highlightedSkills,
+                  highlightColor,
+                  fontSize: _atsPdfSkillsBodyPt(bodyPt),
+                ),
+              );
             } else {
               for (final s in skills) {
                 w.add(
                   pw.Padding(
                     padding: const pw.EdgeInsets.only(bottom: 3),
-                    child: pw.Bullet(
-                      text: s,
+                    child: pw.Text(
+                      s,
                       style: pw.TextStyle(
                         fontSize: _atsPdfSkillsBodyPt(bodyPt),
                       ),
@@ -790,14 +910,15 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 if (dr.isNotEmpty) {
                   w.add(pw.Text(dr, style: pw.TextStyle(fontSize: bodyPt)));
                 }
+                final highlightedBullets =
+                    highlightedBulletsByExperience[i] ?? const <String>{};
                 for (final b in _workBulletLines(item)) {
                   w.add(
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.only(top: 2),
-                      child: pw.Bullet(
-                        text: b,
-                        style: pw.TextStyle(fontSize: bodyPt),
-                      ),
+                    _atsHighlightedBulletLine(
+                      b,
+                      style: pw.TextStyle(fontSize: bodyPt),
+                      isHighlighted: highlightedBullets.contains(b),
+                      highlightColor: highlightColor,
                     ),
                   );
                 }
@@ -853,7 +974,14 @@ extension _ResumePdfAtsPages on ResumePdfService {
     );
   }
 
-  void _addAtsExecutiveTemplatePage(pw.Document document, ResumeData resume) {
+  void _addAtsExecutiveTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) {
+    final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final job = resume.jobTitle.trim();
     final name = _displayName(resume);
@@ -913,11 +1041,13 @@ extension _ResumePdfAtsPages on ResumePdfService {
               ),
             ),
             pw.SizedBox(height: 6),
-            pw.Text(
+            _atsHighlightedSummaryText(
               resume.summary.trim().ifEmpty(
                 'Lead with scope, domains, and measurable outcomes.',
               ),
-              style: pw.TextStyle(fontSize: bodyPt, lineSpacing: 2),
+              bodyPt: bodyPt,
+              highlightSummary: highlightSummary,
+              highlightColor: highlightColor,
             ),
             pw.SizedBox(height: ResumeTypography.sectionGapPdfPt),
             pw.Text(
@@ -936,7 +1066,14 @@ extension _ResumePdfAtsPages on ResumePdfService {
               w.add(pw.Text('Add leadership and core responsibilities.'));
             } else {
               w.addAll(
-                _atsExperienceEntries(items, bodyPt, usePipeRoleCompany: true),
+                _atsExperienceEntries(
+                  items,
+                  bodyPt,
+                  usePipeRoleCompany: true,
+                  highlightedBulletsByExperience:
+                      highlightedBulletsByExperience,
+                  highlightColor: highlightColor,
+                ),
               );
             }
           }
@@ -998,13 +1135,24 @@ extension _ResumePdfAtsPages on ResumePdfService {
           );
           w.add(pw.SizedBox(height: 6));
           if (resume.includeSkillsInResume && skills.isNotEmpty) {
-            for (final row in _twoColumnBulletRows(
-              skills,
-              columnGap: 18,
-              itemBottom: 3,
-              fontSize: _atsPdfSkillsBodyPt(bodyPt),
-            )) {
-              w.add(row);
+            if (highlightedSkills.isNotEmpty) {
+              w.add(
+                _twoColumnBulletListWithHighlights(
+                  skills,
+                  highlightedSkills,
+                  highlightColor,
+                  fontSize: _atsPdfSkillsBodyPt(bodyPt),
+                ),
+              );
+            } else {
+              for (final row in _twoColumnBulletRows(
+                skills,
+                columnGap: 18,
+                itemBottom: 3,
+                fontSize: _atsPdfSkillsBodyPt(bodyPt),
+              )) {
+                w.add(row);
+              }
             }
           } else {
             w.add(pw.Text('Add keywords from target job descriptions.'));

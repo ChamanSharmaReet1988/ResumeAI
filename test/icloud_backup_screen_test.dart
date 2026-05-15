@@ -140,6 +140,22 @@ class _FakeICloudResumeService implements ICloudResumeService {
   @override
   Future<List<String>> uploadCoverLetters(List<CoverLetterData> coverLetters) async =>
       coverLetters.map((c) => c.id).toList();
+
+  final List<({String id, bool isCoverLetter})> deletedItems = [];
+
+  @override
+  Future<void> deleteFromICloud({
+    required String id,
+    required bool isCoverLetter,
+  }) async {
+    deletedItems.add((id: id, isCoverLetter: isCoverLetter));
+    cloudSummaries = cloudSummaries
+        .where(
+          (item) => !(item.id == id && item.isCoverLetter == isCoverLetter),
+        )
+        .toList();
+    cloudPayloads.remove(id);
+  }
 }
 
 void main() {
@@ -174,6 +190,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Cloud Resume'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Download'));
     await tester.pumpAndSettle();
 

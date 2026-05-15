@@ -58,6 +58,11 @@ abstract class ICloudResumeService {
   Future<ResumeData> downloadResume(String id);
 
   Future<CoverLetterData> downloadCoverLetter(String id);
+
+  Future<void> deleteFromICloud({
+    required String id,
+    required bool isCoverLetter,
+  });
 }
 
 class MethodChannelICloudResumeService implements ICloudResumeService {
@@ -167,6 +172,20 @@ class MethodChannelICloudResumeService implements ICloudResumeService {
 
     return CoverLetterData.fromJson(
       raw.map((key, value) => MapEntry(key.toString(), value)),
+    );
+  }
+
+  @override
+  Future<void> deleteFromICloud({
+    required String id,
+    required bool isCoverLetter,
+  }) async {
+    if (!Platform.isIOS || id.isEmpty) {
+      return;
+    }
+    await _channel.invokeMethod<void>(
+      'deleteFromICloud',
+      <String, Object?>{'id': id, 'isCoverLetter': isCoverLetter},
     );
   }
 }

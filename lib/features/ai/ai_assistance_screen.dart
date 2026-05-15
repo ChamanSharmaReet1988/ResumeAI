@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/services/resume_services.dart';
+import 'resume_optimize_highlight.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
@@ -32,31 +33,116 @@ class AiAssistanceScreen extends ResumeAnalyserScreen {
 
 enum _OptimizedResumeSaveChoice { newCopy, existingResume }
 
-class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
+class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
+    with WidgetsBindingObserver {
   static const double _fieldHorizontalPadding = 12;
   final _jobDescriptionController = TextEditingController();
+  final _jobDescriptionFocusNode = FocusNode();
+  OverlayEntry? _keyboardHideOverlay;
 
   bool _isBusy = false;
   List<String> _appliedChanges = const [];
-  _ResumeHighlightPreviewData? _previewData;
+  ResumeOptimizeHighlightData? _previewData;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _jobDescriptionController.addListener(_handleInputChanged);
+    _jobDescriptionFocusNode.addListener(_handleJobDescriptionFocusChanged);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _jobDescriptionController.removeListener(_handleInputChanged);
     _jobDescriptionController.dispose();
+    _jobDescriptionFocusNode
+      ..removeListener(_handleJobDescriptionFocusChanged)
+      ..dispose();
+    _removeKeyboardHideOverlay();
     super.dispose();
   }
 
+  @override
+  void didChangeMetrics() {
+    _scheduleKeyboardHideOverlayUpdate();
+  }
+
   void _handleInputChanged() {
-    if (mounted) {
-      setState(_resetOptimizationPreview);
+    if (!mounted) {
+      return;
     }
+    setState(_resetOptimizationPreview);
+  }
+
+  void _handleJobDescriptionFocusChanged() {
+    _scheduleKeyboardHideOverlayUpdate();
+  }
+
+  void _scheduleKeyboardHideOverlayUpdate() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateKeyboardHideOverlay();
+      }
+    });
+  }
+
+  double _keyboardInsetForOverlay() {
+    if (!mounted) {
+      return 0;
+    }
+    final view = View.of(context);
+    return view.viewInsets.bottom / view.devicePixelRatio;
+  }
+
+  bool _shouldShowKeyboardHideOverlay() {
+    return mounted &&
+        _jobDescriptionFocusNode.hasFocus &&
+        _keyboardInsetForOverlay() > 0;
+  }
+
+  void _updateKeyboardHideOverlay() {
+    if (!_shouldShowKeyboardHideOverlay()) {
+      _removeKeyboardHideOverlay();
+      return;
+    }
+
+    if (_keyboardHideOverlay == null) {
+      final overlay = Overlay.of(context, rootOverlay: true);
+      _keyboardHideOverlay = OverlayEntry(
+        builder: (overlayContext) {
+          final keyboardInset = _keyboardInsetForOverlay();
+          return Positioned(
+            right: 12,
+            bottom: keyboardInset + 8,
+            child: SafeArea(
+              minimum: const EdgeInsets.only(right: 4, bottom: 4),
+              child: IconButton.filledTonal(
+                key: const Key('optimize-hide-keyboard-button'),
+                onPressed: () => FocusScope.of(context).unfocus(),
+                icon: const Icon(Icons.keyboard_hide_rounded),
+                tooltip: 'Hide keyboard',
+              ),
+            ),
+          );
+        },
+      );
+      overlay.insert(_keyboardHideOverlay!);
+      return;
+    }
+
+    _keyboardHideOverlay?.markNeedsBuild();
+  }
+
+  void _removeKeyboardHideOverlay() {
+    _keyboardHideOverlay?.remove();
+    _keyboardHideOverlay = null;
+  }
+
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    _removeKeyboardHideOverlay();
   }
 
   void _resetOptimizationPreview() {
@@ -83,6 +169,8 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
     required LocalAiResumeService aiService,
     required ResumeData? selectedResume,
   }) async {
+    _dismissKeyboard();
+
     final jobDescription = _jobDescriptionController.text.trim();
 
     if (jobDescription.isEmpty) {
@@ -115,44 +203,12 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
 
       setState(() {
         _appliedChanges = result.appliedChanges;
-        _previewData = _buildPreviewData(
+        _previewData = buildResumeOptimizeHighlightData(
           beforeResume: beforeResume,
           afterResume: improvedResume,
         );
       });
     });
-  }
-
-  _ResumeHighlightPreviewData _buildPreviewData({
-    required ResumeData beforeResume,
-    required ResumeData afterResume,
-  }) {
-    final beforeSummary = beforeResume.summary.trim();
-    final afterSummary = afterResume.summary.trim();
-    final highlightedSkills = afterResume.skills
-        .where((skill) => !beforeResume.skills.contains(skill))
-        .toSet();
-    final highlightedBulletsByExperience = <int, Set<String>>{};
-    for (var index = 0; index < afterResume.workExperiences.length; index++) {
-      final updatedExperience = afterResume.workExperiences[index];
-      final originalExperience = index < beforeResume.workExperiences.length
-          ? beforeResume.workExperiences[index]
-          : const WorkExperience.empty();
-      final newBullets = updatedExperience.bullets
-          .where((bullet) => !originalExperience.bullets.contains(bullet))
-          .toSet();
-      if (newBullets.isNotEmpty) {
-        highlightedBulletsByExperience[index] = newBullets;
-      }
-    }
-
-    return _ResumeHighlightPreviewData(
-      beforeResume: beforeResume,
-      afterResume: afterResume,
-      highlightSummary: beforeSummary != afterSummary,
-      highlightedSkills: highlightedSkills,
-      highlightedBulletsByExperience: highlightedBulletsByExperience,
-    );
   }
 
   Future<void> _openOptimizedResumePreview({
@@ -186,11 +242,16 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
     final library = context.watch<ResumeLibraryViewModel>();
     final resumes = library.resumes;
     final selectedResume = library.selectedResume;
-    final hasSelectedResume = selectedResume?.hasMeaningfulContent ?? false;
-    final canImprove =
-        hasSelectedResume && _jobDescriptionController.text.trim().isNotEmpty;
+    final hasSelectedResume = selectedResume != null;
 
-    return SingleChildScrollView(
+    return ListenableBuilder(
+      listenable: _jobDescriptionController,
+      builder: (context, _) {
+        final enableOptimize = resumes.isNotEmpty &&
+            hasSelectedResume &&
+            _jobDescriptionController.text.trim().isNotEmpty;
+
+        return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,9 +364,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
@@ -339,8 +398,10 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
           ],
           TextField(
             controller: _jobDescriptionController,
+            focusNode: _jobDescriptionFocusNode,
             minLines: 5,
             maxLines: 7,
+            onChanged: (_) => _handleInputChanged(),
             decoration: const InputDecoration(
               labelText: 'Job description',
               hintText:
@@ -354,7 +415,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
             children: [
               FilledButton(
                 key: const Key('tailor-resume-ai-button'),
-                onPressed: canImprove
+                onPressed: enableOptimize
                     ? () => _applyAtsFixes(
                         aiService: aiService,
                         selectedResume: selectedResume,
@@ -410,24 +471,10 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen> {
           ],
         ],
       ),
+        );
+      },
     );
   }
-}
-
-class _ResumeHighlightPreviewData {
-  const _ResumeHighlightPreviewData({
-    required this.beforeResume,
-    required this.afterResume,
-    required this.highlightSummary,
-    required this.highlightedSkills,
-    required this.highlightedBulletsByExperience,
-  });
-
-  final ResumeData beforeResume;
-  final ResumeData afterResume;
-  final bool highlightSummary;
-  final Set<String> highlightedSkills;
-  final Map<int, Set<String>> highlightedBulletsByExperience;
 }
 
 class _OptimizedResumeTitleDialog extends StatefulWidget {
@@ -499,7 +546,7 @@ class _OptimizedResumePreviewScreen extends StatefulWidget {
   });
 
   final ResumeData sourceResume;
-  final _ResumeHighlightPreviewData previewData;
+  final ResumeOptimizeHighlightData previewData;
 
   @override
   State<_OptimizedResumePreviewScreen> createState() =>
@@ -698,7 +745,7 @@ class _HighlightedResumePdfPreview extends StatelessWidget {
   });
 
   final ResumePdfService pdfService;
-  final _ResumeHighlightPreviewData previewData;
+  final ResumeOptimizeHighlightData previewData;
 
   @override
   Widget build(BuildContext context) {
