@@ -255,7 +255,8 @@ void main() {
     expect(find.text('Project title'), findsOneWidget);
     expect(find.text('Overview'), findsNothing);
     expect(find.text('Tools & Technologies'), findsNothing);
-    expect(find.text('Bullet 1'), findsOneWidget);
+    expect(find.text('Bullet 1'), findsNothing);
+    expect(find.text('Add bullet point'), findsOneWidget);
   });
 
   testWidgets(

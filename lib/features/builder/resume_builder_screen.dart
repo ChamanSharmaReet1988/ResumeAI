@@ -337,7 +337,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         minimumSize: const Size(0, 34),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         textStyle: theme.textTheme.labelSmall?.copyWith(
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: FontWeight.w700,
           height: 1.2,
         ),
@@ -1667,9 +1667,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     ),
                     const SizedBox(height: 14),
                     ...(() {
-                      final displayBullets = item.bullets.isEmpty
-                          ? <String>['']
-                          : List<String>.from(item.bullets);
+                      final displayBullets = List<String>.from(item.bullets);
                       return <Widget>[
                         ...displayBullets.asMap().entries.map((bulletEntry) {
                           final bulletIndex = bulletEntry.key;
@@ -1696,12 +1694,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                         ),
                                     onChanged: (value) => viewModel
                                         .updateWorkExperience(index, (current) {
-                                          final updated =
-                                              current.bullets.isEmpty
-                                              ? ['']
-                                              : List<String>.from(
-                                                  current.bullets,
-                                                );
+                                          final updated = List<String>.from(
+                                            current.bullets,
+                                          );
                                           if (bulletIndex < updated.length) {
                                             updated[bulletIndex] = value;
                                           }
@@ -1763,12 +1758,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                     viewModel.updateWorkExperience(
                                       index,
                                       (current) => current.copyWith(
-                                        bullets: [
-                                          ...(current.bullets.isEmpty
-                                              ? ['']
-                                              : current.bullets),
-                                          '',
-                                        ],
+                                        bullets: [...current.bullets, ''],
                                         layoutMode:
                                             WorkExperienceLayoutMode.bullets,
                                       ),
@@ -2338,10 +2328,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    ...((item.bullets.isEmpty ? [''] : item.bullets)
-                        .asMap()
-                        .entries
-                        .map((entry) {
+                    ...(item.bullets.asMap().entries.map((entry) {
                           final bi = entry.key;
                           final text = entry.value;
                           return Padding(
@@ -2367,11 +2354,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                         ),
                                     onChanged: (value) => viewModel
                                         .updateProject(index, (current) {
-                                          final next = current.bullets.isEmpty
-                                              ? ['']
-                                              : List<String>.from(
-                                                  current.bullets,
-                                                );
+                                          final next = List<String>.from(
+                                            current.bullets,
+                                          );
                                           if (bi < next.length) {
                                             next[bi] = value;
                                           }
@@ -2394,12 +2379,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                               viewModel.updateProject(index, (
                                                 current,
                                               ) {
-                                                final next =
-                                                    current.bullets.isEmpty
-                                                    ? <String>[]
-                                                    : List<String>.from(
-                                                        current.bullets,
-                                                      );
+                                                final next = List<String>.from(
+                                                  current.bullets,
+                                                );
                                                 if (bi < next.length) {
                                                   next.removeAt(bi);
                                                 }
@@ -2427,12 +2409,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                 viewModel.updateProject(
                                   index,
                                   (current) => current.copyWith(
-                                    bullets: [
-                                      ...(current.bullets.isEmpty
-                                          ? ['']
-                                          : current.bullets),
-                                      '',
-                                    ],
+                                    bullets: [...current.bullets, ''],
                                   ),
                                 );
                               },
