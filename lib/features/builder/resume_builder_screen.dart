@@ -30,6 +30,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     milliseconds: 340,
   );
   static const Curve _stepAnimationCurve = Curves.easeInOutCubicEmphasized;
+  static const double _calendarIconStroke = 1.65;
 
   final _skillController = TextEditingController();
   final _skillFocusNode = FocusNode();
@@ -476,9 +477,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 children: [
                   const SizedBox(height: BottomSheetInsets.topSpacing),
                   ListTile(
-                    leading: Icon(
-                      Icons.calendar_month_outlined,
-                      color: primaryColor,
+                    leading: IconTheme(
+                      data: IconThemeData(color: primaryColor),
+                      child: const _ThinCalendarIcon(
+                        strokeWidth:
+                            _ResumeBuilderScreenState._calendarIconStroke,
+                      ),
                     ),
                     title: const Text('Choose month and year'),
                     onTap: () =>
@@ -2104,14 +2108,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       labelText: 'Add a skill',
                       helperText:
                           'Type to see suggestions or add your own skill',
-                      helperStyle:
-                          Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 11,
-                                height: 1.35,
-                              ),
+                      helperStyle: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: 11,
+                            height: 1.35,
+                          ),
                       suffixIcon: IconButton(
                         onPressed: _addSkillFromInput,
                         icon: const Icon(Icons.add_rounded),
@@ -2155,8 +2159,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                   ),
                                   child: Text(
                                     option,
-                                    style:
-                                        theme.textTheme.bodyLarge?.copyWith(
+                                    style: theme.textTheme.bodyLarge?.copyWith(
                                       color: theme.colorScheme.onSurface,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -2329,77 +2332,74 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     ),
                     const SizedBox(height: 16),
                     ...(item.bullets.asMap().entries.map((entry) {
-                          final bi = entry.key;
-                          final text = entry.value;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: _SyncTextField(
-                                    key: Key('project-bullet-$index-$bi'),
-                                    label: 'Bullet ${bi + 1}',
-                                    value: text,
-                                    textCapitalization:
-                                        TextCapitalization.sentences,
-                                    hintText: 'Enter a bullet point',
-                                    fullWidth: true,
-                                    minLines: 1,
-                                    maxLines: null,
-                                    keyboardType: TextInputType.multiline,
-                                    focusNode:
-                                        _focusNodeForExtendedKeyboardField(
-                                          'project-bullet-$index-$bi',
-                                        ),
-                                    onChanged: (value) => viewModel
-                                        .updateProject(index, (current) {
-                                          final next = List<String>.from(
-                                            current.bullets,
-                                          );
-                                          if (bi < next.length) {
-                                            next[bi] = value;
-                                          }
-                                          return current.copyWith(
-                                            bullets: next,
-                                          );
-                                        }),
-                                  ),
+                      final bi = entry.key;
+                      final text = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _SyncTextField(
+                                key: Key('project-bullet-$index-$bi'),
+                                label: 'Bullet ${bi + 1}',
+                                value: text,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                hintText: 'Enter a bullet point',
+                                fullWidth: true,
+                                minLines: 1,
+                                maxLines: null,
+                                keyboardType: TextInputType.multiline,
+                                focusNode: _focusNodeForExtendedKeyboardField(
+                                  'project-bullet-$index-$bi',
                                 ),
-                                IconButton(
-                                  tooltip: 'Remove bullet',
-                                  onPressed: viewModel.isBusy
-                                      ? null
-                                      : () {
-                                          _confirmRemoval(
-                                            title: 'Remove bullet?',
-                                            message:
-                                                'This bullet will be removed from this project.',
-                                            onConfirm: () {
-                                              viewModel.updateProject(index, (
-                                                current,
-                                              ) {
-                                                final next = List<String>.from(
-                                                  current.bullets,
-                                                );
-                                                if (bi < next.length) {
-                                                  next.removeAt(bi);
-                                                }
-                                                return current.copyWith(
-                                                  bullets: next,
-                                                );
-                                              });
-                                            },
-                                          );
-                                        },
-                                  icon: const ImageIcon(
-                                    AssetImage('assets/fonts/delete.png'),
-                                  ),
-                                ),
-                              ],
+                                onChanged: (value) =>
+                                    viewModel.updateProject(index, (current) {
+                                      final next = List<String>.from(
+                                        current.bullets,
+                                      );
+                                      if (bi < next.length) {
+                                        next[bi] = value;
+                                      }
+                                      return current.copyWith(bullets: next);
+                                    }),
+                              ),
                             ),
-                          );
-                        })),
+                            IconButton(
+                              tooltip: 'Remove bullet',
+                              onPressed: viewModel.isBusy
+                                  ? null
+                                  : () {
+                                      _confirmRemoval(
+                                        title: 'Remove bullet?',
+                                        message:
+                                            'This bullet will be removed from this project.',
+                                        onConfirm: () {
+                                          viewModel.updateProject(index, (
+                                            current,
+                                          ) {
+                                            final next = List<String>.from(
+                                              current.bullets,
+                                            );
+                                            if (bi < next.length) {
+                                              next.removeAt(bi);
+                                            }
+                                            return current.copyWith(
+                                              bullets: next,
+                                            );
+                                          });
+                                        },
+                                      );
+                                    },
+                              icon: const ImageIcon(
+                                AssetImage('assets/fonts/delete.png'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    })),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: _buildAddBulletPointButton(
@@ -3011,30 +3011,130 @@ class _PickerField extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasValue = value.trim().isNotEmpty;
     final theme = Theme.of(context);
+    final inputTheme = theme.inputDecorationTheme;
+    final fillColor = inputTheme.fillColor ?? theme.colorScheme.surface;
+    final enabledBorder = inputTheme.enabledBorder;
+    final outlineBorder = enabledBorder is OutlineInputBorder
+        ? enabledBorder
+        : const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(18)),
+          );
+    final borderSide = outlineBorder.borderSide == BorderSide.none
+        ? BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          )
+        : outlineBorder.borderSide;
+    final borderRadius = outlineBorder.borderRadius;
+    final textStyle = theme.textTheme.bodyLarge?.copyWith(
+      color: hasValue
+          ? theme.colorScheme.onSurface
+          : theme.colorScheme.onSurfaceVariant,
+    );
 
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: borderRadius,
       onTap: onTap,
-      child: InputDecorator(
-        isEmpty: !hasValue,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hintText,
-          hintMaxLines: 1,
-          suffixIcon: const Icon(Icons.calendar_today_outlined),
+      child: Container(
+        height: 54,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: fillColor,
+          borderRadius: borderRadius,
+          border: Border.fromBorderSide(borderSide),
         ),
-        child: hasValue
-            ? Text(
-                value,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                hasValue ? value : label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
-              )
-            : const SizedBox.shrink(),
+                style: textStyle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconTheme(
+              data: IconThemeData(color: theme.colorScheme.primary),
+              child: const _ThinCalendarIcon(
+                strokeWidth: _ResumeBuilderScreenState._calendarIconStroke,
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _ThinCalendarIcon extends StatelessWidget {
+  const _ThinCalendarIcon({required this.strokeWidth});
+
+  final double strokeWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        IconTheme.of(context).color ?? Theme.of(context).iconTheme.color;
+    return SizedBox.square(
+      dimension: 24,
+      child: CustomPaint(
+        painter: _ThinCalendarIconPainter(
+          color: color ?? Colors.black,
+          strokeWidth: strokeWidth,
+        ),
+      ),
+    );
+  }
+}
+
+class _ThinCalendarIconPainter extends CustomPainter {
+  const _ThinCalendarIconPainter({
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  final Color color;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final width = size.width;
+    final height = size.height;
+    final outer = RRect.fromRectAndRadius(
+      Rect.fromLTWH(width * 0.12, height * 0.18, width * 0.76, height * 0.7),
+      Radius.circular(width * 0.08),
+    );
+    canvas.drawRRect(outer, paint);
+
+    final headerY = height * 0.36;
+    canvas.drawLine(
+      Offset(width * 0.12, headerY),
+      Offset(width * 0.88, headerY),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(width * 0.28, height * 0.1),
+      Offset(width * 0.28, height * 0.26),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(width * 0.72, height * 0.1),
+      Offset(width * 0.72, height * 0.26),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ThinCalendarIconPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
   }
 }
 
