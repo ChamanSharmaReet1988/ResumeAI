@@ -11,7 +11,7 @@ final Map<String, pw.ThemeData> _resumePdfThemeCache = {};
 /// Embeds bundled TTFs so exported PDFs match the template typography instead of
 /// built-in Helvetica.
 ///
-/// [bodyFontPt] overrides default body size (e.g. Dark Header 11–15); defaults to [ResumeTypography.bodyPt].
+/// [bodyFontPt] overrides default body size (e.g. Dark Header 11–13); defaults to [ResumeTypography.bodyPt].
 Future<pw.ThemeData> resumePdfThemeForBodyFont(
   ResumeTextFont font, {
   double? bodyFontPt,

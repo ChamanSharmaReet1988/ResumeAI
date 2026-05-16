@@ -228,7 +228,7 @@ class ResumeData {
       includeEducationInResume: true,
       includeSkillsInResume: true,
       includeProjectsInResume: true,
-      bodyFontPt: 13,
+      bodyFontPt: 12,
       corporateColorPresetIndex: 0,
     );
   }
@@ -291,7 +291,7 @@ class ResumeData {
           json['includeEducationInResume'] as bool? ?? true,
       includeSkillsInResume: json['includeSkillsInResume'] as bool? ?? true,
       includeProjectsInResume: json['includeProjectsInResume'] as bool? ?? true,
-      bodyFontPt: (json['bodyFontPt'] as num?)?.toInt() ?? 13,
+      bodyFontPt: (json['bodyFontPt'] as num?)?.toInt() ?? 12,
       corporateColorPresetIndex:
           (json['corporateColorPresetIndex'] as num?)?.toInt() ?? 0,
     );
@@ -324,7 +324,7 @@ class ResumeData {
   final bool includeSkillsInResume;
   final bool includeProjectsInResume;
 
-  /// Body text size (pt) for Dark Header preview + PDF; typically 11–15.
+  /// Body text size (pt) for Dark Header preview + PDF; typically 11–13.
   final int bodyFontPt;
 
   /// Index 0–4 for Dark Header title + top bar colors (see `corporate_resume_style.dart`).

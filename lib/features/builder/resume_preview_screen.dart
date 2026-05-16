@@ -94,7 +94,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
     viewModel.updateResume(
       (resume) => resume.copyWith(
         template: selectedTemplate,
-        bodyFontPt: 13,
+        bodyFontPt: 12,
         corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
           selectedTemplate,
         ),
@@ -193,11 +193,11 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 Expanded(
                                   child: Slider(
                                     value: resume.effectiveBodyFontPt
-                                        .clamp(11, 14)
+                                        .clamp(11, 13)
                                         .toDouble(),
                                     min: 11,
-                                    max: 14,
-                                    divisions: 3,
+                                    max: 13,
+                                    divisions: 2,
                                     label: '${resume.effectiveBodyFontPt}',
                                     onChanged: (v) {
                                       viewModel.updateResume(
@@ -210,7 +210,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 SizedBox(
                                   width: 24,
                                   child: Text(
-                                    '14',
+                                    '13',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: muted,
                                     ),

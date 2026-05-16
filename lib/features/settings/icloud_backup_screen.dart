@@ -303,8 +303,12 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
       builder: (sheetContext) {
         final sheetTheme = Theme.of(sheetContext);
         final primaryColor = sheetTheme.colorScheme.primary;
-        final mutedColor = sheetTheme.colorScheme.onSurfaceVariant;
         final actionTextColor = sheetTheme.colorScheme.onSurface;
+        const disabledOpacity = 0.38;
+        final disabledIconColor = primaryColor.withValues(alpha: disabledOpacity);
+        final disabledTextColor = actionTextColor.withValues(
+          alpha: disabledOpacity,
+        );
 
         return SafeArea(
           child: Padding(
@@ -316,12 +320,12 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                 ListTile(
                   leading: Icon(
                     Icons.download_rounded,
-                    color: canDownload ? primaryColor : mutedColor,
+                    color: canDownload ? primaryColor : disabledIconColor,
                   ),
                   title: Text(
                     canDownload ? 'Download' : 'Already downloaded',
                     style: sheetTheme.textTheme.bodyLarge?.copyWith(
-                      color: canDownload ? actionTextColor : mutedColor,
+                      color: canDownload ? actionTextColor : disabledTextColor,
                     ),
                   ),
                   enabled: canDownload,

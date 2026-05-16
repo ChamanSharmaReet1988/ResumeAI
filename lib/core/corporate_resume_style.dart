@@ -102,11 +102,11 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
 }
 
 extension ResumeCorporateStyleX on ResumeData {
-  /// Clamped 11–14 for preview + PDF body text (Dark Header).
+  /// Clamped 11–13 for preview + PDF body text (Dark Header).
   int get effectiveBodyFontPt {
     final v = bodyFontPt;
     if (v < 11) return 11;
-    if (v > 14) return 14;
+    if (v > 13) return 13;
     return v;
   }
 
