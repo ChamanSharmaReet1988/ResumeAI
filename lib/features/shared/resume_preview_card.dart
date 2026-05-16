@@ -215,9 +215,9 @@ abstract final class _CorporatePdfMetrics {
 
   /// Keep this aligned with [ResumeTypography.sectionGapPreviewPx].
   static EdgeInsets sectionOuter() => const EdgeInsets.fromLTRB(
-    30,
+    ResumeTypography.corporateBodyHorizontalInset,
     0,
-    30,
+    ResumeTypography.corporateBodyHorizontalInset,
     ResumeTypography.sectionGapPreviewPx,
   );
 
@@ -244,11 +244,8 @@ class _DarkHeaderPreview extends StatelessWidget {
   final bool showAllContent;
   static const double _darkHeaderExtraLineSpacingPx = 0.0;
 
-  /// Breathing room below Skills on template thumbnails (not in PDF export).
-  static const double _templatePreviewGapAfterSkills = 36;
-
-  /// Matches PDF [pw.EdgeInsets] bottom margin on corporate pages.
-  static const double _templatePreviewBottomMargin = 30;
+  /// Extra space at end of template thumbnails (not in PDF export).
+  static const double _templatePreviewBottomMargin = 48;
 
   @override
   Widget build(BuildContext context) {
@@ -288,7 +285,12 @@ class _DarkHeaderPreview extends StatelessWidget {
       height: ResumeTypography.textLineHeight,
     );
 
-    const headerPadding = EdgeInsets.fromLTRB(30, 28, 30, 26);
+    const headerPadding = EdgeInsets.fromLTRB(
+      ResumeTypography.corporateHeaderHorizontalInset,
+      28,
+      ResumeTypography.corporateHeaderHorizontalInset,
+      26,
+    );
     final avatarTopOffset = 0.0;
     final nameLabelTopOffset = 0.0;
     final nameToContactSpacing = 8.0;
@@ -452,8 +454,6 @@ class _DarkHeaderPreview extends StatelessWidget {
           hasContent: skills.isNotEmpty,
           child: _CorporateSkillsColumns(skills: skills, bodyStyle: bodyStyle),
         ),
-        if (!scrollable)
-          const SizedBox(height: _templatePreviewGapAfterSkills),
         if (resume.includeProjectsInResume)
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(),

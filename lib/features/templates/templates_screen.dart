@@ -310,7 +310,7 @@ class _TemplateDetailScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(0, 12, 0, 16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -337,13 +337,10 @@ class _TemplateDetailScreen extends StatelessWidget {
               ),
               if (onUseTemplate != null) ...[
                 const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: FilledButton(
-                    key: const Key('use-template-button'),
-                    onPressed: onUseTemplate,
-                    child: const Text('Use template'),
-                  ),
+                FilledButton(
+                  key: const Key('use-template-button'),
+                  onPressed: onUseTemplate,
+                  child: const Text('Use template'),
                 ),
               ],
             ],
@@ -1316,7 +1313,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
   /// Matches [PdfPageFormat.a4] width in points (same as PDF export).
   static const double _pageWidth = 595.28;
   /// Screen padding below the scaled page on the full template screen.
-  static const double _detailBottomInset = 48;
+  static const double _detailBottomInset = 64;
 
   /// Small gap at the bottom of grid tiles.
   static const double _tileBottomInset = 16;

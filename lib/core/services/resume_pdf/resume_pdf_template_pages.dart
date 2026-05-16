@@ -30,7 +30,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         build: (context) => [
           pw.Container(
             color: headerColor,
-            padding: const pw.EdgeInsets.fromLTRB(30, 28, 30, 26),
+            padding: pw.EdgeInsets.fromLTRB(
+              ResumeTypography.corporateHeaderHorizontalInset,
+              28,
+              ResumeTypography.corporateHeaderHorizontalInset,
+              26,
+            ),
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
@@ -171,7 +176,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   }) {
     return [
       pw.Padding(
-        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
         child: _darkHeaderHeadingText(
           title.toUpperCase(),
           color: sectionTitleColor,
@@ -180,7 +190,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       ),
       pw.SizedBox(height: 7),
       pw.Padding(
-        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
         child: pw.Container(height: 2, color: lineColor),
       ),
       pw.SizedBox(height: 12),
@@ -206,7 +221,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         inter: inter,
       ),
       pw.Padding(
-        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
         child: pw.Text(
           summary,
           style: interBodyPdfTextStyle(inter, bodyPt),
@@ -232,7 +252,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       ),
       for (final item in items)
         pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
           child: _buildCorporateEducation(
             item,
             inter: inter,
@@ -266,7 +291,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         bulletStyle: bulletStyle,
       ))
         pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
           child: row,
         ),
       ..._darkHeaderSectionSuffixWidgets(),
@@ -294,7 +324,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
           bodyFontPt: bodyPt,
         ).map(
           (widget) => pw.Padding(
-            padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+            padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
             child: widget,
           ),
         ),
@@ -322,7 +357,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         bodyFontPt: bodyPt,
       ))
         pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
           child: widget,
         ),
       ..._darkHeaderSectionSuffixWidgets(),
@@ -338,7 +378,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   ) {
     final widgets = <pw.Widget>[
       pw.Padding(
-        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
         child: _darkHeaderHeadingText(
           'EXPERIENCE',
           color: sectionTitleColor,
@@ -347,7 +392,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       ),
       pw.SizedBox(height: 7),
       pw.Padding(
-        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
         child: pw.Container(height: 2, color: lineColor),
       ),
       pw.SizedBox(height: 12),
@@ -370,7 +420,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
 
       widgets.add(
         pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
           child: pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -407,7 +462,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         final bullet = bullets[i];
         widgets.add(
           pw.Padding(
-            padding: pw.EdgeInsets.fromLTRB(30, i == 0 ? 0 : 3, 30, 0),
+            padding: pw.EdgeInsets.fromLTRB(
+              ResumeTypography.corporateHeaderHorizontalInset,
+              i == 0 ? 0 : 3,
+              ResumeTypography.corporateHeaderHorizontalInset,
+              0,
+            ),
             child: pw.Bullet(
               text: bullet,
               style: interBodyPdfTextStyle(inter, bodyPt),

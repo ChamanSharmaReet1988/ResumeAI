@@ -33,7 +33,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         build: (context) => [
           pw.Container(
             color: headerColor,
-            padding: const pw.EdgeInsets.fromLTRB(30, 28, 30, 26),
+            padding: pw.EdgeInsets.fromLTRB(
+              ResumeTypography.corporateHeaderHorizontalInset,
+              28,
+              ResumeTypography.corporateHeaderHorizontalInset,
+              26,
+            ),
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
@@ -180,7 +185,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   }) {
     return [
       pw.Padding(
-        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
         child: _corporateHeadingText(
           title.toUpperCase(),
           color: sectionTitleColor,
@@ -224,7 +234,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         inter: inter,
       ),
       pw.Padding(
-        padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+        padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
         child: pw.Container(
           width: double.infinity,
           padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -260,7 +275,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
       ),
       for (var index = 0; index < items.length; index++)
         pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
           child: _buildHighlightedCorporateExperience(
             items[index],
             highlightedBulletsByExperience[index] ?? const <String>{},
@@ -288,7 +308,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
       ),
       for (final item in items)
         pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
           child: _buildCorporateEducation(
             item,
             inter: inter,
@@ -323,7 +348,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         bulletStyle: bulletStyle,
       ))
         pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
           child: row,
         ),
       ..._highlightedCorporateSectionSuffixWidgets(lineColor),
@@ -350,7 +380,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           bodyFontPt: bodyPt,
         ).map(
           (widget) => pw.Padding(
-            padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+            padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
             child: widget,
           ),
         ),
@@ -377,7 +412,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         bodyFontPt: bodyPt,
       ))
         pw.Padding(
-          padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
+          padding: pw.EdgeInsets.fromLTRB(
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+          ResumeTypography.corporateBodyHorizontalInset,
+          0,
+        ),
           child: widget,
         ),
       ..._highlightedCorporateSectionSuffixWidgets(lineColor),

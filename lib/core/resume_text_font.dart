@@ -14,13 +14,19 @@ abstract final class ResumeTypography {
   static const double textLineHeight = 1.4;
 
   /// Body paragraphs, bullets, and summary (Flutter preview + PDF line height).
-  static const double bodyTextLineHeight = 1.6;
+  static const double bodyTextLineHeight = 1.4;
 
   /// PDF [lineSpacing] (pt) so line height = [bodyTextLineHeight] × [fontSizePt].
   static double bodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (bodyTextLineHeight - 1);
   static const double sectionGapPreviewPx = 44;
   static const double sectionGapPdfPt = 30;
+
+  /// Corporate header inner horizontal inset (preview px = PDF pt).
+  static const double corporateHeaderHorizontalInset = 40;
+
+  /// Corporate body sections below the header (preview px = PDF pt).
+  static const double corporateBodyHorizontalInset = 40;
 
   /// Dark Header (corporate template) — preview and PDF type scale.
   static const double darkHeaderNamePt = 28;
