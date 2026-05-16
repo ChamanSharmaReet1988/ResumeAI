@@ -81,6 +81,22 @@ pw.TextStyle interBodyPdfTextStyle(
       fontStyle: fontStyle,
     );
 
+pw.TextStyle interDarkHeaderBodyPdfTextStyle(
+  InterPdfFonts fonts,
+  double bodyFontPt, {
+  int weight = ResumeFontWeight.w400,
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    interPdfTextStyle(
+      fonts,
+      weight,
+      fontSize: bodyFontPt,
+      color: color,
+      lineSpacing: ResumeTypography.darkHeaderBodyPdfLineSpacingFor(bodyFontPt),
+      fontStyle: fontStyle,
+    );
+
 pw.TextStyle darkHeaderInitialsPdfStyle(
   InterPdfFonts fonts,
   PdfColor color,
@@ -112,20 +128,29 @@ Future<InterPdfFonts> loadInterPdfFonts() async {
 Future<pw.ThemeData> resumePdfThemeForInter(
   InterPdfFonts fonts, {
   required double bodyFontPt,
+  double bodyLineHeight = ResumeTypography.bodyTextLineHeight,
 }) async {
-  final cacheKey = 'inter_${bodyFontPt.toStringAsFixed(1)}';
+  final cacheKey =
+      'inter_${bodyFontPt.toStringAsFixed(1)}_${bodyLineHeight.toStringAsFixed(2)}';
   final cached = resumePdfThemeCache[cacheKey];
   if (cached != null) {
     return cached;
   }
+  final lineSpacing = bodyFontPt * (bodyLineHeight - 1);
+  final bodyStyle = interPdfTextStyle(
+    fonts,
+    ResumeFontWeight.w400,
+    fontSize: bodyFontPt,
+    lineSpacing: lineSpacing,
+  );
   final theme = pw.ThemeData.withFont(
     base: fonts.w400,
     bold: fonts.fontFor(ResumeFontWeight.w800),
     italic: fonts.italic,
     boldItalic: fonts.fontFor(ResumeFontWeight.w800),
   ).copyWith(
-    defaultTextStyle: interBodyPdfTextStyle(fonts, bodyFontPt),
-    bulletStyle: interBodyPdfTextStyle(fonts, bodyFontPt),
+    defaultTextStyle: bodyStyle,
+    bulletStyle: bodyStyle,
   );
   resumePdfThemeCache[cacheKey] = theme;
   return theme;

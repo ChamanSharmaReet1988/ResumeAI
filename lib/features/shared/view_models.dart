@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/services/profile_image_storage.dart';
 import '../../core/services/resume_services.dart';
 
 class SettingsViewModel extends ChangeNotifier {
@@ -82,14 +83,21 @@ class ResumeLibraryViewModel extends ChangeNotifier {
   }
 
   Future<ResumeData> duplicateResume(ResumeData source, {String? title}) async {
+    final newId = DateTime.now().microsecondsSinceEpoch.toString();
+    final profileImagePath = await ProfileImageStorage.copyForResume(
+      sourceResumeId: source.id,
+      newResumeId: newId,
+      sourceStoredPath: source.profileImagePath,
+    );
     final duplicated = source.copyWith(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId,
       title: title == null
           ? _duplicateTitle(source.title)
           : _normalizeResumeTitle(title),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       lastSyncedAt: null,
+      profileImagePath: profileImagePath,
     );
 
     await repository.upsertResume(duplicated);

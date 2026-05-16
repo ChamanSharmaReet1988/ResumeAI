@@ -19,6 +19,9 @@ abstract final class ResumeTypography {
   /// PDF [lineSpacing] (pt) so line height = [bodyTextLineHeight] × [fontSizePt].
   static double bodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (bodyTextLineHeight - 1);
+
+  static double darkHeaderBodyPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (darkHeaderBodyLineHeight - 1);
   static const double sectionGapPreviewPx = 44;
   static const double sectionGapPdfPt = 30;
 
@@ -29,10 +32,13 @@ abstract final class ResumeTypography {
   static const double corporateBodyHorizontalInset = 40;
 
   /// Dark Header (corporate template) — preview and PDF type scale.
-  static const double darkHeaderNamePt = 28;
+  static const double darkHeaderNamePt = 24;
   static const double darkHeaderInitialsPt = 48;
-  static const double darkHeaderSectionTitlePt = 16;
-  static const double darkHeaderSubtitlePt = 14;
+  static const double darkHeaderSectionTitlePt = 14;
+  static const double darkHeaderSubtitlePt = 13;
+
+  /// Corporate body paragraph line height (preview + PDF).
+  static const double darkHeaderBodyLineHeight = 1.2;
 
   /// Subtitle lines (role/company, school line, project title).
   static const Color darkHeaderSubtitleColor = Color(0xFF141414);
@@ -50,6 +56,20 @@ abstract final class ResumeTypography {
   static const int darkHeaderNameWeight = 700;
   static const int darkHeaderSectionTitleWeight = 600;
   static const int darkHeaderSubtitleWeight = 500;
+
+  /// Profile Sidebar (creative / template 2) — preview and PDF type scale.
+  static const double creativeNamePt = 24;
+  static const int creativeNameWeight = 600;
+  static const int creativeSidebarContentWeight = 300;
+  static const double creativeSectionTitlePt = 15;
+  static const int creativeSectionTitleWeight = 500;
+  static const double creativeBodyPt = 12;
+  static const int creativeBodyWeight = 300;
+  static const double creativeSubtitlePt = 13;
+  static const int creativeSubtitleWeight = 400;
+
+  /// Profile Sidebar body copy (preview + PDF).
+  static const Color creativeBodyTextColor = Color(0xFF000000);
 
   /// Calibri (Carlito) text style for in-app resume previews.
   static TextStyle calibriPreviewStyle({

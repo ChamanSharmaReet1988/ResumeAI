@@ -68,6 +68,22 @@ pw.TextStyle calibriPdfTextStyle(
   );
 }
 
+pw.TextStyle calibriBodyPdfTextStyle(
+  CalibriPdfFonts fonts,
+  double bodyFontPt, {
+  int weight = ResumeFontWeight.w400,
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    calibriPdfTextStyle(
+      fonts,
+      weight,
+      fontSize: bodyFontPt,
+      color: color,
+      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyFontPt),
+      fontStyle: fontStyle,
+    );
+
 /// Dark Header avatar initials — 36pt, weight 600.
 pw.TextStyle darkHeaderInitialsPdfStyle(
   CalibriPdfFonts fonts,

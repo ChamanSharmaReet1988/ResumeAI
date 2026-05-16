@@ -229,7 +229,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         ),
         child: pw.Text(
           summary,
-          style: interBodyPdfTextStyle(inter, bodyPt),
+          style: interDarkHeaderBodyPdfTextStyle(inter, bodyPt),
         ),
       ),
       ..._darkHeaderSectionSuffixWidgets(),
@@ -275,7 +275,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     InterPdfFonts inter,
     double bodyPt,
   ) {
-    final bulletStyle = interBodyPdfTextStyle(inter, bodyPt);
+    final bulletStyle = interDarkHeaderBodyPdfTextStyle(inter, bodyPt);
     return [
       ..._darkHeaderSectionPrefixWidgets(
         title: 'Skills',
@@ -442,7 +442,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                   alignment: pw.Alignment.centerRight,
                   child: pw.Text(
                     dateStr,
-                    style: interBodyPdfTextStyle(
+                    style: interDarkHeaderBodyPdfTextStyle(
                       inter,
                       bodyPt,
                       color: PdfColor.fromHex('#666B71'),
@@ -470,7 +470,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             ),
             child: pw.Bullet(
               text: bullet,
-              style: interBodyPdfTextStyle(inter, bodyPt),
+              style: interDarkHeaderBodyPdfTextStyle(inter, bodyPt),
             ),
           ),
         );
@@ -537,14 +537,15 @@ ResumeTypography.darkHeaderSubtitleWeight,
   void _addCreativeTemplatePage(
     pw.Document document,
     ResumeData resume, {
+    CalibriPdfFonts? calibri,
     pw.MemoryImage? profileImage,
   }) {
     final accentColor = _creativeSidebarAccentColorPdf(resume);
     final textColor = _creativeTitleColorPdf(resume);
     final lineColor = _creativeSidebarLineColorPdf();
-    final muted = _creativeSidebarMutedColorPdf();
+    final bodyColor = _creativeBodyTextColorPdf();
     final railColor = _creativeSidebarRailColorPdf(resume);
-    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final bodyPt = ResumeTypography.creativeBodyPt;
     final contactItems = _resumeContactItems(resume);
     final allSkills = _skillsForDisplay(resume);
     final template2Skills = allSkills.length > 2
@@ -563,8 +564,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
             contactItems: contactItems,
             accentColor: accentColor,
             lineColor: lineColor,
-            mutedColor: muted,
-            bodyPt: bodyPt,
+            mutedColor: bodyColor,
+            calibri: calibri,
             profileImage: profileImage,
           ),
         ),
@@ -573,12 +574,18 @@ ResumeTypography.darkHeaderSubtitleWeight,
           _creativeMainColumnChild(
             pw.Text(
               _displayName(resume).toUpperCase(),
-              style: pw.TextStyle(
-                color: textColor,
-                fontSize: _creativeNameFontPt,
-                fontWeight: pw.FontWeight.bold,
-                lineSpacing: 1,
-              ),
+              style: calibri != null
+                  ? calibriPdfTextStyle(
+                      calibri,
+                      ResumeTypography.creativeNameWeight,
+                      fontSize: _creativeNameFontPt,
+                      color: textColor,
+                    ).copyWith(lineSpacing: 1)
+                  : pw.TextStyle(
+                      color: textColor,
+                      fontSize: _creativeNameFontPt,
+                      lineSpacing: 1,
+                    ),
             ),
           ),
           if (resume.jobTitle.trim().isNotEmpty) ...[
@@ -586,11 +593,19 @@ ResumeTypography.darkHeaderSubtitleWeight,
             _creativeMainColumnChild(
               pw.Text(
                 resume.jobTitle.trim(),
-                style: pw.TextStyle(
-                  color: muted,
-                  fontSize: bodyPt,
-                  fontStyle: pw.FontStyle.italic,
-                ),
+                style: calibri != null
+                    ? calibriPdfTextStyle(
+                        calibri,
+                        ResumeTypography.creativeSubtitleWeight,
+                        fontSize: ResumeTypography.creativeSubtitlePt,
+                        color: bodyColor,
+                        fontStyle: pw.FontStyle.italic,
+                      )
+                    : pw.TextStyle(
+                        color: bodyColor,
+                        fontSize: ResumeTypography.creativeSubtitlePt,
+                        fontStyle: pw.FontStyle.italic,
+                      ),
               ),
             ),
           ],
@@ -600,6 +615,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
               title: 'Summary',
               titleColor: textColor,
               lineColor: lineColor,
+              calibri: calibri,
             ),
           ),
           pw.SizedBox(height: _creativeHeadingBodyGapPt),
@@ -608,11 +624,23 @@ ResumeTypography.darkHeaderSubtitleWeight,
               resume.summary.trim().ifEmpty(
                 'Add a short summary to position your experience and strengths.',
               ),
-              style: pw.TextStyle(
-                fontSize: bodyPt,
-                color: muted,
-                lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
-              ),
+              style: calibri != null
+                  ? calibriPdfTextStyle(
+                      calibri,
+                      ResumeTypography.creativeBodyWeight,
+                      fontSize: bodyPt,
+                      color: bodyColor,
+                      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+                        bodyPt,
+                      ),
+                    )
+                  : pw.TextStyle(
+                      fontSize: bodyPt,
+                      color: bodyColor,
+                      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+                        bodyPt,
+                      ),
+                    ),
               overflow: pw.TextOverflow.span,
             ),
           ),
@@ -623,12 +651,13 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: 'Experience',
                 titleColor: textColor,
                 lineColor: lineColor,
+                calibri: calibri,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
             for (final item in resume.visibleWorkExperiences)
               _creativeMainColumnChild(
-                _buildCreativeExperience(item, bodyFontPt: bodyPt),
+                _buildCreativeExperience(item, calibri: calibri),
               ),
           ],
           if (educationItems.isNotEmpty) ...[
@@ -638,6 +667,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: 'Education',
                 titleColor: textColor,
                 lineColor: lineColor,
+                calibri: calibri,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
@@ -646,8 +676,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 _creativeSidebarEducationEntry(
                   item,
                   titleColor: textColor,
-                  mutedColor: muted,
-                  bodyFontPt: bodyPt,
+                  mutedColor: bodyColor,
+                  calibri: calibri,
                 ),
               ),
           ],
@@ -658,12 +688,27 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: 'Skills',
                 titleColor: textColor,
                 lineColor: lineColor,
+                calibri: calibri,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
             for (final row in _twoColumnBulletRows(
               _skillsForDisplay(resume),
               fontSize: bodyPt,
+              bulletStyle: calibri != null
+                  ? calibriPdfTextStyle(
+                      calibri,
+                      ResumeTypography.creativeBodyWeight,
+                      fontSize: bodyPt,
+                      color: bodyColor,
+                      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+                        bodyPt,
+                      ),
+                    )
+                  : pw.TextStyle(
+                      fontSize: bodyPt,
+                      color: bodyColor,
+                    ),
             ))
               _creativeMainColumnChild(row),
           ],
@@ -674,12 +719,17 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: 'Projects',
                 titleColor: textColor,
                 lineColor: lineColor,
+                calibri: calibri,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
             for (final item in resume.visibleProjects)
               _creativeMainColumnChild(
-                _buildCompactProject(item, bodyFontPt: bodyPt),
+                _buildCreativeProject(
+                  item,
+                  calibri: calibri,
+                  mutedColor: bodyColor,
+                ),
               ),
           ],
           for (final item in resume.visibleCustomSections) ...[
@@ -689,6 +739,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: item.title.ifEmpty('Custom Section'),
                 titleColor: textColor,
                 lineColor: lineColor,
+                calibri: calibri,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),

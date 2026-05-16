@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/resume_font_weight.dart';
 import '../../core/resume_text_font.dart';
 
 class ResumePreviewCard extends StatelessWidget {
@@ -202,7 +203,7 @@ abstract final class _CorporatePdfMetrics {
   static const lineColor = Color(0xFFD7DCE2);
   static const dateMutedColor = Color(0xFF666B71);
 
-  static const bodyHeight = ResumeTypography.bodyTextLineHeight;
+  static const bodyHeight = ResumeTypography.darkHeaderBodyLineHeight;
 
   static double headerAvatar() => 95;
 
@@ -260,8 +261,7 @@ class _DarkHeaderPreview extends StatelessWidget {
     final preset = resume.corporateColorPreset;
     final headerOnColor = preset.headerOnColor;
     final headerBorderColor = preset.headerBorderColor;
-    final bodyLineHeight =
-        _CorporatePdfMetrics.bodyHeight +
+    final bodyLineHeight = ResumeTypography.darkHeaderBodyLineHeight +
         (_darkHeaderExtraLineSpacingPx / bodyFontPx);
     final nameLineHeight =
         1.05 +
@@ -823,12 +823,23 @@ class _CreativePreview extends StatelessWidget {
     final accentColor = resume.creativeAccentColor;
     final avatarBackgroundColor = resume.creativeAvatarBackgroundColor;
     final textColor = resume.creativeTitleColor;
-    final mutedColor = resume.creativeMutedColor;
     final lineColor = resume.creativeLineColor;
-    final bodyStyle = TextStyle(
-      fontFamily: 'Calibri',
-      color: textColor,
-      fontSize: resume.effectiveBodyFontPt.toDouble(),
+    const bodyTextColor = ResumeTypography.creativeBodyTextColor;
+    final bodyStyle = ResumeTypography.calibriPreviewStyle(
+      weight: ResumeTypography.creativeBodyWeight,
+      fontSize: ResumeTypography.creativeBodyPt,
+      color: bodyTextColor,
+      height: ResumeTypography.textLineHeight,
+    );
+    final subtitleStyle = ResumeTypography.calibriPreviewStyle(
+      weight: ResumeTypography.creativeSubtitleWeight,
+      fontSize: ResumeTypography.creativeSubtitlePt,
+      color: bodyTextColor,
+    );
+    final sidebarStyle = ResumeTypography.calibriPreviewStyle(
+      weight: ResumeTypography.creativeSidebarContentWeight,
+      fontSize: ResumeTypography.creativeBodyPt,
+      color: bodyTextColor,
       height: ResumeTypography.textLineHeight,
     );
     final summary = resume.summary.trim();
@@ -848,7 +859,7 @@ class _CreativePreview extends StatelessWidget {
     const sidebarContentWidth = 150.0;
     const sidebarContentLeft = (sidebarRailWidth - sidebarContentWidth) / 2;
     const mainContentInset = 165.0;
-    const nameFontSize = 30.0;
+    const nameFontSize = ResumeTypography.creativeNamePt;
     final firstProjectLine = projects.isNotEmpty
         ? (_projectBulletLines(projects.first).isNotEmpty
               ? _projectBulletLines(projects.first).first
@@ -890,8 +901,10 @@ class _CreativePreview extends StatelessWidget {
                         _pdfAlignedInitials(resume),
                         style: TextStyle(
                           color: accentColor,
-                          fontSize: 36.0,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 28.0,
+                          fontWeight: ResumeFontWeight.toFlutter(
+                            ResumeTypography.creativeNameWeight,
+                          ),
                         ),
                       ),
                     ),
@@ -912,10 +925,7 @@ class _CreativePreview extends StatelessWidget {
                         child: _CreativeSidebarMetaItem(
                           text: line,
                           iconColor: accentColor,
-                          style: bodyStyle.copyWith(
-                            color: mutedColor,
-                            fontSize: bodyStyle.fontSize! - 0.4,
-                          ),
+                          style: sidebarStyle,
                         ),
                       ),
                     ),
@@ -940,7 +950,9 @@ class _CreativePreview extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: bodyStyle.copyWith(
                           fontSize: nameFontSize,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: ResumeFontWeight.toFlutter(
+                            ResumeTypography.creativeNameWeight,
+                          ),
                           height: 1.0,
                           letterSpacing: 0.2,
                         ),
@@ -951,10 +963,8 @@ class _CreativePreview extends StatelessWidget {
                           resume.jobTitle.trim(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: bodyStyle.copyWith(
-                            color: mutedColor,
+                          style: subtitleStyle.copyWith(
                             fontStyle: FontStyle.italic,
-                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -970,7 +980,7 @@ class _CreativePreview extends StatelessWidget {
                         ),
                         maxLines: 5,
                         overflow: TextOverflow.ellipsis,
-                        style: bodyStyle.copyWith(color: mutedColor),
+                        style: bodyStyle,
                       ),
                       const SizedBox(height: sectionGap),
                       _CreativeSidebarHeading(
@@ -994,18 +1004,14 @@ class _CreativePreview extends StatelessWidget {
                                   title.ifBlank('Role'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: bodyStyle.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                                  style: subtitleStyle,
                                 ),
                                 Text(
                                   item.company.ifBlank('Company'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: bodyStyle.copyWith(
-                                    color: mutedColor,
+                                  style: subtitleStyle.copyWith(
                                     fontStyle: FontStyle.italic,
-                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                                 _CreativeBulletColumn(
@@ -1021,7 +1027,7 @@ class _CreativePreview extends StatelessWidget {
                       else
                         Text(
                           'Add your work experience details.',
-                          style: bodyStyle.copyWith(color: mutedColor),
+                          style: bodyStyle,
                         ),
                       if (education.isNotEmpty) ...[
                         const SizedBox(height: sectionGap),
@@ -1042,19 +1048,14 @@ class _CreativePreview extends StatelessWidget {
                                       item.degree.ifBlank('Degree'),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: bodyStyle.copyWith(
-                                        fontWeight: FontWeight.w800,
-                                      ),
+                                      style: subtitleStyle,
                                     ),
                                     const SizedBox(height: 1),
                                     Text(
                                       item.institution.ifBlank('Institution'),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: bodyStyle.copyWith(
-                                        color: mutedColor,
-                                        fontSize: bodyStyle.fontSize! - 0.4,
-                                      ),
+                                      style: bodyStyle,
                                     ),
                                   ],
                                 ),
@@ -1097,14 +1098,14 @@ class _CreativePreview extends StatelessWidget {
                             : 'Add projects',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: bodyStyle.copyWith(fontWeight: FontWeight.w700),
+                        style: subtitleStyle,
                       ),
                       if (projects.isNotEmpty)
                         Text(
                           firstProjectLine,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: bodyStyle.copyWith(color: mutedColor),
+                          style: bodyStyle,
                         ),
                     ],
                   ),
@@ -2991,9 +2992,10 @@ class _CreativeSidebarHeading extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: ResumeTypography.darkHeaderSectionTitlePt,
-              fontWeight: FontWeight.w900,
+            style: ResumeTypography.calibriPreviewStyle(
+              weight: ResumeTypography.creativeSectionTitleWeight,
+              fontSize: ResumeTypography.creativeSectionTitlePt,
+              color: ResumeTypography.creativeBodyTextColor,
               letterSpacing: 0.2,
             ),
           ),

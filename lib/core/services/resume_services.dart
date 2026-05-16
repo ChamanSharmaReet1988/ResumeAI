@@ -19,6 +19,8 @@ import '../resume_font_weight.dart';
 import '../resume_text_font.dart';
 import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
+import 'profile_image_storage.dart';
+import 'resume_pdf/calibri_pdf_fonts.dart' hide darkHeaderInitialsPdfStyle;
 import 'resume_pdf/inter_pdf_fonts.dart';
 import 'resume_pdf/resume_pdf_theme.dart';
 
@@ -84,7 +86,7 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
   double? bodyFontPt,
 }) {
   final bodyStyle = inter != null && bodyFontPt != null
-      ? interBodyPdfTextStyle(inter, bodyFontPt)
+      ? interDarkHeaderBodyPdfTextStyle(inter, bodyFontPt)
       : pw.TextStyle(
           color: PdfColors.black,
           fontSize: bodyFontPt ?? ResumeTypography.bodyPt,
@@ -155,7 +157,7 @@ const double _creativeMainColumnInsetPt = _creativeSidebarRailWidthPt + 8.0;
 const double _creativeSectionGapPt = 20.0;
 const double _creativeHeadingBodyGapPt = 8.0;
 const double _creativeSidebarDividerGapPt = 20.0;
-const double _creativeNameFontPt = 30.0;
+const double _creativeNameFontPt = ResumeTypography.creativeNamePt;
 const double _creativeAvatarBackgroundOpacity = 0.4;
 
 const double _classicSidebarRailWidthPt = 165.0;
@@ -218,6 +220,8 @@ PdfColor _creativeTitleColorPdf(ResumeData resume) =>
 PdfColor _creativeSidebarLineColorPdf() => PdfColor.fromHex('#CDBAAC');
 
 PdfColor _creativeSidebarMutedColorPdf() => PdfColor.fromHex('#5F656C');
+
+PdfColor _creativeBodyTextColorPdf() => PdfColors.black;
 
 PdfColor _classicSidebarRailColorPdf(ResumeData resume) =>
     _pdfRgb(resume.classicSidebarRailColor);
@@ -295,18 +299,28 @@ pw.Widget _creativeSectionHeadingRow({
   required String title,
   required PdfColor titleColor,
   required PdfColor lineColor,
+  CalibriPdfFonts? calibri,
 }) {
+  final headingColor = _creativeBodyTextColorPdf();
+  final headingStyle = calibri != null
+      ? calibriPdfTextStyle(
+          calibri,
+          ResumeTypography.creativeSectionTitleWeight,
+          fontSize: ResumeTypography.creativeSectionTitlePt,
+          color: headingColor,
+        ).copyWith(letterSpacing: 0.15)
+      : pw.TextStyle(
+          fontSize: ResumeTypography.creativeSectionTitlePt,
+          fontWeight: pw.FontWeight.normal,
+          color: headingColor,
+          letterSpacing: 0.15,
+        );
   return pw.Row(
     crossAxisAlignment: pw.CrossAxisAlignment.center,
     children: [
       pw.Text(
         title.toUpperCase(),
-        style: pw.TextStyle(
-          fontSize: ResumeTypography.darkHeaderSectionTitlePt,
-          fontWeight: pw.FontWeight.bold,
-          color: titleColor,
-          letterSpacing: 0.15,
-        ),
+        style: headingStyle,
       ),
       pw.SizedBox(width: 8),
       pw.Expanded(child: pw.Container(height: 1.2, color: lineColor)),
@@ -452,8 +466,22 @@ pw.Widget _creativeSidebarContactRow(
   String value, {
   required PdfColor iconColor,
   required PdfColor textColor,
-  double fontSize = 10.5,
+  CalibriPdfFonts? calibri,
 }) {
+  final textStyle = calibri != null
+      ? calibriPdfTextStyle(
+          calibri,
+          ResumeTypography.creativeSidebarContentWeight,
+          fontSize: ResumeTypography.creativeBodyPt,
+          color: textColor,
+          lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+            ResumeTypography.creativeBodyPt,
+          ),
+        )
+      : pw.TextStyle(
+          color: textColor,
+          fontSize: ResumeTypography.creativeBodyPt,
+        );
   return pw.Padding(
     padding: const pw.EdgeInsets.only(bottom: 8),
     child: pw.Row(
@@ -471,7 +499,7 @@ pw.Widget _creativeSidebarContactRow(
         pw.Expanded(
           child: pw.Text(
             value,
-            style: pw.TextStyle(color: textColor, fontSize: fontSize),
+            style: textStyle,
           ),
         ),
       ],
@@ -1399,12 +1427,39 @@ pw.Widget _creativeSidebarEducationEntry(
   EducationItem item, {
   required PdfColor titleColor,
   required PdfColor mutedColor,
-  double bodyFontPt = ResumeTypography.bodyPt,
+  CalibriPdfFonts? calibri,
 }) {
   final dates = [
     item.startDate.trim(),
     item.endDate.trim(),
   ].where((value) => value.isNotEmpty).join(' - ');
+
+  final bodyColor = _creativeBodyTextColorPdf();
+  final subtitleStyle = calibri != null
+      ? calibriPdfTextStyle(
+          calibri,
+          ResumeTypography.creativeSubtitleWeight,
+          fontSize: ResumeTypography.creativeSubtitlePt,
+          color: bodyColor,
+        )
+      : pw.TextStyle(
+          color: bodyColor,
+          fontSize: ResumeTypography.creativeSubtitlePt,
+        );
+  final bodyStyle = calibri != null
+      ? calibriPdfTextStyle(
+          calibri,
+          ResumeTypography.creativeBodyWeight,
+          fontSize: ResumeTypography.creativeBodyPt,
+          color: bodyColor,
+          lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+            ResumeTypography.creativeBodyPt,
+          ),
+        )
+      : pw.TextStyle(
+          color: bodyColor,
+          fontSize: ResumeTypography.creativeBodyPt,
+        );
 
   return pw.Padding(
     padding: const pw.EdgeInsets.only(bottom: 9),
@@ -1413,22 +1468,18 @@ pw.Widget _creativeSidebarEducationEntry(
       children: [
         pw.Text(
           item.degree.ifEmpty('Degree'),
-          style: pw.TextStyle(
-            color: titleColor,
-            fontSize: bodyFontPt,
-            fontWeight: pw.FontWeight.bold,
-          ),
+          style: subtitleStyle,
         ),
         pw.SizedBox(height: 2),
         pw.Text(
           item.institution.ifEmpty('Institution'),
-          style: pw.TextStyle(color: mutedColor, fontSize: bodyFontPt - 0.3),
+          style: bodyStyle,
         ),
         if (dates.isNotEmpty) ...[
           pw.SizedBox(height: 1.5),
           pw.Text(
             dates,
-            style: pw.TextStyle(color: mutedColor, fontSize: bodyFontPt - 0.8),
+            style: bodyStyle,
           ),
         ],
       ],
@@ -1442,7 +1493,7 @@ pw.Widget _creativeFirstPageSidebar({
   required PdfColor accentColor,
   required PdfColor lineColor,
   required PdfColor mutedColor,
-  required double bodyPt,
+  CalibriPdfFonts? calibri,
   pw.MemoryImage? profileImage,
 }) {
   return pw.SizedBox(
@@ -1482,7 +1533,7 @@ pw.Widget _creativeFirstPageSidebar({
               item,
               iconColor: accentColor,
               textColor: mutedColor,
-              fontSize: bodyPt,
+              calibri: calibri,
             ),
         ],
       ],
@@ -1549,12 +1600,31 @@ class ResumeRepository {
   }
 
   Future<List<ResumeData>> loadResumes() async {
-    final items =
+    final raw =
         _resumeBox.values
             .whereType<Map>()
             .map((item) => ResumeData.fromJson(Map<String, dynamic>.from(item)))
-            .toList()
-          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+            .toList();
+    final items = <ResumeData>[];
+    for (final resume in raw) {
+      final storedPath = resume.profileImagePath.trim();
+      if (storedPath.isEmpty) {
+        items.add(resume);
+        continue;
+      }
+      final resolved = await ProfileImageStorage.resolvePath(
+        storedPath,
+        resume.id,
+      );
+      if (resolved != storedPath) {
+        final updated = resume.copyWith(profileImagePath: resolved);
+        await _resumeBox.put(resume.id, updated.toJson());
+        items.add(updated);
+      } else {
+        items.add(resume);
+      }
+    }
+    items.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return items;
   }
 
@@ -1570,6 +1640,14 @@ class ResumeRepository {
   }
 
   Future<void> deleteResume(String id) async {
+    final raw = _resumeBox.get(id);
+    if (raw is Map) {
+      final resume = ResumeData.fromJson(Map<String, dynamic>.from(raw));
+      await ProfileImageStorage.deleteForResume(
+        id,
+        knownPath: resume.profileImagePath,
+      );
+    }
     await _resumeBox.delete(id);
   }
 
@@ -4909,21 +4987,49 @@ class _CoverLetterLocale {
 
 class ResumePdfService {
   InterPdfFonts? _interPdfFontsCache;
+  CalibriPdfFonts? _calibriPdfFontsCache;
 
   Future<InterPdfFonts> _ensureInterPdfFonts() async {
     return _interPdfFontsCache ??= await loadInterPdfFonts();
   }
 
+  Future<CalibriPdfFonts> _ensureCalibriPdfFonts() async {
+    return _calibriPdfFontsCache ??= await loadCalibriPdfFonts();
+  }
+
   Future<Uint8List> buildPdf(ResumeData resume) async {
+    final profileImagePath = await ProfileImageStorage.resolvePath(
+      resume.profileImagePath,
+      resume.id,
+    );
+    final profileImage = await _loadProfileImage(profileImagePath);
+
+    if (resume.template == ResumeTemplate.creative) {
+      final calibri = await _ensureCalibriPdfFonts();
+      final bodyPt = ResumeTypography.creativeBodyPt;
+      final document = pw.Document(
+        theme: await resumePdfThemeForCalibri(calibri, bodyFontPt: bodyPt),
+      );
+      _addCreativeTemplatePage(
+        document,
+        resume,
+        calibri: calibri,
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
       theme: await resumePdfThemeForInter(
         inter,
         bodyFontPt: corporateBodyPt,
+        bodyLineHeight: resume.template == ResumeTemplate.corporate
+            ? ResumeTypography.darkHeaderBodyLineHeight
+            : ResumeTypography.bodyTextLineHeight,
       ),
     );
-    final profileImage = await _loadProfileImage(resume.profileImagePath);
 
     switch (resume.template) {
       case ResumeTemplate.corporate:
@@ -4935,7 +5041,6 @@ class ResumePdfService {
         );
         break;
       case ResumeTemplate.creative:
-        _addCreativeTemplatePage(document, resume, profileImage: profileImage);
         break;
       case ResumeTemplate.classicSidebar:
         _addClassicSidebarTemplatePage(
@@ -4976,12 +5081,32 @@ class ResumePdfService {
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) async {
+    if (resume.template == ResumeTemplate.creative) {
+      final calibri = await _ensureCalibriPdfFonts();
+      final bodyPt = ResumeTypography.creativeBodyPt;
+      final document = pw.Document(
+        theme: await resumePdfThemeForCalibri(calibri, bodyFontPt: bodyPt),
+      );
+      _addHighlightedCreativeTemplatePage(
+        document,
+        resume,
+        calibri: calibri,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
       theme: await resumePdfThemeForInter(
         inter,
         bodyFontPt: corporateBodyPt,
+        bodyLineHeight: resume.template == ResumeTemplate.corporate
+            ? ResumeTypography.darkHeaderBodyLineHeight
+            : ResumeTypography.bodyTextLineHeight,
       ),
     );
     switch (resume.template) {
@@ -4996,13 +5121,6 @@ class ResumePdfService {
         );
         break;
       case ResumeTemplate.creative:
-        _addHighlightedCreativeTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
         break;
       case ResumeTemplate.classicSidebar:
         _addHighlightedClassicSidebarTemplatePage(
@@ -5876,7 +5994,7 @@ class ResumePdfService {
           )
         : _corporateRoleCompanyText(item.role, item.company);
     final dateStyle = inter != null
-        ? interBodyPdfTextStyle(
+        ? interDarkHeaderBodyPdfTextStyle(
             inter,
             bodyFontPt,
             color: PdfColor.fromHex('#666B71'),
@@ -5889,11 +6007,13 @@ class ResumePdfService {
             font: pw.Font.helveticaOblique(),
           );
     final bodyStyle = inter != null
-        ? interBodyPdfTextStyle(inter, bodyFontPt)
+        ? interDarkHeaderBodyPdfTextStyle(inter, bodyFontPt)
         : pw.TextStyle(
             color: PdfColors.black,
             fontSize: bodyFontPt,
-            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyFontPt),
+            lineSpacing: ResumeTypography.darkHeaderBodyPdfLineSpacingFor(
+              bodyFontPt,
+            ),
           );
 
     return pw.Column(
@@ -5954,7 +6074,11 @@ class ResumePdfService {
     Set<String> highlightedSkills,
     PdfColor highlightColor, {
     double fontSize = ResumeTypography.bodyPt,
+    pw.TextStyle? bulletStyle,
   }) {
+    final resolvedBulletStyle =
+        bulletStyle ??
+        pw.TextStyle(color: PdfColors.black, fontSize: fontSize);
     final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
     if (cleaned.isEmpty) {
       return pw.SizedBox();
@@ -5981,10 +6105,7 @@ class ResumePdfService {
                         : PdfColors.white,
                     child: _highlightedPdfLineText(
                       cleaned[i],
-                      style: pw.TextStyle(
-                        color: PdfColors.black,
-                        fontSize: fontSize,
-                      ),
+                      style: resolvedBulletStyle,
                     ),
                   ),
                 ),
@@ -6003,10 +6124,7 @@ class ResumePdfService {
                               : PdfColors.white,
                           child: _highlightedPdfLineText(
                             cleaned[i + leftCount],
-                            style: pw.TextStyle(
-                              color: PdfColors.black,
-                              fontSize: fontSize,
-                            ),
+                            style: resolvedBulletStyle,
                           ),
                         )
                       : pw.SizedBox(),
@@ -6084,73 +6202,47 @@ class ResumePdfService {
     ];
   }
 
-  pw.Widget _buildHighlightedCreativeExperience(
-    WorkExperience item,
-    Set<String> highlightedBullets,
-    PdfColor highlightColor, {
-    double bodyFontPt = ResumeTypography.bodyPt,
+  pw.Widget _buildCreativeProject(
+    ProjectItem item, {
+    CalibriPdfFonts? calibri,
+    required PdfColor mutedColor,
   }) {
+    final bullets = _projectBulletLines(item);
+    final titleStyle = calibri != null
+        ? calibriPdfTextStyle(
+            calibri,
+            ResumeTypography.creativeSubtitleWeight,
+            fontSize: ResumeTypography.creativeSubtitlePt,
+          )
+        : pw.TextStyle(fontSize: ResumeTypography.creativeSubtitlePt);
+    final bodyColor = _creativeBodyTextColorPdf();
+    final bodyStyle = calibri != null
+        ? calibriPdfTextStyle(
+            calibri,
+            ResumeTypography.creativeBodyWeight,
+            fontSize: ResumeTypography.creativeBodyPt,
+            color: bodyColor,
+            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+              ResumeTypography.creativeBodyPt,
+            ),
+          )
+        : pw.TextStyle(
+            color: bodyColor,
+            fontSize: ResumeTypography.creativeBodyPt,
+          );
+    final titleStyleWithColor = titleStyle.copyWith(color: bodyColor);
     return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 10),
+      padding: const pw.EdgeInsets.only(bottom: 8),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Expanded(
-                child: pw.RichText(
-                  text: pw.TextSpan(
-                    style: pw.TextStyle(
-                      fontWeight: pw.FontWeight.bold,
-                      fontSize: bodyFontPt + 2,
-                    ),
-                    children: [
-                      pw.TextSpan(
-                        text: item.role.ifEmpty('Role').toUpperCase(),
-                      ),
-                      pw.TextSpan(
-                        text: ' / ${item.company.ifEmpty('Company')}',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (item.startDate.trim().isNotEmpty ||
-                  item.endDate.trim().isNotEmpty)
-                pw.Text(
-                  '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
-                  style: pw.TextStyle(
-                    color: PdfColor.fromHex('#555B61'),
-                    fontStyle: pw.FontStyle.italic,
-                  ),
-                ),
-            ],
-          ),
-          if (_workSummaryText(item).isNotEmpty) ...[
-            pw.SizedBox(height: 4),
-            pw.Text(_workSummaryText(item)),
-          ],
-          for (final bullet in _workBulletLines(item))
+          pw.Text(item.title.ifEmpty('Project'), style: titleStyleWithColor),
+          for (var i = 0; i < bullets.length; i++)
             pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 3),
-              child: pw.Container(
-                width: double.infinity,
-                padding: const pw.EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 3,
-                ),
-                color: highlightedBullets.contains(bullet)
-                    ? highlightColor
-                    : PdfColors.white,
-                child: _highlightedPdfLineText(
-                  bullet,
-                  style: pw.TextStyle(
-                    color: PdfColors.black,
-                    fontSize: bodyFontPt,
-                  ),
-                ),
+              padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
+              child: pw.Bullet(
+                text: bullets[i],
+                style: bodyStyle,
               ),
             ),
         ],
@@ -6158,10 +6250,66 @@ class ResumePdfService {
     );
   }
 
+  pw.Widget _buildHighlightedCreativeExperience(
+    WorkExperience item,
+    Set<String> highlightedBullets,
+    PdfColor highlightColor, {
+    CalibriPdfFonts? calibri,
+  }) {
+    return _buildCreativeExperience(
+      item,
+      calibri: calibri,
+      highlightedBullets: highlightedBullets,
+      highlightColor: highlightColor,
+    );
+  }
+
   pw.Widget _buildCreativeExperience(
     WorkExperience item, {
-    double bodyFontPt = ResumeTypography.bodyPt,
+    CalibriPdfFonts? calibri,
+    Set<String> highlightedBullets = const {},
+    PdfColor? highlightColor,
   }) {
+    final bodyColor = _creativeBodyTextColorPdf();
+    final subtitleStyle = calibri != null
+        ? calibriPdfTextStyle(
+            calibri,
+            ResumeTypography.creativeSubtitleWeight,
+            fontSize: ResumeTypography.creativeSubtitlePt,
+            color: bodyColor,
+          )
+        : pw.TextStyle(
+            fontSize: ResumeTypography.creativeSubtitlePt,
+            color: bodyColor,
+          );
+    final bodyStyle = calibri != null
+        ? calibriPdfTextStyle(
+            calibri,
+            ResumeTypography.creativeBodyWeight,
+            fontSize: ResumeTypography.creativeBodyPt,
+            color: bodyColor,
+            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+              ResumeTypography.creativeBodyPt,
+            ),
+          )
+        : pw.TextStyle(
+            fontSize: ResumeTypography.creativeBodyPt,
+            color: bodyColor,
+          );
+    final dateStyle = calibri != null
+        ? calibriPdfTextStyle(
+            calibri,
+            ResumeTypography.creativeBodyWeight,
+            fontSize: ResumeTypography.creativeBodyPt,
+            color: bodyColor,
+            fontStyle: pw.FontStyle.italic,
+          )
+        : pw.TextStyle(
+            color: bodyColor,
+            fontSize: ResumeTypography.creativeBodyPt,
+            fontStyle: pw.FontStyle.italic,
+          );
+
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 10),
       child: pw.Column(
@@ -6174,10 +6322,7 @@ class ResumePdfService {
               pw.Expanded(
                 child: pw.RichText(
                   text: pw.TextSpan(
-                    style: pw.TextStyle(
-                      fontWeight: pw.FontWeight.bold,
-                      fontSize: bodyFontPt + 2,
-                    ),
+                    style: subtitleStyle,
                     children: [
                       pw.TextSpan(
                         text: item.role.ifEmpty('Role').toUpperCase(),
@@ -6193,27 +6338,36 @@ class ResumePdfService {
                   item.endDate.trim().isNotEmpty)
                 pw.Text(
                   '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
-                  style: pw.TextStyle(
-                    color: PdfColor.fromHex('#555B61'),
-                    fontStyle: pw.FontStyle.italic,
-                  ),
+                  style: dateStyle,
                 ),
             ],
           ),
           if (_workSummaryText(item).isNotEmpty) ...[
             pw.SizedBox(height: 4),
-            pw.Text(_workSummaryText(item)),
+            pw.Text(_workSummaryText(item), style: bodyStyle),
           ],
           for (final bullet in _workBulletLines(item))
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 3),
-              child: pw.Bullet(
-                text: bullet,
-                style: pw.TextStyle(
-                  color: PdfColors.black,
-                  fontSize: bodyFontPt,
-                ),
-              ),
+              child: highlightColor != null
+                  ? pw.Container(
+                      width: double.infinity,
+                      padding: const pw.EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      color: highlightedBullets.contains(bullet)
+                          ? highlightColor
+                          : PdfColors.white,
+                      child: _highlightedPdfLineText(
+                        bullet,
+                        style: bodyStyle,
+                      ),
+                    )
+                  : pw.Bullet(
+                      text: bullet,
+                      style: bodyStyle,
+                    ),
             ),
         ],
       ),
@@ -6246,10 +6400,12 @@ class ResumePdfService {
             lineSpacing: 0,
           );
     final degreeStyle = inter != null
-        ? interBodyPdfTextStyle(inter, bodyFontPt)
+        ? interDarkHeaderBodyPdfTextStyle(inter, bodyFontPt)
         : pw.TextStyle(
             fontSize: bodyFontPt,
-            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyFontPt),
+            lineSpacing: ResumeTypography.darkHeaderBodyPdfLineSpacingFor(
+              bodyFontPt,
+            ),
           );
 
     return pw.Padding(
@@ -6310,11 +6466,13 @@ class ResumePdfService {
           )
         : _corporateStrokeLabelText(item.title.ifEmpty('Project'));
     final bulletStyle = inter != null
-        ? interBodyPdfTextStyle(inter, bodyFontPt)
+        ? interDarkHeaderBodyPdfTextStyle(inter, bodyFontPt)
         : pw.TextStyle(
             color: PdfColors.black,
             fontSize: bodyFontPt,
-            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyFontPt),
+            lineSpacing: ResumeTypography.darkHeaderBodyPdfLineSpacingFor(
+              bodyFontPt,
+            ),
           );
     return [
       titleWidget,

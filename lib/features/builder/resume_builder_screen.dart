@@ -4,10 +4,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/bottom_sheet_insets.dart';
+import '../../core/services/profile_image_storage.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/skill_autocomplete_suggestions.dart';
 import '../../core/services/app_preferences.dart';
@@ -987,14 +987,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       }
       final viewModel = context.read<ResumeEditorViewModel>();
       final currentPath = viewModel.resume.profileImagePath.trim();
-      final persistedPath = await _persistProfileImage(
+      final persistedPath = await ProfileImageStorage.saveFromXFile(
         picked,
         resumeId: viewModel.resume.id,
       );
       if (!mounted) {
         return;
       }
-      if (_isManagedProfileImagePath(currentPath) &&
+      if (ProfileImageStorage.isManagedPath(currentPath) &&
           currentPath.isNotEmpty &&
           currentPath != persistedPath) {
         final previous = File(currentPath);
@@ -1005,6 +1005,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       viewModel.updateResume(
         (resume) => resume.copyWith(profileImagePath: persistedPath),
       );
+      await viewModel.saveResume();
     } catch (_) {
       if (!mounted) {
         return;
@@ -1015,45 +1016,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     }
   }
 
-  void _clearProfileImage() {
+  Future<void> _clearProfileImage() async {
     final viewModel = context.read<ResumeEditorViewModel>();
     final currentPath = viewModel.resume.profileImagePath.trim();
-    if (_isManagedProfileImagePath(currentPath) && currentPath.isNotEmpty) {
-      final file = File(currentPath);
-      if (file.existsSync()) {
-        file.deleteSync();
-      }
-    }
+    await ProfileImageStorage.deleteForResume(
+      viewModel.resume.id,
+      knownPath: currentPath,
+    );
     viewModel.updateResume((resume) => resume.copyWith(profileImagePath: ''));
+    await viewModel.saveResume();
   }
-
-  Future<String> _persistProfileImage(
-    XFile picked, {
-    required String resumeId,
-  }) async {
-    final appSupport = await getApplicationSupportDirectory();
-    final profileDir = Directory('${appSupport.path}/profile_images');
-    if (!profileDir.existsSync()) {
-      profileDir.createSync(recursive: true);
-    }
-    final extension = _fileExtension(picked.path);
-    final fileName =
-        '${resumeId}_${DateTime.now().millisecondsSinceEpoch}$extension';
-    final target = File('${profileDir.path}/$fileName');
-    await File(picked.path).copy(target.path);
-    return target.path;
-  }
-
-  String _fileExtension(String path) {
-    final dotIndex = path.lastIndexOf('.');
-    if (dotIndex < 0 || dotIndex == path.length - 1) {
-      return '.jpg';
-    }
-    return path.substring(dotIndex);
-  }
-
-  bool _isManagedProfileImagePath(String path) =>
-      path.contains('/profile_images/');
 
   Future<void> _showProfilePhotoOptions({required bool hasImage}) async {
     final action = await showModalBottomSheet<String>(
@@ -1106,7 +1078,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       return;
     }
     if (action == 'remove') {
-      _clearProfileImage();
+      await _clearProfileImage();
     }
   }
 
