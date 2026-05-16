@@ -57,8 +57,11 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-          value: library,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
+            Provider<ResumePdfService>(create: (_) => ResumePdfService()),
+          ],
           child: const MaterialApp(
             home: Scaffold(body: TemplatesScreen(onCreateResume: _noop)),
           ),
@@ -106,7 +109,8 @@ void main() {
       );
       await tester.ensureVisible(profileSidebarTile);
       await tester.tap(profileSidebarTile);
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
 
       expect(find.text('Profile Sidebar'), findsOneWidget);
       expect(

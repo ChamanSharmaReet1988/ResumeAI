@@ -211,7 +211,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           30,
           0,
           30,
-          ResumeTypography.sectionGapPdfPt,
+          ResumeTypography.darkHeaderSectionGapPdfPt,
         ),
         child: pw.Container(height: 2, color: lineColor),
       ),

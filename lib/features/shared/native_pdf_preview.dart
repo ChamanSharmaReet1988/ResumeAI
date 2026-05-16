@@ -96,11 +96,14 @@ class _NativePdfPreviewState extends State<NativePdfPreview> {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: Stack(
+            fit: StackFit.expand,
             children: [
-              PdfViewer.data(
-                snapshot.data!,
-                sourceName: widget.documentKey,
-                params: _viewerParams,
+              Positioned.fill(
+                child: PdfViewer.data(
+                  snapshot.data!,
+                  sourceName: widget.documentKey,
+                  params: _viewerParams,
+                ),
               ),
               Positioned(
                 top: 14,

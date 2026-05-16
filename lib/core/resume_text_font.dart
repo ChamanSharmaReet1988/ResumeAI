@@ -25,6 +25,10 @@ abstract final class ResumeTypography {
   static const double sectionGapPreviewPx = 44;
   static const double sectionGapPdfPt = 30;
 
+  /// Corporate (template 1) gap between sections (preview px = PDF pt).
+  static const double darkHeaderSectionGapPreviewPx = 20;
+  static const double darkHeaderSectionGapPdfPt = 20;
+
   /// Corporate header inner horizontal inset (preview px = PDF pt).
   static const double corporateHeaderHorizontalInset = 40;
 

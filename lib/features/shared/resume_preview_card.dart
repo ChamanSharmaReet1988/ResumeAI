@@ -217,12 +217,12 @@ abstract final class _CorporatePdfMetrics {
   static const headerAfterAvatar = 25.0;
   static const afterHeader = 18.0;
 
-  /// Keep this aligned with [ResumeTypography.sectionGapPreviewPx].
+  /// Keep this aligned with [ResumeTypography.darkHeaderSectionGapPreviewPx].
   static EdgeInsets sectionOuter() => const EdgeInsets.fromLTRB(
     ResumeTypography.corporateBodyHorizontalInset,
     0,
     ResumeTypography.corporateBodyHorizontalInset,
-    ResumeTypography.sectionGapPreviewPx,
+    ResumeTypography.darkHeaderSectionGapPreviewPx,
   );
 
   /// [_twoColumnBulletList] column gap.

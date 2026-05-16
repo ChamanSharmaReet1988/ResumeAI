@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
+import '../../core/services/resume_services.dart';
+import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
 
@@ -779,6 +781,25 @@ class _TemplatePreviewArt extends StatelessWidget {
   }
 }
 
+/// Full-screen template detail — paginated PDF preview (all pages scrollable).
+class _TemplateDetailPdfPreview extends StatelessWidget {
+  const _TemplateDetailPdfPreview({required this.resume});
+
+  final ResumeData resume;
+
+  @override
+  Widget build(BuildContext context) {
+    final pdfService = context.read<ResumePdfService>();
+    final viewerBackground = Theme.of(context).scaffoldBackgroundColor;
+    return NativePdfPreview(
+      documentKey:
+          'template-detail-${resume.id}-${resume.template.name}',
+      viewerBackground: viewerBackground,
+      bytesFuture: pdfService.buildPdf(resume),
+    );
+  }
+}
+
 class _ResumeTemplateDetailPreview extends StatelessWidget {
   const _ResumeTemplateDetailPreview({required this.item, this.paletteSeed});
 
@@ -789,21 +810,19 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final template = item.resumeTemplate!;
     if (template == ResumeTemplate.corporate) {
-      return _ResumeTemplatePreviewArt(
+      return _TemplateDetailPdfPreview(
         resume: _applyTemplatePreviewPalette(
           _darkHeaderTemplateResume,
           paletteSeed,
         ),
-        fit: _ResumeTemplatePreviewFit.detail,
       );
     }
     if (template == ResumeTemplate.creative) {
-      return _ResumeTemplatePreviewArt(
+      return _TemplateDetailPdfPreview(
         resume: _applyTemplatePreviewPalette(
           _profileSidebarTemplateResume,
           paletteSeed,
         ),
-        fit: _ResumeTemplatePreviewFit.detail,
       );
     }
     if (template == ResumeTemplate.classicSidebar) {
@@ -1406,10 +1425,14 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        final bottomInset = switch (fit) {
-          _ResumeTemplatePreviewFit.detail => _detailBottomInset,
-          _ResumeTemplatePreviewFit.tile => _tileBottomInset,
-        };
+        final isCreativeProfileSidebar =
+            resume.template.userFacingTemplate == ResumeTemplate.creative;
+        final bottomInset = isCreativeProfileSidebar
+            ? 0.0
+            : switch (fit) {
+                _ResumeTemplatePreviewFit.detail => _detailBottomInset,
+                _ResumeTemplatePreviewFit.tile => _tileBottomInset,
+              };
         final hasHeight = targetHeight.isFinite && targetHeight > 0;
         final contentHeight = hasHeight
             ? (targetHeight - bottomInset).clamp(0.0, targetHeight)

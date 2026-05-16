@@ -203,7 +203,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   }
 
   List<pw.Widget> _darkHeaderSectionSuffixWidgets() {
-    return [pw.SizedBox(height: ResumeTypography.sectionGapPdfPt)];
+    return [pw.SizedBox(height: ResumeTypography.darkHeaderSectionGapPdfPt)];
   }
 
   List<pw.Widget> _darkHeaderSummarySectionWidgets(
@@ -404,7 +404,9 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     ];
 
     if (items.isEmpty) {
-      widgets.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+      widgets.add(
+        pw.SizedBox(height: ResumeTypography.darkHeaderSectionGapPdfPt),
+      );
       return widgets;
     }
 
@@ -478,7 +480,9 @@ extension _ResumePdfTemplatePages on ResumePdfService {
 
       final isLast = index == items.length - 1;
       widgets.add(
-        pw.SizedBox(height: isLast ? ResumeTypography.sectionGapPdfPt : 10),
+        pw.SizedBox(
+          height: isLast ? ResumeTypography.darkHeaderSectionGapPdfPt : 10,
+        ),
       );
     }
 
