@@ -309,17 +309,18 @@ pw.Widget _creativeSectionHeadingRow({
   required PdfColor titleColor,
   required PdfColor lineColor,
   CalibriPdfFonts? calibri,
+  required double sectionTitlePt,
 }) {
   final headingColor = _creativeBodyTextColorPdf();
   final headingStyle = calibri != null
       ? calibriPdfTextStyle(
           calibri,
           ResumeTypography.creativeSectionTitleWeight,
-          fontSize: ResumeTypography.creativeSectionTitlePt,
+          fontSize: sectionTitlePt,
           color: headingColor,
         ).copyWith(letterSpacing: 0.15)
       : pw.TextStyle(
-          fontSize: ResumeTypography.creativeSectionTitlePt,
+          fontSize: sectionTitlePt,
           fontWeight: pw.FontWeight.normal,
           color: headingColor,
           letterSpacing: 0.15,
@@ -477,30 +478,40 @@ pw.Widget _creativeSidebarContactRow(
   required PdfColor iconColor,
   required PdfColor textColor,
   CalibriPdfFonts? calibri,
+  required double bodyPt,
 }) {
   final textStyle = calibri != null
       ? calibriCreativeBodyPdfTextStyle(
           calibri,
-          ResumeTypography.creativeBodyPt,
+          bodyPt,
           weight: ResumeTypography.creativeSidebarContentWeight,
           color: textColor,
         )
       : pw.TextStyle(
           color: textColor,
-          fontSize: ResumeTypography.creativeBodyPt,
+          fontSize: bodyPt,
         );
+  const squareSize = 7.0;
+  final firstLineExtent = bodyPt * ResumeTypography.creativeBodyLineHeight;
+
   return pw.Padding(
     padding: const pw.EdgeInsets.only(bottom: 8),
     child: pw.Row(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Container(
-          width: 7,
-          height: 7,
-          margin: const pw.EdgeInsets.only(top: 3, right: 6),
-          decoration: pw.BoxDecoration(
-            color: iconColor,
-            borderRadius: pw.BorderRadius.circular(1.5),
+        pw.SizedBox(
+          height: firstLineExtent,
+          child: pw.Align(
+            alignment: pw.Alignment.center,
+            child: pw.Container(
+              width: squareSize,
+              height: squareSize,
+              margin: const pw.EdgeInsets.only(right: 6),
+              decoration: pw.BoxDecoration(
+                color: iconColor,
+                borderRadius: pw.BorderRadius.circular(1.5),
+              ),
+            ),
           ),
         ),
         pw.Expanded(
@@ -1435,6 +1446,8 @@ pw.Widget _creativeSidebarEducationEntry(
   required PdfColor titleColor,
   required PdfColor mutedColor,
   CalibriPdfFonts? calibri,
+  required double bodyPt,
+  required double subtitlePt,
 }) {
   final dates = [
     item.startDate.trim(),
@@ -1446,23 +1459,23 @@ pw.Widget _creativeSidebarEducationEntry(
       ? calibriPdfTextStyle(
           calibri,
           ResumeTypography.creativeSubtitleWeight,
-          fontSize: ResumeTypography.creativeSubtitlePt,
+          fontSize: subtitlePt,
           color: bodyColor,
         )
       : pw.TextStyle(
           color: bodyColor,
-          fontSize: ResumeTypography.creativeSubtitlePt,
+          fontSize: subtitlePt,
         );
   final bodyStyle = calibri != null
       ? calibriCreativeBodyPdfTextStyle(
           calibri,
-          ResumeTypography.creativeBodyPt,
+          bodyPt,
           weight: ResumeTypography.creativeBodyWeight,
           color: bodyColor,
         )
       : pw.TextStyle(
           color: bodyColor,
-          fontSize: ResumeTypography.creativeBodyPt,
+          fontSize: bodyPt,
         );
 
   return pw.Padding(
@@ -1499,6 +1512,7 @@ pw.Widget _creativeFirstPageSidebar({
   required PdfColor mutedColor,
   CalibriPdfFonts? calibri,
   pw.MemoryImage? profileImage,
+  required double bodyPt,
 }) {
   return pw.SizedBox(
     width: _creativeSidebarRailWidthPt,
@@ -1549,6 +1563,7 @@ pw.Widget _creativeFirstPageSidebar({
                     iconColor: accentColor,
                     textColor: mutedColor,
                     calibri: calibri,
+                    bodyPt: bodyPt,
                   ),
               ],
             ),
@@ -5024,7 +5039,7 @@ class ResumePdfService {
 
     if (resume.template == ResumeTemplate.creative) {
       final calibri = await _ensureCalibriPdfFonts();
-      final bodyPt = ResumeTypography.creativeBodyPt;
+      final bodyPt = resume.creativeScaledPt(ResumeTypography.creativeBodyPt);
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
           calibri,
@@ -5105,7 +5120,7 @@ class ResumePdfService {
   }) async {
     if (resume.template == ResumeTemplate.creative) {
       final calibri = await _ensureCalibriPdfFonts();
-      final bodyPt = ResumeTypography.creativeBodyPt;
+      final bodyPt = resume.creativeScaledPt(ResumeTypography.creativeBodyPt);
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
           calibri,
@@ -6232,26 +6247,28 @@ class ResumePdfService {
     ProjectItem item, {
     CalibriPdfFonts? calibri,
     required PdfColor mutedColor,
+    required double bodyPt,
+    required double subtitlePt,
   }) {
     final bullets = _projectBulletLines(item);
     final titleStyle = calibri != null
         ? calibriPdfTextStyle(
             calibri,
             ResumeTypography.creativeSubtitleWeight,
-            fontSize: ResumeTypography.creativeSubtitlePt,
+            fontSize: subtitlePt,
           )
-        : pw.TextStyle(fontSize: ResumeTypography.creativeSubtitlePt);
+        : pw.TextStyle(fontSize: subtitlePt);
     final bodyColor = _creativeBodyTextColorPdf();
     final bodyStyle = calibri != null
         ? calibriCreativeBodyPdfTextStyle(
             calibri,
-            ResumeTypography.creativeBodyPt,
+            bodyPt,
             weight: ResumeTypography.creativeBodyWeight,
             color: bodyColor,
           )
         : pw.TextStyle(
             color: bodyColor,
-            fontSize: ResumeTypography.creativeBodyPt,
+            fontSize: bodyPt,
           );
     final titleStyleWithColor = titleStyle.copyWith(color: bodyColor);
     return pw.Padding(
@@ -6278,12 +6295,16 @@ class ResumePdfService {
     Set<String> highlightedBullets,
     PdfColor highlightColor, {
     CalibriPdfFonts? calibri,
+    required double bodyPt,
+    required double subtitlePt,
   }) {
     return _buildCreativeExperience(
       item,
       calibri: calibri,
       highlightedBullets: highlightedBullets,
       highlightColor: highlightColor,
+      bodyPt: bodyPt,
+      subtitlePt: subtitlePt,
     );
   }
 
@@ -6292,41 +6313,43 @@ class ResumePdfService {
     CalibriPdfFonts? calibri,
     Set<String> highlightedBullets = const {},
     PdfColor? highlightColor,
+    required double bodyPt,
+    required double subtitlePt,
   }) {
     final bodyColor = _creativeBodyTextColorPdf();
     final subtitleStyle = calibri != null
         ? calibriPdfTextStyle(
             calibri,
             ResumeTypography.creativeSubtitleWeight,
-            fontSize: ResumeTypography.creativeSubtitlePt,
+            fontSize: subtitlePt,
             color: bodyColor,
           )
         : pw.TextStyle(
-            fontSize: ResumeTypography.creativeSubtitlePt,
+            fontSize: subtitlePt,
             color: bodyColor,
           );
     final bodyStyle = calibri != null
         ? calibriCreativeBodyPdfTextStyle(
             calibri,
-            ResumeTypography.creativeBodyPt,
+            bodyPt,
             weight: ResumeTypography.creativeBodyWeight,
             color: bodyColor,
           )
         : pw.TextStyle(
-            fontSize: ResumeTypography.creativeBodyPt,
+            fontSize: bodyPt,
             color: bodyColor,
           );
     final dateStyle = calibri != null
         ? calibriCreativeBodyPdfTextStyle(
             calibri,
-            ResumeTypography.creativeBodyPt,
+            bodyPt,
             weight: ResumeTypography.creativeBodyWeight,
             color: bodyColor,
             fontStyle: pw.FontStyle.italic,
           )
         : pw.TextStyle(
             color: bodyColor,
-            fontSize: ResumeTypography.creativeBodyPt,
+            fontSize: bodyPt,
             fontStyle: pw.FontStyle.italic,
           );
 

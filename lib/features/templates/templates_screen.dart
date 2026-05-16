@@ -1546,7 +1546,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
   static const double _avatarCornerRadius = 2;
   static const double _avatarBackgroundOpacity = 0.4;
   static const double _sectionRuleHeight = 1.0;
-  static const double _sectionTitleRuleGap = 2;
+  static const double _sectionTitleRuleGap = 1;
 
   static Widget _buildAvatar({
     required ResumeData resume,
@@ -1654,27 +1654,10 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                     for (final lineText in contacts)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 5),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 1.5),
-                              child: Icon(
-                                Icons.square,
-                                size: 3.6,
-                                color: accentColor,
-                              ),
-                            ),
-                            const SizedBox(width: 3),
-                            Expanded(
-                              child: Text(
-                                lineText,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: sidebarStyle,
-                              ),
-                            ),
-                          ],
+                        child: _ProfileSidebarContactRow(
+                          text: lineText,
+                          accentColor: accentColor,
+                          style: sidebarStyle,
                         ),
                       ),
                   ],
@@ -4176,6 +4159,53 @@ class _MiniCoverLetterParagraph extends StatelessWidget {
   }
 }
 
+class _ProfileSidebarContactRow extends StatelessWidget {
+  const _ProfileSidebarContactRow({
+    required this.text,
+    required this.accentColor,
+    required this.style,
+  });
+
+  final String text;
+  final Color accentColor;
+  final TextStyle style;
+
+  static const double _squareSize = 3.6;
+
+  @override
+  Widget build(BuildContext context) {
+    final fontSize = style.fontSize ?? 4.2;
+    final lineHeight = style.height ?? ResumeTypography.creativeBodyLineHeight;
+    final firstLineExtent = fontSize * lineHeight;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: firstLineExtent,
+          child: Align(
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.square,
+              size: _squareSize,
+              color: accentColor,
+            ),
+          ),
+        ),
+        const SizedBox(width: 3),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _MiniSidebarHeading extends StatelessWidget {
   const _MiniSidebarHeading({
     required this.title,
@@ -4304,10 +4334,16 @@ class _MiniBulletColumn extends StatelessWidget {
   /// When omitted, inherits [DefaultTextStyle] (template arts should pass a small style).
   final TextStyle? textStyle;
 
+  static const double _bulletTextGap = 3;
+
   @override
   Widget build(BuildContext context) {
     final base =
         textStyle ?? DefaultTextStyle.of(context).style;
+    final fontSize = base.fontSize ?? 4.2;
+    final lineHeight = base.height ?? 1.2;
+    final firstLineExtent = fontSize * lineHeight;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -4317,13 +4353,21 @@ class _MiniBulletColumn extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '• ',
-                  style: base.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: bulletColor,
+                SizedBox(
+                  height: firstLineExtent,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      '•',
+                      style: base.copyWith(
+                        height: 1.0,
+                        fontWeight: FontWeight.w700,
+                        color: bulletColor,
+                      ),
+                    ),
                   ),
                 ),
+                const SizedBox(width: _bulletTextGap),
                 Expanded(
                   child: Text(item, style: base),
                 ),

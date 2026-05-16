@@ -832,21 +832,27 @@ class _CreativePreview extends StatelessWidget {
     final textColor = resume.creativeTitleColor;
     final lineColor = resume.creativeLineColor;
     const bodyTextColor = ResumeTypography.creativeBodyTextColor;
+    final bodyPt = resume.creativeScaledPt(ResumeTypography.creativeBodyPt);
+    final subtitlePt =
+        resume.creativeScaledPt(ResumeTypography.creativeSubtitlePt);
+    final namePt = resume.creativeScaledPt(ResumeTypography.creativeNamePt);
+    final sectionTitlePt =
+        resume.creativeScaledPt(ResumeTypography.creativeSectionTitlePt);
     final bodyStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeTypography.creativeBodyWeight,
-      fontSize: ResumeTypography.creativeBodyPt,
+      fontSize: bodyPt,
       color: bodyTextColor,
       height: ResumeTypography.creativeBodyLineHeight,
     );
     final subtitleStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeTypography.creativeSubtitleWeight,
-      fontSize: ResumeTypography.creativeSubtitlePt,
+      fontSize: subtitlePt,
       color: bodyTextColor,
       height: ResumeTypography.creativeBodyLineHeight,
     );
     final sidebarStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeTypography.creativeSidebarContentWeight,
-      fontSize: ResumeTypography.creativeBodyPt,
+      fontSize: bodyPt,
       color: bodyTextColor,
       height: ResumeTypography.creativeBodyLineHeight,
     );
@@ -876,7 +882,7 @@ class _CreativePreview extends StatelessWidget {
     const sidebarContentInset = (sidebarRailWidth - _avatarWidth) / 2;
     const mainContentInset =
         sidebarRailWidth + ResumeTypography.creativeSidebarBodyGap;
-    const nameFontSize = ResumeTypography.creativeNamePt;
+    final nameFontSize = namePt;
     final firstProjectLine = projects.isNotEmpty
         ? (_projectBulletLines(projects.first).isNotEmpty
               ? _projectBulletLines(projects.first).first
@@ -915,6 +921,7 @@ class _CreativePreview extends StatelessWidget {
                       accentColor: accentColor,
                       backgroundColor: avatarBackgroundColor,
                       backgroundOpacity: _avatarBackgroundOpacity,
+                      initialsFontSize: namePt * 1.15,
                     ),
                   ),
                   if (contacts.isNotEmpty) ...[
@@ -991,6 +998,7 @@ class _CreativePreview extends StatelessWidget {
                       _CreativeSidebarHeading(
                         title: 'SUMMARY',
                         lineColor: lineColor,
+                        sectionTitlePt: sectionTitlePt,
                       ),
                       const SizedBox(height: headingGap),
                       Text(
@@ -1007,6 +1015,7 @@ class _CreativePreview extends StatelessWidget {
                       _CreativeSidebarHeading(
                         title: 'EXPERIENCE',
                         lineColor: lineColor,
+                        sectionTitlePt: sectionTitlePt,
                       ),
                       const SizedBox(height: headingGap),
                       if (experiences.isNotEmpty)
@@ -1067,6 +1076,7 @@ class _CreativePreview extends StatelessWidget {
                                       ? bullets
                                       : bullets.take(1).toList(),
                                   bodyStyle: bodyStyle,
+                                  maxLines: showAllContent ? null : 1,
                                 ),
                               ],
                             ),
@@ -1082,6 +1092,7 @@ class _CreativePreview extends StatelessWidget {
                         _CreativeSidebarHeading(
                           title: 'EDUCATION',
                           lineColor: lineColor,
+                          sectionTitlePt: sectionTitlePt,
                         ),
                         const SizedBox(height: headingGap),
                         ...education.map(
@@ -1127,6 +1138,7 @@ class _CreativePreview extends StatelessWidget {
                       _CreativeSidebarHeading(
                         title: 'SKILLS',
                         lineColor: lineColor,
+                        sectionTitlePt: sectionTitlePt,
                       ),
                       const SizedBox(height: headingGap),
                       Row(
@@ -1151,6 +1163,7 @@ class _CreativePreview extends StatelessWidget {
                       _CreativeSidebarHeading(
                         title: 'PROJECTS',
                         lineColor: lineColor,
+                        sectionTitlePt: sectionTitlePt,
                       ),
                       const SizedBox(height: headingGap),
                       if (projects.isEmpty)
@@ -1196,6 +1209,7 @@ class _CreativePreview extends StatelessWidget {
                         _CreativeSidebarHeading(
                           title: section.title.ifBlank('Custom Section'),
                           lineColor: lineColor,
+                          sectionTitlePt: sectionTitlePt,
                         ),
                         const SizedBox(height: headingGap),
                         if (section.layoutMode == CustomSectionLayoutMode.bullets)
@@ -3081,10 +3095,15 @@ List<CustomSectionItem> _classicSidebarMainCustomSections(ResumeData resume) {
 }
 
 class _CreativeSidebarHeading extends StatelessWidget {
-  const _CreativeSidebarHeading({required this.title, required this.lineColor});
+  const _CreativeSidebarHeading({
+    required this.title,
+    required this.lineColor,
+    required this.sectionTitlePt,
+  });
 
   final String title;
   final Color lineColor;
+  final double sectionTitlePt;
 
   @override
   Widget build(BuildContext context) {
@@ -3097,7 +3116,7 @@ class _CreativeSidebarHeading extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: ResumeTypography.calibriPreviewStyle(
               weight: ResumeTypography.creativeSectionTitleWeight,
-              fontSize: ResumeTypography.creativeSectionTitlePt,
+              fontSize: sectionTitlePt,
               color: ResumeTypography.creativeBodyTextColor,
               height: ResumeTypography.creativeBodyLineHeight,
               letterSpacing: 0.2,
@@ -3122,18 +3141,31 @@ class _CreativeSidebarMetaItem extends StatelessWidget {
   final Color iconColor;
   final TextStyle style;
 
+  static const double _squareSize = 7;
+
   @override
   Widget build(BuildContext context) {
+    final fontSize = style.fontSize ?? ResumeTypography.creativeBodyPt;
+    final lineHeight =
+        style.height ?? ResumeTypography.creativeBodyLineHeight;
+    final firstLineExtent = fontSize * lineHeight;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 7,
-          height: 7,
-          margin: const EdgeInsets.only(top: 4, right: 6),
-          decoration: BoxDecoration(
-            color: iconColor,
-            borderRadius: BorderRadius.circular(1.5),
+        SizedBox(
+          height: firstLineExtent,
+          child: Align(
+            alignment: Alignment.center,
+            child: Container(
+              width: _squareSize,
+              height: _squareSize,
+              margin: const EdgeInsets.only(right: 6),
+              decoration: BoxDecoration(
+                color: iconColor,
+                borderRadius: BorderRadius.circular(1.5),
+              ),
+            ),
           ),
         ),
         Expanded(
@@ -3157,6 +3189,7 @@ class _CreativeProfileAvatar extends StatelessWidget {
     required this.accentColor,
     required this.backgroundColor,
     required this.backgroundOpacity,
+    required this.initialsFontSize,
   });
 
   final ResumeData resume;
@@ -3165,6 +3198,7 @@ class _CreativeProfileAvatar extends StatelessWidget {
   final Color accentColor;
   final Color backgroundColor;
   final double backgroundOpacity;
+  final double initialsFontSize;
 
   static const double _cornerRadius = 2;
 
@@ -3174,7 +3208,7 @@ class _CreativeProfileAvatar extends StatelessWidget {
     final hasImage = path.isNotEmpty && File(path).existsSync();
     final initialsStyle = TextStyle(
       color: accentColor,
-      fontSize: ResumeTypography.creativeNamePt * 1.15,
+      fontSize: initialsFontSize,
       fontWeight: ResumeFontWeight.toFlutter(
         ResumeTypography.creativeNameWeight,
       ),
@@ -3220,30 +3254,65 @@ String _creativeExperienceDateRange(String startDate, String endDate) {
 }
 
 class _CreativeBulletColumn extends StatelessWidget {
-  const _CreativeBulletColumn({required this.items, required this.bodyStyle});
+  const _CreativeBulletColumn({
+    required this.items,
+    required this.bodyStyle,
+    this.maxLines = 1,
+  });
 
   final List<String> items;
   final TextStyle bodyStyle;
+  final int? maxLines;
+
+  static const double _bulletTextGap = 6;
+
+  Widget _bulletRow(String item) {
+    final fontSize = bodyStyle.fontSize ?? ResumeTypography.creativeBodyPt;
+    final lineHeight =
+        bodyStyle.height ?? ResumeTypography.creativeBodyLineHeight;
+    final firstLineExtent = fontSize * lineHeight;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: firstLineExtent,
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(
+                '•',
+                style: bodyStyle.copyWith(
+                  height: 1.0,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: _bulletTextGap),
+          Expanded(
+            child: Text(
+              item.trim(),
+              maxLines: maxLines,
+              overflow:
+                  maxLines == null ? null : TextOverflow.ellipsis,
+              style: bodyStyle,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return Text('• Add skills', style: bodyStyle);
+      return _bulletRow('Add skills');
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final item in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 3),
-            child: Text(
-              '• ${item.trim()}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: bodyStyle,
-            ),
-          ),
-      ],
+      children: [for (final item in items) _bulletRow(item)],
     );
   }
 }

@@ -434,7 +434,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final bodyColor = _creativeBodyTextColorPdf();
     final railColor = _creativeSidebarRailColorPdf(resume);
     final highlightColor = PdfColor.fromHex('#FFE67A');
-    final bodyPt = ResumeTypography.creativeBodyPt;
+    final bodyPt = resume.creativeScaledPt(ResumeTypography.creativeBodyPt);
+    final namePt = resume.creativeScaledPt(ResumeTypography.creativeNamePt);
+    final subtitlePt =
+        resume.creativeScaledPt(ResumeTypography.creativeSubtitlePt);
+    final sectionTitlePt =
+        resume.creativeScaledPt(ResumeTypography.creativeSectionTitlePt);
     final bodyTextStyle = calibri != null
         ? calibriCreativeBodyPdfTextStyle(
             calibri,
@@ -467,6 +472,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             lineColor: lineColor,
             mutedColor: bodyColor,
             calibri: calibri,
+            bodyPt: bodyPt,
           ),
         ),
         header: _creativeContinuedPageTopGap,
@@ -478,12 +484,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   ? calibriPdfTextStyle(
                       calibri,
                       ResumeTypography.creativeNameWeight,
-                      fontSize: _creativeNameFontPt,
+                      fontSize: namePt,
                       color: textColor,
                     ).copyWith(lineSpacing: 1)
                   : pw.TextStyle(
                       color: textColor,
-                      fontSize: _creativeNameFontPt,
+                      fontSize: namePt,
                       lineSpacing: 1,
                     ),
             ),
@@ -497,13 +503,13 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     ? calibriPdfTextStyle(
                         calibri,
                         ResumeTypography.creativeSubtitleWeight,
-                        fontSize: ResumeTypography.creativeSubtitlePt,
+                        fontSize: subtitlePt,
                         color: bodyColor,
                         fontStyle: pw.FontStyle.italic,
                       )
                     : pw.TextStyle(
                         color: bodyColor,
-                        fontSize: ResumeTypography.creativeSubtitlePt,
+                        fontSize: subtitlePt,
                         fontStyle: pw.FontStyle.italic,
                       ),
               ),
@@ -516,6 +522,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               titleColor: textColor,
               lineColor: lineColor,
               calibri: calibri,
+              sectionTitlePt: sectionTitlePt,
             ),
           ),
           pw.SizedBox(height: _creativeHeadingBodyGapPt),
@@ -543,6 +550,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: textColor,
                 lineColor: lineColor,
                 calibri: calibri,
+                sectionTitlePt: sectionTitlePt,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
@@ -557,6 +565,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   highlightedBulletsByExperience[index] ?? const <String>{},
                   highlightColor,
                   calibri: calibri,
+                  bodyPt: bodyPt,
+                  subtitlePt: subtitlePt,
                 ),
               ),
           ],
@@ -568,6 +578,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: textColor,
                 lineColor: lineColor,
                 calibri: calibri,
+                sectionTitlePt: sectionTitlePt,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
@@ -578,6 +589,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   titleColor: textColor,
                   mutedColor: bodyColor,
                   calibri: calibri,
+                  bodyPt: bodyPt,
+                  subtitlePt: subtitlePt,
                 ),
               ),
           ],
@@ -589,6 +602,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: textColor,
                 lineColor: lineColor,
                 calibri: calibri,
+                sectionTitlePt: sectionTitlePt,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
@@ -610,6 +624,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: textColor,
                 lineColor: lineColor,
                 calibri: calibri,
+                sectionTitlePt: sectionTitlePt,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
@@ -619,6 +634,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   item,
                   calibri: calibri,
                   mutedColor: bodyColor,
+                  bodyPt: bodyPt,
+                  subtitlePt: subtitlePt,
                 ),
               ),
           ],
@@ -630,6 +647,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: textColor,
                 lineColor: lineColor,
                 calibri: calibri,
+                sectionTitlePt: sectionTitlePt,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),

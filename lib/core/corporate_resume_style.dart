@@ -115,6 +115,11 @@ extension ResumeCorporateStyleX on ResumeData {
     return v;
   }
 
+  /// Scales Profile Sidebar (template 2) type from the body font slider (10–12 pt).
+  double get creativeFontScale => effectiveBodyFontPt / kResumeBodyFontPtDefault;
+
+  double creativeScaledPt(double designPt) => designPt * creativeFontScale;
+
   CorporateColorPreset get corporateColorPreset {
     if (corporateColorPresetIndex == kTemplateDefaultColorPresetIndex) {
       return CorporateColorPreset(
