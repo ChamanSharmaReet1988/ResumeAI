@@ -84,6 +84,22 @@ pw.TextStyle calibriBodyPdfTextStyle(
       fontStyle: fontStyle,
     );
 
+pw.TextStyle calibriCreativeBodyPdfTextStyle(
+  CalibriPdfFonts fonts,
+  double bodyFontPt, {
+  int weight = ResumeFontWeight.w400,
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    calibriPdfTextStyle(
+      fonts,
+      weight,
+      fontSize: bodyFontPt,
+      color: color,
+      lineSpacing: ResumeTypography.creativeBodyPdfLineSpacingFor(bodyFontPt),
+      fontStyle: fontStyle,
+    );
+
 /// Dark Header avatar initials — 36pt, weight 600.
 pw.TextStyle darkHeaderInitialsPdfStyle(
   CalibriPdfFonts fonts,
@@ -118,31 +134,29 @@ Future<CalibriPdfFonts> loadCalibriPdfFonts() async {
 Future<pw.ThemeData> resumePdfThemeForCalibri(
   CalibriPdfFonts fonts, {
   required double bodyFontPt,
+  double bodyLineHeight = ResumeTypography.bodyTextLineHeight,
 }) async {
-  final lineSpacing = ResumeTypography.bodyPdfLineSpacingFor(bodyFontPt);
-  final cacheKey = 'calibri_${bodyFontPt.toStringAsFixed(1)}';
+  final lineSpacing = bodyFontPt * (bodyLineHeight - 1);
+  final cacheKey =
+      'calibri_${bodyFontPt.toStringAsFixed(1)}_${bodyLineHeight.toStringAsFixed(2)}';
   final cached = resumePdfThemeCache[cacheKey];
   if (cached != null) {
     return cached;
   }
+  final bodyStyle = calibriPdfTextStyle(
+    fonts,
+    ResumeFontWeight.w400,
+    fontSize: bodyFontPt,
+    lineSpacing: lineSpacing,
+  );
   final theme = pw.ThemeData.withFont(
     base: fonts.w400,
     bold: fonts.fontFor(ResumeFontWeight.w800),
     italic: fonts.italic,
     boldItalic: fonts.fontFor(ResumeFontWeight.w800),
   ).copyWith(
-    defaultTextStyle: calibriPdfTextStyle(
-      fonts,
-      ResumeFontWeight.w400,
-      fontSize: bodyFontPt,
-      lineSpacing: lineSpacing,
-    ),
-    bulletStyle: calibriPdfTextStyle(
-      fonts,
-      ResumeFontWeight.w400,
-      fontSize: bodyFontPt,
-      lineSpacing: lineSpacing,
-    ),
+    defaultTextStyle: bodyStyle,
+    bulletStyle: bodyStyle,
   );
   resumePdfThemeCache[cacheKey] = theme;
   return theme;

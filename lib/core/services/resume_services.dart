@@ -469,14 +469,11 @@ pw.Widget _creativeSidebarContactRow(
   CalibriPdfFonts? calibri,
 }) {
   final textStyle = calibri != null
-      ? calibriPdfTextStyle(
+      ? calibriCreativeBodyPdfTextStyle(
           calibri,
-          ResumeTypography.creativeSidebarContentWeight,
-          fontSize: ResumeTypography.creativeBodyPt,
+          ResumeTypography.creativeBodyPt,
+          weight: ResumeTypography.creativeSidebarContentWeight,
           color: textColor,
-          lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
-            ResumeTypography.creativeBodyPt,
-          ),
         )
       : pw.TextStyle(
           color: textColor,
@@ -1447,14 +1444,11 @@ pw.Widget _creativeSidebarEducationEntry(
           fontSize: ResumeTypography.creativeSubtitlePt,
         );
   final bodyStyle = calibri != null
-      ? calibriPdfTextStyle(
+      ? calibriCreativeBodyPdfTextStyle(
           calibri,
-          ResumeTypography.creativeBodyWeight,
-          fontSize: ResumeTypography.creativeBodyPt,
+          ResumeTypography.creativeBodyPt,
+          weight: ResumeTypography.creativeBodyWeight,
           color: bodyColor,
-          lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
-            ResumeTypography.creativeBodyPt,
-          ),
         )
       : pw.TextStyle(
           color: bodyColor,
@@ -5008,7 +5002,11 @@ class ResumePdfService {
       final calibri = await _ensureCalibriPdfFonts();
       final bodyPt = ResumeTypography.creativeBodyPt;
       final document = pw.Document(
-        theme: await resumePdfThemeForCalibri(calibri, bodyFontPt: bodyPt),
+        theme: await resumePdfThemeForCalibri(
+          calibri,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.creativeBodyLineHeight,
+        ),
       );
       _addCreativeTemplatePage(
         document,
@@ -5085,7 +5083,11 @@ class ResumePdfService {
       final calibri = await _ensureCalibriPdfFonts();
       final bodyPt = ResumeTypography.creativeBodyPt;
       final document = pw.Document(
-        theme: await resumePdfThemeForCalibri(calibri, bodyFontPt: bodyPt),
+        theme: await resumePdfThemeForCalibri(
+          calibri,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.creativeBodyLineHeight,
+        ),
       );
       _addHighlightedCreativeTemplatePage(
         document,
@@ -6217,14 +6219,11 @@ class ResumePdfService {
         : pw.TextStyle(fontSize: ResumeTypography.creativeSubtitlePt);
     final bodyColor = _creativeBodyTextColorPdf();
     final bodyStyle = calibri != null
-        ? calibriPdfTextStyle(
+        ? calibriCreativeBodyPdfTextStyle(
             calibri,
-            ResumeTypography.creativeBodyWeight,
-            fontSize: ResumeTypography.creativeBodyPt,
+            ResumeTypography.creativeBodyPt,
+            weight: ResumeTypography.creativeBodyWeight,
             color: bodyColor,
-            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
-              ResumeTypography.creativeBodyPt,
-            ),
           )
         : pw.TextStyle(
             color: bodyColor,
@@ -6283,24 +6282,21 @@ class ResumePdfService {
             color: bodyColor,
           );
     final bodyStyle = calibri != null
-        ? calibriPdfTextStyle(
+        ? calibriCreativeBodyPdfTextStyle(
             calibri,
-            ResumeTypography.creativeBodyWeight,
-            fontSize: ResumeTypography.creativeBodyPt,
+            ResumeTypography.creativeBodyPt,
+            weight: ResumeTypography.creativeBodyWeight,
             color: bodyColor,
-            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
-              ResumeTypography.creativeBodyPt,
-            ),
           )
         : pw.TextStyle(
             fontSize: ResumeTypography.creativeBodyPt,
             color: bodyColor,
           );
     final dateStyle = calibri != null
-        ? calibriPdfTextStyle(
+        ? calibriCreativeBodyPdfTextStyle(
             calibri,
-            ResumeTypography.creativeBodyWeight,
-            fontSize: ResumeTypography.creativeBodyPt,
+            ResumeTypography.creativeBodyPt,
+            weight: ResumeTypography.creativeBodyWeight,
             color: bodyColor,
             fontStyle: pw.FontStyle.italic,
           )

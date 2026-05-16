@@ -625,19 +625,16 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 'Add a short summary to position your experience and strengths.',
               ),
               style: calibri != null
-                  ? calibriPdfTextStyle(
+                  ? calibriCreativeBodyPdfTextStyle(
                       calibri,
-                      ResumeTypography.creativeBodyWeight,
-                      fontSize: bodyPt,
+                      bodyPt,
+                      weight: ResumeTypography.creativeBodyWeight,
                       color: bodyColor,
-                      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
-                        bodyPt,
-                      ),
                     )
                   : pw.TextStyle(
                       fontSize: bodyPt,
                       color: bodyColor,
-                      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+                      lineSpacing: ResumeTypography.creativeBodyPdfLineSpacingFor(
                         bodyPt,
                       ),
                     ),
@@ -696,14 +693,11 @@ ResumeTypography.darkHeaderSubtitleWeight,
               _skillsForDisplay(resume),
               fontSize: bodyPt,
               bulletStyle: calibri != null
-                  ? calibriPdfTextStyle(
+                  ? calibriCreativeBodyPdfTextStyle(
                       calibri,
-                      ResumeTypography.creativeBodyWeight,
-                      fontSize: bodyPt,
+                      bodyPt,
+                      weight: ResumeTypography.creativeBodyWeight,
                       color: bodyColor,
-                      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
-                        bodyPt,
-                      ),
                     )
                   : pw.TextStyle(
                       fontSize: bodyPt,

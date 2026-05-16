@@ -436,17 +436,16 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final highlightColor = PdfColor.fromHex('#FFE67A');
     final bodyPt = ResumeTypography.creativeBodyPt;
     final bodyTextStyle = calibri != null
-        ? calibriPdfTextStyle(
+        ? calibriCreativeBodyPdfTextStyle(
             calibri,
-            ResumeTypography.creativeBodyWeight,
-            fontSize: bodyPt,
+            bodyPt,
+            weight: ResumeTypography.creativeBodyWeight,
             color: bodyColor,
-            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
           )
         : pw.TextStyle(
             fontSize: bodyPt,
             color: bodyColor,
-            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+            lineSpacing: ResumeTypography.creativeBodyPdfLineSpacingFor(bodyPt),
           );
     final contactItems = _resumeContactItems(resume);
     final allSkills = _skillsForDisplay(resume);

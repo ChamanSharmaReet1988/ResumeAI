@@ -829,18 +829,19 @@ class _CreativePreview extends StatelessWidget {
       weight: ResumeTypography.creativeBodyWeight,
       fontSize: ResumeTypography.creativeBodyPt,
       color: bodyTextColor,
-      height: ResumeTypography.textLineHeight,
+      height: ResumeTypography.creativeBodyLineHeight,
     );
     final subtitleStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeTypography.creativeSubtitleWeight,
       fontSize: ResumeTypography.creativeSubtitlePt,
       color: bodyTextColor,
+      height: ResumeTypography.creativeBodyLineHeight,
     );
     final sidebarStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeTypography.creativeSidebarContentWeight,
       fontSize: ResumeTypography.creativeBodyPt,
       color: bodyTextColor,
-      height: ResumeTypography.textLineHeight,
+      height: ResumeTypography.creativeBodyLineHeight,
     );
     final summary = resume.summary.trim();
     final allSkills = _pdfAlignedSkills(resume);
@@ -2996,6 +2997,7 @@ class _CreativeSidebarHeading extends StatelessWidget {
               weight: ResumeTypography.creativeSectionTitleWeight,
               fontSize: ResumeTypography.creativeSectionTitlePt,
               color: ResumeTypography.creativeBodyTextColor,
+              height: ResumeTypography.creativeBodyLineHeight,
               letterSpacing: 0.2,
             ),
           ),

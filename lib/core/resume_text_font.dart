@@ -61,12 +61,18 @@ abstract final class ResumeTypography {
   static const double creativeNamePt = 24;
   static const int creativeNameWeight = 600;
   static const int creativeSidebarContentWeight = 300;
-  static const double creativeSectionTitlePt = 15;
+  static const double creativeSectionTitlePt = 14;
   static const int creativeSectionTitleWeight = 500;
   static const double creativeBodyPt = 12;
   static const int creativeBodyWeight = 300;
   static const double creativeSubtitlePt = 13;
   static const int creativeSubtitleWeight = 400;
+
+  /// Profile Sidebar body paragraph line height (preview + PDF).
+  static const double creativeBodyLineHeight = 1.2;
+
+  static double creativeBodyPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (creativeBodyLineHeight - 1);
 
   /// Profile Sidebar body copy (preview + PDF).
   static const Color creativeBodyTextColor = Color(0xFF000000);
