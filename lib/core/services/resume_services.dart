@@ -147,11 +147,10 @@ pw.Widget _creativeAvatarIconPlaceholder({
 }
 
 const double _creativeSidebarRailWidthPt = 176.0;
-const double _creativeSidebarContentWidthPt = 150.0;
 const double _creativeAvatarWidthPt = 150.0;
+const double _creativeSidebarContentInsetPt =
+    (_creativeSidebarRailWidthPt - _creativeAvatarWidthPt) / 2;
 const double _creativeAvatarHeightPt = 175.0;
-const double _creativeSidebarPanelLeftInsetPt =
-    (_creativeSidebarRailWidthPt - _creativeSidebarContentWidthPt) / 2;
 // Ensure Template 2 body starts to the right of sidebar rail.
 const double _creativeMainColumnInsetPt = _creativeSidebarRailWidthPt + 8.0;
 const double _creativeSectionGapPt = 20.0;
@@ -266,7 +265,12 @@ pw.PageTheme _creativeSidebarPageTheme({
 }) {
   return pw.PageTheme(
     pageFormat: pageFormat,
-    margin: const pw.EdgeInsets.fromLTRB(24, 18, 24, 30),
+    margin: pw.EdgeInsets.fromLTRB(
+      0,
+      ResumeTypography.creativeBodyTopMargin,
+      ResumeTypography.creativeMainColumnRightInset,
+      ResumeTypography.creativeBodyBottomMargin,
+    ),
     buildBackground: (context) => pw.FullPage(
       ignoreMargins: true,
       child: context.pageNumber == 1
@@ -284,8 +288,8 @@ pw.PageTheme _creativeSidebarPageTheme({
                 ),
                 if (firstPageSidebar != null)
                   pw.Positioned(
-                    left: _creativeSidebarPanelLeftInsetPt,
-                    top: 18,
+                    left: 0,
+                    top: 0,
                     child: firstPageSidebar,
                   ),
               ],
@@ -345,8 +349,9 @@ pw.Widget _classicSidebarMainColumnChild(
 class _CreativePageAwareInset extends pw.SingleChildWidget {
   _CreativePageAwareInset({required pw.Widget child}) : super(child: child);
 
-  double _leftInsetFor(pw.Context context) =>
-      context.pageNumber == 1 ? _creativeMainColumnInsetPt : 0;
+  double _leftInsetFor(pw.Context context) => context.pageNumber == 1
+      ? _creativeMainColumnInsetPt
+      : ResumeTypography.creativeContinuationPageHorizontalInset;
 
   // ignore: must_call_super
   @override
@@ -1491,10 +1496,11 @@ pw.Widget _creativeFirstPageSidebar({
   pw.MemoryImage? profileImage,
 }) {
   return pw.SizedBox(
-    width: _creativeSidebarContentWidthPt,
+    width: _creativeSidebarRailWidthPt,
     child: pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
       children: [
+        pw.SizedBox(height: ResumeTypography.creativeSidebarImageTopPadding),
         pw.Center(
           child: profileImage != null
               ? pw.Container(
@@ -1522,13 +1528,22 @@ pw.Widget _creativeFirstPageSidebar({
             ),
           ),
           pw.SizedBox(height: _creativeSidebarDividerGapPt),
-          for (final item in contactItems)
-            _creativeSidebarContactRow(
-              item,
-              iconColor: accentColor,
-              textColor: mutedColor,
-              calibri: calibri,
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(
+              horizontal: _creativeSidebarContentInsetPt,
             ),
+            child: pw.Column(
+              children: [
+                for (final item in contactItems)
+                  _creativeSidebarContactRow(
+                    item,
+                    iconColor: accentColor,
+                    textColor: mutedColor,
+                    calibri: calibri,
+                  ),
+              ],
+            ),
+          ),
         ],
       ],
     ),

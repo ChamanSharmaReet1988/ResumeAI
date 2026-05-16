@@ -643,15 +643,13 @@ class _TemplatePreviewArt extends StatelessWidget {
         ),
         fit: _ResumeTemplatePreviewFit.tile,
       ),
-      _TemplatePreviewKind.profileSidebarResume =>
-        showPremiumBadgeOnPage
-            ? _ResumeTemplatePreviewArt(
-                resume: _applyTemplatePreviewPalette(
-                  _profileSidebarTemplateResume,
-                  paletteSeed,
-                ),
-              )
-            : const _ProfileSidebarTemplateArtCompact(),
+      _TemplatePreviewKind.profileSidebarResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _profileSidebarTemplateResume,
+          paletteSeed,
+        ),
+        fit: _ResumeTemplatePreviewFit.tile,
+      ),
       _TemplatePreviewKind.classicSidebarResume =>
         showPremiumBadgeOnPage
             ? _ResumeTemplatePreviewArt(
@@ -800,9 +798,12 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       );
     }
     if (template == ResumeTemplate.creative) {
-      return const _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _ProfileSidebarTemplateArtCompact(),
+      return _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _profileSidebarTemplateResume,
+          paletteSeed,
+        ),
+        fit: _ResumeTemplatePreviewFit.detail,
       );
     }
     if (template == ResumeTemplate.classicSidebar) {
@@ -968,6 +969,13 @@ ResumeData _applyTemplatePreviewPalette(
       ),
     );
   }
+  if (sample.template == ResumeTemplate.creative) {
+    return sample.copyWith(
+      corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+        ResumeTemplate.creative,
+      ),
+    );
+  }
   if (paletteSeed == null) {
     return sample;
   }
@@ -1086,56 +1094,126 @@ final ResumeData _darkHeaderTemplateResume = _atsFullSampleResume.copyWith(
   ),
 );
 
-final ResumeData _profileSidebarTemplateResume = ResumeData(
+/// Profile Sidebar template tile + detail preview (same typography/layout as builder/PDF).
+final ResumeData _profileSidebarTemplateResume = _atsFullSampleResume.copyWith(
   id: 'template-profile-sidebar',
-  title: 'Profile Sidebar Template',
-  fullName: '',
-  jobTitle: 'Project Coordinator',
-  email: 'mateo@sample.in',
-  phone: '+1 206 555 0117',
-  location: 'Seattle, WA',
-  website: 'mateovargas.dev',
-  summary:
-      'Project coordinator focused on team handoffs, timeline tracking, and stakeholder updates.',
   template: ResumeTemplate.creative,
+  summary:
+      'Delivery-focused program manager with 8+ years aligning engineering, design, and business stakeholders. Known for turning ambiguous goals into phased roadmaps, measurable KPIs, and predictable releases in regulated and high-growth environments. Comfortable leading vendor negotiations, dependency mapping, and executive readouts across distributed teams.',
   workExperiences: const [
     WorkExperience(
-      role: 'Project Coordinator',
-      company: 'Juniper Studio',
-      startDate: '2021',
+      role: 'Senior Program Manager',
+      company: 'Northwind Analytics',
+      startDate: 'Jan 2019',
       endDate: 'Present',
       description: '',
-      bullets: ['Managed creative timelines for campaign deliverables.'],
+      bullets: [
+        'Directed portfolio planning for three product lines with an \$18M annual budget and quarterly executive reviews.',
+        'Reduced cross-team dependency delays by 27% through shared milestone dashboards and clearer RACI ownership.',
+        'Led vendor selection and contract renewals for analytics and data-pipeline partners.',
+        'Introduced release readiness scorecards adopted by product, QA, and customer success.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Project Lead',
+      company: 'Harbor Systems LLC — Oakland, CA',
+      startDate: 'Jun 2015',
+      endDate: 'Dec 2018',
+      description: '',
+      bullets: [
+        'Led ERP rollout for 120 users; completed UAT two weeks early with zero Sev-1 defects.',
+        'Standardized project intake and status reporting for a 25-person delivery group.',
+        'Coached scrum masters on dependency risk reviews and milestone forecasting.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Business Analyst',
+      company: 'Brightline Retail — San Jose, CA',
+      startDate: 'Aug 2012',
+      endDate: 'May 2015',
+      description: '',
+      bullets: [
+        'Mapped order-to-cash workflows and delivered requirements for inventory visibility tools.',
+        'Built Tableau dashboards used weekly by merchandising and operations leadership.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Operations Coordinator',
+      company: 'Summit Logistics',
+      startDate: 'Jun 2010',
+      endDate: 'Jul 2012',
+      description: '',
+      bullets: [
+        'Coordinated carrier schedules and SLA reporting for a 14-site distribution network.',
+        'Reduced invoice exceptions by 18% through standardized exception codes and training.',
+      ],
     ),
   ],
-  education: const [
-    EducationItem(
-      institution: 'University of Washington',
-      degree: 'B.A. Media Studies',
-      startDate: '2017',
-      endDate: '2021',
-      score: '',
-    ),
+  skills: const [
+    'Program governance',
+    'SQL & Excel modeling',
+    'Agile / Scrum',
+    'Stakeholder communication',
+    'Risk & dependency tracking',
+    'Vendor management',
+    'Roadmap planning',
+    'Executive reporting',
+    'Jira & Confluence',
+    'Process design',
+    'Change management',
+    'Data visualization',
   ],
-  skills: const ['Timeline tracking'],
   projects: const [
     ProjectItem(
-      title: 'Campaign Launch Tracker',
-      bullets: ['Built tracker for campaign milestones and owner handoffs.'],
+      title: 'Forecast Automation Toolkit',
+      overview: 'Finance forecasting workflow',
+      impact: 'SQL, Python, Airflow',
+      bullets: [
+        'Partnered with finance to replace spreadsheet forecasts with auditable, versioned pipelines.',
+        'Cut monthly close prep from five days to two through automated variance checks.',
+        'Documented runbooks and rollback steps for on-call finance engineering support.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Customer Onboarding Playbook',
+      overview: 'Cross-functional onboarding',
+      impact: 'Notion, Miro, Figma',
+      bullets: [
+        'Published a stage-gated onboarding framework used by sales, CS, and implementation.',
+        'Reduced time-to-first-value by 22% for mid-market accounts in the first pilot quarter.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Release Readiness Dashboard',
+      overview: 'Engineering release metrics',
+      impact: 'Looker, BigQuery',
+      bullets: [
+        'Defined readiness criteria and automated weekly scorecards for five product squads.',
+        'Surfaced blocker trends that cut release slip rate by one third over two quarters.',
+      ],
     ),
   ],
-  customSections: const [],
-  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
-  githubLink: 'github.com/mateovargas',
-  linkedinLink: '',
-  profileImagePath: '',
-  resumeTextFont: ResumeTextFont.inter,
-  includeWorkInResume: true,
-  includeEducationInResume: true,
-  includeSkillsInResume: true,
-  includeProjectsInResume: true,
-  bodyFontPt: kResumeBodyFontPtDefault,
-  corporateColorPresetIndex: 3,
+  customSections: const [
+    CustomSectionItem(
+      title: 'Certifications',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: [
+        'PMP — Project Management Institute (2016)',
+        'Agile PM Certificate — Berkeley Extension (2014)',
+        'SAFe Program Consultant — Scaled Agile (2018)',
+      ],
+    ),
+    CustomSectionItem(
+      title: 'Languages',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: ['English (native)', 'Spanish (professional working proficiency)'],
+    ),
+  ],
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.creative,
+  ),
 );
 
 final ResumeData _classicSidebarTemplateResume = ResumeData(
@@ -2697,187 +2775,6 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
   }
 }
 
-class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
-  const _ProfileSidebarTemplateArtCompact();
-
-  @override
-  Widget build(BuildContext context) {
-    const rail = Color(0xFFF4E6DA);
-    const dark = Color(0xFF33373D);
-    const text = Color(0xFF2E3135);
-    const line = Color(0xFFBFC4CB);
-    const muted = Color(0xFF6E747B);
-    final avatarBackground = Color.lerp(
-      rail,
-      Colors.black,
-      0.10,
-    )!.withValues(alpha: 0.4);
-
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.white),
-      child: ClipRRect(
-        borderRadius: BorderRadius.zero,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 72,
-              color: rail,
-              padding: const EdgeInsets.fromLTRB(0, 9, 0, 8),
-              child: DefaultTextStyle(
-                style: const TextStyle(
-                  fontSize: 3.8,
-                  height: 1.35,
-                  color: text,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: _MiniAvatarBlock(
-                        backgroundColor: avatarBackground,
-                        textColor: Color(0xFFE17A3B),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Center(
-                      child: SizedBox(
-                        width: 55,
-                        height: 1,
-                        child: ColoredBox(color: line),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: const _MiniAccentDotLine(text: 'Seattle, WA'),
-                    ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: const _MiniAccentDotLine(text: '+1 206 555 0117'),
-                    ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: const _MiniAccentDotLine(text: 'mateo@sample.in'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                  child: DefaultTextStyle(
-                    style: const TextStyle(
-                      fontSize: 4.6,
-                      height: 1.28,
-                      color: text,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'PROJECT COORDINATOR',
-                          style: TextStyle(
-                            fontSize: 8.8,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.2,
-                            color: dark,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'Marketing operations and handoff management',
-                          style: TextStyle(color: muted),
-                        ),
-                        const SizedBox(height: 7),
-                        const _MiniSidebarHeading(
-                          title: 'SUMMARY',
-                          lineColor: line,
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Project coordinator with a sharp eye for handoffs, meeting cadence, and stakeholder updates across marketing and product teams.',
-                        ),
-                        const SizedBox(height: 7),
-                        const _MiniSidebarHeading(
-                          title: 'EXPERIENCE',
-                          lineColor: line,
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'PROJECT COORDINATOR, 2021 - Present',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        const Text(
-                          'Juniper Studio, Seattle, WA',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        const _MiniBulletColumn(
-                          items: [
-                            'Managed creative timelines for 25+ campaign deliverables.',
-                          ],
-                        ),
-                        const SizedBox(height: 7),
-                        const _MiniSidebarHeading(
-                          title: 'EDUCATION',
-                          lineColor: line,
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'B.A. MEDIA STUDIES, 2021',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        const Text(
-                          'University of Washington',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        const SizedBox(height: 7),
-                        const _MiniSidebarHeading(
-                          title: 'PROJECTS',
-                          lineColor: line,
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'CAMPAIGN LAUNCH TRACKER',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        const _MiniBulletColumn(
-                          items: [
-                            'Built tracker for campaign milestones and owner handoffs.',
-                          ],
-                        ),
-                        const SizedBox(height: 7),
-                        const _MiniSidebarHeading(
-                          title: 'SKILLS',
-                          lineColor: line,
-                        ),
-                        const SizedBox(height: 4),
-                        const _MiniBulletColumn(items: ['Timeline tracking']),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   const _ClassicSidebarTemplateArtCompact({
     required this.resume,
@@ -3836,64 +3733,6 @@ class _MiniSidebarHeading extends StatelessWidget {
           ),
         ),
         Expanded(child: Container(height: 1.1, color: lineColor)),
-      ],
-    );
-  }
-}
-
-class _MiniAvatarBlock extends StatelessWidget {
-  const _MiniAvatarBlock({
-    required this.backgroundColor,
-    required this.textColor,
-  });
-
-  final Color backgroundColor;
-  final Color textColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 55,
-      height: 70,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(2),
-        color: backgroundColor,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        'MV',
-        style: TextStyle(
-          color: textColor,
-          fontSize: 13.6,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniAccentDotLine extends StatelessWidget {
-  const _MiniAccentDotLine({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 4,
-          height: 4,
-          margin: const EdgeInsets.only(top: 0, right: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE17A3B),
-            borderRadius: BorderRadius.circular(1),
-          ),
-        ),
-        Expanded(
-          child: Text(text, style: const TextStyle(color: Color(0xFF6E747B))),
-        ),
       ],
     );
   }

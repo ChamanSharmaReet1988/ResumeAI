@@ -137,7 +137,10 @@ class ResumePreviewCanvas extends StatelessWidget {
         scrollable: scrollable,
         showAllContent: showAllContent,
       ),
-      ResumeTemplate.creative => _CreativePreview(resume: resume),
+      ResumeTemplate.creative => _CreativePreview(
+        resume: resume,
+        showAllContent: showAllContent,
+      ),
       ResumeTemplate.classicSidebar => _ClassicSidebarPreview(resume: resume),
       ResumeTemplate.detailsSidebar => _DetailsSidebarPreview(
         resume: resume,
@@ -810,9 +813,13 @@ Widget _corporateCustomSectionBody(
 }
 
 class _CreativePreview extends StatelessWidget {
-  const _CreativePreview({required this.resume});
+  const _CreativePreview({
+    required this.resume,
+    this.showAllContent = false,
+  });
 
   final ResumeData resume;
+  final bool showAllContent;
   static const double _avatarBackgroundOpacity = 0.4;
   static const double _avatarWidth = 138.0;
   static const double _avatarHeight = 161.0;
@@ -848,17 +855,25 @@ class _CreativePreview extends StatelessWidget {
     final skills = allSkills.length > 2
         ? allSkills.sublist(0, allSkills.length - 2)
         : const <String>[];
-    final experiences = resume.visibleWorkExperiences;
-    final education = resume.visibleEducation;
-    final projects = resume.visibleProjects;
+    final experiences = showAllContent
+        ? resume.visibleWorkExperiences
+        : resume.visibleWorkExperiences.take(2).toList();
+    final education = showAllContent
+        ? resume.visibleEducation
+        : resume.visibleEducation.take(2).toList();
+    final projects = showAllContent
+        ? resume.visibleProjects
+        : resume.visibleProjects.take(1).toList();
+    final customSections = showAllContent
+        ? resume.visibleCustomSections
+        : const <CustomSectionItem>[];
     final contacts = _pdfAlignedContactItems(resume).take(4).toList();
     final midpoint = (skills.length / 2).ceil();
     const sectionGap = 20.0;
     const headingGap = 6.0;
     const sidebarDividerGap = 20.0;
     const sidebarRailWidth = 160.0;
-    const sidebarContentWidth = 150.0;
-    const sidebarContentLeft = (sidebarRailWidth - sidebarContentWidth) / 2;
+    const sidebarContentInset = (sidebarRailWidth - _avatarWidth) / 2;
     const mainContentInset = 165.0;
     const nameFontSize = ResumeTypography.creativeNamePt;
     final firstProjectLine = projects.isNotEmpty
@@ -866,6 +881,7 @@ class _CreativePreview extends StatelessWidget {
               ? _projectBulletLines(projects.first).first
               : 'Add project details.')
         : '';
+    final summaryMaxLines = showAllContent ? null : 5;
 
     return DefaultTextStyle.merge(
       style: const TextStyle(fontFamily: 'Calibri'),
@@ -880,13 +896,16 @@ class _CreativePreview extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: sidebarContentLeft,
-            top: 16,
+            left: 0,
+            top: 0,
             child: SizedBox(
-              width: sidebarContentWidth,
+              width: sidebarRailWidth,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(
+                    height: ResumeTypography.creativeSidebarImageTopPadding,
+                  ),
                   Center(
                     child: Container(
                       width: _avatarWidth,
@@ -902,7 +921,7 @@ class _CreativePreview extends StatelessWidget {
                         _pdfAlignedInitials(resume),
                         style: TextStyle(
                           color: accentColor,
-                          fontSize: 28.0,
+                          fontSize: ResumeTypography.creativeNamePt * 1.15,
                           fontWeight: ResumeFontWeight.toFlutter(
                             ResumeTypography.creativeNameWeight,
                           ),
@@ -920,14 +939,22 @@ class _CreativePreview extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: sidebarDividerGap),
-                    ...contacts.map(
-                      (line) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _CreativeSidebarMetaItem(
-                          text: line,
-                          iconColor: accentColor,
-                          style: sidebarStyle,
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: sidebarContentInset,
+                      ),
+                      child: Column(
+                        children: [
+                          for (final line in contacts)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _CreativeSidebarMetaItem(
+                                text: line,
+                                iconColor: accentColor,
+                                style: sidebarStyle,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -936,13 +963,16 @@ class _CreativePreview extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
+            padding: const EdgeInsets.only(
+              left: mainContentInset,
+              top: ResumeTypography.creativeBodyTopMargin,
+              right: ResumeTypography.creativeMainColumnRightInset,
+              bottom: ResumeTypography.creativeBodyBottomMargin,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: mainContentInset),
-                  child: Column(
+                Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -979,8 +1009,10 @@ class _CreativePreview extends StatelessWidget {
                         summary.ifBlank(
                           'Add a short summary to position your experience and strengths.',
                         ),
-                        maxLines: 5,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: summaryMaxLines,
+                        overflow: summaryMaxLines == null
+                            ? null
+                            : TextOverflow.ellipsis,
                         style: bodyStyle,
                       ),
                       const SizedBox(height: sectionGap),
@@ -990,12 +1022,13 @@ class _CreativePreview extends StatelessWidget {
                       ),
                       const SizedBox(height: headingGap),
                       if (experiences.isNotEmpty)
-                        ...experiences.take(2).map((item) {
+                        ...experiences.map((item) {
                           final title = [
                             item.role.trim(),
                             item.startDate.trim(),
                             item.endDate.trim(),
                           ].where((s) => s.isNotEmpty).join(' • ');
+                          final bullets = _workBulletLines(item);
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Column(
@@ -1003,22 +1036,26 @@ class _CreativePreview extends StatelessWidget {
                               children: [
                                 Text(
                                   title.ifBlank('Role'),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: showAllContent ? null : 1,
+                                  overflow: showAllContent
+                                      ? null
+                                      : TextOverflow.ellipsis,
                                   style: subtitleStyle,
                                 ),
                                 Text(
                                   item.company.ifBlank('Company'),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: showAllContent ? null : 1,
+                                  overflow: showAllContent
+                                      ? null
+                                      : TextOverflow.ellipsis,
                                   style: subtitleStyle.copyWith(
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
                                 _CreativeBulletColumn(
-                                  items: _workBulletLines(
-                                    item,
-                                  ).take(1).toList(),
+                                  items: showAllContent
+                                      ? bullets
+                                      : bullets.take(1).toList(),
                                   bodyStyle: bodyStyle,
                                 ),
                               ],
@@ -1037,9 +1074,7 @@ class _CreativePreview extends StatelessWidget {
                           lineColor: lineColor,
                         ),
                         const SizedBox(height: headingGap),
-                        ...education
-                            .take(2)
-                            .map(
+                        ...education.map(
                               (item) => Padding(
                                 padding: const EdgeInsets.only(bottom: 7),
                                 child: Column(
@@ -1093,23 +1128,65 @@ class _CreativePreview extends StatelessWidget {
                         lineColor: lineColor,
                       ),
                       const SizedBox(height: headingGap),
-                      Text(
-                        projects.isNotEmpty
-                            ? projects.first.title.ifBlank('Project')
-                            : 'Add projects',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: subtitleStyle,
-                      ),
-                      if (projects.isNotEmpty)
+                      if (projects.isEmpty)
+                        Text('Add projects', style: bodyStyle)
+                      else if (showAllContent)
+                        ...projects.map((item) {
+                          final lines = _projectBulletLines(item);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.title.ifBlank('Project'),
+                                  style: subtitleStyle,
+                                ),
+                                if (lines.isNotEmpty)
+                                  _CreativeBulletColumn(
+                                    items: lines,
+                                    bodyStyle: bodyStyle,
+                                  ),
+                              ],
+                            ),
+                          );
+                        })
+                      else ...[
                         Text(
-                          firstProjectLine,
-                          maxLines: 2,
+                          projects.first.title.ifBlank('Project'),
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: bodyStyle,
+                          style: subtitleStyle,
                         ),
+                        if (firstProjectLine.isNotEmpty)
+                          Text(
+                            firstProjectLine,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: bodyStyle,
+                          ),
+                      ],
+                      for (final section in customSections) ...[
+                        const SizedBox(height: sectionGap),
+                        _CreativeSidebarHeading(
+                          title: section.title.ifBlank('Custom Section'),
+                          lineColor: lineColor,
+                        ),
+                        const SizedBox(height: headingGap),
+                        if (section.layoutMode == CustomSectionLayoutMode.bullets)
+                          _CreativeBulletColumn(
+                            items: section.bullets
+                                .where((b) => b.trim().isNotEmpty)
+                                .toList(),
+                            bodyStyle: bodyStyle,
+                          )
+                        else
+                          Text(
+                            section.content.trim(),
+                            style: bodyStyle,
+                          ),
+                      ],
                     ],
-                  ),
                 ),
               ],
             ),

@@ -58,14 +58,14 @@ abstract final class ResumeTypography {
   static const int darkHeaderSubtitleWeight = 500;
 
   /// Profile Sidebar (creative / template 2) — preview and PDF type scale.
-  static const double creativeNamePt = 24;
+  static const double creativeNamePt = 26;
   static const int creativeNameWeight = 600;
   static const int creativeSidebarContentWeight = 300;
-  static const double creativeSectionTitlePt = 14;
+  static const double creativeSectionTitlePt = 16;
   static const int creativeSectionTitleWeight = 500;
-  static const double creativeBodyPt = 12;
+  static const double creativeBodyPt = 14;
   static const int creativeBodyWeight = 300;
-  static const double creativeSubtitlePt = 13;
+  static const double creativeSubtitlePt = 15;
   static const int creativeSubtitleWeight = 400;
 
   /// Profile Sidebar body paragraph line height (preview + PDF).
@@ -73,6 +73,17 @@ abstract final class ResumeTypography {
 
   static double creativeBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (creativeBodyLineHeight - 1);
+
+  /// Profile Sidebar main-column margins (preview px = PDF pt). Sidebar has none.
+  static const double creativeBodyTopMargin = 30;
+  static const double creativeBodyBottomMargin = 40;
+  static const double creativeMainColumnRightInset = 40;
+
+  /// Profile Sidebar avatar top spacing (preview px = PDF pt).
+  static const double creativeSidebarImageTopPadding = 10;
+
+  /// Profile Sidebar page 2+ horizontal inset (preview px = PDF pt).
+  static const double creativeContinuationPageHorizontalInset = 40;
 
   /// Profile Sidebar body copy (preview + PDF).
   static const Color creativeBodyTextColor = Color(0xFF000000);
