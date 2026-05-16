@@ -874,7 +874,8 @@ class _CreativePreview extends StatelessWidget {
     const sidebarDividerGap = 20.0;
     const sidebarRailWidth = 160.0;
     const sidebarContentInset = (sidebarRailWidth - _avatarWidth) / 2;
-    const mainContentInset = 165.0;
+    const mainContentInset =
+        sidebarRailWidth + ResumeTypography.creativeSidebarBodyGap;
     const nameFontSize = ResumeTypography.creativeNamePt;
     final firstProjectLine = projects.isNotEmpty
         ? (_projectBulletLines(projects.first).isNotEmpty

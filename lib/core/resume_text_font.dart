@@ -80,10 +80,16 @@ abstract final class ResumeTypography {
   static const double creativeMainColumnRightInset = 40;
 
   /// Profile Sidebar avatar top spacing (preview px = PDF pt).
-  static const double creativeSidebarImageTopPadding = 10;
+  static const double creativeSidebarImageTopPadding = 20;
+
+  /// Gap between sidebar rail and main body column (preview px = PDF pt).
+  static const double creativeSidebarBodyGap = 15;
 
   /// Profile Sidebar page 2+ horizontal inset (preview px = PDF pt).
   static const double creativeContinuationPageHorizontalInset = 40;
+
+  /// Profile Sidebar page 2+ top margin (PDF; matches [creativeBodyTopMargin]).
+  static const double creativeContinuationPageTopMargin = 30;
 
   /// Profile Sidebar body copy (preview + PDF).
   static const Color creativeBodyTextColor = Color(0xFF000000);

@@ -569,7 +569,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             profileImage: profileImage,
           ),
         ),
-        header: _continuedPageTopGap,
+        header: _creativeContinuedPageTopGap,
         build: (context) => [
           _creativeMainColumnChild(
             pw.Text(

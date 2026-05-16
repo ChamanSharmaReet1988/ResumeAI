@@ -152,7 +152,8 @@ const double _creativeSidebarContentInsetPt =
     (_creativeSidebarRailWidthPt - _creativeAvatarWidthPt) / 2;
 const double _creativeAvatarHeightPt = 175.0;
 // Ensure Template 2 body starts to the right of sidebar rail.
-const double _creativeMainColumnInsetPt = _creativeSidebarRailWidthPt + 8.0;
+const double _creativeMainColumnInsetPt =
+    _creativeSidebarRailWidthPt + ResumeTypography.creativeSidebarBodyGap;
 const double _creativeSectionGapPt = 20.0;
 const double _creativeHeadingBodyGapPt = 8.0;
 const double _creativeSidebarDividerGapPt = 20.0;
@@ -257,6 +258,10 @@ PdfColor _detailsSidebarMutedColorPdf(ResumeData resume) =>
 
 PdfColor _detailsSidebarDividerColorPdf(ResumeData resume) =>
     _pdfRgb(resume.detailsSidebarDividerColor);
+
+/// Profile Sidebar page 2+ top spacing comes from [creativeBodyTopMargin] on
+/// [_creativeSidebarPageTheme]; do not add an extra header gap like corporate.
+pw.Widget _creativeContinuedPageTopGap(pw.Context context) => pw.SizedBox();
 
 pw.PageTheme _creativeSidebarPageTheme({
   required PdfColor railColor,

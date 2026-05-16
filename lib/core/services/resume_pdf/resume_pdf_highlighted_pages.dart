@@ -469,7 +469,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             calibri: calibri,
           ),
         ),
-        header: _continuedPageTopGap,
+        header: _creativeContinuedPageTopGap,
         build: (context) => [
           _creativeMainColumnChild(
             pw.Text(
