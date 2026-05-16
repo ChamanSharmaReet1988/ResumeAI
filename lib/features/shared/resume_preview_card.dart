@@ -74,7 +74,9 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.atsStructured ||
       ResumeTemplate.atsSerifRules ||
       ResumeTemplate.atsModernFlow ||
-      ResumeTemplate.atsExecutive =>
+      ResumeTemplate.atsExecutive ||
+      ResumeTemplate.atsCenterClassic ||
+      ResumeTemplate.atsProfessionalBlue =>
         resume.effectiveBodyFontPt.toDouble(),
       ResumeTemplate.creative ||
       ResumeTemplate.classicSidebar ||
@@ -155,6 +157,10 @@ class ResumePreviewCanvas extends StatelessWidget {
                 _AtsModernFlowPreview(resume: resume),
               ResumeTemplate.atsExecutive =>
                 _AtsExecutivePreview(resume: resume),
+              ResumeTemplate.atsCenterClassic =>
+                _AtsCenterClassicPreview(resume: resume),
+              ResumeTemplate.atsProfessionalBlue =>
+                _AtsProfessionalBluePreview(resume: resume),
             },
           ),
           if (showDebugLabel)
@@ -240,6 +246,8 @@ class _DarkHeaderPreview extends StatelessWidget {
     final onSurface = theme.colorScheme.onSurface;
     final bodyFontPx = resume.effectiveBodyFontPt.toDouble();
     final preset = resume.corporateColorPreset;
+    final headerOnColor = preset.headerOnColor;
+    final headerBorderColor = preset.headerBorderColor;
     final bodyLineHeight =
         _CorporatePdfMetrics.bodyHeight +
         (_darkHeaderExtraLineSpacingPx / bodyFontPx);
@@ -275,13 +283,16 @@ class _DarkHeaderPreview extends StatelessWidget {
                     height: _CorporatePdfMetrics.headerAvatar(),
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.white, width: 1.9),
+                        border: Border.all(
+                          color: headerBorderColor,
+                          width: 1.9,
+                        ),
                       ),
                       child: Center(
                         child: Text(
                           _pdfAlignedInitials(resume),
                           style: TextStyle(
-                            color: Colors.white,
+                            color: headerOnColor,
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
                             height: ResumeTypography.textLineHeight,
@@ -302,7 +313,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                         Text(
                           name.toUpperCase(),
                           style: TextStyle(
-                            color: Colors.white,
+                            color: headerOnColor,
                             fontSize: _CorporatePdfMetrics.headerNameSize(),
                             fontWeight: FontWeight.w900,
                             height: nameLineHeight,
@@ -321,7 +332,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                               child: Text(
                                 contactLines[index],
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: headerOnColor,
                                   fontSize: bodyFontPx + 1,
                                   height: 1.32,
                                 ),
@@ -1815,6 +1826,297 @@ class _AtsModernFlowPreview extends StatelessWidget {
                 maxLines: 7,
                 overflow: TextOverflow.ellipsis,
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AtsCenterClassicPreview extends StatelessWidget {
+  const _AtsCenterClassicPreview({required this.resume});
+
+  final ResumeData resume;
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final body = resume.effectiveBodyFontPt.toDouble();
+    final style = TextStyle(
+      color: onSurface,
+      fontSize: body,
+      height: ResumeTypography.textLineHeight,
+    );
+    final tagline = [
+      if (resume.jobTitle.trim().isNotEmpty) resume.jobTitle.trim(),
+      ..._pdfAlignedSkills(resume).take(3),
+    ].join(' | ');
+    final contact = [
+      if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
+      if (resume.email.trim().isNotEmpty) resume.email.trim(),
+      if (resume.location.trim().isNotEmpty) resume.location.trim(),
+    ].join(' | ');
+    final works = resume.visibleWorkExperiences.take(2).toList();
+
+    return ColoredBox(
+      color: Colors.white,
+      child: Padding(
+        padding: _CorporatePdfMetrics.sectionOuter(),
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                _pdfAlignedDisplayName(resume),
+                textAlign: TextAlign.center,
+                style: style.copyWith(
+                  fontSize: _atsPreviewNameFontSize,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Georgia',
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (tagline.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  tagline,
+                  textAlign: TextAlign.center,
+                  style: style.copyWith(fontSize: body - 0.5),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              if (contact.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  contact,
+                  textAlign: TextAlign.center,
+                  style: style.copyWith(fontSize: body - 0.75),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              const SizedBox(height: 10),
+              Container(height: 1, color: onSurface.withValues(alpha: 0.35)),
+              const SizedBox(height: 10),
+              Text(
+                'SUMMARY',
+                style: style.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                resume.summary.trim().ifBlank(
+                  'Concise overview of experience and impact.',
+                ),
+                style: style,
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (works.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Container(height: 1, color: onSurface.withValues(alpha: 0.25)),
+                const SizedBox(height: 10),
+                Text(
+                  'EXPERIENCE',
+                  style: style.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
+                for (final item in works)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.company.trim().ifBlank('Company'),
+                                style: style.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (item.startDate.trim().isNotEmpty ||
+                                item.endDate.trim().isNotEmpty)
+                              Text(
+                                '${item.startDate.trim()} — ${item.endDate.trim()}',
+                                style: style.copyWith(
+                                  color: onSurface.withValues(alpha: 0.65),
+                                  fontSize: body - 0.5,
+                                ),
+                              ),
+                          ],
+                        ),
+                        Text(
+                          item.role.trim().ifBlank('Role'),
+                          style: style,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AtsProfessionalBluePreview extends StatelessWidget {
+  const _AtsProfessionalBluePreview({required this.resume});
+
+  final ResumeData resume;
+
+  static const Color _blue = Color(0xFF4A90C4);
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final body = resume.effectiveBodyFontPt.toDouble();
+    final style = TextStyle(
+      color: onSurface,
+      fontSize: body,
+      height: ResumeTypography.textLineHeight,
+    );
+    final works = resume.visibleWorkExperiences.take(2).toList();
+
+    return ColoredBox(
+      color: Colors.white,
+      child: Padding(
+        padding: _CorporatePdfMetrics.sectionOuter(),
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _pdfAlignedDisplayName(resume),
+                          style: style.copyWith(
+                            color: _blue,
+                            fontSize: _atsPreviewNameFontSize,
+                            fontWeight: FontWeight.w800,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (resume.jobTitle.trim().isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            resume.jobTitle.trim(),
+                            style: style.copyWith(
+                              color: _blue,
+                              fontWeight: FontWeight.w700,
+                              fontSize: _atsPreviewTitleFontSize - 2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (resume.email.trim().isNotEmpty)
+                        Text(
+                          resume.email.trim(),
+                          style: style.copyWith(color: _blue, fontSize: body - 0.5),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                        ),
+                      if (resume.phone.trim().isNotEmpty)
+                        Text(
+                          resume.phone.trim(),
+                          style: style.copyWith(color: _blue, fontSize: body - 0.5),
+                        ),
+                      if (resume.location.trim().isNotEmpty)
+                        Text(
+                          resume.location.trim(),
+                          style: style.copyWith(color: _blue, fontSize: body - 0.5),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                resume.summary.trim().ifBlank(
+                  'Brief overview of leadership, scope, and results.',
+                ),
+                style: style,
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (works.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Professional Experience',
+                  style: style.copyWith(
+                    color: _blue,
+                    fontSize: body + 2,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                for (final item in works)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.company.trim().ifBlank('Company'),
+                                style: style.copyWith(
+                                  color: _blue,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (item.startDate.trim().isNotEmpty ||
+                                item.endDate.trim().isNotEmpty)
+                              Text(
+                                '${item.startDate.trim()} — ${item.endDate.trim()}',
+                                style: style.copyWith(color: _blue),
+                              ),
+                          ],
+                        ),
+                        Text(
+                          item.role.trim().ifBlank('Role'),
+                          style: style.copyWith(color: _blue),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ],
           ),
         ),

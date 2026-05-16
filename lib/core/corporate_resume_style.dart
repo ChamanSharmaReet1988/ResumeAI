@@ -13,6 +13,18 @@ final class CorporateColorPreset {
   final Color headerColor;
 }
 
+extension CorporateColorPresetX on CorporateColorPreset {
+  /// Light header bars need dark name/contact text instead of white.
+  bool get usesLightHeader => headerColor.computeLuminance() > 0.55;
+
+  Color get headerOnColor =>
+      usesLightHeader ? titleColor : Colors.white;
+
+  Color get headerBorderColor => usesLightHeader
+      ? titleColor.withValues(alpha: 0.4)
+      : Colors.white;
+}
+
 /// Preset palettes: section titles + Dark Header bar.
 ///
 /// First option matches [templates_screen] `_DarkHeaderTemplateArt` (`header` / `text`) — default for new resumes.
@@ -44,6 +56,31 @@ const kCorporateColorPresets = <CorporateColorPreset>[
     titleColor: Color(0xFF0A4A58),
     headerColor: Color(0xFF41B9CC),
   ),
+  // Additional hues (medium-light headers); each distinct from the six above.
+  CorporateColorPreset(
+    titleColor: Color(0xFF4A3570),
+    headerColor: Color(0xFFB39DDB),
+  ),
+  CorporateColorPreset(
+    titleColor: Color(0xFF2F4A2F),
+    headerColor: Color(0xFF94B88A),
+  ),
+  CorporateColorPreset(
+    titleColor: Color(0xFF5C4A1A),
+    headerColor: Color(0xFFE5C36A),
+  ),
+  CorporateColorPreset(
+    titleColor: Color(0xFF5C2A42),
+    headerColor: Color(0xFFC989A8),
+  ),
+  CorporateColorPreset(
+    titleColor: Color(0xFF2C3560),
+    headerColor: Color(0xFF8E9FD4),
+  ),
+  CorporateColorPreset(
+    titleColor: Color(0xFF5C3828),
+    headerColor: Color(0xFFD4967E),
+  ),
 ];
 
 /// Virtual preset index used by template 2/3 to keep their native accent color.
@@ -59,6 +96,8 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.atsSerifRules => 0,
     ResumeTemplate.atsModernFlow => 0,
     ResumeTemplate.atsExecutive => 0,
+    ResumeTemplate.atsCenterClassic => 0,
+    ResumeTemplate.atsProfessionalBlue => 0,
   };
 }
 

@@ -504,7 +504,7 @@ void main() {
     },
   );
 
-  test('ATS template PDFs build for all four layouts', () async {
+  test('ATS template PDFs build for all six layouts', () async {
     final service = ResumePdfService();
     final base = ResumeData.empty(
       template: ResumeTemplate.atsStructured,
@@ -531,6 +531,8 @@ void main() {
       ResumeTemplate.atsSerifRules,
       ResumeTemplate.atsModernFlow,
       ResumeTemplate.atsExecutive,
+      ResumeTemplate.atsCenterClassic,
+      ResumeTemplate.atsProfessionalBlue,
     ]) {
       final bytes = await service.buildPdf(
         base.copyWith(template: template),

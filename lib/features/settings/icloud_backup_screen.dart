@@ -304,7 +304,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
         final sheetTheme = Theme.of(sheetContext);
         final primaryColor = sheetTheme.colorScheme.primary;
         final mutedColor = sheetTheme.colorScheme.onSurfaceVariant;
-        final downloadColor = canDownload ? primaryColor : mutedColor;
+        final actionTextColor = sheetTheme.colorScheme.onSurface;
 
         return SafeArea(
           child: Padding(
@@ -316,12 +316,12 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                 ListTile(
                   leading: Icon(
                     Icons.download_rounded,
-                    color: downloadColor,
+                    color: canDownload ? primaryColor : mutedColor,
                   ),
                   title: Text(
                     canDownload ? 'Download' : 'Already downloaded',
                     style: sheetTheme.textTheme.bodyLarge?.copyWith(
-                      color: downloadColor,
+                      color: canDownload ? actionTextColor : mutedColor,
                     ),
                   ),
                   enabled: canDownload,
@@ -338,7 +338,12 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                       AssetImage('assets/fonts/delete.png'),
                     ),
                   ),
-                  title: const Text('Delete from iCloud'),
+                  title: Text(
+                    'Delete from iCloud',
+                    style: sheetTheme.textTheme.bodyLarge?.copyWith(
+                      color: actionTextColor,
+                    ),
+                  ),
                   onTap: () =>
                       Navigator.of(sheetContext).pop(_ICloudItemAction.delete),
                 ),

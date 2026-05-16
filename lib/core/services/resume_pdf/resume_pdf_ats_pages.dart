@@ -1181,4 +1181,590 @@ extension _ResumePdfAtsPages on ResumePdfService {
       ),
     );
   }
+
+  List<String> _atsCenterClassicTaglineParts(ResumeData resume) {
+    final job = resume.jobTitle.trim();
+    final skillTags = _skillsForDisplay(resume).take(4).toList();
+    return [
+      if (job.isNotEmpty) job,
+      ...skillTags,
+    ];
+  }
+
+  String _atsCenterClassicContactPipe(ResumeData resume) {
+    final parts = <String>[
+      if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
+      if (resume.email.trim().isNotEmpty) resume.email.trim(),
+      if (resume.linkedinLink.trim().isNotEmpty) resume.linkedinLink.trim(),
+      if (resume.website.trim().isNotEmpty) resume.website.trim(),
+      if (resume.location.trim().isNotEmpty) resume.location.trim(),
+    ];
+    return parts.join(' | ');
+  }
+
+  pw.Widget _atsCenterClassicSectionTitle(String title, double bodyPt) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        _atsSolidRule(color: PdfColor.fromHex('#CCCCCC')),
+        pw.SizedBox(height: 10),
+        pw.Text(
+          title.toUpperCase(),
+          style: pw.TextStyle(
+            fontWeight: pw.FontWeight.bold,
+            fontSize: bodyPt + 0.5,
+          ),
+        ),
+        pw.SizedBox(height: 6),
+      ],
+    );
+  }
+
+  List<pw.Widget> _atsCenterClassicExperienceEntries(
+    List<WorkExperience> items,
+    double bodyPt, {
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+    PdfColor? highlightColor,
+  }) {
+    final out = <pw.Widget>[];
+    for (var i = 0; i < items.length; i++) {
+      final item = items[i];
+      final dateStr = _atsWorkDateRange(item);
+      out.add(
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Expanded(
+              child: pw.Text(
+                item.company.ifEmpty('Company'),
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: bodyPt,
+                ),
+              ),
+            ),
+            if (dateStr.isNotEmpty)
+              pw.Text(
+                dateStr,
+                style: pw.TextStyle(fontSize: bodyPt, color: _atsMuted),
+              ),
+          ],
+        ),
+      );
+      out.add(pw.SizedBox(height: 2));
+      out.add(
+        pw.Text(
+          item.role.ifEmpty('Role'),
+          style: pw.TextStyle(fontSize: bodyPt),
+        ),
+      );
+      out.add(pw.SizedBox(height: 4));
+      final highlightedBullets =
+          highlightedBulletsByExperience[i] ?? const <String>{};
+      for (final b in _workBulletLines(item)) {
+        out.add(
+          _atsHighlightedBulletLine(
+            '• $b',
+            style: pw.TextStyle(fontSize: bodyPt),
+            isHighlighted:
+                highlightColor != null && highlightedBullets.contains(b),
+            highlightColor: highlightColor ?? _atsHighlightColor,
+          ),
+        );
+      }
+      if (i < items.length - 1) {
+        out.add(pw.SizedBox(height: 10));
+      }
+    }
+    return out;
+  }
+
+  void _addAtsCenterClassicTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) {
+    final highlightColor = _atsHighlightColor;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final name = _displayName(resume);
+    final tagline = _atsCenterClassicTaglineParts(resume).join(' | ');
+    final contactPipe = _atsCenterClassicContactPipe(resume);
+    final skills = _skillsForDisplay(resume);
+
+    document.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.fromLTRB(42, 40, 42, 40),
+        header: _atsMultiPageHeaderGap,
+        build: (context) {
+          final w = <pw.Widget>[
+            pw.Center(
+              child: pw.Column(
+                children: [
+                  pw.Text(
+                    name,
+                    textAlign: pw.TextAlign.center,
+                    style: pw.TextStyle(
+                      fontSize: 21,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  if (tagline.isNotEmpty) ...[
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      tagline,
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(fontSize: bodyPt - 0.25),
+                    ),
+                  ],
+                  if (contactPipe.isNotEmpty) ...[
+                    pw.SizedBox(height: 5),
+                    pw.Text(
+                      contactPipe,
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(fontSize: bodyPt - 0.5),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 12),
+            _atsCenterClassicSectionTitle('Summary', bodyPt),
+            _atsHighlightedSummaryText(
+              resume.summary.trim().ifEmpty(
+                'Concise overview of experience, domains, and impact.',
+              ),
+              bodyPt: bodyPt,
+              highlightSummary: highlightSummary,
+              highlightColor: highlightColor,
+            ),
+            pw.SizedBox(height: ResumeTypography.sectionGapPdfPt),
+          ];
+
+          if (resume.includeWorkInResume) {
+            w.add(_atsCenterClassicSectionTitle('Experience', bodyPt));
+            final items = resume.visibleWorkExperiences;
+            if (items.isEmpty) {
+              w.add(pw.Text('Add roles with measurable outcomes.'));
+            } else {
+              w.addAll(
+                _atsCenterClassicExperienceEntries(
+                  items,
+                  bodyPt,
+                  highlightedBulletsByExperience:
+                      highlightedBulletsByExperience,
+                  highlightColor: highlightColor,
+                ),
+              );
+            }
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+          }
+
+          if (resume.includeSkillsInResume) {
+            w.add(_atsCenterClassicSectionTitle('Skills', bodyPt));
+            if (skills.isEmpty) {
+              w.add(pw.Text('List tools and competencies.'));
+            } else {
+              w.add(
+                pw.Text(
+                  skills.join(', '),
+                  style: pw.TextStyle(fontSize: bodyPt),
+                ),
+              );
+            }
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+          }
+
+          if (resume.includeProjectsInResume &&
+              resume.visibleProjects.isNotEmpty) {
+            w.add(
+              _atsCenterClassicSectionTitle('Training / Courses', bodyPt),
+            );
+            for (final p in resume.visibleProjects) {
+              w.add(
+                pw.Text(
+                  p.title.ifEmpty('Course'),
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: bodyPt,
+                  ),
+                ),
+              );
+              final overview = p.overview.trim();
+              if (overview.isNotEmpty) {
+                w.add(pw.SizedBox(height: 2));
+                w.add(pw.Text(overview, style: pw.TextStyle(fontSize: bodyPt)));
+              }
+              for (final b in p.bullets.where((e) => e.trim().isNotEmpty)) {
+                w.add(
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(top: 2),
+                    child: pw.Text(
+                      '• $b',
+                      style: pw.TextStyle(fontSize: bodyPt),
+                    ),
+                  ),
+                );
+              }
+              w.add(pw.SizedBox(height: 8));
+            }
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+          }
+
+          if (resume.includeEducationInResume) {
+            w.add(_atsCenterClassicSectionTitle('Education', bodyPt));
+            final edu = resume.visibleEducation;
+            if (edu.isEmpty) {
+              w.add(pw.Text('Add degree and institution.'));
+            } else {
+              for (final item in edu) {
+                final range = educationDateRangeLabel(
+                  item.startDate,
+                  item.endDate,
+                );
+                w.add(
+                  pw.Text(
+                    item.degree.ifEmpty('Degree'),
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: bodyPt,
+                    ),
+                  ),
+                );
+                w.add(pw.SizedBox(height: 2));
+                w.add(
+                  pw.Text(
+                    '${item.institution.ifEmpty('School')}'
+                    '${range.isNotEmpty ? ' ($range)' : ''}',
+                    style: pw.TextStyle(fontSize: bodyPt),
+                  ),
+                );
+                w.add(pw.SizedBox(height: 8));
+              }
+            }
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+          }
+
+          for (final section in resume.visibleCustomSections) {
+            w.add(
+              _atsCenterClassicSectionTitle(
+                section.title.ifEmpty('Additional'),
+                bodyPt,
+              ),
+            );
+            for (final widget in _pwCustomSectionBodyWidgets(section)) {
+              w.add(widget);
+            }
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+          }
+
+          return w;
+        },
+      ),
+    );
+  }
+
+  static final PdfColor _atsProfessionalBlue = PdfColor.fromHex('#4A90C4');
+
+  pw.Widget _atsProfessionalBlueSectionTitle(String title, double bodyPt) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 6),
+      child: pw.Text(
+        title,
+        style: pw.TextStyle(
+          color: _atsProfessionalBlue,
+          fontWeight: pw.FontWeight.bold,
+          fontSize: bodyPt + 2.5,
+        ),
+      ),
+    );
+  }
+
+  void _addAtsProfessionalBlueTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) {
+    final highlightColor = _atsHighlightColor;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final name = _displayName(resume);
+    final job = resume.jobTitle.trim();
+    final email = resume.email.trim();
+    final phone = resume.phone.trim();
+    final loc = resume.location.trim();
+    final skills = _skillsForDisplay(resume);
+    final contactLines = <String>[
+      if (email.isNotEmpty) email,
+      if (phone.isNotEmpty) phone,
+      if (loc.isNotEmpty) loc,
+    ];
+
+    document.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.fromLTRB(44, 40, 44, 40),
+        header: _atsMultiPageHeaderGap,
+        build: (context) {
+          final w = <pw.Widget>[
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        name,
+                        style: pw.TextStyle(
+                          color: _atsProfessionalBlue,
+                          fontSize: 22,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      if (job.isNotEmpty) ...[
+                        pw.SizedBox(height: 3),
+                        pw.Text(
+                          job,
+                          style: pw.TextStyle(
+                            color: _atsProfessionalBlue,
+                            fontSize: bodyPt + 1,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (contactLines.isNotEmpty)
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      for (final line in contactLines)
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(bottom: 2),
+                          child: pw.Text(
+                            line,
+                            textAlign: pw.TextAlign.right,
+                            style: pw.TextStyle(
+                              color: _atsProfessionalBlue,
+                              fontSize: bodyPt - 0.25,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+              ],
+            ),
+            pw.SizedBox(height: 10),
+            _atsHighlightedSummaryText(
+              resume.summary.trim().ifEmpty(
+                'Brief overview of leadership, scope, and results.',
+              ),
+              bodyPt: bodyPt,
+              highlightSummary: highlightSummary,
+              highlightColor: highlightColor,
+            ),
+            pw.SizedBox(height: ResumeTypography.sectionGapPdfPt),
+          ];
+
+          if (resume.includeWorkInResume) {
+            w.add(_atsProfessionalBlueSectionTitle('Professional Experience', bodyPt));
+            final items = resume.visibleWorkExperiences;
+            if (items.isEmpty) {
+              w.add(pw.Text('Add roles with outcomes.'));
+            } else {
+              for (var i = 0; i < items.length; i++) {
+                final item = items[i];
+                final dateStr = _atsWorkDateRange(item);
+                w.add(
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Expanded(
+                        child: pw.Text(
+                          item.company.ifEmpty('Company'),
+                          style: pw.TextStyle(
+                            color: _atsProfessionalBlue,
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: bodyPt,
+                          ),
+                        ),
+                      ),
+                      if (dateStr.isNotEmpty)
+                        pw.Text(
+                          dateStr,
+                          style: pw.TextStyle(
+                            color: _atsProfessionalBlue,
+                            fontSize: bodyPt,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+                w.add(pw.SizedBox(height: 2));
+                w.add(
+                  pw.Text(
+                    item.role.ifEmpty('Role'),
+                    style: pw.TextStyle(
+                      color: _atsProfessionalBlue,
+                      fontSize: bodyPt,
+                    ),
+                  ),
+                );
+                w.add(pw.SizedBox(height: 4));
+                final highlightedBullets =
+                    highlightedBulletsByExperience[i] ?? const <String>{};
+                for (final b in _workBulletLines(item)) {
+                  w.add(
+                    _atsHighlightedBulletLine(
+                      '• $b',
+                      style: pw.TextStyle(fontSize: bodyPt),
+                      isHighlighted: highlightedBullets.contains(b),
+                      highlightColor: highlightColor,
+                    ),
+                  );
+                }
+                if (i < items.length - 1) {
+                  w.add(pw.SizedBox(height: 10));
+                }
+              }
+            }
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+          }
+
+          if (resume.includeEducationInResume) {
+            w.add(_atsProfessionalBlueSectionTitle('Education', bodyPt));
+            final edu = resume.visibleEducation;
+            if (edu.isEmpty) {
+              w.add(pw.Text('Add schools and programs.'));
+            } else {
+              for (final item in edu) {
+                w.add(
+                  pw.Text(
+                    item.degree.ifEmpty('Program'),
+                    style: pw.TextStyle(
+                      color: _atsProfessionalBlue,
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: bodyPt,
+                    ),
+                  ),
+                );
+                w.add(pw.SizedBox(height: 2));
+                w.add(
+                  pw.Text(
+                    item.institution.ifEmpty('School'),
+                    style: pw.TextStyle(fontSize: bodyPt),
+                  ),
+                );
+                w.add(pw.SizedBox(height: 8));
+              }
+            }
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+          }
+
+          if (resume.includeSkillsInResume) {
+            w.add(
+              _atsProfessionalBlueSectionTitle('Areas of Expertise', bodyPt),
+            );
+            if (skills.isEmpty) {
+              w.add(pw.Text('Add skills aligned to your target roles.'));
+            } else {
+              final cleaned =
+                  skills.where((s) => s.trim().isNotEmpty).toList();
+              final columns = <List<String>>[[], [], []];
+              for (var i = 0; i < cleaned.length; i++) {
+                columns[i % 3].add(cleaned[i]);
+              }
+              final rowCount = columns
+                  .map((c) => c.length)
+                  .fold<int>(0, (a, b) => a > b ? a : b);
+              final skillPt = _atsPdfSkillsBodyPt(bodyPt);
+              for (var r = 0; r < rowCount; r++) {
+                w.add(
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(bottom: 3),
+                    child: pw.Row(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        for (var c = 0; c < 3; c++)
+                          pw.Expanded(
+                            child: r < columns[c].length
+                                ? pw.Row(
+                                    crossAxisAlignment:
+                                        pw.CrossAxisAlignment.start,
+                                    children: [
+                                      pw.Container(
+                                        width: 5,
+                                        height: 5,
+                                        margin: const pw.EdgeInsets.only(
+                                          top: 3,
+                                          right: 5,
+                                        ),
+                                        decoration: pw.BoxDecoration(
+                                          color: _atsProfessionalBlue,
+                                          shape: pw.BoxShape.circle,
+                                        ),
+                                      ),
+                                      pw.Expanded(
+                                        child: highlightedSkills.contains(
+                                          columns[c][r],
+                                        )
+                                            ? pw.Container(
+                                                padding:
+                                                    const pw.EdgeInsets
+                                                        .symmetric(
+                                                  horizontal: 4,
+                                                  vertical: 2,
+                                                ),
+                                                color: highlightColor,
+                                                child: pw.Text(
+                                                  columns[c][r],
+                                                  style: pw.TextStyle(
+                                                    fontSize: skillPt,
+                                                  ),
+                                                ),
+                                              )
+                                            : pw.Text(
+                                                columns[c][r],
+                                                style: pw.TextStyle(
+                                                  fontSize: skillPt,
+                                                ),
+                                              ),
+                                      ),
+                                    ],
+                                  )
+                                : pw.SizedBox(),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            }
+          }
+
+          for (final section in resume.visibleCustomSections) {
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+            w.add(
+              _atsProfessionalBlueSectionTitle(
+                section.title.ifEmpty('Additional'),
+                bodyPt,
+              ),
+            );
+            for (final widget in _pwCustomSectionBodyWidgets(section)) {
+              w.add(widget);
+            }
+          }
+
+          return w;
+        },
+      ),
+    );
+  }
 }

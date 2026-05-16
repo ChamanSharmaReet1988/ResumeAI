@@ -444,6 +444,12 @@ class _CorporateColorPresetCircle extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: preset.headerColor,
+            border: preset.usesLightHeader
+                ? Border.all(
+                    color: Colors.black.withValues(alpha: 0.14),
+                    width: 1,
+                  )
+                : null,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: selected ? 0.12 : 0.06),

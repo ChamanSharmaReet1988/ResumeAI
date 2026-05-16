@@ -528,6 +528,22 @@ const _atsResumeCards = <_TemplateTileData>[
     caption: 'Uppercase headings and two-column keyword skills.',
     isPremium: true,
   ),
+  _TemplateTileData(
+    id: 'ats-center-classic',
+    resumeTemplate: ResumeTemplate.atsCenterClassic,
+    previewKind: _TemplatePreviewKind.atsCenterClassicResume,
+    headline: 'Center Classic ATS',
+    caption: 'Centered name, pipe tagline, and ruled single-column sections.',
+    isPremium: true,
+  ),
+  _TemplateTileData(
+    id: 'ats-professional-blue',
+    resumeTemplate: ResumeTemplate.atsProfessionalBlue,
+    previewKind: _TemplatePreviewKind.atsProfessionalBlueResume,
+    headline: 'Professional Blue ATS',
+    caption: 'Blue accent headings with right-aligned contact and skills grid.',
+    isPremium: true,
+  ),
 ];
 
 const _coverLetterTemplateCards = <_TemplateTileData>[
@@ -595,6 +611,8 @@ enum _TemplatePreviewKind {
   atsSerifRulesResume,
   atsModernFlowResume,
   atsExecutiveResume,
+  atsCenterClassicResume,
+  atsProfessionalBlueResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
   sidebarCoverLetter,
@@ -683,6 +701,20 @@ class _TemplatePreviewArt extends StatelessWidget {
           paletteSeed,
         ),
       ),
+      _TemplatePreviewKind.atsCenterClassicResume =>
+        _AtsCenterClassicTemplateArt(
+          resume: _applyTemplatePreviewPalette(
+            _atsSampleFor(ResumeTemplate.atsCenterClassic),
+            paletteSeed,
+          ),
+        ),
+      _TemplatePreviewKind.atsProfessionalBlueResume =>
+        _AtsProfessionalBlueTemplateArt(
+          resume: _applyTemplatePreviewPalette(
+            _atsSampleFor(ResumeTemplate.atsProfessionalBlue),
+            paletteSeed,
+          ),
+        ),
       _TemplatePreviewKind.executiveNoteCoverLetter =>
         const _ExecutiveNoteCoverLetterArt(),
       _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
@@ -830,6 +862,30 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
         child: _AtsExecutiveTemplateArt(
           resume: _applyTemplatePreviewPalette(
             _atsSampleFor(ResumeTemplate.atsExecutive),
+            paletteSeed,
+          ),
+          detailed: true,
+        ),
+      );
+    }
+    if (template == ResumeTemplate.atsCenterClassic) {
+      return _LargeTemplateArtPreview(
+        showPremiumBadge: true,
+        child: _AtsCenterClassicTemplateArt(
+          resume: _applyTemplatePreviewPalette(
+            _atsSampleFor(ResumeTemplate.atsCenterClassic),
+            paletteSeed,
+          ),
+          detailed: true,
+        ),
+      );
+    }
+    if (template == ResumeTemplate.atsProfessionalBlue) {
+      return _LargeTemplateArtPreview(
+        showPremiumBadge: true,
+        child: _AtsProfessionalBlueTemplateArt(
+          resume: _applyTemplatePreviewPalette(
+            _atsSampleFor(ResumeTemplate.atsProfessionalBlue),
             paletteSeed,
           ),
           detailed: true,
@@ -2368,6 +2424,382 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
             ],
           ),
         );
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: detailed
+          ? FittedBox(
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter,
+              child: SizedBox(width: 240, child: pageContent),
+            )
+          : SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: pageContent,
+            ),
+    );
+  }
+}
+
+class _AtsCenterClassicTemplateArt extends StatelessWidget {
+  const _AtsCenterClassicTemplateArt({
+    required this.resume,
+    this.detailed = false,
+  });
+
+  final ResumeData resume;
+  final bool detailed;
+
+  static const Color _ink = Color(0xFF111827);
+
+  @override
+  Widget build(BuildContext context) {
+    final fs = detailed ? 4.75 : 4.45;
+    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final works = resume.visibleWorkExperiences;
+    final edu = resume.visibleEducation;
+    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final tagline = [
+      if (resume.jobTitle.trim().isNotEmpty) resume.jobTitle.trim(),
+      ...skills.take(3),
+    ].join(' | ');
+    final contact = [
+      if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
+      if (resume.email.trim().isNotEmpty) resume.email.trim(),
+      if (resume.location.trim().isNotEmpty) resume.location.trim(),
+    ].join(' | ');
+
+    Widget sectionRule() => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Container(height: 1, color: _ink.withValues(alpha: 0.28)),
+    );
+
+    final pageContent = Padding(
+      padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            resume.fullName.trim(),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: detailed ? 9.2 : 8.4,
+              fontWeight: FontWeight.w800,
+              color: _ink,
+              fontFamily: 'Georgia',
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (tagline.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              tagline,
+              textAlign: TextAlign.center,
+              style: body,
+              maxLines: detailed ? 3 : 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          if (contact.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              contact,
+              textAlign: TextAlign.center,
+              style: body.copyWith(fontSize: fs - 0.35),
+              maxLines: detailed ? 3 : 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          sectionRule(),
+          Text('SUMMARY', style: body.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          Text(
+            resume.summary.trim(),
+            style: body,
+            maxLines: detailed ? 10 : 5,
+            overflow: TextOverflow.ellipsis,
+          ),
+          sectionRule(),
+          Text('EXPERIENCE', style: body.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          if (works.isEmpty)
+            Text('Add experience.', style: body)
+          else
+            for (final w in works.take(detailed ? 2 : 1)) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      w.company.trim(),
+                      style: body.copyWith(fontWeight: FontWeight.w700),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
+                    Text(
+                      educationDateRangeLabel(w.startDate, w.endDate),
+                      style: body,
+                    ),
+                ],
+              ),
+              Text(w.role.trim(), style: body, maxLines: 2, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 4),
+            ],
+          sectionRule(),
+          Text('SKILLS', style: body.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          Text(
+            skills.take(detailed ? 8 : 5).join(', '),
+            style: body,
+            maxLines: detailed ? 4 : 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (detailed && edu.isNotEmpty) ...[
+            sectionRule(),
+            Text('EDUCATION', style: body.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            for (final e in edu.take(1)) ...[
+              Text(
+                e.degree.trim(),
+                style: body.copyWith(fontWeight: FontWeight.w700),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                '${e.institution.trim()} (${educationDateRangeLabel(e.startDate, e.endDate)})',
+                style: body,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: detailed
+          ? FittedBox(
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter,
+              child: SizedBox(width: 240, child: pageContent),
+            )
+          : SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: pageContent,
+            ),
+    );
+  }
+}
+
+class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
+  const _AtsProfessionalBlueTemplateArt({
+    required this.resume,
+    this.detailed = false,
+  });
+
+  final ResumeData resume;
+  final bool detailed;
+
+  static const Color _blue = Color(0xFF4A90C4);
+  static const Color _ink = Color(0xFF1F2937);
+
+  @override
+  Widget build(BuildContext context) {
+    final fs = detailed ? 4.75 : 4.45;
+    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
+    final blueBody = body.copyWith(color: _blue);
+    final works = resume.visibleWorkExperiences;
+    final edu = resume.visibleEducation;
+    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final columns = <List<String>>[[], [], []];
+    for (var i = 0; i < skills.length; i++) {
+      columns[i % 3].add(skills[i]);
+    }
+    final skillRows = columns
+        .map((c) => c.length)
+        .fold<int>(0, (a, b) => a > b ? a : b);
+
+    final pageContent = Padding(
+      padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      resume.fullName.trim(),
+                      style: TextStyle(
+                        fontSize: detailed ? 9.5 : 8.6,
+                        fontWeight: FontWeight.w800,
+                        color: _blue,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (resume.jobTitle.trim().isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        resume.jobTitle.trim(),
+                        style: blueBody.copyWith(fontWeight: FontWeight.w700),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (resume.email.trim().isNotEmpty)
+                    Text(
+                      resume.email.trim(),
+                      style: blueBody,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                    ),
+                  if (resume.phone.trim().isNotEmpty)
+                    Text(resume.phone.trim(), style: blueBody),
+                  if (resume.location.trim().isNotEmpty)
+                    Text(
+                      resume.location.trim(),
+                      style: blueBody,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                    ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            resume.summary.trim(),
+            style: body,
+            maxLines: detailed ? 8 : 4,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Professional Experience',
+            style: blueBody.copyWith(
+              fontWeight: FontWeight.w800,
+              fontSize: fs + 0.85,
+            ),
+          ),
+          const SizedBox(height: 4),
+          if (works.isEmpty)
+            Text('Add roles.', style: body)
+          else
+            for (final w in works.take(detailed ? 2 : 1)) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      w.company.trim(),
+                      style: blueBody.copyWith(fontWeight: FontWeight.w700),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
+                    Text(
+                      educationDateRangeLabel(w.startDate, w.endDate),
+                      style: blueBody,
+                    ),
+                ],
+              ),
+              Text(w.role.trim(), style: blueBody, maxLines: 2, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 4),
+            ],
+          if (detailed && edu.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Education',
+              style: blueBody.copyWith(
+                fontWeight: FontWeight.w800,
+                fontSize: fs + 0.85,
+              ),
+            ),
+            const SizedBox(height: 4),
+            for (final e in edu.take(1)) ...[
+              Text(
+                e.degree.trim(),
+                style: blueBody.copyWith(fontWeight: FontWeight.w700),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                e.institution.trim(),
+                style: body,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+          const SizedBox(height: 4),
+          Text(
+            'Areas of Expertise',
+            style: blueBody.copyWith(
+              fontWeight: FontWeight.w800,
+              fontSize: fs + 0.85,
+            ),
+          ),
+          const SizedBox(height: 4),
+          if (skills.isEmpty)
+            Text('Add skills.', style: body)
+          else
+            for (var r = 0; r < skillRows.clamp(0, detailed ? 5 : 3); r++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var c = 0; c < 3; c++)
+                      Expanded(
+                        child: r < columns[c].length
+                            ? Row(
+                                children: [
+                                  Container(
+                                    width: 3,
+                                    height: 3,
+                                    margin: const EdgeInsets.only(top: 2, right: 3),
+                                    decoration: const BoxDecoration(
+                                      color: _blue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      columns[c][r],
+                                      style: body.copyWith(fontSize: fs - 0.35),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : const SizedBox(),
+                      ),
+                  ],
+                ),
+              ),
+        ],
+      ),
+    );
 
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),

@@ -15,6 +15,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final headerContactFontPt = bodyPt + 1;
     final sectionTitleColor = _corporateTitlePdf(resume);
     final headerColor = _corporateHeaderPdf(resume);
+    final headerOnColor = _corporateHeaderOnPdf(resume);
     final lineColor = PdfColor.fromHex('#D7DCE2');
     final highlightColor = PdfColor.fromHex('#FFE67A');
     final headerContactLines = _corporateHeaderContactLines(
@@ -41,14 +42,14 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   alignment: pw.Alignment.center,
                   decoration: pw.BoxDecoration(
                     border: pw.Border.all(
-                      color: PdfColors.white,
+                      color: headerOnColor,
                       width: avatarBorderWidth,
                     ),
                   ),
                   child: pw.Text(
                     _resumeInitials(resume),
                     style: pw.TextStyle(
-                      color: PdfColors.white,
+                      color: headerOnColor,
                       fontSize: 48,
                       fontWeight: pw.FontWeight.bold,
                     ),
@@ -62,6 +63,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     children: [
                       _highlightedCorporateNameText(
                         _displayName(resume).toUpperCase(),
+                        headerOnColor,
                       ),
                       if (headerContactLines.isNotEmpty) ...[
                         pw.SizedBox(height: 8),
@@ -77,7 +79,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                             child: pw.Text(
                               headerContactLines[index],
                               style: pw.TextStyle(
-                                color: PdfColors.white,
+                                color: headerOnColor,
                                 fontSize: headerContactFontPt,
                                 lineSpacing: 1.6,
                               ),
@@ -140,9 +142,9 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     );
   }
 
-  pw.Widget _highlightedCorporateNameText(String value) {
+  pw.Widget _highlightedCorporateNameText(String value, PdfColor onColor) {
     final style = pw.TextStyle(
-      color: PdfColors.white,
+      color: onColor,
       fontSize: ResumeTypography.darkHeaderNamePt,
       fontWeight: pw.FontWeight.bold,
     );

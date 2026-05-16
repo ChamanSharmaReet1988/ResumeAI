@@ -32,6 +32,9 @@ PdfColor _corporateTitlePdf(ResumeData resume) =>
 PdfColor _corporateHeaderPdf(ResumeData resume) =>
     _pdfRgb(resume.corporateColorPreset.headerColor);
 
+PdfColor _corporateHeaderOnPdf(ResumeData resume) =>
+    _pdfRgb(resume.corporateColorPreset.headerOnColor);
+
 List<String> _corporateHeaderContactLines(List<String> items) {
   final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
   if (cleaned.isEmpty) {
@@ -4939,6 +4942,12 @@ class ResumePdfService {
       case ResumeTemplate.atsExecutive:
         _addAtsExecutiveTemplatePage(document, resume);
         break;
+      case ResumeTemplate.atsCenterClassic:
+        _addAtsCenterClassicTemplatePage(document, resume);
+        break;
+      case ResumeTemplate.atsProfessionalBlue:
+        _addAtsProfessionalBlueTemplatePage(document, resume);
+        break;
     }
 
     return document.save();
@@ -5024,6 +5033,24 @@ class ResumePdfService {
         break;
       case ResumeTemplate.atsExecutive:
         _addAtsExecutiveTemplatePage(
+          document,
+          resume,
+          highlightSummary: highlightSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
+        break;
+      case ResumeTemplate.atsCenterClassic:
+        _addAtsCenterClassicTemplatePage(
+          document,
+          resume,
+          highlightSummary: highlightSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
+        break;
+      case ResumeTemplate.atsProfessionalBlue:
+        _addAtsProfessionalBlueTemplatePage(
           document,
           resume,
           highlightSummary: highlightSummary,

@@ -21,6 +21,10 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.atsModernFlow;
     case 'atsExecutive':
       return ResumeTemplate.atsExecutive;
+    case 'atsCenterClassic':
+      return ResumeTemplate.atsCenterClassic;
+    case 'atsProfessionalBlue':
+      return ResumeTemplate.atsProfessionalBlue;
     default:
       return ResumeTemplate.corporate;
   }
@@ -43,6 +47,12 @@ enum ResumeTemplate {
 
   /// Uppercase headings, strong hierarchy, two-column skills.
   atsExecutive,
+
+  /// Centered name, pipe tagline, ruled sections (Enhancv-style ATS).
+  atsCenterClassic,
+
+  /// Blue accent, contact top-right, three-column skills.
+  atsProfessionalBlue,
 }
 
 enum CoverLetterTemplate {
@@ -63,6 +73,8 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.atsSerifRules,
   ResumeTemplate.atsModernFlow,
   ResumeTemplate.atsExecutive,
+  ResumeTemplate.atsCenterClassic,
+  ResumeTemplate.atsProfessionalBlue,
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
@@ -77,6 +89,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsSerifRules => 'Serif Rules ATS',
     ResumeTemplate.atsModernFlow => 'Modern Flow ATS',
     ResumeTemplate.atsExecutive => 'Executive ATS',
+    ResumeTemplate.atsCenterClassic => 'Center Classic ATS',
+    ResumeTemplate.atsProfessionalBlue => 'Professional Blue ATS',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -96,6 +110,10 @@ extension ResumeTemplateX on ResumeTemplate {
       'Centered header and a logical section flow for scanners and recruiters.',
     ResumeTemplate.atsExecutive =>
       'Strong uppercase headings and scannable two-column skills.',
+    ResumeTemplate.atsCenterClassic =>
+      'Centered serif-style header with ruled sections and inline skills.',
+    ResumeTemplate.atsProfessionalBlue =>
+      'Blue accent headings, right-aligned contact, and three-column skills.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -107,6 +125,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsSerifRules => const Color(0xFF374151),
     ResumeTemplate.atsModernFlow => const Color(0xFF2563EB),
     ResumeTemplate.atsExecutive => const Color(0xFF1F2937),
+    ResumeTemplate.atsCenterClassic => const Color(0xFF374151),
+    ResumeTemplate.atsProfessionalBlue => const Color(0xFF4A90C4),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -118,6 +138,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsSerifRules => const Color(0xFFF9FAFB),
     ResumeTemplate.atsModernFlow => const Color(0xFFEFF6FF),
     ResumeTemplate.atsExecutive => const Color(0xFFF3F4F6),
+    ResumeTemplate.atsCenterClassic => const Color(0xFFF9FAFB),
+    ResumeTemplate.atsProfessionalBlue => const Color(0xFFE8F2FC),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -130,6 +152,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsSerifRules => 'Sans · rules ATS',
     ResumeTemplate.atsModernFlow => 'Sans · flow ATS',
     ResumeTemplate.atsExecutive => 'Sans · executive ATS',
+    ResumeTemplate.atsCenterClassic => 'Serif · center ATS',
+    ResumeTemplate.atsProfessionalBlue => 'Sans · blue ATS',
   };
 }
 

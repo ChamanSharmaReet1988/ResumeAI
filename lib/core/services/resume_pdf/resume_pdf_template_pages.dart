@@ -13,6 +13,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     final headerContactFontPt = bodyPt + 1;
     final sectionTitleColor = _corporateTitlePdf(resume);
     final headerColor = _corporateHeaderPdf(resume);
+    final headerOnColor = _corporateHeaderOnPdf(resume);
     final lineColor = PdfColor.fromHex('#D7DCE2');
     final headerContactLines = _corporateHeaderContactLines(
       _resumeContactItems(resume),
@@ -38,7 +39,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                         height: avatarSize,
                         decoration: pw.BoxDecoration(
                           border: pw.Border.all(
-                            color: PdfColors.white,
+                            color: headerOnColor,
                             width: avatarBorderWidth,
                           ),
                         ),
@@ -50,14 +51,14 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                         alignment: pw.Alignment.center,
                         decoration: pw.BoxDecoration(
                           border: pw.Border.all(
-                            color: PdfColors.white,
+                            color: headerOnColor,
                             width: avatarBorderWidth,
                           ),
                         ),
                         child: pw.Text(
                           _resumeInitials(resume),
                           style: pw.TextStyle(
-                            color: PdfColors.white,
+                            color: headerOnColor,
                             fontSize: 48,
                             fontWeight: pw.FontWeight.bold,
                           ),
@@ -71,7 +72,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                       mainAxisSize: pw.MainAxisSize.min,
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        _darkHeaderNameText(_displayName(resume).toUpperCase()),
+                        _darkHeaderNameText(
+                          _displayName(resume).toUpperCase(),
+                          headerOnColor,
+                        ),
                         if (headerContactLines.isNotEmpty) ...[
                           pw.SizedBox(height: 8),
                           for (
@@ -86,7 +90,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                               child: pw.Text(
                                 headerContactLines[index],
                                 style: pw.TextStyle(
-                                  color: PdfColors.white,
+                                  color: headerOnColor,
                                   fontSize: headerContactFontPt,
                                   lineSpacing: 1.6,
                                 ),
@@ -380,9 +384,9 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     return pw.Text(value, style: style);
   }
 
-  pw.Widget _darkHeaderNameText(String value) {
+  pw.Widget _darkHeaderNameText(String value, PdfColor onColor) {
     final style = pw.TextStyle(
-      color: PdfColors.white,
+      color: onColor,
       fontSize: ResumeTypography.darkHeaderNamePt,
       fontWeight: pw.FontWeight.bold,
     );
