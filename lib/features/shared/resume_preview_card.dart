@@ -908,26 +908,13 @@ class _CreativePreview extends StatelessWidget {
                     height: ResumeTypography.creativeSidebarImageTopPadding,
                   ),
                   Center(
-                    child: Container(
+                    child: _CreativeProfileAvatar(
+                      resume: resume,
                       width: _avatarWidth,
                       height: _avatarHeight,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: avatarBackgroundColor.withValues(
-                          alpha: _avatarBackgroundOpacity,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        _pdfAlignedInitials(resume),
-                        style: TextStyle(
-                          color: accentColor,
-                          fontSize: ResumeTypography.creativeNamePt * 1.15,
-                          fontWeight: ResumeFontWeight.toFlutter(
-                            ResumeTypography.creativeNameWeight,
-                          ),
-                        ),
-                      ),
+                      accentColor: accentColor,
+                      backgroundColor: avatarBackgroundColor,
+                      backgroundOpacity: _avatarBackgroundOpacity,
                     ),
                   ),
                   if (contacts.isNotEmpty) ...[
@@ -1024,34 +1011,56 @@ class _CreativePreview extends StatelessWidget {
                       const SizedBox(height: headingGap),
                       if (experiences.isNotEmpty)
                         ...experiences.map((item) {
-                          final title = [
-                            item.role.trim(),
-                            item.startDate.trim(),
-                            item.endDate.trim(),
-                          ].where((s) => s.isNotEmpty).join(' • ');
                           final bullets = _workBulletLines(item);
+                          final dateLabel = _creativeExperienceDateRange(
+                            item.startDate,
+                            item.endDate,
+                          );
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  title.ifBlank('Role'),
-                                  maxLines: showAllContent ? null : 1,
-                                  overflow: showAllContent
-                                      ? null
-                                      : TextOverflow.ellipsis,
-                                  style: subtitleStyle,
-                                ),
-                                Text(
-                                  item.company.ifBlank('Company'),
-                                  maxLines: showAllContent ? null : 1,
-                                  overflow: showAllContent
-                                      ? null
-                                      : TextOverflow.ellipsis,
-                                  style: subtitleStyle.copyWith(
-                                    fontStyle: FontStyle.italic,
-                                  ),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: RichText(
+                                        maxLines: showAllContent ? null : 2,
+                                        overflow: showAllContent
+                                            ? TextOverflow.clip
+                                            : TextOverflow.ellipsis,
+                                        text: TextSpan(
+                                          style: subtitleStyle,
+                                          children: [
+                                            TextSpan(
+                                              text: item.role
+                                                  .ifBlank('Role')
+                                                  .toUpperCase(),
+                                            ),
+                                            TextSpan(
+                                              text:
+                                                  ' / ${item.company.ifBlank('Company')}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    if (dateLabel.isNotEmpty) ...[
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        dateLabel,
+                                        maxLines: showAllContent ? null : 1,
+                                        overflow: showAllContent
+                                            ? null
+                                            : TextOverflow.ellipsis,
+                                        textAlign: TextAlign.right,
+                                        style: bodyStyle.copyWith(
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                                 _CreativeBulletColumn(
                                   items: showAllContent
@@ -1094,6 +1103,21 @@ class _CreativePreview extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: bodyStyle,
                                     ),
+                                    if (_creativeExperienceDateRange(
+                                      item.startDate,
+                                      item.endDate,
+                                    ).isNotEmpty) ...[
+                                      const SizedBox(height: 1.5),
+                                      Text(
+                                        _creativeExperienceDateRange(
+                                          item.startDate,
+                                          item.endDate,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: bodyStyle,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -3123,6 +3147,76 @@ class _CreativeSidebarMetaItem extends StatelessWidget {
       ],
     );
   }
+}
+
+class _CreativeProfileAvatar extends StatelessWidget {
+  const _CreativeProfileAvatar({
+    required this.resume,
+    required this.width,
+    required this.height,
+    required this.accentColor,
+    required this.backgroundColor,
+    required this.backgroundOpacity,
+  });
+
+  final ResumeData resume;
+  final double width;
+  final double height;
+  final Color accentColor;
+  final Color backgroundColor;
+  final double backgroundOpacity;
+
+  static const double _cornerRadius = 2;
+
+  @override
+  Widget build(BuildContext context) {
+    final path = resume.profileImagePath.trim();
+    final hasImage = path.isNotEmpty && File(path).existsSync();
+    final initialsStyle = TextStyle(
+      color: accentColor,
+      fontSize: ResumeTypography.creativeNamePt * 1.15,
+      fontWeight: ResumeFontWeight.toFlutter(
+        ResumeTypography.creativeNameWeight,
+      ),
+    );
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(_cornerRadius),
+      child: Container(
+        width: width,
+        height: height,
+        color: backgroundColor.withValues(alpha: backgroundOpacity),
+        alignment: Alignment.center,
+        child: hasImage
+            ? Image.file(
+                File(path),
+                width: width,
+                height: height,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Text(
+                  _pdfAlignedInitials(resume),
+                  style: initialsStyle,
+                ),
+              )
+            : Text(
+                _pdfAlignedInitials(resume),
+                style: initialsStyle,
+              ),
+      ),
+    );
+  }
+}
+
+String _creativeExperienceDateRange(String startDate, String endDate) {
+  final start = startDate.trim();
+  final end = endDate.trim();
+  if (start.isEmpty && end.isEmpty) {
+    return '';
+  }
+  if (start.isNotEmpty && end.isNotEmpty) {
+    return '$start - $end';
+  }
+  return start.isNotEmpty ? start : end;
 }
 
 class _CreativeBulletColumn extends StatelessWidget {

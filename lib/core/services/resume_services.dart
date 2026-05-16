@@ -1508,10 +1508,14 @@ pw.Widget _creativeFirstPageSidebar({
         pw.SizedBox(height: ResumeTypography.creativeSidebarImageTopPadding),
         pw.Center(
           child: profileImage != null
-              ? pw.Container(
-                  width: _creativeAvatarWidthPt,
-                  height: _creativeAvatarHeightPt,
-                  child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+              ? pw.ClipRRect(
+                  horizontalRadius: 2,
+                  verticalRadius: 2,
+                  child: pw.Container(
+                    width: _creativeAvatarWidthPt,
+                    height: _creativeAvatarHeightPt,
+                    child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                  ),
                 )
               : _creativeAvatarIconPlaceholder(
                   width: _creativeAvatarWidthPt,
