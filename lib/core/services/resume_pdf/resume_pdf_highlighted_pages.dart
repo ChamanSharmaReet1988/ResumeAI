@@ -7,12 +7,13 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   void _addHighlightedCorporateTemplatePage(
     pw.Document document,
     ResumeData resume, {
+    required InterPdfFonts inter,
     required bool highlightSummary,
     required Set<String> highlightedSkills,
     required Map<int, Set<String>> highlightedBulletsByExperience,
   }) {
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final headerContactFontPt = bodyPt + 1;
+    final headerContactFontPt = bodyPt;
     final sectionTitleColor = _corporateTitlePdf(resume);
     final headerColor = _corporateHeaderPdf(resume);
     final headerOnColor = _corporateHeaderOnPdf(resume);
@@ -48,10 +49,9 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   ),
                   child: pw.Text(
                     _resumeInitials(resume),
-                    style: pw.TextStyle(
-                      color: headerOnColor,
-                      fontSize: 48,
-                      fontWeight: pw.FontWeight.bold,
+                    style: darkHeaderInitialsPdfStyle(
+                      inter,
+                      headerOnColor,
                     ),
                   ),
                 ),
@@ -64,6 +64,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       _highlightedCorporateNameText(
                         _displayName(resume).toUpperCase(),
                         headerOnColor,
+                        inter,
                       ),
                       if (headerContactLines.isNotEmpty) ...[
                         pw.SizedBox(height: 8),
@@ -78,9 +79,11 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                             ),
                             child: pw.Text(
                               headerContactLines[index],
-                              style: pw.TextStyle(
-                                color: headerOnColor,
+                              style: interPdfTextStyle(
+                                inter,
+                                ResumeTypography.darkHeaderContactWeight,
                                 fontSize: headerContactFontPt,
+                                color: headerOnColor,
                                 lineSpacing: 1.6,
                               ),
                             ),
@@ -98,6 +101,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             lineColor,
             sectionTitleColor,
             highlightColor,
+            inter,
+            bodyPt,
             highlightSummary: highlightSummary,
           ),
           if (resume.includeWorkInResume)
@@ -107,6 +112,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               lineColor,
               sectionTitleColor,
               highlightColor,
+              inter,
               bodyPt,
             ),
           if (resume.includeEducationInResume)
@@ -114,6 +120,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               resume.visibleEducation,
               lineColor,
               sectionTitleColor,
+              inter,
               bodyPt,
             ),
           if (resume.includeSkillsInResume)
@@ -123,12 +130,15 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               lineColor,
               sectionTitleColor,
               highlightColor,
+              inter,
+              bodyPt,
             ),
           if (resume.includeProjectsInResume)
             ..._highlightedCorporateProjectsSectionWidgets(
               resume.visibleProjects,
               lineColor,
               sectionTitleColor,
+              inter,
               bodyPt,
             ),
           for (final item in resume.visibleCustomSections)
@@ -136,24 +146,34 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               item,
               lineColor,
               sectionTitleColor,
+              inter,
+              bodyPt,
             ),
         ],
       ),
     );
   }
 
-  pw.Widget _highlightedCorporateNameText(String value, PdfColor onColor) {
-    final style = pw.TextStyle(
-      color: onColor,
-      fontSize: ResumeTypography.darkHeaderNamePt,
-      fontWeight: pw.FontWeight.bold,
+  pw.Widget _highlightedCorporateNameText(
+    String value,
+    PdfColor onColor,
+    InterPdfFonts inter,
+  ) {
+    return pw.Text(
+      value,
+      style: interPdfTextStyle(
+        inter,
+        ResumeTypography.darkHeaderSectionTitleWeight,
+        fontSize: ResumeTypography.darkHeaderNamePt,
+        color: onColor,
+      ),
     );
-    return pw.Text(value, style: style);
   }
 
   List<pw.Widget> _highlightedCorporateSectionPrefixWidgets({
     required String title,
     required PdfColor sectionTitleColor,
+    required InterPdfFonts inter,
   }) {
     return [
       pw.Padding(
@@ -161,6 +181,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         child: _corporateHeadingText(
           title.toUpperCase(),
           color: sectionTitleColor,
+          inter: inter,
         ),
       ),
       pw.SizedBox(height: 8),
@@ -188,13 +209,16 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     String summary,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    PdfColor highlightColor, {
+    PdfColor highlightColor,
+    InterPdfFonts inter,
+    double bodyPt, {
     required bool highlightSummary,
   }) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Summary',
         sectionTitleColor: sectionTitleColor,
+        inter: inter,
       ),
       pw.Padding(
         padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
@@ -202,7 +226,14 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           width: double.infinity,
           padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           color: highlightSummary ? highlightColor : PdfColors.white,
-          child: pw.Text(summary),
+          child: pw.Text(
+            summary,
+            style: interPdfTextStyle(
+              inter,
+              ResumeFontWeight.w400,
+              fontSize: bodyPt,
+            ),
+          ),
         ),
       ),
       ..._highlightedCorporateSectionSuffixWidgets(lineColor),
@@ -215,12 +246,14 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     PdfColor lineColor,
     PdfColor sectionTitleColor,
     PdfColor highlightColor,
+    InterPdfFonts inter,
     double bodyPt,
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Experience',
         sectionTitleColor: sectionTitleColor,
+        inter: inter,
       ),
       for (var index = 0; index < items.length; index++)
         pw.Padding(
@@ -229,6 +262,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             items[index],
             highlightedBulletsByExperience[index] ?? const <String>{},
             highlightColor,
+            inter: inter,
             bodyFontPt: bodyPt,
           ),
         ),
@@ -240,17 +274,23 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     List<EducationItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
+    InterPdfFonts inter,
     double bodyPt,
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Education',
         sectionTitleColor: sectionTitleColor,
+        inter: inter,
       ),
       for (final item in items)
         pw.Padding(
           padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
-          child: _buildCorporateEducation(item, bodyFontPt: bodyPt),
+          child: _buildCorporateEducation(
+            item,
+            inter: inter,
+            bodyFontPt: bodyPt,
+          ),
         ),
       ..._highlightedCorporateSectionSuffixWidgets(lineColor),
     ];
@@ -262,16 +302,22 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     PdfColor lineColor,
     PdfColor sectionTitleColor,
     PdfColor highlightColor,
+    InterPdfFonts inter,
+    double bodyPt,
   ) {
+    final bulletStyle = interBodyPdfTextStyle(inter, bodyPt);
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Skills',
         sectionTitleColor: sectionTitleColor,
+        inter: inter,
       ),
       for (final row in _twoColumnBulletRowsWithHighlights(
         skills,
         highlightedSkills,
         highlightColor,
+        fontSize: bodyPt,
+        bulletStyle: bulletStyle,
       ))
         pw.Padding(
           padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
@@ -285,15 +331,21 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     List<ProjectItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
+    InterPdfFonts inter,
     double bodyPt,
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Projects',
         sectionTitleColor: sectionTitleColor,
+        inter: inter,
       ),
       for (final item in items)
-        ..._buildCompactProjectWidgets(item, bodyFontPt: bodyPt).map(
+        ..._buildCompactProjectWidgets(
+          item,
+          inter: inter,
+          bodyFontPt: bodyPt,
+        ).map(
           (widget) => pw.Padding(
             padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
             child: widget,
@@ -307,13 +359,20 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     CustomSectionItem item,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
+    InterPdfFonts inter,
+    double bodyPt,
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: item.title.ifEmpty('Custom Section'),
         sectionTitleColor: sectionTitleColor,
+        inter: inter,
       ),
-      for (final widget in _pwCustomSectionBodyWidgets(item))
+      for (final widget in _pwCustomSectionBodyWidgets(
+        item,
+        inter: inter,
+        bodyFontPt: bodyPt,
+      ))
         pw.Padding(
           padding: const pw.EdgeInsets.fromLTRB(30, 0, 30, 0),
           child: widget,
@@ -408,7 +467,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 style: pw.TextStyle(
                   fontSize: bodyPt,
                   color: muted,
-                  lineSpacing: 2,
+                  lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
                 ),
               ),
             ),
@@ -581,7 +640,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     style: pw.TextStyle(
                       color: mutedColor,
                       fontSize: bodyPt,
-                      lineSpacing: 2,
+                      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
                     ),
                   ),
                 ),
@@ -857,7 +916,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 style: pw.TextStyle(
                   color: mutedColor,
                   fontSize: bodyPt,
-                  lineSpacing: 2,
+                  lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
                 ),
               ),
             ),

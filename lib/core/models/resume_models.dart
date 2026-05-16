@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../corporate_resume_style.dart';
 import '../resume_text_font.dart';
 
 /// Maps stored template ids; legacy removed layouts default to [ResumeTemplate.corporate].
@@ -228,7 +229,7 @@ class ResumeData {
       includeEducationInResume: true,
       includeSkillsInResume: true,
       includeProjectsInResume: true,
-      bodyFontPt: 12,
+      bodyFontPt: kResumeBodyFontPtDefault,
       corporateColorPresetIndex: 0,
     );
   }
@@ -291,7 +292,8 @@ class ResumeData {
           json['includeEducationInResume'] as bool? ?? true,
       includeSkillsInResume: json['includeSkillsInResume'] as bool? ?? true,
       includeProjectsInResume: json['includeProjectsInResume'] as bool? ?? true,
-      bodyFontPt: (json['bodyFontPt'] as num?)?.toInt() ?? 12,
+      bodyFontPt:
+          (json['bodyFontPt'] as num?)?.toInt() ?? kResumeBodyFontPtDefault,
       corporateColorPresetIndex:
           (json['corporateColorPresetIndex'] as num?)?.toInt() ?? 0,
     );
@@ -324,7 +326,7 @@ class ResumeData {
   final bool includeSkillsInResume;
   final bool includeProjectsInResume;
 
-  /// Body text size (pt) for Dark Header preview + PDF; typically 11–13.
+  /// Body text size (pt) for resume preview + PDF; typically 10–12.
   final int bodyFontPt;
 
   /// Index 0–4 for Dark Header title + top bar colors (see `corporate_resume_style.dart`).

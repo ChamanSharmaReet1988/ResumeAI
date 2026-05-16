@@ -15,9 +15,11 @@ import 'package:share_plus/share_plus.dart';
 import 'app_preferences.dart';
 import '../corporate_resume_style.dart';
 import '../models/resume_models.dart';
+import '../resume_font_weight.dart';
 import '../resume_text_font.dart';
 import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
+import 'resume_pdf/inter_pdf_fonts.dart';
 import 'resume_pdf/resume_pdf_theme.dart';
 
 part 'resume_pdf/resume_pdf_template_pages.dart';
@@ -76,14 +78,24 @@ pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
   }
 }
 
-List<pw.Widget> _pwCustomSectionBodyWidgets(CustomSectionItem item) {
+List<pw.Widget> _pwCustomSectionBodyWidgets(
+  CustomSectionItem item, {
+  InterPdfFonts? inter,
+  double? bodyFontPt,
+}) {
+  final bodyStyle = inter != null && bodyFontPt != null
+      ? interBodyPdfTextStyle(inter, bodyFontPt)
+      : pw.TextStyle(
+          color: PdfColors.black,
+          fontSize: bodyFontPt ?? ResumeTypography.bodyPt,
+        );
   switch (item.layoutMode) {
     case CustomSectionLayoutMode.summary:
       final content = item.content.trim();
       if (content.isEmpty) {
         return const <pw.Widget>[];
       }
-      return [pw.Text(content)];
+      return [pw.Text(content, style: bodyStyle)];
     case CustomSectionLayoutMode.bullets:
       final lines = item.bullets.where((b) => b.trim().isNotEmpty).toList();
       if (lines.isEmpty) {
@@ -93,13 +105,7 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(CustomSectionItem item) {
         for (var i = 0; i < lines.length; i++)
           pw.Padding(
             padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
-            child: pw.Bullet(
-              text: lines[i].trim(),
-              style: pw.TextStyle(
-                color: PdfColors.black,
-                fontSize: ResumeTypography.bodyPt,
-              ),
-            ),
+            child: pw.Bullet(text: lines[i].trim(), style: bodyStyle),
           ),
       ];
   }
@@ -668,7 +674,7 @@ double _classicSidebarSectionTitleHeight() =>
     ResumeTypography.darkHeaderSectionTitlePt + 8;
 
 double _classicSidebarMinItemHeight(double bodyPt) =>
-    bodyPt * ResumeTypography.textLineHeight;
+    bodyPt * ResumeTypography.bodyTextLineHeight;
 
 double _classicSidebarEstimatedItemHeight(
   String text,
@@ -676,7 +682,7 @@ double _classicSidebarEstimatedItemHeight(
   required double itemBottom,
 }) {
   final lines = _classicSidebarEstimatedLineCount(text, fontSize);
-  return (lines * fontSize * ResumeTypography.textLineHeight) + itemBottom;
+  return (lines * fontSize * ResumeTypography.bodyTextLineHeight) + itemBottom;
 }
 
 int _classicSidebarEstimatedLineCount(String text, double fontSize) {
@@ -1006,10 +1012,10 @@ List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
   final headingBlockHeight =
       ResumeTypography.darkHeaderSectionTitlePt + 8 + 1 + 12;
   final infoItemsHeight = infoItems.isEmpty
-      ? (bodyPt * ResumeTypography.textLineHeight)
+      ? (bodyPt * ResumeTypography.bodyTextLineHeight)
       : infoItems.fold<double>(
           0,
-          (sum, _) => sum + (bodyPt * ResumeTypography.textLineHeight) + 10,
+          (sum, _) => sum + (bodyPt * ResumeTypography.bodyTextLineHeight) + 10,
         );
   final nameBlockHeight = 30 + (hasJobTitle ? (14 + bodyPt + 4) : 0) + 26;
 
@@ -1025,7 +1031,7 @@ List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
 
   double skillHeight(String item) {
     final lines = _detailsSidebarEstimatedLineCount(item, bodyPt);
-    return (lines * bodyPt * ResumeTypography.textLineHeight) + 11;
+    return (lines * bodyPt * ResumeTypography.bodyTextLineHeight) + 11;
   }
 
   List<String> takeChunk(Iterable<String> source, double maxHeight) {
@@ -4902,12 +4908,18 @@ class _CoverLetterLocale {
 }
 
 class ResumePdfService {
+  InterPdfFonts? _interPdfFontsCache;
+
+  Future<InterPdfFonts> _ensureInterPdfFonts() async {
+    return _interPdfFontsCache ??= await loadInterPdfFonts();
+  }
+
   Future<Uint8List> buildPdf(ResumeData resume) async {
-    final bodyFont = ResumeTextFont.calibri;
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
+    final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
-      theme: await resumePdfThemeForBodyFont(
-        bodyFont,
+      theme: await resumePdfThemeForInter(
+        inter,
         bodyFontPt: corporateBodyPt,
       ),
     );
@@ -4915,7 +4927,12 @@ class ResumePdfService {
 
     switch (resume.template) {
       case ResumeTemplate.corporate:
-        _addCorporateTemplatePage(document, resume, profileImage: profileImage);
+        _addCorporateTemplatePage(
+          document,
+          resume,
+          inter: inter,
+          profileImage: profileImage,
+        );
         break;
       case ResumeTemplate.creative:
         _addCreativeTemplatePage(document, resume, profileImage: profileImage);
@@ -4959,11 +4976,11 @@ class ResumePdfService {
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) async {
-    final bodyFont = ResumeTextFont.calibri;
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
+    final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
-      theme: await resumePdfThemeForBodyFont(
-        bodyFont,
+      theme: await resumePdfThemeForInter(
+        inter,
         bodyFontPt: corporateBodyPt,
       ),
     );
@@ -4972,6 +4989,7 @@ class ResumePdfService {
         _addHighlightedCorporateTemplatePage(
           document,
           resume,
+          inter: inter,
           highlightSummary: highlightSummary,
           highlightedSkills: highlightedSkills,
           highlightedBulletsByExperience: highlightedBulletsByExperience,
@@ -5737,12 +5755,24 @@ class ResumePdfService {
     return const <String>[];
   }
 
-  pw.Widget _corporateHeadingText(String value, {PdfColor? color}) {
-    final style = pw.TextStyle(
-      fontSize: ResumeTypography.darkHeaderSectionTitlePt,
-      fontWeight: pw.FontWeight.bold,
-      color: color ?? PdfColor.fromHex('#50555C'),
-    );
+  pw.Widget _corporateHeadingText(
+    String value, {
+    PdfColor? color,
+    InterPdfFonts? inter,
+  }) {
+    final resolvedColor = color ?? PdfColor.fromHex('#50555C');
+    final style = inter != null
+        ? interPdfTextStyle(
+            inter,
+            ResumeTypography.darkHeaderSectionTitleWeight,
+            fontSize: ResumeTypography.darkHeaderSectionTitlePt,
+            color: resolvedColor,
+          )
+        : pw.TextStyle(
+            fontSize: ResumeTypography.darkHeaderSectionTitlePt,
+            fontWeight: pw.FontWeight.bold,
+            color: resolvedColor,
+          );
     return pw.Text(value, style: style);
   }
 
@@ -5751,7 +5781,11 @@ class ResumePdfService {
     double columnGap = 20,
     double itemBottom = 3,
     double fontSize = ResumeTypography.bodyPt,
+    pw.TextStyle? bulletStyle,
   }) {
+    final resolvedBulletStyle =
+        bulletStyle ??
+        pw.TextStyle(color: PdfColors.black, fontSize: fontSize);
     final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
     if (cleaned.isEmpty) {
       return const <pw.Widget>[];
@@ -5767,10 +5801,7 @@ class ResumePdfService {
               pw.Expanded(
                 child: pw.Bullet(
                   text: cleaned[i],
-                  style: pw.TextStyle(
-                    color: PdfColors.black,
-                    fontSize: fontSize,
-                  ),
+                  style: resolvedBulletStyle,
                 ),
               ),
               pw.SizedBox(width: columnGap),
@@ -5778,10 +5809,7 @@ class ResumePdfService {
                 child: i + leftCount < cleaned.length
                     ? pw.Bullet(
                         text: cleaned[i + leftCount],
-                        style: pw.TextStyle(
-                          color: PdfColors.black,
-                          fontSize: fontSize,
-                        ),
+                        style: resolvedBulletStyle,
                       )
                     : pw.SizedBox(),
               ),
@@ -5833,8 +5861,41 @@ class ResumePdfService {
     WorkExperience item,
     Set<String> highlightedBullets,
     PdfColor highlightColor, {
+    InterPdfFonts? inter,
     double bodyFontPt = ResumeTypography.bodyPt,
   }) {
+    final roleCompany = inter != null
+        ? pw.Text(
+            '${item.role.ifEmpty('Role')} / ${item.company.ifEmpty('Company')}',
+            style: interPdfTextStyle(
+              inter,
+              ResumeTypography.darkHeaderSubtitleWeight,
+              fontSize: ResumeTypography.darkHeaderSubtitlePt,
+              color: const PdfColor.fromInt(0xFF141414),
+            ),
+          )
+        : _corporateRoleCompanyText(item.role, item.company);
+    final dateStyle = inter != null
+        ? interBodyPdfTextStyle(
+            inter,
+            bodyFontPt,
+            color: PdfColor.fromHex('#666B71'),
+            fontStyle: pw.FontStyle.italic,
+          )
+        : pw.TextStyle(
+            color: PdfColor.fromHex('#666B71'),
+            fontStyle: pw.FontStyle.italic,
+            fontWeight: pw.FontWeight.normal,
+            font: pw.Font.helveticaOblique(),
+          );
+    final bodyStyle = inter != null
+        ? interBodyPdfTextStyle(inter, bodyFontPt)
+        : pw.TextStyle(
+            color: PdfColors.black,
+            fontSize: bodyFontPt,
+            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyFontPt),
+          );
+
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -5842,21 +5903,14 @@ class ResumePdfService {
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
-            pw.Expanded(
-              child: _corporateRoleCompanyText(item.role, item.company),
-            ),
+            pw.Expanded(child: roleCompany),
             if (item.startDate.trim().isNotEmpty ||
                 item.endDate.trim().isNotEmpty)
               pw.Align(
                 alignment: pw.Alignment.centerRight,
                 child: pw.Text(
                   '${item.startDate.trim()}${item.startDate.trim().isNotEmpty && item.endDate.trim().isNotEmpty ? ' - ' : ''}${item.endDate.trim()}',
-                  style: pw.TextStyle(
-                    color: PdfColor.fromHex('#666B71'),
-                    fontStyle: pw.FontStyle.italic,
-                    fontWeight: pw.FontWeight.normal,
-                    font: pw.Font.helveticaOblique(),
-                  ),
+                  style: dateStyle,
                 ),
               ),
           ],
@@ -5864,7 +5918,7 @@ class ResumePdfService {
         pw.SizedBox(height: 4),
         if (_workSummaryText(item).isNotEmpty) ...[
           pw.SizedBox(height: 4),
-          pw.Text(_workSummaryText(item)),
+          pw.Text(_workSummaryText(item), style: bodyStyle),
         ],
         ...(() {
           final bullets = _workBulletLines(item);
@@ -5884,10 +5938,7 @@ class ResumePdfService {
                     : PdfColors.white,
                 child: _highlightedPdfLineText(
                   bullet,
-                  style: pw.TextStyle(
-                    color: PdfColors.black,
-                    fontSize: bodyFontPt,
-                  ),
+                  style: bodyStyle,
                 ),
               ),
             );
@@ -5974,7 +6025,11 @@ class ResumePdfService {
     double columnGap = 20,
     double itemBottom = 3,
     double fontSize = ResumeTypography.bodyPt,
+    pw.TextStyle? bulletStyle,
   }) {
+    final resolvedBulletStyle =
+        bulletStyle ??
+        pw.TextStyle(color: PdfColors.black, fontSize: fontSize);
     final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
     if (cleaned.isEmpty) {
       return const <pw.Widget>[];
@@ -5999,10 +6054,7 @@ class ResumePdfService {
                       : PdfColors.white,
                   child: _highlightedPdfLineText(
                     cleaned[i],
-                    style: pw.TextStyle(
-                      color: PdfColors.black,
-                      fontSize: fontSize,
-                    ),
+                    style: resolvedBulletStyle,
                   ),
                 ),
               ),
@@ -6021,10 +6073,7 @@ class ResumePdfService {
                             : PdfColors.white,
                         child: _highlightedPdfLineText(
                           cleaned[i + leftCount],
-                          style: pw.TextStyle(
-                            color: PdfColors.black,
-                            fontSize: fontSize,
-                          ),
+                          style: resolvedBulletStyle,
                         ),
                       )
                     : pw.SizedBox(),
@@ -6173,6 +6222,7 @@ class ResumePdfService {
 
   pw.Widget _buildCorporateEducation(
     EducationItem item, {
+    InterPdfFonts? inter,
     double bodyFontPt = ResumeTypography.bodyPt,
   }) {
     // Same line as template card: `Institution  |  2014 - 2018`
@@ -6182,25 +6232,34 @@ class ResumePdfService {
       item.endDate,
     );
 
+    final titleStyle = inter != null
+        ? interPdfTextStyle(
+            inter,
+            ResumeTypography.darkHeaderSubtitleWeight,
+            fontSize: ResumeTypography.darkHeaderSubtitlePt,
+            color: const PdfColor.fromInt(0xFF141414),
+          ).copyWith(lineSpacing: 0)
+        : pw.TextStyle(
+            fontWeight: pw.FontWeight.bold,
+            fontSize: 15,
+            color: PdfColors.black,
+            lineSpacing: 0,
+          );
+    final degreeStyle = inter != null
+        ? interBodyPdfTextStyle(inter, bodyFontPt)
+        : pw.TextStyle(
+            fontSize: bodyFontPt,
+            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyFontPt),
+          );
+
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(
-            titleLine,
-            style: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-              fontSize: 15,
-              color: PdfColors.black,
-              lineSpacing: 0,
-            ),
-          ),
+          pw.Text(titleLine, style: titleStyle),
           pw.SizedBox(height: 4),
-          pw.Text(
-            item.degree.ifEmpty('Degree'),
-            style: pw.TextStyle(fontSize: bodyFontPt),
-          ),
+          pw.Text(item.degree.ifEmpty('Degree'), style: degreeStyle),
         ],
       ),
     );
@@ -6235,18 +6294,34 @@ class ResumePdfService {
 
   List<pw.Widget> _buildCompactProjectWidgets(
     ProjectItem item, {
+    InterPdfFonts? inter,
     double bodyFontPt = ResumeTypography.bodyPt,
   }) {
     final bullets = _projectBulletLines(item);
+    final titleWidget = inter != null
+        ? pw.Text(
+            item.title.ifEmpty('Project'),
+            style: interPdfTextStyle(
+              inter,
+              ResumeTypography.darkHeaderSubtitleWeight,
+              fontSize: ResumeTypography.darkHeaderSubtitlePt,
+              color: const PdfColor.fromInt(0xFF141414),
+            ).copyWith(lineSpacing: 0),
+          )
+        : _corporateStrokeLabelText(item.title.ifEmpty('Project'));
+    final bulletStyle = inter != null
+        ? interBodyPdfTextStyle(inter, bodyFontPt)
+        : pw.TextStyle(
+            color: PdfColors.black,
+            fontSize: bodyFontPt,
+            lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyFontPt),
+          );
     return [
-      _corporateStrokeLabelText(item.title.ifEmpty('Project')),
+      titleWidget,
       for (var i = 0; i < bullets.length; i++)
         pw.Padding(
           padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
-          child: pw.Bullet(
-            text: bullets[i],
-            style: pw.TextStyle(color: PdfColors.black, fontSize: bodyFontPt),
-          ),
+          child: pw.Bullet(text: bullets[i], style: bulletStyle),
         ),
       pw.SizedBox(height: 8),
     ];

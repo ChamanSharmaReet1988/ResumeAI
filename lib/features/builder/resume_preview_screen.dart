@@ -94,7 +94,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
     viewModel.updateResume(
       (resume) => resume.copyWith(
         template: selectedTemplate,
-        bodyFontPt: 12,
+        bodyFontPt: kResumeBodyFontPtDefault,
         corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
           selectedTemplate,
         ),
@@ -184,7 +184,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 SizedBox(
                                   width: 24,
                                   child: Text(
-                                    '11',
+                                    '$kResumeBodyFontPtMin',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: muted,
                                     ),
@@ -193,11 +193,15 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 Expanded(
                                   child: Slider(
                                     value: resume.effectiveBodyFontPt
-                                        .clamp(11, 13)
+                                        .clamp(
+                                          kResumeBodyFontPtMin,
+                                          kResumeBodyFontPtMax,
+                                        )
                                         .toDouble(),
-                                    min: 11,
-                                    max: 13,
-                                    divisions: 2,
+                                    min: kResumeBodyFontPtMin.toDouble(),
+                                    max: kResumeBodyFontPtMax.toDouble(),
+                                    divisions: kResumeBodyFontPtMax -
+                                        kResumeBodyFontPtMin,
                                     label: '${resume.effectiveBodyFontPt}',
                                     onChanged: (v) {
                                       viewModel.updateResume(
@@ -210,7 +214,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 SizedBox(
                                   width: 24,
                                   child: Text(
-                                    '13',
+                                    '$kResumeBodyFontPtMax',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: muted,
                                     ),

@@ -1050,12 +1050,12 @@ final ResumeData _atsFullSampleResume = ResumeData(
   githubLink: 'github.com/malee',
   linkedinLink: 'linkedin.com/in/morganalee',
   profileImagePath: '',
-  resumeTextFont: ResumeTextFont.calibri,
+  resumeTextFont: ResumeTextFont.inter,
   includeWorkInResume: true,
   includeEducationInResume: true,
   includeSkillsInResume: true,
   includeProjectsInResume: true,
-  bodyFontPt: 13,
+  bodyFontPt: kResumeBodyFontPtDefault,
   corporateColorPresetIndex: 0,
 );
 
@@ -1105,12 +1105,12 @@ final ResumeData _profileSidebarTemplateResume = ResumeData(
   githubLink: 'github.com/mateovargas',
   linkedinLink: '',
   profileImagePath: '',
-  resumeTextFont: ResumeTextFont.calibri,
+  resumeTextFont: ResumeTextFont.inter,
   includeWorkInResume: true,
   includeEducationInResume: true,
   includeSkillsInResume: true,
   includeProjectsInResume: true,
-  bodyFontPt: 13,
+  bodyFontPt: kResumeBodyFontPtDefault,
   corporateColorPresetIndex: 3,
 );
 
@@ -1198,12 +1198,12 @@ final ResumeData _classicSidebarTemplateResume = ResumeData(
   githubLink: '',
   linkedinLink: 'linkedin.com/in/averybrooks',
   profileImagePath: '',
-  resumeTextFont: ResumeTextFont.calibri,
+  resumeTextFont: ResumeTextFont.inter,
   includeWorkInResume: true,
   includeEducationInResume: true,
   includeSkillsInResume: true,
   includeProjectsInResume: true,
-  bodyFontPt: 13,
+  bodyFontPt: kResumeBodyFontPtDefault,
   corporateColorPresetIndex: 2,
 );
 
@@ -1266,12 +1266,12 @@ final ResumeData _detailsSidebarTemplateResume = ResumeData(
   githubLink: '',
   linkedinLink: '',
   profileImagePath: '',
-  resumeTextFont: ResumeTextFont.calibri,
+  resumeTextFont: ResumeTextFont.inter,
   includeWorkInResume: true,
   includeEducationInResume: true,
   includeSkillsInResume: true,
   includeProjectsInResume: false,
-  bodyFontPt: 13,
+  bodyFontPt: kResumeBodyFontPtDefault,
   corporateColorPresetIndex: 4,
 );
 

@@ -67,22 +67,9 @@ class ResumePreviewCanvas extends StatelessWidget {
     final theme = Theme.of(context);
     final previewTemplate = resume.template.userFacingTemplate;
     final base = theme.textTheme;
-    final ff = ResumeTextFont.calibri.flutterFontFamily;
+    final ff = ResumeTextFont.inter.flutterFontFamily;
     final onSurface = theme.colorScheme.onSurface;
-    final bodyPx = switch (previewTemplate) {
-      ResumeTemplate.corporate ||
-      ResumeTemplate.atsStructured ||
-      ResumeTemplate.atsSerifRules ||
-      ResumeTemplate.atsModernFlow ||
-      ResumeTemplate.atsExecutive ||
-      ResumeTemplate.atsCenterClassic ||
-      ResumeTemplate.atsProfessionalBlue =>
-        resume.effectiveBodyFontPt.toDouble(),
-      ResumeTemplate.creative ||
-      ResumeTemplate.classicSidebar ||
-      ResumeTemplate.detailsSidebar =>
-        ResumeTypography.bodyPt.toDouble(),
-    };
+    final bodyPx = resume.effectiveBodyFontPt.toDouble();
     final resumeBodyTheme = theme.copyWith(
       textTheme: base
           .apply(fontFamily: ff, bodyColor: onSurface, displayColor: onSurface)
@@ -90,47 +77,47 @@ class ResumePreviewCanvas extends StatelessWidget {
             bodyLarge: base.bodyLarge?.copyWith(
               fontFamily: ff,
               fontSize: bodyPx,
-              height: ResumeTypography.textLineHeight,
+              height: ResumeTypography.bodyTextLineHeight,
             ),
             bodyMedium: base.bodyMedium?.copyWith(
               fontFamily: ff,
               fontSize: bodyPx,
-              height: ResumeTypography.textLineHeight,
+              height: ResumeTypography.bodyTextLineHeight,
             ),
             bodySmall: base.bodySmall?.copyWith(
               fontFamily: ff,
               fontSize: bodyPx,
-              height: ResumeTypography.textLineHeight,
+              height: ResumeTypography.bodyTextLineHeight,
             ),
             titleSmall: base.titleSmall?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.headingPt,
-              height: ResumeTypography.textLineHeight,
+              height: ResumeTypography.bodyTextLineHeight,
             ),
             titleMedium: base.titleMedium?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.headingPt,
-              height: ResumeTypography.textLineHeight,
+              height: ResumeTypography.bodyTextLineHeight,
             ),
             titleLarge: base.titleLarge?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.namePt,
-              height: ResumeTypography.textLineHeight,
+              height: ResumeTypography.bodyTextLineHeight,
             ),
             headlineSmall: base.headlineSmall?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.namePt,
-              height: ResumeTypography.textLineHeight,
+              height: ResumeTypography.bodyTextLineHeight,
             ),
             headlineMedium: base.headlineMedium?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.namePt,
-              height: ResumeTypography.textLineHeight,
+              height: ResumeTypography.bodyTextLineHeight,
             ),
             labelLarge: base.labelLarge?.copyWith(
               fontFamily: ff,
               fontSize: ResumeTypography.headingPt,
-              height: ResumeTypography.textLineHeight,
+              height: ResumeTypography.bodyTextLineHeight,
             ),
           ),
     );
@@ -201,11 +188,13 @@ abstract final class _CorporatePdfMetrics {
   static const lineColor = Color(0xFFD7DCE2);
   static const dateMutedColor = Color(0xFF666B71);
 
-  static const bodyHeight = ResumeTypography.textLineHeight;
+  static const bodyHeight = ResumeTypography.bodyTextLineHeight;
 
   static double headerAvatar() => 95;
 
   static double headerNameSize() => ResumeTypography.darkHeaderNamePt;
+
+  static const String calibriFamily = 'Calibri';
 
   static const headerAfterAvatar = 25.0;
   static const afterHeader = 18.0;
@@ -253,11 +242,24 @@ class _DarkHeaderPreview extends StatelessWidget {
         (_darkHeaderExtraLineSpacingPx / bodyFontPx);
     final nameLineHeight =
         1.05 +
-        (_darkHeaderExtraLineSpacingPx / _CorporatePdfMetrics.headerNameSize());
-    final bodyStyle = TextStyle(
+        (_darkHeaderExtraLineSpacingPx / ResumeTypography.darkHeaderNamePt);
+    final bodyStyle = ResumeTypography.interPreviewStyle(
+      weight: ResumeTypography.darkHeaderBodyWeight,
       fontSize: bodyFontPx,
       height: bodyLineHeight,
       color: onSurface,
+    );
+    final contactStyle = ResumeTypography.interPreviewStyle(
+      weight: ResumeTypography.darkHeaderContactWeight,
+      fontSize: bodyFontPx,
+      color: headerOnColor,
+      height: 1.32,
+    );
+    final subtitleStyle = ResumeTypography.interPreviewStyle(
+      weight: ResumeTypography.darkHeaderSubtitleWeight,
+      fontSize: ResumeTypography.darkHeaderSubtitlePt,
+      color: ResumeTypography.darkHeaderSubtitleColor,
+      height: ResumeTypography.textLineHeight,
     );
 
     const headerPadding = EdgeInsets.fromLTRB(30, 28, 30, 26);
@@ -291,10 +293,10 @@ class _DarkHeaderPreview extends StatelessWidget {
                       child: Center(
                         child: Text(
                           _pdfAlignedInitials(resume),
-                          style: TextStyle(
+                          style: ResumeTypography.interPreviewStyle(
+                            weight: ResumeTypography.darkHeaderInitialsWeight,
+                            fontSize: ResumeTypography.darkHeaderInitialsPt,
                             color: headerOnColor,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
                             height: ResumeTypography.textLineHeight,
                           ),
                         ),
@@ -312,10 +314,10 @@ class _DarkHeaderPreview extends StatelessWidget {
                       children: [
                         Text(
                           name.toUpperCase(),
-                          style: TextStyle(
+                          style: ResumeTypography.interPreviewStyle(
+                            weight: ResumeTypography.darkHeaderNameWeight,
+                            fontSize: ResumeTypography.darkHeaderNamePt,
                             color: headerOnColor,
-                            fontSize: _CorporatePdfMetrics.headerNameSize(),
-                            fontWeight: FontWeight.w900,
                             height: nameLineHeight,
                             letterSpacing: 0.15,
                           ),
@@ -331,11 +333,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                               padding: EdgeInsets.only(top: index == 0 ? 0 : 3),
                               child: Text(
                                 contactLines[index],
-                                style: TextStyle(
-                                  color: headerOnColor,
-                                  fontSize: bodyFontPx + 1,
-                                  height: 1.32,
-                                ),
+                                style: contactStyle,
                               ),
                             ),
                         ],
@@ -377,6 +375,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                       item: item,
                       dateColor: _CorporatePdfMetrics.dateMutedColor,
                       bodyStyle: bodyStyle,
+                      subtitleStyle: subtitleStyle,
                     ),
                   ),
               ],
@@ -400,6 +399,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                     child: _CorporateEducationBlock(
                       item: item,
                       bodyStyle: bodyStyle,
+                      subtitleStyle: subtitleStyle,
                     ),
                   ),
               ],
@@ -431,6 +431,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                     child: _CorporateProjectBlock(
                       item: item,
                       bodyStyle: bodyStyle,
+                      subtitleStyle: subtitleStyle,
                     ),
                   ),
               ],
@@ -486,9 +487,9 @@ class _CorporatePdfLikeSection extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: ResumeTypography.interPreviewStyle(
+              weight: ResumeTypography.darkHeaderSectionTitleWeight,
               fontSize: ResumeTypography.darkHeaderSectionTitlePt,
-              fontWeight: FontWeight.w900,
               height: ResumeTypography.textLineHeight,
               color: titleColor,
               letterSpacing: 0.1,
@@ -565,16 +566,16 @@ class _CorporateExperienceBlock extends StatelessWidget {
     required this.item,
     required this.dateColor,
     required this.bodyStyle,
+    required this.subtitleStyle,
   });
 
   final WorkExperience item;
   final Color dateColor;
   final TextStyle bodyStyle;
+  final TextStyle subtitleStyle;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final onSurface = theme.colorScheme.onSurface;
     final start = item.startDate.trim();
     final end = item.endDate.trim();
     final dateStr = start.isEmpty && end.isEmpty
@@ -599,11 +600,7 @@ class _CorporateExperienceBlock extends StatelessWidget {
             Expanded(
               child: Text(
                 '${item.role.ifBlank('Role')} / ${item.company.ifBlank('Company')}',
-                style: bodyStyle.copyWith(
-                  color: onSurface,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 15,
-                ),
+                style: subtitleStyle,
               ),
             ),
             if (dateStr.isNotEmpty)
@@ -651,15 +648,18 @@ class _CorporateExperienceBlock extends StatelessWidget {
 }
 
 class _CorporateEducationBlock extends StatelessWidget {
-  const _CorporateEducationBlock({required this.item, required this.bodyStyle});
+  const _CorporateEducationBlock({
+    required this.item,
+    required this.bodyStyle,
+    required this.subtitleStyle,
+  });
 
   final EducationItem item;
   final TextStyle bodyStyle;
+  final TextStyle subtitleStyle;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final onSurface = theme.colorScheme.onSurface;
     // Same line as template card: `Institution  |  2014 - 2018`
     final titleLine = corporateEducationTitleLine(
       item.institution,
@@ -673,12 +673,7 @@ class _CorporateEducationBlock extends StatelessWidget {
       children: [
         Text(
           titleLine,
-          style: bodyStyle.copyWith(
-            color: onSurface,
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-            height: 1.0,
-          ),
+          style: subtitleStyle.copyWith(height: 1.0),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -690,10 +685,15 @@ class _CorporateEducationBlock extends StatelessWidget {
 }
 
 class _CorporateProjectBlock extends StatelessWidget {
-  const _CorporateProjectBlock({required this.item, required this.bodyStyle});
+  const _CorporateProjectBlock({
+    required this.item,
+    required this.bodyStyle,
+    required this.subtitleStyle,
+  });
 
   final ProjectItem item;
   final TextStyle bodyStyle;
+  final TextStyle subtitleStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -702,7 +702,7 @@ class _CorporateProjectBlock extends StatelessWidget {
       children: [
         Text(
           item.title.ifBlank('Project'),
-          style: bodyStyle.copyWith(fontWeight: FontWeight.w900, fontSize: 15),
+          style: subtitleStyle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

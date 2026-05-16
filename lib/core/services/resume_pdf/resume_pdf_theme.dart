@@ -1,25 +1,27 @@
 import 'package:flutter/services.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../resume_font_weight.dart';
 import '../../resume_text_font.dart';
+import 'inter_pdf_fonts.dart';
 
 /// Cached PDF themes so repeated exports do not reload font bytes.
 /// Key: `fontName_bodyPt` (body pt affects default/bullet styles).
-final Map<String, pw.ThemeData> _resumePdfThemeCache = {};
+final Map<String, pw.ThemeData> resumePdfThemeCache = {};
 
 /// Same [ResumeTextFont] choices as the in-app resume preview ([ResumePreviewCard]).
 /// Embeds bundled TTFs so exported PDFs match the template typography instead of
 /// built-in Helvetica.
 ///
-/// [bodyFontPt] overrides default body size (e.g. Dark Header 11–13); defaults to [ResumeTypography.bodyPt].
+/// [bodyFontPt] overrides default body size (10–12 pt); defaults to [ResumeTypography.bodyPt].
 Future<pw.ThemeData> resumePdfThemeForBodyFont(
   ResumeTextFont font, {
   double? bodyFontPt,
 }) async {
   final pt = bodyFontPt ?? ResumeTypography.bodyPt;
-  final lineSpacing = pt * (ResumeTypography.textLineHeight - 1);
+  final lineSpacing = ResumeTypography.bodyPdfLineSpacingFor(pt);
   final cacheKey = '${font.name}_$pt';
-  final cached = _resumePdfThemeCache[cacheKey];
+  final cached = resumePdfThemeCache[cacheKey];
   if (cached != null) {
     return cached;
   }
@@ -29,14 +31,14 @@ Future<pw.ThemeData> resumePdfThemeForBodyFont(
       bodyPt: pt,
       lineSpacing: lineSpacing,
     );
-    _resumePdfThemeCache[cacheKey] = theme;
+    resumePdfThemeCache[cacheKey] = theme;
     return theme;
   } catch (_) {
     final fallback = _fallbackHelveticaTheme(
       bodyPt: pt,
       lineSpacing: lineSpacing,
     );
-    _resumePdfThemeCache[cacheKey] = fallback;
+    resumePdfThemeCache[cacheKey] = fallback;
     return fallback;
   }
 }
@@ -99,7 +101,7 @@ class _PdfFontSlots {
   final pw.Font boldItalic;
 }
 
-Future<pw.Font> _ttf(String assetPath) async {
+Future<pw.Font> loadPdfTtf(String assetPath) async {
   final data = await rootBundle.load(assetPath);
   return pw.Font.ttf(data);
 }
@@ -107,20 +109,28 @@ Future<pw.Font> _ttf(String assetPath) async {
 Future<_PdfFontSlots> _loadPdfFonts(ResumeTextFont font) async {
   switch (font) {
     case ResumeTextFont.inter:
-      final f = await _ttf('assets/fonts/inter/Inter-Variable.ttf');
-      return _PdfFontSlots(base: f, bold: f, italic: f, boldItalic: f);
+      final inter = await loadInterPdfFonts();
+      return _PdfFontSlots(
+        base: inter.w400,
+        bold: inter.fontFor(ResumeFontWeight.w800),
+        italic: inter.italic,
+        boldItalic: inter.fontFor(ResumeFontWeight.w800),
+      );
     case ResumeTextFont.aptos:
-      final f = await _ttf('assets/fonts/sourcesans3/SourceSans3-Variable.ttf');
+      final f = await loadPdfTtf('assets/fonts/sourcesans3/SourceSans3-Variable.ttf');
       return _PdfFontSlots(base: f, bold: f, italic: f, boldItalic: f);
     case ResumeTextFont.calibri:
-      final reg = await _ttf('assets/fonts/carlito/Carlito-Regular.ttf');
-      final bold = await _ttf('assets/fonts/carlito/Carlito-Bold.ttf');
-      return _PdfFontSlots(base: reg, bold: bold, italic: reg, boldItalic: bold);
+      final reg = await loadPdfTtf('assets/fonts/carlito/Carlito-Regular.ttf');
+      final bold = await loadPdfTtf('assets/fonts/carlito/Carlito-Bold.ttf');
+      final italic = await loadPdfTtf('assets/fonts/carlito/Carlito-Italic.ttf');
+      return _PdfFontSlots(
+        base: reg,
+        bold: bold,
+        italic: italic,
+        boldItalic: bold,
+      );
     case ResumeTextFont.arial:
-      final f = await _ttf('assets/fonts/arimo/Arimo-Variable.ttf');
-      return _PdfFontSlots(base: f, bold: f, italic: f, boldItalic: f);
-    case ResumeTextFont.helvetica:
-      final f = await _ttf('assets/fonts/worksans/WorkSans-Variable.ttf');
+      final f = await loadPdfTtf('assets/fonts/arimo/Arimo-Variable.ttf');
       return _PdfFontSlots(base: f, bold: f, italic: f, boldItalic: f);
   }
 }

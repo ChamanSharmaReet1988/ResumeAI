@@ -101,12 +101,17 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
   };
 }
 
+/// Body font size slider range for resume preview + PDF export (pt).
+const int kResumeBodyFontPtMin = 10;
+const int kResumeBodyFontPtMax = 12;
+const int kResumeBodyFontPtDefault = 11;
+
 extension ResumeCorporateStyleX on ResumeData {
-  /// Clamped 11–13 for preview + PDF body text (Dark Header).
+  /// Clamped [kResumeBodyFontPtMin]–[kResumeBodyFontPtMax] for preview + PDF body text.
   int get effectiveBodyFontPt {
     final v = bodyFontPt;
-    if (v < 11) return 11;
-    if (v > 13) return 13;
+    if (v < kResumeBodyFontPtMin) return kResumeBodyFontPtMin;
+    if (v > kResumeBodyFontPtMax) return kResumeBodyFontPtMax;
     return v;
   }
 

@@ -1,0 +1,132 @@
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+
+import '../../resume_font_weight.dart';
+import '../../resume_text_font.dart';
+import 'resume_pdf_theme.dart';
+
+/// Embedded Inter static cuts for PDF export (weights 100–800).
+class InterPdfFonts {
+  InterPdfFonts._({
+    required Map<int, pw.Font> upright,
+    required pw.Font italic,
+  }) : _upright = upright,
+       italic = italic;
+
+  final Map<int, pw.Font> _upright;
+  final pw.Font italic;
+
+  pw.Font fontFor(int weight, {bool useItalic = false}) {
+    if (useItalic) {
+      return italic;
+    }
+    final key = ResumeFontWeight.normalize(weight);
+    final font = _upright[key];
+    if (font != null) {
+      return font;
+    }
+    return _upright[ResumeFontWeight.w400]!;
+  }
+
+  pw.Font get w400 => fontFor(ResumeFontWeight.w400);
+
+  pw.Font get w700 => fontFor(ResumeFontWeight.w700);
+}
+
+pw.TextStyle interPdfTextStyle(
+  InterPdfFonts fonts,
+  int weight, {
+  double? fontSize,
+  PdfColor? color,
+  double? lineSpacing,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) {
+  final useItalic = fontStyle == pw.FontStyle.italic;
+  final font = fonts.fontFor(weight, useItalic: useItalic);
+  return pw.TextStyle(
+    inherit: false,
+    color: color ?? PdfColors.black,
+    font: font,
+    fontNormal: font,
+    fontBold: font,
+    fontItalic: font,
+    fontBoldItalic: font,
+    fontSize: fontSize ?? ResumeTypography.bodyPt,
+    fontWeight: pw.FontWeight.normal,
+    fontStyle: useItalic ? pw.FontStyle.italic : pw.FontStyle.normal,
+    letterSpacing: 0,
+    wordSpacing: 1,
+    lineSpacing: lineSpacing ?? 0,
+    height: 1,
+    decoration: pw.TextDecoration.none,
+    decorationStyle: pw.TextDecorationStyle.solid,
+    decorationThickness: 1,
+    renderingMode: PdfTextRenderingMode.fill,
+  );
+}
+
+pw.TextStyle interBodyPdfTextStyle(
+  InterPdfFonts fonts,
+  double bodyFontPt, {
+  int weight = ResumeFontWeight.w400,
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    interPdfTextStyle(
+      fonts,
+      weight,
+      fontSize: bodyFontPt,
+      color: color,
+      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyFontPt),
+      fontStyle: fontStyle,
+    );
+
+pw.TextStyle darkHeaderInitialsPdfStyle(
+  InterPdfFonts fonts,
+  PdfColor color,
+) =>
+    interPdfTextStyle(
+      fonts,
+      ResumeTypography.darkHeaderInitialsWeight,
+      fontSize: ResumeTypography.darkHeaderInitialsPt,
+      color: color,
+    );
+
+Future<InterPdfFonts> loadInterPdfFonts() async {
+  final upright = <int, pw.Font>{
+    ResumeFontWeight.w100: await loadPdfTtf('assets/fonts/inter/Inter-Thin.ttf'),
+    ResumeFontWeight.w200: await loadPdfTtf(
+      'assets/fonts/inter/Inter-ExtraLight.ttf',
+    ),
+    ResumeFontWeight.w300: await loadPdfTtf('assets/fonts/inter/Inter-Light.ttf'),
+    ResumeFontWeight.w400: await loadPdfTtf('assets/fonts/inter/Inter-Regular.ttf'),
+    ResumeFontWeight.w500: await loadPdfTtf('assets/fonts/inter/Inter-Medium.ttf'),
+    ResumeFontWeight.w600: await loadPdfTtf('assets/fonts/inter/Inter-SemiBold.ttf'),
+    ResumeFontWeight.w700: await loadPdfTtf('assets/fonts/inter/Inter-Bold.ttf'),
+    ResumeFontWeight.w800: await loadPdfTtf('assets/fonts/inter/Inter-ExtraBold.ttf'),
+  };
+  final italic = await loadPdfTtf('assets/fonts/inter/Inter-Light.ttf');
+  return InterPdfFonts._(upright: upright, italic: italic);
+}
+
+Future<pw.ThemeData> resumePdfThemeForInter(
+  InterPdfFonts fonts, {
+  required double bodyFontPt,
+}) async {
+  final cacheKey = 'inter_${bodyFontPt.toStringAsFixed(1)}';
+  final cached = resumePdfThemeCache[cacheKey];
+  if (cached != null) {
+    return cached;
+  }
+  final theme = pw.ThemeData.withFont(
+    base: fonts.w400,
+    bold: fonts.fontFor(ResumeFontWeight.w800),
+    italic: fonts.italic,
+    boldItalic: fonts.fontFor(ResumeFontWeight.w800),
+  ).copyWith(
+    defaultTextStyle: interBodyPdfTextStyle(fonts, bodyFontPt),
+    bulletStyle: interBodyPdfTextStyle(fonts, bodyFontPt),
+  );
+  resumePdfThemeCache[cacheKey] = theme;
+  return theme;
+}

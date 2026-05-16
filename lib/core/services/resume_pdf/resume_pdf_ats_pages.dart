@@ -12,7 +12,10 @@ pw.Widget _atsHighlightedSummaryText(
   required bool highlightSummary,
   required PdfColor highlightColor,
 }) {
-  final style = pw.TextStyle(fontSize: bodyPt, lineSpacing: 2);
+  final style = pw.TextStyle(
+    fontSize: bodyPt,
+    lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+  );
   if (!highlightSummary) {
     return pw.Text(summary, style: style);
   }

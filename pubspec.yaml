@@ -90,8 +90,21 @@ flutter:
     - assets/fonts/sourcesans3/SourceSans3-Variable.ttf
     - assets/fonts/carlito/Carlito-Regular.ttf
     - assets/fonts/carlito/Carlito-Bold.ttf
+    - assets/fonts/carlito/Carlito-Italic.ttf
+    - assets/fonts/nunito/Nunito-Light.ttf
+    - assets/fonts/nunito/Nunito-Medium.ttf
+    - assets/fonts/nunito/Nunito-SemiBold.ttf
+    - assets/fonts/nunito/Nunito-ExtraBold.ttf
     - assets/fonts/arimo/Arimo-Variable.ttf
     - assets/fonts/worksans/WorkSans-Variable.ttf
+    - assets/fonts/inter/Inter-Thin.ttf
+    - assets/fonts/inter/Inter-ExtraLight.ttf
+    - assets/fonts/inter/Inter-Light.ttf
+    - assets/fonts/inter/Inter-Regular.ttf
+    - assets/fonts/inter/Inter-Medium.ttf
+    - assets/fonts/inter/Inter-SemiBold.ttf
+    - assets/fonts/inter/Inter-Bold.ttf
+    - assets/fonts/inter/Inter-ExtraBold.ttf
   fonts:
     - family: Nunito
       fonts:
@@ -158,7 +171,22 @@ flutter:
     # Resume body text (open-licensed; labels in UI use common office names).
     - family: Inter
       fonts:
-        - asset: assets/fonts/inter/Inter-Variable.ttf
+        - asset: assets/fonts/inter/Inter-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/inter/Inter-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/inter/Inter-Light.ttf
+          weight: 300
+        - asset: assets/fonts/inter/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/inter/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/inter/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/inter/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/inter/Inter-ExtraBold.ttf
+          weight: 800
     - family: Source Sans 3
       fonts:
         - asset: assets/fonts/sourcesans3/SourceSans3-Variable.ttf
@@ -170,17 +198,27 @@ flutter:
           weight: 700
     - family: Calibri
       fonts:
+        - asset: assets/fonts/nunito/Nunito-Light.ttf
+          weight: 300
         - asset: assets/fonts/carlito/Carlito-Regular.ttf
           weight: 400
+        - asset: assets/fonts/nunito/Nunito-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/nunito/Nunito-SemiBold.ttf
+          weight: 600
         - asset: assets/fonts/carlito/Carlito-Bold.ttf
           weight: 700
+        - asset: assets/fonts/nunito/Nunito-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/carlito/Carlito-Italic.ttf
+          weight: 400
+          style: italic
     - family: Arimo
       fonts:
         - asset: assets/fonts/arimo/Arimo-Variable.ttf
     - family: Work Sans
       fonts:
         - asset: assets/fonts/worksans/WorkSans-Variable.ttf
-
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
