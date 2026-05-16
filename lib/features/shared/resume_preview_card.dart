@@ -253,7 +253,7 @@ class _DarkHeaderPreview extends StatelessWidget {
       weight: ResumeTypography.darkHeaderContactWeight,
       fontSize: bodyFontPx,
       color: headerOnColor,
-      height: 1.32,
+      height: ResumeTypography.textLineHeight,
     );
     final subtitleStyle = ResumeTypography.interPreviewStyle(
       weight: ResumeTypography.darkHeaderSubtitleWeight,

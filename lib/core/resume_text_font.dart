@@ -34,6 +34,12 @@ abstract final class ResumeTypography {
   /// Dark Header font weights (see [ResumeFontWeight]).
   static const int darkHeaderBodyWeight = 400;
   static const int darkHeaderContactWeight = 300;
+
+  /// Line height for dark header contact lines (1 or 2 rows).
+  static const double darkHeaderContactLineHeight = 1.4;
+
+  static double darkHeaderContactPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (darkHeaderContactLineHeight - 1);
   static const int darkHeaderInitialsWeight = 500;
   static const int darkHeaderNameWeight = 700;
   static const int darkHeaderSectionTitleWeight = 600;

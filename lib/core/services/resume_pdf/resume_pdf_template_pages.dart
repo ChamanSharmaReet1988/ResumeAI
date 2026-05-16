@@ -95,7 +95,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                                   ResumeTypography.darkHeaderContactWeight,
                                   fontSize: headerContactFontPt,
                                   color: headerOnColor,
-                                  lineSpacing: 1.6,
+                                  lineSpacing: ResumeTypography
+                                      .darkHeaderContactPdfLineSpacingFor(
+                                    headerContactFontPt,
+                                  ),
                                 ),
                               ),
                             ),
