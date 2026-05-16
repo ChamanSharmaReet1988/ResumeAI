@@ -788,7 +788,9 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final template = item.resumeTemplate!;
     if (template == ResumeTemplate.corporate) {
-      return const _LargeTemplateArtPreview(child: _DarkHeaderTemplateArt());
+      return const _LargeTemplateArtPreview(
+        child: _DarkHeaderTemplateArt(detailed: true),
+      );
     }
     if (template == ResumeTemplate.creative) {
       return const _LargeTemplateArtPreview(
@@ -1323,13 +1325,91 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
 }
 
 class _DarkHeaderTemplateArt extends StatelessWidget {
-  const _DarkHeaderTemplateArt();
+  const _DarkHeaderTemplateArt({this.detailed = false});
+
+  final bool detailed;
 
   @override
   Widget build(BuildContext context) {
     const text = Color(0xFF2E3135);
     const header = Color(0xFF31353B);
     const line = Color(0xFFD8DDE4);
+    final summary = detailed
+        ? 'Client success manager with 7+ years leading onboarding, renewals, and cross-functional account programs for SaaS teams. Known for improving adoption, reducing churn risk, and building repeatable playbooks across sales, support, and product.'
+        : 'Client success manager focused on renewals and onboarding.';
+    final experienceBlocks = detailed
+        ? const [
+            _MiniExperienceBlock(
+              title: 'Client Success Lead  /  Ember Cloud',
+              subtitle: 'Austin, TX',
+              dates: '2021 - Present',
+              bullets: [
+                'Lifted renewal rate by 14% through proactive risk reviews.',
+                'Built a quarterly adoption program used across enterprise accounts.',
+              ],
+            ),
+            _MiniExperienceBlock(
+              title: 'Onboarding Manager  /  Harbor Suite',
+              subtitle: 'Remote',
+              dates: '2018 - 2021',
+              bullets: [
+                'Cut time-to-value by 22% with milestone-based onboarding plans.',
+                'Partnered with support to standardize handoff and escalation workflows.',
+              ],
+            ),
+          ]
+        : const [
+            _MiniExperienceBlock(
+              title: 'Client Success Lead  /  Ember Cloud',
+              subtitle: 'Austin, TX',
+              dates: '2021 - Present',
+              bullets: [
+                'Lifted renewal rate by 14% through proactive risk reviews.',
+              ],
+            ),
+          ];
+    final educationLines = detailed
+        ? const [
+            (
+              title: 'Northeastern University | 2014 - 2018',
+              subtitle: 'BBA, Communication Strategy'
+            ),
+            (
+              title: 'SuccessHACKER Academy | 2020',
+              subtitle: 'Customer Success Leadership Certificate'
+            ),
+          ]
+        : const [
+            (
+              title: 'Northeastern University | 2014 - 2018',
+              subtitle: 'BBA, Communication Strategy'
+            ),
+          ];
+    final skills = detailed
+        ? const [
+            'Renewal strategy',
+            'CRM operations',
+            'Onboarding design',
+            'Executive business reviews',
+          ]
+        : const ['Renewal strategy', 'CRM operations'];
+    final projects = detailed
+        ? const [
+            (
+              title: 'Customer Health Dashboard',
+              subtitle: 'Shipped dashboard for weekly success reviews.'
+            ),
+            (
+              title: 'Renewal Risk Playbook',
+              subtitle: 'Created scoring and outreach triggers for at-risk accounts.'
+            ),
+          ]
+        : const [
+            (
+              title: 'Customer Health Dashboard',
+              subtitle: 'Shipped dashboard for weekly reviews.'
+            ),
+          ];
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -1427,56 +1507,53 @@ class _DarkHeaderTemplateArt extends StatelessWidget {
                         lineColor: line,
                       ),
                       const SizedBox(height: 3),
-                      const Text(
-                        'Client success manager focused on renewals and onboarding.',
-                      ),
+                      Text(summary),
                       const SizedBox(height: 4),
                       const _MiniSectionHeading(
                         title: 'EXPERIENCE',
                         lineColor: line,
                       ),
                       const SizedBox(height: 4),
-                      const _MiniExperienceBlock(
-                        title: 'Client Success Lead  /  Ember Cloud',
-                        subtitle: 'Austin, TX',
-                        dates: '2021 - Present',
-                        bullets: [
-                          'Lifted renewal rate by 14% through proactive risk reviews.',
-                        ],
-                      ),
+                      for (final block in experienceBlocks) ...[
+                        block,
+                        const SizedBox(height: 4),
+                      ],
                       const SizedBox(height: 4),
                       const _MiniSectionHeading(
                         title: 'EDUCATION',
                         lineColor: line,
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Northeastern University | 2014 - 2018',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text('BBA, Communication Strategy'),
+                      for (final education in educationLines) ...[
+                        Text(
+                          education.title,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(education.subtitle),
+                        const SizedBox(height: 4),
+                      ],
                       const SizedBox(height: 4),
                       const _MiniSectionHeading(
                         title: 'SKILLS',
                         lineColor: line,
                       ),
                       const SizedBox(height: 4),
-                      const _MiniBulletColumn(
-                        items: ['Renewal strategy', 'CRM operations'],
-                      ),
+                      _MiniBulletColumn(items: skills),
                       const SizedBox(height: 4),
                       const _MiniSectionHeading(
                         title: 'PROJECTS',
                         lineColor: line,
                       ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Customer Health Dashboard',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text('Shipped dashboard for weekly reviews.'),
+                      for (final project in projects) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          project.title,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(project.subtitle),
+                      ],
                     ],
                   ),
                 ),
