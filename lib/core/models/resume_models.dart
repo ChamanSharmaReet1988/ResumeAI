@@ -82,7 +82,7 @@ extension ResumeTemplateX on ResumeTemplate {
   ResumeTemplate get userFacingTemplate => this;
 
   String get label => switch (userFacingTemplate) {
-    ResumeTemplate.corporate => 'Dark Header',
+    ResumeTemplate.corporate => 'Corporate',
     ResumeTemplate.creative => 'Profile Sidebar',
     ResumeTemplate.classicSidebar => 'Classic Sidebar',
     ResumeTemplate.detailsSidebar => 'Details Sidebar',
@@ -145,7 +145,7 @@ extension ResumeTemplateX on ResumeTemplate {
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
   String get fontStyleLabel => switch (userFacingTemplate) {
-    ResumeTemplate.corporate => 'Sans · dark header',
+    ResumeTemplate.corporate => 'Sans · corporate header',
     ResumeTemplate.creative => 'Sans · profile sidebar',
     ResumeTemplate.classicSidebar => 'Sans · classic sidebar',
     ResumeTemplate.detailsSidebar => 'Sans · details sidebar',

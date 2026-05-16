@@ -310,40 +310,40 @@ class _TemplateDetailScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          padding: const EdgeInsets.fromLTRB(0, 12, 0, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 child: Material(
                   color: Colors.transparent,
-                  child: Padding(
-                    padding: const EdgeInsets.all(2),
-                    child: KeyedSubtree(
-                      key: Key('template-detail-preview-${item.id}'),
-                      child: item.resumeTemplate != null
-                          ? _ResumeTemplateDetailPreview(
-                              item: item,
-                              paletteSeed: paletteSeed,
-                            )
-                          : _TemplatePreviewArt(
-                              item: item,
-                              paletteSeed: paletteSeed,
-                              showPremiumBadgeOnPage: true,
-                              premiumBadgeRightPadding: 10,
-                              premiumBadgeSize: 18,
-                              badgeMetricsInScreenPixels: true,
-                            ),
-                    ),
+                  child: KeyedSubtree(
+                    key: Key('template-detail-preview-${item.id}'),
+                    child: item.resumeTemplate != null
+                        ? _ResumeTemplateDetailPreview(
+                            item: item,
+                            paletteSeed: paletteSeed,
+                          )
+                        : _TemplatePreviewArt(
+                            item: item,
+                            paletteSeed: paletteSeed,
+                            showPremiumBadgeOnPage: true,
+                            premiumBadgeRightPadding: 10,
+                            premiumBadgeSize: 18,
+                            badgeMetricsInScreenPixels: true,
+                          ),
                   ),
                 ),
               ),
               if (onUseTemplate != null) ...[
                 const SizedBox(height: 16),
-                FilledButton(
-                  key: const Key('use-template-button'),
-                  onPressed: onUseTemplate,
-                  child: const Text('Use template'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: FilledButton(
+                    key: const Key('use-template-button'),
+                    onPressed: onUseTemplate,
+                    child: const Text('Use template'),
+                  ),
                 ),
               ],
             ],
@@ -463,7 +463,7 @@ const _professionalResumeCards = <_TemplateTileData>[
     id: 'dark-header',
     resumeTemplate: ResumeTemplate.corporate,
     previewKind: _TemplatePreviewKind.darkHeaderResume,
-    headline: 'Dark Header',
+    headline: 'Corporate',
     caption: 'Bold top band with compact professional sections.',
     isPremium: false,
   ),
@@ -639,7 +639,13 @@ class _TemplatePreviewArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final preview = switch (item.previewKind) {
-      _TemplatePreviewKind.darkHeaderResume => const _DarkHeaderTemplateArt(),
+      _TemplatePreviewKind.darkHeaderResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _darkHeaderTemplateResume,
+          paletteSeed,
+        ),
+        fit: _ResumeTemplatePreviewFit.tile,
+      ),
       _TemplatePreviewKind.profileSidebarResume =>
         showPremiumBadgeOnPage
             ? _ResumeTemplatePreviewArt(
@@ -788,8 +794,12 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final template = item.resumeTemplate!;
     if (template == ResumeTemplate.corporate) {
-      return const _LargeTemplateArtPreview(
-        child: _DarkHeaderTemplateArt(detailed: true),
+      return _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _darkHeaderTemplateResume,
+          paletteSeed,
+        ),
+        fit: _ResumeTemplatePreviewFit.detail,
       );
     }
     if (template == ResumeTemplate.creative) {
@@ -953,6 +963,14 @@ ResumeData _applyTemplatePreviewPalette(
   ResumeData sample,
   ResumeData? paletteSeed,
 ) {
+  // Dark Header always shows the first color-picker swatch (#31353B).
+  if (sample.template == ResumeTemplate.corporate) {
+    return sample.copyWith(
+      corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+        ResumeTemplate.corporate,
+      ),
+    );
+  }
   if (paletteSeed == null) {
     return sample;
   }
@@ -1061,6 +1079,15 @@ final ResumeData _atsFullSampleResume = ResumeData(
 
 ResumeData _atsSampleFor(ResumeTemplate template) =>
     _atsFullSampleResume.copyWith(template: template);
+
+/// Dark Header template tile + detail preview (same typography as builder/PDF).
+final ResumeData _darkHeaderTemplateResume = _atsFullSampleResume.copyWith(
+  id: 'template-dark-header',
+  template: ResumeTemplate.corporate,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.corporate,
+  ),
+);
 
 final ResumeData _profileSidebarTemplateResume = ResumeData(
   id: 'template-profile-sidebar',
@@ -1275,293 +1302,72 @@ final ResumeData _detailsSidebarTemplateResume = ResumeData(
   corporateColorPresetIndex: 4,
 );
 
+enum _ResumeTemplatePreviewFit { tile, detail }
+
 class _ResumeTemplatePreviewArt extends StatelessWidget {
-  const _ResumeTemplatePreviewArt({required this.resume});
+  const _ResumeTemplatePreviewArt({
+    required this.resume,
+    this.fit = _ResumeTemplatePreviewFit.tile,
+  });
 
   final ResumeData resume;
-  static const double _pageWidth = 210;
-  static const double _pageHeight = 297;
+  final _ResumeTemplatePreviewFit fit;
+
+  /// Matches [PdfPageFormat.a4] width in points (same as PDF export).
+  static const double _pageWidth = 595.28;
+  /// Screen padding below the scaled page on the full template screen.
+  static const double _detailBottomInset = 48;
+
+  /// Small gap at the bottom of grid tiles.
+  static const double _tileBottomInset = 16;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final scale = math.min(
-          constraints.maxWidth / _pageWidth,
-          constraints.maxHeight / _pageHeight,
+        final targetWidth = constraints.maxWidth;
+        final targetHeight = constraints.maxHeight;
+        if (!targetWidth.isFinite || targetWidth <= 0) {
+          return const SizedBox.shrink();
+        }
+
+        final bottomInset = switch (fit) {
+          _ResumeTemplatePreviewFit.detail => _detailBottomInset,
+          _ResumeTemplatePreviewFit.tile => _tileBottomInset,
+        };
+        final hasHeight = targetHeight.isFinite && targetHeight > 0;
+        final contentHeight = hasHeight
+            ? (targetHeight - bottomInset).clamp(0.0, targetHeight)
+            : null;
+
+        final pagePreview = FittedBox(
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          child: SizedBox(
+            width: _pageWidth,
+            child: ResumePreviewCanvas(
+              resume: resume,
+              showDebugLabel: false,
+              scrollable: false,
+              showAllContent: true,
+            ),
+          ),
         );
-        final safeScale = (scale.isFinite && scale > 0) ? scale : 1.0;
 
         return ColoredBox(
           color: Colors.white,
           child: ClipRect(
-            child: OverflowBox(
-              minWidth: _pageWidth,
-              maxWidth: _pageWidth,
-              minHeight: _pageHeight,
-              maxHeight: _pageHeight,
-              alignment: Alignment.topCenter,
-              child: Transform.scale(
-                scale: safeScale,
-                alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: _pageWidth,
-                  height: _pageHeight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: ResumePreviewCanvas(
-                      resume: resume,
-                      showDebugLabel: false,
-                    ),
-                  ),
-                ),
+            child: SizedBox(
+              width: targetWidth,
+              height: contentHeight,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomInset),
+                child: pagePreview,
               ),
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _DarkHeaderTemplateArt extends StatelessWidget {
-  const _DarkHeaderTemplateArt({this.detailed = false});
-
-  final bool detailed;
-
-  @override
-  Widget build(BuildContext context) {
-    const text = Color(0xFF2E3135);
-    const header = Color(0xFF31353B);
-    const line = Color(0xFFD8DDE4);
-    final summary = detailed
-        ? 'Client success manager with 7+ years leading onboarding, renewals, and cross-functional account programs for SaaS teams. Known for improving adoption, reducing churn risk, and building repeatable playbooks across sales, support, and product.'
-        : 'Client success manager focused on renewals and onboarding.';
-    final experienceBlocks = detailed
-        ? const [
-            _MiniExperienceBlock(
-              title: 'Client Success Lead  /  Ember Cloud',
-              subtitle: 'Austin, TX',
-              dates: '2021 - Present',
-              bullets: [
-                'Lifted renewal rate by 14% through proactive risk reviews.',
-                'Built a quarterly adoption program used across enterprise accounts.',
-              ],
-            ),
-            _MiniExperienceBlock(
-              title: 'Onboarding Manager  /  Harbor Suite',
-              subtitle: 'Remote',
-              dates: '2018 - 2021',
-              bullets: [
-                'Cut time-to-value by 22% with milestone-based onboarding plans.',
-                'Partnered with support to standardize handoff and escalation workflows.',
-              ],
-            ),
-          ]
-        : const [
-            _MiniExperienceBlock(
-              title: 'Client Success Lead  /  Ember Cloud',
-              subtitle: 'Austin, TX',
-              dates: '2021 - Present',
-              bullets: [
-                'Lifted renewal rate by 14% through proactive risk reviews.',
-              ],
-            ),
-          ];
-    final educationLines = detailed
-        ? const [
-            (
-              title: 'Northeastern University | 2014 - 2018',
-              subtitle: 'BBA, Communication Strategy'
-            ),
-            (
-              title: 'SuccessHACKER Academy | 2020',
-              subtitle: 'Customer Success Leadership Certificate'
-            ),
-          ]
-        : const [
-            (
-              title: 'Northeastern University | 2014 - 2018',
-              subtitle: 'BBA, Communication Strategy'
-            ),
-          ];
-    final skills = detailed
-        ? const [
-            'Renewal strategy',
-            'CRM operations',
-            'Onboarding design',
-            'Executive business reviews',
-          ]
-        : const ['Renewal strategy', 'CRM operations'];
-    final projects = detailed
-        ? const [
-            (
-              title: 'Customer Health Dashboard',
-              subtitle: 'Shipped dashboard for weekly success reviews.'
-            ),
-            (
-              title: 'Renewal Risk Playbook',
-              subtitle: 'Created scoring and outreach triggers for at-risk accounts.'
-            ),
-          ]
-        : const [
-            (
-              title: 'Customer Health Dashboard',
-              subtitle: 'Shipped dashboard for weekly reviews.'
-            ),
-          ];
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.zero,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.zero,
-        child: SingleChildScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 56,
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 7),
-                decoration: const BoxDecoration(
-                  color: header,
-                  borderRadius: BorderRadius.vertical(top: Radius.zero),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 33,
-                      height: 33,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.white70),
-                      ),
-                      child: const Text(
-                        'ML',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'MAYA LOPEZ',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Austin, TX 78701 | +1 512 555 0148',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 4.5,
-                              height: 1.35,
-                            ),
-                          ),
-                          Text(
-                            'portfolio.dev/maya | github.com/mayalopez | linkedin.com/in/mayalopez',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 4.5,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                child: DefaultTextStyle(
-                  style: const TextStyle(
-                    fontSize: 4.6,
-                    height: 1.3,
-                    color: text,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _MiniSectionHeading(
-                        title: 'SUMMARY',
-                        lineColor: line,
-                      ),
-                      const SizedBox(height: 3),
-                      Text(summary),
-                      const SizedBox(height: 4),
-                      const _MiniSectionHeading(
-                        title: 'EXPERIENCE',
-                        lineColor: line,
-                      ),
-                      const SizedBox(height: 4),
-                      for (final block in experienceBlocks) ...[
-                        block,
-                        const SizedBox(height: 4),
-                      ],
-                      const SizedBox(height: 4),
-                      const _MiniSectionHeading(
-                        title: 'EDUCATION',
-                        lineColor: line,
-                      ),
-                      const SizedBox(height: 4),
-                      for (final education in educationLines) ...[
-                        Text(
-                          education.title,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(education.subtitle),
-                        const SizedBox(height: 4),
-                      ],
-                      const SizedBox(height: 4),
-                      const _MiniSectionHeading(
-                        title: 'SKILLS',
-                        lineColor: line,
-                      ),
-                      const SizedBox(height: 4),
-                      _MiniBulletColumn(items: skills),
-                      const SizedBox(height: 4),
-                      const _MiniSectionHeading(
-                        title: 'PROJECTS',
-                        lineColor: line,
-                      ),
-                      for (final project in projects) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          project.title,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(project.subtitle),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -4015,32 +3821,6 @@ class _MiniCoverLetterParagraph extends StatelessWidget {
   }
 }
 
-class _MiniSectionHeading extends StatelessWidget {
-  const _MiniSectionHeading({required this.title, required this.lineColor});
-
-  final String title;
-  final Color lineColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 5.6,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.25,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Container(height: 0.8, color: lineColor),
-      ],
-    );
-  }
-}
-
 class _MiniSidebarHeading extends StatelessWidget {
   const _MiniSidebarHeading({required this.title, required this.lineColor});
 
@@ -4233,58 +4013,6 @@ class _MiniBulletColumn extends StatelessWidget {
               ],
             ),
           ),
-      ],
-    );
-  }
-}
-
-class _MiniExperienceBlock extends StatelessWidget {
-  const _MiniExperienceBlock({
-    required this.title,
-    required this.subtitle,
-    required this.dates,
-    required this.bullets,
-  });
-
-  final String title;
-  final String subtitle;
-  final String dates;
-  final List<String> bullets;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(color: Color(0xFF6C7178)),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              dates,
-              style: const TextStyle(
-                color: Color(0xFF6C7178),
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        _MiniBulletColumn(items: bullets),
       ],
     );
   }

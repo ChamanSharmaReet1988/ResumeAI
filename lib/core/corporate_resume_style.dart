@@ -27,7 +27,7 @@ extension CorporateColorPresetX on CorporateColorPreset {
 
 /// Preset palettes: section titles + Dark Header bar.
 ///
-/// First option matches [templates_screen] `_DarkHeaderTemplateArt` (`header` / `text`) — default for new resumes.
+/// First option matches Dark Header template preview (`header` / `text`) — default for new resumes.
 ///
 /// Remaining colors follow the reference palette (salmon, blue, tan, teal, cyan); [headerColor] is the top bar.
 /// Beige is stepped darker so white name/contact text meets contrast; teal/cyan use screenshot hex.

@@ -57,10 +57,18 @@ class ResumePreviewCanvas extends StatelessWidget {
     super.key,
     required this.resume,
     this.showDebugLabel = false,
+    this.scrollable = true,
+    this.showAllContent = false,
   });
 
   final ResumeData resume;
   final bool showDebugLabel;
+
+  /// When false (template thumbnails), content scales to fit instead of scrolling.
+  final bool scrollable;
+
+  /// When true, lists are not truncated for template previews.
+  final bool showAllContent;
 
   @override
   Widget build(BuildContext context) {
@@ -122,34 +130,40 @@ class ResumePreviewCanvas extends StatelessWidget {
           ),
     );
 
+    final preview = switch (previewTemplate) {
+      ResumeTemplate.corporate => _DarkHeaderPreview(
+        resume: resume,
+        scrollable: scrollable,
+        showAllContent: showAllContent,
+      ),
+      ResumeTemplate.creative => _CreativePreview(resume: resume),
+      ResumeTemplate.classicSidebar => _ClassicSidebarPreview(resume: resume),
+      ResumeTemplate.detailsSidebar => _DetailsSidebarPreview(
+        resume: resume,
+      ),
+      ResumeTemplate.atsStructured => _AtsStructuredPreview(resume: resume),
+      ResumeTemplate.atsSerifRules => _AtsSerifRulesPreview(resume: resume),
+      ResumeTemplate.atsModernFlow => _AtsModernFlowPreview(resume: resume),
+      ResumeTemplate.atsExecutive => _AtsExecutivePreview(resume: resume),
+      ResumeTemplate.atsCenterClassic => _AtsCenterClassicPreview(
+        resume: resume,
+      ),
+      ResumeTemplate.atsProfessionalBlue => _AtsProfessionalBluePreview(
+        resume: resume,
+      ),
+    };
+
+    // Template thumbnails only constrain width; [Positioned.fill] needs a
+    // bounded height and would collapse to zero here.
+    if (!scrollable) {
+      return Theme(data: resumeBodyTheme, child: preview);
+    }
+
     return Theme(
       data: resumeBodyTheme,
       child: Stack(
         children: [
-          Positioned.fill(
-            child: switch (previewTemplate) {
-              ResumeTemplate.corporate => _DarkHeaderPreview(resume: resume),
-              ResumeTemplate.creative => _CreativePreview(resume: resume),
-              ResumeTemplate.classicSidebar => _ClassicSidebarPreview(
-                resume: resume,
-              ),
-              ResumeTemplate.detailsSidebar => _DetailsSidebarPreview(
-                resume: resume,
-              ),
-              ResumeTemplate.atsStructured =>
-                _AtsStructuredPreview(resume: resume),
-              ResumeTemplate.atsSerifRules =>
-                _AtsSerifRulesPreview(resume: resume),
-              ResumeTemplate.atsModernFlow =>
-                _AtsModernFlowPreview(resume: resume),
-              ResumeTemplate.atsExecutive =>
-                _AtsExecutivePreview(resume: resume),
-              ResumeTemplate.atsCenterClassic =>
-                _AtsCenterClassicPreview(resume: resume),
-              ResumeTemplate.atsProfessionalBlue =>
-                _AtsProfessionalBluePreview(resume: resume),
-            },
-          ),
+          Positioned.fill(child: preview),
           if (showDebugLabel)
             Positioned(
               right: 10,
@@ -219,10 +233,22 @@ abstract final class _CorporatePdfMetrics {
 }
 
 class _DarkHeaderPreview extends StatelessWidget {
-  const _DarkHeaderPreview({required this.resume});
+  const _DarkHeaderPreview({
+    required this.resume,
+    this.scrollable = true,
+    this.showAllContent = false,
+  });
 
   final ResumeData resume;
+  final bool scrollable;
+  final bool showAllContent;
   static const double _darkHeaderExtraLineSpacingPx = 0.0;
+
+  /// Breathing room below Skills on template thumbnails (not in PDF export).
+  static const double _templatePreviewGapAfterSkills = 36;
+
+  /// Matches PDF [pw.EdgeInsets] bottom margin on corporate pages.
+  static const double _templatePreviewBottomMargin = 30;
 
   @override
   Widget build(BuildContext context) {
@@ -267,6 +293,19 @@ class _DarkHeaderPreview extends StatelessWidget {
     final nameLabelTopOffset = 0.0;
     final nameToContactSpacing = 8.0;
     const defaultTextLineHeight = ResumeTypography.textLineHeight;
+
+    final workExperiences = showAllContent
+        ? resume.visibleWorkExperiences
+        : resume.visibleWorkExperiences.take(3);
+    final educationItems = showAllContent
+        ? resume.visibleEducation
+        : resume.visibleEducation.take(2);
+    final projectItems = showAllContent
+        ? resume.visibleProjects
+        : resume.visibleProjects.take(2);
+    final customSections = showAllContent
+        ? resume.visibleCustomSections
+        : resume.visibleCustomSections.take(2);
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -366,7 +405,7 @@ class _DarkHeaderPreview extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final item in resume.visibleWorkExperiences.take(3))
+                for (final item in workExperiences)
                   Padding(
                     padding: const EdgeInsets.only(
                       bottom: _CorporatePdfMetrics.experienceBlockBottom,
@@ -391,7 +430,7 @@ class _DarkHeaderPreview extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final item in resume.visibleEducation.take(2))
+                for (final item in educationItems)
                   Padding(
                     padding: const EdgeInsets.only(
                       bottom: _CorporatePdfMetrics.educationBlockBottom,
@@ -413,6 +452,8 @@ class _DarkHeaderPreview extends StatelessWidget {
           hasContent: skills.isNotEmpty,
           child: _CorporateSkillsColumns(skills: skills, bodyStyle: bodyStyle),
         ),
+        if (!scrollable)
+          const SizedBox(height: _templatePreviewGapAfterSkills),
         if (resume.includeProjectsInResume)
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(),
@@ -423,7 +464,7 @@ class _DarkHeaderPreview extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final item in resume.visibleProjects.take(2))
+                for (final item in projectItems)
                   Padding(
                     padding: const EdgeInsets.only(
                       bottom: _CorporatePdfMetrics.projectBlockBottom,
@@ -437,7 +478,7 @@ class _DarkHeaderPreview extends StatelessWidget {
               ],
             ),
           ),
-        for (final item in resume.visibleCustomSections.take(2))
+        for (final item in customSections)
           _CorporatePdfLikeSection(
             outerPadding: _CorporatePdfMetrics.sectionOuter(),
             title: item.title.ifBlank('Custom section').toUpperCase(),
@@ -445,10 +486,20 @@ class _DarkHeaderPreview extends StatelessWidget {
             lineColor: _CorporatePdfMetrics.lineColor,
             child: _corporateCustomSectionBody(item, bodyStyle),
           ),
-        // [_addCorporateTemplatePage] ends with `pw.SizedBox(height: 10)`.
-        const SizedBox(height: 10),
+        SizedBox(
+          height: scrollable ? 10 : _templatePreviewBottomMargin,
+        ),
       ],
     );
+
+    final merged = DefaultTextStyle.merge(
+      style: TextStyle(height: defaultTextLineHeight),
+      child: content,
+    );
+
+    if (!scrollable) {
+      return merged;
+    }
 
     return DefaultTextStyle.merge(
       style: TextStyle(height: defaultTextLineHeight),
