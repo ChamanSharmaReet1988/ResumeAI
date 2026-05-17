@@ -542,12 +542,12 @@ class SettingsScreen extends StatelessWidget {
                 ),
                       ),
                       const Spacer(),
-                      const SizedBox(height: 20),
-                      _SettingsVersionFooter(
-                        onTap: kDebugMode
-                            ? () => _openDeveloperTools(context)
-                            : null,
-                      ),
+                      if (kDebugMode) ...[
+                        const SizedBox(height: 20),
+                        _SettingsVersionFooter(
+                          onTap: () => _openDeveloperTools(context),
+                        ),
+                      ],
                     ],
                   ),
                 ),

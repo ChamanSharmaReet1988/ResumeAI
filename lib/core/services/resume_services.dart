@@ -446,9 +446,6 @@ class _ClassicSidebarDynamicInset extends pw.Widget with pw.SpanningWidget {
   double _leftInsetFor(pw.Context context) =>
       context.pageNumber <= sidebarPageCount ? _classicSidebarMainInsetPt : 0;
 
-  double _topInsetFor(pw.Context context) =>
-      context.pageNumber == 1 ? _classicSidebarFirstPageMainTopGapPt : 0;
-
   @override
   void layout(
     pw.Context context,
@@ -458,7 +455,6 @@ class _ClassicSidebarDynamicInset extends pw.Widget with pw.SpanningWidget {
     _wrapped = pw.Padding(
       padding: pw.EdgeInsets.only(
         left: _leftInsetFor(context),
-        top: _topInsetFor(context),
       ),
       child: child,
     );
@@ -1045,6 +1041,22 @@ String _classicSidebarExperienceCompanyDatesLine(WorkExperience item) {
     return company;
   }
   return '$company · $dates';
+}
+
+pw.Widget _classicSidebarSectionBodyBlock({
+  bool showBottomBorder = true,
+  required pw.Widget child,
+}) {
+  return pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      child,
+      if (showBottomBorder) ...[
+        pw.SizedBox(height: _classicSidebarSectionDividerGapPt),
+        pw.SizedBox(height: _classicSidebarSectionBottomPt),
+      ],
+    ],
+  );
 }
 
 String _classicSidebarInitials(ResumeData resume) {

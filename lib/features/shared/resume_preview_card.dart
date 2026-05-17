@@ -2627,7 +2627,7 @@ class _ClassicExperienceBlock extends StatelessWidget {
             ),
           ),
         if (bullets.isNotEmpty) ...[
-          const SizedBox(height: 5),
+          const SizedBox(height: 3),
           _ClassicBulletList(
             items: bullets,
             textStyle: bodyStyle,
@@ -3008,9 +3008,11 @@ class _ClassicBulletList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final item in visibleItems)
+        for (var index = 0; index < visibleItems.length; index++)
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.only(
+              bottom: index == visibleItems.length - 1 ? 0 : 3,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -3024,7 +3026,7 @@ class _ClassicBulletList extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    item,
+                    visibleItems[index],
                     maxLines: maxLines,
                     overflow: TextOverflow.ellipsis,
                     style: textStyle,

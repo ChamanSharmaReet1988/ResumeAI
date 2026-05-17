@@ -712,15 +712,20 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         header: _continuedPageTopGap,
         build: (context) => [
           sidebarWrap(
-            _buildClassicSidebarHeader(
-              resume,
-              titleColor: titleColor,
-              mutedColor: mutedColor,
-              accentColor: accentColor,
-              bodyPt: bodyPt,
-              namePt: namePt,
-              subtitlePt: subtitlePt,
-              calibri: calibri,
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(
+                top: _classicSidebarFirstPageMainTopGapPt,
+              ),
+              child: _buildClassicSidebarHeader(
+                resume,
+                titleColor: titleColor,
+                mutedColor: mutedColor,
+                accentColor: accentColor,
+                bodyPt: bodyPt,
+                namePt: namePt,
+                subtitlePt: subtitlePt,
+                calibri: calibri,
+              ),
             ),
           ),
           sidebarWrap(
@@ -786,27 +791,17 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 calibri: calibri,
               ),
             ),
-            for (
-              var index = 0;
-              index < resume.visibleWorkExperiences.length;
-              index++
-            )
-              sidebarWrap(
-                _buildClassicSidebarSectionBodyBlock(
-                  showBottomBorder:
-                      index == resume.visibleWorkExperiences.length - 1,
-                  child: _buildHighlightedClassicSidebarExperience(
-                    resume.visibleWorkExperiences[index],
-                    highlightedBulletsByExperience[index] ?? const <String>{},
-                    highlightColor,
-                    titleColor: titleColor,
-                    accentColor: accentColor,
-                    bodyPt: bodyPt,
-                    subtitlePt: subtitlePt,
-                    calibri: calibri,
-                  ),
-                ),
-              ),
+            ..._classicSidebarPaginatedExperienceSidebarBlocks(
+              experiences: resume.visibleWorkExperiences,
+              wrap: sidebarWrap,
+              titleColor: titleColor,
+              accentColor: accentColor,
+              bodyPt: bodyPt,
+              subtitlePt: subtitlePt,
+              calibri: calibri,
+              highlightedBulletsByExperience: highlightedBulletsByExperience,
+              bulletHighlightColor: highlightColor,
+            ),
           ],
           if (resume.includeEducationInResume &&
               resume.visibleEducation.isEmpty)
@@ -839,20 +834,15 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 calibri: calibri,
               ),
             ),
-            for (var index = 0; index < resume.visibleEducation.length; index++)
-              sidebarWrap(
-                _buildClassicSidebarSectionBodyBlock(
-                  showBottomBorder: index == resume.visibleEducation.length - 1,
-                  child: _buildClassicSidebarEducation(
-                    resume.visibleEducation[index],
-                    titleColor: titleColor,
-                    mutedColor: mutedColor,
-                    bodyPt: bodyPt,
-                    subtitlePt: subtitlePt,
-                    calibri: calibri,
-                  ),
-                ),
-              ),
+            ..._classicSidebarPaginatedEducationSidebarBlocks(
+              education: resume.visibleEducation,
+              wrap: sidebarWrap,
+              titleColor: titleColor,
+              mutedColor: mutedColor,
+              bodyPt: bodyPt,
+              subtitlePt: subtitlePt,
+              calibri: calibri,
+            ),
           ],
           if (resume.includeProjectsInResume &&
               resume.visibleProjects.isNotEmpty) ...[
@@ -865,21 +855,16 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 calibri: calibri,
               ),
             ),
-            for (var index = 0; index < resume.visibleProjects.length; index++)
-              sidebarWrap(
-                _buildClassicSidebarSectionBodyBlock(
-                  showBottomBorder: index == resume.visibleProjects.length - 1,
-                  child: _buildClassicSidebarProject(
-                    resume.visibleProjects[index],
-                    titleColor: titleColor,
-                    mutedColor: mutedColor,
-                    accentColor: accentColor,
-                    bodyPt: bodyPt,
-                    subtitlePt: subtitlePt,
-                    calibri: calibri,
-                  ),
-                ),
-              ),
+            ..._classicSidebarPaginatedProjectSidebarBlocks(
+              projects: resume.visibleProjects,
+              wrap: sidebarWrap,
+              titleColor: titleColor,
+              mutedColor: mutedColor,
+              accentColor: accentColor,
+              bodyPt: bodyPt,
+              subtitlePt: subtitlePt,
+              calibri: calibri,
+            ),
           ],
           for (var index = 0; index < customSections.length; index++) ...[
             sidebarWrap(
@@ -902,7 +887,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 bulletIndex++
               )
                 sidebarWrap(
-                  _buildClassicSidebarSectionBodyBlock(
+                  _classicSidebarSectionBodyBlock(
                     showBottomBorder:
                         bulletIndex ==
                         customSections[index].bullets
@@ -922,7 +907,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 )
             else
               sidebarWrap(
-                _buildClassicSidebarSectionBodyBlock(
+                _classicSidebarSectionBodyBlock(
                   showBottomBorder: true,
                   child: _buildClassicSidebarCustomSection(
                     customSections[index],
@@ -931,67 +916,6 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     bodyPt: bodyPt,
                     calibri: calibri,
                   ),
-                ),
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildHighlightedClassicSidebarExperience(
-    WorkExperience item,
-    Set<String> highlightedBullets,
-    PdfColor highlightColor, {
-    required PdfColor titleColor,
-    required PdfColor accentColor,
-    required double bodyPt,
-    required double subtitlePt,
-    CalibriPdfFonts? calibri,
-  }) {
-    final bullets = _workBulletLines(item);
-    final companyDatesLine = _classicSidebarExperienceCompanyDatesLine(item);
-
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 10),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            item.role.ifEmpty('Role'),
-            style: _classicSidebarPdfTextStyle(
-              calibri,
-              ResumeTypography.classicSidebarSubtitleWeight,
-              subtitlePt,
-              color: titleColor,
-            ),
-          ),
-          if (companyDatesLine.isNotEmpty) ...[
-            pw.SizedBox(height: 2),
-            pw.Text(
-              companyDatesLine,
-              style: _classicSidebarPdfTextStyle(
-                calibri,
-                ResumeTypography.classicSidebarBodyWeight,
-                bodyPt,
-                color: titleColor,
-              ),
-            ),
-          ],
-          if (bullets.isNotEmpty) ...[
-            pw.SizedBox(height: 5),
-            for (final bullet in bullets)
-              pw.Padding(
-                padding: const pw.EdgeInsets.only(bottom: 4),
-                child: _classicBulletRow(
-                  text: bullet,
-                  bulletColor: accentColor,
-                  textColor: titleColor,
-                  fontSize: bodyPt,
-                  calibri: calibri,
-                  backgroundColor: highlightedBullets.contains(bullet)
-                      ? highlightColor
-                      : null,
                 ),
               ),
           ],

@@ -819,15 +819,20 @@ ResumeTypography.darkHeaderSubtitleWeight,
         header: _continuedPageTopGap,
         build: (context) => [
           sidebarWrap(
-            _buildClassicSidebarHeader(
-              resume,
-              titleColor: titleColor,
-              mutedColor: mutedColor,
-              accentColor: accentColor,
-              bodyPt: bodyPt,
-              namePt: namePt,
-              subtitlePt: subtitlePt,
-              calibri: calibri,
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(
+                top: _classicSidebarFirstPageMainTopGapPt,
+              ),
+              child: _buildClassicSidebarHeader(
+                resume,
+                titleColor: titleColor,
+                mutedColor: mutedColor,
+                accentColor: accentColor,
+                bodyPt: bodyPt,
+                namePt: namePt,
+                subtitlePt: subtitlePt,
+                calibri: calibri,
+              ),
             ),
           ),
           sidebarWrap(
@@ -885,25 +890,15 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 calibri: calibri,
               ),
             ),
-            for (
-              var index = 0;
-              index < resume.visibleWorkExperiences.length;
-              index++
-            )
-              sidebarWrap(
-                _buildClassicSidebarSectionBodyBlock(
-                  showBottomBorder:
-                      index == resume.visibleWorkExperiences.length - 1,
-                  child: _buildClassicSidebarExperience(
-                    resume.visibleWorkExperiences[index],
-                    titleColor: titleColor,
-                    accentColor: accentColor,
-                    bodyPt: bodyPt,
-                    subtitlePt: subtitlePt,
-                    calibri: calibri,
-                  ),
-                ),
-              ),
+            ..._classicSidebarPaginatedExperienceSidebarBlocks(
+              experiences: resume.visibleWorkExperiences,
+              wrap: sidebarWrap,
+              titleColor: titleColor,
+              accentColor: accentColor,
+              bodyPt: bodyPt,
+              subtitlePt: subtitlePt,
+              calibri: calibri,
+            ),
           ],
           if (resume.includeEducationInResume &&
               resume.visibleEducation.isEmpty)
@@ -936,20 +931,15 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 calibri: calibri,
               ),
             ),
-            for (var index = 0; index < resume.visibleEducation.length; index++)
-              sidebarWrap(
-                _buildClassicSidebarSectionBodyBlock(
-                  showBottomBorder: index == resume.visibleEducation.length - 1,
-                  child: _buildClassicSidebarEducation(
-                    resume.visibleEducation[index],
-                    titleColor: titleColor,
-                    mutedColor: mutedColor,
-                    bodyPt: bodyPt,
-                    subtitlePt: subtitlePt,
-                    calibri: calibri,
-                  ),
-                ),
-              ),
+            ..._classicSidebarPaginatedEducationSidebarBlocks(
+              education: resume.visibleEducation,
+              wrap: sidebarWrap,
+              titleColor: titleColor,
+              mutedColor: mutedColor,
+              bodyPt: bodyPt,
+              subtitlePt: subtitlePt,
+              calibri: calibri,
+            ),
           ],
           if (resume.includeProjectsInResume &&
               resume.visibleProjects.isNotEmpty) ...[
@@ -962,21 +952,16 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 calibri: calibri,
               ),
             ),
-            for (var index = 0; index < resume.visibleProjects.length; index++)
-              sidebarWrap(
-                _buildClassicSidebarSectionBodyBlock(
-                  showBottomBorder: index == resume.visibleProjects.length - 1,
-                  child: _buildClassicSidebarProject(
-                    resume.visibleProjects[index],
-                    titleColor: titleColor,
-                    mutedColor: mutedColor,
-                    accentColor: accentColor,
-                    bodyPt: bodyPt,
-                    subtitlePt: subtitlePt,
-                    calibri: calibri,
-                  ),
-                ),
-              ),
+            ..._classicSidebarPaginatedProjectSidebarBlocks(
+              projects: resume.visibleProjects,
+              wrap: sidebarWrap,
+              titleColor: titleColor,
+              mutedColor: mutedColor,
+              accentColor: accentColor,
+              bodyPt: bodyPt,
+              subtitlePt: subtitlePt,
+              calibri: calibri,
+            ),
           ],
           for (var index = 0; index < customSections.length; index++) ...[
             sidebarWrap(
@@ -999,7 +984,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 bulletIndex++
               )
                 sidebarWrap(
-                  _buildClassicSidebarSectionBodyBlock(
+                  _classicSidebarSectionBodyBlock(
                     showBottomBorder:
                         bulletIndex ==
                         customSections[index].bullets
@@ -1019,7 +1004,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 )
             else
               sidebarWrap(
-                _buildClassicSidebarSectionBodyBlock(
+                _classicSidebarSectionBodyBlock(
                   showBottomBorder: true,
                   child: _buildClassicSidebarCustomSection(
                     customSections[index],
@@ -1211,123 +1196,226 @@ ResumeTypography.darkHeaderSubtitleWeight,
     );
   }
 
-  pw.Widget _buildClassicSidebarSectionBodyBlock({
-    bool showBottomBorder = true,
-    required pw.Widget child,
+  List<pw.Widget> _classicSidebarPaginatedSidebarBlocks({
+    required List<pw.Widget> parts,
+    required pw.Widget Function(pw.Widget child) wrap,
+    required bool showSectionFooterOnLastPartOnly,
   }) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        child,
-        if (showBottomBorder)
-          pw.SizedBox(height: _classicSidebarSectionDividerGapPt),
-        pw.SizedBox(height: _classicSidebarSectionBottomPt),
-      ],
-    );
+    if (parts.isEmpty) {
+      return const <pw.Widget>[];
+    }
+    return [
+      for (var index = 0; index < parts.length; index++)
+        wrap(
+          showSectionFooterOnLastPartOnly && index == parts.length - 1
+              ? _classicSidebarSectionBodyBlock(
+                  showBottomBorder: true,
+                  child: parts[index],
+                )
+              : parts[index],
+        ),
+    ];
   }
 
-  pw.Widget _buildClassicSidebarExperience(
+  List<pw.Widget> _classicSidebarPaginatedExperienceParts(
     WorkExperience item, {
     required PdfColor titleColor,
     required PdfColor accentColor,
     required double bodyPt,
     required double subtitlePt,
     CalibriPdfFonts? calibri,
+    bool addTrailingJobGap = true,
+    Set<String> highlightedBullets = const <String>{},
+    PdfColor? bulletHighlightColor,
   }) {
     final bullets = _workBulletLines(item);
     final companyDatesLine = _classicSidebarExperienceCompanyDatesLine(item);
+    final trailingGap = addTrailingJobGap ? 8.0 : 0.0;
+    final parts = <pw.Widget>[];
 
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 10),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            item.role.ifEmpty('Role'),
+    parts.add(
+      pw.Padding(
+        padding: pw.EdgeInsets.only(
+          bottom: companyDatesLine.isNotEmpty
+              ? 2
+              : bullets.isNotEmpty
+              ? 2
+              : trailingGap,
+        ),
+        child: pw.Text(
+          item.role.ifEmpty('Role'),
+          style: _classicSidebarPdfTextStyle(
+            calibri,
+            ResumeTypography.classicSidebarSubtitleWeight,
+            subtitlePt,
+            color: titleColor,
+          ),
+        ),
+      ),
+    );
+
+    if (companyDatesLine.isNotEmpty) {
+      parts.add(
+        pw.Padding(
+          padding: pw.EdgeInsets.only(
+            bottom: bullets.isNotEmpty ? 2 : trailingGap,
+          ),
+          child: pw.Text(
+            companyDatesLine,
             style: _classicSidebarPdfTextStyle(
               calibri,
-              ResumeTypography.classicSidebarSubtitleWeight,
-              subtitlePt,
+              ResumeTypography.classicSidebarBodyWeight,
+              bodyPt,
               color: titleColor,
             ),
           ),
-          if (companyDatesLine.isNotEmpty) ...[
-            pw.SizedBox(height: 2),
-            pw.Text(
-              companyDatesLine,
-              style: _classicSidebarPdfTextStyle(
-                calibri,
-                ResumeTypography.classicSidebarBodyWeight,
-                bodyPt,
-                color: titleColor,
-              ),
-            ),
-          ],
-          if (bullets.isNotEmpty) ...[
-            pw.SizedBox(height: 5),
-            for (final bullet in bullets)
-              pw.Padding(
-                padding: const pw.EdgeInsets.only(bottom: 4),
-                child: _classicBulletRow(
-                  text: bullet,
-                  bulletColor: accentColor,
-                  textColor: titleColor,
-                  fontSize: bodyPt,
-                  calibri: calibri,
-                ),
-              ),
-          ],
-        ],
-      ),
-    );
+        ),
+      );
+    }
+
+    for (var index = 0; index < bullets.length; index++) {
+      final bullet = bullets[index];
+      final isLastBullet = index == bullets.length - 1;
+      parts.add(
+        pw.Padding(
+          padding: pw.EdgeInsets.only(
+            bottom: isLastBullet ? trailingGap : 0,
+          ),
+          child: _classicBulletRow(
+            text: bullet,
+            bulletColor: accentColor,
+            textColor: titleColor,
+            fontSize: bodyPt,
+            calibri: calibri,
+            backgroundColor:
+                bulletHighlightColor != null &&
+                    highlightedBullets.contains(bullet)
+                ? bulletHighlightColor
+                : null,
+          ),
+        ),
+      );
+    }
+
+    return parts;
   }
 
-  pw.Widget _buildClassicSidebarEducation(
+  List<pw.Widget> _classicSidebarPaginatedExperienceSidebarBlocks({
+    required List<WorkExperience> experiences,
+    required pw.Widget Function(pw.Widget child) wrap,
+    required PdfColor titleColor,
+    required PdfColor accentColor,
+    required double bodyPt,
+    required double subtitlePt,
+    CalibriPdfFonts? calibri,
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+    PdfColor? bulletHighlightColor,
+  }) {
+    final blocks = <pw.Widget>[];
+    for (var index = 0; index < experiences.length; index++) {
+      blocks.addAll(
+        _classicSidebarPaginatedSidebarBlocks(
+          parts: _classicSidebarPaginatedExperienceParts(
+            experiences[index],
+            titleColor: titleColor,
+            accentColor: accentColor,
+            bodyPt: bodyPt,
+            subtitlePt: subtitlePt,
+            calibri: calibri,
+            addTrailingJobGap: index < experiences.length - 1,
+            highlightedBullets:
+                highlightedBulletsByExperience[index] ?? const <String>{},
+            bulletHighlightColor: bulletHighlightColor,
+          ),
+          wrap: wrap,
+          showSectionFooterOnLastPartOnly: index == experiences.length - 1,
+        ),
+      );
+    }
+    return blocks;
+  }
+
+  List<pw.Widget> _classicSidebarPaginatedEducationParts(
     EducationItem item, {
     required PdfColor titleColor,
     required PdfColor mutedColor,
     required double bodyPt,
     required double subtitlePt,
     CalibriPdfFonts? calibri,
+    bool addTrailingEntryGap = true,
   }) {
     final dates = [
       item.startDate.trim(),
       item.endDate.trim(),
     ].where((value) => value.isNotEmpty).join(' - ');
+    final trailingGap = addTrailingEntryGap ? 8.0 : 0.0;
+    final parts = <pw.Widget>[
+      pw.Padding(
+        padding: pw.EdgeInsets.only(bottom: dates.isNotEmpty ? 2 : trailingGap),
+        child: pw.Text(
+          '${item.degree.ifEmpty('Degree')}, ${item.institution.ifEmpty('Institution')}',
+          style: _classicSidebarPdfTextStyle(
+            calibri,
+            ResumeTypography.classicSidebarSubtitleWeight,
+            subtitlePt,
+            color: titleColor,
+          ),
+        ),
+      ),
+    ];
 
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 8),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            '${item.degree.ifEmpty('Degree')}, ${item.institution.ifEmpty('Institution')}',
+    if (dates.isNotEmpty) {
+      parts.add(
+        pw.Padding(
+          padding: pw.EdgeInsets.only(bottom: trailingGap),
+          child: pw.Text(
+            dates,
             style: _classicSidebarPdfTextStyle(
               calibri,
-              ResumeTypography.classicSidebarSubtitleWeight,
-              subtitlePt,
-              color: titleColor,
+              ResumeTypography.classicSidebarBodyWeight,
+              bodyPt,
+              color: mutedColor,
+              fontStyle: pw.FontStyle.italic,
             ),
           ),
-          if (dates.isNotEmpty) ...[
-            pw.SizedBox(height: 2),
-            pw.Text(
-              dates,
-              style: _classicSidebarPdfTextStyle(
-                calibri,
-                ResumeTypography.classicSidebarBodyWeight,
-                bodyPt,
-                color: mutedColor,
-                fontStyle: pw.FontStyle.italic,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
+        ),
+      );
+    }
+
+    return parts;
   }
 
-  pw.Widget _buildClassicSidebarProject(
+  List<pw.Widget> _classicSidebarPaginatedEducationSidebarBlocks({
+    required List<EducationItem> education,
+    required pw.Widget Function(pw.Widget child) wrap,
+    required PdfColor titleColor,
+    required PdfColor mutedColor,
+    required double bodyPt,
+    required double subtitlePt,
+    CalibriPdfFonts? calibri,
+  }) {
+    final blocks = <pw.Widget>[];
+    for (var index = 0; index < education.length; index++) {
+      blocks.addAll(
+        _classicSidebarPaginatedSidebarBlocks(
+          parts: _classicSidebarPaginatedEducationParts(
+            education[index],
+            titleColor: titleColor,
+            mutedColor: mutedColor,
+            bodyPt: bodyPt,
+            subtitlePt: subtitlePt,
+            calibri: calibri,
+            addTrailingEntryGap: index < education.length - 1,
+          ),
+          wrap: wrap,
+          showSectionFooterOnLastPartOnly: index == education.length - 1,
+        ),
+      );
+    }
+    return blocks;
+  }
+
+  List<pw.Widget> _classicSidebarPaginatedProjectParts(
     ProjectItem item, {
     required PdfColor titleColor,
     required PdfColor mutedColor,
@@ -1335,39 +1423,74 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required double bodyPt,
     required double subtitlePt,
     CalibriPdfFonts? calibri,
+    bool addTrailingEntryGap = true,
   }) {
     final bullets = _projectBulletLines(item);
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 8),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            item.title.ifEmpty('Project'),
-            style: _classicSidebarPdfTextStyle(
-              calibri,
-              ResumeTypography.classicSidebarSubtitleWeight,
-              subtitlePt,
-              color: titleColor,
-            ),
+    final trailingGap = addTrailingEntryGap ? 8.0 : 0.0;
+    final parts = <pw.Widget>[
+      pw.Padding(
+        padding: pw.EdgeInsets.only(bottom: bullets.isNotEmpty ? 4 : trailingGap),
+        child: pw.Text(
+          item.title.ifEmpty('Project'),
+          style: _classicSidebarPdfTextStyle(
+            calibri,
+            ResumeTypography.classicSidebarSubtitleWeight,
+            subtitlePt,
+            color: titleColor,
           ),
-          if (bullets.isNotEmpty) ...[
-            pw.SizedBox(height: 4),
-            for (final bullet in bullets)
-              pw.Padding(
-                padding: const pw.EdgeInsets.only(bottom: 4),
-                child: _classicBulletRow(
-                  text: bullet,
-                  bulletColor: accentColor,
-                  textColor: mutedColor,
-                  fontSize: bodyPt,
-                  calibri: calibri,
-                ),
-              ),
-          ],
-        ],
+        ),
       ),
-    );
+    ];
+
+    for (var index = 0; index < bullets.length; index++) {
+      final isLastBullet = index == bullets.length - 1;
+      parts.add(
+        pw.Padding(
+          padding: pw.EdgeInsets.only(bottom: isLastBullet ? trailingGap : 4),
+          child: _classicBulletRow(
+            text: bullets[index],
+            bulletColor: accentColor,
+            textColor: mutedColor,
+            fontSize: bodyPt,
+            calibri: calibri,
+          ),
+        ),
+      );
+    }
+
+    return parts;
+  }
+
+  List<pw.Widget> _classicSidebarPaginatedProjectSidebarBlocks({
+    required List<ProjectItem> projects,
+    required pw.Widget Function(pw.Widget child) wrap,
+    required PdfColor titleColor,
+    required PdfColor mutedColor,
+    required PdfColor accentColor,
+    required double bodyPt,
+    required double subtitlePt,
+    CalibriPdfFonts? calibri,
+  }) {
+    final blocks = <pw.Widget>[];
+    for (var index = 0; index < projects.length; index++) {
+      blocks.addAll(
+        _classicSidebarPaginatedSidebarBlocks(
+          parts: _classicSidebarPaginatedProjectParts(
+            projects[index],
+            titleColor: titleColor,
+            mutedColor: mutedColor,
+            accentColor: accentColor,
+            bodyPt: bodyPt,
+            subtitlePt: subtitlePt,
+            calibri: calibri,
+            addTrailingEntryGap: index < projects.length - 1,
+          ),
+          wrap: wrap,
+          showSectionFooterOnLastPartOnly: index == projects.length - 1,
+        ),
+      );
+    }
+    return blocks;
   }
 
   pw.Widget _buildClassicSidebarCustomSection(
