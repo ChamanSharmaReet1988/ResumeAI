@@ -3321,6 +3321,9 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   static double _matchPreviewSpacing(double previewLogicalPx) =>
       previewLogicalPx * (_tileSidebarWidth / _previewSidebarWidth);
 
+  /// Matches Classic Sidebar PDF main-column right margin (40pt).
+  static double get _mainColumnRightPadding => _scaledPt(40);
+
   static TextStyle _bodyStyle() => ResumeTypography.calibriPreviewStyle(
         weight: ResumeTypography.classicSidebarBodyWeight,
         fontSize: _scaledPt(ResumeTypography.classicSidebarBodyPt),
@@ -3509,7 +3512,12 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(9, 14, 9, 6),
+                padding: EdgeInsets.fromLTRB(
+                  9,
+                  14,
+                  _mainColumnRightPadding,
+                  6,
+                ),
                 child: DefaultTextStyle(
                   style: bodyStyle,
                   child: ClipRect(
