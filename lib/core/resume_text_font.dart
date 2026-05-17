@@ -141,6 +141,23 @@ abstract final class ResumeTypography {
         letterSpacing: letterSpacing,
       );
 
+  /// Garamond (EB Garamond) for accent-strip name and section titles in preview.
+  static TextStyle garamondPreviewStyle({
+    required int weight,
+    double? fontSize,
+    Color? color,
+    double? height,
+    double? letterSpacing,
+  }) =>
+      TextStyle(
+        fontFamily: 'Garamond',
+        fontWeight: ResumeFontWeight.toFlutter(weight),
+        fontSize: fontSize,
+        color: color,
+        height: height,
+        letterSpacing: letterSpacing,
+      );
+
   /// Inter text style for in-app resume previews.
   static TextStyle interPreviewStyle({
     required int weight,

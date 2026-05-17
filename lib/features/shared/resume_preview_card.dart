@@ -1898,21 +1898,49 @@ class _AccentStripPreview extends StatelessWidget {
     final projects = resume.visibleProjects.take(1).toList();
     final customSections = resume.visibleCustomSections.take(1).toList();
 
-    final bodyStyle = TextStyle(
-      color: titleColor,
+    final bodyStyle = ResumeTypography.calibriPreviewStyle(
+      weight: ResumeFontWeight.w400,
       fontSize: body + 0.4,
+      color: titleColor,
       height: 1.4,
     );
-    final metaStyle = bodyStyle.copyWith(fontSize: body + 0.2);
-    final headingStyle = bodyStyle.copyWith(
+    final metaStyle = ResumeTypography.calibriPreviewStyle(
+      weight: ResumeFontWeight.w500,
+      fontSize: body + 0.2,
+      color: titleColor,
+      height: 1.4,
+    );
+    final headingStyle = ResumeTypography.garamondPreviewStyle(
+      weight: ResumeFontWeight.w700,
       fontSize: body + 5,
-      fontWeight: FontWeight.w800,
+      color: titleColor,
+      height: 1.4,
       letterSpacing: 0.2,
     );
-    final roleStyle = bodyStyle.copyWith(fontWeight: FontWeight.w500);
-    final dateStyle = bodyStyle.copyWith(
+    final roleStyle = ResumeTypography.calibriPreviewStyle(
+      weight: ResumeFontWeight.w500,
+      fontSize: body + 0.4,
+      color: titleColor,
+      height: 1.4,
+    );
+    final dateStyle = ResumeTypography.calibriPreviewStyle(
+      weight: ResumeFontWeight.w700,
       fontSize: body + 2,
-      fontWeight: FontWeight.w800,
+      color: titleColor,
+      height: 1.4,
+    );
+    final nameStyle = ResumeTypography.garamondPreviewStyle(
+      weight: ResumeFontWeight.w700,
+      fontSize: 30,
+      color: titleColor,
+      height: 1.0,
+      letterSpacing: 0.4,
+    );
+    final contactStyle = ResumeTypography.calibriPreviewStyle(
+      weight: ResumeFontWeight.w700,
+      fontSize: body + 1.1,
+      color: titleColor,
+      height: 1.4,
     );
     final sectionGap = body + 10;
 
@@ -1947,11 +1975,7 @@ class _AccentStripPreview extends StatelessWidget {
                       children: [
                         Text(
                           _pdfAlignedDisplayName(resume).toUpperCase(),
-                          style: bodyStyle.copyWith(
-                            fontSize: 30,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.4,
-                          ),
+                          style: nameStyle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1959,10 +1983,7 @@ class _AccentStripPreview extends StatelessWidget {
                           const SizedBox(height: 12),
                           Text(
                             contactItems.join(' | '),
-                            style: bodyStyle.copyWith(
-                              fontSize: body + 1.1,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: contactStyle,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),

@@ -21,6 +21,7 @@ import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
 import 'profile_image_storage.dart';
 import 'resume_pdf/calibri_pdf_fonts.dart' hide darkHeaderInitialsPdfStyle;
+import 'resume_pdf/garamond_pdf_fonts.dart';
 import 'resume_pdf/inter_pdf_fonts.dart';
 import 'resume_pdf/resume_pdf_theme.dart';
 
@@ -5126,6 +5127,7 @@ class _CoverLetterLocale {
 class ResumePdfService {
   InterPdfFonts? _interPdfFontsCache;
   CalibriPdfFonts? _calibriPdfFontsCache;
+  GaramondPdfFonts? _garamondPdfFontsCache;
 
   Future<InterPdfFonts> _ensureInterPdfFonts() async {
     return _interPdfFontsCache ??= await loadInterPdfFonts();
@@ -5133,6 +5135,10 @@ class ResumePdfService {
 
   Future<CalibriPdfFonts> _ensureCalibriPdfFonts() async {
     return _calibriPdfFontsCache ??= await loadCalibriPdfFonts();
+  }
+
+  Future<GaramondPdfFonts> _ensureGaramondPdfFonts() async {
+    return _garamondPdfFontsCache ??= await loadGaramondPdfFonts();
   }
 
   Future<Uint8List> buildPdf(ResumeData resume) async {
@@ -5181,6 +5187,26 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.accentStrip) {
+      final calibri = await _ensureCalibriPdfFonts();
+      final garamond = await _ensureGaramondPdfFonts();
+      final bodyPt = resume.effectiveBodyFontPt.toDouble() + 0.4;
+      final document = pw.Document(
+        theme: await resumePdfThemeForCalibri(
+          calibri,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+        ),
+      );
+      _addAccentStripTemplatePage(
+        document,
+        resume,
+        calibri: calibri,
+        garamond: garamond,
+      );
+      return document.save();
+    }
+
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
@@ -5210,7 +5236,6 @@ class ResumePdfService {
         _addDetailsSidebarTemplatePage(document, resume);
         break;
       case ResumeTemplate.accentStrip:
-        _addAccentStripTemplatePage(document, resume);
         break;
       case ResumeTemplate.atsStructured:
         _addAtsStructuredTemplatePage(document, resume);
@@ -5284,6 +5309,29 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.accentStrip) {
+      final calibri = await _ensureCalibriPdfFonts();
+      final garamond = await _ensureGaramondPdfFonts();
+      final bodyPt = resume.effectiveBodyFontPt.toDouble() + 0.4;
+      final document = pw.Document(
+        theme: await resumePdfThemeForCalibri(
+          calibri,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+        ),
+      );
+      _addAccentStripTemplatePage(
+        document,
+        resume,
+        calibri: calibri,
+        garamond: garamond,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
@@ -5320,13 +5368,6 @@ class ResumePdfService {
         );
         break;
       case ResumeTemplate.accentStrip:
-        _addAccentStripTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
         break;
       case ResumeTemplate.atsStructured:
         _addAtsStructuredTemplatePage(

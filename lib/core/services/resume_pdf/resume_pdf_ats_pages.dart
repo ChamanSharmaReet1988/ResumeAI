@@ -1771,23 +1771,40 @@ extension _ResumePdfAtsPages on ResumePdfService {
     );
   }
 
-  pw.Widget _accentStripSectionTitle(String title, double bodyPt) {
+  pw.Widget _accentStripSectionTitle(
+    String title,
+    double bodyPt, {
+    required GaramondPdfFonts garamond,
+  }) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
       child: pw.Text(
         title,
-        style: pw.TextStyle(
+        style: garamondPdfTextStyle(
+          garamond,
+          ResumeFontWeight.w700,
           fontSize: bodyPt + 6,
-          fontWeight: pw.FontWeight.bold,
-          letterSpacing: 0.2,
-        ),
+        ).copyWith(letterSpacing: 0.2),
       ),
     );
   }
 
+  pw.TextStyle _accentStripBodyPdfStyle(
+    CalibriPdfFonts calibri,
+    double bodyPt, {
+    int weight = ResumeFontWeight.w400,
+  }) =>
+      calibriBodyPdfTextStyle(
+        calibri,
+        bodyPt,
+        weight: weight,
+      );
+
   void _addAccentStripTemplatePage(
     pw.Document document,
     ResumeData resume, {
+    required CalibriPdfFonts calibri,
+    required GaramondPdfFonts garamond,
     bool highlightSummary = false,
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
@@ -1821,19 +1838,20 @@ extension _ResumePdfAtsPages on ResumePdfService {
           final widgets = <pw.Widget>[
             pw.Text(
               name,
-              style: pw.TextStyle(
+              style: garamondPdfTextStyle(
+                garamond,
+                ResumeFontWeight.w700,
                 fontSize: 33,
-                fontWeight: pw.FontWeight.bold,
-                letterSpacing: 0.4,
-              ),
+              ).copyWith(letterSpacing: 0.4),
             ),
             if (contactLine.isNotEmpty) ...[
               pw.SizedBox(height: 14),
               pw.Text(
                 contactLine,
-                style: pw.TextStyle(
-                  fontSize: bodyPt + 1,
-                  fontWeight: pw.FontWeight.bold,
+                style: _accentStripBodyPdfStyle(
+                  calibri,
+                  bodyPt + 1,
+                  weight: ResumeFontWeight.w700,
                 ),
               ),
             ],
@@ -1850,13 +1868,19 @@ extension _ResumePdfAtsPages on ResumePdfService {
 
           if (resume.includeWorkInResume) {
             widgets.add(pw.SizedBox(height: 28));
-            widgets.add(_accentStripSectionTitle('EXPERIENCE', bodyPt));
+            widgets.add(
+              _accentStripSectionTitle(
+                'EXPERIENCE',
+                bodyPt,
+                garamond: garamond,
+              ),
+            );
             final items = resume.visibleWorkExperiences;
             if (items.isEmpty) {
               widgets.add(
                 pw.Text(
                   'Add experience entries with dates, roles, and outcomes.',
-                  style: pw.TextStyle(fontSize: bodyPt),
+                  style: _accentStripBodyPdfStyle(calibri, bodyPt),
                 ),
               );
             } else {
@@ -1875,9 +1899,10 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   widgets.add(
                     pw.Text(
                       dateLabel,
-                      style: pw.TextStyle(
-                        fontSize: bodyPt + 2.2,
-                        fontWeight: pw.FontWeight.bold,
+                      style: _accentStripBodyPdfStyle(
+                        calibri,
+                        bodyPt + 2.2,
+                        weight: ResumeFontWeight.w700,
                       ),
                     ),
                   );
@@ -1887,9 +1912,10 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   widgets.add(
                     pw.Text(
                       roleLine,
-                      style: pw.TextStyle(
-                        fontSize: bodyPt + 0.8,
-                        fontWeight: pw.FontWeight.bold,
+                      style: _accentStripBodyPdfStyle(
+                        calibri,
+                        bodyPt + 0.8,
+                        weight: ResumeFontWeight.w700,
                       ),
                     ),
                   );
@@ -1901,12 +1927,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     widgets.add(
                       _atsHighlightedBulletLine(
                         bullet,
-                        style: pw.TextStyle(
-                          fontSize: bodyPt,
-                          lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
-                            bodyPt,
-                          ),
-                        ),
+                        style: _accentStripBodyPdfStyle(calibri, bodyPt),
                         isHighlighted: highlightedBullets.contains(bullet),
                         highlightColor: highlightColor,
                       ),
@@ -1917,12 +1938,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   widgets.add(
                     pw.Text(
                       item.description.trim(),
-                      style: pw.TextStyle(
-                        fontSize: bodyPt,
-                        lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
-                          bodyPt,
-                        ),
-                      ),
+                      style: _accentStripBodyPdfStyle(calibri, bodyPt),
                     ),
                   );
                 }
@@ -1936,13 +1952,19 @@ extension _ResumePdfAtsPages on ResumePdfService {
 
           if (resume.includeEducationInResume) {
             widgets.add(pw.SizedBox(height: 22));
-            widgets.add(_accentStripSectionTitle('EDUCATION', bodyPt));
+            widgets.add(
+              _accentStripSectionTitle(
+                'EDUCATION',
+                bodyPt,
+                garamond: garamond,
+              ),
+            );
             final items = resume.visibleEducation;
             if (items.isEmpty) {
               widgets.add(
                 pw.Text(
                   'Add education details.',
-                  style: pw.TextStyle(fontSize: bodyPt),
+                  style: _accentStripBodyPdfStyle(calibri, bodyPt),
                 ),
               );
             } else {
@@ -1954,9 +1976,10 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 widgets.add(
                   pw.Text(
                     item.degree.trim().ifEmpty('Degree'),
-                    style: pw.TextStyle(
-                      fontSize: bodyPt + 0.8,
-                      fontWeight: pw.FontWeight.bold,
+                    style: _accentStripBodyPdfStyle(
+                      calibri,
+                      bodyPt + 0.8,
+                      weight: ResumeFontWeight.w700,
                     ),
                   ),
                 );
@@ -1967,7 +1990,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       item.institution.trim().ifEmpty('Institution'),
                       if (dates.isNotEmpty) dates,
                     ].join(' | '),
-                    style: pw.TextStyle(fontSize: bodyPt),
+                    style: _accentStripBodyPdfStyle(calibri, bodyPt),
                   ),
                 );
                 widgets.add(pw.SizedBox(height: 10));
@@ -1977,17 +2000,24 @@ extension _ResumePdfAtsPages on ResumePdfService {
 
           if (resume.includeSkillsInResume) {
             widgets.add(pw.SizedBox(height: 18));
-            widgets.add(_accentStripSectionTitle('SKILLS', bodyPt));
+            widgets.add(
+              _accentStripSectionTitle(
+                'SKILLS',
+                bodyPt,
+                garamond: garamond,
+              ),
+            );
             if (skills.isEmpty) {
               widgets.add(
                 pw.Text(
                   'Add skills aligned to the target role.',
-                  style: pw.TextStyle(fontSize: bodyPt),
+                  style: _accentStripBodyPdfStyle(calibri, bodyPt),
                 ),
               );
             } else {
               final rows = <pw.Widget>[];
               for (final skill in skills) {
+                final skillStyle = _accentStripBodyPdfStyle(calibri, bodyPt);
                 final text = highlightedSkills.contains(skill)
                     ? pw.Container(
                         padding: const pw.EdgeInsets.symmetric(
@@ -1995,15 +2025,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                           vertical: 2,
                         ),
                         color: highlightColor,
-                        child: pw.Text(
-                          '• $skill',
-                          style: pw.TextStyle(fontSize: bodyPt),
-                        ),
+                        child: pw.Text('• $skill', style: skillStyle),
                       )
-                    : pw.Text(
-                        '• $skill',
-                        style: pw.TextStyle(fontSize: bodyPt),
-                      );
+                    : pw.Text('• $skill', style: skillStyle);
                 rows.add(text);
               }
               widgets.add(
@@ -2020,14 +2044,21 @@ extension _ResumePdfAtsPages on ResumePdfService {
             final items = resume.visibleProjects;
             if (items.isNotEmpty) {
               widgets.add(pw.SizedBox(height: 18));
-              widgets.add(_accentStripSectionTitle('PROJECTS', bodyPt));
+              widgets.add(
+                _accentStripSectionTitle(
+                  'PROJECTS',
+                  bodyPt,
+                  garamond: garamond,
+                ),
+              );
               for (final item in items) {
                 widgets.add(
                   pw.Text(
                     item.title.trim().ifEmpty('Project'),
-                    style: pw.TextStyle(
-                      fontSize: bodyPt + 0.8,
-                      fontWeight: pw.FontWeight.bold,
+                    style: _accentStripBodyPdfStyle(
+                      calibri,
+                      bodyPt + 0.8,
+                      weight: ResumeFontWeight.w700,
                     ),
                   ),
                 );
@@ -2043,7 +2074,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   widgets.add(
                     pw.Text(
                       content,
-                      style: pw.TextStyle(fontSize: bodyPt),
+                      style: _accentStripBodyPdfStyle(calibri, bodyPt),
                     ),
                   );
                 }
@@ -2058,6 +2089,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               _accentStripSectionTitle(
                 section.title.trim().ifEmpty('ADDITIONAL').toUpperCase(),
                 bodyPt,
+                garamond: garamond,
               ),
             );
             for (final widget in _pwCustomSectionBodyWidgets(section)) {
