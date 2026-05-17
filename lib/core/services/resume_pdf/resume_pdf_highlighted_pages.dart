@@ -651,7 +651,12 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
-            _creativeMainColumnChild(_pwCustomSectionBody(item)),
+            for (final widget in _pwCustomSectionBodyWidgets(
+              item,
+              calibri: calibri,
+              bodyFontPt: bodyPt,
+            ))
+              _creativeMainColumnChild(widget),
           ],
         ],
       ),
