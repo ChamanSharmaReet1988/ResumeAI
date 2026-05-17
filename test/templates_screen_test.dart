@@ -104,8 +104,12 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.byKey(const Key('template-image-details-sidebar')),
+        find.byKey(const Key('template-image-accent-strip')),
         findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('template-image-details-sidebar')),
+        findsNothing,
       );
       expect(
         find.byKey(const Key('template-image-executive-note')),

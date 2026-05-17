@@ -5209,6 +5209,9 @@ class ResumePdfService {
       case ResumeTemplate.detailsSidebar:
         _addDetailsSidebarTemplatePage(document, resume);
         break;
+      case ResumeTemplate.accentStrip:
+        _addAccentStripTemplatePage(document, resume);
+        break;
       case ResumeTemplate.atsStructured:
         _addAtsStructuredTemplatePage(document, resume);
         break;
@@ -5309,6 +5312,15 @@ class ResumePdfService {
         break;
       case ResumeTemplate.detailsSidebar:
         _addHighlightedDetailsSidebarTemplatePage(
+          document,
+          resume,
+          highlightSummary: highlightSummary,
+          highlightedSkills: highlightedSkills,
+          highlightedBulletsByExperience: highlightedBulletsByExperience,
+        );
+        break;
+      case ResumeTemplate.accentStrip:
+        _addAccentStripTemplatePage(
           document,
           resume,
           highlightSummary: highlightSummary,

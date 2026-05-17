@@ -8,6 +8,8 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
   switch (raw?.toString()) {
     case 'detailsSidebar':
       return ResumeTemplate.detailsSidebar;
+    case 'accentStrip':
+      return ResumeTemplate.accentStrip;
     case 'classicSidebar':
       return ResumeTemplate.classicSidebar;
     case 'creative':
@@ -36,6 +38,7 @@ enum ResumeTemplate {
   creative,
   classicSidebar,
   detailsSidebar,
+  accentStrip,
 
   /// Centered header, gray section bands (ATS-friendly).
   atsStructured,
@@ -69,7 +72,7 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.corporate,
   ResumeTemplate.creative,
   ResumeTemplate.classicSidebar,
-  ResumeTemplate.detailsSidebar,
+  ResumeTemplate.accentStrip,
   ResumeTemplate.atsStructured,
   ResumeTemplate.atsSerifRules,
   ResumeTemplate.atsModernFlow,
@@ -86,6 +89,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.creative => 'Profile Sidebar',
     ResumeTemplate.classicSidebar => 'Classic Sidebar',
     ResumeTemplate.detailsSidebar => 'Details Sidebar',
+    ResumeTemplate.accentStrip => 'Accent Strip',
     ResumeTemplate.atsStructured => 'Structured ATS',
     ResumeTemplate.atsSerifRules => 'Serif Rules ATS',
     ResumeTemplate.atsModernFlow => 'Modern Flow ATS',
@@ -103,6 +107,8 @@ extension ResumeTemplateX on ResumeTemplate {
       'Soft sidebar layout with a profile photo, skills rail, and clean resume blocks.',
     ResumeTemplate.detailsSidebar =>
       'Minimal left details rail with clean section lines and balanced content blocks.',
+    ResumeTemplate.accentStrip =>
+      'Bold left accent stripe with an oversized nameplate and single-column sections.',
     ResumeTemplate.atsStructured =>
       'Single column with banded section titles—optimized for keyword parsing.',
     ResumeTemplate.atsSerifRules =>
@@ -122,6 +128,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.creative => const Color(0xFFE85D04),
     ResumeTemplate.classicSidebar => const Color(0xFF344054),
     ResumeTemplate.detailsSidebar => const Color(0xFF344054),
+    ResumeTemplate.accentStrip => const Color(0xFFF4552F),
     ResumeTemplate.atsStructured => const Color(0xFF374151),
     ResumeTemplate.atsSerifRules => const Color(0xFF374151),
     ResumeTemplate.atsModernFlow => const Color(0xFF2563EB),
@@ -135,6 +142,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.creative => const Color(0xFFFFE9D8),
     ResumeTemplate.classicSidebar => const Color(0xFFF2F4F7),
     ResumeTemplate.detailsSidebar => const Color(0xFFF2F4F7),
+    ResumeTemplate.accentStrip => const Color(0xFFFFEFE8),
     ResumeTemplate.atsStructured => const Color(0xFFF3F4F6),
     ResumeTemplate.atsSerifRules => const Color(0xFFF9FAFB),
     ResumeTemplate.atsModernFlow => const Color(0xFFEFF6FF),
@@ -149,6 +157,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.creative => 'Sans · profile sidebar',
     ResumeTemplate.classicSidebar => 'Sans · classic sidebar',
     ResumeTemplate.detailsSidebar => 'Sans · details sidebar',
+    ResumeTemplate.accentStrip => 'Sans · accent strip',
     ResumeTemplate.atsStructured => 'Sans · banded ATS',
     ResumeTemplate.atsSerifRules => 'Sans · rules ATS',
     ResumeTemplate.atsModernFlow => 'Sans · flow ATS',

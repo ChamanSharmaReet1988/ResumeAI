@@ -492,11 +492,11 @@ const _professionalResumeCards = <_TemplateTileData>[
     isPremium: true,
   ),
   _TemplateTileData(
-    id: 'details-sidebar',
-    resumeTemplate: ResumeTemplate.detailsSidebar,
-    previewKind: _TemplatePreviewKind.detailsSidebarResume,
-    headline: 'Details Sidebar',
-    caption: 'Minimal left details rail with structured content on the right.',
+    id: 'accent-strip',
+    resumeTemplate: ResumeTemplate.accentStrip,
+    previewKind: _TemplatePreviewKind.accentStripResume,
+    headline: 'Accent Strip',
+    caption: 'Bold left stripe with an oversized nameplate and clean sections.',
     isPremium: true,
   ),
 ];
@@ -615,6 +615,7 @@ enum _TemplatePreviewKind {
   profileSidebarResume,
   classicSidebarResume,
   detailsSidebarResume,
+  accentStripResume,
   atsStructuredResume,
   atsSerifRulesResume,
   atsModernFlowResume,
@@ -689,6 +690,12 @@ class _TemplatePreviewArt extends StatelessWidget {
                   paletteSeed,
                 ),
               ),
+      _TemplatePreviewKind.accentStripResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _accentStripTemplateResume,
+          paletteSeed,
+        ),
+      ),
       _TemplatePreviewKind.atsStructuredResume => _AtsStructuredTemplateArt(
         resume: _applyTemplatePreviewPalette(
           _atsSampleFor(ResumeTemplate.atsStructured),
@@ -859,6 +866,14 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
             paletteSeed,
           ),
           detailed: true,
+        ),
+      );
+    }
+    if (template == ResumeTemplate.accentStrip) {
+      return _TemplateDetailPdfPreview(
+        resume: _applyTemplatePreviewPalette(
+          _accentStripTemplateResume,
+          paletteSeed,
         ),
       );
     }
@@ -1409,6 +1424,108 @@ final ResumeData _detailsSidebarTemplateResume = ResumeData(
   corporateColorPresetIndex: 4,
 );
 
+final ResumeData _accentStripTemplateResume = ResumeData(
+  id: 'template-accent-strip',
+  title: 'Accent Strip Template',
+  fullName: 'DONNA ROBBINS',
+  jobTitle: 'Senior Accountant',
+  email: 'donna@example.com',
+  phone: '(313) 555-0100',
+  location: '4567 Main Street, Detroit, MI 48127',
+  website: 'www.greatsiteaddress.com',
+  summary:
+      'Analytical, organized and detail-oriented accountant with GAAP expertise and experience in the full spectrum of public accounting. Collaborative team player with ownership mentality and a track record of delivering strategic solutions to resolve challenges and support business growth.',
+  template: ResumeTemplate.accentStrip,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Accountant',
+      company: 'Trey Research | San Francisco, CA',
+      startDate: '20XX',
+      endDate: 'Present',
+      description:
+          'Working in a mid-sized public accounting firm to provide professional accounting services for individuals and business clients. Provide full range of services, including income tax preparation, audit support, preparation of financial statements, pro forma budgeting, general ledger accounting, and bank reconciliation.',
+      bullets: [],
+    ),
+    WorkExperience(
+      role: 'Bookkeeper',
+      company: 'Bandter Real Estate | Berkeley, CA',
+      startDate: '20XX',
+      endDate: '20XX',
+      description:
+          'Inhouse bookkeeper for a real estate development company. Maintained financial books, tracked expenses, prepared and submitted invoices, and oversaw payroll.',
+      bullets: [],
+    ),
+    WorkExperience(
+      role: 'Accounting Intern',
+      company: 'Olson Harris Ltd. | Vallejo, CA',
+      startDate: 'December 20XX',
+      endDate: 'April 20XX',
+      description:
+          'Assisted with payroll and pensions service management for 150+ employees. Prepared invoices for more than 200 clients. Assisted with bill payments, records organization and preparation, and other office duties to support financial and accounting operations.',
+      bullets: [],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'University of Michigan',
+      degree: 'Bachelor of Business Administration in Accounting',
+      startDate: '20XX',
+      endDate: '20XX',
+      score: '',
+    ),
+    EducationItem(
+      institution: 'Macomb Community College',
+      degree: 'Associate Degree in Business Administration',
+      startDate: '20XX',
+      endDate: '20XX',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'GAAP',
+    'Income tax preparation',
+    'Audit support',
+    'General ledger accounting',
+    'Bank reconciliation',
+    'Financial statements',
+  ],
+  projects: const [
+    ProjectItem(
+      title: 'Quarter-End Close Playbook',
+      overview: 'Finance operations process improvement',
+      impact: 'Accounting controls, reporting, reconciliation',
+      bullets: [
+        'Standardized close checklists and reconciliations to improve month-end reporting readiness.',
+      ],
+    ),
+  ],
+  customSections: const [
+    CustomSectionItem(
+      title: 'Certifications',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: [
+        'Certified Public Accountant (CPA)',
+        'QuickBooks ProAdvisor',
+        'Advanced Excel for Finance',
+      ],
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: true,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.accentStrip,
+  ),
+);
+
 enum _ResumeTemplatePreviewFit { tile, detail }
 
 class _ResumeTemplatePreviewArt extends StatelessWidget {
@@ -1438,9 +1555,14 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        final isCreativeProfileSidebar =
-            resume.template.userFacingTemplate == ResumeTemplate.creative;
-        final bottomInset = isCreativeProfileSidebar
+        final isAccentStrip =
+            resume.template.userFacingTemplate == ResumeTemplate.accentStrip;
+        final fullHeightTemplate = switch (resume.template.userFacingTemplate) {
+          ResumeTemplate.creative => true,
+          ResumeTemplate.accentStrip => true,
+          _ => false,
+        };
+        final bottomInset = fullHeightTemplate
             ? 0.0
             : switch (fit) {
                 _ResumeTemplatePreviewFit.detail => _detailBottomInset,
@@ -1471,9 +1593,26 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
             child: SizedBox(
               width: targetWidth,
               height: contentHeight,
-              child: Padding(
-                padding: EdgeInsets.only(bottom: bottomInset),
-                child: pagePreview,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (isAccentStrip)
+                    Positioned(
+                      left: targetWidth * (22 / _pageWidth),
+                      top: 0,
+                      bottom: 0,
+                      child: ColoredBox(
+                        color: resume.corporateColorPreset.headerColor,
+                        child: SizedBox(
+                          width: targetWidth * (34 / _pageWidth),
+                        ),
+                      ),
+                    ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: bottomInset),
+                    child: pagePreview,
+                  ),
+                ],
               ),
             ),
           ),
@@ -1934,18 +2073,6 @@ String _profileSidebarCreativeDateRange(String startDate, String endDate) {
     return '$start - $end';
   }
   return start.isNotEmpty ? start : end;
-}
-
-List<String> _templateArtExperienceBullets(
-  WorkExperience item,
-  bool detailed,
-) {
-  final bullets = item.bullets.where((b) => b.trim().isNotEmpty).toList();
-  if (bullets.isNotEmpty) {
-    return bullets.take(detailed ? 4 : 3).toList();
-  }
-  final description = item.description.trim();
-  return description.isEmpty ? const [] : [description];
 }
 
 class _AtsStructuredTemplateArt extends StatelessWidget {

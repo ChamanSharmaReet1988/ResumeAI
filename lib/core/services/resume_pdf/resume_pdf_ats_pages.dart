@@ -1770,4 +1770,304 @@ extension _ResumePdfAtsPages on ResumePdfService {
       ),
     );
   }
+
+  pw.Widget _accentStripSectionTitle(String title, double bodyPt) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 8),
+      child: pw.Text(
+        title,
+        style: pw.TextStyle(
+          fontSize: bodyPt + 6,
+          fontWeight: pw.FontWeight.bold,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+
+  void _addAccentStripTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) {
+    final accent = _pdfRgb(resume.corporateColorPreset.headerColor);
+    final highlightColor = _atsHighlightColor;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble() + 0.4;
+    final name = _displayName(resume).toUpperCase();
+    final contactLine = _resumeContactItems(resume).join(' | ');
+    final summary = resume.summary.trim();
+    final skills = _skillsForDisplay(resume);
+
+    document.addPage(
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.fromLTRB(96, 36, 34, 34),
+          buildBackground: (context) => pw.FullPage(
+            ignoreMargins: true,
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+              children: [
+                pw.SizedBox(width: 24),
+                pw.Container(width: 40, color: accent),
+                pw.Expanded(child: pw.SizedBox()),
+              ],
+            ),
+          ),
+        ),
+        build: (context) {
+          final widgets = <pw.Widget>[
+            pw.Text(
+              name,
+              style: pw.TextStyle(
+                fontSize: 33,
+                fontWeight: pw.FontWeight.bold,
+                letterSpacing: 0.4,
+              ),
+            ),
+            if (contactLine.isNotEmpty) ...[
+              pw.SizedBox(height: 14),
+              pw.Text(
+                contactLine,
+                style: pw.TextStyle(
+                  fontSize: bodyPt + 1,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ],
+            if (summary.isNotEmpty) ...[
+              pw.SizedBox(height: 24),
+              _atsHighlightedSummaryText(
+                summary,
+                bodyPt: bodyPt,
+                highlightSummary: highlightSummary,
+                highlightColor: highlightColor,
+              ),
+            ],
+          ];
+
+          if (resume.includeWorkInResume) {
+            widgets.add(pw.SizedBox(height: 28));
+            widgets.add(_accentStripSectionTitle('EXPERIENCE', bodyPt));
+            final items = resume.visibleWorkExperiences;
+            if (items.isEmpty) {
+              widgets.add(
+                pw.Text(
+                  'Add experience entries with dates, roles, and outcomes.',
+                  style: pw.TextStyle(fontSize: bodyPt),
+                ),
+              );
+            } else {
+              for (var index = 0; index < items.length; index++) {
+                final item = items[index];
+                final dateLabel = _atsWorkDateRange(item);
+                final roleLine = [
+                  item.role.trim(),
+                  item.company.trim(),
+                ].where((value) => value.isNotEmpty).join(' | ');
+                final bullets = _workBulletLines(item);
+                final highlightedBullets =
+                    highlightedBulletsByExperience[index] ?? const <String>{};
+
+                if (dateLabel.isNotEmpty) {
+                  widgets.add(
+                    pw.Text(
+                      dateLabel,
+                      style: pw.TextStyle(
+                        fontSize: bodyPt + 2.2,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  );
+                }
+                if (roleLine.isNotEmpty) {
+                  widgets.add(pw.SizedBox(height: 4));
+                  widgets.add(
+                    pw.Text(
+                      roleLine,
+                      style: pw.TextStyle(
+                        fontSize: bodyPt + 0.8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  );
+                }
+
+                if (bullets.isNotEmpty) {
+                  widgets.add(pw.SizedBox(height: 6));
+                  for (final bullet in bullets) {
+                    widgets.add(
+                      _atsHighlightedBulletLine(
+                        bullet,
+                        style: pw.TextStyle(
+                          fontSize: bodyPt,
+                          lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+                            bodyPt,
+                          ),
+                        ),
+                        isHighlighted: highlightedBullets.contains(bullet),
+                        highlightColor: highlightColor,
+                      ),
+                    );
+                  }
+                } else if (item.description.trim().isNotEmpty) {
+                  widgets.add(pw.SizedBox(height: 6));
+                  widgets.add(
+                    pw.Text(
+                      item.description.trim(),
+                      style: pw.TextStyle(
+                        fontSize: bodyPt,
+                        lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+                          bodyPt,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                if (index < items.length - 1) {
+                  widgets.add(pw.SizedBox(height: 18));
+                }
+              }
+            }
+          }
+
+          if (resume.includeEducationInResume) {
+            widgets.add(pw.SizedBox(height: 22));
+            widgets.add(_accentStripSectionTitle('EDUCATION', bodyPt));
+            final items = resume.visibleEducation;
+            if (items.isEmpty) {
+              widgets.add(
+                pw.Text(
+                  'Add education details.',
+                  style: pw.TextStyle(fontSize: bodyPt),
+                ),
+              );
+            } else {
+              for (final item in items) {
+                final dates = [
+                  item.startDate.trim(),
+                  item.endDate.trim(),
+                ].where((value) => value.isNotEmpty).join(' – ');
+                widgets.add(
+                  pw.Text(
+                    item.degree.trim().ifEmpty('Degree'),
+                    style: pw.TextStyle(
+                      fontSize: bodyPt + 0.8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                );
+                widgets.add(pw.SizedBox(height: 3));
+                widgets.add(
+                  pw.Text(
+                    [
+                      item.institution.trim().ifEmpty('Institution'),
+                      if (dates.isNotEmpty) dates,
+                    ].join(' | '),
+                    style: pw.TextStyle(fontSize: bodyPt),
+                  ),
+                );
+                widgets.add(pw.SizedBox(height: 10));
+              }
+            }
+          }
+
+          if (resume.includeSkillsInResume) {
+            widgets.add(pw.SizedBox(height: 18));
+            widgets.add(_accentStripSectionTitle('SKILLS', bodyPt));
+            if (skills.isEmpty) {
+              widgets.add(
+                pw.Text(
+                  'Add skills aligned to the target role.',
+                  style: pw.TextStyle(fontSize: bodyPt),
+                ),
+              );
+            } else {
+              final rows = <pw.Widget>[];
+              for (final skill in skills) {
+                final text = highlightedSkills.contains(skill)
+                    ? pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 2,
+                        ),
+                        color: highlightColor,
+                        child: pw.Text(
+                          '• $skill',
+                          style: pw.TextStyle(fontSize: bodyPt),
+                        ),
+                      )
+                    : pw.Text(
+                        '• $skill',
+                        style: pw.TextStyle(fontSize: bodyPt),
+                      );
+                rows.add(text);
+              }
+              widgets.add(
+                pw.Wrap(
+                  spacing: 18,
+                  runSpacing: 6,
+                  children: rows,
+                ),
+              );
+            }
+          }
+
+          if (resume.includeProjectsInResume) {
+            final items = resume.visibleProjects;
+            if (items.isNotEmpty) {
+              widgets.add(pw.SizedBox(height: 18));
+              widgets.add(_accentStripSectionTitle('PROJECTS', bodyPt));
+              for (final item in items) {
+                widgets.add(
+                  pw.Text(
+                    item.title.trim().ifEmpty('Project'),
+                    style: pw.TextStyle(
+                      fontSize: bodyPt + 0.8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                );
+                final lines = _projectBulletLines(item);
+                final content = lines.isNotEmpty
+                    ? lines.join(' ')
+                    : [
+                        item.overview.trim(),
+                        item.impact.trim(),
+                      ].where((value) => value.isNotEmpty).join(' | ');
+                if (content.isNotEmpty) {
+                  widgets.add(pw.SizedBox(height: 4));
+                  widgets.add(
+                    pw.Text(
+                      content,
+                      style: pw.TextStyle(fontSize: bodyPt),
+                    ),
+                  );
+                }
+                widgets.add(pw.SizedBox(height: 10));
+              }
+            }
+          }
+
+          for (final section in resume.visibleCustomSections) {
+            widgets.add(pw.SizedBox(height: 18));
+            widgets.add(
+              _accentStripSectionTitle(
+                section.title.trim().ifEmpty('ADDITIONAL').toUpperCase(),
+                bodyPt,
+              ),
+            );
+            for (final widget in _pwCustomSectionBodyWidgets(section)) {
+              widgets.add(widget);
+            }
+          }
+
+          return widgets;
+        },
+      ),
+    );
+  }
 }

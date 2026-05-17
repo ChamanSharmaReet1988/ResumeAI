@@ -185,6 +185,63 @@ void main() {
     );
   }
 
+  ResumeData buildAccentStripResume() {
+    return ResumeData.empty(template: ResumeTemplate.accentStrip).copyWith(
+      title: 'Accent Strip Test',
+      fullName: 'Donna Robbins',
+      jobTitle: 'Senior Accountant',
+      email: 'donna@example.com',
+      phone: '(313) 555-0100',
+      location: '4567 Main Street, Detroit, MI 48127',
+      website: 'www.greatsiteaddress.com',
+      summary:
+          'Analytical accountant with GAAP expertise, ownership mentality, and experience supporting public accounting and business finance operations.',
+      workExperiences: const [
+        WorkExperience(
+          role: 'Accountant',
+          company: 'Trey Research | San Francisco, CA',
+          startDate: '20XX',
+          endDate: 'Present',
+          description:
+              'Provided accounting services for business and individual clients including reconciliations, tax preparation, and financial statement support.',
+          bullets: [],
+        ),
+        WorkExperience(
+          role: 'Bookkeeper',
+          company: 'Bandter Real Estate | Berkeley, CA',
+          startDate: '20XX',
+          endDate: '20XX',
+          description:
+              'Maintained books, tracked expenses, prepared invoices, and supported payroll administration.',
+          bullets: [],
+        ),
+      ],
+      education: const [
+        EducationItem(
+          institution: 'University of Michigan',
+          degree: 'Bachelor of Business Administration in Accounting',
+          startDate: '20XX',
+          endDate: '20XX',
+          score: '',
+        ),
+      ],
+      skills: const [
+        'GAAP',
+        'Income tax preparation',
+        'Audit support',
+        'General ledger accounting',
+      ],
+      projects: const [
+        ProjectItem(
+          title: 'Quarter-End Close Playbook',
+          bullets: [
+            'Standardized close steps and reconciliations to improve reporting readiness.',
+          ],
+        ),
+      ],
+    );
+  }
+
   ResumeData buildLongClassicSidebarResume() {
     final workItems = List<WorkExperience>.generate(
       10,
@@ -427,6 +484,26 @@ void main() {
           'Prepared reports and maintained confidential records across office operations.',
         },
       },
+    );
+
+    expect(pdfBytes, isNotEmpty);
+  });
+
+  test('accent strip template PDF renders successfully', () async {
+    final service = ResumePdfService();
+    final pdfBytes = await service.buildPdf(buildAccentStripResume());
+
+    expect(pdfBytes, isNotEmpty);
+  });
+
+  test('highlighted accent strip template PDF renders successfully', () async {
+    final service = ResumePdfService();
+    final resume = buildAccentStripResume();
+    final pdfBytes = await service.buildHighlightedResumePdf(
+      resume: resume,
+      highlightSummary: true,
+      highlightedSkills: const {'GAAP'},
+      highlightedBulletsByExperience: const {},
     );
 
     expect(pdfBytes, isNotEmpty);

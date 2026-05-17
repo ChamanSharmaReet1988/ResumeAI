@@ -145,6 +145,7 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.detailsSidebar => _DetailsSidebarPreview(
         resume: resume,
       ),
+      ResumeTemplate.accentStrip => _AccentStripPreview(resume: resume),
       ResumeTemplate.atsStructured => _AtsStructuredPreview(resume: resume),
       ResumeTemplate.atsSerifRules => _AtsSerifRulesPreview(resume: resume),
       ResumeTemplate.atsModernFlow => _AtsModernFlowPreview(resume: resume),
@@ -1871,6 +1872,375 @@ class _AtsStructuredPreview extends StatelessWidget {
           decoration: TextDecoration.underline,
         ),
       ),
+    );
+  }
+}
+
+class _AccentStripPreview extends StatelessWidget {
+  const _AccentStripPreview({required this.resume});
+
+  final ResumeData resume;
+
+  @override
+  Widget build(BuildContext context) {
+    final body = resume.effectiveBodyFontPt.toDouble();
+    final accent = resume.corporateColorPreset.headerColor;
+    final titleColor = const Color(0xFF111111);
+    final contactItems = <String>[
+      if (resume.location.trim().isNotEmpty) resume.location.trim(),
+      if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
+      if (resume.email.trim().isNotEmpty) resume.email.trim(),
+      if (resume.website.trim().isNotEmpty) resume.website.trim(),
+    ];
+    final works = resume.visibleWorkExperiences.take(3).toList();
+    final education = resume.visibleEducation.take(2).toList();
+    final skills = _pdfAlignedSkills(resume).take(6).toList();
+    final projects = resume.visibleProjects.take(1).toList();
+    final customSections = resume.visibleCustomSections.take(1).toList();
+
+    final bodyStyle = TextStyle(
+      color: titleColor,
+      fontSize: body + 0.4,
+      height: 1.4,
+    );
+    final metaStyle = bodyStyle.copyWith(fontSize: body + 0.2);
+    final headingStyle = bodyStyle.copyWith(
+      fontSize: body + 5,
+      fontWeight: FontWeight.w800,
+      letterSpacing: 0.2,
+    );
+    final roleStyle = bodyStyle.copyWith(fontWeight: FontWeight.w500);
+    final dateStyle = bodyStyle.copyWith(
+      fontSize: body + 2,
+      fontWeight: FontWeight.w800,
+    );
+    final sectionGap = body + 10;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final resolvedHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : constraints.maxWidth / ResumePreviewCard._a4AspectRatio;
+
+        return ColoredBox(
+          color: Colors.white,
+          child: SizedBox(
+            height: resolvedHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned(
+                  left: 22,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 34,
+                    color: accent,
+                  ),
+                ),
+                SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(96, 34, 38, 30),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _pdfAlignedDisplayName(resume).toUpperCase(),
+                          style: bodyStyle.copyWith(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.4,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (contactItems.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            contactItems.join(' | '),
+                            style: bodyStyle.copyWith(
+                              fontSize: body + 1.1,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        if (resume.summary.trim().isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          Text(
+                            resume.summary.trim(),
+                            style: bodyStyle,
+                            maxLines: 5,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        if (works.isNotEmpty) ...[
+                          SizedBox(height: sectionGap),
+                          _AccentStripSectionTitle(
+                            title: 'EXPERIENCE',
+                            style: headingStyle,
+                          ),
+                          const SizedBox(height: 10),
+                          for (final item in works)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _AccentStripExperienceBlock(
+                                item: item,
+                                dateStyle: dateStyle,
+                                metaStyle: metaStyle,
+                                bodyStyle: bodyStyle,
+                                roleStyle: roleStyle,
+                              ),
+                            ),
+                        ],
+                        if (education.isNotEmpty) ...[
+                          SizedBox(height: sectionGap - 4),
+                          _AccentStripSectionTitle(
+                            title: 'EDUCATION',
+                            style: headingStyle,
+                          ),
+                          const SizedBox(height: 10),
+                          for (final item in education)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _AccentStripEducationBlock(
+                                item: item,
+                                titleStyle: roleStyle,
+                                bodyStyle: bodyStyle,
+                              ),
+                            ),
+                        ],
+                        if (skills.isNotEmpty) ...[
+                          SizedBox(height: sectionGap - 6),
+                          _AccentStripSectionTitle(
+                            title: 'SKILLS',
+                            style: headingStyle,
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 18,
+                            runSpacing: 6,
+                            children: skills
+                                .map(
+                                  (skill) => Text(
+                                    '• $skill',
+                                    style: bodyStyle,
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ],
+                        if (projects.isNotEmpty) ...[
+                          SizedBox(height: sectionGap - 6),
+                          _AccentStripSectionTitle(
+                            title: 'PROJECTS',
+                            style: headingStyle,
+                          ),
+                          const SizedBox(height: 10),
+                          for (final item in projects)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _AccentStripProjectBlock(
+                                item: item,
+                                titleStyle: roleStyle,
+                                bodyStyle: bodyStyle,
+                              ),
+                            ),
+                        ],
+                        for (final item in customSections) ...[
+                          SizedBox(height: sectionGap - 6),
+                          _AccentStripSectionTitle(
+                            title: item.title.trim().toUpperCase(),
+                            style: headingStyle,
+                          ),
+                          const SizedBox(height: 10),
+                          _AccentStripCustomSectionBlock(
+                            item: item,
+                            bodyStyle: bodyStyle,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AccentStripSectionTitle extends StatelessWidget {
+  const _AccentStripSectionTitle({
+    required this.title,
+    required this.style,
+  });
+
+  final String title;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(title, style: style);
+  }
+}
+
+class _AccentStripExperienceBlock extends StatelessWidget {
+  const _AccentStripExperienceBlock({
+    required this.item,
+    required this.dateStyle,
+    required this.metaStyle,
+    required this.bodyStyle,
+    required this.roleStyle,
+  });
+
+  final WorkExperience item;
+  final TextStyle dateStyle;
+  final TextStyle metaStyle;
+  final TextStyle bodyStyle;
+  final TextStyle roleStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final dateLabel = [
+      item.startDate.trim(),
+      item.endDate.trim(),
+    ].where((value) => value.isNotEmpty).join(' – ');
+    final roleLine = [
+      item.role.trim(),
+      item.company.trim(),
+    ].where((value) => value.isNotEmpty).join(' | ');
+    final body = _workBulletLines(item).join(' ').ifBlank(
+          item.description.trim().ifBlank('Add outcomes and scope.'),
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (dateLabel.isNotEmpty)
+          Text(dateLabel, style: dateStyle, maxLines: 1, overflow: TextOverflow.ellipsis),
+        if (roleLine.isNotEmpty) ...[
+          const SizedBox(height: 5),
+          Text(roleLine, style: roleStyle, maxLines: 2, overflow: TextOverflow.ellipsis),
+        ],
+        if (body.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(body, style: bodyStyle, maxLines: 4, overflow: TextOverflow.ellipsis),
+        ],
+      ],
+    );
+  }
+}
+
+class _AccentStripEducationBlock extends StatelessWidget {
+  const _AccentStripEducationBlock({
+    required this.item,
+    required this.titleStyle,
+    required this.bodyStyle,
+  });
+
+  final EducationItem item;
+  final TextStyle titleStyle;
+  final TextStyle bodyStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = item.degree.trim().ifBlank('Degree');
+    final school = item.institution.trim().ifBlank('Institution');
+    final dates = [
+      item.startDate.trim(),
+      item.endDate.trim(),
+    ].where((value) => value.isNotEmpty).join(' – ');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: titleStyle, maxLines: 2, overflow: TextOverflow.ellipsis),
+        const SizedBox(height: 3),
+        Text(
+          [school, dates].where((value) => value.isNotEmpty).join(' | '),
+          style: bodyStyle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+}
+
+class _AccentStripProjectBlock extends StatelessWidget {
+  const _AccentStripProjectBlock({
+    required this.item,
+    required this.titleStyle,
+    required this.bodyStyle,
+  });
+
+  final ProjectItem item;
+  final TextStyle titleStyle;
+  final TextStyle bodyStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final bullets = _projectBulletLines(item);
+    final body = bullets.join(' ').ifBlank(
+      [item.overview.trim(), item.impact.trim()]
+          .where((value) => value.isNotEmpty)
+          .join(' | ')
+          .ifBlank('Add project highlights.'),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          item.title.trim().ifBlank('Project'),
+          style: titleStyle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 4),
+        Text(body, style: bodyStyle, maxLines: 3, overflow: TextOverflow.ellipsis),
+      ],
+    );
+  }
+}
+
+class _AccentStripCustomSectionBlock extends StatelessWidget {
+  const _AccentStripCustomSectionBlock({
+    required this.item,
+    required this.bodyStyle,
+  });
+
+  final CustomSectionItem item;
+  final TextStyle bodyStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    if (item.layoutMode == CustomSectionLayoutMode.bullets) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: item.bullets
+            .take(3)
+            .where((value) => value.trim().isNotEmpty)
+            .map(
+              (bullet) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text('• $bullet', style: bodyStyle),
+              ),
+            )
+            .toList(),
+      );
+    }
+
+    return Text(
+      item.content.trim().ifBlank('Add content'),
+      style: bodyStyle,
+      maxLines: 4,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }
