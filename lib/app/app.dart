@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/services/app_preferences.dart';
+import '../core/services/premium_purchase_service.dart';
 import '../core/services/firebase_app_services.dart';
 import '../core/services/google_drive_resume_service.dart';
 import '../core/services/icloud_resume_service.dart';
@@ -19,12 +20,14 @@ class ResumeApp extends StatelessWidget {
     super.key,
     required this.repository,
     required this.appPreferences,
+    required this.premiumPurchaseService,
     required this.firebaseServices,
     required this.googleDriveResumeService,
   });
 
   final ResumeRepository repository;
   final AppPreferences appPreferences;
+  final PremiumPurchaseService premiumPurchaseService;
   final FirebaseAppServices firebaseServices;
   final GoogleDriveResumeService googleDriveResumeService;
 
@@ -36,6 +39,9 @@ class ResumeApp extends StatelessWidget {
       providers: [
         Provider<ResumeRepository>.value(value: repository),
         Provider<AppPreferences>.value(value: appPreferences),
+        ChangeNotifierProvider<PremiumPurchaseService>.value(
+          value: premiumPurchaseService,
+        ),
         Provider<FirebaseAppServices>.value(value: firebaseServices),
         Provider<ICloudResumeService>(
           create: (_) => const MethodChannelICloudResumeService(),

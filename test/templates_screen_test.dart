@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
@@ -56,11 +57,18 @@ void main() {
         repository: _FakeTemplatesRepository(),
       );
 
+      final appPreferences = AppPreferences.inMemory(isPremium: true);
       await tester.pumpWidget(
         MultiProvider(
           providers: [
             ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
             Provider<ResumePdfService>(create: (_) => ResumePdfService()),
+            ChangeNotifierProvider<PremiumPurchaseService>(
+              create: (_) => PremiumPurchaseService.inMemory(
+                appPreferences: appPreferences,
+                isPremium: true,
+              ),
+            ),
           ],
           child: const MaterialApp(
             home: Scaffold(body: TemplatesScreen(onCreateResume: _noop)),

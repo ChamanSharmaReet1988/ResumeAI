@@ -10,6 +10,7 @@ import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/services/resume_services.dart';
+import '../premium/premium_gate.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
@@ -46,6 +47,65 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         widget.onTemplateSelected == null) {
       _selectedSegment = _TemplateSegment.coverLetter;
     }
+  }
+
+  Future<void> _onTemplateTileTapped(
+    BuildContext context,
+    _TemplateTileData item,
+    ResumeLibraryViewModel? library,
+  ) async {
+    if (!await ensurePremiumForTemplateTile(context, templateTileId: item.id)) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+
+    if (widget.onTemplateSelected != null && item.resumeTemplate != null) {
+      widget.onTemplateSelected!(item.resumeTemplate!);
+      return;
+    }
+    if (widget.onCoverLetterTemplateSelected != null &&
+        item.coverLetterTemplate != null) {
+      widget.onCoverLetterTemplateSelected!(item.coverLetterTemplate!);
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _TemplateDetailScreen(
+          item: item,
+          paletteSeed: library?.selectedResume,
+          onUseTemplate: item.resumeTemplate == null
+              ? null
+              : () => _applyResumeTemplate(context, item, library),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _applyResumeTemplate(
+    BuildContext context,
+    _TemplateTileData item,
+    ResumeLibraryViewModel? library,
+  ) async {
+    if (!await ensurePremiumForTemplateTile(context, templateTileId: item.id)) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+
+    library?.setDefaultTemplate(item.resumeTemplate!);
+    if (!context.mounted) {
+      return;
+    }
+    Navigator.of(context).pop();
+    widget.onCreateResume?.call();
   }
 
   @override
@@ -193,38 +253,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                 item: item,
                 selected: selected,
                 paletteSeed: library?.selectedResume,
-                onTap: () {
-                  if (widget.onTemplateSelected != null &&
-                      item.resumeTemplate != null) {
-                    widget.onTemplateSelected!(item.resumeTemplate!);
-                    return;
-                  }
-                  if (widget.onCoverLetterTemplateSelected != null &&
-                      item.coverLetterTemplate != null) {
-                    widget.onCoverLetterTemplateSelected!(
-                      item.coverLetterTemplate!,
-                    );
-                    return;
-                  }
-
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => _TemplateDetailScreen(
-                        item: item,
-                        paletteSeed: library?.selectedResume,
-                        onUseTemplate: item.resumeTemplate == null
-                            ? null
-                            : () {
-                                library?.setDefaultTemplate(
-                                  item.resumeTemplate!,
-                                );
-                                Navigator.of(context).pop();
-                                widget.onCreateResume?.call();
-                              },
-                      ),
-                    ),
-                  );
-                },
+                onTap: () =>
+                    _onTemplateTileTapped(context, item, library),
               );
             },
           ),
@@ -258,31 +288,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   item: item,
                   selected: selected,
                   paletteSeed: library?.selectedResume,
-                  onTap: () {
-                    if (widget.onTemplateSelected != null &&
-                        item.resumeTemplate != null) {
-                      widget.onTemplateSelected!(item.resumeTemplate!);
-                      return;
-                    }
-
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => _TemplateDetailScreen(
-                          item: item,
-                          paletteSeed: library?.selectedResume,
-                          onUseTemplate: item.resumeTemplate == null
-                              ? null
-                              : () {
-                                  library?.setDefaultTemplate(
-                                    item.resumeTemplate!,
-                                  );
-                                  Navigator.of(context).pop();
-                                  widget.onCreateResume?.call();
-                                },
-                        ),
-                      ),
-                    );
-                  },
+                  onTap: () =>
+                      _onTemplateTileTapped(context, item, library),
                 );
               },
             ),
@@ -503,7 +510,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsStructuredResume,
     headline: 'Structured ATS',
     caption: 'Gray section bands and a centered header for parsers.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'ats-serif-rules',
@@ -554,7 +561,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.executiveNoteCoverLetter,
     headline: 'Executive Note',
     caption: 'Clean professional cover letter with a strong header block.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'minimal-letter',
@@ -562,7 +569,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.minimalCoverLetter,
     headline: 'Minimal Letter',
     caption: 'Centered and airy layout with restrained modern spacing.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'sidebar-letter',
@@ -570,7 +577,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.sidebarCoverLetter,
     headline: 'Sidebar Letter',
     caption: 'A bolder cover letter with a left rail for contact details.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'classic-business-letter',
@@ -579,7 +586,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     headline: 'Classic Business',
     caption:
         'Traditional business letter: date, recipient block, and left-aligned body.',
-    isPremium: true,
+    isPremium: false,
   ),
 ];
 

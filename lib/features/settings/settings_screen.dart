@@ -1,13 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'google_drive_backup_screen.dart';
 import 'icloud_backup_screen.dart';
+import '../premium/go_premium_screen.dart';
+import '../premium/premium_gate.dart';
 import '../shared/view_models.dart';
+import '../../core/services/premium_purchase_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -18,7 +22,6 @@ class SettingsScreen extends StatelessWidget {
   static final Uri _termsOfUseUri = Uri.parse(
     'https://sites.google.com/mindplexapp.com/resumeapp/terms',
   );
-  static final Uri _goPremiumUri = Uri.parse('https://resumeai.app/premium');
   static final Uri _appStoreUri = Uri.parse(
     'https://apps.apple.com/us/app/resume-builder/id6768385894',
   );
@@ -113,11 +116,40 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _openGoPremium(BuildContext context) async {
+    final premium = context.read<PremiumPurchaseService>();
+    if (premium.isPremium) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You already have ResumeApp Pro.')),
+      );
+      return;
+    }
+
+    final unlocked = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const GoPremiumScreen(),
+      ),
+    );
+
+    if (!context.mounted) {
+      return;
+    }
+    if (unlocked == true || premium.isPremium) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ResumeApp Pro is now active.')),
+      );
+    }
+  }
+
   Future<void> _openBackup(BuildContext context) async {
     if (!context.mounted) {
       return;
     }
     if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final allowed = await ensurePremiumForICloudBackup(context);
+      if (!allowed || !context.mounted) {
+        return;
+      }
       await Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => const ICloudBackupScreen()),
       );
@@ -130,10 +162,21 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _openDeveloperTools(BuildContext context) async {
+    if (!kDebugMode) {
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const _DeveloperToolsScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsViewModel>(
-      builder: (context, settings, _) {
+    return Consumer2<SettingsViewModel, PremiumPurchaseService>(
+      builder: (context, settings, premium, _) {
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
         final isIos = defaultTargetPlatform == TargetPlatform.iOS;
@@ -145,12 +188,28 @@ class SettingsScreen extends StatelessWidget {
           fontWeight: FontWeight.w400,
         );
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            const horizontalPadding = 20.0;
+            const topPadding = 20.0;
+            const bottomPadding = 24.0;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                horizontalPadding,
+                topPadding,
+                horizontalPadding,
+                bottomPadding,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - topPadding - bottomPadding,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Card(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -243,7 +302,7 @@ class SettingsScreen extends StatelessWidget {
               Card(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _openExternalUrl(context, _goPremiumUri),
+                  onTap: () => _openGoPremium(context),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -258,7 +317,20 @@ class SettingsScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text('Go Premium', style: rowLabelStyle),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Go Premium', style: rowLabelStyle),
+                              if (premium.isPremium)
+                                Text(
+                                  'Active',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                         Icon(
                           Icons.arrow_forward_ios_rounded,
@@ -418,11 +490,130 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                      ),
+                      const Spacer(),
+                      const SizedBox(height: 20),
+                      _SettingsVersionFooter(
+                        onTap: kDebugMode
+                            ? () => _openDeveloperTools(context)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _SettingsVersionFooter extends StatefulWidget {
+  const _SettingsVersionFooter({this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  State<_SettingsVersionFooter> createState() => _SettingsVersionFooterState();
+}
+
+class _SettingsVersionFooterState extends State<_SettingsVersionFooter> {
+  late final Future<PackageInfo?> _packageInfoFuture = _loadPackageInfo();
+
+  Future<PackageInfo?> _loadPackageInfo() async {
+    try {
+      return await PackageInfo.fromPlatform();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return FutureBuilder<PackageInfo?>(
+      future: _packageInfoFuture,
+      builder: (context, snapshot) {
+        final packageInfo = snapshot.data;
+        final versionLabel = packageInfo == null
+            ? 'Version'
+            : 'Version ${packageInfo.version} (${packageInfo.buildNumber})';
+        final text = Text(
+          versionLabel,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: 11,
+            color: colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
+        );
+
+        if (widget.onTap == null) {
+          return text;
+        }
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: widget.onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: text,
           ),
         );
       },
+    );
+  }
+}
+
+class _DeveloperToolsScreen extends StatelessWidget {
+  const _DeveloperToolsScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Developer Tools')),
+      body: SafeArea(
+        child: Consumer<PremiumPurchaseService>(
+          builder: (context, premium, _) {
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              children: [
+                Card(
+                  child: SwitchListTile(
+                    value: premium.debugPremiumOverrideEnabled,
+                    onChanged: (value) async {
+                      await premium.setDebugPremiumOverrideEnabled(value);
+                    },
+                    title: Text(
+                      'Enable Pro feature',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Debug-only override for premium access testing.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }

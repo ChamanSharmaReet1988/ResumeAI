@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_import_service.dart';
@@ -75,12 +76,20 @@ void main() {
       await resumeLibrary.loadResumes();
       await coverLetterLibrary.loadCoverLetters();
 
+      final appPreferences = AppPreferences.inMemory();
+      final premiumPurchaseService = PremiumPurchaseService.inMemory(
+        appPreferences: appPreferences,
+      );
+
       await tester.pumpWidget(
         MultiProvider(
           providers: [
             Provider<ResumeImportService>.value(value: ResumeImportService()),
             Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
+            Provider<AppPreferences>.value(value: appPreferences),
+            ChangeNotifierProvider<PremiumPurchaseService>.value(
+              value: premiumPurchaseService,
+            ),
             Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
             Provider<ResumePdfService>.value(value: ResumePdfService()),
             ChangeNotifierProvider<ResumeLibraryViewModel>.value(
@@ -126,12 +135,20 @@ void main() {
       await resumeLibrary.loadResumes();
       await coverLetterLibrary.loadCoverLetters();
 
+      final appPreferences = AppPreferences.inMemory();
+      final premiumPurchaseService = PremiumPurchaseService.inMemory(
+        appPreferences: appPreferences,
+      );
+
       await tester.pumpWidget(
         MultiProvider(
           providers: [
             Provider<ResumeImportService>.value(value: ResumeImportService()),
             Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
+            Provider<AppPreferences>.value(value: appPreferences),
+            ChangeNotifierProvider<PremiumPurchaseService>.value(
+              value: premiumPurchaseService,
+            ),
             Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
             Provider<ResumePdfService>.value(value: ResumePdfService()),
             ChangeNotifierProvider<ResumeLibraryViewModel>.value(

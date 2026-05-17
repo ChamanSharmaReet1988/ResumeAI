@@ -1,4 +1,4 @@
-package com.chamansharma.resume_app
+package com.quickresume
 
 import io.flutter.embedding.android.FlutterActivity
 
