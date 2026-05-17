@@ -3292,6 +3292,15 @@ String _classicSidebarExperienceCompanyDatesLine(WorkExperience item) {
   return '$company · $dates';
 }
 
+/// Sidebar list spacing aligned with [_ClassicSidebarPreview] / [_ClassicSidebarListSection].
+abstract final class _ClassicSidebarPreviewSkillsSpacing {
+  static const double headingGap = 14;
+  static const double itemGap = 8;
+  static const double afterSectionGap = 12;
+  static const double beforeNextTitleGap = 10;
+  static const double languagesHeadingGap = 8;
+}
+
 class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   const _ClassicSidebarTemplateArtCompact({
     required this.resume,
@@ -3303,7 +3312,14 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
 
   static const double _layoutScale = 240 / 595.28;
 
+  /// [_ClassicSidebarPreview] sidebar is 122 logical px wide; tile art is 60.
+  static const double _previewSidebarWidth = 122;
+  static const double _tileSidebarWidth = 60;
+
   static double _scaledPt(double pt) => pt * _layoutScale;
+
+  static double _matchPreviewSpacing(double previewLogicalPx) =>
+      previewLogicalPx * (_tileSidebarWidth / _previewSidebarWidth);
 
   static TextStyle _bodyStyle() => ResumeTypography.calibriPreviewStyle(
         weight: ResumeTypography.classicSidebarBodyWeight,
@@ -3420,19 +3436,23 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: ClipOval(
-                        child: Container(
-                          width: 52,
-                          height: 52,
-                          color: avatar,
-                          alignment: Alignment.center,
-                          child: Text(
-                            _miniClassicInitials(resume.fullName),
-                            textAlign: TextAlign.center,
-                            style: avatarInitialsStyle.copyWith(color: title),
-                            textHeightBehavior: const TextHeightBehavior(
-                              applyHeightToFirstAscent: false,
-                              applyHeightToLastDescent: false,
+                      child: SizedBox(
+                        width: 52,
+                        height: 52,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: avatar,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              _miniClassicInitials(resume.fullName),
+                              textAlign: TextAlign.center,
+                              style: avatarInitialsStyle.copyWith(color: title),
+                              textHeightBehavior: const TextHeightBehavior(
+                                applyHeightToFirstAscent: false,
+                                applyHeightToLastDescent: false,
+                              ),
                             ),
                           ),
                         ),
@@ -3445,21 +3465,39 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                       'SKILLS',
                       style: sectionHeadingStyle.copyWith(color: title),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: _matchPreviewSpacing(
+                        _ClassicSidebarPreviewSkillsSpacing.headingGap,
+                      ),
+                    ),
                     _MiniBulletColumn(
                       items: skills,
                       bulletColor: accent,
                       textStyle: bodyStyle,
-                      itemBottom: 4,
+                      itemBottom: _matchPreviewSpacing(
+                        _ClassicSidebarPreviewSkillsSpacing.itemGap,
+                      ),
                     ),
-                    SizedBox(height: detailed ? 8 : 4),
+                    SizedBox(
+                      height: _matchPreviewSpacing(
+                        _ClassicSidebarPreviewSkillsSpacing.afterSectionGap,
+                      ),
+                    ),
                     Container(height: 1, color: line),
-                    SizedBox(height: detailed ? 5 : 3),
+                    SizedBox(
+                      height: _matchPreviewSpacing(
+                        _ClassicSidebarPreviewSkillsSpacing.beforeNextTitleGap,
+                      ),
+                    ),
                     Text(
                       'LANGUAGES',
                       style: sectionHeadingStyle.copyWith(color: title),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(
+                      height: _matchPreviewSpacing(
+                        _ClassicSidebarPreviewSkillsSpacing.languagesHeadingGap,
+                      ),
+                    ),
                     _MiniBulletColumn(
                       items: languages,
                       bulletColor: accent,
@@ -3512,12 +3550,12 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                               text: resume.linkedinLink.trim(),
                             ),
                           ],
-                          SizedBox(height: detailed ? 6 : 4),
+                          const SizedBox(height: 10),
                           Text(
                             'SUMMARY',
                             style: sectionHeadingStyle.copyWith(color: title),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
                             summary,
                             maxLines: detailed ? 5 : 2,
@@ -3566,20 +3604,31 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           const SizedBox(height: 4),
                           for (final item in education) ...[
                             Text(
-                              item.degree,
-                              maxLines: 1,
+                              '${item.degree.trim().isEmpty ? 'Degree' : item.degree.trim()}, '
+                              '${item.institution.trim().isEmpty ? 'Institution' : item.institution.trim()}',
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: subtitleStyle.copyWith(color: title),
                             ),
-                            Text(
-                              '${item.institution} · ${item.endDate}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: mutedBodyStyle.copyWith(
-                                fontStyle: FontStyle.italic,
+                            if ([
+                              item.startDate.trim(),
+                              item.endDate.trim(),
+                            ].where((value) => value.isNotEmpty).isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  [
+                                    item.startDate.trim(),
+                                    item.endDate.trim(),
+                                  ].where((value) => value.isNotEmpty).join(' - '),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: mutedBodyStyle.copyWith(
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
                               ),
-                            ),
-                            SizedBox(height: detailed ? 3 : 1),
+                            SizedBox(height: detailed ? 8 : 6),
                           ],
                           SizedBox(height: detailed ? 3 : 2),
                           Container(height: 1, color: line),
