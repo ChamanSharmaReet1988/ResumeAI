@@ -2615,11 +2615,15 @@ class _AtsSerifRulesPreview extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 10),
+          const SizedBox(height: ResumeTypography.atsSerifRulesSectionLeadGapPt),
           Text(title, style: sectionTitleStyle),
-          const SizedBox(height: 4),
+          const SizedBox(
+            height: ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt,
+          ),
           Container(height: 1, color: _ink.withValues(alpha: 0.35)),
-          const SizedBox(height: 6),
+          const SizedBox(
+            height: ResumeTypography.atsSerifRulesSectionContentTopGapPt,
+          ),
           ...children,
         ],
       );
@@ -2647,7 +2651,7 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _pdfAlignedDisplayName(resume),
+                          resume.serifRulesDisplayName,
                           style: ResumeTypography.garamondPreviewStyle(
                             weight: ResumeTypography.atsStructuredNameWeight,
                             fontSize: _atsPreviewNameFontSize,
@@ -2779,19 +2783,13 @@ class _AtsSerifRulesPreview extends StatelessWidget {
               if (resume.includeSkillsInResume && skills.isNotEmpty)
                 ruledSection(
                   'Skills',
-                  skills
-                      .map(
-                        (s) => Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: Text(
-                            '• $s',
-                            style: bodyStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      )
-                      .toList(),
+                  [
+                    _atsStructuredSkillsGrid(
+                      skills: skills,
+                      bodyStyle: bodyStyle,
+                      showAllContent: false,
+                    ),
+                  ],
                 ),
               if (resume.includeProjectsInResume && projects.isNotEmpty)
                 ruledSection(

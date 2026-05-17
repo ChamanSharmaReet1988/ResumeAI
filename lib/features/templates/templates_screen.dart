@@ -2488,7 +2488,7 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          resume.fullName.trim(),
+                          resume.serifRulesDisplayName,
                           style: nameStyle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -2539,15 +2539,25 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 7),
+              SizedBox(
+                height: _scaledPt(ResumeTypography.atsSerifRulesSectionLeadGapPt + 4),
+              ),
               Text('Summary', style: sectionTitleStyle),
-              const SizedBox(height: 3),
+              SizedBox(
+                height: _scaledPt(
+                  ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt,
+                ),
+              ),
               Container(
                 height: 1,
                 color: ResumeTypography.atsStructuredBodyTextColor
                     .withValues(alpha: 0.35),
               ),
-              const SizedBox(height: 5),
+              SizedBox(
+                height: _scaledPt(
+                  ResumeTypography.atsSerifRulesSectionContentTopGapPt,
+                ),
+              ),
               Text(
                 resume.summary.trim(),
                 style: body,
@@ -2555,15 +2565,25 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (works.isNotEmpty) ...[
-                const SizedBox(height: 6),
+                SizedBox(
+                  height: _scaledPt(ResumeTypography.atsSerifRulesSectionGapPt),
+                ),
                 Text('Experience', style: sectionTitleStyle),
-                const SizedBox(height: 3),
+                SizedBox(
+                  height: _scaledPt(
+                    ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt,
+                  ),
+                ),
                 Container(
                   height: 1,
                   color: ResumeTypography.atsStructuredBodyTextColor
                       .withValues(alpha: 0.35),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(
+                  height: _scaledPt(
+                    ResumeTypography.atsSerifRulesSectionContentTopGapPt,
+                  ),
+                ),
                 for (final w in works.take(detailed ? 2 : 1)) ...[
                   Text(
                     w.role.trim(),
@@ -2623,14 +2643,25 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                 ],
               ],
               if (edu.isNotEmpty) ...[
+                SizedBox(
+                  height: _scaledPt(ResumeTypography.atsSerifRulesSectionGapPt),
+                ),
                 Text('Education', style: sectionTitleStyle),
-                const SizedBox(height: 3),
+                SizedBox(
+                  height: _scaledPt(
+                    ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt,
+                  ),
+                ),
                 Container(
                   height: 1,
                   color: ResumeTypography.atsStructuredBodyTextColor
                       .withValues(alpha: 0.35),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(
+                  height: _scaledPt(
+                    ResumeTypography.atsSerifRulesSectionContentTopGapPt,
+                  ),
+                ),
                 for (final e in edu.take(detailed ? 2 : 1)) ...[
                   Text(
                     '${e.degree.trim()} · ${educationDateRangeLabel(e.startDate, e.endDate)}',
@@ -2649,17 +2680,28 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                 ],
               ],
               if (skills.isNotEmpty) ...[
+                SizedBox(
+                  height: _scaledPt(ResumeTypography.atsSerifRulesSectionGapPt),
+                ),
                 Text('Skills', style: sectionTitleStyle),
-                const SizedBox(height: 3),
+                SizedBox(
+                  height: _scaledPt(
+                    ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt,
+                  ),
+                ),
                 Container(
                   height: 1,
                   color: ResumeTypography.atsStructuredBodyTextColor
                       .withValues(alpha: 0.35),
                 ),
-                const SizedBox(height: 5),
-                _MiniBulletColumn(
-                  items: skills.take(detailed ? 8 : 5).toList(),
-                  textStyle: skillsBody,
+                SizedBox(
+                  height: _scaledPt(
+                    ResumeTypography.atsSerifRulesSectionContentTopGapPt,
+                  ),
+                ),
+                _serifRulesSkillsTwoColumn(
+                  skills.take(detailed ? 8 : 5).toList(),
+                  skillsBody,
                 ),
               ],
             ],
@@ -2678,6 +2720,53 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               child: pageContent,
             ),
+    );
+  }
+
+  Widget _serifRulesSkillsTwoColumn(List<String> skills, TextStyle body) {
+    if (skills.isEmpty) {
+      return Text('Add skills.', style: body, maxLines: 2, overflow: TextOverflow.ellipsis);
+    }
+    final midpoint = (skills.length / 2).ceil();
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final skill in skills.take(midpoint))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '• $skill',
+                    style: body,
+                    maxLines: detailed ? 2 : 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(width: _scaledPt(16)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final skill in skills.skip(midpoint))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '• $skill',
+                    style: body,
+                    maxLines: detailed ? 2 : 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

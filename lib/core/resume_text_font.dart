@@ -40,6 +40,18 @@ abstract final class ResumeTypography {
   /// Serif Rules ATS page 2+ header gap (PDF pt). Page margin already sets top inset.
   static const double atsSerifRulesContinuationPageTopGapPt = 0;
 
+  /// Serif Rules ATS — gap between sections (preview px = PDF pt).
+  static const double atsSerifRulesSectionGapPt = 16;
+
+  /// Space before a section title (after prior section or header block).
+  static const double atsSerifRulesSectionLeadGapPt = 6;
+
+  /// Section title to horizontal rule.
+  static const double atsSerifRulesSectionTitleToRuleGapPt = 3;
+
+  /// Rule to section body content.
+  static const double atsSerifRulesSectionContentTopGapPt = 5;
+
   /// Template grid tile bottom inset (logical px in 240px-wide art).
   static const double atsStructuredGridBottomInsetPx = 30;
 

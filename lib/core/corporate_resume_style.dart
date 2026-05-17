@@ -107,7 +107,27 @@ const int kResumeBodyFontPtMin = 11;
 const int kResumeBodyFontPtMax = 13;
 const int kResumeBodyFontPtDefault = 12;
 
+/// Title-case each word in a person's name (e.g. "morgan lee" → "Morgan Lee").
+String resumeFullNameTitleCase(String fullName) {
+  final trimmed = fullName.trim();
+  if (trimmed.isEmpty) {
+    return 'Your Name';
+  }
+  return trimmed
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .map(
+        (part) => part.length <= 2
+            ? part.toUpperCase()
+            : '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
+      )
+      .join(' ');
+}
+
 extension ResumeCorporateStyleX on ResumeData {
+  /// Serif Rules ATS header name — each word capitalized, not ALL CAPS.
+  String get serifRulesDisplayName => resumeFullNameTitleCase(fullName);
+
   /// Clamped [kResumeBodyFontPtMin]–[kResumeBodyFontPtMax] for preview + PDF body text.
   int get effectiveBodyFontPt {
     final v = bodyFontPt;
