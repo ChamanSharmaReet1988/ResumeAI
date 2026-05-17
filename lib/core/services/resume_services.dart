@@ -88,11 +88,7 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
   double? bodyFontPt,
 }) {
   final bodyStyle = calibri != null && bodyFontPt != null
-      ? calibriCreativeBodyPdfTextStyle(
-          calibri,
-          bodyFontPt,
-          weight: ResumeTypography.creativeBodyWeight,
-        )
+      ? nunitoBodyPdfTextStyle(calibri, bodyFontPt)
       : inter != null && bodyFontPt != null
       ? interDarkHeaderBodyPdfTextStyle(inter, bodyFontPt)
       : pw.TextStyle(

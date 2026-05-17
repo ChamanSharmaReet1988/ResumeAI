@@ -67,15 +67,16 @@ abstract final class ResumeTypography {
   static const int darkHeaderSubtitleWeight = 500;
 
   /// Profile Sidebar (creative / template 2) — preview and PDF type scale.
-  static const double creativeNamePt = 26;
+  static const double creativeNamePt = 24;
   static const int creativeNameWeight = 600;
   static const int creativeSidebarContentWeight = 300;
-  static const double creativeSectionTitlePt = 16;
+  static const double creativeSectionTitlePt = 14;
   static const int creativeSectionTitleWeight = 500;
   /// Legacy design reference; body copy uses [ResumeData.effectiveBodyFontPt] (10–12).
   static const double creativeBodyPt = 14;
-  static const int creativeBodyWeight = 300;
-  static const double creativeSubtitlePt = 15;
+  /// Profile Sidebar main body — Nunito Regular (preview + PDF).
+  static const int creativeBodyWeight = 400;
+  static const double creativeSubtitlePt = 13;
   static const int creativeSubtitleWeight = 400;
 
   /// Profile Sidebar body paragraph line height (preview + PDF).
@@ -105,7 +106,7 @@ abstract final class ResumeTypography {
   static const Color creativeBodyTextColor = Color(0xFF000000);
 
   /// Classic Sidebar (template 3) — same type scale as Profile Sidebar, independent tokens.
-  static const double classicSidebarNamePt = 26;
+  static const double classicSidebarNamePt = 24;
   static const int classicSidebarNameWeight = 600;
   static const double classicSidebarAvatarInitialsNameRatio = 1.15;
   static const double classicSidebarAvatarInitialsExtraPt = 18;
@@ -115,12 +116,17 @@ abstract final class ResumeTypography {
       scaledNamePt * classicSidebarAvatarInitialsNameRatio +
       classicSidebarAvatarInitialsExtraPt;
   static const int classicSidebarSidebarContentWeight = 300;
-  static const double classicSidebarSectionTitlePt = 16;
+  static const double classicSidebarSectionTitlePt = 14;
   static const int classicSidebarSectionTitleWeight = 500;
   /// Legacy design reference; body copy uses [ResumeData.effectiveBodyFontPt] (10–12).
   static const double classicSidebarBodyPt = 14;
-  static const int classicSidebarBodyWeight = 300;
-  static const double classicSidebarSubtitlePt = 15;
+  /// Classic Sidebar main body — Nunito Regular (preview + PDF).
+  static const int classicSidebarBodyWeight = 400;
+
+  /// Accent Strip body — same Nunito Regular weight as templates 2–3.
+  static const int accentStripBodyWeight = 400;
+
+  static const double classicSidebarSubtitlePt = 13;
   static const int classicSidebarSubtitleWeight = 400;
 
   static const double classicSidebarBodyLineHeight = 1.2;
@@ -130,6 +136,21 @@ abstract final class ResumeTypography {
 
   /// Classic Sidebar body copy (preview + PDF).
   static const Color classicSidebarBodyTextColor = Color(0xFF000000);
+
+  /// Templates 2–4 body — Nunito Regular at [creativeBodyWeight] (not Carlito).
+  static TextStyle nunitoBodyPreviewStyle({
+    double? fontSize,
+    Color? color,
+    double? height,
+    int weight = creativeBodyWeight,
+  }) =>
+      TextStyle(
+        fontFamily: 'Nunito',
+        fontWeight: ResumeFontWeight.toFlutter(weight),
+        fontSize: fontSize,
+        color: color,
+        height: height,
+      );
 
   /// Calibri (Carlito) text style for in-app resume previews.
   static TextStyle calibriPreviewStyle({

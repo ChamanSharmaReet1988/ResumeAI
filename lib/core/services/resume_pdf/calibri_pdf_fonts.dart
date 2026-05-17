@@ -13,11 +13,16 @@ class CalibriPdfFonts {
   CalibriPdfFonts._({
     required Map<int, pw.Font> upright,
     required pw.Font italic,
+    required pw.Font nunitoBodyRegular,
   }) : _upright = upright,
-       italic = italic;
+       italic = italic,
+       this.nunitoBodyRegular = nunitoBodyRegular;
 
   final Map<int, pw.Font> _upright;
   final pw.Font italic;
+
+  /// Nunito Regular — templates 2–4 body at weight 400.
+  final pw.Font nunitoBodyRegular;
 
   pw.Font fontFor(int weight, {bool useItalic = false}) {
     if (useItalic) {
@@ -90,14 +95,71 @@ pw.TextStyle calibriCreativeBodyPdfTextStyle(
   int weight = ResumeFontWeight.w400,
   PdfColor? color,
   pw.FontStyle fontStyle = pw.FontStyle.normal,
-}) =>
-    calibriPdfTextStyle(
+}) {
+  if (ResumeFontWeight.normalize(weight) ==
+      ResumeTypography.creativeBodyWeight) {
+    return nunitoBodyPdfTextStyle(
       fonts,
-      weight,
-      fontSize: bodyFontPt,
+      bodyFontPt,
       color: color,
       lineSpacing: ResumeTypography.creativeBodyPdfLineSpacingFor(bodyFontPt),
       fontStyle: fontStyle,
+    );
+  }
+  return calibriPdfTextStyle(
+    fonts,
+    weight,
+    fontSize: bodyFontPt,
+    color: color,
+    lineSpacing: ResumeTypography.creativeBodyPdfLineSpacingFor(bodyFontPt),
+    fontStyle: fontStyle,
+  );
+}
+
+/// Templates 2–4 body — Nunito Regular at weight 400.
+pw.TextStyle nunitoBodyPdfTextStyle(
+  CalibriPdfFonts fonts,
+  double bodyFontPt, {
+  PdfColor? color,
+  double? lineSpacing,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    _pwTextStyleFromFont(
+      fonts.nunitoBodyRegular,
+      fontSize: bodyFontPt,
+      color: color,
+      lineSpacing:
+          lineSpacing ??
+          ResumeTypography.creativeBodyPdfLineSpacingFor(bodyFontPt),
+      fontStyle: fontStyle,
+    );
+
+pw.TextStyle _pwTextStyleFromFont(
+  pw.Font font, {
+  required double fontSize,
+  PdfColor? color,
+  double? lineSpacing,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    pw.TextStyle(
+      inherit: false,
+      color: color ?? PdfColors.black,
+      font: font,
+      fontNormal: font,
+      fontBold: font,
+      fontItalic: font,
+      fontBoldItalic: font,
+      fontSize: fontSize,
+      fontWeight: pw.FontWeight.normal,
+      fontStyle: fontStyle,
+      letterSpacing: 0,
+      wordSpacing: 1,
+      lineSpacing: lineSpacing ?? 0,
+      height: 1,
+      decoration: pw.TextDecoration.none,
+      decorationStyle: pw.TextDecorationStyle.solid,
+      decorationThickness: 1,
+      renderingMode: PdfTextRenderingMode.fill,
     );
 
 pw.TextStyle calibriClassicSidebarBodyPdfTextStyle(
@@ -106,16 +168,28 @@ pw.TextStyle calibriClassicSidebarBodyPdfTextStyle(
   int weight = ResumeFontWeight.w400,
   PdfColor? color,
   pw.FontStyle fontStyle = pw.FontStyle.normal,
-}) =>
-    calibriPdfTextStyle(
+}) {
+  if (ResumeFontWeight.normalize(weight) ==
+      ResumeTypography.classicSidebarBodyWeight) {
+    return nunitoBodyPdfTextStyle(
       fonts,
-      weight,
-      fontSize: bodyFontPt,
+      bodyFontPt,
       color: color,
       lineSpacing:
           ResumeTypography.classicSidebarBodyPdfLineSpacingFor(bodyFontPt),
       fontStyle: fontStyle,
     );
+  }
+  return calibriPdfTextStyle(
+    fonts,
+    weight,
+    fontSize: bodyFontPt,
+    color: color,
+    lineSpacing:
+        ResumeTypography.classicSidebarBodyPdfLineSpacingFor(bodyFontPt),
+    fontStyle: fontStyle,
+  );
+}
 
 /// Dark Header avatar initials — 36pt, weight 600.
 pw.TextStyle darkHeaderInitialsPdfStyle(
@@ -145,7 +219,14 @@ Future<CalibriPdfFonts> loadCalibriPdfFonts() async {
     ),
   };
   final italic = await loadPdfTtf('assets/fonts/carlito/Carlito-Italic.ttf');
-  return CalibriPdfFonts._(upright: upright, italic: italic);
+  final nunitoBodyRegular = await loadPdfTtf(
+    'assets/fonts/nunito/Nunito-Regular.ttf',
+  );
+  return CalibriPdfFonts._(
+    upright: upright,
+    italic: italic,
+    nunitoBodyRegular: nunitoBodyRegular,
+  );
 }
 
 Future<pw.ThemeData> resumePdfThemeForCalibri(

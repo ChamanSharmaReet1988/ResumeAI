@@ -845,8 +845,7 @@ class _CreativePreview extends StatelessWidget {
     final namePt = resume.creativeScaledPt(ResumeTypography.creativeNamePt);
     final sectionTitlePt =
         resume.creativeScaledPt(ResumeTypography.creativeSectionTitlePt);
-    final bodyStyle = ResumeTypography.calibriPreviewStyle(
-      weight: ResumeTypography.creativeBodyWeight,
+    final bodyStyle = ResumeTypography.nunitoBodyPreviewStyle(
       fontSize: bodyPt,
       color: bodyTextColor,
       height: ResumeTypography.creativeBodyLineHeight,
@@ -1275,8 +1274,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
     final sectionTitlePt = resume.classicSidebarScaledPt(
       ResumeTypography.classicSidebarSectionTitlePt,
     );
-    final bodyStyle = ResumeTypography.calibriPreviewStyle(
-      weight: ResumeTypography.classicSidebarBodyWeight,
+    final bodyStyle = ResumeTypography.nunitoBodyPreviewStyle(
       fontSize: bodyPt,
       color: ResumeTypography.classicSidebarBodyTextColor,
       height: ResumeTypography.classicSidebarBodyLineHeight,
@@ -1903,8 +1901,7 @@ class _AccentStripPreview extends StatelessWidget {
     final projects = resume.visibleProjects.take(1).toList();
     final customSections = resume.visibleCustomSections.take(1).toList();
 
-    final bodyStyle = ResumeTypography.calibriPreviewStyle(
-      weight: ResumeTypography.creativeBodyWeight,
+    final bodyStyle = ResumeTypography.nunitoBodyPreviewStyle(
       fontSize: bodyPt,
       color: bodyTextColor,
       height: ResumeTypography.creativeBodyLineHeight,

@@ -1653,8 +1653,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
 
   static double _scaledPt(double pt) => pt * _layoutScale;
 
-  TextStyle _bodyStyle() => ResumeTypography.calibriPreviewStyle(
-        weight: ResumeTypography.creativeBodyWeight,
+  TextStyle _bodyStyle() => ResumeTypography.nunitoBodyPreviewStyle(
         fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.creativeBodyTextColor,
         height: ResumeTypography.creativeBodyLineHeight,
@@ -3458,8 +3457,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   /// Matches Classic Sidebar PDF main-column right margin (40pt).
   static double get _mainColumnRightPadding => _scaledPt(40);
 
-  TextStyle _bodyStyle() => ResumeTypography.calibriPreviewStyle(
-        weight: ResumeTypography.classicSidebarBodyWeight,
+  TextStyle _bodyStyle() => ResumeTypography.nunitoBodyPreviewStyle(
         fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.classicSidebarBodyTextColor,
         height: ResumeTypography.classicSidebarBodyLineHeight,

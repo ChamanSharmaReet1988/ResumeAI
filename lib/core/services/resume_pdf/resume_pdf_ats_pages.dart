@@ -1792,16 +1792,8 @@ extension _ResumePdfAtsPages on ResumePdfService {
     );
   }
 
-  pw.TextStyle _accentStripBodyPdfStyle(
-    CalibriPdfFonts calibri,
-    double bodyPt, {
-    int weight = ResumeTypography.creativeBodyWeight,
-  }) =>
-      calibriCreativeBodyPdfTextStyle(
-        calibri,
-        bodyPt,
-        weight: weight,
-      );
+  pw.TextStyle _accentStripBodyPdfStyle(CalibriPdfFonts calibri, double bodyPt) =>
+      nunitoBodyPdfTextStyle(calibri, bodyPt);
 
   pw.TextStyle _accentStripSubsectionPdfStyle(GaramondPdfFonts garamond) =>
       garamondPdfTextStyle(

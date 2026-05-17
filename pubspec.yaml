@@ -96,6 +96,7 @@ flutter:
     - assets/fonts/carlito/Carlito-Bold.ttf
     - assets/fonts/carlito/Carlito-Italic.ttf
     - assets/fonts/nunito/Nunito-Light.ttf
+    - assets/fonts/nunito/Nunito-Regular.ttf
     - assets/fonts/nunito/Nunito-Medium.ttf
     - assets/fonts/nunito/Nunito-SemiBold.ttf
     - assets/fonts/nunito/Nunito-ExtraBold.ttf
