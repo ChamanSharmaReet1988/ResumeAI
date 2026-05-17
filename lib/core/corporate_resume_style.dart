@@ -157,6 +157,14 @@ extension ResumeCorporateStyleX on ResumeData {
     return lines;
   }
 
+  /// Serif Rules ATS header — right column (top-aligned with name).
+  List<String> atsSerifRulesRightContactLines() => [
+    email.trim(),
+    linkedinLink.trim(),
+    githubLink.trim(),
+    website.trim(),
+  ].where((item) => item.isNotEmpty).toList();
+
   /// Scales Profile Sidebar (template 2) type from the body font slider (11–13 pt).
   double get creativeFontScale => effectiveBodyFontPt / kResumeBodyFontPtDefault;
 

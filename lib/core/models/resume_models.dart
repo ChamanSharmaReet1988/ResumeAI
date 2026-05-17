@@ -159,7 +159,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.detailsSidebar => 'Sans · details sidebar',
     ResumeTemplate.accentStrip => 'Garamond · accent strip',
     ResumeTemplate.atsStructured => 'Garamond · banded ATS',
-    ResumeTemplate.atsSerifRules => 'Sans · rules ATS',
+    ResumeTemplate.atsSerifRules => 'Garamond · rules ATS',
     ResumeTemplate.atsModernFlow => 'Sans · flow ATS',
     ResumeTemplate.atsExecutive => 'Sans · executive ATS',
     ResumeTemplate.atsCenterClassic => 'Serif · center ATS',

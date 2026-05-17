@@ -34,6 +34,12 @@ abstract final class ResumeTypography {
   /// Page margin for Structured ATS (preview px = PDF pt).
   static const double atsStructuredPageInsetPt = 40;
 
+  /// Serif Rules ATS (template 6) horizontal inset (preview px = PDF pt).
+  static const double atsSerifRulesPageHorizontalInsetPt = 45;
+
+  /// Serif Rules ATS page 2+ header gap (PDF pt). Page margin already sets top inset.
+  static const double atsSerifRulesContinuationPageTopGapPt = 0;
+
   /// Template grid tile bottom inset (logical px in 240px-wide art).
   static const double atsStructuredGridBottomInsetPx = 30;
 

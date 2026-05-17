@@ -2416,19 +2416,66 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
   final ResumeData resume;
   final bool detailed;
 
-  static const Color _ink = Color(0xFF111827);
+  static const double _layoutScale = 240 / 595.28;
+
+  static double _scaledPt(double pt) => pt * _layoutScale;
+
+  TextStyle _garamond({
+    required double fontSize,
+    required int weight,
+  }) =>
+      ResumeTypography.garamondPreviewStyle(
+        weight: weight,
+        fontSize: fontSize,
+        color: ResumeTypography.atsStructuredBodyTextColor,
+        height: ResumeTypography.textLineHeight,
+      );
 
   @override
   Widget build(BuildContext context) {
-    final fs = detailed ? 4.75 : 4.45;
-    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
-    final skillsBody = body.copyWith(fontSize: math.max(3.25, fs - 0.85));
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final body = _garamond(
+      fontSize: _scaledPt(bodyPt),
+      weight: ResumeTypography.atsStructuredBodyWeight,
+    );
+    final contactStyle = _garamond(
+      fontSize: _scaledPt(bodyPt),
+      weight: ResumeTypography.atsStructuredContactWeight,
+    );
+    final sectionTitleStyle = _garamond(
+      fontSize: _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
+      weight: ResumeTypography.atsStructuredTitleWeight,
+    );
+    final subtitleStyle = _garamond(
+      fontSize: _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
+      weight: ResumeTypography.atsStructuredSubtitleWeight,
+    );
+    final nameStyle = _garamond(
+      fontSize: _scaledPt(ResumeTypography.atsStructuredNamePt),
+      weight: ResumeTypography.atsStructuredNameWeight,
+    );
+    final jobStyle = _garamond(
+      fontSize: _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
+      weight: ResumeTypography.atsStructuredTitleWeight,
+    );
+    final skillsBody = _garamond(
+      fontSize: _scaledPt(math.max(9, bodyPt - 1.35)),
+      weight: ResumeTypography.atsStructuredBodyWeight,
+    );
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final rightContacts = resume.atsSerifRulesRightContactLines();
+    final linkStyle = body.copyWith(fontStyle: FontStyle.italic);
+    final hInset = _scaledPt(ResumeTypography.atsSerifRulesPageHorizontalInsetPt);
 
     final pageContent = Padding(
-          padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
+          padding: EdgeInsets.fromLTRB(
+            hInset,
+            detailed ? 11 : 9,
+            hInset,
+            detailed ? 10 : 8,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2442,11 +2489,7 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                       children: [
                         Text(
                           resume.fullName.trim(),
-                          style: TextStyle(
-                            fontSize: detailed ? 9 : 8.2,
-                            fontWeight: FontWeight.w800,
-                            color: _ink,
-                          ),
+                          style: nameStyle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -2454,7 +2497,7 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             resume.jobTitle.trim(),
-                            style: body.copyWith(fontWeight: FontWeight.w700),
+                            style: jobStyle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -2463,36 +2506,47 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                         if (resume.location.trim().isNotEmpty)
                           Text(
                             resume.location.trim(),
-                            style: body,
+                            style: contactStyle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         if (resume.phone.trim().isNotEmpty)
                           Text(
                             resume.phone.trim(),
-                            style: body,
+                            style: contactStyle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                       ],
                     ),
                   ),
-                  if (resume.email.trim().isNotEmpty)
-                    Flexible(
-                      child: Text(
-                        resume.email.trim(),
-                        style: body.copyWith(fontStyle: FontStyle.italic),
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
-                      ),
+                  if (rightContacts.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        for (var i = 0; i < rightContacts.length; i++)
+                          Padding(
+                            padding: EdgeInsets.only(top: i == 0 ? 0 : 2),
+                            child: Text(
+                              rightContacts[i],
+                              style: linkStyle,
+                              textAlign: TextAlign.right,
+                              maxLines: detailed ? 3 : 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
                     ),
                 ],
               ),
               const SizedBox(height: 7),
-              Text('Summary', style: body.copyWith(fontWeight: FontWeight.w800)),
+              Text('Summary', style: sectionTitleStyle),
               const SizedBox(height: 3),
-              Container(height: 1, color: _ink.withValues(alpha: 0.35)),
+              Container(
+                height: 1,
+                color: ResumeTypography.atsStructuredBodyTextColor
+                    .withValues(alpha: 0.35),
+              ),
               const SizedBox(height: 5),
               Text(
                 resume.summary.trim(),
@@ -2502,20 +2556,18 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
               ),
               if (works.isNotEmpty) ...[
                 const SizedBox(height: 6),
-                Text(
-                  'Experience',
-                  style: body.copyWith(fontWeight: FontWeight.w800),
-                ),
+                Text('Experience', style: sectionTitleStyle),
                 const SizedBox(height: 3),
-                Container(height: 1, color: _ink.withValues(alpha: 0.35)),
+                Container(
+                  height: 1,
+                  color: ResumeTypography.atsStructuredBodyTextColor
+                      .withValues(alpha: 0.35),
+                ),
                 const SizedBox(height: 5),
                 for (final w in works.take(detailed ? 2 : 1)) ...[
                   Text(
                     w.role.trim(),
-                    style: body.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: fs + 0.35,
-                    ),
+                    style: subtitleStyle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2539,7 +2591,8 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                             textAlign: TextAlign.right,
                             style: body.copyWith(
                               fontStyle: FontStyle.italic,
-                              color: _ink.withValues(alpha: 0.72),
+                              color: ResumeTypography.atsStructuredBodyTextColor
+                                  .withValues(alpha: 0.72),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -2570,17 +2623,18 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                 ],
               ],
               if (edu.isNotEmpty) ...[
-                Text(
-                  'Education',
-                  style: body.copyWith(fontWeight: FontWeight.w800),
-                ),
+                Text('Education', style: sectionTitleStyle),
                 const SizedBox(height: 3),
-                Container(height: 1, color: _ink.withValues(alpha: 0.35)),
+                Container(
+                  height: 1,
+                  color: ResumeTypography.atsStructuredBodyTextColor
+                      .withValues(alpha: 0.35),
+                ),
                 const SizedBox(height: 5),
                 for (final e in edu.take(detailed ? 2 : 1)) ...[
                   Text(
                     '${e.degree.trim()} · ${educationDateRangeLabel(e.startDate, e.endDate)}',
-                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    style: subtitleStyle,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2595,9 +2649,13 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                 ],
               ],
               if (skills.isNotEmpty) ...[
-                Text('Skills', style: body.copyWith(fontWeight: FontWeight.w800)),
+                Text('Skills', style: sectionTitleStyle),
                 const SizedBox(height: 3),
-                Container(height: 1, color: _ink.withValues(alpha: 0.35)),
+                Container(
+                  height: 1,
+                  color: ResumeTypography.atsStructuredBodyTextColor
+                      .withValues(alpha: 0.35),
+                ),
                 const SizedBox(height: 5),
                 _MiniBulletColumn(
                   items: skills.take(detailed ? 8 : 5).toList(),

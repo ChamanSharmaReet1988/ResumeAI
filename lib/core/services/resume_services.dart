@@ -5216,6 +5216,13 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsSerifRules) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsSerifRulesTemplatePage(document, resume, garamond: garamond);
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -5253,7 +5260,6 @@ class ResumePdfService {
       case ResumeTemplate.atsStructured:
         break;
       case ResumeTemplate.atsSerifRules:
-        _addAtsSerifRulesTemplatePage(document, resume);
         break;
       case ResumeTemplate.atsModernFlow:
         _addAtsModernFlowTemplatePage(document, resume);
@@ -5343,6 +5349,20 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsSerifRules) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsSerifRulesTemplatePage(
+        document,
+        resume,
+        garamond: garamond,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -5387,13 +5407,6 @@ class ResumePdfService {
       case ResumeTemplate.atsStructured:
         break;
       case ResumeTemplate.atsSerifRules:
-        _addAtsSerifRulesTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
         break;
       case ResumeTemplate.atsModernFlow:
         _addAtsModernFlowTemplatePage(
@@ -6681,21 +6694,30 @@ class ResumePdfService {
     ProjectItem item, {
     GaramondPdfFonts? garamond,
     double bodyFontPt = ResumeTypography.bodyPt,
+    bool atsGaramondBody = false,
   }) {
     final bullets = _projectBulletLines(item);
+    final subtitleWeight = atsGaramondBody
+        ? ResumeTypography.atsStructuredSubtitleWeight
+        : ResumeTypography.darkHeaderSubtitleWeight;
+    final subtitlePt = atsGaramondBody
+        ? ResumeTypography.atsStructuredSubtitlePt
+        : ResumeTypography.darkHeaderSubtitlePt;
     final titleWidget = garamond != null
         ? pw.Text(
             item.title.ifEmpty('Project'),
             style: garamondPdfTextStyle(
               garamond,
-              ResumeTypography.darkHeaderSubtitleWeight,
-              fontSize: ResumeTypography.darkHeaderSubtitlePt,
+              subtitleWeight,
+              fontSize: subtitlePt,
               color: const PdfColor.fromInt(0xFF141414),
             ).copyWith(lineSpacing: 0),
           )
         : _corporateStrokeLabelText(item.title.ifEmpty('Project'));
     final bulletStyle = garamond != null
-        ? corporateBodyPdfTextStyle(garamond, bodyFontPt)
+        ? (atsGaramondBody
+              ? atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
+              : corporateBodyPdfTextStyle(garamond, bodyFontPt))
         : pw.TextStyle(
             color: PdfColors.black,
             fontSize: bodyFontPt,
