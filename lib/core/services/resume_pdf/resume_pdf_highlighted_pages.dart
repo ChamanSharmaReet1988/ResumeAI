@@ -434,7 +434,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final bodyColor = _creativeBodyTextColorPdf();
     final railColor = _creativeSidebarRailColorPdf(resume);
     final highlightColor = PdfColor.fromHex('#FFE67A');
-    final bodyPt = resume.creativeScaledPt(ResumeTypography.creativeBodyPt);
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final namePt = resume.creativeScaledPt(ResumeTypography.creativeNamePt);
     final subtitlePt =
         resume.creativeScaledPt(ResumeTypography.creativeSubtitlePt);
@@ -672,8 +672,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final dividerColor = _classicSidebarDividerColorPdf(resume);
     final borderColor = _classicSidebarSectionBorderPdf(resume);
     final highlightColor = PdfColor.fromHex('#FFE67A');
-    final bodyPt =
-        resume.classicSidebarScaledPt(ResumeTypography.classicSidebarBodyPt);
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final namePt =
         resume.classicSidebarScaledPt(ResumeTypography.classicSidebarNamePt);
     final subtitlePt =

@@ -72,6 +72,7 @@ abstract final class ResumeTypography {
   static const int creativeSidebarContentWeight = 300;
   static const double creativeSectionTitlePt = 16;
   static const int creativeSectionTitleWeight = 500;
+  /// Legacy design reference; body copy uses [ResumeData.effectiveBodyFontPt] (10–12).
   static const double creativeBodyPt = 14;
   static const int creativeBodyWeight = 300;
   static const double creativeSubtitlePt = 15;
@@ -116,6 +117,7 @@ abstract final class ResumeTypography {
   static const int classicSidebarSidebarContentWeight = 300;
   static const double classicSidebarSectionTitlePt = 16;
   static const int classicSidebarSectionTitleWeight = 500;
+  /// Legacy design reference; body copy uses [ResumeData.effectiveBodyFontPt] (10–12).
   static const double classicSidebarBodyPt = 14;
   static const int classicSidebarBodyWeight = 300;
   static const double classicSidebarSubtitlePt = 15;

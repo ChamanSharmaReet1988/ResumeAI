@@ -1653,9 +1653,9 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
 
   static double _scaledPt(double pt) => pt * _layoutScale;
 
-  static TextStyle _bodyStyle() => ResumeTypography.calibriPreviewStyle(
+  TextStyle _bodyStyle() => ResumeTypography.calibriPreviewStyle(
         weight: ResumeTypography.creativeBodyWeight,
-        fontSize: _scaledPt(ResumeTypography.creativeBodyPt),
+        fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.creativeBodyTextColor,
         height: ResumeTypography.creativeBodyLineHeight,
       );
@@ -1684,14 +1684,14 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
         letterSpacing: 0.2,
       );
 
-  static TextStyle _sidebarStyle() => ResumeTypography.calibriPreviewStyle(
+  TextStyle _sidebarStyle() => ResumeTypography.calibriPreviewStyle(
         weight: ResumeTypography.creativeSidebarContentWeight,
-        fontSize: _scaledPt(ResumeTypography.creativeBodyPt),
+        fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.creativeBodyTextColor,
         height: ResumeTypography.creativeBodyLineHeight,
       );
 
-  static TextStyle _experienceDateStyle() =>
+  TextStyle _experienceDateStyle() =>
       _bodyStyle().copyWith(fontStyle: FontStyle.italic);
 
   static const double _avatarWidth = 48;
@@ -3458,9 +3458,9 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   /// Matches Classic Sidebar PDF main-column right margin (40pt).
   static double get _mainColumnRightPadding => _scaledPt(40);
 
-  static TextStyle _bodyStyle() => ResumeTypography.calibriPreviewStyle(
+  TextStyle _bodyStyle() => ResumeTypography.calibriPreviewStyle(
         weight: ResumeTypography.classicSidebarBodyWeight,
-        fontSize: _scaledPt(ResumeTypography.classicSidebarBodyPt),
+        fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.classicSidebarBodyTextColor,
         height: ResumeTypography.classicSidebarBodyLineHeight,
       );
@@ -3504,9 +3504,9 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
         letterSpacing: 0.2,
       );
 
-  static TextStyle _sidebarStyle() => ResumeTypography.calibriPreviewStyle(
+  TextStyle _sidebarStyle() => ResumeTypography.calibriPreviewStyle(
         weight: ResumeTypography.classicSidebarSidebarContentWeight,
-        fontSize: _scaledPt(ResumeTypography.classicSidebarBodyPt),
+        fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.classicSidebarBodyTextColor,
         height: ResumeTypography.classicSidebarBodyLineHeight,
       );

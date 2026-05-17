@@ -549,7 +549,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     final lineColor = _creativeSidebarLineColorPdf();
     final bodyColor = _creativeBodyTextColorPdf();
     final railColor = _creativeSidebarRailColorPdf(resume);
-    final bodyPt = resume.creativeScaledPt(ResumeTypography.creativeBodyPt);
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final namePt = resume.creativeScaledPt(ResumeTypography.creativeNamePt);
     final subtitlePt =
         resume.creativeScaledPt(ResumeTypography.creativeSubtitlePt);
@@ -780,8 +780,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     final accentColor = _classicSidebarAccentColorPdf(resume);
     final dividerColor = _classicSidebarDividerColorPdf(resume);
     final borderColor = _classicSidebarSectionBorderPdf(resume);
-    final bodyPt =
-        resume.classicSidebarScaledPt(ResumeTypography.classicSidebarBodyPt);
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final namePt =
         resume.classicSidebarScaledPt(ResumeTypography.classicSidebarNamePt);
     final subtitlePt =

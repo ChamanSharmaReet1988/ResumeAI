@@ -5157,7 +5157,7 @@ class ResumePdfService {
 
     if (resume.template == ResumeTemplate.creative) {
       final calibri = await _ensureCalibriPdfFonts();
-      final bodyPt = resume.creativeScaledPt(ResumeTypography.creativeBodyPt);
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
           calibri,
@@ -5176,8 +5176,7 @@ class ResumePdfService {
 
     if (resume.template == ResumeTemplate.classicSidebar) {
       final calibri = await _ensureCalibriPdfFonts();
-      final bodyPt =
-          resume.classicSidebarScaledPt(ResumeTypography.classicSidebarBodyPt);
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
           calibri,
@@ -5275,7 +5274,7 @@ class ResumePdfService {
   }) async {
     if (resume.template == ResumeTemplate.creative) {
       final calibri = await _ensureCalibriPdfFonts();
-      final bodyPt = resume.creativeScaledPt(ResumeTypography.creativeBodyPt);
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
           calibri,
@@ -5296,8 +5295,7 @@ class ResumePdfService {
 
     if (resume.template == ResumeTemplate.classicSidebar) {
       final calibri = await _ensureCalibriPdfFonts();
-      final bodyPt =
-          resume.classicSidebarScaledPt(ResumeTypography.classicSidebarBodyPt);
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
           calibri,

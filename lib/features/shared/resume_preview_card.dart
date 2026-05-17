@@ -839,7 +839,7 @@ class _CreativePreview extends StatelessWidget {
     final textColor = resume.creativeTitleColor;
     final lineColor = resume.creativeLineColor;
     const bodyTextColor = ResumeTypography.creativeBodyTextColor;
-    final bodyPt = resume.creativeScaledPt(ResumeTypography.creativeBodyPt);
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final subtitlePt =
         resume.creativeScaledPt(ResumeTypography.creativeSubtitlePt);
     final namePt = resume.creativeScaledPt(ResumeTypography.creativeNamePt);
@@ -1267,8 +1267,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
     final mutedColor = resume.classicSidebarMutedColor;
     final dividerColor = resume.classicSidebarDividerColor;
     final sectionBorderColor = resume.classicSidebarSectionBorderColor;
-    final bodyPt =
-        resume.classicSidebarScaledPt(ResumeTypography.classicSidebarBodyPt);
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final subtitlePt =
         resume.classicSidebarScaledPt(ResumeTypography.classicSidebarSubtitlePt);
     final namePt =
