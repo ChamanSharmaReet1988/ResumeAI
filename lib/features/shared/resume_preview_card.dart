@@ -83,10 +83,13 @@ class ResumePreviewCanvas extends StatelessWidget {
       _ => resume.resumeTextFont.flutterFontFamily,
     };
     final onSurface = theme.colorScheme.onSurface;
+    final bodyColor = previewTemplate == ResumeTemplate.atsStructured
+        ? ResumeTypography.atsStructuredBodyTextColor
+        : onSurface;
     final bodyPx = resume.effectiveBodyFontPt.toDouble();
     final resumeBodyTheme = theme.copyWith(
       textTheme: base
-          .apply(fontFamily: ff, bodyColor: onSurface, displayColor: onSurface)
+          .apply(fontFamily: ff, bodyColor: bodyColor, displayColor: bodyColor)
           .copyWith(
             bodyLarge: base.bodyLarge?.copyWith(
               fontFamily: ff,
@@ -1805,18 +1808,18 @@ class _AtsStructuredPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onSurface = Theme.of(context).colorScheme.onSurface;
+    const ink = ResumeTypography.atsStructuredBodyTextColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
       fontSize: bodyPt,
-      color: onSurface,
+      color: ink,
       height: ResumeTypography.textLineHeight,
     );
     final subtitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
-      color: onSurface,
+      color: ink,
       height: ResumeTypography.textLineHeight,
     );
     final contact = _atsPreviewContactLines(resume);
@@ -1843,7 +1846,7 @@ class _AtsStructuredPreview extends StatelessWidget {
           style: ResumeTypography.garamondPreviewStyle(
             weight: ResumeTypography.atsStructuredNameWeight,
             fontSize: _atsPreviewNameFontSize,
-            color: onSurface,
+            color: ink,
             height: ResumeTypography.textLineHeight,
           ),
           maxLines: showAllContent ? null : 2,
@@ -1857,7 +1860,7 @@ class _AtsStructuredPreview extends StatelessWidget {
             style: ResumeTypography.garamondPreviewStyle(
               weight: ResumeTypography.atsStructuredTitleWeight,
               fontSize: _atsPreviewJobTitleFontSize,
-              color: onSurface,
+              color: ink,
               height: ResumeTypography.textLineHeight,
             ),
             maxLines: showAllContent ? null : 2,
@@ -1873,7 +1876,7 @@ class _AtsStructuredPreview extends StatelessWidget {
               style: ResumeTypography.garamondPreviewStyle(
                 weight: ResumeTypography.atsStructuredContactWeight,
                 fontSize: bodyPt,
-                color: onSurface,
+                color: ink,
                 height: ResumeTypography.textLineHeight,
               ),
               maxLines: showAllContent ? null : 2,
@@ -1881,9 +1884,9 @@ class _AtsStructuredPreview extends StatelessWidget {
             ),
         ],
         const SizedBox(height: 8),
-        Container(height: 1, color: onSurface.withValues(alpha: 0.85)),
+        Container(height: 1, color: ink.withValues(alpha: 0.85)),
         const SizedBox(height: 10),
-        _atsBandTitle('SUMMARY', onSurface),
+        _atsBandTitle('SUMMARY', ink),
         const SizedBox(height: 6),
         Text(
           resume.summary.trim().ifBlank(
@@ -1895,7 +1898,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ),
         if (resume.includeWorkInResume) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('EXPERIENCE', onSurface),
+          _atsBandTitle('EXPERIENCE', ink),
           const SizedBox(height: 6),
           ..._atsStructuredExperienceBlocks(
             works: works,
@@ -1906,7 +1909,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ],
         if (resume.includeEducationInResume) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('EDUCATION', onSurface),
+          _atsBandTitle('EDUCATION', ink),
           const SizedBox(height: 6),
           ..._atsStructuredEducationBlocks(
             items: education,
@@ -1917,7 +1920,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ],
         if (resume.includeSkillsInResume && skills.isNotEmpty) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('SKILLS', onSurface),
+          _atsBandTitle('SKILLS', ink),
           const SizedBox(height: 6),
           _atsStructuredSkillsGrid(
             skills: skills,
@@ -1927,7 +1930,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ],
         if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('PROJECTS', onSurface),
+          _atsBandTitle('PROJECTS', ink),
           const SizedBox(height: 6),
           for (final project in projects)
             ..._atsStructuredProjectBlocks(
@@ -1941,7 +1944,7 @@ class _AtsStructuredPreview extends StatelessWidget {
           const SizedBox(height: _sectionGap),
           _atsBandTitle(
             section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
-            onSurface,
+            ink,
           ),
           const SizedBox(height: 6),
           if (section.layoutMode == CustomSectionLayoutMode.bullets)
@@ -1981,7 +1984,7 @@ class _AtsStructuredPreview extends StatelessWidget {
     );
   }
 
-  Widget _atsBandTitle(String title, Color onSurface) {
+  Widget _atsBandTitle(String title, Color ink) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1992,7 +1995,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         style: ResumeTypography.garamondPreviewStyle(
           weight: ResumeTypography.atsStructuredTitleWeight,
           fontSize: _atsPreviewSectionTitleFontSize,
-          color: onSurface,
+          color: ink,
           height: ResumeTypography.textLineHeight,
         ).copyWith(decoration: TextDecoration.underline),
       ),

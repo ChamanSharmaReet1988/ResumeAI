@@ -2080,7 +2080,6 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
   final ResumeData resume;
   final bool detailed;
 
-  static const Color _ink = Color(0xFF1F2937);
   static const Color _band = Color(0xFFE5E7EB);
 
   /// Matches [_ResumeTemplatePreviewArt] / PDF A4 width (240px tile art).
@@ -2092,7 +2091,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
       ResumeTypography.garamondPreviewStyle(
         weight: weight,
         fontSize: fontSize,
-        color: _ink,
+        color: ResumeTypography.atsStructuredBodyTextColor,
         height: ResumeTypography.textLineHeight,
       );
 
@@ -2115,8 +2114,11 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
     final contactLines = resume.atsStructuredHeaderContactLines();
 
     final pageInset = _scaledPt(ResumeTypography.atsStructuredPageInsetPt);
+    final bottomInset = detailed
+        ? pageInset
+        : ResumeTypography.atsStructuredGridBottomInsetPx;
     final pageContent = Padding(
-          padding: EdgeInsets.fromLTRB(pageInset, pageInset, pageInset, pageInset),
+          padding: EdgeInsets.fromLTRB(pageInset, pageInset, pageInset, bottomInset),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2159,7 +2161,11 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
                   ),
               ],
               const SizedBox(height: 5),
-              Container(height: 1, color: _ink.withValues(alpha: 0.85)),
+              Container(
+                height: 1,
+                color: ResumeTypography.atsStructuredBodyTextColor
+                    .withValues(alpha: 0.85),
+              ),
               _atsGrayBandLabel('SUMMARY'),
               Text(
                 resume.summary.trim(),
@@ -2255,7 +2261,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
               style: ResumeTypography.garamondPreviewStyle(
                 weight: ResumeTypography.atsStructuredTitleWeight,
                 fontSize: _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
-                color: _ink,
+                color: ResumeTypography.atsStructuredBodyTextColor,
                 height: ResumeTypography.textLineHeight,
               ).copyWith(decoration: TextDecoration.underline),
             ),

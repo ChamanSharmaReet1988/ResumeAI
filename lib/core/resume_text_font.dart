@@ -34,6 +34,12 @@ abstract final class ResumeTypography {
   /// Page margin for Structured ATS (preview px = PDF pt).
   static const double atsStructuredPageInsetPt = 40;
 
+  /// Template grid tile bottom inset (logical px in 240px-wide art).
+  static const double atsStructuredGridBottomInsetPx = 30;
+
+  /// Structured ATS body ink (preview + template art; matches PDF black).
+  static const Color atsStructuredBodyTextColor = Color(0xFF000000);
+
   /// Section titles, headings (single-line friendly).
   static const double textLineHeight = 1.4;
 
