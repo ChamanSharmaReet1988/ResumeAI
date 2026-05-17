@@ -15,17 +15,21 @@ abstract final class ResumeTypography {
   static const double accentStripNamePt = 24;
   static const double accentStripSectionTitlePt = 14;
   static const double accentStripSubsectionPt = 13;
+  static const int accentStripNameWeight = 700;
+  static const int accentStripTitleWeight = 600;
+  static const int accentStripSubtitleWeight = 500;
+  static const int accentStripContactWeight = 500;
 
   /// Structured ATS (first ATS template) — same Garamond sizes as Accent Strip.
   static const double atsStructuredNamePt = accentStripNamePt;
-  static const int atsStructuredNameWeight = 700;
+  static const int atsStructuredNameWeight = accentStripNameWeight;
   static const double atsStructuredJobTitlePt = accentStripSectionTitlePt;
-  static const int atsStructuredTitleWeight = 600;
+  static const int atsStructuredTitleWeight = accentStripTitleWeight;
   static const double atsStructuredSectionTitlePt = accentStripSectionTitlePt;
   static const double atsStructuredSubtitlePt = accentStripSubsectionPt;
-  static const int atsStructuredSubtitleWeight = 500;
-  static const int atsStructuredBodyWeight = 400;
-  static const int atsStructuredContactWeight = 500;
+  static const int atsStructuredSubtitleWeight = accentStripSubtitleWeight;
+  static const int atsStructuredBodyWeight = accentStripBodyWeight;
+  static const int atsStructuredContactWeight = accentStripContactWeight;
 
   /// Page margin for Structured ATS (preview px = PDF pt).
   static const double atsStructuredPageInsetPt = 40;

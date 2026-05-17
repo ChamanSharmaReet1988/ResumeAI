@@ -1819,7 +1819,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
         title,
         style: garamondPdfTextStyle(
           garamond,
-          ResumeFontWeight.w600,
+          ResumeTypography.accentStripTitleWeight,
           fontSize: ResumeTypography.accentStripSectionTitlePt,
           color: accent,
         ).copyWith(letterSpacing: 0.2),
@@ -1833,7 +1833,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   pw.TextStyle _accentStripSubsectionPdfStyle(GaramondPdfFonts garamond) =>
       garamondPdfTextStyle(
         garamond,
-        ResumeFontWeight.w600,
+        ResumeTypography.accentStripSubtitleWeight,
         fontSize: ResumeTypography.accentStripSubsectionPt,
       );
 
@@ -1877,7 +1877,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               name,
               style: garamondPdfTextStyle(
                 garamond,
-                ResumeFontWeight.w700,
+                ResumeTypography.accentStripNameWeight,
                 fontSize: ResumeTypography.accentStripNamePt,
                 color: accent,
               ).copyWith(letterSpacing: 0.4),
@@ -1888,7 +1888,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 contactLine,
                 style: garamondPdfTextStyle(
                   garamond,
-                  ResumeFontWeight.w500,
+                  ResumeTypography.accentStripContactWeight,
                   fontSize: bodyPt,
                 ),
               ),

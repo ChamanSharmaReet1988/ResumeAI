@@ -2212,27 +2212,27 @@ class _AccentStripPreview extends StatelessWidget {
       color: bodyTextColor,
     );
     final headingStyle = ResumeTypography.garamondPreviewStyle(
-      weight: ResumeFontWeight.w600,
+      weight: ResumeTypography.accentStripTitleWeight,
       fontSize: ResumeTypography.accentStripSectionTitlePt,
       color: accent,
       height: 1.4,
       letterSpacing: 0.2,
     );
     final subsectionStyle = ResumeTypography.garamondPreviewStyle(
-      weight: ResumeFontWeight.w600,
+      weight: ResumeTypography.accentStripSubtitleWeight,
       fontSize: ResumeTypography.accentStripSubsectionPt,
       color: bodyTextColor,
       height: 1.4,
     );
     final nameStyle = ResumeTypography.garamondPreviewStyle(
-      weight: ResumeFontWeight.w700,
+      weight: ResumeTypography.accentStripNameWeight,
       fontSize: ResumeTypography.accentStripNamePt,
       color: accent,
       height: 1.0,
       letterSpacing: 0.4,
     );
     final contactStyle = ResumeTypography.garamondPreviewStyle(
-      weight: ResumeFontWeight.w500,
+      weight: ResumeTypography.accentStripContactWeight,
       fontSize: bodyPt,
       color: bodyTextColor,
       height: ResumeTypography.creativeBodyLineHeight,
