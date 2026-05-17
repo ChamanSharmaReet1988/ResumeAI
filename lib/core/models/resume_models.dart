@@ -335,7 +335,7 @@ class ResumeData {
   final bool includeSkillsInResume;
   final bool includeProjectsInResume;
 
-  /// Body text size (pt) for resume preview + PDF; typically 10–12.
+  /// Body text size (pt) for resume preview + PDF; typically 11–13.
   final int bodyFontPt;
 
   /// Index 0–4 for Dark Header title + top bar colors (see `corporate_resume_style.dart`).

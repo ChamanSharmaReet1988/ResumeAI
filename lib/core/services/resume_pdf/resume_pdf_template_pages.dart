@@ -7,7 +7,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   void _addCorporateTemplatePage(
     pw.Document document,
     ResumeData resume, {
-    required InterPdfFonts inter,
+    required GaramondPdfFonts garamond,
     pw.MemoryImage? profileImage,
   }) {
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
@@ -63,8 +63,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                         ),
                         child: pw.Text(
                           _resumeInitials(resume),
-                          style: darkHeaderInitialsPdfStyle(
-                            inter,
+                          style: darkHeaderInitialsGaramondPdfStyle(
+                            garamond,
                             headerOnColor,
                           ),
                         ),
@@ -80,7 +80,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                         _darkHeaderNameText(
                           _displayName(resume).toUpperCase(),
                           headerOnColor,
-                          inter,
+                          garamond,
                         ),
                         if (headerContactLines.isNotEmpty) ...[
                           pw.SizedBox(height: 8),
@@ -95,8 +95,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                               ),
                               child: pw.Text(
                                 headerContactLines[index],
-                                style: interPdfTextStyle(
-                                  inter,
+                                style: garamondPdfTextStyle(
+                                  garamond,
                                   ResumeTypography.darkHeaderContactWeight,
                                   fontSize: headerContactFontPt,
                                   color: headerOnColor,
@@ -120,7 +120,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             resume.summary.trim(),
             lineColor,
             sectionTitleColor,
-            inter,
+            garamond,
             bodyPt,
           ),
           if (resume.includeWorkInResume)
@@ -128,7 +128,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               resume.visibleWorkExperiences,
               lineColor,
               sectionTitleColor,
-              inter,
+              garamond,
               bodyPt,
             ),
           if (resume.includeEducationInResume)
@@ -136,7 +136,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               resume.visibleEducation,
               lineColor,
               sectionTitleColor,
-              inter,
+              garamond,
               bodyPt,
             ),
           if (resume.includeSkillsInResume)
@@ -144,7 +144,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               _skillsForDisplay(resume),
               lineColor,
               sectionTitleColor,
-              inter,
+              garamond,
               bodyPt,
             ),
           if (resume.includeProjectsInResume)
@@ -152,7 +152,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               resume.visibleProjects,
               lineColor,
               sectionTitleColor,
-              inter,
+              garamond,
               bodyPt,
             ),
           for (final item in resume.visibleCustomSections)
@@ -160,7 +160,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
               item,
               lineColor,
               sectionTitleColor,
-              inter,
+              garamond,
               bodyPt,
             ),
         ],
@@ -172,7 +172,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     required String title,
     required PdfColor lineColor,
     required PdfColor sectionTitleColor,
-    required InterPdfFonts inter,
+    required GaramondPdfFonts garamond,
   }) {
     return [
       pw.Padding(
@@ -185,7 +185,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         child: _darkHeaderHeadingText(
           title.toUpperCase(),
           color: sectionTitleColor,
-          inter: inter,
+          garamond: garamond,
         ),
       ),
       pw.SizedBox(height: 7),
@@ -210,7 +210,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     String summary,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     return [
@@ -218,7 +218,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         title: 'Summary',
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       pw.Padding(
         padding: pw.EdgeInsets.fromLTRB(
@@ -229,7 +229,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         ),
         child: pw.Text(
           summary,
-          style: interDarkHeaderBodyPdfTextStyle(inter, bodyPt),
+          style: corporateBodyPdfTextStyle(garamond, bodyPt),
         ),
       ),
       ..._darkHeaderSectionSuffixWidgets(),
@@ -240,7 +240,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     List<EducationItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     return [
@@ -248,7 +248,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         title: 'Education',
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       for (final item in items)
         pw.Padding(
@@ -260,7 +260,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         ),
           child: _buildCorporateEducation(
             item,
-            inter: inter,
+            garamond: garamond,
             bodyFontPt: bodyPt,
           ),
         ),
@@ -272,16 +272,16 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     List<String> skills,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
-    final bulletStyle = interDarkHeaderBodyPdfTextStyle(inter, bodyPt);
+    final bulletStyle = corporateBodyPdfTextStyle(garamond, bodyPt);
     return [
       ..._darkHeaderSectionPrefixWidgets(
         title: 'Skills',
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       for (final row in _twoColumnBulletRows(
         skills,
@@ -307,7 +307,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     List<ProjectItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     return [
@@ -315,12 +315,12 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         title: 'Projects',
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       for (final item in items)
         ..._buildCompactProjectWidgets(
           item,
-          inter: inter,
+          garamond: garamond,
           bodyFontPt: bodyPt,
         ).map(
           (widget) => pw.Padding(
@@ -341,7 +341,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     CustomSectionItem item,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     return [
@@ -349,11 +349,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         title: item.title.ifEmpty('Custom Section'),
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       for (final widget in _pwCustomSectionBodyWidgets(
         item,
-        inter: inter,
+        garamond: garamond,
         bodyFontPt: bodyPt,
       ))
         pw.Padding(
@@ -373,7 +373,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     List<WorkExperience> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     final widgets = <pw.Widget>[
@@ -387,7 +387,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         child: _darkHeaderHeadingText(
           'EXPERIENCE',
           color: sectionTitleColor,
-          inter: inter,
+          garamond: garamond,
         ),
       ),
       pw.SizedBox(height: 7),
@@ -436,7 +436,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                 child: _darkHeaderRoleCompanyText(
                   item.role.ifEmpty('Role'),
                   item.company.ifEmpty('Company'),
-                  inter: inter,
+                  garamond: garamond,
                 ),
               ),
               if (dateStr.isNotEmpty)
@@ -444,8 +444,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                   alignment: pw.Alignment.centerRight,
                   child: pw.Text(
                     dateStr,
-                    style: interDarkHeaderBodyPdfTextStyle(
-                      inter,
+                    style: corporateBodyPdfTextStyle(
+                      garamond,
                       bodyPt,
                       color: PdfColor.fromHex('#666B71'),
                       fontStyle: pw.FontStyle.italic,
@@ -472,7 +472,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             ),
             child: pw.Bullet(
               text: bullet,
-              style: interDarkHeaderBodyPdfTextStyle(inter, bodyPt),
+              style: corporateBodyPdfTextStyle(garamond, bodyPt),
             ),
           ),
         );
@@ -492,13 +492,13 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   pw.Widget _darkHeaderRoleCompanyText(
     String role,
     String company, {
-    required InterPdfFonts inter,
+    required GaramondPdfFonts garamond,
   }) {
     final value = '$role / $company';
     return pw.Text(
       value,
-      style: interPdfTextStyle(
-        inter,
+      style: garamondPdfTextStyle(
+        garamond,
 ResumeTypography.darkHeaderSubtitleWeight,
       fontSize: ResumeTypography.darkHeaderSubtitlePt,
         color: const PdfColor.fromInt(0xFF141414),
@@ -509,12 +509,12 @@ ResumeTypography.darkHeaderSubtitleWeight,
   pw.Widget _darkHeaderNameText(
     String value,
     PdfColor onColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
   ) {
     return pw.Text(
       value,
-      style: interPdfTextStyle(
-        inter,
+      style: garamondPdfTextStyle(
+        garamond,
         ResumeTypography.darkHeaderNameWeight,
         fontSize: ResumeTypography.darkHeaderNamePt,
         color: onColor,
@@ -525,12 +525,12 @@ ResumeTypography.darkHeaderSubtitleWeight,
   pw.Widget _darkHeaderHeadingText(
     String value, {
     PdfColor color = const PdfColor(0, 0, 0),
-    required InterPdfFonts inter,
+    required GaramondPdfFonts garamond,
   }) {
     return pw.Text(
       value,
-      style: interPdfTextStyle(
-        inter,
+      style: garamondPdfTextStyle(
+        garamond,
         ResumeTypography.darkHeaderSectionTitleWeight,
         fontSize: ResumeTypography.darkHeaderSectionTitlePt,
         color: color,
@@ -541,7 +541,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
   void _addCreativeTemplatePage(
     pw.Document document,
     ResumeData resume, {
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     pw.MemoryImage? profileImage,
   }) {
     final accentColor = _creativeSidebarAccentColorPdf(resume);
@@ -574,7 +574,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             accentColor: accentColor,
             lineColor: lineColor,
             mutedColor: bodyColor,
-            calibri: calibri,
+            garamond: garamond,
             profileImage: profileImage,
             bodyPt: bodyPt,
           ),
@@ -584,9 +584,9 @@ ResumeTypography.darkHeaderSubtitleWeight,
           _creativeMainColumnChild(
             pw.Text(
               _displayName(resume).toUpperCase(),
-              style: calibri != null
-                  ? calibriPdfTextStyle(
-                      calibri,
+              style: garamond != null
+                  ? garamondPdfTextStyle(
+                      garamond,
                       ResumeTypography.creativeNameWeight,
                       fontSize: namePt,
                       color: textColor,
@@ -603,9 +603,9 @@ ResumeTypography.darkHeaderSubtitleWeight,
             _creativeMainColumnChild(
               pw.Text(
                 resume.jobTitle.trim(),
-                style: calibri != null
-                    ? calibriPdfTextStyle(
-                        calibri,
+                style: garamond != null
+                    ? garamondPdfTextStyle(
+                        garamond,
                         ResumeTypography.creativeSubtitleWeight,
                         fontSize: subtitlePt,
                         color: bodyColor,
@@ -625,7 +625,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
               title: 'Summary',
               titleColor: textColor,
               lineColor: lineColor,
-              calibri: calibri,
+              garamond: garamond,
               sectionTitlePt: sectionTitlePt,
             ),
           ),
@@ -635,11 +635,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
               resume.summary.trim().ifEmpty(
                 'Add a short summary to position your experience and strengths.',
               ),
-              style: calibri != null
-                  ? calibriCreativeBodyPdfTextStyle(
-                      calibri,
+              style: garamond != null
+                  ? accentStripBodyPdfTextStyle(
+                      garamond,
                       bodyPt,
-                      weight: ResumeTypography.creativeBodyWeight,
                       color: bodyColor,
                     )
                   : pw.TextStyle(
@@ -659,7 +658,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: 'Experience',
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
@@ -668,7 +667,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
               _creativeMainColumnChild(
                 _buildCreativeExperience(
                   item,
-                  calibri: calibri,
+                  garamond: garamond,
                   bodyPt: bodyPt,
                   subtitlePt: subtitlePt,
                 ),
@@ -681,7 +680,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: 'Education',
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
@@ -692,7 +691,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   item,
                   titleColor: textColor,
                   mutedColor: bodyColor,
-                  calibri: calibri,
+                  garamond: garamond,
                   bodyPt: bodyPt,
                   subtitlePt: subtitlePt,
                 ),
@@ -705,7 +704,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: 'Skills',
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
@@ -713,11 +712,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
             for (final row in _twoColumnBulletRows(
               _skillsForDisplay(resume),
               fontSize: bodyPt,
-              bulletStyle: calibri != null
-                  ? calibriCreativeBodyPdfTextStyle(
-                      calibri,
+              bulletStyle: garamond != null
+                  ? accentStripBodyPdfTextStyle(
+                      garamond,
                       bodyPt,
-                      weight: ResumeTypography.creativeBodyWeight,
                       color: bodyColor,
                     )
                   : pw.TextStyle(
@@ -734,7 +732,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: 'Projects',
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
@@ -743,7 +741,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
               _creativeMainColumnChild(
                 _buildCreativeProject(
                   item,
-                  calibri: calibri,
+                  garamond: garamond,
                   mutedColor: bodyColor,
                   bodyPt: bodyPt,
                   subtitlePt: subtitlePt,
@@ -757,14 +755,14 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 title: item.title.ifEmpty('Custom Section'),
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
             for (final widget in _pwCustomSectionBodyWidgets(
               item,
-              calibri: calibri,
+              garamond: garamond,
               bodyFontPt: bodyPt,
             ))
               _creativeMainColumnChild(widget),
@@ -777,7 +775,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
   void _addClassicSidebarTemplatePage(
     pw.Document document,
     ResumeData resume, {
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     pw.MemoryImage? profileImage,
   }) {
     final titleColor = _classicSidebarTitleColorPdf(resume);
@@ -817,7 +815,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
           mutedColor: mutedColor,
           bodyPt: bodyPt,
           sectionTitlePt: sectionTitlePt,
-          calibri: calibri,
+          garamond: garamond,
           profileImage: profileImage,
         ),
         header: _continuedPageTopGap,
@@ -836,7 +834,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 bodyPt: bodyPt,
                 namePt: namePt,
                 subtitlePt: subtitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
           ),
@@ -845,13 +843,13 @@ ResumeTypography.darkHeaderSubtitleWeight,
               title: 'Summary',
               titleColor: titleColor,
               sectionTitlePt: sectionTitlePt,
-              calibri: calibri,
+              garamond: garamond,
               child: pw.Text(
                 resume.summary.trim().ifEmpty(
                   'Add a short summary to position your experience and strengths.',
                 ),
                 style: _classicSidebarPdfTextStyle(
-                  calibri,
+                  garamond,
                   ResumeTypography.classicSidebarBodyWeight,
                   bodyPt,
                   color: titleColor,
@@ -872,11 +870,11 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
                 child: pw.Text(
                   'Add your work experience details.',
                   style: _classicSidebarPdfTextStyle(
-                    calibri,
+                    garamond,
                     ResumeTypography.classicSidebarBodyWeight,
                     bodyPt,
                     color: mutedColor,
@@ -892,7 +890,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
             ..._classicSidebarPaginatedExperienceSidebarBlocks(
@@ -902,7 +900,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
               accentColor: accentColor,
               bodyPt: bodyPt,
               subtitlePt: subtitlePt,
-              calibri: calibri,
+              garamond: garamond,
             ),
           ],
           if (resume.includeEducationInResume &&
@@ -913,11 +911,11 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
                 child: pw.Text(
                   'Add your education details.',
                   style: _classicSidebarPdfTextStyle(
-                    calibri,
+                    garamond,
                     ResumeTypography.classicSidebarBodyWeight,
                     bodyPt,
                     color: mutedColor,
@@ -933,7 +931,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
             ..._classicSidebarPaginatedEducationSidebarBlocks(
@@ -943,7 +941,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
               mutedColor: mutedColor,
               bodyPt: bodyPt,
               subtitlePt: subtitlePt,
-              calibri: calibri,
+              garamond: garamond,
             ),
           ],
           if (resume.includeProjectsInResume &&
@@ -954,7 +952,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
             ..._classicSidebarPaginatedProjectSidebarBlocks(
@@ -965,7 +963,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
               accentColor: accentColor,
               bodyPt: bodyPt,
               subtitlePt: subtitlePt,
-              calibri: calibri,
+              garamond: garamond,
             ),
           ],
           for (var index = 0; index < customSections.length; index++) ...[
@@ -975,7 +973,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
             if (customSections[index].layoutMode ==
@@ -1003,7 +1001,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                       bulletColor: accentColor,
                       textColor: mutedColor,
                       fontSize: bodyPt,
-                      calibri: calibri,
+                      garamond: garamond,
                     ),
                   ),
                 )
@@ -1016,7 +1014,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     mutedColor: mutedColor,
                     accentColor: accentColor,
                     bodyPt: bodyPt,
-                    calibri: calibri,
+                    garamond: garamond,
                   ),
                 ),
               ),
@@ -1034,7 +1032,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required double bodyPt,
     required double namePt,
     required double subtitlePt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
   }) {
     return pw.Container(
       width: double.infinity,
@@ -1045,7 +1043,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
           pw.Text(
             _displayName(resume).toUpperCase(),
             style: _classicSidebarPdfTextStyle(
-              calibri,
+              garamond,
               ResumeTypography.classicSidebarNameWeight,
               namePt,
               color: titleColor,
@@ -1056,7 +1054,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             pw.Text(
               resume.jobTitle.trim(),
               style: _classicSidebarPdfTextStyle(
-                calibri,
+                garamond,
                 ResumeTypography.classicSidebarSubtitleWeight,
                 subtitlePt,
                 color: mutedColor,
@@ -1070,7 +1068,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             accentColor: accentColor,
             textColor: mutedColor,
             fontSize: bodyPt,
-            calibri: calibri,
+            garamond: garamond,
           ),
         ],
       ),
@@ -1082,7 +1080,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor accentColor,
     required PdfColor textColor,
     required double fontSize,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
   }) {
     final rows = <String>[
       if (resume.email.trim().isNotEmpty) resume.email.trim(),
@@ -1113,7 +1111,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   child: pw.Text(
                     text,
                     style: _classicSidebarPdfTextStyle(
-                      calibri,
+                      garamond,
                       ResumeTypography.classicSidebarSidebarContentWeight,
                       fontSize,
                       color: textColor,
@@ -1131,7 +1129,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required String title,
     required PdfColor titleColor,
     required double sectionTitlePt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     PdfColor? topDividerColor,
     bool showBottomBorder = true,
     required pw.Widget child,
@@ -1150,7 +1148,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
         pw.Text(
           title.toUpperCase(),
           style: _classicSidebarPdfTextStyle(
-            calibri,
+            garamond,
             ResumeTypography.classicSidebarSectionTitleWeight,
             sectionTitlePt,
             color: titleColor,
@@ -1169,7 +1167,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required String title,
     required PdfColor titleColor,
     required double sectionTitlePt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     PdfColor? topDividerColor,
   }) {
     return pw.Column(
@@ -1190,7 +1188,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
           child: pw.Text(
             title.toUpperCase(),
             style: _classicSidebarPdfTextStyle(
-              calibri,
+              garamond,
               ResumeTypography.classicSidebarSectionTitleWeight,
               sectionTitlePt,
               color: titleColor,
@@ -1228,7 +1226,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor accentColor,
     required double bodyPt,
     required double subtitlePt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     bool addTrailingJobGap = true,
     Set<String> highlightedBullets = const <String>{},
     PdfColor? bulletHighlightColor,
@@ -1250,7 +1248,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
         child: pw.Text(
           item.role.ifEmpty('Role'),
           style: _classicSidebarPdfTextStyle(
-            calibri,
+            garamond,
             ResumeTypography.classicSidebarSubtitleWeight,
             subtitlePt,
             color: titleColor,
@@ -1268,7 +1266,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
           child: pw.Text(
             companyDatesLine,
             style: _classicSidebarPdfTextStyle(
-              calibri,
+              garamond,
               ResumeTypography.classicSidebarBodyWeight,
               bodyPt,
               color: titleColor,
@@ -1291,7 +1289,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             bulletColor: accentColor,
             textColor: titleColor,
             fontSize: bodyPt,
-            calibri: calibri,
+            garamond: garamond,
             backgroundColor:
                 bulletHighlightColor != null &&
                     highlightedBullets.contains(bullet)
@@ -1312,7 +1310,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor accentColor,
     required double bodyPt,
     required double subtitlePt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
     PdfColor? bulletHighlightColor,
   }) {
@@ -1326,7 +1324,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             accentColor: accentColor,
             bodyPt: bodyPt,
             subtitlePt: subtitlePt,
-            calibri: calibri,
+            garamond: garamond,
             addTrailingJobGap: index < experiences.length - 1,
             highlightedBullets:
                 highlightedBulletsByExperience[index] ?? const <String>{},
@@ -1346,7 +1344,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor mutedColor,
     required double bodyPt,
     required double subtitlePt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     bool addTrailingEntryGap = true,
   }) {
     final dates = [
@@ -1360,7 +1358,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
         child: pw.Text(
           '${item.degree.ifEmpty('Degree')}, ${item.institution.ifEmpty('Institution')}',
           style: _classicSidebarPdfTextStyle(
-            calibri,
+            garamond,
             ResumeTypography.classicSidebarSubtitleWeight,
             subtitlePt,
             color: titleColor,
@@ -1376,7 +1374,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
           child: pw.Text(
             dates,
             style: _classicSidebarPdfTextStyle(
-              calibri,
+              garamond,
               ResumeTypography.classicSidebarBodyWeight,
               bodyPt,
               color: mutedColor,
@@ -1397,7 +1395,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor mutedColor,
     required double bodyPt,
     required double subtitlePt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
   }) {
     final blocks = <pw.Widget>[];
     for (var index = 0; index < education.length; index++) {
@@ -1409,7 +1407,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             mutedColor: mutedColor,
             bodyPt: bodyPt,
             subtitlePt: subtitlePt,
-            calibri: calibri,
+            garamond: garamond,
             addTrailingEntryGap: index < education.length - 1,
           ),
           wrap: wrap,
@@ -1427,7 +1425,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor accentColor,
     required double bodyPt,
     required double subtitlePt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     bool addTrailingEntryGap = true,
   }) {
     final bullets = _projectBulletLines(item);
@@ -1438,7 +1436,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
         child: pw.Text(
           item.title.ifEmpty('Project'),
           style: _classicSidebarPdfTextStyle(
-            calibri,
+            garamond,
             ResumeTypography.classicSidebarSubtitleWeight,
             subtitlePt,
             color: titleColor,
@@ -1457,7 +1455,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             bulletColor: accentColor,
             textColor: titleColor,
             fontSize: bodyPt,
-            calibri: calibri,
+            garamond: garamond,
           ),
         ),
       );
@@ -1474,7 +1472,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor accentColor,
     required double bodyPt,
     required double subtitlePt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
   }) {
     final blocks = <pw.Widget>[];
     for (var index = 0; index < projects.length; index++) {
@@ -1487,7 +1485,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             accentColor: accentColor,
             bodyPt: bodyPt,
             subtitlePt: subtitlePt,
-            calibri: calibri,
+            garamond: garamond,
             addTrailingEntryGap: index < projects.length - 1,
           ),
           wrap: wrap,
@@ -1503,7 +1501,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor mutedColor,
     required PdfColor accentColor,
     required double bodyPt,
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
   }) {
     if (item.layoutMode == CustomSectionLayoutMode.bullets) {
       return pw.Column(
@@ -1517,7 +1515,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 bulletColor: accentColor,
                 textColor: mutedColor,
                 fontSize: bodyPt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
         ],
@@ -1526,7 +1524,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     return pw.Text(
       item.content.trim(),
       style: _classicSidebarPdfTextStyle(
-        calibri,
+        garamond,
         ResumeTypography.classicSidebarBodyWeight,
         bodyPt,
         color: mutedColor,

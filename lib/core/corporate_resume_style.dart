@@ -103,9 +103,9 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
 }
 
 /// Body font size slider range for resume preview + PDF export (pt).
-const int kResumeBodyFontPtMin = 10;
-const int kResumeBodyFontPtMax = 12;
-const int kResumeBodyFontPtDefault = 11;
+const int kResumeBodyFontPtMin = 11;
+const int kResumeBodyFontPtMax = 13;
+const int kResumeBodyFontPtDefault = 12;
 
 extension ResumeCorporateStyleX on ResumeData {
   /// Clamped [kResumeBodyFontPtMin]–[kResumeBodyFontPtMax] for preview + PDF body text.
@@ -157,12 +157,12 @@ extension ResumeCorporateStyleX on ResumeData {
     return lines;
   }
 
-  /// Scales Profile Sidebar (template 2) type from the body font slider (10–12 pt).
+  /// Scales Profile Sidebar (template 2) type from the body font slider (11–13 pt).
   double get creativeFontScale => effectiveBodyFontPt / kResumeBodyFontPtDefault;
 
   double creativeScaledPt(double designPt) => designPt * creativeFontScale;
 
-  /// Scales Classic Sidebar (template 3) type from the body font slider (10–12 pt).
+  /// Scales Classic Sidebar (template 3) type from the body font slider (11–13 pt).
   double get classicSidebarFontScale =>
       effectiveBodyFontPt / kResumeBodyFontPtDefault;
 

@@ -13,7 +13,7 @@ final Map<String, pw.ThemeData> resumePdfThemeCache = {};
 /// Embeds bundled TTFs so exported PDFs match the template typography instead of
 /// built-in Helvetica.
 ///
-/// [bodyFontPt] overrides default body size (10–12 pt); defaults to [ResumeTypography.bodyPt].
+/// [bodyFontPt] overrides default body size (11–13 pt); defaults to [ResumeTypography.bodyPt].
 Future<pw.ThemeData> resumePdfThemeForBodyFont(
   ResumeTextFont font, {
   double? bodyFontPt,

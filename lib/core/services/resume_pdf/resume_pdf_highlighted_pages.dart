@@ -7,7 +7,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   void _addHighlightedCorporateTemplatePage(
     pw.Document document,
     ResumeData resume, {
-    required InterPdfFonts inter,
+    required GaramondPdfFonts garamond,
     required bool highlightSummary,
     required Set<String> highlightedSkills,
     required Map<int, Set<String>> highlightedBulletsByExperience,
@@ -54,8 +54,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   ),
                   child: pw.Text(
                     _resumeInitials(resume),
-                    style: darkHeaderInitialsPdfStyle(
-                      inter,
+                    style: darkHeaderInitialsGaramondPdfStyle(
+                      garamond,
                       headerOnColor,
                     ),
                   ),
@@ -69,7 +69,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       _highlightedCorporateNameText(
                         _displayName(resume).toUpperCase(),
                         headerOnColor,
-                        inter,
+                        garamond,
                       ),
                       if (headerContactLines.isNotEmpty) ...[
                         pw.SizedBox(height: 8),
@@ -84,8 +84,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                             ),
                             child: pw.Text(
                               headerContactLines[index],
-                              style: interPdfTextStyle(
-                                inter,
+                              style: garamondPdfTextStyle(
+                                garamond,
                                 ResumeTypography.darkHeaderContactWeight,
                                 fontSize: headerContactFontPt,
                                 color: headerOnColor,
@@ -109,7 +109,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             lineColor,
             sectionTitleColor,
             highlightColor,
-            inter,
+            garamond,
             bodyPt,
             highlightSummary: highlightSummary,
           ),
@@ -120,7 +120,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               lineColor,
               sectionTitleColor,
               highlightColor,
-              inter,
+              garamond,
               bodyPt,
             ),
           if (resume.includeEducationInResume)
@@ -128,7 +128,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               resume.visibleEducation,
               lineColor,
               sectionTitleColor,
-              inter,
+              garamond,
               bodyPt,
             ),
           if (resume.includeSkillsInResume)
@@ -138,7 +138,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               lineColor,
               sectionTitleColor,
               highlightColor,
-              inter,
+              garamond,
               bodyPt,
             ),
           if (resume.includeProjectsInResume)
@@ -146,7 +146,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               resume.visibleProjects,
               lineColor,
               sectionTitleColor,
-              inter,
+              garamond,
               bodyPt,
             ),
           for (final item in resume.visibleCustomSections)
@@ -154,7 +154,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               item,
               lineColor,
               sectionTitleColor,
-              inter,
+              garamond,
               bodyPt,
             ),
         ],
@@ -165,13 +165,13 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   pw.Widget _highlightedCorporateNameText(
     String value,
     PdfColor onColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
   ) {
     return pw.Text(
       value,
-      style: interPdfTextStyle(
-        inter,
-        ResumeTypography.darkHeaderSectionTitleWeight,
+      style: garamondPdfTextStyle(
+        garamond,
+        ResumeTypography.darkHeaderNameWeight,
         fontSize: ResumeTypography.darkHeaderNamePt,
         color: onColor,
       ),
@@ -181,7 +181,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   List<pw.Widget> _highlightedCorporateSectionPrefixWidgets({
     required String title,
     required PdfColor sectionTitleColor,
-    required InterPdfFonts inter,
+    required GaramondPdfFonts garamond,
   }) {
     return [
       pw.Padding(
@@ -194,7 +194,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         child: _corporateHeadingText(
           title.toUpperCase(),
           color: sectionTitleColor,
-          inter: inter,
+          garamond: garamond,
         ),
       ),
       pw.SizedBox(height: 8),
@@ -223,7 +223,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     PdfColor lineColor,
     PdfColor sectionTitleColor,
     PdfColor highlightColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt, {
     required bool highlightSummary,
   }) {
@@ -231,7 +231,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Summary',
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       pw.Padding(
         padding: pw.EdgeInsets.fromLTRB(
@@ -246,7 +246,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           color: highlightSummary ? highlightColor : PdfColors.white,
           child: pw.Text(
             summary,
-            style: interDarkHeaderBodyPdfTextStyle(inter, bodyPt),
+            style: corporateBodyPdfTextStyle(garamond, bodyPt),
           ),
         ),
       ),
@@ -260,14 +260,14 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     PdfColor lineColor,
     PdfColor sectionTitleColor,
     PdfColor highlightColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Experience',
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       for (var index = 0; index < items.length; index++)
         pw.Padding(
@@ -281,7 +281,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             items[index],
             highlightedBulletsByExperience[index] ?? const <String>{},
             highlightColor,
-            inter: inter,
+            garamond: garamond,
             bodyFontPt: bodyPt,
           ),
         ),
@@ -293,14 +293,14 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     List<EducationItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Education',
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       for (final item in items)
         pw.Padding(
@@ -312,7 +312,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         ),
           child: _buildCorporateEducation(
             item,
-            inter: inter,
+            garamond: garamond,
             bodyFontPt: bodyPt,
           ),
         ),
@@ -326,15 +326,15 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     PdfColor lineColor,
     PdfColor sectionTitleColor,
     PdfColor highlightColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
-    final bulletStyle = interDarkHeaderBodyPdfTextStyle(inter, bodyPt);
+    final bulletStyle = corporateBodyPdfTextStyle(garamond, bodyPt);
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Skills',
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       for (final row in _twoColumnBulletRowsWithHighlights(
         skills,
@@ -360,19 +360,19 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     List<ProjectItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Projects',
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       for (final item in items)
         ..._buildCompactProjectWidgets(
           item,
-          inter: inter,
+          garamond: garamond,
           bodyFontPt: bodyPt,
         ).map(
           (widget) => pw.Padding(
@@ -393,18 +393,18 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     CustomSectionItem item,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
-    InterPdfFonts inter,
+    GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: item.title.ifEmpty('Custom Section'),
         sectionTitleColor: sectionTitleColor,
-        inter: inter,
+        garamond: garamond,
       ),
       for (final widget in _pwCustomSectionBodyWidgets(
         item,
-        inter: inter,
+        garamond: garamond,
         bodyFontPt: bodyPt,
       ))
         pw.Padding(
@@ -423,7 +423,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   void _addHighlightedCreativeTemplatePage(
     pw.Document document,
     ResumeData resume, {
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     required bool highlightSummary,
     required Set<String> highlightedSkills,
     required Map<int, Set<String>> highlightedBulletsByExperience,
@@ -440,11 +440,10 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         resume.creativeScaledPt(ResumeTypography.creativeSubtitlePt);
     final sectionTitlePt =
         resume.creativeScaledPt(ResumeTypography.creativeSectionTitlePt);
-    final bodyTextStyle = calibri != null
-        ? calibriCreativeBodyPdfTextStyle(
-            calibri,
+    final bodyTextStyle = garamond != null
+        ? accentStripBodyPdfTextStyle(
+            garamond,
             bodyPt,
-            weight: ResumeTypography.creativeBodyWeight,
             color: bodyColor,
           )
         : pw.TextStyle(
@@ -471,7 +470,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             accentColor: accentColor,
             lineColor: lineColor,
             mutedColor: bodyColor,
-            calibri: calibri,
+            garamond: garamond,
             bodyPt: bodyPt,
           ),
         ),
@@ -480,9 +479,9 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           _creativeMainColumnChild(
             pw.Text(
               _displayName(resume).toUpperCase(),
-              style: calibri != null
-                  ? calibriPdfTextStyle(
-                      calibri,
+              style: garamond != null
+                  ? garamondPdfTextStyle(
+                      garamond,
                       ResumeTypography.creativeNameWeight,
                       fontSize: namePt,
                       color: textColor,
@@ -499,9 +498,9 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             _creativeMainColumnChild(
               pw.Text(
                 resume.jobTitle.trim(),
-                style: calibri != null
-                    ? calibriPdfTextStyle(
-                        calibri,
+                style: garamond != null
+                    ? garamondPdfTextStyle(
+                        garamond,
                         ResumeTypography.creativeSubtitleWeight,
                         fontSize: subtitlePt,
                         color: bodyColor,
@@ -521,7 +520,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               title: 'Summary',
               titleColor: textColor,
               lineColor: lineColor,
-              calibri: calibri,
+              garamond: garamond,
               sectionTitlePt: sectionTitlePt,
             ),
           ),
@@ -549,7 +548,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: 'Experience',
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
@@ -564,7 +563,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   resume.visibleWorkExperiences[index],
                   highlightedBulletsByExperience[index] ?? const <String>{},
                   highlightColor,
-                  calibri: calibri,
+                  garamond: garamond,
                   bodyPt: bodyPt,
                   subtitlePt: subtitlePt,
                 ),
@@ -577,7 +576,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: 'Education',
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
@@ -588,7 +587,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   item,
                   titleColor: textColor,
                   mutedColor: bodyColor,
-                  calibri: calibri,
+                  garamond: garamond,
                   bodyPt: bodyPt,
                   subtitlePt: subtitlePt,
                 ),
@@ -601,7 +600,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: 'Skills',
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
@@ -623,7 +622,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: 'Projects',
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
@@ -632,7 +631,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               _creativeMainColumnChild(
                 _buildCreativeProject(
                   item,
-                  calibri: calibri,
+                  garamond: garamond,
                   mutedColor: bodyColor,
                   bodyPt: bodyPt,
                   subtitlePt: subtitlePt,
@@ -646,14 +645,14 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: item.title.ifEmpty('Custom Section'),
                 titleColor: textColor,
                 lineColor: lineColor,
-                calibri: calibri,
+                garamond: garamond,
                 sectionTitlePt: sectionTitlePt,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
             for (final widget in _pwCustomSectionBodyWidgets(
               item,
-              calibri: calibri,
+              garamond: garamond,
               bodyFontPt: bodyPt,
             ))
               _creativeMainColumnChild(widget),
@@ -666,7 +665,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   void _addHighlightedClassicSidebarTemplatePage(
     pw.Document document,
     ResumeData resume, {
-    CalibriPdfFonts? calibri,
+    GaramondPdfFonts? garamond,
     required bool highlightSummary,
     required Set<String> highlightedSkills,
     required Map<int, Set<String>> highlightedBulletsByExperience,
@@ -709,7 +708,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           mutedColor: mutedColor,
           bodyPt: bodyPt,
           sectionTitlePt: sectionTitlePt,
-          calibri: calibri,
+          garamond: garamond,
           highlightedSkills: highlightedSkills,
           highlightColor: highlightColor,
         ),
@@ -729,7 +728,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 bodyPt: bodyPt,
                 namePt: namePt,
                 subtitlePt: subtitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
           ),
@@ -738,7 +737,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               title: 'Summary',
               titleColor: titleColor,
               sectionTitlePt: sectionTitlePt,
-              calibri: calibri,
+              garamond: garamond,
               child: pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.symmetric(
@@ -751,7 +750,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     'Add a short summary to position your experience and strengths.',
                   ),
                   style: _classicSidebarPdfTextStyle(
-                    calibri,
+                    garamond,
                     ResumeTypography.classicSidebarBodyWeight,
                     bodyPt,
                     color: titleColor,
@@ -773,11 +772,11 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
                 child: pw.Text(
                   'Add your work experience details.',
                   style: _classicSidebarPdfTextStyle(
-                    calibri,
+                    garamond,
                     ResumeTypography.classicSidebarBodyWeight,
                     bodyPt,
                     color: mutedColor,
@@ -793,7 +792,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
             ..._classicSidebarPaginatedExperienceSidebarBlocks(
@@ -803,7 +802,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               accentColor: accentColor,
               bodyPt: bodyPt,
               subtitlePt: subtitlePt,
-              calibri: calibri,
+              garamond: garamond,
               highlightedBulletsByExperience: highlightedBulletsByExperience,
               bulletHighlightColor: highlightColor,
             ),
@@ -816,11 +815,11 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
                 child: pw.Text(
                   'Add your education details.',
                   style: _classicSidebarPdfTextStyle(
-                    calibri,
+                    garamond,
                     ResumeTypography.classicSidebarBodyWeight,
                     bodyPt,
                     color: mutedColor,
@@ -836,7 +835,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
             ..._classicSidebarPaginatedEducationSidebarBlocks(
@@ -846,7 +845,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               mutedColor: mutedColor,
               bodyPt: bodyPt,
               subtitlePt: subtitlePt,
-              calibri: calibri,
+              garamond: garamond,
             ),
           ],
           if (resume.includeProjectsInResume &&
@@ -857,7 +856,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
             ..._classicSidebarPaginatedProjectSidebarBlocks(
@@ -868,7 +867,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               accentColor: accentColor,
               bodyPt: bodyPt,
               subtitlePt: subtitlePt,
-              calibri: calibri,
+              garamond: garamond,
             ),
           ],
           for (var index = 0; index < customSections.length; index++) ...[
@@ -878,7 +877,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 titleColor: titleColor,
                 topDividerColor: borderColor,
                 sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
+                garamond: garamond,
               ),
             ),
             if (customSections[index].layoutMode ==
@@ -906,7 +905,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       bulletColor: accentColor,
                       textColor: mutedColor,
                       fontSize: bodyPt,
-                      calibri: calibri,
+                      garamond: garamond,
                     ),
                   ),
                 )
@@ -919,7 +918,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     mutedColor: mutedColor,
                     accentColor: accentColor,
                     bodyPt: bodyPt,
-                    calibri: calibri,
+                    garamond: garamond,
                   ),
                 ),
               ),

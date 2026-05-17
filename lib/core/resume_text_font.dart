@@ -7,11 +7,11 @@ import 'resume_font_weight.dart';
 /// Default type scale for resume content (preview + PDF). Font family defaults to
 /// [ResumeTextFont.inter] on [ResumeData.resumeTextFont].
 abstract final class ResumeTypography {
-  static const double bodyPt = 11;
+  static const double bodyPt = 12;
   static const double headingPt = 14;
   static const double namePt = 17;
 
-  /// Accent Strip (template 4): fixed Garamond titles; body uses slider pt (10–12, default 11).
+  /// Accent Strip (template 4): fixed Garamond titles; body uses slider pt (11–13, default 12).
   static const double accentStripNamePt = 24;
   static const double accentStripSectionTitlePt = 14;
   static const double accentStripSubsectionPt = 13;
@@ -65,44 +65,42 @@ abstract final class ResumeTypography {
   /// Corporate body sections below the header (preview px = PDF pt).
   static const double corporateBodyHorizontalInset = 40;
 
-  /// Dark Header (corporate template) — preview and PDF type scale.
-  static const double darkHeaderNamePt = 24;
+  /// Dark Header (corporate template) — Garamond; same scale as Accent Strip.
+  static const double darkHeaderNamePt = accentStripNamePt;
   static const double darkHeaderInitialsPt = 48;
-  static const double darkHeaderSectionTitlePt = 14;
-  static const double darkHeaderSubtitlePt = 13;
+  static const double darkHeaderSectionTitlePt = accentStripSectionTitlePt;
+  static const double darkHeaderSubtitlePt = accentStripSubsectionPt;
 
   /// Corporate body paragraph line height (preview + PDF).
-  static const double darkHeaderBodyLineHeight = 1.2;
+  static const double darkHeaderBodyLineHeight = creativeBodyLineHeight;
 
   /// Subtitle lines (role/company, school line, project title).
-  static const Color darkHeaderSubtitleColor = Color(0xFF141414);
+  static const Color darkHeaderSubtitleColor = atsStructuredBodyTextColor;
 
-  /// Dark Header font weights (see [ResumeFontWeight]).
-  static const int darkHeaderBodyWeight = 400;
-  static const int darkHeaderContactWeight = 300;
+  static const int darkHeaderBodyWeight = accentStripBodyWeight;
+  static const int darkHeaderContactWeight = accentStripContactWeight;
 
   /// Line height for dark header contact lines (1 or 2 rows).
-  static const double darkHeaderContactLineHeight = 1.4;
+  static const double darkHeaderContactLineHeight = textLineHeight;
 
   static double darkHeaderContactPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (darkHeaderContactLineHeight - 1);
-  static const int darkHeaderInitialsWeight = 500;
-  static const int darkHeaderNameWeight = 700;
-  static const int darkHeaderSectionTitleWeight = 600;
-  static const int darkHeaderSubtitleWeight = 500;
+  static const int darkHeaderInitialsWeight = accentStripSubtitleWeight;
+  static const int darkHeaderNameWeight = accentStripNameWeight;
+  static const int darkHeaderSectionTitleWeight = accentStripTitleWeight;
+  static const int darkHeaderSubtitleWeight = accentStripSubtitleWeight;
 
-  /// Profile Sidebar (creative / template 2) — preview and PDF type scale.
-  static const double creativeNamePt = 24;
-  static const int creativeNameWeight = 600;
-  static const int creativeSidebarContentWeight = 300;
-  static const double creativeSectionTitlePt = 14;
-  static const int creativeSectionTitleWeight = 500;
-  /// Legacy design reference; body copy uses [ResumeData.effectiveBodyFontPt] (10–12).
+  /// Profile Sidebar (creative / template 2) — Garamond; same scale as Accent Strip.
+  static const double creativeNamePt = accentStripNamePt;
+  static const int creativeNameWeight = accentStripNameWeight;
+  static const int creativeSidebarContentWeight = accentStripContactWeight;
+  static const double creativeSectionTitlePt = accentStripSectionTitlePt;
+  static const int creativeSectionTitleWeight = accentStripTitleWeight;
+  /// Legacy design reference; body copy uses [ResumeData.effectiveBodyFontPt] (11–13).
   static const double creativeBodyPt = 14;
-  /// Profile Sidebar main body — Nunito Regular (preview + PDF).
-  static const int creativeBodyWeight = 400;
-  static const double creativeSubtitlePt = 13;
-  static const int creativeSubtitleWeight = 400;
+  static const int creativeBodyWeight = accentStripBodyWeight;
+  static const double creativeSubtitlePt = accentStripSubsectionPt;
+  static const int creativeSubtitleWeight = accentStripSubtitleWeight;
 
   /// Profile Sidebar body paragraph line height (preview + PDF).
   static const double creativeBodyLineHeight = 1.2;
@@ -130,9 +128,9 @@ abstract final class ResumeTypography {
   /// Profile Sidebar body copy (preview + PDF).
   static const Color creativeBodyTextColor = Color(0xFF000000);
 
-  /// Classic Sidebar (template 3) — same type scale as Profile Sidebar, independent tokens.
-  static const double classicSidebarNamePt = 24;
-  static const int classicSidebarNameWeight = 600;
+  /// Classic Sidebar (template 3) — Garamond; same scale as Accent Strip.
+  static const double classicSidebarNamePt = accentStripNamePt;
+  static const int classicSidebarNameWeight = accentStripNameWeight;
   static const double classicSidebarAvatarInitialsNameRatio = 1.15;
   static const double classicSidebarAvatarInitialsExtraPt = 18;
 
@@ -140,19 +138,18 @@ abstract final class ResumeTypography {
   static double classicSidebarAvatarInitialsFontPt(double scaledNamePt) =>
       scaledNamePt * classicSidebarAvatarInitialsNameRatio +
       classicSidebarAvatarInitialsExtraPt;
-  static const int classicSidebarSidebarContentWeight = 300;
-  static const double classicSidebarSectionTitlePt = 14;
-  static const int classicSidebarSectionTitleWeight = 500;
-  /// Legacy design reference; body copy uses [ResumeData.effectiveBodyFontPt] (10–12).
+  static const int classicSidebarSidebarContentWeight = accentStripContactWeight;
+  static const double classicSidebarSectionTitlePt = accentStripSectionTitlePt;
+  static const int classicSidebarSectionTitleWeight = accentStripTitleWeight;
+  /// Legacy design reference; body copy uses [ResumeData.effectiveBodyFontPt] (11–13).
   static const double classicSidebarBodyPt = 14;
-  /// Classic Sidebar main body — Nunito Regular (preview + PDF).
-  static const int classicSidebarBodyWeight = 400;
+  static const int classicSidebarBodyWeight = accentStripBodyWeight;
 
   /// Accent Strip body — Garamond Regular (400).
   static const int accentStripBodyWeight = 400;
 
-  static const double classicSidebarSubtitlePt = 13;
-  static const int classicSidebarSubtitleWeight = 400;
+  static const double classicSidebarSubtitlePt = accentStripSubsectionPt;
+  static const int classicSidebarSubtitleWeight = accentStripSubtitleWeight;
 
   static const double classicSidebarBodyLineHeight = 1.2;
 
@@ -175,19 +172,32 @@ abstract final class ResumeTypography {
         height: height ?? creativeBodyLineHeight,
       );
 
-  /// Templates 2–3 body — Nunito Regular at [creativeBodyWeight] (not Carlito).
+  /// Templates 2–3 body — Garamond Regular at [creativeBodyWeight].
+  static TextStyle sidebarBodyPreviewStyle({
+    double? fontSize,
+    Color? color,
+    double? height,
+    int weight = creativeBodyWeight,
+  }) =>
+      garamondPreviewStyle(
+        weight: weight,
+        fontSize: fontSize,
+        color: color,
+        height: height ?? creativeBodyLineHeight,
+      );
+
+  /// @deprecated Use [sidebarBodyPreviewStyle] for templates 2–3.
   static TextStyle nunitoBodyPreviewStyle({
     double? fontSize,
     Color? color,
     double? height,
     int weight = creativeBodyWeight,
   }) =>
-      TextStyle(
-        fontFamily: 'Nunito',
-        fontWeight: ResumeFontWeight.toFlutter(weight),
+      sidebarBodyPreviewStyle(
         fontSize: fontSize,
         color: color,
         height: height,
+        weight: weight,
       );
 
   /// Calibri (Carlito) text style for in-app resume previews.

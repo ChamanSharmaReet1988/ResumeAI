@@ -60,6 +60,31 @@ pw.TextStyle accentStripBodyPdfTextStyle(
       fontStyle: fontStyle,
     );
 
+/// Corporate (template 1) body — Garamond Regular at [darkHeaderBodyWeight].
+pw.TextStyle corporateBodyPdfTextStyle(
+  GaramondPdfFonts fonts,
+  double bodyPt, {
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    accentStripBodyPdfTextStyle(
+      fonts,
+      bodyPt,
+      color: color,
+      fontStyle: fontStyle,
+    );
+
+pw.TextStyle darkHeaderInitialsGaramondPdfStyle(
+  GaramondPdfFonts fonts,
+  PdfColor color,
+) =>
+    garamondPdfTextStyle(
+      fonts,
+      ResumeTypography.darkHeaderInitialsWeight,
+      fontSize: ResumeTypography.darkHeaderInitialsPt,
+      color: color,
+    );
+
 pw.TextStyle garamondPdfTextStyle(
   GaramondPdfFonts fonts,
   int weight, {

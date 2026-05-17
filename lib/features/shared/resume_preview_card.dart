@@ -77,15 +77,19 @@ class ResumePreviewCanvas extends StatelessWidget {
     final previewTemplate = resume.template.userFacingTemplate;
     final base = theme.textTheme;
     final ff = switch (previewTemplate) {
-      ResumeTemplate.accentStrip || ResumeTemplate.atsStructured => 'Garamond',
-      ResumeTemplate.creative || ResumeTemplate.classicSidebar =>
-        ResumeTextFont.calibri.flutterFontFamily,
+      ResumeTemplate.corporate ||
+      ResumeTemplate.accentStrip ||
+      ResumeTemplate.atsStructured ||
+      ResumeTemplate.creative ||
+      ResumeTemplate.classicSidebar => 'Garamond',
       _ => resume.resumeTextFont.flutterFontFamily,
     };
     final onSurface = theme.colorScheme.onSurface;
-    final bodyColor = previewTemplate == ResumeTemplate.atsStructured
-        ? ResumeTypography.atsStructuredBodyTextColor
-        : onSurface;
+    final bodyColor = switch (previewTemplate) {
+      ResumeTemplate.atsStructured ||
+      ResumeTemplate.corporate => ResumeTypography.atsStructuredBodyTextColor,
+      _ => onSurface,
+    };
     final bodyPx = resume.effectiveBodyFontPt.toDouble();
     final resumeBodyTheme = theme.copyWith(
       textTheme: base
@@ -282,19 +286,19 @@ class _DarkHeaderPreview extends StatelessWidget {
     final nameLineHeight =
         1.05 +
         (_darkHeaderExtraLineSpacingPx / ResumeTypography.darkHeaderNamePt);
-    final bodyStyle = ResumeTypography.interPreviewStyle(
-      weight: ResumeTypography.darkHeaderBodyWeight,
+    final bodyStyle = ResumeTypography.sidebarBodyPreviewStyle(
       fontSize: bodyFontPx,
       height: bodyLineHeight,
-      color: onSurface,
+      color: ResumeTypography.darkHeaderSubtitleColor,
+      weight: ResumeTypography.darkHeaderBodyWeight,
     );
-    final contactStyle = ResumeTypography.interPreviewStyle(
+    final contactStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.darkHeaderContactWeight,
       fontSize: bodyFontPx,
       color: headerOnColor,
-      height: ResumeTypography.textLineHeight,
+      height: ResumeTypography.darkHeaderContactLineHeight,
     );
-    final subtitleStyle = ResumeTypography.interPreviewStyle(
+    final subtitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.darkHeaderSubtitleWeight,
       fontSize: ResumeTypography.darkHeaderSubtitlePt,
       color: ResumeTypography.darkHeaderSubtitleColor,
@@ -350,7 +354,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                       child: Center(
                         child: Text(
                           _pdfAlignedInitials(resume),
-                          style: ResumeTypography.interPreviewStyle(
+                          style: ResumeTypography.garamondPreviewStyle(
                             weight: ResumeTypography.darkHeaderInitialsWeight,
                             fontSize: ResumeTypography.darkHeaderInitialsPt,
                             color: headerOnColor,
@@ -371,7 +375,7 @@ class _DarkHeaderPreview extends StatelessWidget {
                       children: [
                         Text(
                           name.toUpperCase(),
-                          style: ResumeTypography.interPreviewStyle(
+                          style: ResumeTypography.garamondPreviewStyle(
                             weight: ResumeTypography.darkHeaderNameWeight,
                             fontSize: ResumeTypography.darkHeaderNamePt,
                             color: headerOnColor,
@@ -554,7 +558,7 @@ class _CorporatePdfLikeSection extends StatelessWidget {
         children: [
           Text(
             title,
-            style: ResumeTypography.interPreviewStyle(
+            style: ResumeTypography.garamondPreviewStyle(
               weight: ResumeTypography.darkHeaderSectionTitleWeight,
               fontSize: ResumeTypography.darkHeaderSectionTitlePt,
               height: ResumeTypography.textLineHeight,
@@ -851,18 +855,18 @@ class _CreativePreview extends StatelessWidget {
     final namePt = resume.creativeScaledPt(ResumeTypography.creativeNamePt);
     final sectionTitlePt =
         resume.creativeScaledPt(ResumeTypography.creativeSectionTitlePt);
-    final bodyStyle = ResumeTypography.nunitoBodyPreviewStyle(
+    final bodyStyle = ResumeTypography.sidebarBodyPreviewStyle(
       fontSize: bodyPt,
       color: bodyTextColor,
       height: ResumeTypography.creativeBodyLineHeight,
     );
-    final subtitleStyle = ResumeTypography.calibriPreviewStyle(
+    final subtitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.creativeSubtitleWeight,
       fontSize: subtitlePt,
       color: bodyTextColor,
       height: ResumeTypography.creativeBodyLineHeight,
     );
-    final sidebarStyle = ResumeTypography.calibriPreviewStyle(
+    final sidebarStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.creativeSidebarContentWeight,
       fontSize: bodyPt,
       color: bodyTextColor,
@@ -903,7 +907,7 @@ class _CreativePreview extends StatelessWidget {
     final summaryMaxLines = showAllContent ? null : 5;
 
     return DefaultTextStyle.merge(
-      style: const TextStyle(fontFamily: 'Calibri'),
+      style: const TextStyle(fontFamily: 'Garamond'),
       child: Stack(
         children: [
           Positioned.fill(
@@ -1280,31 +1284,31 @@ class _ClassicSidebarPreview extends StatelessWidget {
     final sectionTitlePt = resume.classicSidebarScaledPt(
       ResumeTypography.classicSidebarSectionTitlePt,
     );
-    final bodyStyle = ResumeTypography.nunitoBodyPreviewStyle(
+    final bodyStyle = ResumeTypography.sidebarBodyPreviewStyle(
       fontSize: bodyPt,
       color: ResumeTypography.classicSidebarBodyTextColor,
       height: ResumeTypography.classicSidebarBodyLineHeight,
     );
-    final subtitleStyle = ResumeTypography.calibriPreviewStyle(
+    final subtitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.classicSidebarSubtitleWeight,
       fontSize: subtitlePt,
       color: ResumeTypography.classicSidebarBodyTextColor,
       height: ResumeTypography.classicSidebarBodyLineHeight,
     );
-    final sidebarStyle = ResumeTypography.calibriPreviewStyle(
+    final sidebarStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.classicSidebarSidebarContentWeight,
       fontSize: bodyPt,
       color: ResumeTypography.classicSidebarBodyTextColor,
       height: ResumeTypography.classicSidebarBodyLineHeight,
     );
-    final sectionTitleStyle = ResumeTypography.calibriPreviewStyle(
+    final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.classicSidebarSectionTitleWeight,
       fontSize: sectionTitlePt,
       color: titleColor,
       height: ResumeTypography.classicSidebarBodyLineHeight,
       letterSpacing: 0.2,
     );
-    final nameStyle = ResumeTypography.calibriPreviewStyle(
+    final nameStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.classicSidebarNameWeight,
       fontSize: namePt,
       color: titleColor,
@@ -1324,7 +1328,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
         avatarPath.isNotEmpty && File(avatarPath).existsSync();
 
     return DefaultTextStyle.merge(
-      style: const TextStyle(fontFamily: 'Calibri'),
+      style: const TextStyle(fontFamily: 'Garamond'),
       child: Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -3133,7 +3137,7 @@ class _ClassicSidebarAvatarPlaceholder extends StatelessWidget {
         child: Text(
           _pdfAlignedInitials(resume),
           style: textStyle ??
-              ResumeTypography.calibriPreviewStyle(
+              ResumeTypography.garamondPreviewStyle(
                 weight: ResumeTypography.classicSidebarNameWeight,
                 fontSize: fontSize,
                 color: resume.classicSidebarTitleColor,
@@ -3865,7 +3869,7 @@ class _CreativeSidebarHeading extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: ResumeTypography.calibriPreviewStyle(
+            style: ResumeTypography.garamondPreviewStyle(
               weight: ResumeTypography.creativeSectionTitleWeight,
               fontSize: sectionTitlePt,
               color: ResumeTypography.creativeBodyTextColor,

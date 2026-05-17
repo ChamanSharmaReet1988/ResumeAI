@@ -1649,21 +1649,21 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
 
   static double _scaledPt(double pt) => pt * _layoutScale;
 
-  TextStyle _bodyStyle() => ResumeTypography.nunitoBodyPreviewStyle(
+  TextStyle _bodyStyle() => ResumeTypography.sidebarBodyPreviewStyle(
         fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.creativeBodyTextColor,
         height: ResumeTypography.creativeBodyLineHeight,
       );
 
   static TextStyle _subtitleStyle({bool italic = false}) =>
-      ResumeTypography.calibriPreviewStyle(
+      ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.creativeSubtitleWeight,
         fontSize: _scaledPt(ResumeTypography.creativeSubtitlePt),
         color: ResumeTypography.creativeBodyTextColor,
         height: ResumeTypography.creativeBodyLineHeight,
       ).copyWith(fontStyle: italic ? FontStyle.italic : null);
 
-  static TextStyle _nameStyle() => ResumeTypography.calibriPreviewStyle(
+  static TextStyle _nameStyle() => ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.creativeNameWeight,
         fontSize: _scaledPt(ResumeTypography.creativeNamePt),
         color: ResumeTypography.creativeBodyTextColor,
@@ -1671,7 +1671,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
         letterSpacing: 0.2,
       );
 
-  static TextStyle _sectionHeadingStyle() => ResumeTypography.calibriPreviewStyle(
+  static TextStyle _sectionHeadingStyle() => ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.creativeSectionTitleWeight,
         fontSize: _scaledPt(ResumeTypography.creativeSectionTitlePt),
         color: ResumeTypography.creativeBodyTextColor,
@@ -1679,7 +1679,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
         letterSpacing: 0.2,
       );
 
-  TextStyle _sidebarStyle() => ResumeTypography.calibriPreviewStyle(
+  TextStyle _sidebarStyle() => ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.creativeSidebarContentWeight,
         fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.creativeBodyTextColor,
@@ -1708,7 +1708,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
   }) {
     final path = resume.profileImagePath.trim();
     final hasImage = path.isNotEmpty && File(path).existsSync();
-    final initialsStyle = ResumeTypography.calibriPreviewStyle(
+    final initialsStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.creativeNameWeight,
       fontSize: _scaledPt(ResumeTypography.creativeNamePt * 1.15),
       color: accentColor,
@@ -2178,11 +2178,8 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
               _atsGrayBandLabel('EDUCATION'),
               ..._atsStructuredSchools(edu, body, subtitleStyle),
               _atsGrayBandLabel('SKILLS'),
-              _MiniBulletColumn(
-                items: skills.take(detailed ? 8 : 5).toList(),
-                textStyle: body,
-              ),
-              if (detailed && projects.isNotEmpty) ...[
+              _atsStructuredSkillsGrid(skills, body),
+              if (projects.isNotEmpty) ...[
                 _atsGrayBandLabel('PROJECTS'),
                 Text(
                   projects.first.title.trim(),
@@ -2193,56 +2190,29 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
                 if (_templateArtProjectBullets(projects.first).isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
-                    _templateArtProjectBullets(projects.first).first,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
+                    '• ${_templateArtProjectBullets(projects.first).first}',
                     style: body,
+                    maxLines: detailed ? 4 : 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ],
-              if (detailed && resume.visibleCustomSections.isNotEmpty) ...[
-                for (final section in resume.visibleCustomSections.take(1)) ...[
-                  _atsGrayBandLabel(section.title.trim().toUpperCase()),
-                  if (section.layoutMode == CustomSectionLayoutMode.bullets)
-                    ...section.bullets
-                        .where((b) => b.trim().isNotEmpty)
-                        .take(3)
-                        .map(
-                          (b) => Padding(
-                            padding: const EdgeInsets.only(bottom: 2),
-                            child: Text(
-                              b,
-                              style: body,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        )
-                  else
-                    Text(
-                      section.content.trim(),
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                      style: body,
-                    ),
                 ],
               ],
             ],
           ),
         );
 
+    // Grid + detail: scale full page art to fit (same as Profile Sidebar tile).
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: detailed
-          ? FittedBox(
-              fit: BoxFit.contain,
-              alignment: Alignment.topCenter,
-              child: SizedBox(width: 240, child: pageContent),
-            )
-          : SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: pageContent,
-            ),
+      child: FittedBox(
+        fit: BoxFit.contain,
+        alignment: Alignment.topCenter,
+        child: SizedBox(
+          width: 240,
+          height: 360,
+          child: pageContent,
+        ),
+      ),
     );
   }
 
@@ -2373,14 +2343,67 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
           child: Text(
             e.degree.trim(),
             style: body.copyWith(fontStyle: FontStyle.italic),
-            maxLines: 3,
+            maxLines: detailed ? 3 : 2,
             overflow: TextOverflow.ellipsis,
           ),
         ),
       );
-      out.add(const SizedBox(height: 4));
+      out.add(SizedBox(height: detailed ? 4 : 0));
     }
     return out;
+  }
+
+  Widget _atsStructuredSkillsGrid(List<String> skills, TextStyle body) {
+    final items = skills.take(8).toList();
+    if (items.isEmpty) {
+      return Text(
+        'Add skills.',
+        style: body,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    final midpoint = (items.length / 2).ceil();
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final skill in items.take(midpoint))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '• $skill',
+                    style: body,
+                    maxLines: detailed ? 2 : 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(width: _scaledPt(16)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final skill in items.skip(midpoint))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '• $skill',
+                    style: body,
+                    maxLines: detailed ? 2 : 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -3470,21 +3493,21 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   /// Matches Classic Sidebar PDF main-column right margin (40pt).
   static double get _mainColumnRightPadding => _scaledPt(40);
 
-  TextStyle _bodyStyle() => ResumeTypography.nunitoBodyPreviewStyle(
+  TextStyle _bodyStyle() => ResumeTypography.sidebarBodyPreviewStyle(
         fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.classicSidebarBodyTextColor,
         height: ResumeTypography.classicSidebarBodyLineHeight,
       );
 
   static TextStyle _subtitleStyle({bool italic = false}) =>
-      ResumeTypography.calibriPreviewStyle(
+      ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.classicSidebarSubtitleWeight,
         fontSize: _scaledPt(ResumeTypography.classicSidebarSubtitlePt),
         color: ResumeTypography.classicSidebarBodyTextColor,
         height: ResumeTypography.classicSidebarBodyLineHeight,
       ).copyWith(fontStyle: italic ? FontStyle.italic : null);
 
-  static TextStyle _nameStyle() => ResumeTypography.calibriPreviewStyle(
+  static TextStyle _nameStyle() => ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.classicSidebarNameWeight,
         fontSize: _scaledPt(ResumeTypography.classicSidebarNamePt),
         color: ResumeTypography.classicSidebarBodyTextColor,
@@ -3500,14 +3523,14 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
       );
 
   static TextStyle _avatarInitialsStyle(ResumeData resume) =>
-      ResumeTypography.calibriPreviewStyle(
+      ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.classicSidebarNameWeight,
         fontSize: _avatarInitialsFontSize(resume),
         color: ResumeTypography.classicSidebarBodyTextColor,
         height: 1,
       );
 
-  static TextStyle _sectionHeadingStyle() => ResumeTypography.calibriPreviewStyle(
+  static TextStyle _sectionHeadingStyle() => ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.classicSidebarSectionTitleWeight,
         fontSize: _scaledPt(ResumeTypography.classicSidebarSectionTitlePt),
         color: ResumeTypography.classicSidebarBodyTextColor,
@@ -3515,7 +3538,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
         letterSpacing: 0.2,
       );
 
-  TextStyle _sidebarStyle() => ResumeTypography.calibriPreviewStyle(
+  TextStyle _sidebarStyle() => ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.classicSidebarSidebarContentWeight,
         fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
         color: ResumeTypography.classicSidebarBodyTextColor,
@@ -3566,7 +3589,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
     final mutedBodyStyle = bodyStyle.copyWith(color: muted);
 
     return DefaultTextStyle.merge(
-      style: const TextStyle(fontFamily: 'Calibri'),
+      style: const TextStyle(fontFamily: 'Garamond'),
       child: DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
       child: ClipRRect(
@@ -4546,9 +4569,9 @@ class _MiniSidebarHeading extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: titleStyle ??
                 const TextStyle(
-                  fontFamily: 'Calibri',
+                  fontFamily: 'Garamond',
                   fontSize: 5.8,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                 ),
           ),
         ),
