@@ -1554,6 +1554,8 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
   static const double _avatarBackgroundOpacity = 0.4;
   static const double _sectionRuleHeight = 1.0;
   static const double _sectionTitleRuleGap = 1;
+  static const double _mainColumnTopPadding = 18;
+  static const double _mainColumnBottomPadding = 16;
 
   static Widget _buildAvatar({
     required ResumeData resume,
@@ -1613,19 +1615,20 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
     ].where((item) => item.isNotEmpty).take(4).toList();
     final experiences = resume.workExperiences
         .where((item) => !item.isBlank)
-        .take(detailed ? 4 : 3)
+        .take(2)
         .toList();
     final education = resume.education
         .where((item) => !item.isBlank)
-        .take(detailed ? 2 : 2)
+        .take(2)
         .toList();
     final skillItems = resume.skills
         .where((item) => item.trim().isNotEmpty)
-        .take(detailed ? 4 : 2)
+        .take(detailed ? 6 : 4)
         .toList();
-    final midpoint = (skillItems.length / 2).ceil();
-    final leftSkills = skillItems.take(midpoint).toList();
-    final rightSkills = skillItems.skip(midpoint).toList();
+    final skillMidpoint = (skillItems.length / 2).ceil();
+    final leftSkills = skillItems.take(skillMidpoint).toList();
+    final rightSkills = skillItems.skip(skillMidpoint).toList();
+    final projects = resume.visibleProjects.take(1).toList();
     final summary = resume.summary.trim();
 
     return DecoratedBox(
@@ -1673,7 +1676,12 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(6, 8, 6, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  6,
+                  _mainColumnTopPadding,
+                  6,
+                  _mainColumnBottomPadding,
+                ),
                 child: DefaultTextStyle(
                   style: bodyStyle,
                   child: LayoutBuilder(
@@ -1768,23 +1776,9 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                                 ],
                               ],
                             ),
-                            if (_templateArtExperienceBullets(
-                              item,
-                              detailed,
-                            ).isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              _MiniBulletColumn(
-                                items: _templateArtExperienceBullets(
-                                  item,
-                                  detailed,
-                                ),
-                                bulletColor:
-                                    ResumeTypography.creativeBodyTextColor,
-                                textStyle: bodyStyle,
-                              ),
-                            ],
                             const SizedBox(height: 4),
                           ],
+                          const SizedBox(height: 6),
                           _MiniSidebarHeading(
                             title: 'EDUCATION',
                             lineColor: line,
@@ -1828,35 +1822,85 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                             ],
                             const SizedBox(height: 3),
                           ],
-                          const SizedBox(height: 2),
-                          _MiniSidebarHeading(
-                            title: 'SKILLS',
-                            lineColor: line,
-                            titleStyle: _sectionHeadingStyle(),
-                            lineHeight: _sectionRuleHeight,
-                            titleGap: _sectionTitleRuleGap,
-                          ),
-                          const SizedBox(height: 3),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: _MiniBulletColumn(
-                                  items: leftSkills,
-                                  bulletColor: ResumeTypography.creativeBodyTextColor,
+                          if (projects.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            _MiniSidebarHeading(
+                              title: 'PROJECTS',
+                              lineColor: line,
+                              titleStyle: _sectionHeadingStyle(),
+                              lineHeight: _sectionRuleHeight,
+                              titleGap: _sectionTitleRuleGap,
+                            ),
+                            const SizedBox(height: 3),
+                            for (final project in projects) ...[
+                              Text(
+                                project.title.trim().isEmpty
+                                    ? 'Project'
+                                    : project.title.trim(),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: subtitleStyle,
+                              ),
+                              if (project.overview.trim().isNotEmpty ||
+                                  project.impact.trim().isNotEmpty) ...[
+                                const SizedBox(height: 1),
+                                Text(
+                                  [
+                                    project.overview.trim(),
+                                    project.impact.trim(),
+                                  ].where((s) => s.isNotEmpty).join(' · '),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: bodyStyle,
+                                ),
+                              ],
+                              if (_templateArtProjectBullets(project)
+                                  .isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                _MiniBulletColumn(
+                                  items: _templateArtProjectBullets(project)
+                                      .take(detailed ? 3 : 2)
+                                      .toList(),
+                                  bulletColor:
+                                      ResumeTypography.creativeBodyTextColor,
                                   textStyle: bodyStyle,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _MiniBulletColumn(
-                                  items: rightSkills,
-                                  bulletColor: ResumeTypography.creativeBodyTextColor,
-                                  textStyle: bodyStyle,
-                                ),
-                              ),
+                              ],
                             ],
-                          ),
+                          ],
+                          if (leftSkills.isNotEmpty || rightSkills.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            _MiniSidebarHeading(
+                              title: 'SKILLS',
+                              lineColor: line,
+                              titleStyle: _sectionHeadingStyle(),
+                              lineHeight: _sectionRuleHeight,
+                              titleGap: _sectionTitleRuleGap,
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: _MiniBulletColumn(
+                                    items: leftSkills,
+                                    bulletColor:
+                                        ResumeTypography.creativeBodyTextColor,
+                                    textStyle: bodyStyle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _MiniBulletColumn(
+                                    items: rightSkills,
+                                    bulletColor:
+                                        ResumeTypography.creativeBodyTextColor,
+                                    textStyle: bodyStyle,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                               ],
                             ),
                           ),

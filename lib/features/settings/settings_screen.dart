@@ -119,9 +119,7 @@ class SettingsScreen extends StatelessWidget {
   Future<void> _openGoPremium(BuildContext context) async {
     final premium = context.read<PremiumPurchaseService>();
     if (premium.isPremium) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You already have ResumeApp Pro.')),
-      );
+      await _showActivePremiumSheet(context, premium);
       return;
     }
 
@@ -139,6 +137,58 @@ class SettingsScreen extends StatelessWidget {
         const SnackBar(content: Text('ResumeApp Pro is now active.')),
       );
     }
+  }
+
+  Future<void> _showActivePremiumSheet(
+    BuildContext context,
+    PremiumPurchaseService premium,
+  ) async {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final currentPlan = premium.debugPremiumOverrideEnabled
+        ? 'Developer Pro override'
+        : 'ResumeApp Pro';
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: theme.cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'You are already a Pro user',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Current subscription: $currentPlan',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _openBackup(BuildContext context) async {
@@ -317,21 +367,21 @@ class SettingsScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Go Premium', style: rowLabelStyle),
-                              if (premium.isPremium)
-                                Text(
-                                  'Active',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                            ],
+                          child: Text(
+                            premium.isPremium
+                                ? 'You are a Pro user'
+                                : 'Go Premium',
+                            style: rowLabelStyle,
                           ),
                         ),
+                        if (premium.isPremium) ...[
+                          const Icon(
+                            Icons.workspace_premium_rounded,
+                            size: 18,
+                            color: Color(0xFFC98910),
+                          ),
+                          const SizedBox(width: 10),
+                        ],
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 16,
