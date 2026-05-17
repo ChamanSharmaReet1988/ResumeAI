@@ -11,19 +11,21 @@ pw.Widget _atsHighlightedSummaryText(
   required double bodyPt,
   required bool highlightSummary,
   required PdfColor highlightColor,
+  pw.TextStyle? textStyle,
 }) {
-  final style = pw.TextStyle(
-    fontSize: bodyPt,
-    lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
-  );
+  final resolvedStyle = textStyle ??
+      pw.TextStyle(
+        fontSize: bodyPt,
+        lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+      );
   if (!highlightSummary) {
-    return pw.Text(summary, style: style);
+    return pw.Text(summary, style: resolvedStyle);
   }
   return pw.Container(
     width: double.infinity,
     padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
     color: highlightColor,
-    child: pw.Text(summary, style: style),
+    child: pw.Text(summary, style: resolvedStyle),
   );
 }
 
@@ -1772,8 +1774,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   }
 
   pw.Widget _accentStripSectionTitle(
-    String title,
-    double bodyPt, {
+    String title, {
     required GaramondPdfFonts garamond,
     required PdfColor accent,
   }) {
@@ -1783,8 +1784,8 @@ extension _ResumePdfAtsPages on ResumePdfService {
         title,
         style: garamondPdfTextStyle(
           garamond,
-          ResumeFontWeight.w700,
-          fontSize: bodyPt + 6,
+          ResumeFontWeight.w600,
+          fontSize: ResumeTypography.accentStripSectionTitlePt,
           color: accent,
         ).copyWith(letterSpacing: 0.2),
       ),
@@ -1802,6 +1803,13 @@ extension _ResumePdfAtsPages on ResumePdfService {
         weight: weight,
       );
 
+  pw.TextStyle _accentStripSubsectionPdfStyle(GaramondPdfFonts garamond) =>
+      garamondPdfTextStyle(
+        garamond,
+        ResumeFontWeight.w600,
+        fontSize: ResumeTypography.accentStripSubsectionPt,
+      );
+
   void _addAccentStripTemplatePage(
     pw.Document document,
     ResumeData resume, {
@@ -1813,7 +1821,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   }) {
     final accent = _pdfRgb(resume.corporateColorPreset.headerColor);
     final highlightColor = _atsHighlightColor;
-    final bodyPt = resume.effectiveBodyFontPt.toDouble() + 0.4;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final name = _displayName(resume).toUpperCase();
     final contactLine = _resumeContactItems(resume).join(' | ');
     final summary = resume.summary.trim();
@@ -1843,7 +1851,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               style: garamondPdfTextStyle(
                 garamond,
                 ResumeFontWeight.w700,
-                fontSize: 33,
+                fontSize: ResumeTypography.accentStripNamePt,
                 color: accent,
               ).copyWith(letterSpacing: 0.4),
             ),
@@ -1851,10 +1859,10 @@ extension _ResumePdfAtsPages on ResumePdfService {
               pw.SizedBox(height: 14),
               pw.Text(
                 contactLine,
-                style: _accentStripBodyPdfStyle(
-                  calibri,
-                  bodyPt + 1,
-                  weight: ResumeFontWeight.w700,
+                style: garamondPdfTextStyle(
+                  garamond,
+                  ResumeFontWeight.w500,
+                  fontSize: bodyPt,
                 ),
               ),
             ],
@@ -1865,6 +1873,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 bodyPt: bodyPt,
                 highlightSummary: highlightSummary,
                 highlightColor: highlightColor,
+                textStyle: _accentStripBodyPdfStyle(calibri, bodyPt),
               ),
             ],
           ];
@@ -1874,7 +1883,6 @@ extension _ResumePdfAtsPages on ResumePdfService {
             widgets.add(
               _accentStripSectionTitle(
                 'EXPERIENCE',
-                bodyPt,
                 garamond: garamond,
                 accent: accent,
               ),
@@ -1903,11 +1911,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   widgets.add(
                     pw.Text(
                       dateLabel,
-                      style: _accentStripBodyPdfStyle(
-                        calibri,
-                        bodyPt + 2.2,
-                        weight: ResumeFontWeight.w700,
-                      ),
+                      style: _accentStripSubsectionPdfStyle(garamond),
                     ),
                   );
                 }
@@ -1916,11 +1920,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   widgets.add(
                     pw.Text(
                       roleLine,
-                      style: _accentStripBodyPdfStyle(
-                        calibri,
-                        bodyPt + 0.8,
-                        weight: ResumeFontWeight.w700,
-                      ),
+                      style: _accentStripSubsectionPdfStyle(garamond),
                     ),
                   );
                 }
@@ -1959,7 +1959,6 @@ extension _ResumePdfAtsPages on ResumePdfService {
             widgets.add(
               _accentStripSectionTitle(
                 'EDUCATION',
-                bodyPt,
                 garamond: garamond,
                 accent: accent,
               ),
@@ -1981,11 +1980,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 widgets.add(
                   pw.Text(
                     item.degree.trim().ifEmpty('Degree'),
-                    style: _accentStripBodyPdfStyle(
-                      calibri,
-                      bodyPt + 0.8,
-                      weight: ResumeFontWeight.w700,
-                    ),
+                    style: _accentStripSubsectionPdfStyle(garamond),
                   ),
                 );
                 widgets.add(pw.SizedBox(height: 3));
@@ -2008,7 +2003,6 @@ extension _ResumePdfAtsPages on ResumePdfService {
             widgets.add(
               _accentStripSectionTitle(
                 'SKILLS',
-                bodyPt,
                 garamond: garamond,
                 accent: accent,
               ),
@@ -2053,7 +2047,6 @@ extension _ResumePdfAtsPages on ResumePdfService {
               widgets.add(
                 _accentStripSectionTitle(
                   'PROJECTS',
-                  bodyPt,
                   garamond: garamond,
                   accent: accent,
                 ),
@@ -2062,11 +2055,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 widgets.add(
                   pw.Text(
                     item.title.trim().ifEmpty('Project'),
-                    style: _accentStripBodyPdfStyle(
-                      calibri,
-                      bodyPt + 0.8,
-                      weight: ResumeFontWeight.w700,
-                    ),
+                    style: _accentStripSubsectionPdfStyle(garamond),
                   ),
                 );
                 final lines = _projectBulletLines(item);
@@ -2095,12 +2084,15 @@ extension _ResumePdfAtsPages on ResumePdfService {
             widgets.add(
               _accentStripSectionTitle(
                 section.title.trim().ifEmpty('ADDITIONAL').toUpperCase(),
-                bodyPt,
                 garamond: garamond,
                 accent: accent,
               ),
             );
-            for (final widget in _pwCustomSectionBodyWidgets(section)) {
+            for (final widget in _pwCustomSectionBodyWidgets(
+              section,
+              calibri: calibri,
+              bodyFontPt: bodyPt,
+            )) {
               widgets.add(widget);
             }
           }

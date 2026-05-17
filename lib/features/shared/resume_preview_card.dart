@@ -76,7 +76,13 @@ class ResumePreviewCanvas extends StatelessWidget {
     final theme = Theme.of(context);
     final previewTemplate = resume.template.userFacingTemplate;
     final base = theme.textTheme;
-    final ff = ResumeTextFont.inter.flutterFontFamily;
+    final ff = switch (previewTemplate) {
+      ResumeTemplate.accentStrip ||
+      ResumeTemplate.creative ||
+      ResumeTemplate.classicSidebar =>
+        ResumeTextFont.calibri.flutterFontFamily,
+      _ => resume.resumeTextFont.flutterFontFamily,
+    };
     final onSurface = theme.colorScheme.onSurface;
     final bodyPx = resume.effectiveBodyFontPt.toDouble();
     final resumeBodyTheme = theme.copyWith(
@@ -1900,45 +1906,33 @@ class _AccentStripPreview extends StatelessWidget {
 
     final bodyStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeFontWeight.w400,
-      fontSize: body + 0.4,
-      color: bodyTextColor,
-      height: 1.4,
-    );
-    final metaStyle = ResumeTypography.calibriPreviewStyle(
-      weight: ResumeFontWeight.w500,
-      fontSize: body + 0.2,
+      fontSize: body,
       color: bodyTextColor,
       height: 1.4,
     );
     final headingStyle = ResumeTypography.garamondPreviewStyle(
-      weight: ResumeFontWeight.w700,
-      fontSize: body + 5,
+      weight: ResumeFontWeight.w600,
+      fontSize: ResumeTypography.accentStripSectionTitlePt,
       color: accent,
       height: 1.4,
       letterSpacing: 0.2,
     );
-    final roleStyle = ResumeTypography.calibriPreviewStyle(
-      weight: ResumeFontWeight.w500,
-      fontSize: body + 0.4,
-      color: bodyTextColor,
-      height: 1.4,
-    );
-    final dateStyle = ResumeTypography.calibriPreviewStyle(
-      weight: ResumeFontWeight.w700,
-      fontSize: body + 2,
+    final subsectionStyle = ResumeTypography.garamondPreviewStyle(
+      weight: ResumeFontWeight.w600,
+      fontSize: ResumeTypography.accentStripSubsectionPt,
       color: bodyTextColor,
       height: 1.4,
     );
     final nameStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w700,
-      fontSize: 30,
+      fontSize: ResumeTypography.accentStripNamePt,
       color: accent,
       height: 1.0,
       letterSpacing: 0.4,
     );
-    final contactStyle = ResumeTypography.calibriPreviewStyle(
-      weight: ResumeFontWeight.w700,
-      fontSize: body + 1.1,
+    final contactStyle = ResumeTypography.garamondPreviewStyle(
+      weight: ResumeFontWeight.w500,
+      fontSize: body,
       color: bodyTextColor,
       height: 1.4,
     );
@@ -2009,10 +2003,9 @@ class _AccentStripPreview extends StatelessWidget {
                               padding: const EdgeInsets.only(bottom: 16),
                               child: _AccentStripExperienceBlock(
                                 item: item,
-                                dateStyle: dateStyle,
-                                metaStyle: metaStyle,
+                                dateStyle: subsectionStyle,
                                 bodyStyle: bodyStyle,
-                                roleStyle: roleStyle,
+                                roleStyle: subsectionStyle,
                               ),
                             ),
                         ],
@@ -2028,7 +2021,7 @@ class _AccentStripPreview extends StatelessWidget {
                               padding: const EdgeInsets.only(bottom: 12),
                               child: _AccentStripEducationBlock(
                                 item: item,
-                                titleStyle: roleStyle,
+                                titleStyle: subsectionStyle,
                                 bodyStyle: bodyStyle,
                               ),
                             ),
@@ -2065,7 +2058,7 @@ class _AccentStripPreview extends StatelessWidget {
                               padding: const EdgeInsets.only(bottom: 12),
                               child: _AccentStripProjectBlock(
                                 item: item,
-                                titleStyle: roleStyle,
+                                titleStyle: subsectionStyle,
                                 bodyStyle: bodyStyle,
                               ),
                             ),
@@ -2114,14 +2107,12 @@ class _AccentStripExperienceBlock extends StatelessWidget {
   const _AccentStripExperienceBlock({
     required this.item,
     required this.dateStyle,
-    required this.metaStyle,
     required this.bodyStyle,
     required this.roleStyle,
   });
 
   final WorkExperience item;
   final TextStyle dateStyle;
-  final TextStyle metaStyle;
   final TextStyle bodyStyle;
   final TextStyle roleStyle;
 

@@ -10,6 +10,11 @@ abstract final class ResumeTypography {
   static const double bodyPt = 11;
   static const double headingPt = 14;
   static const double namePt = 17;
+
+  /// Accent Strip (template 4): fixed Garamond titles; body/contact use slider pt.
+  static const double accentStripNamePt = 24;
+  static const double accentStripSectionTitlePt = 14;
+  static const double accentStripSubsectionPt = 13;
   /// Section titles, headings (single-line friendly).
   static const double textLineHeight = 1.4;
 
@@ -133,7 +138,7 @@ abstract final class ResumeTypography {
     double? letterSpacing,
   }) =>
       TextStyle(
-        fontFamily: 'Calibri',
+        fontFamily: ResumeTextFont.calibri.flutterFontFamily,
         fontWeight: ResumeFontWeight.toFlutter(weight),
         fontSize: fontSize,
         color: color,

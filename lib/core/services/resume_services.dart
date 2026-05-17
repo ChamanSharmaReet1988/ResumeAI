@@ -84,9 +84,12 @@ pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
 List<pw.Widget> _pwCustomSectionBodyWidgets(
   CustomSectionItem item, {
   InterPdfFonts? inter,
+  CalibriPdfFonts? calibri,
   double? bodyFontPt,
 }) {
-  final bodyStyle = inter != null && bodyFontPt != null
+  final bodyStyle = calibri != null && bodyFontPt != null
+      ? calibriBodyPdfTextStyle(calibri, bodyFontPt)
+      : inter != null && bodyFontPt != null
       ? interDarkHeaderBodyPdfTextStyle(inter, bodyFontPt)
       : pw.TextStyle(
           color: PdfColors.black,
@@ -5190,7 +5193,7 @@ class ResumePdfService {
     if (resume.template == ResumeTemplate.accentStrip) {
       final calibri = await _ensureCalibriPdfFonts();
       final garamond = await _ensureGaramondPdfFonts();
-      final bodyPt = resume.effectiveBodyFontPt.toDouble() + 0.4;
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
           calibri,
@@ -5312,7 +5315,7 @@ class ResumePdfService {
     if (resume.template == ResumeTemplate.accentStrip) {
       final calibri = await _ensureCalibriPdfFonts();
       final garamond = await _ensureGaramondPdfFonts();
-      final bodyPt = resume.effectiveBodyFontPt.toDouble() + 0.4;
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
           calibri,

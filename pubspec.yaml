@@ -109,9 +109,16 @@ flutter:
     - assets/fonts/inter/Inter-SemiBold.ttf
     - assets/fonts/inter/Inter-Bold.ttf
     - assets/fonts/inter/Inter-ExtraBold.ttf
-    # EB Garamond (OFL) — bundled as Garamond; not wired into UI/templates yet.
+    # EB Garamond (OFL) — bundled as Garamond (variable + instanced static weights).
     - assets/fonts/garamond/Garamond-Variable.ttf
     - assets/fonts/garamond/Garamond-Italic-Variable.ttf
+    - assets/fonts/garamond/Garamond-Regular.ttf
+    - assets/fonts/garamond/Garamond-Medium.ttf
+    - assets/fonts/garamond/Garamond-SemiBold.ttf
+    - assets/fonts/garamond/Garamond-Bold.ttf
+    - assets/fonts/garamond/Garamond-ExtraBold.ttf
+    - assets/fonts/garamond/Garamond-Italic.ttf
+    - assets/fonts/garamond/Garamond-BoldItalic.ttf
     - assets/fonts/garamond/OFL.txt
   fonts:
     - family: Nunito
@@ -227,11 +234,24 @@ flutter:
     - family: Work Sans
       fonts:
         - asset: assets/fonts/worksans/WorkSans-Variable.ttf
-    # EB Garamond (OFL), registered as Garamond — available for future use.
+    # EB Garamond (OFL), registered as Garamond — accent strip headings.
     - family: Garamond
       fonts:
-        - asset: assets/fonts/garamond/Garamond-Variable.ttf
-        - asset: assets/fonts/garamond/Garamond-Italic-Variable.ttf
+        - asset: assets/fonts/garamond/Garamond-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/garamond/Garamond-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/garamond/Garamond-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/garamond/Garamond-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/garamond/Garamond-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/garamond/Garamond-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/garamond/Garamond-BoldItalic.ttf
+          weight: 700
           style: italic
   # To add assets to your application, add an assets section, like this:
   # assets:

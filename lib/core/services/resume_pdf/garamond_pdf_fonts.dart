@@ -6,18 +6,28 @@ import '../../resume_text_font.dart';
 import 'resume_pdf_theme.dart';
 
 /// EB Garamond (bundled as Garamond) for accent-strip headings in PDF export.
+///
+/// The variable font files do not honor [pw.FontWeight.bold] in the PDF engine, so
+/// we load instanced static faces per weight (400–800).
 class GaramondPdfFonts {
-  GaramondPdfFonts._({required this.upright, required this.italic});
+  GaramondPdfFonts._({
+    required Map<int, pw.Font> upright,
+    required Map<int, pw.Font> italic,
+  }) : _upright = upright,
+       _italic = italic;
 
-  final pw.Font upright;
-  final pw.Font italic;
+  final Map<int, pw.Font> _upright;
+  final Map<int, pw.Font> _italic;
 
   pw.Font fontFor(int weight, {bool useItalic = false}) {
-    if (useItalic) {
-      return italic;
-    }
-    return upright;
+    final key = ResumeFontWeight.normalize(weight);
+    final map = useItalic ? _italic : _upright;
+    return map[key] ?? map[ResumeFontWeight.w400]!;
   }
+
+  pw.Font get w400 => fontFor(ResumeFontWeight.w400);
+
+  pw.Font get w700 => fontFor(ResumeFontWeight.w700);
 }
 
 pw.TextStyle garamondPdfTextStyle(
@@ -30,21 +40,16 @@ pw.TextStyle garamondPdfTextStyle(
 }) {
   final useItalic = fontStyle == pw.FontStyle.italic;
   final font = fonts.fontFor(weight, useItalic: useItalic);
-  final normalized = ResumeFontWeight.normalize(weight);
-  final pdfWeight = normalized >= ResumeFontWeight.w700
-      ? pw.FontWeight.bold
-      : pw.FontWeight.normal;
-
   return pw.TextStyle(
     inherit: false,
     color: color ?? PdfColors.black,
     font: font,
     fontNormal: font,
     fontBold: font,
-    fontItalic: fonts.italic,
-    fontBoldItalic: fonts.italic,
+    fontItalic: font,
+    fontBoldItalic: font,
     fontSize: fontSize ?? ResumeTypography.bodyPt,
-    fontWeight: pdfWeight,
+    fontWeight: pw.FontWeight.normal,
     fontStyle: useItalic ? pw.FontStyle.italic : pw.FontStyle.normal,
     letterSpacing: 0,
     wordSpacing: 1,
@@ -58,9 +63,30 @@ pw.TextStyle garamondPdfTextStyle(
 }
 
 Future<GaramondPdfFonts> loadGaramondPdfFonts() async {
-  final upright = await loadPdfTtf('assets/fonts/garamond/Garamond-Variable.ttf');
-  final italic = await loadPdfTtf(
-    'assets/fonts/garamond/Garamond-Italic-Variable.ttf',
-  );
+  final upright = <int, pw.Font>{
+    ResumeFontWeight.w400: await loadPdfTtf(
+      'assets/fonts/garamond/Garamond-Regular.ttf',
+    ),
+    ResumeFontWeight.w500: await loadPdfTtf(
+      'assets/fonts/garamond/Garamond-Medium.ttf',
+    ),
+    ResumeFontWeight.w600: await loadPdfTtf(
+      'assets/fonts/garamond/Garamond-SemiBold.ttf',
+    ),
+    ResumeFontWeight.w700: await loadPdfTtf(
+      'assets/fonts/garamond/Garamond-Bold.ttf',
+    ),
+    ResumeFontWeight.w800: await loadPdfTtf(
+      'assets/fonts/garamond/Garamond-ExtraBold.ttf',
+    ),
+  };
+  final italic = <int, pw.Font>{
+    ResumeFontWeight.w400: await loadPdfTtf(
+      'assets/fonts/garamond/Garamond-Italic.ttf',
+    ),
+    ResumeFontWeight.w700: await loadPdfTtf(
+      'assets/fonts/garamond/Garamond-BoldItalic.ttf',
+    ),
+  };
   return GaramondPdfFonts._(upright: upright, italic: italic);
 }
