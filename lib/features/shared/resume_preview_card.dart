@@ -1885,7 +1885,7 @@ class _AccentStripPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final body = resume.effectiveBodyFontPt.toDouble();
     final accent = resume.corporateColorPreset.headerColor;
-    final titleColor = const Color(0xFF111111);
+    const bodyTextColor = Color(0xFF111111);
     final contactItems = <String>[
       if (resume.location.trim().isNotEmpty) resume.location.trim(),
       if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
@@ -1901,45 +1901,45 @@ class _AccentStripPreview extends StatelessWidget {
     final bodyStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeFontWeight.w400,
       fontSize: body + 0.4,
-      color: titleColor,
+      color: bodyTextColor,
       height: 1.4,
     );
     final metaStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeFontWeight.w500,
       fontSize: body + 0.2,
-      color: titleColor,
+      color: bodyTextColor,
       height: 1.4,
     );
     final headingStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w700,
       fontSize: body + 5,
-      color: titleColor,
+      color: accent,
       height: 1.4,
       letterSpacing: 0.2,
     );
     final roleStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeFontWeight.w500,
       fontSize: body + 0.4,
-      color: titleColor,
+      color: bodyTextColor,
       height: 1.4,
     );
     final dateStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeFontWeight.w700,
       fontSize: body + 2,
-      color: titleColor,
+      color: bodyTextColor,
       height: 1.4,
     );
     final nameStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w700,
       fontSize: 30,
-      color: titleColor,
+      color: accent,
       height: 1.0,
       letterSpacing: 0.4,
     );
     final contactStyle = ResumeTypography.calibriPreviewStyle(
       weight: ResumeFontWeight.w700,
       fontSize: body + 1.1,
-      color: titleColor,
+      color: bodyTextColor,
       height: 1.4,
     );
     final sectionGap = body + 10;

@@ -1775,6 +1775,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     String title,
     double bodyPt, {
     required GaramondPdfFonts garamond,
+    required PdfColor accent,
   }) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
@@ -1784,6 +1785,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
           garamond,
           ResumeFontWeight.w700,
           fontSize: bodyPt + 6,
+          color: accent,
         ).copyWith(letterSpacing: 0.2),
       ),
     );
@@ -1842,6 +1844,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 garamond,
                 ResumeFontWeight.w700,
                 fontSize: 33,
+                color: accent,
               ).copyWith(letterSpacing: 0.4),
             ),
             if (contactLine.isNotEmpty) ...[
@@ -1873,6 +1876,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 'EXPERIENCE',
                 bodyPt,
                 garamond: garamond,
+                accent: accent,
               ),
             );
             final items = resume.visibleWorkExperiences;
@@ -1957,6 +1961,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 'EDUCATION',
                 bodyPt,
                 garamond: garamond,
+                accent: accent,
               ),
             );
             final items = resume.visibleEducation;
@@ -2005,6 +2010,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 'SKILLS',
                 bodyPt,
                 garamond: garamond,
+                accent: accent,
               ),
             );
             if (skills.isEmpty) {
@@ -2049,6 +2055,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   'PROJECTS',
                   bodyPt,
                   garamond: garamond,
+                  accent: accent,
                 ),
               );
               for (final item in items) {
@@ -2090,6 +2097,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 section.title.trim().ifEmpty('ADDITIONAL').toUpperCase(),
                 bodyPt,
                 garamond: garamond,
+                accent: accent,
               ),
             );
             for (final widget in _pwCustomSectionBodyWidgets(section)) {

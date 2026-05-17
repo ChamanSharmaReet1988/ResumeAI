@@ -1023,6 +1023,13 @@ ResumeData _applyTemplatePreviewPalette(
       ),
     );
   }
+  if (sample.template == ResumeTemplate.accentStrip) {
+    return sample.copyWith(
+      corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+        ResumeTemplate.accentStrip,
+      ),
+    );
+  }
   if (paletteSeed == null) {
     return sample;
   }
