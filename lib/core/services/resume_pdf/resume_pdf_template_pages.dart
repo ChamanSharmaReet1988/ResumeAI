@@ -1163,7 +1163,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             width: double.infinity,
             color: topDividerColor,
           ),
-          pw.SizedBox(height: 12),
+          pw.SizedBox(height: _classicSidebarSectionDividerGapPt),
         ],
         pw.Text(
           title.toUpperCase(),
@@ -1176,7 +1176,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
         ),
         pw.SizedBox(height: _classicSidebarHeadingGapPt),
         child,
-        if (showBottomBorder) pw.SizedBox(height: 12),
+        if (showBottomBorder)
+          pw.SizedBox(height: _classicSidebarSectionDividerGapPt),
         pw.SizedBox(height: _classicSidebarSectionBottomPt),
       ],
     );
@@ -1198,7 +1199,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             width: double.infinity,
             color: topDividerColor,
           ),
-          pw.SizedBox(height: 12),
+          pw.SizedBox(height: _classicSidebarSectionDividerGapPt),
         ],
         pw.Padding(
           padding: const pw.EdgeInsets.only(
@@ -1226,7 +1227,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         child,
-        if (showBottomBorder) pw.SizedBox(height: 12),
+        if (showBottomBorder)
+          pw.SizedBox(height: _classicSidebarSectionDividerGapPt),
         pw.SizedBox(height: _classicSidebarSectionBottomPt),
       ],
     );
@@ -1300,7 +1302,6 @@ ResumeTypography.darkHeaderSubtitleWeight,
       item.startDate.trim(),
       item.endDate.trim(),
     ].where((value) => value.isNotEmpty).join(' - ');
-    final details = item.score.trim();
 
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
@@ -1326,18 +1327,6 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 bodyPt,
                 color: mutedColor,
                 fontStyle: pw.FontStyle.italic,
-              ),
-            ),
-          ],
-          if (details.isNotEmpty) ...[
-            pw.SizedBox(height: 3),
-            pw.Text(
-              details,
-              style: _classicSidebarPdfTextStyle(
-                calibri,
-                ResumeTypography.classicSidebarBodyWeight,
-                bodyPt,
-                color: mutedColor,
               ),
             ),
           ],

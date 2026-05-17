@@ -1243,11 +1243,12 @@ class _ClassicSidebarPreview extends StatelessWidget {
 
   static const double _sidebarWidth = 122;
   static const double _avatarSize = 114;
-  static const double _sectionGap = 18;
-  static const double _contentSectionGap = 16;
+  static const double _sectionGap = 12;
+  static const double _contentSectionGap = 10;
 
   /// Matches PDF `_classicSidebarSectionBottomPt` spacing before section titles.
-  static const double _sectionBlockTopGap = 14;
+  static const double _sectionBlockTopGap = 8;
+  static const double _sectionDividerGap = 8;
   static const double _sectionHeadingGap = 6;
   static const double _mainColumnTopPadding = 22;
   static const double _mainColumnBottomPadding = 10;
@@ -2554,18 +2555,20 @@ class _ClassicContentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(
+        bottom: _ClassicSidebarPreview._sectionBlockTopGap,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (topDividerColor != null) ...[
             Container(height: 1, color: topDividerColor),
-            const SizedBox(height: 12),
+            const SizedBox(height: _ClassicSidebarPreview._sectionDividerGap),
           ],
           Text(title, style: titleStyle),
           const SizedBox(height: _ClassicSidebarPreview._sectionHeadingGap),
           child,
-          const SizedBox(height: 12),
+          const SizedBox(height: _ClassicSidebarPreview._sectionDividerGap),
         ],
       ),
     );
@@ -2662,7 +2665,6 @@ class _ClassicEducationBlock extends StatelessWidget {
       item.startDate.trim(),
       item.endDate.trim(),
     ].where((value) => value.isNotEmpty).join(' - ');
-    final details = item.score.trim();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2682,16 +2684,6 @@ class _ClassicEducationBlock extends StatelessWidget {
                 color: mutedColor,
                 fontStyle: FontStyle.italic,
               ),
-            ),
-          ),
-        if (details.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 3),
-            child: Text(
-              details,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: bodyStyle.copyWith(color: mutedColor),
             ),
           ),
       ],
