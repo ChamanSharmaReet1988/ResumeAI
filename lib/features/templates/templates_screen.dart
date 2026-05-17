@@ -704,7 +704,7 @@ class _TemplatePreviewArt extends StatelessWidget {
       ),
       _TemplatePreviewKind.atsSerifRulesResume => _AtsSerifRulesTemplateArt(
         resume: _applyTemplatePreviewPalette(
-          _atsSampleFor(ResumeTemplate.atsSerifRules),
+          _atsSerifRulesTemplateResume,
           paletteSeed,
         ),
       ),
@@ -890,7 +890,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
         showPremiumBadge: true,
         child: _AtsSerifRulesTemplateArt(
           resume: _applyTemplatePreviewPalette(
-            _atsSampleFor(ResumeTemplate.atsSerifRules),
+            _atsSerifRulesTemplateResume,
             paletteSeed,
           ),
           detailed: true,
@@ -1132,8 +1132,94 @@ final ResumeData _atsFullSampleResume = ResumeData(
   corporateColorPresetIndex: 0,
 );
 
-ResumeData _atsSampleFor(ResumeTemplate template) =>
-    _atsFullSampleResume.copyWith(template: template);
+ResumeData _atsSampleFor(ResumeTemplate template) => switch (template) {
+  ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
+  _ => _atsFullSampleResume.copyWith(template: template),
+};
+
+/// Serif Rules ATS — sample tuned for ruled sections, right-column links, 2-col skills.
+final ResumeData _atsSerifRulesTemplateResume = ResumeData(
+  id: 'template-ats-serif-rules',
+  title: 'Serif Rules ATS Sample',
+  fullName: 'Jordan',
+  jobTitle: 'Senior Data Analyst',
+  email: 'jordan.reed@email.example.com',
+  phone: '(312) 555-0147',
+  location: 'Chicago, IL 60601',
+  website: 'jordanreed.dev',
+  githubLink: 'github.com/jmreed',
+  linkedinLink: 'linkedin.com/in/jordanmreed',
+  summary:
+      'Analyst with 7+ years turning messy operational data into decisions product and finance teams trust. Experienced in SQL pipelines, self-serve dashboards, and clear stakeholder readouts in regulated and fast-moving environments.',
+  template: ResumeTemplate.atsSerifRules,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Senior Data Analyst',
+      company: 'Lakeside Health Systems',
+      startDate: 'Mar 2020',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Built patient-access dashboards used by 40+ clinic managers; cut reporting requests to analytics by 35%.',
+        'Partnered with finance on revenue-cycle models that improved forecast accuracy within 3 points.',
+        'Documented metric definitions and lineage so compliance audits passed without rework.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Business Intelligence Analyst',
+      company: 'Urban Retail Group',
+      startDate: 'Jun 2016',
+      endDate: 'Feb 2020',
+      description: '',
+      bullets: [
+        'Migrated legacy Excel reports to Looker views adopted by merchandising and store ops.',
+        'Automated weekly inventory exception alerts, reducing stockouts on top SKUs by 12%.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'University of Illinois Chicago',
+      degree: 'BS, Statistics & Information Systems',
+      startDate: '2012',
+      endDate: '2016',
+      score: 'magna cum laude',
+    ),
+  ],
+  skills: const [
+    'SQL & dbt',
+    'Python (pandas)',
+    'Looker / Tableau',
+    'Snowflake',
+    'Stakeholder storytelling',
+    'Metric governance',
+    'A/B test analysis',
+    'Excel modeling',
+  ],
+  projects: const [
+    ProjectItem(
+      title: 'Clinic Wait-Time Predictor',
+      overview: 'Scheduling optimization pilot',
+      impact: 'Python, scikit-learn',
+      bullets: [
+        'Prototyped models on two years of appointment data to flag likely overrun slots.',
+        'Pilot reduced average wait times by 11 minutes at three test locations.',
+      ],
+    ),
+  ],
+  customSections: const [],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: true,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.atsSerifRules,
+  ),
+);
 
 /// Dark Header template tile + detail preview (same typography as builder/PDF).
 final ResumeData _darkHeaderTemplateResume = _atsFullSampleResume.copyWith(
