@@ -3328,11 +3328,17 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
         letterSpacing: 0.2,
       );
 
-  static TextStyle _avatarInitialsStyle() => ResumeTypography.calibriPreviewStyle(
-        weight: ResumeTypography.classicSidebarNameWeight,
-        fontSize: ResumeTypography.classicSidebarAvatarInitialsFontPt(
-          _scaledPt(ResumeTypography.classicSidebarNamePt),
+  /// Matches [_ClassicSidebarPreview] avatar initials sizing, scaled for tile art.
+  static double _avatarInitialsFontSize(ResumeData resume) => _scaledPt(
+        ResumeTypography.classicSidebarAvatarInitialsFontPt(
+          resume.classicSidebarScaledPt(ResumeTypography.classicSidebarNamePt),
         ),
+      );
+
+  static TextStyle _avatarInitialsStyle(ResumeData resume) =>
+      ResumeTypography.calibriPreviewStyle(
+        weight: ResumeTypography.classicSidebarNameWeight,
+        fontSize: _avatarInitialsFontSize(resume),
         color: ResumeTypography.classicSidebarBodyTextColor,
         height: 1,
       );
@@ -3390,7 +3396,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
     final bodyStyle = _bodyStyle();
     final sidebarStyle = _sidebarStyle();
     final nameStyle = _nameStyle();
-    final avatarInitialsStyle = _avatarInitialsStyle();
+    final avatarInitialsStyle = _avatarInitialsStyle(resume);
     final sectionHeadingStyle = _sectionHeadingStyle();
     final subtitleStyle = _subtitleStyle();
     final mutedBodyStyle = bodyStyle.copyWith(color: muted);
@@ -3414,17 +3420,21 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
+                      child: ClipOval(
+                        child: Container(
+                          width: 52,
+                          height: 52,
                           color: avatar,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          _miniClassicInitials(resume.fullName),
-                          style: avatarInitialsStyle.copyWith(color: title),
+                          alignment: Alignment.center,
+                          child: Text(
+                            _miniClassicInitials(resume.fullName),
+                            textAlign: TextAlign.center,
+                            style: avatarInitialsStyle.copyWith(color: title),
+                            textHeightBehavior: const TextHeightBehavior(
+                              applyHeightToFirstAscent: false,
+                              applyHeightToLastDescent: false,
+                            ),
+                          ),
                         ),
                       ),
                     ),
