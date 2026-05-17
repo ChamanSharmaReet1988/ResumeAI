@@ -661,6 +661,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   void _addHighlightedClassicSidebarTemplatePage(
     pw.Document document,
     ResumeData resume, {
+    CalibriPdfFonts? calibri,
     required bool highlightSummary,
     required Set<String> highlightedSkills,
     required Map<int, Set<String>> highlightedBulletsByExperience,
@@ -671,11 +672,20 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     final dividerColor = _classicSidebarDividerColorPdf(resume);
     final borderColor = _classicSidebarSectionBorderPdf(resume);
     final highlightColor = PdfColor.fromHex('#FFE67A');
-    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final bodyPt =
+        resume.classicSidebarScaledPt(ResumeTypography.classicSidebarBodyPt);
+    final namePt =
+        resume.classicSidebarScaledPt(ResumeTypography.classicSidebarNamePt);
+    final subtitlePt =
+        resume.classicSidebarScaledPt(ResumeTypography.classicSidebarSubtitlePt);
+    final sectionTitlePt = resume.classicSidebarScaledPt(
+      ResumeTypography.classicSidebarSectionTitlePt,
+    );
     final customSections = _classicSidebarMainCustomSections(resume);
     final sidebarPageCount = _classicSidebarPageSlices(
       resume: resume,
       bodyPt: bodyPt,
+      sectionTitlePt: sectionTitlePt,
       highlightedSkills: highlightedSkills,
       pageFormat: PdfPageFormat.a4,
     ).length;
@@ -694,6 +704,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           titleColor: titleColor,
           mutedColor: mutedColor,
           bodyPt: bodyPt,
+          sectionTitlePt: sectionTitlePt,
+          calibri: calibri,
           highlightedSkills: highlightedSkills,
           highlightColor: highlightColor,
         ),
@@ -707,6 +719,9 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               accentColor: accentColor,
               borderColor: borderColor,
               bodyPt: bodyPt,
+              namePt: namePt,
+              subtitlePt: subtitlePt,
+              calibri: calibri,
             ),
           ),
           sidebarWrap(
@@ -717,6 +732,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               child: _buildClassicSidebarSection(
                 title: 'Summary',
                 titleColor: titleColor,
+                sectionTitlePt: sectionTitlePt,
+                calibri: calibri,
                 child: pw.Container(
                   width: double.infinity,
                   padding: const pw.EdgeInsets.symmetric(
@@ -728,10 +745,16 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     resume.summary.trim().ifEmpty(
                       'Add a short summary to position your experience and strengths.',
                     ),
-                    style: pw.TextStyle(
-                      color: mutedColor,
-                      fontSize: bodyPt,
-                      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+                    style: _classicSidebarPdfTextStyle(
+                      calibri,
+                      ResumeTypography.classicSidebarBodyWeight,
+                      bodyPt,
+                      color: titleColor,
+                    ).copyWith(
+                      lineSpacing:
+                          ResumeTypography.classicSidebarBodyPdfLineSpacingFor(
+                        bodyPt,
+                      ),
                     ),
                   ),
                 ),
@@ -745,9 +768,16 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: 'Experience',
                 titleColor: titleColor,
                 topDividerColor: borderColor,
+                sectionTitlePt: sectionTitlePt,
+                calibri: calibri,
                 child: pw.Text(
                   'Add your work experience details.',
-                  style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+                  style: _classicSidebarPdfTextStyle(
+                    calibri,
+                    ResumeTypography.classicSidebarBodyWeight,
+                    bodyPt,
+                    color: mutedColor,
+                  ),
                 ),
               ),
             ),
@@ -758,6 +788,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: 'Experience',
                 titleColor: titleColor,
                 topDividerColor: borderColor,
+                sectionTitlePt: sectionTitlePt,
+                calibri: calibri,
               ),
             ),
             for (
@@ -774,9 +806,10 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     highlightedBulletsByExperience[index] ?? const <String>{},
                     highlightColor,
                     titleColor: titleColor,
-                    mutedColor: mutedColor,
                     accentColor: accentColor,
                     bodyPt: bodyPt,
+                    subtitlePt: subtitlePt,
+                    calibri: calibri,
                   ),
                 ),
               ),
@@ -788,9 +821,16 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: 'Education',
                 titleColor: titleColor,
                 topDividerColor: borderColor,
+                sectionTitlePt: sectionTitlePt,
+                calibri: calibri,
                 child: pw.Text(
                   'Add your education details.',
-                  style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+                  style: _classicSidebarPdfTextStyle(
+                    calibri,
+                    ResumeTypography.classicSidebarBodyWeight,
+                    bodyPt,
+                    color: mutedColor,
+                  ),
                 ),
               ),
             ),
@@ -801,6 +841,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: 'Education',
                 titleColor: titleColor,
                 topDividerColor: borderColor,
+                sectionTitlePt: sectionTitlePt,
+                calibri: calibri,
               ),
             ),
             for (var index = 0; index < resume.visibleEducation.length; index++)
@@ -812,6 +854,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     titleColor: titleColor,
                     mutedColor: mutedColor,
                     bodyPt: bodyPt,
+                    subtitlePt: subtitlePt,
+                    calibri: calibri,
                   ),
                 ),
               ),
@@ -823,6 +867,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: 'Projects',
                 titleColor: titleColor,
                 topDividerColor: borderColor,
+                sectionTitlePt: sectionTitlePt,
+                calibri: calibri,
               ),
             ),
             for (var index = 0; index < resume.visibleProjects.length; index++)
@@ -835,6 +881,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     mutedColor: mutedColor,
                     accentColor: accentColor,
                     bodyPt: bodyPt,
+                    subtitlePt: subtitlePt,
+                    calibri: calibri,
                   ),
                 ),
               ),
@@ -845,6 +893,8 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 title: customSections[index].title.ifEmpty('Custom Section'),
                 titleColor: titleColor,
                 topDividerColor: borderColor,
+                sectionTitlePt: sectionTitlePt,
+                calibri: calibri,
               ),
             ),
             if (customSections[index].layoutMode ==
@@ -872,6 +922,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                       bulletColor: accentColor,
                       textColor: mutedColor,
                       fontSize: bodyPt,
+                      calibri: calibri,
                     ),
                   ),
                 )
@@ -884,6 +935,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     mutedColor: mutedColor,
                     accentColor: accentColor,
                     bodyPt: bodyPt,
+                    calibri: calibri,
                   ),
                 ),
               ),
@@ -898,15 +950,13 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     Set<String> highlightedBullets,
     PdfColor highlightColor, {
     required PdfColor titleColor,
-    required PdfColor mutedColor,
     required PdfColor accentColor,
     required double bodyPt,
+    required double subtitlePt,
+    CalibriPdfFonts? calibri,
   }) {
     final bullets = _workBulletLines(item);
-    final dates = [
-      item.startDate.trim(),
-      item.endDate.trim(),
-    ].where((value) => value.isNotEmpty).join(' - ');
+    final companyDatesLine = _classicSidebarExperienceCompanyDatesLine(item);
 
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 10),
@@ -914,18 +964,24 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            '${item.role.ifEmpty('Role')}, ${item.company.ifEmpty('Company')}',
-            style: pw.TextStyle(
+            item.role.ifEmpty('Role'),
+            style: _classicSidebarPdfTextStyle(
+              calibri,
+              ResumeTypography.classicSidebarSubtitleWeight,
+              subtitlePt,
               color: titleColor,
-              fontSize: bodyPt + 1.2,
-              fontWeight: pw.FontWeight.bold,
             ),
           ),
-          if (dates.isNotEmpty) ...[
+          if (companyDatesLine.isNotEmpty) ...[
             pw.SizedBox(height: 2),
             pw.Text(
-              dates,
-              style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+              companyDatesLine,
+              style: _classicSidebarPdfTextStyle(
+                calibri,
+                ResumeTypography.classicSidebarBodyWeight,
+                bodyPt,
+                color: titleColor,
+              ),
             ),
           ],
           if (bullets.isNotEmpty) ...[
@@ -938,6 +994,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   bulletColor: accentColor,
                   textColor: titleColor,
                   fontSize: bodyPt,
+                  calibri: calibri,
                   backgroundColor: highlightedBullets.contains(bullet)
                       ? highlightColor
                       : null,

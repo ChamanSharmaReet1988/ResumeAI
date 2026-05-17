@@ -120,6 +120,13 @@ extension ResumeCorporateStyleX on ResumeData {
 
   double creativeScaledPt(double designPt) => designPt * creativeFontScale;
 
+  /// Scales Classic Sidebar (template 3) type from the body font slider (10–12 pt).
+  double get classicSidebarFontScale =>
+      effectiveBodyFontPt / kResumeBodyFontPtDefault;
+
+  double classicSidebarScaledPt(double designPt) =>
+      designPt * classicSidebarFontScale;
+
   CorporateColorPreset get corporateColorPreset {
     if (corporateColorPresetIndex == kTemplateDefaultColorPresetIndex) {
       return CorporateColorPreset(

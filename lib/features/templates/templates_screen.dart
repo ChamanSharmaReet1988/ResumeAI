@@ -3270,6 +3270,24 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
   }
 }
 
+String _classicSidebarExperienceCompanyDatesLine(WorkExperience item) {
+  final company = item.company.trim();
+  final dates = [
+    item.startDate.trim(),
+    item.endDate.trim(),
+  ].where((value) => value.isNotEmpty).join(' - ');
+  if (company.isEmpty && dates.isEmpty) {
+    return '';
+  }
+  if (company.isEmpty) {
+    return dates;
+  }
+  if (dates.isEmpty) {
+    return company;
+  }
+  return '$company · $dates';
+}
+
 class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   const _ClassicSidebarTemplateArtCompact({
     required this.resume,
@@ -3279,13 +3297,63 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   final ResumeData resume;
   final bool detailed;
 
+  static const double _layoutScale = 240 / 595.28;
+
+  static double _scaledPt(double pt) => pt * _layoutScale;
+
+  static TextStyle _bodyStyle() => ResumeTypography.calibriPreviewStyle(
+        weight: ResumeTypography.classicSidebarBodyWeight,
+        fontSize: _scaledPt(ResumeTypography.classicSidebarBodyPt),
+        color: ResumeTypography.classicSidebarBodyTextColor,
+        height: ResumeTypography.classicSidebarBodyLineHeight,
+      );
+
+  static TextStyle _subtitleStyle({bool italic = false}) =>
+      ResumeTypography.calibriPreviewStyle(
+        weight: ResumeTypography.classicSidebarSubtitleWeight,
+        fontSize: _scaledPt(ResumeTypography.classicSidebarSubtitlePt),
+        color: ResumeTypography.classicSidebarBodyTextColor,
+        height: ResumeTypography.classicSidebarBodyLineHeight,
+      ).copyWith(fontStyle: italic ? FontStyle.italic : null);
+
+  static TextStyle _nameStyle() => ResumeTypography.calibriPreviewStyle(
+        weight: ResumeTypography.classicSidebarNameWeight,
+        fontSize: _scaledPt(ResumeTypography.classicSidebarNamePt),
+        color: ResumeTypography.classicSidebarBodyTextColor,
+        height: 1,
+        letterSpacing: 0.2,
+      );
+
+  static TextStyle _avatarInitialsStyle() => ResumeTypography.calibriPreviewStyle(
+        weight: ResumeTypography.classicSidebarNameWeight,
+        fontSize: ResumeTypography.classicSidebarAvatarInitialsFontPt(
+          _scaledPt(ResumeTypography.classicSidebarNamePt),
+        ),
+        color: ResumeTypography.classicSidebarBodyTextColor,
+        height: 1,
+      );
+
+  static TextStyle _sectionHeadingStyle() => ResumeTypography.calibriPreviewStyle(
+        weight: ResumeTypography.classicSidebarSectionTitleWeight,
+        fontSize: _scaledPt(ResumeTypography.classicSidebarSectionTitlePt),
+        color: ResumeTypography.classicSidebarBodyTextColor,
+        height: ResumeTypography.classicSidebarBodyLineHeight,
+        letterSpacing: 0.2,
+      );
+
+  static TextStyle _sidebarStyle() => ResumeTypography.calibriPreviewStyle(
+        weight: ResumeTypography.classicSidebarSidebarContentWeight,
+        fontSize: _scaledPt(ResumeTypography.classicSidebarBodyPt),
+        color: ResumeTypography.classicSidebarBodyTextColor,
+        height: ResumeTypography.classicSidebarBodyLineHeight,
+      );
+
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFF2E7CB3);
     final rail = Color.lerp(Colors.white, accent, 0.14)!;
     final avatar = Color.lerp(accent, Colors.white, 0.45)!;
     const title = Color(0xFF1F2937);
-    const text = Color(0xFF344054);
     const muted = Color(0xFF667085);
     final line = Color.lerp(accent, Colors.white, 0.7)!;
     final skills = resume.skills.take(detailed ? 3 : 2).toList();
@@ -3315,7 +3383,17 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
     final nameLine = _miniClassicNameLine(resume.fullName);
     final summary = resume.summary.trim();
 
-    return DecoratedBox(
+    final bodyStyle = _bodyStyle();
+    final sidebarStyle = _sidebarStyle();
+    final nameStyle = _nameStyle();
+    final avatarInitialsStyle = _avatarInitialsStyle();
+    final sectionHeadingStyle = _sectionHeadingStyle();
+    final subtitleStyle = _subtitleStyle();
+    final mutedBodyStyle = bodyStyle.copyWith(color: muted);
+
+    return DefaultTextStyle.merge(
+      style: const TextStyle(fontFamily: 'Calibri'),
+      child: DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
       child: ClipRRect(
         borderRadius: BorderRadius.zero,
@@ -3327,11 +3405,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
               color: rail,
               padding: const EdgeInsets.fromLTRB(6, 10, 6, 8),
               child: DefaultTextStyle(
-                style: TextStyle(
-                  fontSize: 4.6,
-                  height: 1.28,
-                  color: text,
-                ),
+                style: sidebarStyle,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -3346,12 +3420,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                         alignment: Alignment.center,
                         child: Text(
                           _miniClassicInitials(resume.fullName),
-                          style: TextStyle(
-                            color: title,
-                            fontSize: 12.6,
-                            fontWeight: FontWeight.w800,
-                            height: 1,
-                          ),
+                          style: avatarInitialsStyle.copyWith(color: title),
                         ),
                       ),
                     ),
@@ -3360,42 +3429,37 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       'SKILLS',
-                      style: TextStyle(
-                        fontSize: 5.7,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.15,
-                        color: title,
-                      ),
+                      style: sectionHeadingStyle.copyWith(color: title),
                     ),
-                    const SizedBox(height: 7),
-                    _MiniBulletColumn(items: skills, bulletColor: accent),
+                    const SizedBox(height: 10),
+                    _MiniBulletColumn(
+                      items: skills,
+                      bulletColor: accent,
+                      textStyle: bodyStyle,
+                      itemBottom: 4,
+                    ),
                     SizedBox(height: detailed ? 8 : 4),
                     Container(height: 1, color: line),
                     SizedBox(height: detailed ? 5 : 3),
                     Text(
                       'LANGUAGES',
-                      style: TextStyle(
-                        fontSize: 5.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.15,
-                        color: title,
-                      ),
+                      style: sectionHeadingStyle.copyWith(color: title),
                     ),
                     const SizedBox(height: 4),
-                    _MiniBulletColumn(items: languages, bulletColor: accent),
+                    _MiniBulletColumn(
+                      items: languages,
+                      bulletColor: accent,
+                      textStyle: bodyStyle,
+                    ),
                   ],
                 ),
               ),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(9, 10, 9, 9),
+                padding: const EdgeInsets.fromLTRB(9, 14, 9, 6),
                 child: DefaultTextStyle(
-                  style: TextStyle(
-                    fontSize: 4.6,
-                    height: 1.28,
-                    color: text,
-                  ),
+                  style: bodyStyle,
                   child: ClipRect(
                     child: SingleChildScrollView(
                       physics: const NeverScrollableScrollPhysics(),
@@ -3406,19 +3470,17 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                             nameLine,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 8.4,
-                              height: 0.96,
-                              fontWeight: FontWeight.w900,
-                              color: title,
-                            ),
+                            style: nameStyle.copyWith(color: title),
                           ),
                           const SizedBox(height: 3),
                           Text(
                             resume.jobTitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: muted),
+                            style: subtitleStyle.copyWith(
+                              color: muted,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                           SizedBox(height: detailed ? 5 : 3),
                           _MiniClassicInfoLine(text: resume.email),
@@ -3431,44 +3493,33 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           SizedBox(height: detailed ? 6 : 4),
                           Text(
                             'SUMMARY',
-                            style: TextStyle(
-                              fontSize: 5.6,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.15,
-                              color: title,
-                            ),
+                            style: sectionHeadingStyle.copyWith(color: title),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             summary,
                             maxLines: detailed ? 5 : 2,
                             overflow: TextOverflow.clip,
-                            style: TextStyle(color: muted),
+                            style: bodyStyle,
                           ),
                           SizedBox(height: detailed ? 7 : 4),
                           Container(height: 1, color: line),
                           SizedBox(height: detailed ? 6 : 4),
                           Text(
                             'EXPERIENCE',
-                            style: TextStyle(
-                              fontSize: 5.6,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.15,
-                              color: title,
-                            ),
+                            style: sectionHeadingStyle.copyWith(color: title),
                           ),
                           const SizedBox(height: 4),
                           if (experiences.isNotEmpty) ...[
                             Text(
                               experiences.first.role,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: title,
-                              ),
+                              style: subtitleStyle.copyWith(color: title),
                             ),
                             Text(
-                              '${experiences.first.company} · ${experiences.first.startDate}-${experiences.first.endDate}',
-                              style: TextStyle(color: muted),
+                              _classicSidebarExperienceCompanyDatesLine(
+                                experiences.first,
+                              ),
+                              style: bodyStyle,
                             ),
                             const SizedBox(height: 3),
                             _MiniBulletColumn(
@@ -3488,12 +3539,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           SizedBox(height: detailed ? 6 : 4),
                           Text(
                             'EDUCATION',
-                            style: TextStyle(
-                              fontSize: 5.6,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.15,
-                              color: title,
-                            ),
+                            style: sectionHeadingStyle.copyWith(color: title),
                           ),
                           const SizedBox(height: 4),
                           for (final item in education) ...[
@@ -3501,16 +3547,15 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                               item.degree,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: title,
-                              ),
+                              style: subtitleStyle.copyWith(color: title),
                             ),
                             Text(
                               '${item.institution} · ${item.endDate}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: muted),
+                              style: mutedBodyStyle.copyWith(
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                             SizedBox(height: detailed ? 3 : 1),
                           ],
@@ -3519,21 +3564,13 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           SizedBox(height: detailed ? 6 : 4),
                           Text(
                             'PROJECTS',
-                            style: TextStyle(
-                              fontSize: 5.6,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.15,
-                              color: title,
-                            ),
+                            style: sectionHeadingStyle.copyWith(color: title),
                           ),
                           const SizedBox(height: 4),
                           for (final item in projects) ...[
                             Text(
                               item.title,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: title,
-                              ),
+                              style: subtitleStyle.copyWith(color: title),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -3558,6 +3595,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -4377,6 +4415,7 @@ class _MiniBulletColumn extends StatelessWidget {
     required this.items,
     this.bulletColor = const Color(0xFF344054),
     this.textStyle,
+    this.itemBottom = 2,
   });
 
   final List<String> items;
@@ -4384,6 +4423,7 @@ class _MiniBulletColumn extends StatelessWidget {
 
   /// When omitted, inherits [DefaultTextStyle] (template arts should pass a small style).
   final TextStyle? textStyle;
+  final double itemBottom;
 
   static const double _bulletTextGap = 3;
 
@@ -4400,7 +4440,7 @@ class _MiniBulletColumn extends StatelessWidget {
       children: [
         for (final item in items)
           Padding(
-            padding: const EdgeInsets.only(bottom: 2),
+            padding: EdgeInsets.only(bottom: itemBottom),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

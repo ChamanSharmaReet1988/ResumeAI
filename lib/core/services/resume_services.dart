@@ -169,6 +169,9 @@ const double _classicSidebarHeadingGapPt = 6.0;
 const double _classicSidebarSectionBottomPt = 14.0;
 const double _classicSidebarPanelTopPt = 24.0;
 const double _classicSidebarPanelBottomPt = 0.0;
+const double _classicSidebarPageTopMargin = 20.0;
+const double _classicSidebarFirstPageMainTopGapPt = 16.0;
+const double _classicSidebarPageBottomMargin = 18.0;
 const double _classicSidebarPanelLeftInsetPt =
     (_classicSidebarRailWidthPt - _classicSidebarContentWidthPt) / 2;
 const double _detailsSidebarRailWidthPt = 164.0;
@@ -243,6 +246,29 @@ PdfColor _classicSidebarSectionBorderPdf(ResumeData resume) =>
 
 PdfColor _classicSidebarAvatarFillPdf(ResumeData resume) =>
     _pdfRgb(resume.classicSidebarAvatarFillColor);
+
+pw.TextStyle _classicSidebarPdfTextStyle(
+  CalibriPdfFonts? calibri,
+  int weight,
+  double fontSize, {
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) {
+  if (calibri == null) {
+    return pw.TextStyle(
+      color: color,
+      fontSize: fontSize,
+      fontStyle: fontStyle,
+    );
+  }
+  return calibriClassicSidebarBodyPdfTextStyle(
+    calibri,
+    fontSize,
+    weight: weight,
+    color: color,
+    fontStyle: fontStyle,
+  );
+}
 
 PdfColor _detailsSidebarRailColorPdf(ResumeData resume) =>
     _pdfRgb(resume.detailsSidebarRailColor);
@@ -419,6 +445,9 @@ class _ClassicSidebarDynamicInset extends pw.Widget with pw.SpanningWidget {
   double _leftInsetFor(pw.Context context) =>
       context.pageNumber <= sidebarPageCount ? _classicSidebarMainInsetPt : 0;
 
+  double _topInsetFor(pw.Context context) =>
+      context.pageNumber == 1 ? _classicSidebarFirstPageMainTopGapPt : 0;
+
   @override
   void layout(
     pw.Context context,
@@ -426,7 +455,10 @@ class _ClassicSidebarDynamicInset extends pw.Widget with pw.SpanningWidget {
     bool parentUsesSize = false,
   }) {
     _wrapped = pw.Padding(
-      padding: pw.EdgeInsets.only(left: _leftInsetFor(context)),
+      padding: pw.EdgeInsets.only(
+        left: _leftInsetFor(context),
+        top: _topInsetFor(context),
+      ),
       child: child,
     );
     _wrapped!.layout(context, constraints, parentUsesSize: parentUsesSize);
@@ -533,18 +565,19 @@ pw.PageTheme _classicSidebarPageTheme({
   required PdfColor titleColor,
   required PdfColor mutedColor,
   required double bodyPt,
+  required double sectionTitlePt,
+  CalibriPdfFonts? calibri,
   pw.MemoryImage? profileImage,
   Set<String> highlightedSkills = const <String>{},
   PdfColor? highlightColor,
   PdfPageFormat pageFormat = PdfPageFormat.a4,
 }) {
   const pageLeftMargin = 20.0;
-  const pageTopMargin = 20.0;
   const pageRightMargin = 24.0;
-  const pageBottomMargin = 28.0;
   final sidebarPages = _classicSidebarPageSlices(
     resume: resume,
     bodyPt: bodyPt,
+    sectionTitlePt: sectionTitlePt,
     highlightedSkills: highlightedSkills,
     pageFormat: pageFormat,
   );
@@ -552,9 +585,9 @@ pw.PageTheme _classicSidebarPageTheme({
     pageFormat: pageFormat,
     margin: const pw.EdgeInsets.fromLTRB(
       pageLeftMargin,
-      pageTopMargin,
+      _classicSidebarPageTopMargin,
       pageRightMargin,
-      pageBottomMargin,
+      _classicSidebarPageBottomMargin,
     ),
     buildBackground: (context) => pw.FullPage(
       ignoreMargins: true,
@@ -580,6 +613,8 @@ pw.PageTheme _classicSidebarPageTheme({
                     titleColor: titleColor,
                     mutedColor: mutedColor,
                     bodyPt: bodyPt,
+                    sectionTitlePt: sectionTitlePt,
+                    calibri: calibri,
                     profileImage: profileImage,
                     highlightColor: highlightColor,
                     pageSlice: sidebarPages[context.pageNumber - 1],
@@ -595,6 +630,7 @@ pw.PageTheme _classicSidebarPageTheme({
 List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
   required ResumeData resume,
   required double bodyPt,
+  required double sectionTitlePt,
   required Set<String> highlightedSkills,
   required PdfPageFormat pageFormat,
 }) {
@@ -640,7 +676,7 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
       final pageSections = pages[pageIndex];
       final sectionOverhead =
           (pageSections.isNotEmpty ? _classicSidebarInterSectionHeight() : 0) +
-          _classicSidebarSectionTitleHeight();
+          _classicSidebarSectionTitleHeight(sectionTitlePt);
       if (availableHeights[pageIndex] <=
           sectionOverhead + _classicSidebarMinItemHeight(bodyPt)) {
         pageIndex++;
@@ -650,7 +686,8 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
       if (pageSections.isNotEmpty) {
         availableHeights[pageIndex] -= _classicSidebarInterSectionHeight();
       }
-      availableHeights[pageIndex] -= _classicSidebarSectionTitleHeight();
+      availableHeights[pageIndex] -=
+          _classicSidebarSectionTitleHeight(sectionTitlePt);
 
       final pageItems = <String>[];
       while (itemIndex < section.items.length) {
@@ -658,7 +695,7 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
         final itemHeight = _classicSidebarEstimatedItemHeight(
           item,
           bodyPt,
-          itemBottom: section.type == _ClassicSidebarSectionType.skills ? 0 : 8,
+          itemBottom: section.type == _ClassicSidebarSectionType.skills ? 6 : 8,
         );
         if (pageItems.isNotEmpty && availableHeights[pageIndex] < itemHeight) {
           break;
@@ -716,11 +753,11 @@ double _classicSidebarFirstPageHeaderHeight() =>
 double _classicSidebarInterSectionHeight() =>
     _classicSidebarSectionGapPt + 1.2 + 10;
 
-double _classicSidebarSectionTitleHeight() =>
-    ResumeTypography.darkHeaderSectionTitlePt + 8;
+double _classicSidebarSectionTitleHeight(double sectionTitlePt) =>
+    sectionTitlePt + 8;
 
 double _classicSidebarMinItemHeight(double bodyPt) =>
-    bodyPt * ResumeTypography.bodyTextLineHeight;
+    bodyPt * ResumeTypography.classicSidebarBodyLineHeight;
 
 double _classicSidebarEstimatedItemHeight(
   String text,
@@ -728,7 +765,8 @@ double _classicSidebarEstimatedItemHeight(
   required double itemBottom,
 }) {
   final lines = _classicSidebarEstimatedLineCount(text, fontSize);
-  return (lines * fontSize * ResumeTypography.bodyTextLineHeight) + itemBottom;
+  return (lines * fontSize * ResumeTypography.classicSidebarBodyLineHeight) +
+      itemBottom;
 }
 
 int _classicSidebarEstimatedLineCount(String text, double fontSize) {
@@ -769,10 +807,15 @@ pw.Widget _classicSidebarPanel({
   required PdfColor titleColor,
   required PdfColor mutedColor,
   required double bodyPt,
+  required double sectionTitlePt,
   required _ClassicSidebarPageSlice pageSlice,
+  CalibriPdfFonts? calibri,
   pw.MemoryImage? profileImage,
   PdfColor? highlightColor,
 }) {
+  final avatarInitialsPt = ResumeTypography.classicSidebarAvatarInitialsFontPt(
+    resume.classicSidebarScaledPt(ResumeTypography.classicSidebarNamePt),
+  );
   return pw.SizedBox(
     width: _classicSidebarContentWidthPt,
     child: pw.Column(
@@ -800,10 +843,11 @@ pw.Widget _classicSidebarPanel({
               alignment: pw.Alignment.center,
               child: pw.Text(
                 _classicSidebarInitials(resume),
-                style: pw.TextStyle(
+                style: _classicSidebarPdfTextStyle(
+                  calibri,
+                  ResumeTypography.classicSidebarNameWeight,
+                  avatarInitialsPt,
                   color: titleColor,
-                  fontSize: 34,
-                  fontWeight: pw.FontWeight.bold,
                 ),
               ),
             ),
@@ -829,24 +873,23 @@ pw.Widget _classicSidebarPanel({
             items: pageSlice.sections[index].items,
             titleColor: titleColor,
             bulletColor: accentColor,
-            textColor:
-                pageSlice.sections[index].type ==
-                    _ClassicSidebarSectionType.skills
-                ? titleColor
-                : mutedColor,
+            textColor: titleColor,
             fontSize: bodyPt,
+            sectionTitlePt: sectionTitlePt,
+            calibri: calibri,
+            textWeight: ResumeTypography.classicSidebarBodyWeight,
             highlightedItems: pageSlice.sections[index].highlightedItems,
             highlightColor: highlightColor,
             showTitle: pageSlice.sections[index].showSectionTitle,
             itemBottom:
                 pageSlice.sections[index].type ==
                     _ClassicSidebarSectionType.skills
-                ? 0
+                ? 6
                 : 8,
             titleBottomGap:
                 pageSlice.sections[index].type ==
                     _ClassicSidebarSectionType.skills
-                ? 11
+                ? 14
                 : 8,
           ),
         ],
@@ -862,6 +905,9 @@ pw.Widget _classicSidebarListSection({
   required PdfColor bulletColor,
   required PdfColor textColor,
   required double fontSize,
+  required double sectionTitlePt,
+  CalibriPdfFonts? calibri,
+  int textWeight = ResumeTypography.classicSidebarBodyWeight,
   Set<String> highlightedItems = const <String>{},
   PdfColor? highlightColor,
   bool showTitle = true,
@@ -875,17 +921,23 @@ pw.Widget _classicSidebarListSection({
       if (showTitle)
         pw.Text(
           title.toUpperCase(),
-          style: pw.TextStyle(
+          style: _classicSidebarPdfTextStyle(
+            calibri,
+            ResumeTypography.classicSidebarSectionTitleWeight,
+            sectionTitlePt,
             color: titleColor,
-            fontSize: ResumeTypography.darkHeaderSectionTitlePt,
-            fontWeight: pw.FontWeight.bold,
           ),
         ),
       if (showTitle) pw.SizedBox(height: titleBottomGap),
       if (visibleItems.isEmpty)
         pw.Text(
           'Add items',
-          style: pw.TextStyle(color: textColor, fontSize: fontSize),
+          style: _classicSidebarPdfTextStyle(
+            calibri,
+            textWeight,
+            fontSize,
+            color: textColor,
+          ),
         )
       else
         for (final item in visibleItems)
@@ -896,6 +948,8 @@ pw.Widget _classicSidebarListSection({
               bulletColor: bulletColor,
               textColor: textColor,
               fontSize: fontSize,
+              calibri: calibri,
+              textWeight: textWeight,
               backgroundColor: highlightedItems.contains(item)
                   ? highlightColor
                   : null,
@@ -917,6 +971,8 @@ pw.Widget _classicBulletRow({
   required PdfColor bulletColor,
   required PdfColor textColor,
   required double fontSize,
+  CalibriPdfFonts? calibri,
+  int textWeight = ResumeTypography.classicSidebarBodyWeight,
   PdfColor? backgroundColor,
 }) {
   final row = pw.Row(
@@ -924,17 +980,23 @@ pw.Widget _classicBulletRow({
     children: [
       pw.Text(
         '•',
-        style: pw.TextStyle(
+        style: _classicSidebarPdfTextStyle(
+          calibri,
+          ResumeTypography.classicSidebarSectionTitleWeight,
+          fontSize,
           color: bulletColor,
-          fontSize: fontSize,
-          fontWeight: pw.FontWeight.bold,
         ),
       ),
       pw.SizedBox(width: 6),
       pw.Expanded(
         child: pw.Text(
           text,
-          style: pw.TextStyle(color: textColor, fontSize: fontSize),
+          style: _classicSidebarPdfTextStyle(
+            calibri,
+            textWeight,
+            fontSize,
+            color: textColor,
+          ),
         ),
       ),
     ],
@@ -964,6 +1026,24 @@ List<String> _classicSidebarLanguageLines(ResumeData resume) {
       .map((item) => item.trim())
       .where((item) => item.isNotEmpty)
       .toList();
+}
+
+String _classicSidebarExperienceCompanyDatesLine(WorkExperience item) {
+  final company = item.company.trim();
+  final dates = [
+    item.startDate.trim(),
+    item.endDate.trim(),
+  ].where((value) => value.isNotEmpty).join(' - ');
+  if (company.isEmpty && dates.isEmpty) {
+    return '';
+  }
+  if (company.isEmpty) {
+    return dates;
+  }
+  if (dates.isEmpty) {
+    return company;
+  }
+  return '$company · $dates';
 }
 
 String _classicSidebarInitials(ResumeData resume) {
@@ -5056,6 +5136,26 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.classicSidebar) {
+      final calibri = await _ensureCalibriPdfFonts();
+      final bodyPt =
+          resume.classicSidebarScaledPt(ResumeTypography.classicSidebarBodyPt);
+      final document = pw.Document(
+        theme: await resumePdfThemeForCalibri(
+          calibri,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.classicSidebarBodyLineHeight,
+        ),
+      );
+      _addClassicSidebarTemplatePage(
+        document,
+        resume,
+        calibri: calibri,
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
@@ -5080,11 +5180,6 @@ class ResumePdfService {
       case ResumeTemplate.creative:
         break;
       case ResumeTemplate.classicSidebar:
-        _addClassicSidebarTemplatePage(
-          document,
-          resume,
-          profileImage: profileImage,
-        );
         break;
       case ResumeTemplate.detailsSidebar:
         _addDetailsSidebarTemplatePage(document, resume);
@@ -5139,6 +5234,28 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.classicSidebar) {
+      final calibri = await _ensureCalibriPdfFonts();
+      final bodyPt =
+          resume.classicSidebarScaledPt(ResumeTypography.classicSidebarBodyPt);
+      final document = pw.Document(
+        theme: await resumePdfThemeForCalibri(
+          calibri,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.classicSidebarBodyLineHeight,
+        ),
+      );
+      _addHighlightedClassicSidebarTemplatePage(
+        document,
+        resume,
+        calibri: calibri,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
@@ -5164,13 +5281,6 @@ class ResumePdfService {
       case ResumeTemplate.creative:
         break;
       case ResumeTemplate.classicSidebar:
-        _addHighlightedClassicSidebarTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
         break;
       case ResumeTemplate.detailsSidebar:
         _addHighlightedDetailsSidebarTemplatePage(

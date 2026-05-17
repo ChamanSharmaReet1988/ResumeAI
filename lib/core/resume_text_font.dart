@@ -98,6 +98,32 @@ abstract final class ResumeTypography {
   /// Profile Sidebar body copy (preview + PDF).
   static const Color creativeBodyTextColor = Color(0xFF000000);
 
+  /// Classic Sidebar (template 3) — same type scale as Profile Sidebar, independent tokens.
+  static const double classicSidebarNamePt = 26;
+  static const int classicSidebarNameWeight = 600;
+  static const double classicSidebarAvatarInitialsNameRatio = 1.15;
+  static const double classicSidebarAvatarInitialsExtraPt = 18;
+
+  /// Sidebar avatar initials (scaled name × ratio + extra points).
+  static double classicSidebarAvatarInitialsFontPt(double scaledNamePt) =>
+      scaledNamePt * classicSidebarAvatarInitialsNameRatio +
+      classicSidebarAvatarInitialsExtraPt;
+  static const int classicSidebarSidebarContentWeight = 300;
+  static const double classicSidebarSectionTitlePt = 16;
+  static const int classicSidebarSectionTitleWeight = 500;
+  static const double classicSidebarBodyPt = 14;
+  static const int classicSidebarBodyWeight = 300;
+  static const double classicSidebarSubtitlePt = 15;
+  static const int classicSidebarSubtitleWeight = 400;
+
+  static const double classicSidebarBodyLineHeight = 1.2;
+
+  static double classicSidebarBodyPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (classicSidebarBodyLineHeight - 1);
+
+  /// Classic Sidebar body copy (preview + PDF).
+  static const Color classicSidebarBodyTextColor = Color(0xFF000000);
+
   /// Calibri (Carlito) text style for in-app resume previews.
   static TextStyle calibriPreviewStyle({
     required int weight,
