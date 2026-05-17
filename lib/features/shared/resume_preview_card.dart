@@ -77,9 +77,8 @@ class ResumePreviewCanvas extends StatelessWidget {
     final previewTemplate = resume.template.userFacingTemplate;
     final base = theme.textTheme;
     final ff = switch (previewTemplate) {
-      ResumeTemplate.accentStrip ||
-      ResumeTemplate.creative ||
-      ResumeTemplate.classicSidebar =>
+      ResumeTemplate.accentStrip || ResumeTemplate.atsStructured => 'Garamond',
+      ResumeTemplate.creative || ResumeTemplate.classicSidebar =>
         ResumeTextFont.calibri.flutterFontFamily,
       _ => resume.resumeTextFont.flutterFontFamily,
     };
@@ -152,7 +151,11 @@ class ResumePreviewCanvas extends StatelessWidget {
         resume: resume,
       ),
       ResumeTemplate.accentStrip => _AccentStripPreview(resume: resume),
-      ResumeTemplate.atsStructured => _AtsStructuredPreview(resume: resume),
+      ResumeTemplate.atsStructured => _AtsStructuredPreview(
+        resume: resume,
+        showAllContent: showAllContent,
+        scrollable: scrollable,
+      ),
       ResumeTemplate.atsSerifRules => _AtsSerifRulesPreview(resume: resume),
       ResumeTemplate.atsModernFlow => _AtsModernFlowPreview(resume: resume),
       ResumeTemplate.atsExecutive => _AtsExecutivePreview(resume: resume),
@@ -879,7 +882,7 @@ class _CreativePreview extends StatelessWidget {
     final customSections = showAllContent
         ? resume.visibleCustomSections
         : const <CustomSectionItem>[];
-    final contacts = _pdfAlignedContactItems(resume).take(4).toList();
+    final contacts = _pdfAlignedContactItems(resume);
     final midpoint = (skills.length / 2).ceil();
     const sectionGap = 20.0;
     const headingGap = 6.0;
@@ -1776,92 +1779,209 @@ class _DetailsSidebarPreview extends StatelessWidget {
   }
 }
 
-/// Fixed type scale for ATS template previews (in-app card only).
-const double _atsPreviewNameFontSize = 24;
+/// Structured ATS preview — matches Accent Strip type scale.
+const double _atsPreviewNameFontSize = ResumeTypography.accentStripNamePt;
+const double _atsPreviewJobTitleFontSize =
+    ResumeTypography.accentStripSectionTitlePt;
+const double _atsPreviewSectionTitleFontSize =
+    ResumeTypography.accentStripSectionTitlePt;
+
+/// Other ATS template previews (unchanged scale).
 const double _atsPreviewTitleFontSize = 18;
 
 class _AtsStructuredPreview extends StatelessWidget {
-  const _AtsStructuredPreview({required this.resume});
+  const _AtsStructuredPreview({
+    required this.resume,
+    this.showAllContent = false,
+    this.scrollable = true,
+  });
 
   final ResumeData resume;
+  final bool showAllContent;
+  final bool scrollable;
 
   static const Color _band = Color(0xFFE6E6E6);
+  static const double _sectionGap = 20;
 
   @override
   Widget build(BuildContext context) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
-    final body = resume.effectiveBodyFontPt.toDouble();
-    final style = TextStyle(
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final bodyStyle = ResumeTypography.garamondPreviewStyle(
+      weight: ResumeTypography.atsStructuredBodyWeight,
+      fontSize: bodyPt,
       color: onSurface,
-      fontSize: body,
+      height: ResumeTypography.textLineHeight,
+    );
+    final subtitleStyle = ResumeTypography.garamondPreviewStyle(
+      weight: ResumeTypography.atsStructuredSubtitleWeight,
+      fontSize: ResumeTypography.atsStructuredSubtitlePt,
+      color: onSurface,
       height: ResumeTypography.textLineHeight,
     );
     final contact = _atsPreviewContactLines(resume);
+    final works = showAllContent
+        ? resume.visibleWorkExperiences
+        : resume.visibleWorkExperiences.take(2).toList();
+    final education = showAllContent
+        ? resume.visibleEducation
+        : resume.visibleEducation.take(2).toList();
+    final skills = _pdfAlignedSkills(resume);
+    final projects = showAllContent
+        ? resume.visibleProjects
+        : resume.visibleProjects.take(1).toList();
+    final customSections = showAllContent
+        ? resume.visibleCustomSections
+        : resume.visibleCustomSections.take(1).toList();
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          _pdfAlignedDisplayName(resume).toUpperCase(),
+          textAlign: TextAlign.center,
+          style: ResumeTypography.garamondPreviewStyle(
+            weight: ResumeTypography.atsStructuredNameWeight,
+            fontSize: _atsPreviewNameFontSize,
+            color: onSurface,
+            height: ResumeTypography.textLineHeight,
+          ),
+          maxLines: showAllContent ? null : 2,
+          overflow: showAllContent ? null : TextOverflow.ellipsis,
+        ),
+        if (resume.jobTitle.trim().isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            resume.jobTitle.trim(),
+            textAlign: TextAlign.center,
+            style: ResumeTypography.garamondPreviewStyle(
+              weight: ResumeTypography.atsStructuredTitleWeight,
+              fontSize: _atsPreviewJobTitleFontSize,
+              color: onSurface,
+              height: ResumeTypography.textLineHeight,
+            ),
+            maxLines: showAllContent ? null : 2,
+            overflow: showAllContent ? null : TextOverflow.ellipsis,
+          ),
+        ],
+        if (contact.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          for (final line in contact)
+            Text(
+              line,
+              textAlign: TextAlign.center,
+              style: ResumeTypography.garamondPreviewStyle(
+                weight: ResumeTypography.atsStructuredContactWeight,
+                fontSize: bodyPt,
+                color: onSurface,
+                height: ResumeTypography.textLineHeight,
+              ),
+              maxLines: showAllContent ? null : 2,
+              overflow: showAllContent ? null : TextOverflow.ellipsis,
+            ),
+        ],
+        const SizedBox(height: 8),
+        Container(height: 1, color: onSurface.withValues(alpha: 0.85)),
+        const SizedBox(height: 10),
+        _atsBandTitle('SUMMARY', onSurface),
+        const SizedBox(height: 6),
+        Text(
+          resume.summary.trim().ifBlank(
+            'Concise summary tailored to your target roles.',
+          ),
+          style: bodyStyle,
+          maxLines: showAllContent ? null : 6,
+          overflow: showAllContent ? null : TextOverflow.ellipsis,
+        ),
+        if (resume.includeWorkInResume) ...[
+          const SizedBox(height: _sectionGap),
+          _atsBandTitle('EXPERIENCE', onSurface),
+          const SizedBox(height: 6),
+          ..._atsStructuredExperienceBlocks(
+            works: works,
+            bodyStyle: bodyStyle,
+            subtitleStyle: subtitleStyle,
+            showAllContent: showAllContent,
+          ),
+        ],
+        if (resume.includeEducationInResume) ...[
+          const SizedBox(height: _sectionGap),
+          _atsBandTitle('EDUCATION', onSurface),
+          const SizedBox(height: 6),
+          ..._atsStructuredEducationBlocks(
+            items: education,
+            bodyStyle: bodyStyle,
+            subtitleStyle: subtitleStyle,
+            showAllContent: showAllContent,
+          ),
+        ],
+        if (resume.includeSkillsInResume && skills.isNotEmpty) ...[
+          const SizedBox(height: _sectionGap),
+          _atsBandTitle('SKILLS', onSurface),
+          const SizedBox(height: 6),
+          _atsStructuredSkillsGrid(
+            skills: skills,
+            bodyStyle: bodyStyle,
+            showAllContent: showAllContent,
+          ),
+        ],
+        if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
+          const SizedBox(height: _sectionGap),
+          _atsBandTitle('PROJECTS', onSurface),
+          const SizedBox(height: 6),
+          for (final project in projects)
+            ..._atsStructuredProjectBlocks(
+              project: project,
+              bodyStyle: bodyStyle,
+              subtitleStyle: subtitleStyle,
+              showAllContent: showAllContent,
+            ),
+        ],
+        for (final section in customSections) ...[
+          const SizedBox(height: _sectionGap),
+          _atsBandTitle(
+            section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
+            onSurface,
+          ),
+          const SizedBox(height: 6),
+          if (section.layoutMode == CustomSectionLayoutMode.bullets)
+            ...section.bullets
+                .where((b) => b.trim().isNotEmpty)
+                .map(
+                  (b) => Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '• ${b.trim()}',
+                      style: bodyStyle,
+                      maxLines: showAllContent ? null : 3,
+                      overflow:
+                          showAllContent ? null : TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+          else
+            Text(
+              section.content.trim(),
+              style: bodyStyle,
+              maxLines: showAllContent ? null : 5,
+              overflow: showAllContent ? null : TextOverflow.ellipsis,
+            ),
+        ],
+      ],
+    );
 
     return ColoredBox(
       color: Colors.white,
       child: Padding(
-        padding: _CorporatePdfMetrics.sectionOuter(),
-        child: SingleChildScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                _pdfAlignedDisplayName(resume).toUpperCase(),
-                textAlign: TextAlign.center,
-                style: style.copyWith(
-                  fontSize: _atsPreviewNameFontSize,
-                  fontWeight: FontWeight.w900,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (resume.jobTitle.trim().isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  resume.jobTitle.trim(),
-                  textAlign: TextAlign.center,
-                  style: style.copyWith(
-                    fontSize: _atsPreviewTitleFontSize,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              if (contact.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                for (final line in contact)
-                  Text(
-                    line,
-                    textAlign: TextAlign.center,
-                    style: style.copyWith(fontSize: body - 0.5),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-              const SizedBox(height: 8),
-              Container(height: 1, color: onSurface.withValues(alpha: 0.85)),
-              const SizedBox(height: 10),
-              _atsBandTitle('SUMMARY'),
-              const SizedBox(height: 6),
-              Text(
-                resume.summary.trim().ifBlank(
-                  'Concise summary tailored to your target roles.',
-                ),
-                style: style,
-                maxLines: 6,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
+        padding: const EdgeInsets.all(ResumeTypography.atsStructuredPageInsetPt),
+        child: scrollable
+            ? SingleChildScrollView(child: content)
+            : content,
       ),
     );
   }
 
-  Widget _atsBandTitle(String title) {
+  Widget _atsBandTitle(String title, Color onSurface) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1869,14 +1989,200 @@ class _AtsStructuredPreview extends StatelessWidget {
       child: Text(
         title,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w800,
-          decoration: TextDecoration.underline,
-        ),
+        style: ResumeTypography.garamondPreviewStyle(
+          weight: ResumeTypography.atsStructuredTitleWeight,
+          fontSize: _atsPreviewSectionTitleFontSize,
+          color: onSurface,
+          height: ResumeTypography.textLineHeight,
+        ).copyWith(decoration: TextDecoration.underline),
       ),
     );
   }
+}
+
+List<Widget> _atsStructuredExperienceBlocks({
+  required List<WorkExperience> works,
+  required TextStyle bodyStyle,
+  required TextStyle subtitleStyle,
+  required bool showAllContent,
+}) {
+  if (works.isEmpty) {
+    return [Text('Add experience entries with dates, roles, and outcomes.', style: bodyStyle)];
+  }
+  final out = <Widget>[];
+  for (final item in works) {
+    final dateLabel = educationDateRangeLabel(item.startDate, item.endDate);
+    out.add(
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              '* ${item.role.trim().ifBlank('Role')}, ${item.company.trim().ifBlank('Company')}',
+              style: subtitleStyle,
+              maxLines: showAllContent ? null : 3,
+              overflow: showAllContent ? null : TextOverflow.ellipsis,
+            ),
+          ),
+          if (dateLabel.isNotEmpty)
+            Text(
+              dateLabel,
+              style: bodyStyle.copyWith(fontStyle: FontStyle.italic),
+              maxLines: showAllContent ? null : 2,
+              overflow: showAllContent ? null : TextOverflow.ellipsis,
+            ),
+        ],
+      ),
+    );
+    final bullets = _workBulletLines(item);
+    final limit = showAllContent ? bullets.length : 3;
+    for (var i = 0; i < bullets.length && i < limit; i++) {
+      out.add(
+        Padding(
+          padding: const EdgeInsets.only(left: 2, top: 2),
+          child: Text(
+            '• ${bullets[i]}',
+            style: bodyStyle,
+            maxLines: showAllContent ? null : 4,
+            overflow: showAllContent ? null : TextOverflow.ellipsis,
+          ),
+        ),
+      );
+    }
+    out.add(const SizedBox(height: 8));
+  }
+  return out;
+}
+
+List<Widget> _atsStructuredEducationBlocks({
+  required List<EducationItem> items,
+  required TextStyle bodyStyle,
+  required TextStyle subtitleStyle,
+  required bool showAllContent,
+}) {
+  if (items.isEmpty) {
+    return [Text('Add your education.', style: bodyStyle)];
+  }
+  final out = <Widget>[];
+  for (final item in items) {
+    final dateLabel = educationDateRangeLabel(item.startDate, item.endDate);
+    out.add(
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              '* ${item.institution.trim().ifBlank('School')}',
+              style: subtitleStyle,
+              maxLines: showAllContent ? null : 2,
+              overflow: showAllContent ? null : TextOverflow.ellipsis,
+            ),
+          ),
+          if (dateLabel.isNotEmpty)
+            Text(
+              dateLabel,
+              style: bodyStyle,
+              maxLines: showAllContent ? null : 2,
+              overflow: showAllContent ? null : TextOverflow.ellipsis,
+            ),
+        ],
+      ),
+    );
+    out.add(
+      Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Text(
+          item.degree.trim().ifBlank('Degree'),
+          style: bodyStyle.copyWith(fontStyle: FontStyle.italic),
+          maxLines: showAllContent ? null : 3,
+          overflow: showAllContent ? null : TextOverflow.ellipsis,
+        ),
+      ),
+    );
+    out.add(const SizedBox(height: 8));
+  }
+  return out;
+}
+
+Widget _atsStructuredSkillsGrid({
+  required List<String> skills,
+  required TextStyle bodyStyle,
+  required bool showAllContent,
+}) {
+  final items = showAllContent ? skills : skills.take(8).toList();
+  if (items.isEmpty) {
+    return Text('List relevant tools and competencies.', style: bodyStyle);
+  }
+  final midpoint = (items.length / 2).ceil();
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final skill in items.take(midpoint))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 3),
+                child: Text(
+                  '• $skill',
+                  style: bodyStyle,
+                  maxLines: showAllContent ? null : 2,
+                  overflow: showAllContent ? null : TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+        ),
+      ),
+      const SizedBox(width: 16),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final skill in items.skip(midpoint))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 3),
+                child: Text(
+                  '• $skill',
+                  style: bodyStyle,
+                  maxLines: showAllContent ? null : 2,
+                  overflow: showAllContent ? null : TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+List<Widget> _atsStructuredProjectBlocks({
+  required ProjectItem project,
+  required TextStyle bodyStyle,
+  required TextStyle subtitleStyle,
+  required bool showAllContent,
+}) {
+  final bullets = _projectBulletLines(project);
+  return [
+    Text(
+      project.title.trim().ifBlank('Project'),
+      style: subtitleStyle,
+      maxLines: showAllContent ? null : 2,
+      overflow: showAllContent ? null : TextOverflow.ellipsis,
+    ),
+    for (var i = 0; i < bullets.length; i++)
+      if (showAllContent || i < 3)
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            '• ${bullets[i]}',
+            style: bodyStyle,
+            maxLines: showAllContent ? null : 4,
+            overflow: showAllContent ? null : TextOverflow.ellipsis,
+          ),
+        ),
+    const SizedBox(height: 8),
+  ];
 }
 
 class _AccentStripPreview extends StatelessWidget {
@@ -1901,10 +2207,9 @@ class _AccentStripPreview extends StatelessWidget {
     final projects = resume.visibleProjects.take(1).toList();
     final customSections = resume.visibleCustomSections.take(1).toList();
 
-    final bodyStyle = ResumeTypography.nunitoBodyPreviewStyle(
+    final bodyStyle = ResumeTypography.accentStripBodyPreviewStyle(
       fontSize: bodyPt,
       color: bodyTextColor,
-      height: ResumeTypography.creativeBodyLineHeight,
     );
     final headingStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w600,
@@ -1941,7 +2246,7 @@ class _AccentStripPreview extends StatelessWidget {
             : constraints.maxWidth / ResumePreviewCard._a4AspectRatio;
 
         return DefaultTextStyle.merge(
-          style: const TextStyle(fontFamily: 'Calibri'),
+          style: const TextStyle(fontFamily: 'Garamond'),
           child: ColoredBox(
             color: Colors.white,
             child: SizedBox(
@@ -2803,23 +3108,8 @@ class _AtsExecutivePreview extends StatelessWidget {
   }
 }
 
-List<String> _atsPreviewContactLines(ResumeData resume) {
-  final email = resume.email.trim();
-  final phone = resume.phone.trim();
-  final loc = resume.location.trim();
-  final lines = <String>[];
-  if (loc.isNotEmpty) {
-    lines.add(loc);
-  }
-  if (email.isNotEmpty && phone.isNotEmpty) {
-    lines.add('$email    $phone');
-  } else if (email.isNotEmpty) {
-    lines.add(email);
-  } else if (phone.isNotEmpty) {
-    lines.add(phone);
-  }
-  return lines;
-}
+List<String> _atsPreviewContactLines(ResumeData resume) =>
+    resume.atsStructuredHeaderContactLines();
 
 class _ClassicSidebarAvatarPlaceholder extends StatelessWidget {
   const _ClassicSidebarAvatarPlaceholder({
@@ -3793,16 +4083,8 @@ String _pdfAlignedInitials(ResumeData resume) {
 }
 
 /// Same contact order as [ResumePdfService._resumeContactItems].
-List<String> _pdfAlignedContactItems(ResumeData resume) {
-  return [
-    resume.email.trim(),
-    resume.location.trim(),
-    resume.phone.trim(),
-    resume.website.trim(),
-    resume.githubLink.trim(),
-    resume.linkedinLink.trim(),
-  ].where((item) => item.isNotEmpty).toList();
-}
+List<String> _pdfAlignedContactItems(ResumeData resume) =>
+    resume.resumeContactItems();
 
 /// Same fallback skills as [ResumePdfService._skillsForDisplay].
 List<String> _pdfAlignedSkills(ResumeData resume) {

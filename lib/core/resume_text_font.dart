@@ -15,6 +15,21 @@ abstract final class ResumeTypography {
   static const double accentStripNamePt = 24;
   static const double accentStripSectionTitlePt = 14;
   static const double accentStripSubsectionPt = 13;
+
+  /// Structured ATS (first ATS template) — same Garamond sizes as Accent Strip.
+  static const double atsStructuredNamePt = accentStripNamePt;
+  static const int atsStructuredNameWeight = 700;
+  static const double atsStructuredJobTitlePt = accentStripSectionTitlePt;
+  static const int atsStructuredTitleWeight = 600;
+  static const double atsStructuredSectionTitlePt = accentStripSectionTitlePt;
+  static const double atsStructuredSubtitlePt = accentStripSubsectionPt;
+  static const int atsStructuredSubtitleWeight = 500;
+  static const int atsStructuredBodyWeight = 400;
+  static const int atsStructuredContactWeight = 500;
+
+  /// Page margin for Structured ATS (preview px = PDF pt).
+  static const double atsStructuredPageInsetPt = 40;
+
   /// Section titles, headings (single-line friendly).
   static const double textLineHeight = 1.4;
 
@@ -123,7 +138,7 @@ abstract final class ResumeTypography {
   /// Classic Sidebar main body — Nunito Regular (preview + PDF).
   static const int classicSidebarBodyWeight = 400;
 
-  /// Accent Strip body — same Nunito Regular weight as templates 2–3.
+  /// Accent Strip body — Garamond Regular (400).
   static const int accentStripBodyWeight = 400;
 
   static const double classicSidebarSubtitlePt = 13;
@@ -137,7 +152,20 @@ abstract final class ResumeTypography {
   /// Classic Sidebar body copy (preview + PDF).
   static const Color classicSidebarBodyTextColor = Color(0xFF000000);
 
-  /// Templates 2–4 body — Nunito Regular at [creativeBodyWeight] (not Carlito).
+  /// Accent Strip body — Garamond at [accentStripBodyWeight].
+  static TextStyle accentStripBodyPreviewStyle({
+    double? fontSize,
+    Color? color,
+    double? height,
+  }) =>
+      garamondPreviewStyle(
+        weight: accentStripBodyWeight,
+        fontSize: fontSize,
+        color: color,
+        height: height ?? creativeBodyLineHeight,
+      );
+
+  /// Templates 2–3 body — Nunito Regular at [creativeBodyWeight] (not Carlito).
   static TextStyle nunitoBodyPreviewStyle({
     double? fontSize,
     Color? color,

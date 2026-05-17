@@ -85,9 +85,15 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
   CustomSectionItem item, {
   InterPdfFonts? inter,
   CalibriPdfFonts? calibri,
+  GaramondPdfFonts? garamond,
   double? bodyFontPt,
+  bool accentStripGaramondBody = false,
 }) {
-  final bodyStyle = calibri != null && bodyFontPt != null
+  final bodyStyle = garamond != null && bodyFontPt != null
+      ? accentStripGaramondBody
+      ? accentStripBodyPdfTextStyle(garamond, bodyFontPt)
+      : atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
+      : calibri != null && bodyFontPt != null
       ? nunitoBodyPdfTextStyle(calibri, bodyFontPt)
       : inter != null && bodyFontPt != null
       ? interDarkHeaderBodyPdfTextStyle(inter, bodyFontPt)
@@ -5209,6 +5215,13 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsStructured) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsStructuredTemplatePage(document, resume, garamond: garamond);
+      return document.save();
+    }
+
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
@@ -5240,7 +5253,6 @@ class ResumePdfService {
       case ResumeTemplate.accentStrip:
         break;
       case ResumeTemplate.atsStructured:
-        _addAtsStructuredTemplatePage(document, resume);
         break;
       case ResumeTemplate.atsSerifRules:
         _addAtsSerifRulesTemplatePage(document, resume);
@@ -5333,6 +5345,20 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsStructured) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsStructuredTemplatePage(
+        document,
+        resume,
+        garamond: garamond,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
@@ -5371,13 +5397,6 @@ class ResumePdfService {
       case ResumeTemplate.accentStrip:
         break;
       case ResumeTemplate.atsStructured:
-        _addAtsStructuredTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
         break;
       case ResumeTemplate.atsSerifRules:
         _addAtsSerifRulesTemplatePage(
@@ -6083,16 +6102,8 @@ class ResumePdfService {
     return words.map((part) => part[0].toUpperCase()).join();
   }
 
-  List<String> _resumeContactItems(ResumeData resume) {
-    return [
-      resume.email.trim(),
-      resume.location.trim(),
-      resume.phone.trim(),
-      resume.website.trim(),
-      resume.githubLink.trim(),
-      resume.linkedinLink.trim(),
-    ].where((item) => item.isNotEmpty).toList();
-  }
+  List<String> _resumeContactItems(ResumeData resume) =>
+      resume.resumeContactItems();
 
   List<String> _skillsForDisplay(ResumeData resume) {
     if (!resume.includeSkillsInResume) {
@@ -6684,10 +6695,21 @@ class ResumePdfService {
   List<pw.Widget> _buildCompactProjectWidgets(
     ProjectItem item, {
     InterPdfFonts? inter,
+    GaramondPdfFonts? garamond,
     double bodyFontPt = ResumeTypography.bodyPt,
   }) {
     final bullets = _projectBulletLines(item);
-    final titleWidget = inter != null
+    final titleWidget = garamond != null
+        ? pw.Text(
+            item.title.ifEmpty('Project'),
+            style: garamondPdfTextStyle(
+              garamond,
+              ResumeTypography.atsStructuredSubtitleWeight,
+              fontSize: ResumeTypography.atsStructuredSubtitlePt,
+              color: PdfColors.black,
+            ),
+          )
+        : inter != null
         ? pw.Text(
             item.title.ifEmpty('Project'),
             style: interPdfTextStyle(
@@ -6698,7 +6720,9 @@ class ResumePdfService {
             ).copyWith(lineSpacing: 0),
           )
         : _corporateStrokeLabelText(item.title.ifEmpty('Project'));
-    final bulletStyle = inter != null
+    final bulletStyle = garamond != null
+        ? atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
+        : inter != null
         ? interDarkHeaderBodyPdfTextStyle(inter, bodyFontPt)
         : pw.TextStyle(
             color: PdfColors.black,

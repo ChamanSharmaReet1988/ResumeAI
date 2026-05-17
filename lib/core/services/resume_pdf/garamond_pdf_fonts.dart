@@ -30,6 +30,36 @@ class GaramondPdfFonts {
   pw.Font get w700 => fontFor(ResumeFontWeight.w700);
 }
 
+pw.TextStyle atsStructuredBodyPdfTextStyle(
+  GaramondPdfFonts fonts,
+  double bodyPt, {
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    garamondPdfTextStyle(
+      fonts,
+      ResumeTypography.atsStructuredBodyWeight,
+      fontSize: bodyPt,
+      color: color,
+      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+      fontStyle: fontStyle,
+    );
+
+pw.TextStyle accentStripBodyPdfTextStyle(
+  GaramondPdfFonts fonts,
+  double bodyPt, {
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    garamondPdfTextStyle(
+      fonts,
+      ResumeTypography.accentStripBodyWeight,
+      fontSize: bodyPt,
+      color: color,
+      lineSpacing: ResumeTypography.creativeBodyPdfLineSpacingFor(bodyPt),
+      fontStyle: fontStyle,
+    );
+
 pw.TextStyle garamondPdfTextStyle(
   GaramondPdfFonts fonts,
   int weight, {

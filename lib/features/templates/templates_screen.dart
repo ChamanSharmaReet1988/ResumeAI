@@ -878,14 +878,10 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       );
     }
     if (template == ResumeTemplate.atsStructured) {
-      return _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _AtsStructuredTemplateArt(
-          resume: _applyTemplatePreviewPalette(
-            _atsSampleFor(ResumeTemplate.atsStructured),
-            paletteSeed,
-          ),
-          detailed: true,
+      return _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsStructured),
+          paletteSeed,
         ),
       );
     }
@@ -1755,13 +1751,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
     final subtitleStyle = _subtitleStyle();
     final experienceDateStyle = _experienceDateStyle();
     final sidebarStyle = _sidebarStyle();
-    final contacts = [
-      resume.email.trim(),
-      resume.location.trim(),
-      resume.phone.trim(),
-      resume.website.trim(),
-      resume.githubLink.trim(),
-    ].where((item) => item.isNotEmpty).take(4).toList();
+    final contacts = resume.resumeContactItems();
     final experiences = resume.workExperiences
         .where((item) => !item.isBlank)
         .take(2)
@@ -2093,26 +2083,40 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
   static const Color _ink = Color(0xFF1F2937);
   static const Color _band = Color(0xFFE5E7EB);
 
+  /// Matches [_ResumeTemplatePreviewArt] / PDF A4 width (240px tile art).
+  static const double _layoutScale = 240 / 595.28;
+
+  static double _scaledPt(double pt) => pt * _layoutScale;
+
+  TextStyle _garamondBody(double fontSize, {int weight = ResumeTypography.atsStructuredBodyWeight}) =>
+      ResumeTypography.garamondPreviewStyle(
+        weight: weight,
+        fontSize: fontSize,
+        color: _ink,
+        height: ResumeTypography.textLineHeight,
+      );
+
   @override
   Widget build(BuildContext context) {
-    final fs = detailed ? 4.75 : 4.35;
-    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
-    final skillsBody = body.copyWith(fontSize: math.max(3.25, fs - 0.85));
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final body = _garamondBody(_scaledPt(bodyPt));
+    final contactStyle = _garamondBody(
+      _scaledPt(bodyPt),
+      weight: ResumeTypography.atsStructuredContactWeight,
+    );
+    final subtitleStyle = _garamondBody(
+      _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
+      weight: ResumeTypography.atsStructuredSubtitleWeight,
+    );
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
     final projects = resume.visibleProjects;
-    final contactLine = [
-      if (resume.email.trim().isNotEmpty && resume.phone.trim().isNotEmpty)
-        '${resume.email.trim()}    ${resume.phone.trim()}'
-      else if (resume.email.trim().isNotEmpty)
-        resume.email.trim()
-      else if (resume.phone.trim().isNotEmpty)
-        resume.phone.trim(),
-    ];
+    final contactLines = resume.atsStructuredHeaderContactLines();
 
+    final pageInset = _scaledPt(ResumeTypography.atsStructuredPageInsetPt);
     final pageContent = Padding(
-          padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
+          padding: EdgeInsets.fromLTRB(pageInset, pageInset, pageInset, pageInset),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2122,10 +2126,9 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: _ink,
-                  fontSize: detailed ? 8.2 : 7.6,
-                  fontWeight: FontWeight.w900,
+                style: _garamondBody(
+                  _scaledPt(ResumeTypography.atsStructuredNamePt),
+                  weight: ResumeTypography.atsStructuredNameWeight,
                 ),
               ),
               if (resume.jobTitle.trim().isNotEmpty) ...[
@@ -2135,31 +2138,25 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: body.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: fs + 0.35,
+                  style: _garamondBody(
+                    _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
+                    weight: ResumeTypography.atsStructuredTitleWeight,
                   ),
                 ),
               ],
-              if (resume.location.trim().isNotEmpty) ...[
+              if (contactLines.isNotEmpty) ...[
                 const SizedBox(height: 3),
-                Text(
-                  resume.location.trim(),
-                  textAlign: TextAlign.center,
-                  maxLines: detailed ? 3 : 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: body,
-                ),
-              ],
-              if (contactLine.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  contactLine.first,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: body,
-                ),
+                for (final line in contactLines)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      line,
+                      textAlign: TextAlign.center,
+                      maxLines: detailed ? 3 : 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: contactStyle,
+                    ),
+                  ),
               ],
               const SizedBox(height: 5),
               Container(height: 1, color: _ink.withValues(alpha: 0.85)),
@@ -2171,19 +2168,19 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
                 style: body,
               ),
               _atsGrayBandLabel('EXPERIENCE'),
-              ..._atsStructuredJobs(works, body),
+              ..._atsStructuredJobs(works, body, subtitleStyle),
               _atsGrayBandLabel('EDUCATION'),
-              ..._atsStructuredSchools(edu, body),
+              ..._atsStructuredSchools(edu, body, subtitleStyle),
               _atsGrayBandLabel('SKILLS'),
               _MiniBulletColumn(
                 items: skills.take(detailed ? 8 : 5).toList(),
-                textStyle: skillsBody,
+                textStyle: body,
               ),
               if (detailed && projects.isNotEmpty) ...[
                 _atsGrayBandLabel('PROJECTS'),
                 Text(
                   projects.first.title.trim(),
-                  style: body.copyWith(fontWeight: FontWeight.w700),
+                  style: subtitleStyle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2255,12 +2252,12 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
             child: Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 4.75,
-                fontWeight: FontWeight.w800,
-                decoration: TextDecoration.underline,
+              style: ResumeTypography.garamondPreviewStyle(
+                weight: ResumeTypography.atsStructuredTitleWeight,
+                fontSize: _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
                 color: _ink,
-              ),
+                height: ResumeTypography.textLineHeight,
+              ).copyWith(decoration: TextDecoration.underline),
             ),
           ),
           const SizedBox(height: 4),
@@ -2269,7 +2266,11 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
     );
   }
 
-  List<Widget> _atsStructuredJobs(List<WorkExperience> works, TextStyle body) {
+  List<Widget> _atsStructuredJobs(
+    List<WorkExperience> works,
+    TextStyle body,
+    TextStyle subtitleStyle,
+  ) {
     if (works.isEmpty) {
       return [Text('Add experience.', style: body), const SizedBox(height: 4)];
     }
@@ -2284,7 +2285,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
             Expanded(
               child: Text(
                 '* ${w.role.trim()}, ${w.company.trim()}',
-                style: body.copyWith(fontWeight: FontWeight.w700),
+                style: subtitleStyle,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -2294,7 +2295,9 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
                 child: Text(
                   dr,
                   textAlign: TextAlign.right,
-                  style: body.copyWith(fontSize: (body.fontSize ?? 4.5) - 0.25),
+                  style: body.copyWith(
+                    fontSize: (body.fontSize ?? 4.5) - 0.25,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2322,7 +2325,11 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
     return out;
   }
 
-  List<Widget> _atsStructuredSchools(List<EducationItem> items, TextStyle body) {
+  List<Widget> _atsStructuredSchools(
+    List<EducationItem> items,
+    TextStyle body,
+    TextStyle subtitleStyle,
+  ) {
     if (items.isEmpty) {
       return [Text('Add education.', style: body), const SizedBox(height: 4)];
     }
@@ -2336,7 +2343,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
             Expanded(
               child: Text(
                 '* ${e.institution.trim()}',
-                style: body.copyWith(fontWeight: FontWeight.w700),
+                style: subtitleStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

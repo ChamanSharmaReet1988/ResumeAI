@@ -116,6 +116,47 @@ extension ResumeCorporateStyleX on ResumeData {
     return v;
   }
 
+  /// Sidebar / PDF contact order (email, location, phone, website, GitHub, LinkedIn).
+  List<String> resumeContactItems() => [
+    email.trim(),
+    location.trim(),
+    phone.trim(),
+    website.trim(),
+    githubLink.trim(),
+    linkedinLink.trim(),
+  ].where((item) => item.isNotEmpty).toList();
+
+  /// Structured ATS header contact block (location, email/phone, website, GitHub, LinkedIn).
+  List<String> atsStructuredHeaderContactLines() {
+    final email = this.email.trim();
+    final phone = this.phone.trim();
+    final loc = location.trim();
+    final web = website.trim();
+    final github = githubLink.trim();
+    final linkedin = linkedinLink.trim();
+    final lines = <String>[];
+    if (loc.isNotEmpty) {
+      lines.add(loc);
+    }
+    if (email.isNotEmpty && phone.isNotEmpty) {
+      lines.add('$email    $phone');
+    } else if (email.isNotEmpty) {
+      lines.add(email);
+    } else if (phone.isNotEmpty) {
+      lines.add(phone);
+    }
+    if (web.isNotEmpty) {
+      lines.add(web);
+    }
+    if (github.isNotEmpty) {
+      lines.add(github);
+    }
+    if (linkedin.isNotEmpty) {
+      lines.add(linkedin);
+    }
+    return lines;
+  }
+
   /// Scales Profile Sidebar (template 2) type from the body font slider (10–12 pt).
   double get creativeFontScale => effectiveBodyFontPt / kResumeBodyFontPtDefault;
 
