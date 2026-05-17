@@ -6007,6 +6007,7 @@ class ResumePdfService {
 
   List<String> _resumeContactItems(ResumeData resume) {
     return [
+      resume.email.trim(),
       resume.location.trim(),
       resume.phone.trim(),
       resume.website.trim(),

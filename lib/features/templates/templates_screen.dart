@@ -1608,6 +1608,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
     final experienceDateStyle = _experienceDateStyle();
     final sidebarStyle = _sidebarStyle();
     final contacts = [
+      resume.email.trim(),
       resume.location.trim(),
       resume.phone.trim(),
       resume.website.trim(),

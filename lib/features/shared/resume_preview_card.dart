@@ -3412,6 +3412,7 @@ String _pdfAlignedInitials(ResumeData resume) {
 /// Same contact order as [ResumePdfService._resumeContactItems].
 List<String> _pdfAlignedContactItems(ResumeData resume) {
   return [
+    resume.email.trim(),
     resume.location.trim(),
     resume.phone.trim(),
     resume.website.trim(),
