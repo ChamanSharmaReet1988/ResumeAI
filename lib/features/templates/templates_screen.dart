@@ -1557,6 +1557,9 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
   static const double _mainColumnTopPadding = 18;
   static const double _mainColumnBottomPadding = 16;
 
+  static double get _mainColumnRightPadding =>
+      _scaledPt(ResumeTypography.creativeMainColumnRightInset);
+
   static Widget _buildAvatar({
     required ResumeData resume,
     required Color avatarFill,
@@ -1677,10 +1680,10 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                   6,
                   _mainColumnTopPadding,
-                  6,
+                  _mainColumnRightPadding,
                   _mainColumnBottomPadding,
                 ),
                 child: DefaultTextStyle(

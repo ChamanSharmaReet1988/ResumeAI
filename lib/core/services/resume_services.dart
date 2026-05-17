@@ -172,6 +172,10 @@ const double _classicSidebarPanelTopPt = 24.0;
 const double _classicSidebarPanelBottomPt = 0.0;
 const double _classicSidebarPageLeftMargin = 20.0;
 const double _classicSidebarPageRightMargin = 40.0;
+
+/// Extra left inset on full-width pages so total left matches [_classicSidebarPageRightMargin].
+const double _classicSidebarContinuationPageLeftInsetPt =
+    _classicSidebarPageRightMargin - _classicSidebarPageLeftMargin;
 const double _classicSidebarPageTopMargin = 20.0;
 const double _classicSidebarFirstPageMainTopGapPt = 16.0;
 const double _classicSidebarPageBottomMargin = 18.0;
@@ -452,7 +456,9 @@ class _ClassicSidebarDynamicInset extends pw.Widget with pw.SpanningWidget {
   pw.Widget? _wrapped;
 
   double _leftInsetFor(pw.Context context) =>
-      context.pageNumber <= sidebarPageCount ? _classicSidebarMainInsetPt : 0;
+      context.pageNumber <= sidebarPageCount
+      ? _classicSidebarMainInsetPt
+      : _classicSidebarContinuationPageLeftInsetPt;
 
   @override
   void layout(
