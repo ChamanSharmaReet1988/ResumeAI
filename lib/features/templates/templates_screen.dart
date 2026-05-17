@@ -3488,9 +3488,17 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                           _MiniClassicInfoLine(text: resume.location),
                           SizedBox(height: detailed ? 4 : 3),
                           _MiniClassicInfoLine(text: resume.phone),
-                          SizedBox(height: detailed ? 4 : 2),
-                          Container(height: 1, color: line),
-                          SizedBox(height: detailed ? 4 : 2),
+                          if (resume.githubLink.trim().isNotEmpty) ...[
+                            SizedBox(height: detailed ? 4 : 3),
+                            _MiniClassicInfoLine(text: resume.githubLink.trim()),
+                          ],
+                          if (resume.linkedinLink.trim().isNotEmpty) ...[
+                            SizedBox(height: detailed ? 4 : 3),
+                            _MiniClassicInfoLine(
+                              text: resume.linkedinLink.trim(),
+                            ),
+                          ],
+                          SizedBox(height: detailed ? 6 : 4),
                           Text(
                             'SUMMARY',
                             style: sectionHeadingStyle.copyWith(color: title),

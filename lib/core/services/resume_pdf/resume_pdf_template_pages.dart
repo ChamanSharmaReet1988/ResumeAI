@@ -824,7 +824,6 @@ ResumeTypography.darkHeaderSubtitleWeight,
               titleColor: titleColor,
               mutedColor: mutedColor,
               accentColor: accentColor,
-              borderColor: borderColor,
               bodyPt: bodyPt,
               namePt: namePt,
               subtitlePt: subtitlePt,
@@ -832,29 +831,24 @@ ResumeTypography.darkHeaderSubtitleWeight,
             ),
           ),
           sidebarWrap(
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(
-                top: _classicSidebarSectionBottomPt,
-              ),
-              child: _buildClassicSidebarSection(
-                title: 'Summary',
-                titleColor: titleColor,
-                sectionTitlePt: sectionTitlePt,
-                calibri: calibri,
-                child: pw.Text(
-                  resume.summary.trim().ifEmpty(
-                    'Add a short summary to position your experience and strengths.',
-                  ),
-                  style: _classicSidebarPdfTextStyle(
-                    calibri,
-                    ResumeTypography.classicSidebarBodyWeight,
+            _buildClassicSidebarSection(
+              title: 'Summary',
+              titleColor: titleColor,
+              sectionTitlePt: sectionTitlePt,
+              calibri: calibri,
+              child: pw.Text(
+                resume.summary.trim().ifEmpty(
+                  'Add a short summary to position your experience and strengths.',
+                ),
+                style: _classicSidebarPdfTextStyle(
+                  calibri,
+                  ResumeTypography.classicSidebarBodyWeight,
+                  bodyPt,
+                  color: titleColor,
+                ).copyWith(
+                  lineSpacing:
+                      ResumeTypography.classicSidebarBodyPdfLineSpacingFor(
                     bodyPt,
-                    color: titleColor,
-                  ).copyWith(
-                    lineSpacing:
-                        ResumeTypography.classicSidebarBodyPdfLineSpacingFor(
-                      bodyPt,
-                    ),
                   ),
                 ),
               ),
@@ -1047,7 +1041,6 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor titleColor,
     required PdfColor mutedColor,
     required PdfColor accentColor,
-    required PdfColor borderColor,
     required double bodyPt,
     required double namePt,
     required double subtitlePt,
@@ -1056,9 +1049,6 @@ ResumeTypography.darkHeaderSubtitleWeight,
     return pw.Container(
       width: double.infinity,
       padding: const pw.EdgeInsets.only(bottom: 12),
-      decoration: pw.BoxDecoration(
-        border: pw.Border(bottom: pw.BorderSide(color: borderColor, width: 1)),
-      ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -1109,6 +1099,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
       if (resume.location.trim().isNotEmpty) resume.location.trim(),
       if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
       if (resume.website.trim().isNotEmpty) resume.website.trim(),
+      if (resume.githubLink.trim().isNotEmpty) resume.githubLink.trim(),
+      if (resume.linkedinLink.trim().isNotEmpty) resume.linkedinLink.trim(),
     ];
 
     return rows

@@ -1244,7 +1244,6 @@ class _ClassicSidebarPreview extends StatelessWidget {
   static const double _sidebarWidth = 122;
   static const double _avatarSize = 114;
   static const double _sectionGap = 12;
-  static const double _contentSectionGap = 10;
 
   /// Matches PDF `_classicSidebarSectionBottomPt` spacing before section titles.
   static const double _sectionBlockTopGap = 8;
@@ -1439,24 +1438,19 @@ class _ClassicSidebarPreview extends StatelessWidget {
                       mutedColor: mutedColor,
                       iconColor: titleColor,
                       baseStyle: sidebarStyle.copyWith(color: mutedColor),
-                      maxItems: 4,
+                      maxItems: 6,
                     ),
                     const SizedBox(height: 10),
-                    Container(height: 1.1, color: sectionBorderColor),
-                    SizedBox(height: _contentSectionGap),
-                    Padding(
-                      padding: const EdgeInsets.only(top: _sectionBlockTopGap),
-                      child: _ClassicContentSection(
-                        title: 'SUMMARY',
-                        titleStyle: sectionTitleStyle,
-                        child: Text(
-                          resume.summary.trim().ifBlank(
-                            'Add a short summary to position your experience and strengths.',
-                          ),
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                          style: bodyStyle,
+                    _ClassicContentSection(
+                      title: 'SUMMARY',
+                      titleStyle: sectionTitleStyle,
+                      child: Text(
+                        resume.summary.trim().ifBlank(
+                          'Add a short summary to position your experience and strengths.',
                         ),
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        style: bodyStyle,
                       ),
                     ),
                     _ClassicContentSection(
@@ -3060,6 +3054,10 @@ List<Widget> _classicSidebarContactRows(
       (icon: Icons.call_rounded, text: resume.phone.trim()),
     if (resume.website.trim().isNotEmpty)
       (icon: Icons.language_rounded, text: resume.website.trim()),
+    if (resume.githubLink.trim().isNotEmpty)
+      (icon: Icons.code_rounded, text: resume.githubLink.trim()),
+    if (resume.linkedinLink.trim().isNotEmpty)
+      (icon: Icons.work_outline_rounded, text: resume.linkedinLink.trim()),
   ];
 
   return rows
