@@ -1795,9 +1795,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
   pw.TextStyle _accentStripBodyPdfStyle(
     CalibriPdfFonts calibri,
     double bodyPt, {
-    int weight = ResumeFontWeight.w400,
+    int weight = ResumeTypography.creativeBodyWeight,
   }) =>
-      calibriBodyPdfTextStyle(
+      calibriCreativeBodyPdfTextStyle(
         calibri,
         bodyPt,
         weight: weight,

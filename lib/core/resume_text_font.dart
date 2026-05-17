@@ -11,7 +11,7 @@ abstract final class ResumeTypography {
   static const double headingPt = 14;
   static const double namePt = 17;
 
-  /// Accent Strip (template 4): fixed Garamond titles; body/contact use slider pt.
+  /// Accent Strip (template 4): fixed Garamond titles; body uses slider pt (10–12, default 11).
   static const double accentStripNamePt = 24;
   static const double accentStripSectionTitlePt = 14;
   static const double accentStripSubsectionPt = 13;

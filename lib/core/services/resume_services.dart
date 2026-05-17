@@ -88,7 +88,11 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
   double? bodyFontPt,
 }) {
   final bodyStyle = calibri != null && bodyFontPt != null
-      ? calibriBodyPdfTextStyle(calibri, bodyFontPt)
+      ? calibriCreativeBodyPdfTextStyle(
+          calibri,
+          bodyFontPt,
+          weight: ResumeTypography.creativeBodyWeight,
+        )
       : inter != null && bodyFontPt != null
       ? interDarkHeaderBodyPdfTextStyle(inter, bodyFontPt)
       : pw.TextStyle(
@@ -5198,7 +5202,7 @@ class ResumePdfService {
         theme: await resumePdfThemeForCalibri(
           calibri,
           bodyFontPt: bodyPt,
-          bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+          bodyLineHeight: ResumeTypography.creativeBodyLineHeight,
         ),
       );
       _addAccentStripTemplatePage(
@@ -5320,7 +5324,7 @@ class ResumePdfService {
         theme: await resumePdfThemeForCalibri(
           calibri,
           bodyFontPt: bodyPt,
-          bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+          bodyLineHeight: ResumeTypography.creativeBodyLineHeight,
         ),
       );
       _addAccentStripTemplatePage(

@@ -1889,9 +1889,9 @@ class _AccentStripPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final body = resume.effectiveBodyFontPt.toDouble();
     final accent = resume.corporateColorPreset.headerColor;
-    const bodyTextColor = Color(0xFF111111);
+    const bodyTextColor = ResumeTypography.creativeBodyTextColor;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final contactItems = <String>[
       if (resume.location.trim().isNotEmpty) resume.location.trim(),
       if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
@@ -1905,10 +1905,10 @@ class _AccentStripPreview extends StatelessWidget {
     final customSections = resume.visibleCustomSections.take(1).toList();
 
     final bodyStyle = ResumeTypography.calibriPreviewStyle(
-      weight: ResumeFontWeight.w400,
-      fontSize: body,
+      weight: ResumeTypography.creativeBodyWeight,
+      fontSize: bodyPt,
       color: bodyTextColor,
-      height: 1.4,
+      height: ResumeTypography.creativeBodyLineHeight,
     );
     final headingStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w600,
@@ -1932,11 +1932,11 @@ class _AccentStripPreview extends StatelessWidget {
     );
     final contactStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w500,
-      fontSize: body,
+      fontSize: bodyPt,
       color: bodyTextColor,
-      height: 1.4,
+      height: ResumeTypography.creativeBodyLineHeight,
     );
-    final sectionGap = body + 10;
+    final sectionGap = bodyPt + 10;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1944,29 +1944,31 @@ class _AccentStripPreview extends StatelessWidget {
             ? constraints.maxHeight
             : constraints.maxWidth / ResumePreviewCard._a4AspectRatio;
 
-        return ColoredBox(
-          color: Colors.white,
-          child: SizedBox(
-            height: resolvedHeight,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Positioned(
-                  left: 22,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 34,
-                    color: accent,
+        return DefaultTextStyle.merge(
+          style: const TextStyle(fontFamily: 'Calibri'),
+          child: ColoredBox(
+            color: Colors.white,
+            child: SizedBox(
+              height: resolvedHeight,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned(
+                    left: 22,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 34,
+                      color: accent,
+                    ),
                   ),
-                ),
-                SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(96, 34, 38, 30),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                  SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(96, 34, 38, 30),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                         Text(
                           _pdfAlignedDisplayName(resume).toUpperCase(),
                           style: nameStyle,
@@ -2082,6 +2084,7 @@ class _AccentStripPreview extends StatelessWidget {
               ],
             ),
           ),
+        ),
         );
       },
     );
