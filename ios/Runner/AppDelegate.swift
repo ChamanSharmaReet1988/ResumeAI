@@ -160,6 +160,7 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
         options: [.prettyPrinted, .sortedKeys]
       )
       try data.write(to: fileURL, options: .atomic)
+      try syncProfileImageUpload(resumeMap: resumeMap, resumeId: id)
       uploadedIds.append(id)
     }
     return uploadedIds
@@ -201,6 +202,9 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
       throw ICloudResumePluginError.resumeNotFound
     }
     try fileManager.removeItem(at: fileURL)
+    if !isCoverLetter {
+      try removeCloudProfileImages(for: id)
+    }
   }
 
   private func downloadResume(id: String, isCoverLetter: Bool) throws -> [String: Any] {
@@ -217,7 +221,100 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
     guard fileManager.fileExists(atPath: fileURL.path) else {
       throw ICloudResumePluginError.resumeNotFound
     }
-    return try readJSON(from: fileURL, waitForDownload: true)
+    var payload = try readJSON(from: fileURL, waitForDownload: true)
+    if !isCoverLetter {
+      try enrichResumeWithProfileImage(&payload, resumeId: id)
+    }
+    return payload
+  }
+
+  private static let profileImageExtensions = ["jpg", "jpeg", "png", "webp", "heic"]
+
+  private func profileImagesDirectoryURL(createIfNeeded: Bool) -> URL? {
+    guard let resumesURL = resumeDirectoryURL(createIfNeeded: createIfNeeded) else {
+      return nil
+    }
+    let directoryURL = resumesURL.appendingPathComponent("ProfileImages", isDirectory: true)
+    if createIfNeeded, !fileManager.fileExists(atPath: directoryURL.path) {
+      try? fileManager.createDirectory(
+        at: directoryURL,
+        withIntermediateDirectories: true
+      )
+    }
+    return directoryURL
+  }
+
+  private func removeCloudProfileImages(for resumeId: String) throws {
+    guard let imagesURL = profileImagesDirectoryURL(createIfNeeded: false) else {
+      return
+    }
+    guard fileManager.fileExists(atPath: imagesURL.path) else {
+      return
+    }
+    for ext in Self.profileImageExtensions {
+      let url = imagesURL.appendingPathComponent("\(resumeId).\(ext)")
+      if fileManager.fileExists(atPath: url.path) {
+        try fileManager.removeItem(at: url)
+      }
+    }
+  }
+
+  private func syncProfileImageUpload(resumeMap: [String: Any], resumeId: String) throws {
+    try removeCloudProfileImages(for: resumeId)
+
+    guard
+      let path = resumeMap["profileImagePath"] as? String,
+      !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    else {
+      return
+    }
+
+    let sourceURL = URL(fileURLWithPath: path)
+    guard fileManager.fileExists(atPath: sourceURL.path) else {
+      return
+    }
+
+    guard let imagesURL = profileImagesDirectoryURL(createIfNeeded: true) else {
+      return
+    }
+
+    var ext = sourceURL.pathExtension.lowercased()
+    if ext.isEmpty {
+      ext = "jpg"
+    }
+    let destURL = imagesURL.appendingPathComponent("\(resumeId).\(ext)")
+    if fileManager.fileExists(atPath: destURL.path) {
+      try fileManager.removeItem(at: destURL)
+    }
+    try fileManager.copyItem(at: sourceURL, to: destURL)
+  }
+
+  private func enrichResumeWithProfileImage(
+    _ resumeMap: inout [String: Any],
+    resumeId: String
+  ) throws {
+    guard let imagesURL = profileImagesDirectoryURL(createIfNeeded: false) else {
+      return
+    }
+    guard fileManager.fileExists(atPath: imagesURL.path) else {
+      return
+    }
+
+    for ext in Self.profileImageExtensions {
+      let url = imagesURL.appendingPathComponent("\(resumeId).\(ext)")
+      guard fileManager.fileExists(atPath: url.path) else {
+        continue
+      }
+      try ensureFileDownloadedIfNeeded(url, waitForDownload: true)
+      let data = try Data(contentsOf: url)
+      guard !data.isEmpty else {
+        continue
+      }
+      resumeMap["profileImagePath"] = ""
+      resumeMap["profileImageBase64"] = data.base64EncodedString()
+      resumeMap["profileImageExtension"] = ext
+      return
+    }
   }
 
   private func readJSON(from url: URL, waitForDownload: Bool) throws -> [String: Any] {

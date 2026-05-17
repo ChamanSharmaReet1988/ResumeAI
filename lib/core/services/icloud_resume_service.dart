@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
 
 import '../models/resume_models.dart';
+import 'profile_image_storage.dart';
 
 class ICloudResumeSummary {
   const ICloudResumeSummary({
@@ -115,11 +117,24 @@ class MethodChannelICloudResumeService implements ICloudResumeService {
       return const [];
     }
 
+    final prepared = await Future.wait(
+      resumes.map((resume) async {
+        final resolvedPath = await ProfileImageStorage.resolvePath(
+          resume.profileImagePath,
+          resume.id,
+        );
+        if (resolvedPath == resume.profileImagePath) {
+          return resume;
+        }
+        return resume.copyWith(profileImagePath: resolvedPath);
+      }),
+    );
+
     final raw =
         await _channel.invokeListMethod<dynamic>(
           'uploadResumes',
           <String, Object?>{
-            'resumes': resumes.map((resume) => resume.toJson()).toList(),
+            'resumes': prepared.map((resume) => resume.toJson()).toList(),
           },
         ) ??
         const <dynamic>[];
@@ -155,9 +170,29 @@ class MethodChannelICloudResumeService implements ICloudResumeService {
       throw const FormatException('No resume payload returned from iCloud.');
     }
 
-    return ResumeData.fromJson(
-      raw.map((key, value) => MapEntry(key.toString(), value)),
+    return _resumeFromICloudPayload(raw);
+  }
+
+  Future<ResumeData> _resumeFromICloudPayload(
+    Map<Object?, Object?> raw,
+  ) async {
+    final json = raw.map((key, value) => MapEntry(key.toString(), value));
+    var resume = ResumeData.fromJson(json);
+
+    final imageBase64 = json['profileImageBase64'] as String?;
+    if (imageBase64 == null || imageBase64.isEmpty) {
+      return resume;
+    }
+
+    final extension = (json['profileImageExtension'] as String? ?? 'jpg')
+        .trim()
+        .toLowerCase();
+    final path = await ProfileImageStorage.saveBytes(
+      base64Decode(imageBase64),
+      resumeId: resume.id,
+      extension: extension.startsWith('.') ? extension : '.$extension',
     );
+    return resume.copyWith(profileImagePath: path);
   }
 
   @override
