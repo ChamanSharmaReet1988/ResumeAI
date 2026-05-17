@@ -1450,7 +1450,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
           child: _classicBulletRow(
             text: bullets[index],
             bulletColor: accentColor,
-            textColor: mutedColor,
+            textColor: titleColor,
             fontSize: bodyPt,
             calibri: calibri,
           ),
