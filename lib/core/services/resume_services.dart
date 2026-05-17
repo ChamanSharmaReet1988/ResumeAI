@@ -170,9 +170,12 @@ const double _classicSidebarSectionBottomPt = 8.0;
 const double _classicSidebarSectionDividerGapPt = 8.0;
 const double _classicSidebarPanelTopPt = 24.0;
 const double _classicSidebarPanelBottomPt = 0.0;
+const double _classicSidebarPageLeftMargin = 20.0;
+const double _classicSidebarPageRightMargin = 40.0;
 const double _classicSidebarPageTopMargin = 20.0;
 const double _classicSidebarFirstPageMainTopGapPt = 16.0;
 const double _classicSidebarPageBottomMargin = 18.0;
+const double _classicSidebarFirstPageExtraBottomPaddingPt = 24.0;
 const double _classicSidebarPanelLeftInsetPt =
     (_classicSidebarRailWidthPt - _classicSidebarContentWidthPt) / 2;
 const double _detailsSidebarRailWidthPt = 164.0;
@@ -379,6 +382,11 @@ pw.Widget _classicSidebarMainColumnChild(
   );
 }
 
+pw.Widget _classicSidebarFirstPageBottomSpacer(pw.Context context) =>
+    context.pageNumber == 1
+        ? pw.SizedBox(height: _classicSidebarFirstPageExtraBottomPaddingPt)
+        : pw.SizedBox();
+
 class _CreativePageAwareInset extends pw.SingleChildWidget {
   _CreativePageAwareInset({required pw.Widget child}) : super(child: child);
 
@@ -569,8 +577,6 @@ pw.PageTheme _classicSidebarPageTheme({
   PdfColor? highlightColor,
   PdfPageFormat pageFormat = PdfPageFormat.a4,
 }) {
-  const pageLeftMargin = 20.0;
-  const pageRightMargin = 24.0;
   final sidebarPages = _classicSidebarPageSlices(
     resume: resume,
     bodyPt: bodyPt,
@@ -581,9 +587,9 @@ pw.PageTheme _classicSidebarPageTheme({
   return pw.PageTheme(
     pageFormat: pageFormat,
     margin: const pw.EdgeInsets.fromLTRB(
-      pageLeftMargin,
+      _classicSidebarPageLeftMargin,
       _classicSidebarPageTopMargin,
-      pageRightMargin,
+      _classicSidebarPageRightMargin,
       _classicSidebarPageBottomMargin,
     ),
     buildBackground: (context) => pw.FullPage(

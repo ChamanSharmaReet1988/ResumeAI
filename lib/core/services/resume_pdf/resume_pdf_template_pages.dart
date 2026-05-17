@@ -817,6 +817,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
           profileImage: profileImage,
         ),
         header: _continuedPageTopGap,
+        footer: _classicSidebarFirstPageBottomSpacer,
         build: (context) => [
           sidebarWrap(
             pw.Padding(

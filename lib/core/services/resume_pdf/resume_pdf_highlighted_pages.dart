@@ -710,6 +710,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           highlightColor: highlightColor,
         ),
         header: _continuedPageTopGap,
+        footer: _classicSidebarFirstPageBottomSpacer,
         build: (context) => [
           sidebarWrap(
             pw.Padding(
