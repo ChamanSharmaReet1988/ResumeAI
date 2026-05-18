@@ -98,6 +98,10 @@ abstract final class ResumeTypography {
   static double atsProfessionalBlueBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (atsProfessionalBlueBodyLineHeight - 1);
 
+  /// Extra top inset for Professional Blue ATS beyond [atsStructuredPageInsetPt]
+  /// (preview px = PDF pt; template grid art scales this for the 240px tile).
+  static const double atsProfessionalBlueExtraTopPaddingPt = 10;
+
   static double darkHeaderBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (darkHeaderBodyLineHeight - 1);
   static const double sectionGapPreviewPx = 44;

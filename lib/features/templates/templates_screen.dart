@@ -3609,6 +3609,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = ResumeTemplate.atsCenterClassic.accentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final body = _arialBody(_scaledPt(bodyPt));
     final contactStyle = _arialBody(
@@ -3616,9 +3617,15 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
       weight: ResumeTypography.atsStructuredContactWeight,
       height: ResumeTypography.textLineHeight,
     );
-    final subtitleStyle = _arialBody(
+    final taglineStyle = _arialBody(
       _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
+      height: ResumeTypography.textLineHeight,
+    );
+    final sectionSubtitleStyle = _arialBody(
+      _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
+      weight: ResumeTypography.atsStructuredSubtitleWeight,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final sectionTitleStyle = _arialBody(
@@ -3675,7 +3682,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
             Text(
               tagline,
               textAlign: TextAlign.center,
-              style: subtitleStyle,
+              style: taglineStyle,
               maxLines: detailed ? 3 : 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -3712,7 +3719,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
                   Expanded(
                     child: Text(
                       w.company.trim(),
-                      style: subtitleStyle,
+                      style: sectionSubtitleStyle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -3720,7 +3727,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
                   if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
                     Text(
                       educationDateRangeLabel(w.startDate, w.endDate),
-                      style: body.copyWith(color: const Color(0xFF5C5C5C)),
+                      style: sectionSubtitleStyle,
                     ),
                 ],
               ),
@@ -3740,12 +3747,12 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
               resume.includeProjectsInResume &&
               projects.isNotEmpty) ...[
             sectionRule(),
-            Text('TRAINING / COURSES', style: sectionTitleStyle),
+            Text('PROJECTS', style: sectionTitleStyle),
             const SizedBox(height: 4),
             for (final p in projects.take(detailed ? 3 : 1)) ...[
               Text(
                 p.title.trim(),
-                style: subtitleStyle,
+                style: sectionSubtitleStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -3806,7 +3813,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
             for (final e in edu.take(1)) ...[
               Text(
                 e.degree.trim(),
-                style: subtitleStyle,
+                style: sectionSubtitleStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -3847,7 +3854,6 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
   final ResumeData resume;
   final bool detailed;
 
-  static const Color _blue = Color(0xFF4A90C4);
   static const double _layoutScale = 240 / 595.28;
 
   static double _scaledPt(double pt) => pt * _layoutScale;
@@ -3867,24 +3873,25 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = ResumeTemplate.atsProfessionalBlue.accentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final body = _arialBody(_scaledPt(bodyPt));
     final contactStyle = _arialBody(
       _scaledPt(bodyPt),
       weight: ResumeTypography.atsStructuredContactWeight,
-      color: _blue,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final subtitleStyle = _arialBody(
       _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
-      color: _blue,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final sectionTitleStyle = _arialBody(
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
-      color: _blue,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final works = resume.visibleWorkExperiences;
@@ -3901,10 +3908,11 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
     final horizontalInset =
         _scaledPt(ResumeTypography.atsStructuredPageInsetPt);
 
+    final extraTop = _scaledPt(ResumeTypography.atsProfessionalBlueExtraTopPaddingPt);
     final pageContent = Padding(
       padding: EdgeInsets.fromLTRB(
         horizontalInset,
-        detailed ? 11 : 9,
+        (detailed ? 11 : 9) + extraTop,
         horizontalInset,
         detailed ? 10 : 8,
       ),
@@ -3924,7 +3932,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                       style: _arialBody(
                         _scaledPt(ResumeTypography.atsStructuredNamePt),
                         weight: ResumeTypography.atsStructuredNameWeight,
-                        color: _blue,
+                        color: accent,
                         height: ResumeTypography.textLineHeight,
                       ),
                       maxLines: 2,
@@ -3937,7 +3945,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                         style: _arialBody(
                           _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
                           weight: ResumeTypography.atsStructuredTitleWeight,
-                          color: _blue,
+                          color: accent,
                           height: ResumeTypography.textLineHeight,
                         ),
                         maxLines: 2,
@@ -4057,8 +4065,8 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                                     width: 3,
                                     height: 3,
                                     margin: const EdgeInsets.only(top: 2, right: 3),
-                                    decoration: const BoxDecoration(
-                                      color: _blue,
+                                    decoration: BoxDecoration(
+                                      color: accent,
                                       shape: BoxShape.circle,
                                     ),
                                   ),

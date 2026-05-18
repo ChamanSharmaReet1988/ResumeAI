@@ -3109,10 +3109,10 @@ class _AtsCenterClassicPreview extends StatelessWidget {
   final ResumeData resume;
 
   static const Color _ink = ResumeTypography.atsStructuredBodyTextColor;
-  static const Color _muted = Color(0xFF5C5C5C);
 
   @override
   Widget build(BuildContext context) {
+    final accent = resume.atsCenterClassicAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = ResumeTypography.arialPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
@@ -3126,10 +3126,16 @@ class _AtsCenterClassicPreview extends StatelessWidget {
       color: _ink,
       height: ResumeTypography.textLineHeight,
     );
-    final subtitleStyle = ResumeTypography.arialPreviewStyle(
+    final taglineStyle = ResumeTypography.arialPreviewStyle(
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
       color: _ink,
+      height: ResumeTypography.textLineHeight,
+    );
+    final sectionSubtitleStyle = ResumeTypography.arialPreviewStyle(
+      weight: ResumeTypography.atsStructuredSubtitleWeight,
+      fontSize: ResumeTypography.atsStructuredSubtitlePt,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final tagline = [
@@ -3183,7 +3189,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                 Text(
                   tagline,
                   textAlign: TextAlign.center,
-                  style: subtitleStyle,
+                  style: taglineStyle,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -3230,7 +3236,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 item.company.trim().ifBlank('Company'),
-                                style: subtitleStyle,
+                                style: sectionSubtitleStyle,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -3244,7 +3250,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                                   item.startDate,
                                   item.endDate,
                                 ),
-                                style: bodyStyle.copyWith(color: _muted),
+                                style: sectionSubtitleStyle,
                               ),
                           ],
                         ),
@@ -3273,12 +3279,12 @@ class _AtsCenterClassicPreview extends StatelessWidget {
               ],
               if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
                 sectionRule(),
-                Text('TRAINING / COURSES', style: sectionTitleStyle),
+                Text('PROJECTS', style: sectionTitleStyle),
                 const SizedBox(height: 6),
                 for (final project in projects) ...[
                   Text(
                     project.title.trim().ifBlank('Course'),
-                    style: subtitleStyle,
+                    style: sectionSubtitleStyle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -3321,7 +3327,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                   for (final item in education) ...[
                     Text(
                       item.degree.trim().ifBlank('Degree'),
-                      style: subtitleStyle,
+                      style: sectionSubtitleStyle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -3378,11 +3384,11 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
 
   final ResumeData resume;
 
-  static const Color _blue = Color(0xFF4A90C4);
   static const Color _ink = ResumeTypography.atsStructuredBodyTextColor;
 
   @override
   Widget build(BuildContext context) {
+    final accent = resume.atsProfessionalBlueAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = ResumeTypography.arialPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
@@ -3393,19 +3399,19 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
     final sectionTitleStyle = ResumeTypography.arialPreviewStyle(
       weight: ResumeTypography.atsStructuredTitleWeight,
       fontSize: _atsPreviewSectionTitleFontSize,
-      color: _blue,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final subtitleStyle = ResumeTypography.arialPreviewStyle(
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
-      color: _blue,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final contactStyle = ResumeTypography.arialPreviewStyle(
       weight: ResumeTypography.atsStructuredContactWeight,
       fontSize: bodyPt,
-      color: _blue,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final works = resume.visibleWorkExperiences.take(4).toList();
@@ -3416,7 +3422,7 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           ResumeTypography.atsStructuredPageInsetPt,
-          0,
+          ResumeTypography.atsProfessionalBlueExtraTopPaddingPt,
           ResumeTypography.atsStructuredPageInsetPt,
           ResumeTypography.darkHeaderSectionGapPreviewPx,
         ),
@@ -3437,7 +3443,7 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                           style: ResumeTypography.arialPreviewStyle(
                             weight: ResumeTypography.atsStructuredNameWeight,
                             fontSize: _atsPreviewNameFontSize,
-                            color: _blue,
+                            color: accent,
                             height: ResumeTypography.textLineHeight,
                           ),
                           maxLines: 2,
@@ -3450,7 +3456,7 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                             style: ResumeTypography.arialPreviewStyle(
                               weight: ResumeTypography.atsStructuredTitleWeight,
                               fontSize: _atsPreviewJobTitleFontSize,
-                              color: _blue,
+                              color: accent,
                               height: ResumeTypography.textLineHeight,
                             ),
                             maxLines: 2,

@@ -1416,6 +1416,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) {
+    final accent = _pdfRgb(resume.atsCenterClassicAccentColor);
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = atsCenterClassicBodyPdfTextStyle(arimo, bodyPt);
@@ -1438,22 +1439,17 @@ extension _ResumePdfAtsPages on ResumePdfService {
       fontSize: ResumeTypography.atsStructuredSectionTitlePt,
       color: PdfColors.black,
     );
-    final subtitleStyle = arimoPdfTextStyle(
+    final sectionSubtitleStyle = arimoPdfTextStyle(
       arimo,
       ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
-      color: PdfColors.black,
+      color: accent,
     );
     final nameStyle = arimoPdfTextStyle(
       arimo,
       ResumeTypography.atsStructuredNameWeight,
       fontSize: ResumeTypography.atsStructuredNamePt,
       color: PdfColors.black,
-    );
-    final mutedDateStyle = atsCenterClassicBodyPdfTextStyle(
-      arimo,
-      bodyPt,
-      color: _atsMuted,
     );
     final name = _displayName(resume);
     final tagline = _atsCenterClassicTaglineParts(resume).join(' | ');
@@ -1523,8 +1519,8 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 _atsCenterClassicExperienceEntries(
                   items,
                   bodyStyle: bodyStyle,
-                  subtitleStyle: subtitleStyle,
-                  mutedDateStyle: mutedDateStyle,
+                  subtitleStyle: sectionSubtitleStyle,
+                  mutedDateStyle: sectionSubtitleStyle,
                   highlightedBulletsByExperience:
                       highlightedBulletsByExperience,
                   highlightColor: highlightColor,
@@ -1548,7 +1544,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               resume.visibleProjects.isNotEmpty) {
             w.add(
               _atsCenterClassicSectionTitle(
-                'Training / Courses',
+                'Projects',
                 sectionTitleStyle,
               ),
             );
@@ -1556,7 +1552,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               w.add(
                 pw.Text(
                   p.title.ifEmpty('Course'),
-                  style: subtitleStyle,
+                  style: sectionSubtitleStyle,
                 ),
               );
               final overview = p.overview.trim();
@@ -1591,7 +1587,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 w.add(
                   pw.Text(
                     item.degree.ifEmpty('Degree'),
-                    style: subtitleStyle,
+                    style: sectionSubtitleStyle,
                   ),
                 );
                 w.add(pw.SizedBox(height: 2));
@@ -1632,8 +1628,6 @@ extension _ResumePdfAtsPages on ResumePdfService {
     );
   }
 
-  static final PdfColor _atsProfessionalBlue = PdfColor.fromHex('#4A90C4');
-
   pw.Widget _atsProfessionalBlueSectionTitle(
     String title,
     pw.TextStyle sectionTitleStyle,
@@ -1652,6 +1646,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) {
+    final accent = _pdfRgb(resume.atsProfessionalBlueAccentColor);
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = atsProfessionalBlueBodyPdfTextStyle(arimo, bodyPt);
@@ -1659,32 +1654,32 @@ extension _ResumePdfAtsPages on ResumePdfService {
       arimo,
       ResumeTypography.atsStructuredContactWeight,
       fontSize: bodyPt,
-      color: _atsProfessionalBlue,
+      color: accent,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
     );
     final sectionTitleStyle = arimoPdfTextStyle(
       arimo,
       ResumeTypography.atsStructuredTitleWeight,
       fontSize: ResumeTypography.atsStructuredSectionTitlePt,
-      color: _atsProfessionalBlue,
+      color: accent,
     );
     final subtitleStyle = arimoPdfTextStyle(
       arimo,
       ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
-      color: _atsProfessionalBlue,
+      color: accent,
     );
     final nameStyle = arimoPdfTextStyle(
       arimo,
       ResumeTypography.atsStructuredNameWeight,
       fontSize: ResumeTypography.atsStructuredNamePt,
-      color: _atsProfessionalBlue,
+      color: accent,
     );
     final jobStyle = arimoPdfTextStyle(
       arimo,
       ResumeTypography.atsStructuredTitleWeight,
       fontSize: ResumeTypography.atsStructuredJobTitlePt,
-      color: _atsProfessionalBlue,
+      color: accent,
     );
     final skillsBodyStyle = atsProfessionalBlueBodyPdfTextStyle(
       arimo,
@@ -1705,11 +1700,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(
+        margin: pw.EdgeInsets.fromLTRB(
           ResumeTypography.atsStructuredPageInsetPt,
-          40,
+          ResumeTypography.atsStructuredPageInsetPt +
+              ResumeTypography.atsProfessionalBlueExtraTopPaddingPt,
           ResumeTypography.atsStructuredPageInsetPt,
-          40,
+          ResumeTypography.atsStructuredPageInsetPt,
         ),
         header: _atsMultiPageHeaderGap,
         build: (context) {
@@ -1886,7 +1882,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                                           right: 5,
                                         ),
                                         decoration: pw.BoxDecoration(
-                                          color: _atsProfessionalBlue,
+                                          color: accent,
                                           shape: pw.BoxShape.circle,
                                         ),
                                       ),

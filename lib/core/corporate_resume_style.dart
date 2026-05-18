@@ -98,7 +98,7 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.atsModernFlow => 0,
     ResumeTemplate.atsExecutive => 0,
     ResumeTemplate.atsCenterClassic => 0,
-    ResumeTemplate.atsProfessionalBlue => 0,
+    ResumeTemplate.atsProfessionalBlue => kTemplateDefaultColorPresetIndex,
   };
 }
 
@@ -250,6 +250,12 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get classicSidebarSectionBorderColor => const Color(0xFFE5E7EB);
 
   Color get detailsSidebarAccentColor => corporateColorPreset.headerColor;
+
+  /// Center Classic ATS experience, education, and project subtitles.
+  Color get atsCenterClassicAccentColor => corporateColorPreset.headerColor;
+
+  /// Professional Blue ATS section titles, name, contact, and skill bullets.
+  Color get atsProfessionalBlueAccentColor => corporateColorPreset.headerColor;
 
   Color get detailsSidebarRailColor => const Color(0xFFF3F4F6);
 
