@@ -1239,11 +1239,6 @@ final ResumeData _atsProfessionalBlueTemplateResume = ResumeData(
     'Agile / Scrum',
     'Stakeholder communication',
     'Risk & dependency tracking',
-    'Vendor management',
-    'Roadmap planning',
-    'Executive reporting',
-    'Jira & Confluence',
-    'Process design',
   ],
   projects: const [
     ProjectItem(
