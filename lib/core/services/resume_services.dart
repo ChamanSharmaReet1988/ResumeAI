@@ -88,10 +88,16 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
   GaramondPdfFonts? garamond,
   double? bodyFontPt,
   bool accentStripGaramondBody = false,
+  bool atsModernFlowGaramondBody = false,
+  bool atsExecutiveGaramondBody = false,
 }) {
   final bodyStyle = garamond != null && bodyFontPt != null
       ? accentStripGaramondBody
       ? accentStripBodyPdfTextStyle(garamond, bodyFontPt)
+      : atsModernFlowGaramondBody
+      ? atsModernFlowBodyPdfTextStyle(garamond, bodyFontPt)
+      : atsExecutiveGaramondBody
+      ? atsExecutiveBodyPdfTextStyle(garamond, bodyFontPt)
       : atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
       : calibri != null && bodyFontPt != null
       ? nunitoBodyPdfTextStyle(calibri, bodyFontPt)
@@ -6732,6 +6738,8 @@ class ResumePdfService {
     GaramondPdfFonts? garamond,
     double bodyFontPt = ResumeTypography.bodyPt,
     bool atsGaramondBody = false,
+    bool atsModernFlowGaramondBody = false,
+    bool atsExecutiveGaramondBody = false,
   }) {
     final bullets = _projectBulletLines(item);
     final subtitleWeight = atsGaramondBody
@@ -6752,7 +6760,11 @@ class ResumePdfService {
           )
         : _corporateStrokeLabelText(item.title.ifEmpty('Project'));
     final bulletStyle = garamond != null
-        ? (atsGaramondBody
+        ? (atsModernFlowGaramondBody
+              ? atsModernFlowBodyPdfTextStyle(garamond, bodyFontPt)
+              : atsExecutiveGaramondBody
+              ? atsExecutiveBodyPdfTextStyle(garamond, bodyFontPt)
+              : atsGaramondBody
               ? atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
               : corporateBodyPdfTextStyle(garamond, bodyFontPt))
         : pw.TextStyle(

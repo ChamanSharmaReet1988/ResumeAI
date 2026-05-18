@@ -74,6 +74,18 @@ abstract final class ResumeTypography {
   static double bodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (bodyTextLineHeight - 1);
 
+  /// Modern Flow ATS (template 7) body paragraph line height (preview + PDF).
+  static const double atsModernFlowBodyLineHeight = 1.2;
+
+  static double atsModernFlowBodyPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (atsModernFlowBodyLineHeight - 1);
+
+  /// Executive ATS (template 8) body paragraph line height (preview + PDF).
+  static const double atsExecutiveBodyLineHeight = 1.2;
+
+  static double atsExecutiveBodyPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (atsExecutiveBodyLineHeight - 1);
+
   static double darkHeaderBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (darkHeaderBodyLineHeight - 1);
   static const double sectionGapPreviewPx = 44;

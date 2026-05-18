@@ -2831,7 +2831,7 @@ class _AtsModernFlowPreview extends StatelessWidget {
       weight: ResumeTypography.atsStructuredBodyWeight,
       fontSize: bodyPt,
       color: ink,
-      height: ResumeTypography.textLineHeight,
+      height: ResumeTypography.atsModernFlowBodyLineHeight,
     );
     final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredTitleWeight,
@@ -3405,7 +3405,7 @@ class _AtsExecutivePreview extends StatelessWidget {
       weight: ResumeTypography.atsStructuredBodyWeight,
       fontSize: bodyPt,
       color: ink,
-      height: ResumeTypography.textLineHeight,
+      height: ResumeTypography.atsExecutiveBodyLineHeight,
     );
     final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredTitleWeight,

@@ -110,6 +110,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
     PdfColor? highlightColor,
     GaramondPdfFonts? garamond,
+    bool atsExecutiveGaramondBody = false,
   }) {
     final subtitleStyle = garamond != null
         ? garamondPdfTextStyle(
@@ -124,15 +125,24 @@ extension _ResumePdfAtsPages on ResumePdfService {
             color: PdfColors.black,
           );
     final bodyStyle = garamond != null
-        ? atsStructuredBodyPdfTextStyle(garamond, bodyPt)
+        ? (atsExecutiveGaramondBody
+              ? atsExecutiveBodyPdfTextStyle(garamond, bodyPt)
+              : atsStructuredBodyPdfTextStyle(garamond, bodyPt))
         : pw.TextStyle(color: PdfColors.black, fontSize: bodyPt);
     final mutedDateStyle = garamond != null
-        ? atsStructuredBodyPdfTextStyle(
-            garamond,
-            bodyPt,
-            color: _atsMuted,
-            fontStyle: pw.FontStyle.italic,
-          )
+        ? (atsExecutiveGaramondBody
+              ? atsExecutiveBodyPdfTextStyle(
+                  garamond,
+                  bodyPt,
+                  color: _atsMuted,
+                  fontStyle: pw.FontStyle.italic,
+                )
+              : atsStructuredBodyPdfTextStyle(
+                  garamond,
+                  bodyPt,
+                  color: _atsMuted,
+                  fontStyle: pw.FontStyle.italic,
+                ))
         : pw.TextStyle(
             fontSize: bodyPt,
             color: _atsMuted,
@@ -805,7 +815,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   }) {
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final bodyStyle = atsStructuredBodyPdfTextStyle(garamond, bodyPt);
+    final bodyStyle = atsModernFlowBodyPdfTextStyle(garamond, bodyPt);
     final contactStyle = garamondPdfTextStyle(
       garamond,
       ResumeTypography.atsStructuredContactWeight,
@@ -837,8 +847,10 @@ extension _ResumePdfAtsPages on ResumePdfService {
       fontSize: ResumeTypography.atsStructuredJobTitlePt,
       color: PdfColors.black,
     );
-    final skillsBodyStyle =
-        atsStructuredBodyPdfTextStyle(garamond, _atsPdfSkillsBodyPt(bodyPt));
+    final skillsBodyStyle = atsModernFlowBodyPdfTextStyle(
+      garamond,
+      _atsPdfSkillsBodyPt(bodyPt),
+    );
     final name = _displayName(resume);
     final job = resume.jobTitle.trim();
     final email = resume.email.trim();
@@ -1029,6 +1041,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   garamond: garamond,
                   bodyFontPt: bodyPt,
                   atsGaramondBody: true,
+                  atsModernFlowGaramondBody: true,
                 ),
               );
             }
@@ -1049,6 +1062,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               section,
               garamond: garamond,
               bodyFontPt: bodyPt,
+              atsModernFlowGaramondBody: true,
             )) {
               w.add(widget);
             }
@@ -1071,7 +1085,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   }) {
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final bodyStyle = atsStructuredBodyPdfTextStyle(garamond, bodyPt);
+    final bodyStyle = atsExecutiveBodyPdfTextStyle(garamond, bodyPt);
     final contactStyle = garamondPdfTextStyle(
       garamond,
       ResumeTypography.atsStructuredContactWeight,
@@ -1103,8 +1117,10 @@ extension _ResumePdfAtsPages on ResumePdfService {
       fontSize: ResumeTypography.atsStructuredJobTitlePt,
       color: PdfColors.black,
     );
-    final skillsBodyStyle =
-        atsStructuredBodyPdfTextStyle(garamond, _atsPdfSkillsBodyPt(bodyPt));
+    final skillsBodyStyle = atsExecutiveBodyPdfTextStyle(
+      garamond,
+      _atsPdfSkillsBodyPt(bodyPt),
+    );
     final job = resume.jobTitle.trim();
     final name = _displayName(resume);
     final loc = resume.location.trim();
@@ -1191,6 +1207,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       highlightedBulletsByExperience,
                   highlightColor: highlightColor,
                   garamond: garamond,
+                  atsExecutiveGaramondBody: true,
                 ),
               );
             }
@@ -1273,6 +1290,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   garamond: garamond,
                   bodyFontPt: bodyPt,
                   atsGaramondBody: true,
+                  atsExecutiveGaramondBody: true,
                 ),
               );
             }
@@ -1291,6 +1309,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               section,
               garamond: garamond,
               bodyFontPt: bodyPt,
+              atsExecutiveGaramondBody: true,
             )) {
               w.add(widget);
             }

@@ -45,6 +45,36 @@ pw.TextStyle atsStructuredBodyPdfTextStyle(
       fontStyle: fontStyle,
     );
 
+pw.TextStyle atsModernFlowBodyPdfTextStyle(
+  GaramondPdfFonts fonts,
+  double bodyPt, {
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    garamondPdfTextStyle(
+      fonts,
+      ResumeTypography.atsStructuredBodyWeight,
+      fontSize: bodyPt,
+      color: color,
+      lineSpacing: ResumeTypography.atsModernFlowBodyPdfLineSpacingFor(bodyPt),
+      fontStyle: fontStyle,
+    );
+
+pw.TextStyle atsExecutiveBodyPdfTextStyle(
+  GaramondPdfFonts fonts,
+  double bodyPt, {
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    garamondPdfTextStyle(
+      fonts,
+      ResumeTypography.atsStructuredBodyWeight,
+      fontSize: bodyPt,
+      color: color,
+      lineSpacing: ResumeTypography.atsExecutiveBodyPdfLineSpacingFor(bodyPt),
+      fontStyle: fontStyle,
+    );
+
 pw.TextStyle accentStripBodyPdfTextStyle(
   GaramondPdfFonts fonts,
   double bodyPt, {

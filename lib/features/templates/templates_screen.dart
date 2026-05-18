@@ -2846,12 +2846,16 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
 
   static double _scaledPt(double pt) => pt * _layoutScale;
 
-  TextStyle _garamondBody(double fontSize, {int weight = ResumeTypography.atsStructuredBodyWeight}) =>
+  TextStyle _garamondBody(
+    double fontSize, {
+    int weight = ResumeTypography.atsStructuredBodyWeight,
+    double? height,
+  }) =>
       ResumeTypography.garamondPreviewStyle(
         weight: weight,
         fontSize: fontSize,
         color: ResumeTypography.atsStructuredBodyTextColor,
-        height: ResumeTypography.textLineHeight,
+        height: height ?? ResumeTypography.atsModernFlowBodyLineHeight,
       );
 
   @override
@@ -2861,14 +2865,17 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
     final contactStyle = _garamondBody(
       _scaledPt(bodyPt),
       weight: ResumeTypography.atsStructuredContactWeight,
+      height: ResumeTypography.textLineHeight,
     );
     final subtitleStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
+      height: ResumeTypography.textLineHeight,
     );
     final sectionTitleStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
+      height: ResumeTypography.textLineHeight,
     );
     final skillsBody = _garamondBody(
       _scaledPt(math.max(9.0, bodyPt - 1.35)),
@@ -2891,6 +2898,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                 style: _garamondBody(
                   _scaledPt(ResumeTypography.atsStructuredNamePt),
                   weight: ResumeTypography.atsStructuredNameWeight,
+                  height: ResumeTypography.textLineHeight,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -2903,6 +2911,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                   style: _garamondBody(
                     _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
                     weight: ResumeTypography.atsStructuredTitleWeight,
+                    height: ResumeTypography.textLineHeight,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -3119,12 +3128,16 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
 
   static double _scaledPt(double pt) => pt * _layoutScale;
 
-  TextStyle _garamondBody(double fontSize, {int weight = ResumeTypography.atsStructuredBodyWeight}) =>
+  TextStyle _garamondBody(
+    double fontSize, {
+    int weight = ResumeTypography.atsStructuredBodyWeight,
+    double? height,
+  }) =>
       ResumeTypography.garamondPreviewStyle(
         weight: weight,
         fontSize: fontSize,
         color: ResumeTypography.atsStructuredBodyTextColor,
-        height: ResumeTypography.textLineHeight,
+        height: height ?? ResumeTypography.atsExecutiveBodyLineHeight,
       );
 
   @override
@@ -3134,14 +3147,17 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
     final contactStyle = _garamondBody(
       _scaledPt(bodyPt),
       weight: ResumeTypography.atsStructuredContactWeight,
+      height: ResumeTypography.textLineHeight,
     );
     final subtitleStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
+      height: ResumeTypography.textLineHeight,
     );
     final sectionTitleStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
+      height: ResumeTypography.textLineHeight,
     );
     final skillsBody = _garamondBody(
       _scaledPt(math.max(9.0, bodyPt - 1.35)),
@@ -3168,6 +3184,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                   style: _garamondBody(
                     _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
                     weight: ResumeTypography.atsStructuredTitleWeight,
+                    height: ResumeTypography.textLineHeight,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -3179,6 +3196,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                 style: _garamondBody(
                   _scaledPt(ResumeTypography.atsStructuredNamePt),
                   weight: ResumeTypography.atsStructuredNameWeight,
+                  height: ResumeTypography.textLineHeight,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
