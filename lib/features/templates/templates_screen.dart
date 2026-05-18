@@ -2842,18 +2842,38 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
   final ResumeData resume;
   final bool detailed;
 
-  static const Color _ink = Color(0xFF111827);
+  static const double _layoutScale = 240 / 595.28;
+
+  static double _scaledPt(double pt) => pt * _layoutScale;
+
+  TextStyle _garamondBody(double fontSize, {int weight = ResumeTypography.atsStructuredBodyWeight}) =>
+      ResumeTypography.garamondPreviewStyle(
+        weight: weight,
+        fontSize: fontSize,
+        color: ResumeTypography.atsStructuredBodyTextColor,
+        height: ResumeTypography.textLineHeight,
+      );
 
   @override
   Widget build(BuildContext context) {
-    final fs = detailed ? 4.75 : 4.45;
-    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
-    final skillsBody = body.copyWith(fontSize: math.max(3.25, fs - 0.85));
-    final pipes = [
-      if (resume.location.trim().isNotEmpty) resume.location.trim(),
-      if (resume.email.trim().isNotEmpty) resume.email.trim(),
-      if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
-    ].join('  |  ');
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final body = _garamondBody(_scaledPt(bodyPt));
+    final contactStyle = _garamondBody(
+      _scaledPt(bodyPt),
+      weight: ResumeTypography.atsStructuredContactWeight,
+    );
+    final subtitleStyle = _garamondBody(
+      _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
+      weight: ResumeTypography.atsStructuredSubtitleWeight,
+    );
+    final sectionTitleStyle = _garamondBody(
+      _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
+      weight: ResumeTypography.atsStructuredTitleWeight,
+    );
+    final skillsBody = _garamondBody(
+      _scaledPt(math.max(9.0, bodyPt - 1.35)),
+    );
+    final contactLines = resume.atsStructuredHeaderContactLines();
     final edu = resume.visibleEducation;
     final works = resume.visibleWorkExperiences;
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
@@ -2868,31 +2888,45 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
               Text(
                 resume.fullName.trim(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: detailed ? 9 : 8.2,
-                  fontWeight: FontWeight.w800,
-                  color: _ink,
+                style: _garamondBody(
+                  _scaledPt(ResumeTypography.atsStructuredNamePt),
+                  weight: ResumeTypography.atsStructuredNameWeight,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (pipes.isNotEmpty) ...[
-                const SizedBox(height: 3),
+              if (resume.jobTitle.trim().isNotEmpty) ...[
+                const SizedBox(height: 2),
                 Text(
-                  pipes,
+                  resume.jobTitle.trim(),
                   textAlign: TextAlign.center,
-                  style: body.copyWith(color: _ink.withValues(alpha: 0.92)),
-                  maxLines: detailed ? 4 : 3,
+                  style: _garamondBody(
+                    _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
+                    weight: ResumeTypography.atsStructuredTitleWeight,
+                  ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
+              if (contactLines.isNotEmpty) ...[
+                const SizedBox(height: 3),
+                for (final line in contactLines)
+                  Text(
+                    line,
+                    textAlign: TextAlign.center,
+                    style: contactStyle,
+                    maxLines: detailed ? 4 : 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
               const SizedBox(height: 6),
-              Container(height: 1, color: _ink.withValues(alpha: 0.42)),
-              const SizedBox(height: 7),
-              Text(
-                'Professional Summary',
-                style: body.copyWith(fontWeight: FontWeight.w800),
+              Container(
+                height: 1,
+                color: ResumeTypography.atsStructuredBodyTextColor
+                    .withValues(alpha: 0.85),
               ),
+              const SizedBox(height: 7),
+              Text('Professional Summary', style: sectionTitleStyle),
               const SizedBox(height: 5),
               Text(
                 resume.summary.trim(),
@@ -2901,12 +2935,13 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 6),
-              Container(height: 1, color: _ink.withValues(alpha: 0.22)),
-              const SizedBox(height: 7),
-              Text(
-                'Education',
-                style: body.copyWith(fontWeight: FontWeight.w800),
+              Container(
+                height: 1,
+                color: ResumeTypography.atsStructuredBodyTextColor
+                    .withValues(alpha: 0.22),
               ),
+              const SizedBox(height: 7),
+              Text('Education', style: sectionTitleStyle),
               const SizedBox(height: 5),
               if (edu.isEmpty)
                 Text('Add education.', style: body)
@@ -2914,7 +2949,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                 for (final e in edu.take(detailed ? 2 : 1)) ...[
                   Text(
                     e.degree.trim(),
-                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    style: subtitleStyle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2937,21 +2972,26 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                   ],
                   const SizedBox(height: 6),
                 ],
-              Container(height: 1, color: _ink.withValues(alpha: 0.22)),
+              Container(
+                height: 1,
+                color: ResumeTypography.atsStructuredBodyTextColor
+                    .withValues(alpha: 0.22),
+              ),
               const SizedBox(height: 7),
-              Text('Skills', style: body.copyWith(fontWeight: FontWeight.w800)),
+              Text('Skills', style: sectionTitleStyle),
               const SizedBox(height: 5),
               _MiniBulletColumn(
                 items: skills.take(detailed ? 7 : 4).toList(),
                 textStyle: skillsBody,
               ),
               const SizedBox(height: 6),
-              Container(height: 1, color: _ink.withValues(alpha: 0.22)),
-              const SizedBox(height: 7),
-              Text(
-                'Experience',
-                style: body.copyWith(fontWeight: FontWeight.w800),
+              Container(
+                height: 1,
+                color: ResumeTypography.atsStructuredBodyTextColor
+                    .withValues(alpha: 0.22),
               ),
+              const SizedBox(height: 7),
+              Text('Experience', style: sectionTitleStyle),
               const SizedBox(height: 5),
               if (works.isEmpty)
                 Text('Add roles.', style: body)
@@ -2959,7 +2999,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                 for (final w in works.take(detailed ? 2 : 1)) ...[
                   Text(
                     '${w.role.trim()} — ${w.company.trim()}',
-                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    style: subtitleStyle,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2989,17 +3029,18 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                   const SizedBox(height: 6),
                 ],
               if (detailed && projects.isNotEmpty) ...[
-                Container(height: 1, color: _ink.withValues(alpha: 0.22)),
-                const SizedBox(height: 7),
-                Text(
-                  'Projects',
-                  style: body.copyWith(fontWeight: FontWeight.w800),
+                Container(
+                  height: 1,
+                  color: ResumeTypography.atsStructuredBodyTextColor
+                      .withValues(alpha: 0.22),
                 ),
+                const SizedBox(height: 7),
+                Text('Projects', style: sectionTitleStyle),
                 const SizedBox(height: 5),
                 for (final p in projects.take(1)) ...[
                   Text(
                     p.title.trim(),
-                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    style: subtitleStyle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -3011,6 +3052,39 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                 ],
+              ],
+              for (final section
+                  in resume.visibleCustomSections.take(detailed ? 3 : 1)) ...[
+                Container(
+                  height: 1,
+                  color: ResumeTypography.atsStructuredBodyTextColor
+                      .withValues(alpha: 0.22),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  section.title.trim().isEmpty
+                      ? 'Additional'
+                      : section.title.trim(),
+                  style: sectionTitleStyle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 5),
+                if (section.layoutMode == CustomSectionLayoutMode.bullets)
+                  _MiniBulletColumn(
+                    items: section.bullets
+                        .where((b) => b.trim().isNotEmpty)
+                        .take(detailed ? 4 : 2)
+                        .toList(),
+                    textStyle: body,
+                  )
+                else if (section.content.trim().isNotEmpty)
+                  Text(
+                    section.content.trim(),
+                    style: body,
+                    maxLines: detailed ? 6 : 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
               ],
             ],
           ),
@@ -3041,13 +3115,37 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
   final ResumeData resume;
   final bool detailed;
 
-  static const Color _ink = Color(0xFF111827);
+  static const double _layoutScale = 240 / 595.28;
+
+  static double _scaledPt(double pt) => pt * _layoutScale;
+
+  TextStyle _garamondBody(double fontSize, {int weight = ResumeTypography.atsStructuredBodyWeight}) =>
+      ResumeTypography.garamondPreviewStyle(
+        weight: weight,
+        fontSize: fontSize,
+        color: ResumeTypography.atsStructuredBodyTextColor,
+        height: ResumeTypography.textLineHeight,
+      );
 
   @override
   Widget build(BuildContext context) {
-    final fs = detailed ? 4.75 : 4.45;
-    final body = TextStyle(fontSize: fs, height: 1.28, color: _ink);
-    final skillsBody = body.copyWith(fontSize: math.max(3.25, fs - 0.85));
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final body = _garamondBody(_scaledPt(bodyPt));
+    final contactStyle = _garamondBody(
+      _scaledPt(bodyPt),
+      weight: ResumeTypography.atsStructuredContactWeight,
+    );
+    final subtitleStyle = _garamondBody(
+      _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
+      weight: ResumeTypography.atsStructuredSubtitleWeight,
+    );
+    final sectionTitleStyle = _garamondBody(
+      _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
+      weight: ResumeTypography.atsStructuredTitleWeight,
+    );
+    final skillsBody = _garamondBody(
+      _scaledPt(math.max(9.0, bodyPt - 1.35)),
+    );
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
@@ -3067,7 +3165,10 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                 Text(
                   resume.jobTitle.trim().toUpperCase(),
                   textAlign: TextAlign.center,
-                  style: body.copyWith(fontWeight: FontWeight.w800),
+                  style: _garamondBody(
+                    _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
+                    weight: ResumeTypography.atsStructuredTitleWeight,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -3075,10 +3176,9 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
               Text(
                 resume.fullName.trim(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: detailed ? 9.5 : 8.8,
-                  fontWeight: FontWeight.w900,
-                  color: _ink,
+                style: _garamondBody(
+                  _scaledPt(ResumeTypography.atsStructuredNamePt),
+                  weight: ResumeTypography.atsStructuredNameWeight,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -3088,7 +3188,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                 Text(
                   resume.location.trim(),
                   textAlign: TextAlign.center,
-                  style: body,
+                  style: contactStyle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -3102,18 +3202,19 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                     if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
                   ].join('   '),
                   textAlign: TextAlign.center,
-                  style: body,
+                  style: contactStyle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
               const SizedBox(height: 6),
-              Container(height: 1, color: _ink.withValues(alpha: 0.85)),
-              const SizedBox(height: 7),
-              Text(
-                'SUMMARY',
-                style: body.copyWith(fontWeight: FontWeight.w900),
+              Container(
+                height: 1,
+                color: ResumeTypography.atsStructuredBodyTextColor
+                    .withValues(alpha: 0.85),
               ),
+              const SizedBox(height: 7),
+              Text('SUMMARY', style: sectionTitleStyle),
               const SizedBox(height: 5),
               Text(
                 resume.summary.trim(),
@@ -3122,10 +3223,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 7),
-              Text(
-                'EXPERIENCE',
-                style: body.copyWith(fontWeight: FontWeight.w900),
-              ),
+              Text('EXPERIENCE', style: sectionTitleStyle),
               const SizedBox(height: 5),
               if (works.isEmpty)
                 Text('Add experience.', style: body)
@@ -3137,7 +3235,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                       Expanded(
                         child: Text(
                           w.role.trim().toUpperCase(),
-                          style: body.copyWith(fontWeight: FontWeight.w700),
+                          style: subtitleStyle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -3148,7 +3246,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                           child: Text(
                             educationDateRangeLabel(w.startDate, w.endDate),
                             textAlign: TextAlign.right,
-                            style: body.copyWith(fontWeight: FontWeight.w700),
+                            style: subtitleStyle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -3182,10 +3280,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                     ),
                   const SizedBox(height: 6),
                 ],
-              Text(
-                'EDUCATION',
-                style: body.copyWith(fontWeight: FontWeight.w900),
-              ),
+              Text('EDUCATION', style: sectionTitleStyle),
               const SizedBox(height: 5),
               if (edu.isEmpty)
                 Text('Add education.', style: body)
@@ -3193,7 +3288,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                 for (final e in edu.take(detailed ? 2 : 1)) ...[
                   Text(
                     '${e.institution.trim()} | ${e.degree.trim()}',
-                    style: body.copyWith(fontWeight: FontWeight.w700),
+                    style: subtitleStyle,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -3211,10 +3306,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                 ],
-              Text(
-                'SKILLS',
-                style: body.copyWith(fontWeight: FontWeight.w900),
-              ),
+              Text('SKILLS', style: sectionTitleStyle),
               const SizedBox(height: 5),
               if (skills.isEmpty)
                 Text('Add skills.', style: skillsBody)
@@ -3248,6 +3340,54 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                       ],
                     ),
                   ),
+              if (detailed && resume.visibleProjects.isNotEmpty) ...[
+                const SizedBox(height: 7),
+                Text('PROJECTS', style: sectionTitleStyle),
+                const SizedBox(height: 5),
+                for (final p in resume.visibleProjects.take(1)) ...[
+                  Text(
+                    p.title.trim(),
+                    style: subtitleStyle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (_templateArtProjectBullets(p).isNotEmpty)
+                    Text(
+                      _templateArtProjectBullets(p).first,
+                      style: body,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ],
+              for (final section
+                  in resume.visibleCustomSections.take(detailed ? 3 : 1)) ...[
+                const SizedBox(height: 7),
+                Text(
+                  section.title.trim().isEmpty
+                      ? 'ADDITIONAL'
+                      : section.title.trim().toUpperCase(),
+                  style: sectionTitleStyle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 5),
+                if (section.layoutMode == CustomSectionLayoutMode.bullets)
+                  _MiniBulletColumn(
+                    items: section.bullets
+                        .where((b) => b.trim().isNotEmpty)
+                        .take(detailed ? 4 : 2)
+                        .toList(),
+                    textStyle: body,
+                  )
+                else if (section.content.trim().isNotEmpty)
+                  Text(
+                    section.content.trim(),
+                    style: body,
+                    maxLines: detailed ? 6 : 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
             ],
           ),
         );

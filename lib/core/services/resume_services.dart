@@ -5234,6 +5234,20 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsModernFlow) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsModernFlowTemplatePage(document, resume, garamond: garamond);
+      return document.save();
+    }
+
+    if (resume.template == ResumeTemplate.atsExecutive) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsExecutiveTemplatePage(document, resume, garamond: garamond);
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -5273,10 +5287,8 @@ class ResumePdfService {
       case ResumeTemplate.atsSerifRules:
         break;
       case ResumeTemplate.atsModernFlow:
-        _addAtsModernFlowTemplatePage(document, resume);
         break;
       case ResumeTemplate.atsExecutive:
-        _addAtsExecutiveTemplatePage(document, resume);
         break;
       case ResumeTemplate.atsCenterClassic:
         _addAtsCenterClassicTemplatePage(document, resume);
@@ -5374,6 +5386,34 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsModernFlow) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsModernFlowTemplatePage(
+        document,
+        resume,
+        garamond: garamond,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
+    if (resume.template == ResumeTemplate.atsExecutive) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsExecutiveTemplatePage(
+        document,
+        resume,
+        garamond: garamond,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -5420,22 +5460,8 @@ class ResumePdfService {
       case ResumeTemplate.atsSerifRules:
         break;
       case ResumeTemplate.atsModernFlow:
-        _addAtsModernFlowTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
         break;
       case ResumeTemplate.atsExecutive:
-        _addAtsExecutiveTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
         break;
       case ResumeTemplate.atsCenterClassic:
         _addAtsCenterClassicTemplatePage(

@@ -160,8 +160,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.accentStrip => 'Garamond · accent strip',
     ResumeTemplate.atsStructured => 'Garamond · banded ATS',
     ResumeTemplate.atsSerifRules => 'Garamond · rules ATS',
-    ResumeTemplate.atsModernFlow => 'Sans · flow ATS',
-    ResumeTemplate.atsExecutive => 'Sans · executive ATS',
+    ResumeTemplate.atsModernFlow => 'Garamond · flow ATS',
+    ResumeTemplate.atsExecutive => 'Garamond · executive ATS',
     ResumeTemplate.atsCenterClassic => 'Serif · center ATS',
     ResumeTemplate.atsProfessionalBlue => 'Sans · blue ATS',
   };
