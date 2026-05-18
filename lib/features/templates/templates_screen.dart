@@ -3099,18 +3099,15 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
           ),
         );
 
+    // Scale to fit tile/detail bounds (Structured ATS uses a 240×360 box; these
+    // layouts are taller in grid mode, so width-only lets FittedBox shrink height).
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: detailed
-          ? FittedBox(
-              fit: BoxFit.contain,
-              alignment: Alignment.topCenter,
-              child: SizedBox(width: 240, child: pageContent),
-            )
-          : SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: pageContent,
-            ),
+      child: FittedBox(
+        fit: BoxFit.contain,
+        alignment: Alignment.topCenter,
+        child: SizedBox(width: 240, child: pageContent),
+      ),
     );
   }
 }
@@ -3412,16 +3409,11 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
 
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: detailed
-          ? FittedBox(
-              fit: BoxFit.contain,
-              alignment: Alignment.topCenter,
-              child: SizedBox(width: 240, child: pageContent),
-            )
-          : SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: pageContent,
-            ),
+      child: FittedBox(
+        fit: BoxFit.contain,
+        alignment: Alignment.topCenter,
+        child: SizedBox(width: 240, child: pageContent),
+      ),
     );
   }
 }
