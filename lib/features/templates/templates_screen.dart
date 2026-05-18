@@ -1152,8 +1152,153 @@ final ResumeData _atsFullSampleResume = ResumeData(
 
 ResumeData _atsSampleFor(ResumeTemplate template) => switch (template) {
   ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
+  ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
   _ => _atsFullSampleResume.copyWith(template: template),
 };
+
+/// Professional Blue ATS (template 10) — sample with four experience roles.
+final ResumeData _atsProfessionalBlueTemplateResume = ResumeData(
+  id: 'template-ats-professional-blue',
+  title: 'Professional Blue ATS Sample',
+  fullName: 'Morgan A. Lee',
+  jobTitle: 'Senior Program Manager',
+  email: 'morgan.lee@professional.example.com',
+  phone: '(415) 555-0192',
+  location: 'San Francisco, CA 94105',
+  website: 'morganlee.dev',
+  summary:
+      'Delivery-focused program manager with 8+ years aligning engineering, design, and business stakeholders. Known for turning ambiguous goals into phased roadmaps, measurable KPIs, and predictable releases in regulated and high-growth environments.',
+  template: ResumeTemplate.atsProfessionalBlue,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Senior Program Manager',
+      company: 'Northwind Analytics',
+      startDate: 'Jan 2019',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Directed portfolio planning for three product lines with an \$18M annual budget and quarterly executive reviews.',
+        'Reduced cross-team dependency delays by 27% through shared milestone dashboards and clearer RACI ownership.',
+        'Led vendor selection and contract renewals for analytics and data-pipeline partners.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Associate Program Manager',
+      company: 'Cascade Partners — Seattle, WA',
+      startDate: 'Feb 2017',
+      endDate: 'Dec 2018',
+      description: '',
+      bullets: [
+        'Coordinated three concurrent SaaS integrations with shared milestone plans and weekly steering reviews.',
+        'Introduced dependency heatmaps that cut slipped handoffs between product and implementation by 19%.',
+        'Owned vendor SOWs and change requests for analytics and identity partners.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Project Lead',
+      company: 'Harbor Systems LLC — Oakland, CA',
+      startDate: 'Jun 2015',
+      endDate: 'Jan 2017',
+      description: '',
+      bullets: [
+        'Led ERP rollout for 120 users; completed UAT two weeks early with zero Sev-1 defects.',
+        'Standardized project intake and status reporting for a 25-person delivery group.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Business Analyst',
+      company: 'Brightline Retail — San Jose, CA',
+      startDate: 'Aug 2012',
+      endDate: 'May 2015',
+      description: '',
+      bullets: [
+        'Mapped order-to-cash workflows and delivered requirements for inventory visibility tools.',
+        'Built Tableau dashboards used weekly by merchandising and operations leadership.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'University of California, Berkeley',
+      degree: 'MBA, Technology Strategy',
+      startDate: '2013',
+      endDate: '2015',
+      score: "Dean's List",
+    ),
+    EducationItem(
+      institution: 'San José State University',
+      degree: 'BS, Industrial Engineering',
+      startDate: '2009',
+      endDate: '2013',
+      score: 'cum laude',
+    ),
+  ],
+  skills: const [
+    'Program governance',
+    'SQL & Excel modeling',
+    'Agile / Scrum',
+    'Stakeholder communication',
+    'Risk & dependency tracking',
+    'Vendor management',
+    'Roadmap planning',
+    'Executive reporting',
+    'Jira & Confluence',
+    'Process design',
+  ],
+  projects: const [
+    ProjectItem(
+      title: 'Forecast Automation Toolkit',
+      overview: 'Finance forecasting workflow',
+      impact: 'SQL, Python, Airflow',
+      bullets: [
+        'Partnered with finance to replace spreadsheet forecasts with auditable, versioned pipelines.',
+        'Cut monthly close prep from five days to two through automated variance checks.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Customer Onboarding Playbook',
+      overview: 'Cross-functional onboarding',
+      impact: 'Notion, Miro, Figma',
+      bullets: [
+        'Published a stage-gated onboarding framework used by sales, CS, and implementation.',
+        'Reduced time-to-first-value by 22% for mid-market accounts in the first pilot quarter.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Release Readiness Dashboard',
+      overview: 'Engineering release metrics',
+      impact: 'Looker, BigQuery',
+      bullets: [
+        'Defined readiness criteria and automated weekly scorecards for five product squads.',
+        'Surfaced blocker trends that cut release slip rate by one third over two quarters.',
+      ],
+    ),
+  ],
+  customSections: const [
+    CustomSectionItem(
+      title: 'Certifications',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: [
+        'PMP — Project Management Institute (2016)',
+        'Agile PM Certificate — Berkeley Extension (2014)',
+      ],
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: 'github.com/malee',
+  linkedinLink: 'linkedin.com/in/morganalee',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: true,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.atsProfessionalBlue,
+  ),
+);
 
 /// Serif Rules ATS — sample tuned for ruled sections, right-column links, 2-col skills.
 final ResumeData _atsSerifRulesTemplateResume = ResumeData(
@@ -3856,7 +4001,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
           if (works.isEmpty)
             Text('Add roles.', style: body)
           else
-            for (final w in works.take(detailed ? 2 : 1)) ...[
+            for (final w in works.take(4)) ...[
               Row(
                 children: [
                   Expanded(

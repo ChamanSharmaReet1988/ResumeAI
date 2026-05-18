@@ -3408,7 +3408,7 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
       color: _blue,
       height: ResumeTypography.textLineHeight,
     );
-    final works = resume.visibleWorkExperiences.take(2).toList();
+    final works = resume.visibleWorkExperiences.take(4).toList();
     final projects = resume.visibleProjects.take(2).toList();
 
     return ColoredBox(
