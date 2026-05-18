@@ -898,14 +898,10 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       );
     }
     if (template == ResumeTemplate.atsModernFlow) {
-      return _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _AtsModernFlowTemplateArt(
-          resume: _applyTemplatePreviewPalette(
-            _atsSampleFor(ResumeTemplate.atsModernFlow),
-            paletteSeed,
-          ),
-          detailed: true,
+      return _TemplateDetailPdfPreview(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsModernFlow),
+          paletteSeed,
         ),
       );
     }
@@ -2997,11 +2993,9 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
 class _AtsModernFlowTemplateArt extends StatelessWidget {
   const _AtsModernFlowTemplateArt({
     required this.resume,
-    this.detailed = false,
   });
 
   final ResumeData resume;
-  final bool detailed;
 
   static const double _layoutScale = 240 / 595.28;
 
@@ -3048,7 +3042,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
     final projects = resume.visibleProjects;
 
     final pageContent = Padding(
-          padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
+          padding: const EdgeInsets.fromLTRB(10, 9, 10, 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3085,7 +3079,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                     line,
                     textAlign: TextAlign.center,
                     style: contactStyle,
-                    maxLines: detailed ? 4 : 3,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
               ],
@@ -3101,7 +3095,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
               Text(
                 resume.summary.trim(),
                 style: body,
-                maxLines: detailed ? 10 : 5,
+                maxLines: 5,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 6),
@@ -3116,7 +3110,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
               if (edu.isEmpty)
                 Text('Add education.', style: body)
               else
-                for (final e in edu.take(detailed ? 2 : 1)) ...[
+                for (final e in edu.take(1)) ...[
                   Text(
                     e.degree.trim(),
                     style: subtitleStyle,
@@ -3151,7 +3145,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
               Text('Skills', style: sectionTitleStyle),
               const SizedBox(height: 5),
               _MiniBulletColumn(
-                items: skills.take(detailed ? 7 : 4).toList(),
+                items: skills.take(4).toList(),
                 textStyle: skillsBody,
               ),
               const SizedBox(height: 6),
@@ -3166,7 +3160,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
               if (works.isEmpty)
                 Text('Add roles.', style: body)
               else
-                for (final w in works.take(detailed ? 2 : 1)) ...[
+                for (final w in works.take(1)) ...[
                   Text(
                     '${w.role.trim()} — ${w.company.trim()}',
                     style: subtitleStyle,
@@ -3184,7 +3178,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                         w.bullets
                             .where((b) => b.trim().isNotEmpty)
                             .length
-                            .clamp(0, detailed ? 3 : 1);
+                            .clamp(0, 1);
                     i++
                   )
                     Padding(
@@ -3198,7 +3192,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                     ),
                   const SizedBox(height: 6),
                 ],
-              if (detailed && projects.isNotEmpty) ...[
+              if (projects.isNotEmpty) ...[
                 Container(
                   height: 1,
                   color: ResumeTypography.atsStructuredBodyTextColor
@@ -3207,7 +3201,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                 const SizedBox(height: 7),
                 Text('Projects', style: sectionTitleStyle),
                 const SizedBox(height: 5),
-                for (final p in projects.take(detailed ? 3 : 1)) ...[
+                for (final p in projects.take(1)) ...[
                   Text(
                     p.title.trim(),
                     style: subtitleStyle,
@@ -3225,7 +3219,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                 ],
               ],
               for (final section
-                  in resume.visibleCustomSections.take(detailed ? 3 : 1)) ...[
+                  in resume.visibleCustomSections.take(1)) ...[
                 Container(
                   height: 1,
                   color: ResumeTypography.atsStructuredBodyTextColor
@@ -3245,7 +3239,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                   _MiniBulletColumn(
                     items: section.bullets
                         .where((b) => b.trim().isNotEmpty)
-                        .take(detailed ? 4 : 2)
+                        .take(2)
                         .toList(),
                     textStyle: body,
                   )
@@ -3253,7 +3247,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                   Text(
                     section.content.trim(),
                     style: body,
-                    maxLines: detailed ? 6 : 3,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
               ],
