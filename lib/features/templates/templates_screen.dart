@@ -54,7 +54,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     _TemplateTileData item,
     ResumeLibraryViewModel? library,
   ) async {
-    if (!await ensurePremiumForTemplateTile(context, templateTileId: item.id)) {
+    if (!await _ensureCanUseTemplate(context, item)) {
       return;
     }
     if (!context.mounted) {
@@ -88,12 +88,25 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     );
   }
 
+  Future<bool> _ensureCanUseTemplate(
+    BuildContext context,
+    _TemplateTileData item,
+  ) {
+    if (item.coverLetterTemplate != null) {
+      return ensurePremiumForCoverLetterTemplate(
+        context,
+        item.coverLetterTemplate!,
+      );
+    }
+    return ensurePremiumForTemplateTile(context, templateTileId: item.id);
+  }
+
   Future<void> _applyResumeTemplate(
     BuildContext context,
     _TemplateTileData item,
     ResumeLibraryViewModel? library,
   ) async {
-    if (!await ensurePremiumForTemplateTile(context, templateTileId: item.id)) {
+    if (!await _ensureCanUseTemplate(context, item)) {
       return;
     }
     if (!context.mounted) {
@@ -410,31 +423,10 @@ class _TemplateTile extends StatelessWidget {
                     Expanded(
                       child: KeyedSubtree(
                         key: Key('template-image-${item.id}'),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            _TemplatePreviewArt(
-                              item: item,
-                              paletteSeed: paletteSeed,
-                            ),
-                            if (item.isPremium)
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    right: 20,
-                                    bottom: 10,
-                                  ),
-                                  child: Image.asset(
-                                    'assets/premium_badge.png',
-                                    width: 18,
-                                    height: 18,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                          ],
+                        child: _TemplatePreviewArt(
+                          item: item,
+                          paletteSeed: paletteSeed,
+                          showPremiumBadgeOnTile: true,
                         ),
                       ),
                     ),
@@ -569,7 +561,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.minimalCoverLetter,
     headline: 'Minimal Letter',
     caption: 'Centered and airy layout with restrained modern spacing.',
-    isPremium: false,
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'sidebar-letter',
@@ -577,7 +569,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.sidebarCoverLetter,
     headline: 'Sidebar Letter',
     caption: 'A bolder cover letter with a left rail for contact details.',
-    isPremium: false,
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'classic-business-letter',
@@ -586,7 +578,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     headline: 'Classic Business',
     caption:
         'Traditional business letter: date, recipient block, and left-aligned body.',
-    isPremium: false,
+    isPremium: true,
   ),
 ];
 
@@ -632,6 +624,7 @@ class _TemplatePreviewArt extends StatelessWidget {
   const _TemplatePreviewArt({
     required this.item,
     this.paletteSeed,
+    this.showPremiumBadgeOnTile = false,
     this.showPremiumBadgeOnPage = false,
     this.premiumBadgeRightPadding = 20,
     this.premiumBadgeSize = 18,
@@ -640,6 +633,7 @@ class _TemplatePreviewArt extends StatelessWidget {
 
   final _TemplateTileData item;
   final ResumeData? paletteSeed;
+  final bool showPremiumBadgeOnTile;
   final bool showPremiumBadgeOnPage;
   final double premiumBadgeRightPadding;
   final double premiumBadgeSize;
@@ -777,7 +771,8 @@ class _TemplatePreviewArt extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (showPremiumBadgeOnPage && item.isPremium)
+                if ((showPremiumBadgeOnTile || showPremiumBadgeOnPage) &&
+                    item.isPremium)
                   Positioned(
                     right: badgeRightPadding,
                     bottom: badgeBottomPadding,

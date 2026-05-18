@@ -26,6 +26,10 @@ bool resumeTemplateRequiresPremium(ResumeTemplate template) {
   return PremiumAccess.resumeTemplateRequiresPremium(template);
 }
 
+bool coverLetterTemplateRequiresPremium(CoverLetterTemplate template) {
+  return PremiumAccess.coverLetterTemplateRequiresPremium(template);
+}
+
 /// Returns `true` when the user already has Premium or completes a purchase.
 Future<bool> ensurePremiumAccess(BuildContext context) async {
   if (readPremiumAccess(context)) {
@@ -73,6 +77,16 @@ Future<bool> ensurePremiumForResumeTemplate(
   ResumeTemplate template,
 ) async {
   if (!resumeTemplateRequiresPremium(template)) {
+    return true;
+  }
+  return ensurePremiumAccess(context);
+}
+
+Future<bool> ensurePremiumForCoverLetterTemplate(
+  BuildContext context,
+  CoverLetterTemplate template,
+) async {
+  if (!coverLetterTemplateRequiresPremium(template)) {
     return true;
   }
   return ensurePremiumAccess(context);

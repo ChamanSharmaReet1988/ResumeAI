@@ -4,11 +4,22 @@ import '../models/resume_models.dart';
 abstract final class PremiumAccess {
   static const String freeProfessionalTemplateTileId = 'dark-header';
   static const String freeAtsTemplateTileId = 'ats-structured';
+  static const String freeCoverLetterTemplateTileId = 'executive-note';
+
+  static const Set<String> coverLetterTemplateTileIds = {
+    'executive-note',
+    'minimal-letter',
+    'sidebar-letter',
+    'classic-business-letter',
+  };
 
   static bool templateTileRequiresPremium(String tileId) {
     if (tileId == freeProfessionalTemplateTileId ||
         tileId == freeAtsTemplateTileId) {
       return false;
+    }
+    if (coverLetterTemplateTileIds.contains(tileId)) {
+      return coverLetterTemplateTileRequiresPremium(tileId);
     }
     return true;
   }
@@ -21,9 +32,16 @@ abstract final class PremiumAccess {
     };
   }
 
-  /// Cover letters, PDF export, AI, and most app features stay free.
-  static bool coverLetterTemplateRequiresPremium(CoverLetterTemplate template) =>
-      false;
+  static bool coverLetterTemplateRequiresPremium(CoverLetterTemplate template) {
+    return switch (template) {
+      CoverLetterTemplate.executiveNote => false,
+      _ => true,
+    };
+  }
+
+  static bool coverLetterTemplateTileRequiresPremium(String tileId) {
+    return tileId != freeCoverLetterTemplateTileId;
+  }
 
   static const bool iCloudBackupRequiresPremium = true;
 }
