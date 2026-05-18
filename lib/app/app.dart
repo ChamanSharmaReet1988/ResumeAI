@@ -13,6 +13,7 @@ import '../core/services/resume_services.dart';
 import '../features/shared/view_models.dart';
 import '../features/shell/app_shell.dart';
 import 'app_theme.dart';
+import 'premium_subscription_watcher.dart';
 import 'vertical_edge_bounce.dart';
 
 class ResumeApp extends StatelessWidget {
@@ -81,7 +82,9 @@ class ResumeApp extends StatelessWidget {
             themeMode: settings.themeMode,
             theme: AppTheme.lightTheme(platform),
             darkTheme: AppTheme.darkTheme(platform),
-            home: const AppShell(),
+            home: const PremiumSubscriptionWatcher(
+              child: AppShell(),
+            ),
           );
         },
       ),

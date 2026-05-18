@@ -9,6 +9,7 @@ import '../../core/models/resume_models.dart';
 import '../../core/services/app_preferences.dart';
 import '../../core/services/icloud_resume_service.dart';
 import '../../core/services/resume_services.dart';
+import '../premium/premium_gate.dart';
 import '../shared/view_models.dart';
 
 class ICloudBackupScreen extends StatefulWidget {
@@ -34,17 +35,28 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
   void initState() {
     super.initState();
     _autoSyncEnabled = _preferences.iCloudAutoSyncEnabled;
-    _loadCloudResumes();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        unawaited(
-          context.read<CoverLetterLibraryViewModel>().loadCoverLetters(),
-        );
+      if (!mounted) {
+        return;
       }
+      if (!readPremiumAccess(context)) {
+        Navigator.of(context).pop();
+        return;
+      }
+      unawaited(_loadCloudResumes());
+      unawaited(
+        context.read<CoverLetterLibraryViewModel>().loadCoverLetters(),
+      );
     });
   }
 
   Future<void> _setAutoSyncEnabled(bool value) async {
+    if (value && !readPremiumAccess(context)) {
+      final allowed = await ensurePremiumForICloudBackup(context);
+      if (!allowed || !mounted) {
+        return;
+      }
+    }
     await _preferences.setICloudAutoSyncEnabled(value);
     if (!mounted) {
       return;

@@ -32,10 +32,6 @@ Future<void> main() async {
   final repository = await ResumeRepository.create();
   final appPreferences = await AppPreferences.open();
   final googleDriveResumeService = GoogleDriveResumeService();
-  repository.configureICloudAutoSync(
-    appPreferences: appPreferences,
-    service: const MethodChannelICloudResumeService(),
-  );
   repository.configureGoogleDriveAutoSync(
     appPreferences: appPreferences,
     service: googleDriveResumeService,
@@ -49,6 +45,11 @@ Future<void> main() async {
   }
   final premiumPurchaseService = PremiumPurchaseService(
     appPreferences: appPreferences,
+  );
+  repository.configureICloudAutoSync(
+    appPreferences: appPreferences,
+    service: const MethodChannelICloudResumeService(),
+    hasPremium: () => premiumPurchaseService.isPremium,
   );
   await premiumPurchaseService.initialize();
 

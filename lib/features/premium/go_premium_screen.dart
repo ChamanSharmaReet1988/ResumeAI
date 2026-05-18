@@ -6,6 +6,12 @@ import 'package:provider/provider.dart';
 
 import '../../core/services/premium_products.dart';
 import '../../core/services/premium_purchase_service.dart';
+import '../../core/services/premium_store_messages.dart';
+import '../shell/app_shell_scope.dart';
+import 'premium_store_loading_overlay.dart';
+import 'premium_welcome_dialog.dart';
+
+const Color _kGoPremiumLabelColor = Color.fromRGBO(20, 20, 20, 1);
 
 class GoPremiumScreen extends StatefulWidget {
   const GoPremiumScreen({super.key});
@@ -16,6 +22,11 @@ class GoPremiumScreen extends StatefulWidget {
 
 class _GoPremiumScreenState extends State<GoPremiumScreen> {
   String? _selectedProductId = PremiumProducts.year;
+  bool _didPop = false;
+  bool _isFullScreenLoading = false;
+  String _loadingMessage = 'Processing…';
+  bool _waitingForStoreResult = false;
+  PremiumPurchaseService? _premium;
 
   @override
   void initState() {
@@ -26,18 +37,146 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       }
       final premium = context.read<PremiumPurchaseService>();
       if (premium.isPremium) {
-        Navigator.of(context).pop(true);
+        unawaited(_completeAndLeave(premium));
         return;
       }
       unawaited(premium.refreshProducts());
     });
   }
 
-  void _onPremiumActivated(PremiumPurchaseService premium) {
-    if (!premium.isPremium || !mounted) {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final premium = context.read<PremiumPurchaseService>();
+    if (!identical(_premium, premium)) {
+      _premium?.removeListener(_onPremiumServiceUpdated);
+      _premium = premium;
+      premium.addListener(_onPremiumServiceUpdated);
+    }
+  }
+
+  @override
+  void dispose() {
+    _premium?.removeListener(_onPremiumServiceUpdated);
+    super.dispose();
+  }
+
+  void _onPremiumServiceUpdated() {
+    if (!_waitingForStoreResult || !mounted) {
       return;
     }
+    final premium = context.read<PremiumPurchaseService>();
+    if (premium.isPurchasing || premium.isRestoring) {
+      return;
+    }
+
+    if (premium.isPremium) {
+      unawaited(_completeAndLeave(premium));
+      return;
+    }
+
+    _endLoadingWithFailure(premium);
+  }
+
+  void _startFullScreenLoading(String message) {
+    setState(() {
+      _isFullScreenLoading = true;
+      _loadingMessage = message;
+      _waitingForStoreResult = true;
+    });
+  }
+
+  void _endLoadingWithFailure(PremiumPurchaseService premium) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isFullScreenLoading = false;
+      _waitingForStoreResult = false;
+    });
+
+    final error = premium.errorMessage;
+    final status = premium.statusMessage;
+    if (error != null && error.isNotEmpty) {
+      _showMessage(
+        PremiumStoreMessages.friendly(
+          rawMessage: error,
+          fallback: PremiumStoreMessages.purchaseFailed,
+        ),
+        isError: true,
+      );
+    } else if (status != null && status.isNotEmpty) {
+      _showMessage(status);
+    }
+    premium.clearMessages();
+  }
+
+  void _showMessage(String text, {bool isError = false}) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: isError ? Theme.of(context).colorScheme.error : null,
+      ),
+    );
+  }
+
+  Future<void> _completeAndLeave(PremiumPurchaseService premium) async {
+    if (_didPop || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _isFullScreenLoading = false;
+      _waitingForStoreResult = false;
+    });
+
+    if (premium.consumePremiumWelcomePending()) {
+      final planLabel = premiumWelcomePlanLabel(
+        premium.activeSubscriptionProductId,
+      );
+      await showPremiumWelcomeDialog(context, planLabel: planLabel);
+    }
+
+    if (!mounted || _didPop) {
+      return;
+    }
+
+    _didPop = true;
+    AppShellScope.goToSettings(context);
     Navigator.of(context).pop(true);
+  }
+
+  Future<void> _onContinuePressed(PremiumPurchaseService premium) async {
+    if (_selectedProductId == null || _isFullScreenLoading) {
+      return;
+    }
+    premium.clearMessages();
+    _startFullScreenLoading('Completing your purchase…');
+    await premium.buy(_selectedProductId!);
+    if (!mounted) {
+      return;
+    }
+    if (!premium.isPurchasing && !premium.isPremium) {
+      _endLoadingWithFailure(premium);
+    }
+  }
+
+  Future<void> _onRestorePressed(PremiumPurchaseService premium) async {
+    if (_isFullScreenLoading) {
+      return;
+    }
+    premium.clearMessages();
+    _startFullScreenLoading('Restoring your subscription…');
+    await premium.restorePurchases();
+    if (!mounted || _didPop) {
+      return;
+    }
+    if (!premium.isRestoring && !premium.isPremium) {
+      _endLoadingWithFailure(premium);
+    }
   }
 
   @override
@@ -47,137 +186,183 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
 
     return Consumer<PremiumPurchaseService>(
       builder: (context, premium, _) {
-        if (premium.isPremium) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _onPremiumActivated(premium);
-          });
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Go Premium'),
-          ),
-          body: SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Included free',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        for (final item in kFreeTierIncludes)
-                          _BenefitRow(
-                            text: item,
-                            color: colorScheme.onSurfaceVariant,
-                            icon: Icons.check_rounded,
-                          ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'ResumeApp Pro',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        for (final benefit in kPremiumBenefits)
-                          _BenefitRow(
-                            text: benefit,
-                            color: colorScheme.primary,
-                          ),
-                        const SizedBox(height: 22),
-                        Text(
-                          'Choose a plan',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (premium.isLoadingProducts)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        else ...[
-                          for (final plan in kPremiumPlanDefinitions)
-                            _PlanCard(
-                              definition: plan,
-                              product: premium.productFor(plan.productId),
-                              selected: _selectedProductId == plan.productId,
-                              onTap: () {
-                                setState(() {
-                                  _selectedProductId = plan.productId;
-                                });
-                              },
-                            ),
-                        ],
-                      ],
-                    ),
-                  ),
+        return PopScope(
+          canPop: !_isFullScreenLoading,
+          child: Stack(
+            children: [
+              Scaffold(
+                appBar: AppBar(
+                  automaticallyImplyLeading: !_isFullScreenLoading,
+                  title: const Text('Go Premium'),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                body: SafeArea(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      FilledButton(
-                        onPressed: premium.isPurchasing ||
-                                premium.isLoadingProducts ||
-                                _selectedProductId == null
-                            ? null
-                            : () async {
-                                premium.clearMessages();
-                                await premium.buy(_selectedProductId!);
-                                if (!context.mounted) {
-                                  return;
-                                }
-                                final message = premium.errorMessage;
-                                if (message != null && message.isNotEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(message),
-                                      backgroundColor:
-                                          colorScheme.error,
-                                    ),
-                                  );
-                                  premium.clearMessages();
-                                }
-                              },
-                        child: premium.isPurchasing
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'ResumeApp Pro',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
                                 ),
-                              )
-                            : const Text('Continue'),
+                              ),
+                              const SizedBox(height: 12),
+                              for (final benefit in kPremiumBenefits)
+                                _BenefitRow(
+                                  text: benefit,
+                                  color: colorScheme.primary,
+                                ),
+                              const SizedBox(height: 16),
+                              const _PremiumUpcomingHighlight(),
+                              const SizedBox(height: 28),
+                              Text(
+                                'Choose a plan',
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: _kGoPremiumLabelColor,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              if (premium.isLoadingProducts)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 20),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                )
+                              else ...[
+                                for (final plan in kPremiumPlanDefinitions)
+                                  _PlanCard(
+                                    definition: plan,
+                                    product: premium.productFor(plan.productId),
+                                    savingsLabel:
+                                        plan.productId == PremiumProducts.year
+                                        ? premiumYearlySavingsLabel(
+                                            yearlyPrice: premium
+                                                .productFor(
+                                                  PremiumProducts.year,
+                                                )
+                                                ?.rawPrice,
+                                            monthlyPrice: premium
+                                                .productFor(
+                                                  PremiumProducts.month,
+                                                )
+                                                ?.rawPrice,
+                                          )
+                                        : null,
+                                    selected:
+                                        _selectedProductId == plan.productId,
+                                    onTap: _isFullScreenLoading
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              _selectedProductId =
+                                                  plan.productId;
+                                            });
+                                          },
+                                  ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
-                      TextButton(
-                        onPressed: premium.isRestoring
-                            ? null
-                            : () => premium.restorePurchases(),
-                        child: const Text('Restore purchases'),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            FilledButton(
+                              onPressed: _isFullScreenLoading ||
+                                      premium.isLoadingProducts ||
+                                      _selectedProductId == null
+                                  ? null
+                                  : () => _onContinuePressed(premium),
+                              child: const Text('Continue'),
+                            ),
+                            const SizedBox(height: 6),
+                            TextButton(
+                              onPressed: _isFullScreenLoading
+                                  ? null
+                                  : () => _onRestorePressed(premium),
+                              child: const Text('Restore purchases'),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              if (_isFullScreenLoading)
+                PremiumStoreLoadingOverlay(message: _loadingMessage),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PremiumUpcomingHighlight extends StatelessWidget {
+  const _PremiumUpcomingHighlight();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.auto_awesome_rounded,
+            size: 14,
+            color: colorScheme.primary.withValues(alpha: 0.9),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  kPremiumUpcomingUpdateBadge,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: _kGoPremiumLabelColor,
+                    height: 1.15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  kPremiumUpcomingUpdateMessage,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 14,
+                    height: 1.25,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -186,21 +371,19 @@ class _BenefitRow extends StatelessWidget {
   const _BenefitRow({
     required this.text,
     required this.color,
-    this.icon = Icons.check_circle_rounded,
   });
 
   final String text;
   final Color color;
-  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: color),
+          Icon(Icons.check_circle_rounded, size: 18, color: color),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -220,14 +403,16 @@ class _PlanCard extends StatelessWidget {
   const _PlanCard({
     required this.definition,
     required this.product,
+    this.savingsLabel,
     required this.selected,
     required this.onTap,
   });
 
   final PremiumPlanDefinition definition;
   final ProductDetails? product;
+  final String? savingsLabel;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -236,56 +421,78 @@ class _PlanCard extends StatelessWidget {
     final priceLabel = product?.price ?? '—';
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Material(
-        color: selected
-            ? colorScheme.primary.withValues(alpha: 0.07)
-            : theme.cardColor,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
+      padding: EdgeInsets.only(bottom: savingsLabel != null ? 6 : 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            color: selected
+                ? colorScheme.primary.withValues(alpha: 0.07)
+                : theme.cardColor,
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: selected
-                    ? colorScheme.primary
-                    : colorScheme.outlineVariant.withValues(alpha: 0.65),
+              onTap: onTap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: selected
+                        ? colorScheme.primary
+                        : colorScheme.outlineVariant.withValues(alpha: 0.65),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      selected
+                          ? Icons.radio_button_checked_rounded
+                          : Icons.radio_button_off_rounded,
+                      size: 20,
+                      color: selected
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        definition.title,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: _kGoPremiumLabelColor,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      priceLabel,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  selected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_off_rounded,
-                  size: 20,
-                  color: selected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    definition.title,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Text(
-                  priceLabel,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
           ),
-        ),
+          if (savingsLabel != null) ...[
+            const SizedBox(height: 5),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                savingsLabel!,
+                textAlign: TextAlign.end,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 11,
+                  height: 1.15,
+                  fontWeight: FontWeight.w300,
+                  color: _kGoPremiumLabelColor,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

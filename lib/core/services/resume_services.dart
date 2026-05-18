@@ -1718,6 +1718,7 @@ class ResumeRepository {
   final Box<dynamic> _resumeBox;
   final Box<dynamic> _coverLetterBox;
   AppPreferences? _appPreferences;
+  bool Function()? _hasPremiumAccess;
   ICloudResumeService? _iCloudResumeService;
   Timer? _iCloudAutoSyncTimer;
   bool _isFlushingICloudAutoSync = false;
@@ -1742,10 +1743,16 @@ class ResumeRepository {
   void configureICloudAutoSync({
     required AppPreferences appPreferences,
     required ICloudResumeService service,
+    bool Function()? hasPremium,
   }) {
     _appPreferences = appPreferences;
     _iCloudResumeService = service;
+    _hasPremiumAccess = hasPremium;
   }
+
+  bool get _canUseICloudBackup =>
+      (_hasPremiumAccess?.call() ?? false) &&
+      (_appPreferences?.isPremium ?? false);
 
   void configureGoogleDriveAutoSync({
     required AppPreferences appPreferences,
@@ -1808,7 +1815,8 @@ class ResumeRepository {
   }
 
   void _scheduleICloudAutoSyncResume(String resumeId) {
-    if (!(_appPreferences?.iCloudAutoSyncEnabled ?? false)) {
+    if (!_canUseICloudBackup ||
+        !(_appPreferences?.iCloudAutoSyncEnabled ?? false)) {
       return;
     }
 
@@ -1820,7 +1828,8 @@ class ResumeRepository {
   }
 
   void _scheduleICloudAutoSyncCoverLetter(String coverLetterId) {
-    if (!(_appPreferences?.iCloudAutoSyncEnabled ?? false)) {
+    if (!_canUseICloudBackup ||
+        !(_appPreferences?.iCloudAutoSyncEnabled ?? false)) {
       return;
     }
 
@@ -1838,14 +1847,16 @@ class ResumeRepository {
 
     final appPreferences = _appPreferences;
     final service = _iCloudResumeService;
-    if (appPreferences == null || service == null) {
+    if (appPreferences == null || service == null || !_canUseICloudBackup) {
+      _pendingICloudResumeIds.clear();
+      _pendingICloudCoverLetterIds.clear();
       return;
     }
 
     _isFlushingICloudAutoSync = true;
     try {
       while (_pendingICloudResumeIds.isNotEmpty) {
-        if (!appPreferences.iCloudAutoSyncEnabled) {
+        if (!appPreferences.iCloudAutoSyncEnabled || !_canUseICloudBackup) {
           _pendingICloudResumeIds.clear();
           _pendingICloudCoverLetterIds.clear();
           return;
@@ -1896,7 +1907,7 @@ class ResumeRepository {
       }
 
       while (_pendingICloudCoverLetterIds.isNotEmpty) {
-        if (!appPreferences.iCloudAutoSyncEnabled) {
+        if (!appPreferences.iCloudAutoSyncEnabled || !_canUseICloudBackup) {
           _pendingICloudCoverLetterIds.clear();
           _pendingICloudResumeIds.clear();
           return;

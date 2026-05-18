@@ -2506,6 +2506,22 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
 
   static double _scaledPt(double pt) => pt * _layoutScale;
 
+  double _sectionGap() => detailed
+      ? _scaledPt(ResumeTypography.atsSerifRulesSectionGapPt)
+      : ResumeTypography.atsSerifRulesGridSectionGapPx;
+
+  double _sectionLeadGap() => detailed
+      ? _scaledPt(ResumeTypography.atsSerifRulesSectionLeadGapPt + 4)
+      : ResumeTypography.atsSerifRulesGridSectionLeadGapPx;
+
+  double _titleToRuleGap() => detailed
+      ? _scaledPt(ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt)
+      : ResumeTypography.atsSerifRulesGridSectionTitleToRuleGapPx;
+
+  double _contentTopGap() => detailed
+      ? _scaledPt(ResumeTypography.atsSerifRulesSectionContentTopGapPt)
+      : ResumeTypography.atsSerifRulesGridSectionContentTopGapPx;
+
   TextStyle _garamond({
     required double fontSize,
     required int weight,
@@ -2625,25 +2641,15 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                     ),
                 ],
               ),
-              SizedBox(
-                height: _scaledPt(ResumeTypography.atsSerifRulesSectionLeadGapPt + 4),
-              ),
+              SizedBox(height: _sectionLeadGap()),
               Text('Summary', style: sectionTitleStyle),
-              SizedBox(
-                height: _scaledPt(
-                  ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt,
-                ),
-              ),
+              SizedBox(height: _titleToRuleGap()),
               Container(
                 height: 1,
                 color: ResumeTypography.atsStructuredBodyTextColor
                     .withValues(alpha: 0.35),
               ),
-              SizedBox(
-                height: _scaledPt(
-                  ResumeTypography.atsSerifRulesSectionContentTopGapPt,
-                ),
-              ),
+              SizedBox(height: _contentTopGap()),
               Text(
                 resume.summary.trim(),
                 style: body,
@@ -2651,25 +2657,15 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (works.isNotEmpty) ...[
-                SizedBox(
-                  height: _scaledPt(ResumeTypography.atsSerifRulesSectionGapPt),
-                ),
+                SizedBox(height: _sectionGap()),
                 Text('Experience', style: sectionTitleStyle),
-                SizedBox(
-                  height: _scaledPt(
-                    ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt,
-                  ),
-                ),
+                SizedBox(height: _titleToRuleGap()),
                 Container(
                   height: 1,
                   color: ResumeTypography.atsStructuredBodyTextColor
                       .withValues(alpha: 0.35),
                 ),
-                SizedBox(
-                  height: _scaledPt(
-                    ResumeTypography.atsSerifRulesSectionContentTopGapPt,
-                  ),
-                ),
+                SizedBox(height: _contentTopGap()),
                 for (final w in works.take(detailed ? 2 : 1)) ...[
                   Text(
                     w.role.trim(),
@@ -2725,29 +2721,19 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  const SizedBox(height: 5),
+                  SizedBox(height: detailed ? 5 : 3),
                 ],
               ],
               if (edu.isNotEmpty) ...[
-                SizedBox(
-                  height: _scaledPt(ResumeTypography.atsSerifRulesSectionGapPt),
-                ),
+                SizedBox(height: _sectionGap()),
                 Text('Education', style: sectionTitleStyle),
-                SizedBox(
-                  height: _scaledPt(
-                    ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt,
-                  ),
-                ),
+                SizedBox(height: _titleToRuleGap()),
                 Container(
                   height: 1,
                   color: ResumeTypography.atsStructuredBodyTextColor
                       .withValues(alpha: 0.35),
                 ),
-                SizedBox(
-                  height: _scaledPt(
-                    ResumeTypography.atsSerifRulesSectionContentTopGapPt,
-                  ),
-                ),
+                SizedBox(height: _contentTopGap()),
                 for (final e in edu.take(detailed ? 2 : 1)) ...[
                   Text(
                     '${e.degree.trim()} · ${educationDateRangeLabel(e.startDate, e.endDate)}',
@@ -2762,29 +2748,19 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 5),
+                  SizedBox(height: detailed ? 5 : 3),
                 ],
               ],
               if (skills.isNotEmpty) ...[
-                SizedBox(
-                  height: _scaledPt(ResumeTypography.atsSerifRulesSectionGapPt),
-                ),
+                SizedBox(height: _sectionGap()),
                 Text('Skills', style: sectionTitleStyle),
-                SizedBox(
-                  height: _scaledPt(
-                    ResumeTypography.atsSerifRulesSectionTitleToRuleGapPt,
-                  ),
-                ),
+                SizedBox(height: _titleToRuleGap()),
                 Container(
                   height: 1,
                   color: ResumeTypography.atsStructuredBodyTextColor
                       .withValues(alpha: 0.35),
                 ),
-                SizedBox(
-                  height: _scaledPt(
-                    ResumeTypography.atsSerifRulesSectionContentTopGapPt,
-                  ),
-                ),
+                SizedBox(height: _contentTopGap()),
                 _serifRulesSkillsTwoColumn(
                   skills.take(detailed ? 8 : 5).toList(),
                   skillsBody,

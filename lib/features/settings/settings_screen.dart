@@ -10,11 +10,18 @@ import 'google_drive_backup_screen.dart';
 import 'icloud_backup_screen.dart';
 import '../premium/go_premium_screen.dart';
 import '../premium/premium_gate.dart';
+import '../shell/app_shell_scope.dart';
 import '../shared/view_models.dart';
 import '../../core/services/premium_purchase_service.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
   static const String _appStoreId = '6768385894';
   static final Uri _privacyPolicyUri = Uri.parse(
     'https://sites.google.com/mindplexapp.com/resumeapp/privacy-policy',
@@ -133,9 +140,7 @@ class SettingsScreen extends StatelessWidget {
       return;
     }
     if (unlocked == true || premium.isPremium) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ResumeApp Pro is now active.')),
-      );
+      AppShellScope.goToSettings(context);
     }
   }
 
@@ -143,11 +148,27 @@ class SettingsScreen extends StatelessWidget {
     BuildContext context,
     PremiumPurchaseService premium,
   ) async {
+    if (premium.debugPremiumOverrideEnabled) {
+      await _presentActivePremiumSheet(context, premium);
+      return;
+    }
+
+    await _presentActivePremiumSheet(context, premium);
+  }
+
+  Future<void> _presentActivePremiumSheet(
+    BuildContext context,
+    PremiumPurchaseService premium,
+  ) async {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final currentPlan = premium.debugPremiumOverrideEnabled
+    final planLabel = premium.activeSubscriptionPlanLabel;
+    final sheetTitle = premium.debugPremiumOverrideEnabled
+        ? 'Pro access enabled'
+        : 'Already subscribed';
+    final sheetHeadline = premium.debugPremiumOverrideEnabled
         ? 'Developer Pro override'
-        : 'ResumeApp Pro';
+        : 'You\'re on the $planLabel';
 
     await showModalBottomSheet<void>(
       context: context,
@@ -165,17 +186,26 @@ class SettingsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'You are already a Pro user',
+                  sheetTitle,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  sheetHeadline,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Current subscription: $currentPlan',
+                  premium.alreadySubscribedMessage(),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w400,
+                    height: 1.4,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -637,9 +667,9 @@ class _DeveloperToolsScreen extends StatelessWidget {
               children: [
                 Card(
                   child: SwitchListTile(
-                    value: premium.debugPremiumOverrideEnabled,
+                    value: premium.isPremium,
                     onChanged: (value) async {
-                      await premium.setDebugPremiumOverrideEnabled(value);
+                      await premium.setDeveloperProAccessEnabled(value);
                     },
                     title: Text(
                       'Enable Pro feature',
@@ -648,7 +678,9 @@ class _DeveloperToolsScreen extends StatelessWidget {
                       ),
                     ),
                     subtitle: Text(
-                      'Debug-only override for premium access testing.',
+                      premium.isPremium
+                          ? 'Pro access is on. Turn off to test the free experience.'
+                          : 'Turn on to enable Pro templates and features for testing.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),

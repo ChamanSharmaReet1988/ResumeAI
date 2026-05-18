@@ -52,6 +52,12 @@ abstract final class ResumeTypography {
   /// Rule to section body content.
   static const double atsSerifRulesSectionContentTopGapPt = 5;
 
+  /// Serif Rules 240px grid tile — tighter gaps between sections (logical px).
+  static const double atsSerifRulesGridSectionGapPx = 3;
+  static const double atsSerifRulesGridSectionLeadGapPx = 3;
+  static const double atsSerifRulesGridSectionTitleToRuleGapPx = 2;
+  static const double atsSerifRulesGridSectionContentTopGapPx = 2;
+
   /// Template grid tile bottom inset (logical px in 240px-wide art).
   static const double atsStructuredGridBottomInsetPx = 30;
 

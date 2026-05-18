@@ -1,10 +1,14 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/services/premium_access.dart';
 import '../../core/services/premium_purchase_service.dart';
+import '../shell/app_shell_scope.dart';
 import 'go_premium_screen.dart';
+import 'premium_welcome_dialog.dart';
 
 bool hasPremiumAccess(BuildContext context) {
   return context.watch<PremiumPurchaseService>().isPremium;
@@ -38,7 +42,20 @@ Future<bool> ensurePremiumAccess(BuildContext context) async {
   if (!context.mounted) {
     return false;
   }
-  return unlocked == true || readPremiumAccess(context);
+  final premium = context.read<PremiumPurchaseService>();
+  final hasAccess = unlocked == true || readPremiumAccess(context);
+  if (hasAccess) {
+    AppShellScope.goToSettings(context);
+    if (premium.consumePremiumWelcomePending() && context.mounted) {
+      final planLabel = premiumWelcomePlanLabel(
+        premium.activeSubscriptionProductId,
+      );
+      unawaited(
+        showPremiumWelcomeDialog(context, planLabel: planLabel),
+      );
+    }
+  }
+  return hasAccess;
 }
 
 Future<bool> ensurePremiumForTemplateTile(

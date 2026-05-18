@@ -16,6 +16,7 @@ import '../home/home_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shared/view_models.dart';
 import '../templates/templates_screen.dart';
+import 'app_shell_scope.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -297,13 +298,15 @@ class _AppShellState extends State<AppShell> {
       const SettingsScreen(),
     ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 980;
-        final content = IndexedStack(index: _currentIndex, children: pages);
+    return AppShellScope(
+      selectTab: _selectTab,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 980;
+          final content = IndexedStack(index: _currentIndex, children: pages);
 
-        if (isWide) {
-          return Scaffold(
+          if (isWide) {
+            return Scaffold(
             floatingActionButton: _buildFloatingActionButton(),
             body: SafeArea(
               child: Row(
@@ -407,8 +410,9 @@ class _AppShellState extends State<AppShell> {
                       .toList(),
                   onDestinationSelected: _selectTab,
                 ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 

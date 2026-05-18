@@ -26,6 +26,7 @@ class _FakeHomeRepository implements ResumeRepository {
   void configureICloudAutoSync({
     required AppPreferences appPreferences,
     required ICloudResumeService service,
+    bool Function()? hasPremium,
   }) {}
 
   @override

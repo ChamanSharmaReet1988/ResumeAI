@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
@@ -14,12 +15,20 @@ Widget _icloudTestApp({
   required ResumeRepository repository,
   required ICloudResumeService service,
   required ResumeLibraryViewModel resumeLibrary,
+  AppPreferences? preferences,
 }) {
+  final prefs = preferences ?? AppPreferences.inMemory();
   return MultiProvider(
     providers: [
-      Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
+      Provider<AppPreferences>.value(value: prefs),
       Provider<ResumeRepository>.value(value: repository),
       Provider<ICloudResumeService>.value(value: service),
+      ChangeNotifierProvider<PremiumPurchaseService>(
+        create: (_) => PremiumPurchaseService.inMemory(
+          appPreferences: prefs,
+          isPremium: true,
+        ),
+      ),
       ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: resumeLibrary),
       ChangeNotifierProvider<CoverLetterLibraryViewModel>(
         create: (_) => CoverLetterLibraryViewModel(repository: repository),
@@ -44,6 +53,7 @@ class _FakeICloudRepository implements ResumeRepository {
   void configureICloudAutoSync({
     required AppPreferences appPreferences,
     required ICloudResumeService service,
+    bool Function()? hasPremium,
   }) {}
 
   @override
@@ -262,17 +272,11 @@ void main() {
     final preferences = AppPreferences.inMemory();
 
     await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          Provider<AppPreferences>.value(value: preferences),
-          Provider<ResumeRepository>.value(value: repository),
-          Provider<ICloudResumeService>.value(value: service),
-          ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
-          ChangeNotifierProvider<CoverLetterLibraryViewModel>(
-            create: (_) => CoverLetterLibraryViewModel(repository: repository),
-          ),
-        ],
-        child: const MaterialApp(home: ICloudBackupScreen()),
+      _icloudTestApp(
+        repository: repository,
+        service: service,
+        resumeLibrary: library,
+        preferences: preferences,
       ),
     );
     await tester.pumpAndSettle();

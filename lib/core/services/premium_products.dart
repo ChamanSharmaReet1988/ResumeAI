@@ -9,6 +9,49 @@ abstract final class PremiumProducts {
     month,
     year,
   ];
+
+  static String planTitleFor(String? productId) {
+    return switch (productId) {
+      week => 'Weekly',
+      month => 'Monthly',
+      year => 'Yearly',
+      _ => 'Pro',
+    };
+  }
+
+  /// Short label for settings and sheets (e.g. "Monthly plan").
+  static String planLabelFor(String? productId) {
+    final title = planTitleFor(productId);
+    if (title == 'Pro') {
+      return 'ResumeApp Pro';
+    }
+    return '$title plan';
+  }
+
+  /// Body copy for the already-subscribed bottom sheet.
+  static String alreadySubscribedMessage({
+    required String? productId,
+    bool debugOverride = false,
+  }) {
+    if (debugOverride) {
+      return 'Developer Pro override is on. All Pro features are unlocked '
+          'for testing on this device.';
+    }
+    return switch (productId) {
+      week =>
+        'You have an active weekly subscription. All Pro templates, iCloud '
+            'backup, and premium features are included.',
+      month =>
+        'You have an active monthly subscription. All Pro templates, iCloud '
+            'backup, and premium features are included.',
+      year =>
+        'You have an active yearly subscription. All Pro templates, iCloud '
+            'backup, and premium features are included.',
+      _ =>
+        'You have an active ResumeApp Pro subscription. All premium features '
+            'are included in your plan.',
+    };
+  }
 }
 
 /// Display metadata for paywall plans (prices come from the store when loaded).
@@ -50,8 +93,28 @@ const List<String> kPremiumBenefits = [
   'Back up and sync resumes with iCloud',
 ];
 
-const List<String> kFreeTierIncludes = [
-  'Corporate professional template',
-  'Structured ATS template',
-  'PDF export',
-];
+/// Highlighted on Go Premium — upcoming Pro content shipped in a future release.
+const String kPremiumUpcomingUpdateBadge = 'Coming in the next update';
+const String kPremiumUpcomingUpdateMessage =
+    'New resume layouts and modern templates — included with Pro.';
+
+/// Savings line under the yearly plan (vs 12× monthly). `null` if prices are missing.
+String? premiumYearlySavingsLabel({
+  required double? yearlyPrice,
+  required double? monthlyPrice,
+}) {
+  if (yearlyPrice == null ||
+      monthlyPrice == null ||
+      yearlyPrice <= 0 ||
+      monthlyPrice <= 0) {
+    return null;
+  }
+  final monthlyBilledYearly = monthlyPrice * 12;
+  if (monthlyBilledYearly <= yearlyPrice) {
+    return null;
+  }
+  final percent =
+      ((1 - yearlyPrice / monthlyBilledYearly) * 100).round().clamp(1, 99);
+  return 'Save $percent% with yearly billing';
+}
+

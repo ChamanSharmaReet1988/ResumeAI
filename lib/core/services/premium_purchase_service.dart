@@ -5,7 +5,10 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
 import 'app_preferences.dart';
+import 'premium_debug_log.dart';
+import 'premium_entitlement_resolver.dart';
 import 'premium_products.dart';
+import 'premium_store_messages.dart';
 
 /// Loads subscription products, handles purchases, and persists premium access.
 class PremiumPurchaseService extends ChangeNotifier {
@@ -48,14 +51,35 @@ class PremiumPurchaseService extends ChangeNotifier {
   String? _statusMessage;
   String? _errorMessage;
   List<ProductDetails> _products = const [];
+  String? _activeSubscriptionProductId;
+
+  /// Debug-only: user turned Pro off in Developer Tools; ignore store until re-enabled.
+  bool _developerProManuallyDisabled = false;
+
+  /// Show welcome dialog on Settings after buy / restore (not on silent launch).
+  bool _pendingPremiumWelcome = false;
+
+  /// Latest subscription product id reported on the purchase stream (restore/buy).
+  String? _purchaseStreamSubscriptionProductId;
+
+  /// Prevents overlapping store sync / stream handlers from fighting each other.
+  Future<void>? _ongoingStoreSync;
+
+  static const Duration _storeEntitlementSettleDelay = Duration(
+    milliseconds: 3500,
+  );
 
   bool get storeAvailable => _storeAvailable;
   bool get isLoadingProducts => _isLoadingProducts;
   bool get isPurchasing => _isPurchasing;
   bool get isRestoring => _isRestoring;
-  bool get isPremium =>
-      _appPreferences.isPremium ||
-      (kDebugMode && _appPreferences.debugPremiumOverrideEnabled);
+  bool get isPremium {
+    if (kDebugMode && _developerProManuallyDisabled) {
+      return false;
+    }
+    return _appPreferences.isPremium ||
+        (kDebugMode && _appPreferences.debugPremiumOverrideEnabled);
+  }
   bool get debugPremiumOverrideEnabled =>
       kDebugMode && _appPreferences.debugPremiumOverrideEnabled;
   String? get statusMessage => _statusMessage;
@@ -63,6 +87,24 @@ class PremiumPurchaseService extends ChangeNotifier {
   List<ProductDetails> get products => _products;
   List<String> get notFoundProductIds => _notFoundProductIds;
   bool get hasLoadedProducts => _products.isNotEmpty;
+  String? get activeSubscriptionProductId => _activeSubscriptionProductId;
+
+  String get activeSubscriptionPlanLabel =>
+      PremiumProducts.planLabelFor(_activeSubscriptionProductId);
+
+  String alreadySubscribedMessage() => PremiumProducts.alreadySubscribedMessage(
+        productId: _activeSubscriptionProductId,
+        debugOverride: debugPremiumOverrideEnabled,
+      );
+
+  /// Consumed by [SettingsScreen] to show the Pro welcome dialog once.
+  bool consumePremiumWelcomePending() {
+    if (!_pendingPremiumWelcome) {
+      return false;
+    }
+    _pendingPremiumWelcome = false;
+    return true;
+  }
 
   ProductDetails? productFor(String productId) {
     for (final product in _products) {
@@ -80,7 +122,10 @@ class PremiumPurchaseService extends ChangeNotifier {
     _purchaseSubscription = _inAppPurchase.purchaseStream.listen(
       _onPurchaseUpdates,
       onError: (Object error) {
-        _errorMessage = 'Purchase error: $error';
+        _errorMessage = PremiumStoreMessages.friendly(
+          error: error,
+          fallback: PremiumStoreMessages.purchaseFailed,
+        );
         _isPurchasing = false;
         notifyListeners();
       },
@@ -88,7 +133,11 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   Future<void> initialize() async {
+    PremiumDebugLog.section('Premium initialize (app launch)');
+    _logLocalPremiumState('before initialize');
+
     if (!_enableStore) {
+      PremiumDebugLog.log('Store disabled (in-memory / test mode)');
       _isLoadingProducts = false;
       notifyListeners();
       return;
@@ -96,6 +145,7 @@ class PremiumPurchaseService extends ChangeNotifier {
 
     try {
       _storeAvailable = await _inAppPurchase.isAvailable();
+      PremiumDebugLog.logPair('storeAvailable', _storeAvailable);
       if (!_storeAvailable) {
         _errorMessage =
             'In-app purchases are not available on this device right now.';
@@ -107,9 +157,17 @@ class PremiumPurchaseService extends ChangeNotifier {
       _ensurePurchaseStreamListener();
 
       await _loadProducts();
-      await restorePurchases(silent: true);
-    } catch (error) {
-      _errorMessage = 'Could not connect to the store: $error';
+      await verifyPremiumLocally(reason: 'app_launch');
+      _logLocalPremiumState('after initialize');
+    } catch (error, stackTrace) {
+      PremiumDebugLog.log('initialize failed: $error');
+      if (kDebugMode) {
+        debugPrint(stackTrace.toString());
+      }
+      _errorMessage = PremiumStoreMessages.friendly(
+        error: error,
+        fallback: PremiumStoreMessages.connectFailed,
+      );
       _isLoadingProducts = false;
       notifyListeners();
     }
@@ -117,6 +175,133 @@ class PremiumPurchaseService extends ChangeNotifier {
 
   /// Reloads subscription prices from the App Store or Play Store.
   Future<void> refreshProducts() => _loadProducts();
+
+  /// Reads subscription state already on the device — never calls [restorePurchases]
+  /// or [AppStore.sync], so the user is not asked for an Apple ID password.
+  Future<void> verifyPremiumLocally({required String reason}) async {
+    PremiumDebugLog.section('Local Pro verify ($reason)');
+    _logLocalPremiumState('before local verify');
+
+    if (!_enableStore) {
+      return;
+    }
+
+    _ensurePurchaseStreamListener();
+
+    if (!_storeAvailable) {
+      _storeAvailable = await _inAppPurchase.isAvailable();
+    }
+    if (!_storeAvailable) {
+      PremiumDebugLog.log('local verify skipped: store unavailable');
+      return;
+    }
+
+    try {
+      await _refreshActiveSubscriptionFromStore(reason: reason);
+      final entitled = _activeSubscriptionProductId != null;
+      await _applyStoreEntitlement(entitled, reason: reason);
+      _logLocalPremiumState('after local verify');
+    } catch (error, stackTrace) {
+      PremiumDebugLog.log('local verify failed ($reason): $error');
+      if (kDebugMode) {
+        debugPrint(stackTrace.toString());
+      }
+    }
+  }
+
+  /// Re-checks App Store / Play subscription state and updates local premium flag.
+  ///
+  /// Set [requestStoreRestore] to true only for the Restore purchases button.
+  /// Silent checks read cached StoreKit / Play data and do not ask for a password.
+  Future<void> syncPremiumWithStore({
+    bool silent = true,
+    String reason = 'sync',
+    bool requestStoreRestore = false,
+  }) async {
+    while (_ongoingStoreSync != null) {
+      await _ongoingStoreSync;
+    }
+
+    final syncRun = _runStoreSync(
+      silent: silent,
+      reason: reason,
+      requestStoreRestore: requestStoreRestore,
+    );
+    _ongoingStoreSync = syncRun;
+    try {
+      await syncRun;
+    } finally {
+      if (identical(_ongoingStoreSync, syncRun)) {
+        _ongoingStoreSync = null;
+      }
+    }
+  }
+
+  Future<void> _runStoreSync({
+    required bool silent,
+    required String reason,
+    required bool requestStoreRestore,
+  }) async {
+    PremiumDebugLog.section('Premium sync ($reason)');
+    _logLocalPremiumState('before sync');
+
+    if (!_enableStore) {
+      PremiumDebugLog.log('sync skipped: store disabled');
+      return;
+    }
+
+    _ensurePurchaseStreamListener();
+
+    if (!_storeAvailable) {
+      _storeAvailable = await _inAppPurchase.isAvailable();
+    }
+    PremiumDebugLog.logPair('storeAvailable', _storeAvailable);
+    if (!_storeAvailable) {
+      PremiumDebugLog.log('sync skipped: store unavailable');
+      return;
+    }
+
+    if (!silent) {
+      _errorMessage = null;
+      _statusMessage = null;
+    }
+    notifyListeners();
+
+    try {
+      if (requestStoreRestore) {
+        PremiumDebugLog.log('Calling restorePurchases() (user initiated)…');
+        await _inAppPurchase.restorePurchases();
+        PremiumDebugLog.log(
+          'Waiting ${_storeEntitlementSettleDelay.inMilliseconds}ms for purchase stream…',
+        );
+        await Future<void>.delayed(_storeEntitlementSettleDelay);
+      } else {
+        PremiumDebugLog.log(
+          'Silent entitlement check (no restorePurchases / no AppStore.sync)',
+        );
+      }
+
+      await _refreshActiveSubscriptionFromStore(reason: reason);
+
+      final entitled = _activeSubscriptionProductId != null;
+      PremiumDebugLog.logPair('storeSaysEntitled', entitled);
+      await _applyStoreEntitlement(entitled, reason: reason);
+
+      _logLocalPremiumState('after sync');
+    } catch (error, stackTrace) {
+      PremiumDebugLog.log('sync failed ($reason): $error');
+      if (kDebugMode) {
+        debugPrint(stackTrace.toString());
+      }
+      if (!silent) {
+        _errorMessage = PremiumStoreMessages.friendly(
+          error: error,
+          fallback: PremiumStoreMessages.verifyFailed,
+        );
+        notifyListeners();
+      }
+    }
+  }
 
   Future<void> _loadProducts() async {
     if (!_enableStore) {
@@ -163,9 +348,12 @@ class PremiumPurchaseService extends ChangeNotifier {
       _products = _sortProducts(resolved.productDetails);
       if (_products.isEmpty) {
         if (_notFoundProductIds.isNotEmpty) {
-          _errorMessage =
-              'Could not load plans. Product IDs must match App Store Connect '
-              'exactly: ${_notFoundProductIds.join(', ')}.';
+          if (kDebugMode) {
+            debugPrint(
+              'Premium products not found in store: $_notFoundProductIds',
+            );
+          }
+          _errorMessage = PremiumStoreMessages.productsUnavailable;
         } else {
           _errorMessage =
               'Could not load subscription prices. Try again.';
@@ -203,13 +391,10 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   String _friendlyProductLoadError(String message) {
-    if (defaultTargetPlatform == TargetPlatform.iOS &&
-        message.contains('StoreKit: Failed to get response from platform.')) {
-      return 'The App Store did not return subscription products. '
-          'Live prices require a real iPhone build using Sandbox, TestFlight, '
-          'or the App Store.';
-    }
-    return message;
+    return PremiumStoreMessages.friendly(
+      rawMessage: message,
+      fallback: PremiumStoreMessages.productsUnavailable,
+    );
   }
 
   List<ProductDetails> _sortProducts(List<ProductDetails> products) {
@@ -260,7 +445,15 @@ class PremiumPurchaseService extends ChangeNotifier {
       return;
     }
 
+    if (kDebugMode && _developerProManuallyDisabled) {
+      PremiumDebugLog.log(
+        'manual restore: clearing developer forced-free mode',
+      );
+      _developerProManuallyDisabled = false;
+    }
+
     _isRestoring = !silent;
+    _purchaseStreamSubscriptionProductId = null;
     if (!silent) {
       _errorMessage = null;
       _statusMessage = null;
@@ -268,9 +461,14 @@ class PremiumPurchaseService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _inAppPurchase.restorePurchases();
+      await syncPremiumWithStore(
+        silent: silent,
+        reason: 'manual_restore',
+        requestStoreRestore: true,
+      );
       if (!silent) {
-        if (isPremium) {
+        final hasActiveStoreSubscription = _activeSubscriptionProductId != null;
+        if (hasActiveStoreSubscription) {
           _statusMessage = 'Your Premium subscription has been restored.';
         } else {
           _statusMessage =
@@ -279,7 +477,10 @@ class PremiumPurchaseService extends ChangeNotifier {
       }
     } catch (error) {
       if (!silent) {
-        _errorMessage = 'Restore failed: $error';
+        _errorMessage = PremiumStoreMessages.friendly(
+          error: error,
+          fallback: PremiumStoreMessages.restoreFailed,
+        );
       }
     } finally {
       _isRestoring = false;
@@ -288,10 +489,19 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   void _onPurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) {
+    PremiumDebugLog.log(
+      'purchaseStream update: ${purchaseDetailsList.length} item(s)',
+    );
     for (final purchase in purchaseDetailsList) {
       if (!PremiumProducts.subscriptionIds.contains(purchase.productID)) {
         continue;
       }
+
+      PremiumDebugLog.log(
+        '  stream productId=${purchase.productID} '
+        'status=${purchase.status.name} '
+        'purchaseId=${purchase.purchaseID ?? "none"}',
+      );
 
       switch (purchase.status) {
         case PurchaseStatus.pending:
@@ -299,8 +509,10 @@ class PremiumPurchaseService extends ChangeNotifier {
           break;
         case PurchaseStatus.error:
           _isPurchasing = false;
-          _errorMessage =
-              purchase.error?.message ?? 'Purchase could not be completed.';
+          _errorMessage = PremiumStoreMessages.friendly(
+            rawMessage: purchase.error?.message,
+            fallback: PremiumStoreMessages.purchaseFailed,
+          );
           break;
         case PurchaseStatus.canceled:
           _isPurchasing = false;
@@ -308,11 +520,24 @@ class PremiumPurchaseService extends ChangeNotifier {
           break;
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
+          _purchaseStreamSubscriptionProductId = purchase.productID;
+          final handleStreamUpdate =
+              _isPurchasing || _isRestoring || _ongoingStoreSync != null;
           _isPurchasing = false;
-          unawaited(_grantPremium());
-          _statusMessage = purchase.status == PurchaseStatus.restored
-              ? 'Premium restored successfully.'
-              : 'Welcome to ResumeApp Pro!';
+          if (!handleStreamUpdate) {
+            PremiumDebugLog.log(
+              'Ignoring purchase stream ${purchase.status.name} '
+              '(no active buy/restore)',
+            );
+            break;
+          }
+          if (_ongoingStoreSync != null) {
+            PremiumDebugLog.log(
+              'Deferring stream re-verify; store sync in progress',
+            );
+          } else {
+            unawaited(_refreshPremiumFromStoreAfterPurchase(purchase));
+          }
           break;
       }
 
@@ -324,20 +549,154 @@ class PremiumPurchaseService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _grantPremium() async {
-    if (_appPreferences.isPremium) {
+  Future<void> _refreshActiveSubscriptionFromStore({
+    String reason = 'refresh',
+  }) async {
+    if (!_enableStore) {
+      _activeSubscriptionProductId = null;
       return;
     }
+    _activeSubscriptionProductId =
+        await PremiumEntitlementResolver.resolveActiveProductId(
+      _inAppPurchase,
+      reason: reason,
+    );
+    PremiumDebugLog.logPair(
+      'cachedActiveProductId',
+      _activeSubscriptionProductId ?? 'none',
+    );
+    notifyListeners();
+  }
+
+  Future<void> _refreshPremiumFromStoreAfterPurchase(
+    PurchaseDetails purchase,
+  ) async {
+    PremiumDebugLog.section(
+      'Purchase stream → re-verify (${purchase.status.name})',
+    );
+    await _refreshActiveSubscriptionFromStore(
+      reason: 'purchase_stream_${purchase.status.name}',
+    );
+    final entitled = _activeSubscriptionProductId != null;
+    await _applyStoreEntitlement(
+      entitled,
+      reason: 'purchase_stream_${purchase.status.name}',
+    );
+    if (entitled) {
+      _statusMessage = purchase.status == PurchaseStatus.restored
+          ? 'Premium restored successfully.'
+          : 'Welcome to ResumeApp Pro!';
+    } else if (purchase.status == PurchaseStatus.restored) {
+      _statusMessage =
+          'No active subscription was found for this Apple ID or Google account.';
+    }
+    notifyListeners();
+  }
+
+  Future<void> _grantPremium() async {
+    if (_appPreferences.isPremium) {
+      PremiumDebugLog.log('grantPremium: already premium in local prefs');
+      return;
+    }
+    PremiumDebugLog.log('grantPremium: setting is_premium=true');
     await _appPreferences.setIsPremium(true);
     notifyListeners();
   }
 
-  Future<void> setDebugPremiumOverrideEnabled(bool value) async {
-    if (!kDebugMode ||
-        _appPreferences.debugPremiumOverrideEnabled == value) {
+  Future<void> _revokePremium() async {
+    _activeSubscriptionProductId = null;
+    if (!_appPreferences.isPremium) {
+      PremiumDebugLog.log('revokePremium: already not premium in local prefs');
       return;
     }
-    await _appPreferences.setDebugPremiumOverrideEnabled(value);
+    PremiumDebugLog.log('revokePremium: setting is_premium=false');
+    await _appPreferences.setIsPremium(false);
+    if (_appPreferences.iCloudAutoSyncEnabled) {
+      await _appPreferences.setICloudAutoSyncEnabled(false);
+    }
+    notifyListeners();
+  }
+
+  Future<void> _applyStoreEntitlement(
+    bool entitled, {
+    String reason = 'apply',
+  }) async {
+    if (kDebugMode && _developerProManuallyDisabled) {
+      PremiumDebugLog.log(
+        'applyStoreEntitlement($reason): developer Pro toggle OFF → '
+        'keeping free access',
+      );
+      await _revokePremium();
+      notifyListeners();
+      return;
+    }
+
+    if (kDebugMode && _appPreferences.debugPremiumOverrideEnabled) {
+      PremiumDebugLog.log(
+        'applyStoreEntitlement($reason): debug override ON → '
+        'skip revoke; isPremium getter=$isPremium',
+      );
+      if (entitled) {
+        await _grantPremium();
+      }
+      notifyListeners();
+      return;
+    }
+
+    PremiumDebugLog.log(
+      'applyStoreEntitlement($reason): entitled=$entitled → '
+      '${entitled ? "grant" : "revoke"} local premium',
+    );
+
+    final wasPremium = _appPreferences.isPremium;
+    if (entitled) {
+      await _grantPremium();
+      if (!wasPremium && _shouldCelebratePremiumActivation(reason)) {
+        _pendingPremiumWelcome = true;
+        PremiumDebugLog.log('Premium welcome dialog queued ($reason)');
+      }
+    } else {
+      await _revokePremium();
+    }
+    notifyListeners();
+  }
+
+  bool _shouldCelebratePremiumActivation(String reason) {
+    return reason.startsWith('purchase_stream') || reason == 'manual_restore';
+  }
+
+  void _logLocalPremiumState(String moment) {
+    PremiumDebugLog.log(
+      'Local state ($moment): '
+      'hiveIsPremium=${_appPreferences.isPremium} '
+      'debugOverride=${_appPreferences.debugPremiumOverrideEnabled} '
+      'activeProductId=${_activeSubscriptionProductId ?? "none"} '
+      'isPremiumGetter=$isPremium',
+    );
+  }
+
+  /// Developer Tools switch: mirrors [isPremium]; turning off forces free access.
+  Future<void> setDeveloperProAccessEnabled(bool enabled) async {
+    if (!kDebugMode) {
+      return;
+    }
+
+    PremiumDebugLog.log(
+      'setDeveloperProAccessEnabled: $enabled '
+      '(was isPremium=$isPremium)',
+    );
+
+    if (enabled) {
+      _developerProManuallyDisabled = false;
+      await _appPreferences.setDebugPremiumOverrideEnabled(true);
+      await _grantPremium();
+      notifyListeners();
+      return;
+    }
+
+    _developerProManuallyDisabled = true;
+    await _appPreferences.setDebugPremiumOverrideEnabled(false);
+    await _revokePremium();
     notifyListeners();
   }
 
