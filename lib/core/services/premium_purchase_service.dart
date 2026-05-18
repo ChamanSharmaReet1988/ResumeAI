@@ -59,9 +59,6 @@ class PremiumPurchaseService extends ChangeNotifier {
   /// Show welcome dialog on Settings after buy / restore (not on silent launch).
   bool _pendingPremiumWelcome = false;
 
-  /// Latest subscription product id reported on the purchase stream (restore/buy).
-  String? _purchaseStreamSubscriptionProductId;
-
   /// Prevents overlapping store sync / stream handlers from fighting each other.
   Future<void>? _ongoingStoreSync;
 
@@ -176,6 +173,35 @@ class PremiumPurchaseService extends ChangeNotifier {
   /// Reloads subscription prices from the App Store or Play Store.
   Future<void> refreshProducts() => _loadProducts();
 
+  /// Reads the current store entitlement and caches the active subscription
+  /// product ID without changing local premium state.
+  Future<String?> resolveCurrentStoreSubscription({
+    String reason = 'store_preflight',
+    bool requestAppStoreSync = false,
+  }) async {
+    if (!_enableStore) {
+      return null;
+    }
+
+    _ensurePurchaseStreamListener();
+
+    if (!_storeAvailable) {
+      _storeAvailable = await _inAppPurchase.isAvailable();
+    }
+    if (!_storeAvailable) {
+      PremiumDebugLog.log(
+        'resolveCurrentStoreSubscription($reason): store unavailable',
+      );
+      return null;
+    }
+
+    await _refreshActiveSubscriptionFromStore(
+      reason: reason,
+      requestAppStoreSync: requestAppStoreSync,
+    );
+    return _activeSubscriptionProductId;
+  }
+
   /// Reads subscription state already on the device — never calls [restorePurchases]
   /// or [AppStore.sync], so the user is not asked for an Apple ID password.
   Future<void> verifyPremiumLocally({required String reason}) async {
@@ -212,11 +238,13 @@ class PremiumPurchaseService extends ChangeNotifier {
   /// Re-checks App Store / Play subscription state and updates local premium flag.
   ///
   /// Set [requestStoreRestore] to true only for the Restore purchases button.
+  /// Set [requestAppStoreSync] for a user-initiated iOS sync without restore.
   /// Silent checks read cached StoreKit / Play data and do not ask for a password.
   Future<void> syncPremiumWithStore({
     bool silent = true,
     String reason = 'sync',
     bool requestStoreRestore = false,
+    bool requestAppStoreSync = false,
   }) async {
     while (_ongoingStoreSync != null) {
       await _ongoingStoreSync;
@@ -226,6 +254,7 @@ class PremiumPurchaseService extends ChangeNotifier {
       silent: silent,
       reason: reason,
       requestStoreRestore: requestStoreRestore,
+      requestAppStoreSync: requestAppStoreSync,
     );
     _ongoingStoreSync = syncRun;
     try {
@@ -241,6 +270,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     required bool silent,
     required String reason,
     required bool requestStoreRestore,
+    required bool requestAppStoreSync,
   }) async {
     PremiumDebugLog.section('Premium sync ($reason)');
     _logLocalPremiumState('before sync');
@@ -275,13 +305,20 @@ class PremiumPurchaseService extends ChangeNotifier {
           'Waiting ${_storeEntitlementSettleDelay.inMilliseconds}ms for purchase stream…',
         );
         await Future<void>.delayed(_storeEntitlementSettleDelay);
+      } else if (requestAppStoreSync) {
+        PremiumDebugLog.log(
+          'User-initiated AppStore.sync entitlement refresh (no restorePurchases)',
+        );
       } else {
         PremiumDebugLog.log(
           'Silent entitlement check (no restorePurchases / no AppStore.sync)',
         );
       }
 
-      await _refreshActiveSubscriptionFromStore(reason: reason);
+      await _refreshActiveSubscriptionFromStore(
+        reason: reason,
+        requestAppStoreSync: requestAppStoreSync,
+      );
 
       final entitled = _activeSubscriptionProductId != null;
       PremiumDebugLog.logPair('storeSaysEntitled', entitled);
@@ -453,7 +490,6 @@ class PremiumPurchaseService extends ChangeNotifier {
     }
 
     _isRestoring = !silent;
-    _purchaseStreamSubscriptionProductId = null;
     if (!silent) {
       _errorMessage = null;
       _statusMessage = null;
@@ -465,6 +501,7 @@ class PremiumPurchaseService extends ChangeNotifier {
         silent: silent,
         reason: 'manual_restore',
         requestStoreRestore: true,
+        requestAppStoreSync: true,
       );
       if (!silent) {
         final hasActiveStoreSubscription = _activeSubscriptionProductId != null;
@@ -505,7 +542,9 @@ class PremiumPurchaseService extends ChangeNotifier {
 
       switch (purchase.status) {
         case PurchaseStatus.pending:
-          _statusMessage = 'Purchase pending approval…';
+          _isPurchasing = true;
+          _errorMessage = null;
+          _statusMessage = null;
           break;
         case PurchaseStatus.error:
           _isPurchasing = false;
@@ -520,10 +559,8 @@ class PremiumPurchaseService extends ChangeNotifier {
           break;
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          _purchaseStreamSubscriptionProductId = purchase.productID;
           final handleStreamUpdate =
               _isPurchasing || _isRestoring || _ongoingStoreSync != null;
-          _isPurchasing = false;
           if (!handleStreamUpdate) {
             PremiumDebugLog.log(
               'Ignoring purchase stream ${purchase.status.name} '
@@ -531,13 +568,7 @@ class PremiumPurchaseService extends ChangeNotifier {
             );
             break;
           }
-          if (_ongoingStoreSync != null) {
-            PremiumDebugLog.log(
-              'Deferring stream re-verify; store sync in progress',
-            );
-          } else {
-            unawaited(_refreshPremiumFromStoreAfterPurchase(purchase));
-          }
+          unawaited(_finalizePurchaseFromStream(purchase));
           break;
       }
 
@@ -551,6 +582,8 @@ class PremiumPurchaseService extends ChangeNotifier {
 
   Future<void> _refreshActiveSubscriptionFromStore({
     String reason = 'refresh',
+    String? preferredProductId,
+    bool requestAppStoreSync = false,
   }) async {
     if (!_enableStore) {
       _activeSubscriptionProductId = null;
@@ -560,12 +593,35 @@ class PremiumPurchaseService extends ChangeNotifier {
         await PremiumEntitlementResolver.resolveActiveProductId(
       _inAppPurchase,
       reason: reason,
+      preferredProductId: preferredProductId,
+      requestAppStoreSync: requestAppStoreSync,
     );
     PremiumDebugLog.logPair(
       'cachedActiveProductId',
       _activeSubscriptionProductId ?? 'none',
     );
     notifyListeners();
+  }
+
+  Future<void> _finalizePurchaseFromStream(PurchaseDetails purchase) async {
+    final wasBuying = _isPurchasing;
+    try {
+      if (_ongoingStoreSync != null) {
+        PremiumDebugLog.log(
+          'Waiting for store sync before purchase stream re-verify',
+        );
+        await _ongoingStoreSync;
+      }
+      if (purchase.status == PurchaseStatus.purchased) {
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+      }
+      await _refreshPremiumFromStoreAfterPurchase(purchase);
+    } finally {
+      if (wasBuying) {
+        _isPurchasing = false;
+      }
+      notifyListeners();
+    }
   }
 
   Future<void> _refreshPremiumFromStoreAfterPurchase(
@@ -576,6 +632,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     );
     await _refreshActiveSubscriptionFromStore(
       reason: 'purchase_stream_${purchase.status.name}',
+      preferredProductId: purchase.productID,
     );
     final entitled = _activeSubscriptionProductId != null;
     await _applyStoreEntitlement(

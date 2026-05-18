@@ -26,6 +26,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
   bool _isFullScreenLoading = false;
   String _loadingMessage = 'Processing…';
   bool _waitingForStoreResult = false;
+  bool _showWelcomeOnSuccess = false;
   PremiumPurchaseService? _premium;
 
   @override
@@ -67,6 +68,11 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     }
     final premium = context.read<PremiumPurchaseService>();
     if (premium.isPurchasing || premium.isRestoring) {
+      if (_isFullScreenLoading) {
+        setState(() {
+          _loadingMessage = 'Completing your purchase…';
+        });
+      }
       return;
     }
 
@@ -90,6 +96,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     if (!mounted) {
       return;
     }
+    _showWelcomeOnSuccess = false;
     setState(() {
       _isFullScreenLoading = false;
       _waitingForStoreResult = false;
@@ -105,10 +112,21 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
         ),
         isError: true,
       );
-    } else if (status != null && status.isNotEmpty) {
-      _showMessage(status);
+    } else if (status != null &&
+        status.isNotEmpty &&
+        !_isPendingPurchaseStatus(status)) {
+      _showMessage(
+        PremiumStoreMessages.friendly(
+          rawMessage: status,
+          fallback: PremiumStoreMessages.purchaseFailed,
+        ),
+      );
     }
     premium.clearMessages();
+  }
+
+  bool _isPendingPurchaseStatus(String status) {
+    return status.toLowerCase().contains('pending');
   }
 
   void _showMessage(String text, {bool isError = false}) {
@@ -123,6 +141,18 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     );
   }
 
+  bool _hasImmediateFailureState(PremiumPurchaseService premium) {
+    final error = premium.errorMessage;
+    if (error != null && error.isNotEmpty) {
+      return true;
+    }
+    final status = premium.statusMessage;
+    if (status == null || status.isEmpty) {
+      return false;
+    }
+    return !_isPendingPurchaseStatus(status);
+  }
+
   Future<void> _completeAndLeave(PremiumPurchaseService premium) async {
     if (_didPop || !mounted) {
       return;
@@ -133,7 +163,10 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       _waitingForStoreResult = false;
     });
 
-    if (premium.consumePremiumWelcomePending()) {
+    final shouldShowWelcome =
+        _showWelcomeOnSuccess || premium.consumePremiumWelcomePending();
+    _showWelcomeOnSuccess = false;
+    if (shouldShowWelcome) {
       final planLabel = premiumWelcomePlanLabel(
         premium.activeSubscriptionProductId,
       );
@@ -149,17 +182,71 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     Navigator.of(context).pop(true);
   }
 
+  Future<void> _showAlreadySubscribedDialog(
+    PremiumPurchaseService premium,
+    String productId,
+  ) async {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Already subscribed'),
+          content: Text(
+            PremiumProducts.alreadySubscribedMessage(
+              productId: productId,
+              debugOverride: premium.debugPremiumOverrideEnabled,
+            ),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _onContinuePressed(PremiumPurchaseService premium) async {
     if (_selectedProductId == null || _isFullScreenLoading) {
       return;
     }
     premium.clearMessages();
-    _startFullScreenLoading('Completing your purchase…');
-    await premium.buy(_selectedProductId!);
+    setState(() {
+      _isFullScreenLoading = true;
+      _loadingMessage = 'Checking your subscription…';
+      _waitingForStoreResult = false;
+    });
+    final existingProductId = await premium.resolveCurrentStoreSubscription(
+      reason: 'purchase_preflight',
+    );
     if (!mounted) {
       return;
     }
-    if (!premium.isPurchasing && !premium.isPremium) {
+    if (existingProductId != null) {
+      setState(() {
+        _isFullScreenLoading = false;
+        _waitingForStoreResult = false;
+      });
+      await _showAlreadySubscribedDialog(premium, existingProductId);
+      return;
+    }
+    _showWelcomeOnSuccess = true;
+    _startFullScreenLoading('Completing your purchase…');
+    await premium.buy(_selectedProductId!);
+    if (!mounted || !_waitingForStoreResult) {
+      return;
+    }
+    if (!premium.isPurchasing &&
+        !premium.isPremium &&
+        _hasImmediateFailureState(premium)) {
       _endLoadingWithFailure(premium);
     }
   }
@@ -169,12 +256,15 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       return;
     }
     premium.clearMessages();
+    _showWelcomeOnSuccess = true;
     _startFullScreenLoading('Restoring your subscription…');
     await premium.restorePurchases();
     if (!mounted || _didPop) {
       return;
     }
-    if (!premium.isRestoring && !premium.isPremium) {
+    if (!premium.isRestoring &&
+        !premium.isPremium &&
+        _hasImmediateFailureState(premium)) {
       _endLoadingWithFailure(premium);
     }
   }

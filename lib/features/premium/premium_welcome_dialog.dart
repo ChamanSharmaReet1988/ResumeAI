@@ -10,7 +10,7 @@ Future<void> showPremiumWelcomeDialog(
 }) {
   return showDialog<void>(
     context: context,
-    barrierDismissible: true,
+    barrierDismissible: false,
     barrierColor: Colors.black54,
     builder: (dialogContext) {
       return PremiumWelcomeDialog(planLabel: planLabel);
@@ -52,6 +52,7 @@ class _PremiumWelcomeDialogState extends State<PremiumWelcomeDialog> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final size = MediaQuery.sizeOf(context);
+    final horizontalInset = size.width < 380 ? 18.0 : 28.0;
 
     return Center(
       child: Material(
@@ -83,7 +84,7 @@ class _PremiumWelcomeDialogState extends State<PremiumWelcomeDialog> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
+                padding: EdgeInsets.symmetric(horizontal: horizontalInset),
                 child: Dialog(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -100,7 +101,7 @@ class _PremiumWelcomeDialogState extends State<PremiumWelcomeDialog> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Welcome to ResumeApp Pro!',
+                          'Congratulations!',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w800,
@@ -108,8 +109,8 @@ class _PremiumWelcomeDialogState extends State<PremiumWelcomeDialog> {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          'You\'re on the ${widget.planLabel}. '
-                          'Every premium template and iCloud backup is unlocked.',
+                          'ResumeApp Pro is active on your ${widget.planLabel}. '
+                          'Premium templates and iCloud backup are now unlocked.',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant,

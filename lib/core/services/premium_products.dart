@@ -96,7 +96,7 @@ const List<String> kPremiumBenefits = [
 /// Highlighted on Go Premium — upcoming Pro content shipped in a future release.
 const String kPremiumUpcomingUpdateBadge = 'Coming in the next update';
 const String kPremiumUpcomingUpdateMessage =
-    'New resume layouts and modern templates — included with Pro.';
+    'New resume layouts and modern templates, included with Pro.';
 
 /// Savings line under the yearly plan (vs 12× monthly). `null` if prices are missing.
 String? premiumYearlySavingsLabel({

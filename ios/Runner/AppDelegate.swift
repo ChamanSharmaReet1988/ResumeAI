@@ -1,5 +1,6 @@
 import Foundation
 import Flutter
+import StoreKit
 import UIKit
 
 @main
@@ -14,6 +15,7 @@ import UIKit
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     registerICloudPluginIfNeeded(with: engineBridge.pluginRegistry)
+    registerStoreKitEntitlementPluginIfNeeded(with: engineBridge.pluginRegistry)
   }
 
   private func registerICloudPluginIfNeeded(with registry: FlutterPluginRegistry) {
@@ -25,6 +27,17 @@ import UIKit
       return
     }
     ICloudResumePlugin.register(with: registrar)
+  }
+
+  private func registerStoreKitEntitlementPluginIfNeeded(with registry: FlutterPluginRegistry) {
+    let pluginKey = "StoreKitEntitlementPlugin"
+    guard !registry.hasPlugin(pluginKey) else {
+      return
+    }
+    guard let registrar = registry.registrar(forPlugin: pluginKey) else {
+      return
+    }
+    StoreKitEntitlementPlugin.register(with: registrar)
   }
 }
 
@@ -130,6 +143,7 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
       ]
     }
   }
+    
 
   private func coverLetterDisplayTitle(from payload: [String: Any]?) -> String {
     guard let payload else {
@@ -415,6 +429,162 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
       }
     }
   }
+}
+
+private final class StoreKitEntitlementPlugin: NSObject, FlutterPlugin {
+  private static let channelName = "resume_app/storekit_entitlements"
+  private static let subscriptionProductIds = [
+    "gp_pro_week",
+    "gp_pro_month",
+    "gp_pro_year"
+  ]
+  private let isoFormatter = ISO8601DateFormatter()
+
+  static func register(with registrar: FlutterPluginRegistrar) {
+    let channel = FlutterMethodChannel(name: channelName, binaryMessenger: registrar.messenger())
+    let instance = StoreKitEntitlementPlugin()
+    registrar.addMethodCallDelegate(instance, channel: channel)
+  }
+
+  func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "getCurrentSubscriptionEntitlements":
+      if #available(iOS 15.0, *) {
+        Task {
+          do {
+            let rows = try await currentSubscriptionEntitlements()
+            DispatchQueue.main.async {
+              result(rows)
+            }
+          } catch {
+            DispatchQueue.main.async {
+              result(
+                FlutterError(
+                  code: "storekit_entitlements_failed",
+                  message: error.localizedDescription,
+                  details: nil
+                )
+              )
+            }
+          }
+        }
+      } else {
+        result(
+          FlutterError(
+            code: "storekit_unsupported",
+            message: "StoreKit current entitlements require iOS 15 or later.",
+            details: nil
+          )
+        )
+      }
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  @available(iOS 15.0, *)
+  private func currentSubscriptionEntitlements() async throws -> [[String: Any]] {
+    var rows: [[String: Any]] = []
+    let statusByProductId = try await subscriptionStatusByProductId()
+
+    for await verificationResult in Transaction.currentEntitlements {
+      guard case .verified(let transaction) = verificationResult else {
+        continue
+      }
+      guard transaction.productType == .autoRenewable else {
+        continue
+      }
+      if transaction.revocationDate != nil {
+        continue
+      }
+
+      let status = statusByProductId[transaction.productID]
+
+      rows.append([
+        "productId": transaction.productID,
+        "transactionId": String(transaction.id),
+        "originalTransactionId": String(transaction.originalID),
+        "purchaseDate": isoFormatter.string(from: transaction.purchaseDate),
+        "expirationDate": transaction.expirationDate.map { isoFormatter.string(from: $0) } as Any,
+        "statusState": status?.state as Any,
+        "willAutoRenew": status?.willAutoRenew as Any,
+        "expirationReason": status?.expirationReason as Any,
+      ])
+    }
+
+    return rows
+  }
+
+  @available(iOS 15.0, *)
+  private func subscriptionStatusByProductId() async throws -> [String: SubscriptionStatusSnapshot] {
+    let products = try await Product.products(for: Self.subscriptionProductIds)
+    var rows: [String: SubscriptionStatusSnapshot] = [:]
+
+    for product in products {
+      guard let subscription = product.subscription else {
+        continue
+      }
+      let statuses = try await subscription.status
+      for status in statuses {
+        guard case .verified(let renewalInfo) = status.renewalInfo else {
+          continue
+        }
+        rows[renewalInfo.currentProductID] = SubscriptionStatusSnapshot(
+          state: subscriptionStateLabel(status.state),
+          willAutoRenew: renewalInfo.willAutoRenew,
+          expirationReason: subscriptionExpirationReasonLabel(renewalInfo.expirationReason)
+        )
+      }
+    }
+
+    return rows
+  }
+
+  @available(iOS 15.0, *)
+  private func subscriptionStateLabel(_ state: Product.SubscriptionInfo.RenewalState) -> String {
+    switch state {
+    case .subscribed:
+      return "subscribed"
+    case .expired:
+      return "expired"
+    case .inBillingRetryPeriod:
+      return "inBillingRetryPeriod"
+    case .inGracePeriod:
+      return "inGracePeriod"
+    case .revoked:
+      return "revoked"
+    default:
+      return "unknown"
+    }
+  }
+
+  @available(iOS 15.0, *)
+  private func subscriptionExpirationReasonLabel(
+    _ reason: Product.SubscriptionInfo.RenewalInfo.ExpirationReason?
+  ) -> String? {
+    guard let reason else {
+      return nil
+    }
+    switch reason {
+    case .autoRenewDisabled:
+      return "autoRenewDisabled"
+    case .billingError:
+      return "billingError"
+    case .didNotConsentToPriceIncrease:
+      return "didNotConsentToPriceIncrease"
+    case .productUnavailable:
+      return "productUnavailable"
+    default:
+      return "unknown"
+    }
+  }
+}
+
+@available(iOS 15.0, *)
+private struct SubscriptionStatusSnapshot {
+  let state: String
+  let willAutoRenew: Bool
+  let expirationReason: String?
 }
 
 private enum ICloudResumePluginError: Error {

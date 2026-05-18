@@ -36,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static String get _shareMessage =>
       'Check out ResumeApp to create, optimize, and share professional resumes on iPhone. '
       'Get it on the App Store: ${_appStoreUri.toString()}';
+  bool _isCheckingPremiumStatus = false;
 
   Uri _buildFeedbackMailtoUri() {
     final subject = Uri.encodeComponent('ResumeApp Feedback');
@@ -124,7 +125,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _openGoPremium(BuildContext context) async {
+    if (_isCheckingPremiumStatus) {
+      return;
+    }
     final premium = context.read<PremiumPurchaseService>();
+    setState(() => _isCheckingPremiumStatus = true);
+    try {
+      await premium.syncPremiumWithStore(
+        silent: true,
+        reason: 'settings_go_premium_tap',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isCheckingPremiumStatus = false);
+      }
+    }
+    if (!context.mounted) {
+      return;
+    }
     if (premium.isPremium) {
       await _showActivePremiumSheet(context, premium);
       return;
@@ -268,27 +286,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           fontWeight: FontWeight.w400,
         );
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            const horizontalPadding = 20.0;
-            const topPadding = 20.0;
-            const bottomPadding = 24.0;
+        return Stack(
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const horizontalPadding = 20.0;
+                const topPadding = 20.0;
+                const bottomPadding = 24.0;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                horizontalPadding,
-                topPadding,
-                horizontalPadding,
-                bottomPadding,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight - topPadding - bottomPadding,
-                ),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    topPadding,
+                    horizontalPadding,
+                    bottomPadding,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight:
+                          constraints.maxHeight - topPadding - bottomPadding,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                       Card(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -382,7 +403,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Card(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _openGoPremium(context),
+                  onTap: _isCheckingPremiumStatus
+                      ? null
+                      : () => _openGoPremium(context),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -404,19 +427,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: rowLabelStyle,
                           ),
                         ),
-                        if (premium.isPremium) ...[
-                          const Icon(
-                            Icons.workspace_premium_rounded,
-                            size: 18,
-                            color: Color(0xFFC98910),
+                        if (!_isCheckingPremiumStatus) ...[
+                          if (premium.isPremium) ...[
+                            const Icon(
+                              Icons.workspace_premium_rounded,
+                              size: 18,
+                              color: Color(0xFFC98910),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 16,
+                            color: colorScheme.primary,
                           ),
-                          const SizedBox(width: 10),
                         ],
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
                       ],
                     ),
                   ),
@@ -578,12 +603,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onTap: () => _openDeveloperTools(context),
                         ),
                       ],
-                    ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            if (_isCheckingPremiumStatus)
+              Positioned.fill(
+                child: ColoredBox(
+                  color: colorScheme.surface.withValues(alpha: 0.72),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        colorScheme.primary,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            );
-          },
+          ],
         );
       },
     );
