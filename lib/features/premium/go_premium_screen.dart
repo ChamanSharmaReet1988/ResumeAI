@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/services/analytics_events.dart';
 import '../../core/services/premium_products.dart';
 import '../../core/services/premium_purchase_service.dart';
 import '../../core/services/premium_store_messages.dart';
@@ -12,6 +13,8 @@ import 'premium_store_loading_overlay.dart';
 import 'premium_welcome_dialog.dart';
 
 const Color _kGoPremiumLabelColor = Color.fromRGBO(20, 20, 20, 1);
+
+enum _PremiumSuccessSource { purchase, restore }
 
 class GoPremiumScreen extends StatefulWidget {
   const GoPremiumScreen({super.key});
@@ -27,6 +30,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
   String _loadingMessage = 'Processing…';
   bool _waitingForStoreResult = false;
   bool _showWelcomeOnSuccess = false;
+  _PremiumSuccessSource? _pendingSuccessSource;
   PremiumPurchaseService? _premium;
 
   @override
@@ -97,6 +101,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       return;
     }
     _showWelcomeOnSuccess = false;
+    _pendingSuccessSource = null;
     setState(() {
       _isFullScreenLoading = false;
       _waitingForStoreResult = false;
@@ -158,10 +163,29 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       return;
     }
 
+    final successSource = _pendingSuccessSource;
+    _pendingSuccessSource = null;
     setState(() {
       _isFullScreenLoading = false;
       _waitingForStoreResult = false;
     });
+
+    if (successSource == _PremiumSuccessSource.purchase) {
+      await logAnalyticsEvent(
+        context,
+        AnalyticsEvents.premiumPurchaseSuccess,
+        parameters: premiumPlanAnalytics(premium.activeSubscriptionProductId),
+      );
+    } else if (successSource == _PremiumSuccessSource.restore) {
+      await logAnalyticsEvent(
+        context,
+        AnalyticsEvents.premiumRestoreSuccess,
+        parameters: premiumPlanAnalytics(premium.activeSubscriptionProductId),
+      );
+    }
+    if (!mounted || _didPop) {
+      return;
+    }
 
     final shouldShowWelcome =
         _showWelcomeOnSuccess || premium.consumePremiumWelcomePending();
@@ -239,6 +263,12 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       return;
     }
     _showWelcomeOnSuccess = true;
+    _pendingSuccessSource = _PremiumSuccessSource.purchase;
+    await logAnalyticsEvent(
+      context,
+      AnalyticsEvents.premiumPurchaseStarted,
+      parameters: premiumPlanAnalytics(_selectedProductId),
+    );
     _startFullScreenLoading('Completing your purchase…');
     await premium.buy(_selectedProductId!);
     if (!mounted || !_waitingForStoreResult) {
@@ -257,6 +287,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     }
     premium.clearMessages();
     _showWelcomeOnSuccess = true;
+    _pendingSuccessSource = _PremiumSuccessSource.restore;
     _startFullScreenLoading('Restoring your subscription…');
     await premium.restorePurchases();
     if (!mounted || _didPop) {

@@ -118,7 +118,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsExecutive =>
       'Strong uppercase headings and scannable two-column skills.',
     ResumeTemplate.atsCenterClassic =>
-      'Centered serif-style header with ruled sections and inline skills.',
+      'Centered Arial header with ruled sections and inline skills.',
     ResumeTemplate.atsProfessionalBlue =>
       'Blue accent headings, right-aligned contact, and three-column skills.',
   };
@@ -162,8 +162,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsSerifRules => 'Garamond · rules ATS',
     ResumeTemplate.atsModernFlow => 'Garamond · flow ATS',
     ResumeTemplate.atsExecutive => 'Garamond · executive ATS',
-    ResumeTemplate.atsCenterClassic => 'Serif · center ATS',
-    ResumeTemplate.atsProfessionalBlue => 'Sans · blue ATS',
+    ResumeTemplate.atsCenterClassic => 'Arial · center ATS',
+    ResumeTemplate.atsProfessionalBlue => 'Arial · blue ATS',
   };
 }
 

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/models/resume_models.dart';
+import '../../core/services/analytics_events.dart';
 import '../../core/services/resume_services.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/view_models.dart';
@@ -36,6 +37,17 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
         sharePositionOrigin: box == null
             ? null
             : box.localToGlobal(Offset.zero) & box.size,
+      );
+      if (!mounted) {
+        return;
+      }
+      await logAnalyticsEvent(
+        context,
+        AnalyticsEvents.coverLetterSharedPdf,
+        parameters: {
+          ...coverLetterTemplateAnalytics(viewModel.coverLetter.template),
+          'source': 'cover_letter_preview',
+        },
       );
     } catch (_) {
       if (!mounted) {
@@ -79,6 +91,17 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
       (letter) => letter.copyWith(template: selectedTemplate),
     );
     await viewModel.saveCoverLetter(showBusy: false);
+    if (!mounted) {
+      return;
+    }
+    await logAnalyticsEvent(
+      context,
+      AnalyticsEvents.coverLetterTemplateSelected,
+      parameters: {
+        ...coverLetterTemplateAnalytics(selectedTemplate),
+        'source': 'cover_letter_preview',
+      },
+    );
   }
 
   @override

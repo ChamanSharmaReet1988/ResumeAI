@@ -20,6 +20,7 @@ import '../resume_text_font.dart';
 import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
 import 'profile_image_storage.dart';
+import 'resume_pdf/arimo_pdf_fonts.dart';
 import 'resume_pdf/calibri_pdf_fonts.dart' hide darkHeaderInitialsPdfStyle;
 import 'resume_pdf/garamond_pdf_fonts.dart';
 import 'resume_pdf/inter_pdf_fonts.dart';
@@ -90,8 +91,17 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
   bool accentStripGaramondBody = false,
   bool atsModernFlowGaramondBody = false,
   bool atsExecutiveGaramondBody = false,
+  ArimoPdfFonts? arimo,
+  bool atsCenterClassicArimoBody = false,
+  bool atsProfessionalBlueArimoBody = false,
 }) {
-  final bodyStyle = garamond != null && bodyFontPt != null
+  final bodyStyle = arimo != null && bodyFontPt != null
+      ? atsCenterClassicArimoBody
+      ? atsCenterClassicBodyPdfTextStyle(arimo, bodyFontPt)
+      : atsProfessionalBlueArimoBody
+      ? atsProfessionalBlueBodyPdfTextStyle(arimo, bodyFontPt)
+      : atsCenterClassicBodyPdfTextStyle(arimo, bodyFontPt)
+      : garamond != null && bodyFontPt != null
       ? accentStripGaramondBody
       ? accentStripBodyPdfTextStyle(garamond, bodyFontPt)
       : atsModernFlowGaramondBody
@@ -5162,6 +5172,7 @@ class ResumePdfService {
   InterPdfFonts? _interPdfFontsCache;
   CalibriPdfFonts? _calibriPdfFontsCache;
   GaramondPdfFonts? _garamondPdfFontsCache;
+  ArimoPdfFonts? _arimoPdfFontsCache;
 
   Future<InterPdfFonts> _ensureInterPdfFonts() async {
     return _interPdfFontsCache ??= await loadInterPdfFonts();
@@ -5173,6 +5184,10 @@ class ResumePdfService {
 
   Future<GaramondPdfFonts> _ensureGaramondPdfFonts() async {
     return _garamondPdfFontsCache ??= await loadGaramondPdfFonts();
+  }
+
+  Future<ArimoPdfFonts> _ensureArimoPdfFonts() async {
+    return _arimoPdfFontsCache ??= await loadArimoPdfFonts();
   }
 
   Future<Uint8List> buildPdf(ResumeData resume) async {
@@ -5254,6 +5269,34 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsCenterClassic) {
+      final arimo = await _ensureArimoPdfFonts();
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
+      final document = pw.Document(
+        theme: await resumePdfThemeForArimo(
+          arimo,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.atsCenterClassicBodyLineHeight,
+        ),
+      );
+      _addAtsCenterClassicTemplatePage(document, resume, arimo: arimo);
+      return document.save();
+    }
+
+    if (resume.template == ResumeTemplate.atsProfessionalBlue) {
+      final arimo = await _ensureArimoPdfFonts();
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
+      final document = pw.Document(
+        theme: await resumePdfThemeForArimo(
+          arimo,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.atsProfessionalBlueBodyLineHeight,
+        ),
+      );
+      _addAtsProfessionalBlueTemplatePage(document, resume, arimo: arimo);
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -5297,10 +5340,8 @@ class ResumePdfService {
       case ResumeTemplate.atsExecutive:
         break;
       case ResumeTemplate.atsCenterClassic:
-        _addAtsCenterClassicTemplatePage(document, resume);
         break;
       case ResumeTemplate.atsProfessionalBlue:
-        _addAtsProfessionalBlueTemplatePage(document, resume);
         break;
     }
 
@@ -5420,6 +5461,48 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsCenterClassic) {
+      final arimo = await _ensureArimoPdfFonts();
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
+      final document = pw.Document(
+        theme: await resumePdfThemeForArimo(
+          arimo,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.atsCenterClassicBodyLineHeight,
+        ),
+      );
+      _addAtsCenterClassicTemplatePage(
+        document,
+        resume,
+        arimo: arimo,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
+    if (resume.template == ResumeTemplate.atsProfessionalBlue) {
+      final arimo = await _ensureArimoPdfFonts();
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
+      final document = pw.Document(
+        theme: await resumePdfThemeForArimo(
+          arimo,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.atsProfessionalBlueBodyLineHeight,
+        ),
+      );
+      _addAtsProfessionalBlueTemplatePage(
+        document,
+        resume,
+        arimo: arimo,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -5470,22 +5553,8 @@ class ResumePdfService {
       case ResumeTemplate.atsExecutive:
         break;
       case ResumeTemplate.atsCenterClassic:
-        _addAtsCenterClassicTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
         break;
       case ResumeTemplate.atsProfessionalBlue:
-        _addAtsProfessionalBlueTemplatePage(
-          document,
-          resume,
-          highlightSummary: highlightSummary,
-          highlightedSkills: highlightedSkills,
-          highlightedBulletsByExperience: highlightedBulletsByExperience,
-        );
         break;
     }
 

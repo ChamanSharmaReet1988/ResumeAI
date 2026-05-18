@@ -86,6 +86,18 @@ abstract final class ResumeTypography {
   static double atsExecutiveBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (atsExecutiveBodyLineHeight - 1);
 
+  /// Center Classic ATS (template 9) body paragraph line height (preview + PDF).
+  static const double atsCenterClassicBodyLineHeight = 1.2;
+
+  static double atsCenterClassicBodyPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (atsCenterClassicBodyLineHeight - 1);
+
+  /// Professional Blue ATS (template 10) body paragraph line height (preview + PDF).
+  static const double atsProfessionalBlueBodyLineHeight = 1.2;
+
+  static double atsProfessionalBlueBodyPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (atsProfessionalBlueBodyLineHeight - 1);
+
   static double darkHeaderBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (darkHeaderBodyLineHeight - 1);
   static const double sectionGapPreviewPx = 44;
@@ -263,6 +275,23 @@ abstract final class ResumeTypography {
   }) =>
       TextStyle(
         fontFamily: 'Garamond',
+        fontWeight: ResumeFontWeight.toFlutter(weight),
+        fontSize: fontSize,
+        color: color,
+        height: height,
+        letterSpacing: letterSpacing,
+      );
+
+  /// Arial (Arimo) text style for in-app resume previews.
+  static TextStyle arialPreviewStyle({
+    required int weight,
+    double? fontSize,
+    Color? color,
+    double? height,
+    double? letterSpacing,
+  }) =>
+      TextStyle(
+        fontFamily: ResumeTextFont.arial.flutterFontFamily,
         fontWeight: ResumeFontWeight.toFlutter(weight),
         fontSize: fontSize,
         color: color,

@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/bottom_sheet_insets.dart';
+import '../../core/services/analytics_events.dart';
 import '../../core/services/profile_image_storage.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/skill_autocomplete_suggestions.dart';
@@ -222,7 +223,20 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   Future<void> _downloadResume() async {
-    final path = await context.read<ResumeEditorViewModel>().downloadPdf();
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final path = await viewModel.downloadPdf();
+    if (!mounted) {
+      return;
+    }
+
+    await logAnalyticsEvent(
+      context,
+      AnalyticsEvents.resumeExportedPdf,
+      parameters: {
+        ...resumeTemplateAnalytics(viewModel.resume.template.userFacingTemplate),
+        'source': 'resume_builder',
+      },
+    );
     if (!mounted) {
       return;
     }
@@ -233,7 +247,19 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   Future<void> _shareResume() async {
-    await context.read<ResumeEditorViewModel>().sharePdf();
+    final viewModel = context.read<ResumeEditorViewModel>();
+    await viewModel.sharePdf();
+    if (!mounted) {
+      return;
+    }
+    await logAnalyticsEvent(
+      context,
+      AnalyticsEvents.resumeSharedPdf,
+      parameters: {
+        ...resumeTemplateAnalytics(viewModel.resume.template.userFacingTemplate),
+        'source': 'resume_builder',
+      },
+    );
   }
 
   Future<void> _printResume() async {

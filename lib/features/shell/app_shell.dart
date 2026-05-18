@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/resume_models.dart';
+import '../../core/services/analytics_events.dart';
 import '../../core/services/resume_services.dart';
 import '../ai/ai_assistance_screen.dart';
 import '../builder/resume_builder_screen.dart';
@@ -98,6 +99,31 @@ class _AppShellState extends State<AppShell> {
     );
 
     await context.read<ResumeRepository>().upsertResume(draft);
+    if (!mounted) {
+      return;
+    }
+    await logAnalyticsEvent(
+      context,
+      AnalyticsEvents.resumeCreated,
+      parameters: {
+        ...resumeTemplateAnalytics(draft.template.userFacingTemplate),
+        'source': 'home_add',
+      },
+    );
+    await _openBuilder(seed: draft);
+  }
+
+  Future<void> _createResumeFromTemplatesTab() async {
+    final library = context.read<ResumeLibraryViewModel>();
+    final draft = library.newDraft();
+    await logAnalyticsEvent(
+      context,
+      AnalyticsEvents.resumeCreated,
+      parameters: {
+        ...resumeTemplateAnalytics(draft.template.userFacingTemplate),
+        'source': 'templates_tab',
+      },
+    );
     await _openBuilder(seed: draft);
   }
 
@@ -290,7 +316,7 @@ class _AppShellState extends State<AppShell> {
         onEditCoverLetter: (coverLetter) =>
             _openCoverLetterContent(seed: coverLetter),
       ),
-      TemplatesScreen(onCreateResume: () => _openBuilder()),
+      TemplatesScreen(onCreateResume: _createResumeFromTemplatesTab),
       ResumeAnalyserScreen(
         onOpenResumeBuilder: () => _openBuilder(),
         onGoToHomeTab: _goToHomeResumeTab,

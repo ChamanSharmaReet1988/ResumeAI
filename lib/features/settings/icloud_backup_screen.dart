@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/services/analytics_events.dart';
 import '../../core/services/app_preferences.dart';
 import '../../core/services/icloud_resume_service.dart';
 import '../../core/services/resume_services.dart';
@@ -193,6 +194,16 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
       } else {
         _showMessage('Synced $uploadedSummary to iCloud.');
       }
+      await logAnalyticsEvent(
+        context,
+        AnalyticsEvents.iCloudBackupSync,
+        parameters: {
+          'resume_count': resumeCount,
+          'cover_letter_count': letterCount,
+          'skipped_count': skipped,
+          'auto_sync_enabled': _autoSyncEnabled,
+        },
+      );
     } on Exception catch (error) {
       if (mounted) {
         _showMessage('Could not sync to iCloud: $error');

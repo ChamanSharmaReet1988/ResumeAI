@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/services/analytics_events.dart';
 import '../../core/skill_autocomplete_suggestions.dart';
 import 'cover_letter_content_screen.dart';
 import '../shared/view_models.dart';
@@ -196,6 +197,19 @@ class CoverLetterEditorScreen extends StatelessWidget {
                                   ? null
                                   : () async {
                                       await viewModel.createCoverLetter();
+                                      if (!context.mounted) {
+                                        return;
+                                      }
+                                      await logAnalyticsEvent(
+                                        context,
+                                        AnalyticsEvents.coverLetterCreated,
+                                        parameters: {
+                                          ...coverLetterTemplateAnalytics(
+                                            viewModel.coverLetter.template,
+                                          ),
+                                          'source': 'cover_letter_editor',
+                                        },
+                                      );
                                       if (!context.mounted) {
                                         return;
                                       }

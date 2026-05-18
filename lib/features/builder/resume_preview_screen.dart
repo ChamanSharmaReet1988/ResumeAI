@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/services/analytics_events.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../templates/templates_screen.dart';
@@ -54,6 +55,19 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             ? null
             : box.localToGlobal(Offset.zero) & box.size,
       );
+      if (!mounted) {
+        return;
+      }
+      await logAnalyticsEvent(
+        context,
+        AnalyticsEvents.resumeSharedPdf,
+        parameters: {
+          ...resumeTemplateAnalytics(
+            viewModel.resume.template.userFacingTemplate,
+          ),
+          'source': 'resume_preview',
+        },
+      );
     } catch (_) {
       if (!mounted) {
         return;
@@ -101,6 +115,17 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
       ),
     );
     await viewModel.saveResume();
+    if (!mounted) {
+      return;
+    }
+    await logAnalyticsEvent(
+      context,
+      AnalyticsEvents.resumeTemplateSelected,
+      parameters: {
+        ...resumeTemplateAnalytics(selectedTemplate),
+        'source': 'resume_preview',
+      },
+    );
   }
 
   void _onBackPressed() {
