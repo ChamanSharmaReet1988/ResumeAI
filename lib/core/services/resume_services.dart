@@ -5581,10 +5581,20 @@ class ResumePdfService {
 
     switch (coverLetter.template) {
       case CoverLetterTemplate.executiveNote:
-        _addExecutiveNoteCoverLetterPage(document, parsed);
+        _addExecutiveNoteCoverLetterPage(
+          document,
+          parsed,
+          arimo: await _ensureArimoPdfFonts(),
+          fontFallback: fallbacks,
+        );
         break;
       case CoverLetterTemplate.minimalLetter:
-        _addMinimalCoverLetterPage(document, parsed);
+        _addMinimalCoverLetterPage(
+          document,
+          parsed,
+          arimo: await _ensureArimoPdfFonts(),
+          fontFallback: fallbacks,
+        );
         break;
       case CoverLetterTemplate.sidebarLetter:
         _addSidebarCoverLetterPage(document, coverLetter, parsed);
@@ -5747,9 +5757,55 @@ class ResumePdfService {
   void _addExecutiveNoteCoverLetterPage(
     pw.Document document,
     _ParsedCoverLetterContent parsed,
-  ) {
+    {
+    required ArimoPdfFonts arimo,
+    List<pw.Font> fontFallback = const <pw.Font>[],
+  }) {
     final headerColor = PdfColor.fromHex('#1F2937');
     final dividerColor = PdfColor.fromHex('#E5E7EB');
+    final nameStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w700,
+      fontSize: 24,
+      color: PdfColors.white,
+      fontFallback: fontFallback,
+    );
+    final headerMetaStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w400,
+      fontSize: 12,
+      color: PdfColors.white,
+      fontFallback: fontFallback,
+    );
+    final headingStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w500,
+      fontSize: 14,
+      color: PdfColor.fromHex('#4B4F55'),
+      fontFallback: fontFallback,
+    );
+    final bodyStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w400,
+      fontSize: 12,
+      color: PdfColor.fromHex('#202327'),
+      lineHeight: 1.55,
+      fontFallback: fontFallback,
+    );
+    final recipientStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w500,
+      fontSize: 14,
+      color: PdfColor.fromHex('#4B4F55'),
+      fontFallback: fontFallback,
+    );
+    final signatureStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w700,
+      fontSize: 14,
+      color: PdfColor.fromHex('#202327'),
+      fontFallback: fontFallback,
+    );
 
     document.addPage(
       pw.MultiPage(
@@ -5767,20 +5823,13 @@ class ResumePdfService {
               children: [
                 pw.Text(
                   parsed.senderName,
-                  style: pw.TextStyle(
-                    color: PdfColors.white,
-                    fontSize: 24,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                  style: nameStyle,
                 ),
                 if (parsed.senderDetails.isNotEmpty) ...[
                   pw.SizedBox(height: 8),
                   pw.Text(
                     parsed.senderDetails.join('  |  '),
-                    style: const pw.TextStyle(
-                      color: PdfColors.white,
-                      fontSize: 10,
-                    ),
+                    style: headerMetaStyle,
                   ),
                 ],
               ],
@@ -5789,9 +5838,14 @@ class ResumePdfService {
           pw.SizedBox(height: 18),
           pw.Divider(color: dividerColor),
           pw.SizedBox(height: 10),
-          _buildCoverLetterRecipientBlock(parsed),
+          pw.Text(parsed.recipientLines.join('\n'), style: recipientStyle),
           pw.SizedBox(height: 16),
-          ..._buildCoverLetterBody(parsed),
+          ..._buildCoverLetterBodyWithStyles(
+            parsed,
+            bodyStyle: bodyStyle,
+            headingStyle: headingStyle,
+            signatureStyle: signatureStyle,
+          ),
         ],
       ),
     );
@@ -5864,8 +5918,47 @@ class ResumePdfService {
   void _addMinimalCoverLetterPage(
     pw.Document document,
     _ParsedCoverLetterContent parsed,
-  ) {
+    {
+    required ArimoPdfFonts arimo,
+    List<pw.Font> fontFallback = const <pw.Font>[],
+  }) {
     final accent = PdfColor.fromHex('#9A6B2F');
+    final nameStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w700,
+      fontSize: 24,
+      color: accent,
+      fontFallback: fontFallback,
+    );
+    final headingStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w500,
+      fontSize: 14,
+      color: PdfColor.fromHex('#202327'),
+      fontFallback: fontFallback,
+    );
+    final bodyStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w400,
+      fontSize: 12,
+      color: PdfColor.fromHex('#202327'),
+      lineHeight: 1.55,
+      fontFallback: fontFallback,
+    );
+    final mutedBodyStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w400,
+      fontSize: 12,
+      color: PdfColor.fromHex('#5E6369'),
+      fontFallback: fontFallback,
+    );
+    final signatureStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w700,
+      fontSize: 14,
+      color: PdfColor.fromHex('#202327'),
+      fontFallback: fontFallback,
+    );
 
     document.addPage(
       pw.MultiPage(
@@ -5875,11 +5968,7 @@ class ResumePdfService {
             child: pw.Text(
               parsed.senderName,
               textAlign: pw.TextAlign.center,
-              style: pw.TextStyle(
-                fontSize: 25,
-                fontWeight: pw.FontWeight.bold,
-                color: accent,
-              ),
+              style: nameStyle,
             ),
           ),
           if (parsed.senderDetails.isNotEmpty) ...[
@@ -5888,19 +5977,21 @@ class ResumePdfService {
               child: pw.Text(
                 parsed.senderDetails.join('  |  '),
                 textAlign: pw.TextAlign.center,
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  color: PdfColor.fromHex('#5E6369'),
-                ),
+                style: mutedBodyStyle,
               ),
             ),
           ],
           pw.SizedBox(height: 16),
           pw.Container(height: 1, color: accent),
           pw.SizedBox(height: 18),
-          _buildCoverLetterRecipientBlock(parsed),
+          pw.Text(parsed.recipientLines.join('\n'), style: mutedBodyStyle),
           pw.SizedBox(height: 16),
-          ..._buildCoverLetterBody(parsed),
+          ..._buildCoverLetterBodyWithStyles(
+            parsed,
+            bodyStyle: bodyStyle,
+            headingStyle: headingStyle,
+            signatureStyle: signatureStyle,
+          ),
         ],
       ),
     );
@@ -6074,17 +6165,6 @@ class ResumePdfService {
     return '${monthNames[date.month - 1]} ${date.day}, ${date.year}';
   }
 
-  pw.Widget _buildCoverLetterRecipientBlock(_ParsedCoverLetterContent parsed) {
-    return pw.Text(
-      parsed.recipientLines.join('\n'),
-      style: pw.TextStyle(
-        fontSize: 11,
-        color: PdfColor.fromHex('#4B4F55'),
-        height: 1.45,
-      ),
-    );
-  }
-
   List<pw.Widget> _buildCoverLetterBody(_ParsedCoverLetterContent parsed) {
     final bodyStyle = pw.TextStyle(
       fontSize: 11.5,
@@ -6108,6 +6188,48 @@ class ResumePdfService {
         parsed.signature,
         style: bodyStyle.copyWith(fontWeight: pw.FontWeight.bold),
       ),
+    ];
+  }
+
+  pw.TextStyle _coverLetterArialPdfStyle(
+    ArimoPdfFonts arimo, {
+    required int weight,
+    required double fontSize,
+    PdfColor? color,
+    double lineHeight = 1.45,
+    List<pw.Font> fontFallback = const <pw.Font>[],
+  }) {
+    final normalizedWeight = ResumeFontWeight.normalize(weight);
+    return arimoPdfTextStyle(
+      arimo,
+      normalizedWeight,
+      fontSize: fontSize,
+      color: color,
+      lineSpacing: fontSize * (lineHeight - 1),
+    ).copyWith(
+      fontWeight: normalizedWeight >= ResumeFontWeight.w700
+          ? pw.FontWeight.bold
+          : pw.FontWeight.normal,
+      fontFallback: fontFallback,
+    );
+  }
+
+  List<pw.Widget> _buildCoverLetterBodyWithStyles(
+    _ParsedCoverLetterContent parsed, {
+    required pw.TextStyle bodyStyle,
+    required pw.TextStyle headingStyle,
+    required pw.TextStyle signatureStyle,
+  }) {
+    return [
+      pw.Text(parsed.greeting, style: headingStyle),
+      pw.SizedBox(height: 12),
+      for (final paragraph in parsed.bodyParagraphs) ...[
+        pw.Text(paragraph, style: bodyStyle),
+        pw.SizedBox(height: 12),
+      ],
+      pw.Text(parsed.closing, style: headingStyle),
+      pw.SizedBox(height: 20),
+      pw.Text(parsed.signature, style: signatureStyle),
     ];
   }
 

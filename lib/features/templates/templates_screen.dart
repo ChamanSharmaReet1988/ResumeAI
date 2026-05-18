@@ -4866,7 +4866,13 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(9, 9, 9, 10),
           child: DefaultTextStyle(
-            style: const TextStyle(fontSize: 4.45, height: 1.38, color: text),
+            style: const TextStyle(
+              fontFamily: 'Arimo',
+              fontSize: 4.45,
+              fontWeight: FontWeight.w400,
+              height: 1.38,
+              color: text,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -4883,36 +4889,57 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                       Text(
                         'MAYA FERNANDES',
                         style: TextStyle(
+                          fontFamily: 'Arimo',
                           color: Colors.white,
                           fontSize: 8.2,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
                         ),
                       ),
                       SizedBox(height: 2),
                       Text(
                         'mfernandes@mail.com  |  +1 646 555 0131  |  Brooklyn, NY',
                         style: TextStyle(
+                          fontFamily: 'Arimo',
                           color: Color(0xFFD7E4F5),
-                          fontSize: 4.2,
+                          fontSize: 4.45,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 5),
-                const Text('March 30, 2026', style: TextStyle(color: muted)),
+                const Text(
+                  'March 30, 2026',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: muted,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 const SizedBox(height: 3),
                 const Text(
                   'Hiring Manager\nNorthpeak Studio\nNew York, NY',
-                  style: TextStyle(color: muted, height: 1.38),
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: muted,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                    height: 1.38,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Container(height: 1, color: line),
                 const SizedBox(height: 4),
                 const Text(
                   'Dear Hiring Manager,',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 const _MiniCoverLetterParagraph(
@@ -4929,10 +4956,21 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                 const SizedBox(height: 4),
                 const Text(
                   'Sincerely,',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 2),
-                const Text('Maya Fernandes'),
+                const Text(
+                  'Maya Fernandes',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           ),
@@ -4962,24 +5000,36 @@ class _MinimalCoverLetterArt extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(11, 10, 11, 12),
           child: DefaultTextStyle(
-            style: const TextStyle(fontSize: 4.6, height: 1.45, color: text),
+            style: const TextStyle(
+              fontFamily: 'Arimo',
+              fontSize: 4.6,
+              fontWeight: FontWeight.w400,
+              height: 1.45,
+              color: text,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Text(
                   'NOAH PARK',
                   style: TextStyle(
+                    fontFamily: 'Arimo',
                     fontSize: 8.4,
                     fontWeight: FontWeight.w700,
                     color: accent,
-                    letterSpacing: 0.6,
+                    letterSpacing: 0.2,
                   ),
                 ),
                 const SizedBox(height: 3),
                 const Text(
                   'noah.park@mail.com  |  +1 206 555 0126  |  Seattle, WA',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: muted, fontSize: 4.1),
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: muted,
+                    fontSize: 4.45,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
                 const SizedBox(height: 7),
                 Row(
@@ -4990,9 +5040,11 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                       child: Text(
                         'COVER LETTER',
                         style: TextStyle(
+                          fontFamily: 'Arimo',
                           color: accent,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.6,
+                          fontSize: 4.9,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ),
@@ -5004,7 +5056,11 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Dear Product Team,',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontFamily: 'Arimo',
+                      fontSize: 4.9,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -5028,14 +5084,25 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                 const Spacer(),
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Best regards,'),
+                  child: Text(
+                    'Best regards,',
+                    style: TextStyle(
+                      fontFamily: 'Arimo',
+                      fontSize: 4.9,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 2),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Noah Park',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontFamily: 'Arimo',
+                      fontSize: 4.9,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
