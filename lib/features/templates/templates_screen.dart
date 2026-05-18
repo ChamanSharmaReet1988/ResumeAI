@@ -4791,13 +4791,23 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
           child: DefaultTextStyle(
-            style: const TextStyle(fontSize: 4.35, height: 1.34, color: text),
+            style: const TextStyle(
+              fontFamily: 'Arimo',
+              fontSize: 4.35,
+              fontWeight: FontWeight.w400,
+              height: 1.34,
+              color: text,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'October 6, 2026',
-                  style: TextStyle(color: muted),
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: muted,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 5),
                 const Text(
@@ -4805,12 +4815,20 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                   'VP Technical Services\n'
                   'Computers Forever\n'
                   '1224 Main Street, Allentown, PA 55555',
-                  style: TextStyle(color: muted, height: 1.38),
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: muted,
+                    fontWeight: FontWeight.w500,
+                    height: 1.38,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 const Text(
                   'Dear Ms. Smith:',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 const _MiniCoverLetterParagraph(
@@ -4830,12 +4848,18 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                 const Spacer(),
                 const Text(
                   'Sincerely,',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 const Text(
                   'Martin Stein',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -5141,7 +5165,9 @@ class _SidebarCoverLetterArt extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
               child: const DefaultTextStyle(
                 style: TextStyle(
+                  fontFamily: 'Arimo',
                   fontSize: 4.1,
+                  fontWeight: FontWeight.w400,
                   height: 1.42,
                   color: Color(0xFFE7EDF6),
                 ),
@@ -5151,15 +5177,17 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                     Text(
                       'AK',
                       style: TextStyle(
+                        fontFamily: 'Arimo',
                         color: gold,
                         fontSize: 8.4,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: 6),
                     Text(
                       'Aisha Khan',
                       style: TextStyle(
+                        fontFamily: 'Arimo',
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
@@ -5175,7 +5203,9 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(9, 10, 10, 12),
                 child: DefaultTextStyle(
                   style: const TextStyle(
+                    fontFamily: 'Arimo',
                     fontSize: 4.6,
+                    fontWeight: FontWeight.w400,
                     height: 1.45,
                     color: text,
                   ),
@@ -5185,21 +5215,30 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                       const Text(
                         'OPERATIONS COORDINATOR',
                         style: TextStyle(
+                          fontFamily: 'Arimo',
                           fontSize: 7.2,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 2),
                       const Text(
                         'April 1, 2026  |  Horizon Logistics  |  Pune, India',
-                        style: TextStyle(color: muted, fontSize: 4.1),
+                        style: TextStyle(
+                          fontFamily: 'Arimo',
+                          color: muted,
+                          fontSize: 4.1,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Container(height: 1, color: line),
                       const SizedBox(height: 6),
                       const Text(
                         'Dear Hiring Committee,',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontFamily: 'Arimo',
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       const _MiniCoverLetterParagraph(
@@ -5217,11 +5256,20 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                             'I would be excited to bring that organized, service-minded approach to Horizon Logistics. Thank you for your consideration.',
                       ),
                       const Spacer(),
-                      const Text('Warm regards,'),
+                      const Text(
+                        'Warm regards,',
+                        style: TextStyle(
+                          fontFamily: 'Arimo',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       const SizedBox(height: 2),
                       const Text(
                         'Aisha Khan',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontFamily: 'Arimo',
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
