@@ -853,20 +853,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     );
     final name = _displayName(resume);
     final job = resume.jobTitle.trim();
-    final email = resume.email.trim();
-    final phone = resume.phone.trim();
-    final loc = resume.location.trim();
-    final parts = <String>[];
-    if (loc.isNotEmpty) {
-      parts.add(loc);
-    }
-    if (email.isNotEmpty) {
-      parts.add(email);
-    }
-    if (phone.isNotEmpty) {
-      parts.add(phone);
-    }
-    final contactLine = parts.join('  |  ');
+    final contact = _atsHeaderContactLines(resume);
     final skills = _skillsForDisplay(resume);
 
     document.addPage(
@@ -892,13 +879,17 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       style: jobStyle,
                     ),
                   ],
-                  if (contactLine.isNotEmpty) ...[
+                  if (contact.isNotEmpty) ...[
                     pw.SizedBox(height: 5),
-                    pw.Text(
-                      contactLine,
-                      textAlign: pw.TextAlign.center,
-                      style: contactStyle,
-                    ),
+                    for (var i = 0; i < contact.length; i++)
+                      pw.Padding(
+                        padding: pw.EdgeInsets.only(top: i == 0 ? 0 : 2),
+                        child: pw.Text(
+                          contact[i],
+                          textAlign: pw.TextAlign.center,
+                          style: contactStyle,
+                        ),
+                      ),
                   ],
                 ],
               ),
