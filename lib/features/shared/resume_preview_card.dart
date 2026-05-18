@@ -3490,6 +3490,22 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.right,
                         ),
+                      if (resume.githubLink.trim().isNotEmpty)
+                        Text(
+                          resume.githubLink.trim(),
+                          style: contactStyle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                        ),
+                      if (resume.linkedinLink.trim().isNotEmpty)
+                        Text(
+                          resume.linkedinLink.trim(),
+                          style: contactStyle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                        ),
                     ],
                   ),
                 ],

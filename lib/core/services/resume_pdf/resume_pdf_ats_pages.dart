@@ -1690,11 +1690,15 @@ extension _ResumePdfAtsPages on ResumePdfService {
     final email = resume.email.trim();
     final phone = resume.phone.trim();
     final loc = resume.location.trim();
+    final github = resume.githubLink.trim();
+    final linkedin = resume.linkedinLink.trim();
     final skills = _skillsForDisplay(resume);
     final contactLines = <String>[
       if (email.isNotEmpty) email,
       if (phone.isNotEmpty) phone,
       if (loc.isNotEmpty) loc,
+      if (github.isNotEmpty) github,
+      if (linkedin.isNotEmpty) linkedin,
     ];
 
     document.addPage(

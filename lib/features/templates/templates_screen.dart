@@ -1160,7 +1160,7 @@ ResumeData _atsSampleFor(ResumeTemplate template) => switch (template) {
 final ResumeData _atsProfessionalBlueTemplateResume = ResumeData(
   id: 'template-ats-professional-blue',
   title: 'Professional Blue ATS Sample',
-  fullName: 'Morgan A. Lee',
+  fullName: 'Jordan',
   jobTitle: 'Senior Program Manager',
   email: 'morgan.lee@professional.example.com',
   phone: '(415) 555-0192',
