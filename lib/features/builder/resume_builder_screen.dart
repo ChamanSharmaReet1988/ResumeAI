@@ -1925,9 +1925,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 12),
           if (!_resumeOrderNudgeDismissed &&
               viewModel.resume.education.length > 1) ...[
-            const SizedBox(height: 12),
             _HintBanner(
               title: 'Resume order',
               body:
@@ -1937,19 +1937,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             ),
             const SizedBox(height: 10),
           ],
-          ...viewModel.resume.education.asMap().entries.map((entry) {
+          ...viewModel.resume.education.asMap().entries.expand((entry) {
             final index = entry.key;
             final item = entry.value;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.transparent
-                      : Theme.of(context).colorScheme.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(24),
-                ),
+            final isLast = index == viewModel.resume.education.length - 1;
+            final educationWidgets = <Widget>[
+              Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 20 : 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1965,7 +1959,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 8),
                               Text(
                                 _resumeOrderLabel(index),
                                 style: _resumeOrderHintStyle(context),
@@ -2015,7 +2009,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 28),
                     _ResponsiveFieldGroup(
                       children: [
                         _SyncTextField(
@@ -2075,7 +2069,23 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   ],
                 ),
               ),
-            );
+            ];
+            if (!isLast) {
+              final dividerColor = Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.28);
+              educationWidgets.addAll([
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 1,
+                  child: ColoredBox(color: dividerColor),
+                ),
+                const SizedBox(height: 18),
+              ]);
+            }
+            return educationWidgets;
           }),
           Align(
             alignment: Alignment.centerLeft,
