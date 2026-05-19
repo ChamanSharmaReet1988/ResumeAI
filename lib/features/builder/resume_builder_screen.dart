@@ -2272,9 +2272,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 12),
           if (!_resumeOrderNudgeDismissed &&
               viewModel.resume.projects.length > 1) ...[
-            const SizedBox(height: 12),
             _HintBanner(
               title: 'Resume order',
               body:
@@ -2284,19 +2284,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             ),
             const SizedBox(height: 10),
           ],
-          ...viewModel.resume.projects.asMap().entries.map((entry) {
+          ...viewModel.resume.projects.asMap().entries.expand((entry) {
             final index = entry.key;
             final item = entry.value;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.transparent
-                      : Theme.of(context).colorScheme.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(24),
-                ),
+            final isLast = index == viewModel.resume.projects.length - 1;
+            final projectWidgets = <Widget>[
+              Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 20 : 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2312,7 +2306,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 8),
                               Text(
                                 _resumeOrderLabel(index),
                                 style: _resumeOrderHintStyle(context),
@@ -2358,7 +2352,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 28),
                     _ResponsiveFieldGroup(
                       children: [
                         _SyncTextField(
@@ -2376,12 +2370,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    ...(item.bullets.asMap().entries.map((entry) {
-                      final bi = entry.key;
-                      final text = entry.value;
+                    const SizedBox(height: 26),
+                    ...item.bullets.asMap().entries.map((bulletEntry) {
+                      final bi = bulletEntry.key;
+                      final text = bulletEntry.value;
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: 16),
                         child: _BulletField(
                           fieldKey: Key('project-bullet-$index-$bi'),
                           label: 'Bullet ${bi + 1}',
@@ -2421,7 +2415,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           },
                         ),
                       );
-                    })),
+                    }),
+                    const SizedBox(height: 14),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: _buildAddBulletPointButton(
@@ -2440,7 +2435,23 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   ],
                 ),
               ),
-            );
+            ];
+            if (!isLast) {
+              final dividerColor = Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.28);
+              projectWidgets.addAll([
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 1,
+                  child: ColoredBox(color: dividerColor),
+                ),
+                const SizedBox(height: 18),
+              ]);
+            }
+            return projectWidgets;
           }),
           Align(
             alignment: Alignment.centerLeft,
