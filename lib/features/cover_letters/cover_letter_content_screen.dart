@@ -16,10 +16,12 @@ class CoverLetterContentScreen extends StatefulWidget {
 
 class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
   Timer? _saveTimer;
+  final _contentFocusNode = FocusNode();
 
   @override
   void dispose() {
     _saveTimer?.cancel();
+    _contentFocusNode.dispose();
     super.dispose();
   }
 
@@ -66,6 +68,9 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
             : Theme.of(context).appBarTheme.titleTextStyle;
         final titleStyle = baseTitleStyle;
 
+        final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+        final showKeyboardHideButton = keyboardInset > 0;
+
         return PopScope(
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) {
@@ -73,6 +78,7 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
             }
           },
           child: Scaffold(
+            resizeToAvoidBottomInset: false,
             appBar: AppBar(
               leadingWidth: 56,
               titleSpacing: 2,
@@ -81,79 +87,124 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
                 style: titleStyle,
               ),
             ),
-            bottomNavigationBar: SafeArea(
-              top: false,
-              minimum: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  key: const Key('preview-cover-letter-button'),
-                  onPressed: viewModel.coverLetter.content.trim().isEmpty
-                      ? null
-                      : () => _openPreview(viewModel),
-                  child: const Text('Preview'),
-                ),
-              ),
-            ),
             body: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (viewModel.isBusy) const LinearProgressIndicator(),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Cover letter content',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Your cover letter draft is ready. Review the full content below, edit anything you want, and your changes will be saved automatically.',
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                            const SizedBox(height: 20),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                key: const Key('regenerate-cover-letter-button'),
-                                onPressed: viewModel.isBusy ||
-                                        !viewModel.canCreateCoverLetter
-                                    ? null
-                                    : () => unawaited(
-                                          viewModel.regenerateCoverLetter(),
+              child: Stack(
+                children: [
+                  Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: EdgeInsets.fromLTRB(
+                            20,
+                            20,
+                            20,
+                            32 + keyboardInset,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (viewModel.isBusy)
+                                const LinearProgressIndicator(),
+                              Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Cover letter content',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Your cover letter draft is ready. Review the full content below, edit anything you want, and your changes will be saved automatically.',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: TextButton.icon(
+                                          key: const Key(
+                                            'regenerate-cover-letter-button',
+                                          ),
+                                          onPressed: viewModel.isBusy ||
+                                                  !viewModel
+                                                      .canCreateCoverLetter
+                                              ? null
+                                              : () => unawaited(
+                                                    viewModel
+                                                        .regenerateCoverLetter(),
+                                                  ),
+                                          icon: const Icon(
+                                            Icons.refresh_rounded,
+                                          ),
+                                          label: const Text('Regenerate'),
                                         ),
-                                icon: const Icon(Icons.refresh_rounded),
-                                label: const Text('Regenerate'),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _CoverLetterContentField(
+                                        focusNode: _contentFocusNode,
+                                        value: viewModel.coverLetter.content,
+                                        onChanged: (value) {
+                                          viewModel.updateCoverLetter(
+                                            (current) => current.copyWith(
+                                              content: value,
+                                            ),
+                                          );
+                                          _scheduleSave(viewModel);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            _CoverLetterContentField(
-                              value: viewModel.coverLetter.content,
-                              onChanged: (value) {
-                                viewModel.updateCoverLetter(
-                                  (current) => current.copyWith(content: value),
-                                );
-                                _scheduleSave(viewModel);
-                              },
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
+                      SafeArea(
+                        top: false,
+                        minimum: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            key: const Key('preview-cover-letter-button'),
+                            onPressed:
+                                viewModel.coverLetter.content.trim().isEmpty
+                                ? null
+                                : () => _openPreview(viewModel),
+                            child: const Text('Preview'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (showKeyboardHideButton)
+                    Positioned(
+                      right: 12,
+                      bottom: keyboardInset + 8,
+                      child: IconButton.filledTonal(
+                        onPressed: () => FocusScope.of(context).unfocus(),
+                        icon: const Icon(Icons.keyboard_hide_rounded),
+                        tooltip: 'Hide keyboard',
+                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),
@@ -165,10 +216,12 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
 
 class _CoverLetterContentField extends StatefulWidget {
   const _CoverLetterContentField({
+    required this.focusNode,
     required this.value,
     required this.onChanged,
   });
 
+  final FocusNode focusNode;
   final String value;
   final ValueChanged<String> onChanged;
 
@@ -207,8 +260,10 @@ class _CoverLetterContentFieldState extends State<_CoverLetterContentField> {
   Widget build(BuildContext context) {
     return TextField(
       controller: _controller,
+      focusNode: widget.focusNode,
       minLines: 18,
       maxLines: null,
+      keyboardType: TextInputType.multiline,
       textCapitalization: TextCapitalization.sentences,
       onChanged: widget.onChanged,
       decoration: const InputDecoration(

@@ -102,6 +102,18 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
   };
 }
 
+int defaultColorPresetIndexForCoverLetterTemplate(
+  CoverLetterTemplate template,
+) {
+  return switch (template) {
+    CoverLetterTemplate.executiveNote => 0,
+    CoverLetterTemplate.minimalLetter => kTemplateDefaultColorPresetIndex,
+    CoverLetterTemplate.sidebarLetter => kTemplateDefaultColorPresetIndex,
+    CoverLetterTemplate.classicBusinessLetter =>
+      kTemplateDefaultColorPresetIndex,
+  };
+}
+
 /// Body font size slider range for resume preview + PDF export (pt).
 const int kResumeBodyFontPtMin = 11;
 const int kResumeBodyFontPtMax = 13;
@@ -264,4 +276,35 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get detailsSidebarMutedColor => const Color(0xFF475467);
 
   Color get detailsSidebarDividerColor => const Color(0xFF98A2B3);
+}
+
+extension CoverLetterCorporateStyleX on CoverLetterData {
+  int get effectiveBodyFontPt {
+    final v = bodyFontPt;
+    if (v < kResumeBodyFontPtMin) return kResumeBodyFontPtMin;
+    if (v > kResumeBodyFontPtMax) return kResumeBodyFontPtMax;
+    return v;
+  }
+
+  double get coverLetterFontScale =>
+      effectiveBodyFontPt / kResumeBodyFontPtDefault;
+
+  double coverLetterScaledPt(double designPt) => designPt * coverLetterFontScale;
+
+  CorporateColorPreset get corporateColorPreset {
+    if (corporateColorPresetIndex == kTemplateDefaultColorPresetIndex) {
+      return CorporateColorPreset(
+        titleColor: const Color(0xFF2E3135),
+        headerColor: template.accentColor,
+      );
+    }
+    final i = corporateColorPresetIndex
+        .clamp(0, kCorporateColorPresets.length - 1)
+        .toInt();
+    return kCorporateColorPresets[i];
+  }
+
+  Color get coverLetterSidebarRailColor =>
+      Color.lerp(corporateColorPreset.headerColor, Colors.black, 0.55) ??
+      const Color(0xFF262A31);
 }

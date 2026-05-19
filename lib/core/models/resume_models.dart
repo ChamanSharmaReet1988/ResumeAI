@@ -174,6 +174,13 @@ extension CoverLetterTemplateX on CoverLetterTemplate {
     CoverLetterTemplate.sidebarLetter => 'Sidebar Letter',
     CoverLetterTemplate.classicBusinessLetter => 'Classic Business',
   };
+
+  Color get accentColor => switch (this) {
+    CoverLetterTemplate.executiveNote => const Color(0xFF1F2937),
+    CoverLetterTemplate.minimalLetter => const Color(0xFF9A6B2F),
+    CoverLetterTemplate.sidebarLetter => const Color(0xFFD5923B),
+    CoverLetterTemplate.classicBusinessLetter => const Color(0xFF374151),
+  };
 }
 
 class ResumeData {
@@ -508,6 +515,8 @@ class CoverLetterData {
     required this.content,
     required this.updatedAt,
     this.lastSyncedAt,
+    required this.bodyFontPt,
+    required this.corporateColorPresetIndex,
   });
 
   factory CoverLetterData.empty() {
@@ -522,19 +531,22 @@ class CoverLetterData {
       content: '',
       updatedAt: DateTime.now(),
       lastSyncedAt: null,
+      bodyFontPt: kResumeBodyFontPtDefault,
+      corporateColorPresetIndex: 0,
     );
   }
 
   factory CoverLetterData.fromJson(Map<String, dynamic> json) {
+    final template = CoverLetterTemplate.values.firstWhere(
+      (value) => value.name == json['template'],
+      orElse: () => CoverLetterTemplate.executiveNote,
+    );
     return CoverLetterData(
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       company: json['company'] as String? ?? '',
       role: json['role'] as String? ?? '',
-      template: CoverLetterTemplate.values.firstWhere(
-        (value) => value.name == json['template'],
-        orElse: () => CoverLetterTemplate.executiveNote,
-      ),
+      template: template,
       skillToHighlight: json['skillToHighlight'] as String? ?? '',
       language: json['language'] as String? ?? '',
       content: json['content'] as String? ?? '',
@@ -542,6 +554,11 @@ class CoverLetterData {
           DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
           DateTime.now(),
       lastSyncedAt: DateTime.tryParse(json['lastSyncedAt'] as String? ?? ''),
+      bodyFontPt:
+          (json['bodyFontPt'] as num?)?.toInt() ?? kResumeBodyFontPtDefault,
+      corporateColorPresetIndex:
+          (json['corporateColorPresetIndex'] as num?)?.toInt() ??
+          defaultColorPresetIndexForCoverLetterTemplate(template),
     );
   }
 
@@ -555,6 +572,12 @@ class CoverLetterData {
   final String content;
   final DateTime updatedAt;
   final DateTime? lastSyncedAt;
+
+  /// Body text size (pt) for cover letter preview + PDF; typically 11–13.
+  final int bodyFontPt;
+
+  /// Accent/header palette index (see `corporate_resume_style.dart`).
+  final int corporateColorPresetIndex;
 
   bool get hasMeaningfulContent =>
       title.trim().isNotEmpty ||
@@ -588,6 +611,8 @@ class CoverLetterData {
     String? content,
     DateTime? updatedAt,
     Object? lastSyncedAt = _coverLetterDateSentinel,
+    int? bodyFontPt,
+    int? corporateColorPresetIndex,
   }) {
     return CoverLetterData(
       id: id ?? this.id,
@@ -602,6 +627,9 @@ class CoverLetterData {
       lastSyncedAt: identical(lastSyncedAt, _coverLetterDateSentinel)
           ? this.lastSyncedAt
           : lastSyncedAt as DateTime?,
+      bodyFontPt: bodyFontPt ?? this.bodyFontPt,
+      corporateColorPresetIndex:
+          corporateColorPresetIndex ?? this.corporateColorPresetIndex,
     );
   }
 
@@ -617,6 +645,8 @@ class CoverLetterData {
       'content': content,
       'updatedAt': updatedAt.toIso8601String(),
       'lastSyncedAt': lastSyncedAt?.toIso8601String(),
+      'bodyFontPt': bodyFontPt,
+      'corporateColorPresetIndex': corporateColorPresetIndex,
     };
   }
 }

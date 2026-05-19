@@ -41,6 +41,18 @@ PdfColor _corporateHeaderPdf(ResumeData resume) =>
 PdfColor _corporateHeaderOnPdf(ResumeData resume) =>
     _pdfRgb(resume.corporateColorPreset.headerOnColor);
 
+PdfColor _coverLetterHeaderPdf(CoverLetterData letter) =>
+    _pdfRgb(letter.corporateColorPreset.headerColor);
+
+PdfColor _coverLetterHeaderOnPdf(CoverLetterData letter) =>
+    _pdfRgb(letter.corporateColorPreset.headerOnColor);
+
+PdfColor _coverLetterSidebarRailPdf(CoverLetterData letter) =>
+    _pdfRgb(letter.coverLetterSidebarRailColor);
+
+double _coverLetterPt(CoverLetterData letter, double designPt) =>
+    letter.coverLetterScaledPt(designPt);
+
 List<String> _corporateHeaderContactLines(List<String> items) {
   final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
   if (cleaned.isEmpty) {
@@ -6272,7 +6284,11 @@ class ResumePdfService {
 
   Future<Uint8List> buildCoverLetterPdf(CoverLetterData coverLetter) async {
     final parsed = _parseCoverLetterContent(coverLetter.content);
-    final baseTheme = await resumePdfThemeForBodyFont(ResumeTextFont.inter);
+    final bodyPt = coverLetter.effectiveBodyFontPt.toDouble();
+    final baseTheme = await resumePdfThemeForBodyFont(
+      ResumeTextFont.inter,
+      bodyFontPt: bodyPt,
+    );
     // Embed Noto fallbacks for non-Latin scripts so Arabic, Hindi,
     // Bengali, CJK, etc. render in the PDF preview/export.
     final fallbacks = await _coverLetterFontFallbacks(parsed);
@@ -6292,6 +6308,7 @@ class ResumePdfService {
       case CoverLetterTemplate.executiveNote:
         _addExecutiveNoteCoverLetterPage(
           document,
+          coverLetter,
           parsed,
           arimo: await _ensureArimoPdfFonts(),
           fontFallback: fallbacks,
@@ -6300,6 +6317,7 @@ class ResumePdfService {
       case CoverLetterTemplate.minimalLetter:
         _addMinimalCoverLetterPage(
           document,
+          coverLetter,
           parsed,
           arimo: await _ensureArimoPdfFonts(),
           fontFallback: fallbacks,
@@ -6317,6 +6335,7 @@ class ResumePdfService {
       case CoverLetterTemplate.classicBusinessLetter:
         _addClassicBusinessCoverLetterPage(
           document,
+          coverLetter,
           parsed,
           arimo: await _ensureArimoPdfFonts(),
           fontFallback: fallbacks,
@@ -6476,38 +6495,40 @@ class ResumePdfService {
 
   void _addExecutiveNoteCoverLetterPage(
     pw.Document document,
+    CoverLetterData coverLetter,
     _ParsedCoverLetterContent parsed,
     {
     required ArimoPdfFonts arimo,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
-    final headerColor = PdfColor.fromHex('#1F2937');
+    final headerColor = _coverLetterHeaderPdf(coverLetter);
+    final headerOnColor = _coverLetterHeaderOnPdf(coverLetter);
     final dividerColor = PdfColor.fromHex('#E5E7EB');
     final nameStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: 24,
-      color: PdfColors.white,
+      fontSize: _coverLetterPt(coverLetter, 24),
+      color: headerOnColor,
       fontFallback: fontFallback,
     );
     final headerMetaStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
-      fontSize: 12,
-      color: PdfColors.white,
+      fontSize: _coverLetterPt(coverLetter, 12),
+      color: headerOnColor,
       fontFallback: fontFallback,
     );
     final headingStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w500,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: PdfColor.fromHex('#4B4F55'),
       fontFallback: fontFallback,
     );
     final bodyStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
-      fontSize: 12,
+      fontSize: _coverLetterPt(coverLetter, 12),
       color: PdfColor.fromHex('#202327'),
       lineHeight: 1.55,
       fontFallback: fontFallback,
@@ -6515,14 +6536,14 @@ class ResumePdfService {
     final recipientStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w500,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: PdfColor.fromHex('#4B4F55'),
       fontFallback: fontFallback,
     );
     final signatureStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: PdfColor.fromHex('#202327'),
       fontFallback: fontFallback,
     );
@@ -6573,16 +6594,18 @@ class ResumePdfService {
 
   void _addClassicBusinessCoverLetterPage(
     pw.Document document,
+    CoverLetterData coverLetter,
     _ParsedCoverLetterContent parsed,
     {
     required ArimoPdfFonts arimo,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
     final (dateLine, _) = _classicLetterDatePrefix(parsed.senderLines);
+    final accent = _coverLetterHeaderPdf(coverLetter);
     final bodyStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
-      fontSize: 12,
+      fontSize: _coverLetterPt(coverLetter, 12),
       color: PdfColor.fromHex('#1A1D21'),
       lineHeight: 1.45,
       fontFallback: fontFallback,
@@ -6590,7 +6613,7 @@ class ResumePdfService {
     final metaStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w500,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: PdfColor.fromHex('#3D4349'),
       lineHeight: 1.38,
       fontFallback: fontFallback,
@@ -6598,14 +6621,14 @@ class ResumePdfService {
     final headingStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w500,
-      fontSize: 14,
-      color: PdfColor.fromHex('#1A1D21'),
+      fontSize: _coverLetterPt(coverLetter, 14),
+      color: accent,
       fontFallback: fontFallback,
     );
     final signatureStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: PdfColor.fromHex('#1A1D21'),
       fontFallback: fontFallback,
     );
@@ -6651,30 +6674,31 @@ class ResumePdfService {
 
   void _addMinimalCoverLetterPage(
     pw.Document document,
+    CoverLetterData coverLetter,
     _ParsedCoverLetterContent parsed,
     {
     required ArimoPdfFonts arimo,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
-    final accent = PdfColor.fromHex('#9A6B2F');
+    final accent = _coverLetterHeaderPdf(coverLetter);
     final nameStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: 24,
+      fontSize: _coverLetterPt(coverLetter, 24),
       color: accent,
       fontFallback: fontFallback,
     );
     final headingStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w500,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: PdfColor.fromHex('#202327'),
       fontFallback: fontFallback,
     );
     final bodyStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
-      fontSize: 12,
+      fontSize: _coverLetterPt(coverLetter, 12),
       color: PdfColor.fromHex('#202327'),
       lineHeight: 1.55,
       fontFallback: fontFallback,
@@ -6682,14 +6706,14 @@ class ResumePdfService {
     final mutedBodyStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
-      fontSize: 12,
+      fontSize: _coverLetterPt(coverLetter, 12),
       color: PdfColor.fromHex('#5E6369'),
       fontFallback: fontFallback,
     );
     final signatureStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: PdfColor.fromHex('#202327'),
       fontFallback: fontFallback,
     );
@@ -6739,8 +6763,8 @@ class ResumePdfService {
     required ArimoPdfFonts arimo,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
-    final rail = PdfColor.fromHex('#262A31');
-    final accent = PdfColor.fromHex('#D5923B');
+    final rail = _coverLetterSidebarRailPdf(coverLetter);
+    final accent = _coverLetterHeaderPdf(coverLetter);
     final text = PdfColor.fromHex('#2E3238');
     final muted = PdfColor.fromHex('#717880');
     final line = PdfColor.fromHex('#D8DDE3');
@@ -6752,7 +6776,7 @@ class ResumePdfService {
     final sidebarDetailStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
-      fontSize: 10,
+      fontSize: _coverLetterPt(coverLetter, 10),
       color: PdfColor.fromHex('#E7EDF6'),
       lineHeight: 1.45,
       fontFallback: fontFallback,
@@ -6760,42 +6784,42 @@ class ResumePdfService {
     final initialsStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: 27,
+      fontSize: _coverLetterPt(coverLetter, 27),
       color: accent,
       fontFallback: fontFallback,
     );
     final senderNameStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: 13,
+      fontSize: _coverLetterPt(coverLetter, 13),
       color: PdfColors.white,
       fontFallback: fontFallback,
     );
     final roleTitleStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w500,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: text,
       fontFallback: fontFallback,
     );
     final metaLineStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
-      fontSize: 10,
+      fontSize: _coverLetterPt(coverLetter, 10),
       color: muted,
       fontFallback: fontFallback,
     );
     final headingStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w500,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: text,
       fontFallback: fontFallback,
     );
     final bodyStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
-      fontSize: 12,
+      fontSize: _coverLetterPt(coverLetter, 12),
       color: PdfColor.fromHex('#202327'),
       lineHeight: 1.55,
       fontFallback: fontFallback,
@@ -6803,7 +6827,7 @@ class ResumePdfService {
     final signatureStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: 14,
+      fontSize: _coverLetterPt(coverLetter, 14),
       color: PdfColor.fromHex('#202327'),
       fontFallback: fontFallback,
     );

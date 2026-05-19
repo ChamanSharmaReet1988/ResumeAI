@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:resume_app/core/corporate_resume_style.dart';
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 
@@ -616,5 +617,37 @@ void main() {
       );
       expect(bytes, isNotEmpty, reason: template.toString());
     }
+  });
+
+  test('cover letter PDF builds for all templates with style fields', () async {
+    final service = ResumePdfService();
+    const content =
+        'Alex Morgan\nalex@example.com\n\n'
+        'Hiring Manager\nAcme Labs\n\n'
+        'Dear Hiring Manager,\n\n'
+        'I am excited to apply for the role.\n\n'
+        'Sincerely,\nAlex Morgan';
+
+    for (final template in CoverLetterTemplate.values) {
+      final letter = CoverLetterData.empty().copyWith(
+        template: template,
+        content: content,
+        bodyFontPt: 13,
+        corporateColorPresetIndex: 1,
+      );
+      final bytes = await service.buildCoverLetterPdf(letter);
+      expect(bytes, isNotEmpty, reason: template.name);
+    }
+  });
+
+  test('cover letter style fields round-trip through JSON', () {
+    final letter = CoverLetterData.empty().copyWith(
+      bodyFontPt: 11,
+      corporateColorPresetIndex: 3,
+    );
+    final restored = CoverLetterData.fromJson(letter.toJson());
+    expect(restored.bodyFontPt, 11);
+    expect(restored.corporateColorPresetIndex, 3);
+    expect(restored.effectiveBodyFontPt, 11);
   });
 }

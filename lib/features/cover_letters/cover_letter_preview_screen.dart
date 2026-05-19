@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/bottom_sheet_insets.dart';
+import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
 import '../../core/services/resume_services.dart';
@@ -88,7 +90,13 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
     }
 
     viewModel.updateCoverLetter(
-      (letter) => letter.copyWith(template: selectedTemplate),
+      (letter) => letter.copyWith(
+        template: selectedTemplate,
+        bodyFontPt: kResumeBodyFontPtDefault,
+        corporateColorPresetIndex: defaultColorPresetIndexForCoverLetterTemplate(
+          selectedTemplate,
+        ),
+      ),
     );
     await viewModel.saveCoverLetter(showBusy: false);
     if (!mounted) {
@@ -104,12 +112,202 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
     );
   }
 
+  Future<void> _showCoverLetterStyleSheet() async {
+    final viewModel = context.read<CoverLetterEditorViewModel>();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).cardColor,
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.viewInsetsOf(sheetContext).bottom;
+        return ListenableBuilder(
+          listenable: viewModel,
+          builder: (context, _) {
+            final theme = Theme.of(sheetContext);
+            final muted = theme.colorScheme.onSurfaceVariant;
+            final letter = viewModel.coverLetter;
+            final selectedTemplateDefault =
+                letter.corporateColorPresetIndex ==
+                kTemplateDefaultColorPresetIndex;
+            final presetIndex = selectedTemplateDefault
+                ? 0
+                : letter.corporateColorPresetIndex.clamp(
+                    0,
+                    kCorporateColorPresets.length - 1,
+                  );
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: bottomInset),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    top: BottomSheetInsets.topSpacing,
+                    bottom: 28,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Font size',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  child: Text(
+                                    '$kResumeBodyFontPtMin',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: muted,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Slider(
+                                    value: letter.effectiveBodyFontPt
+                                        .clamp(
+                                          kResumeBodyFontPtMin,
+                                          kResumeBodyFontPtMax,
+                                        )
+                                        .toDouble(),
+                                    min: kResumeBodyFontPtMin.toDouble(),
+                                    max: kResumeBodyFontPtMax.toDouble(),
+                                    divisions: kResumeBodyFontPtMax -
+                                        kResumeBodyFontPtMin,
+                                    label: '${letter.effectiveBodyFontPt}',
+                                    onChanged: (v) {
+                                      viewModel.updateCoverLetter(
+                                        (current) => current.copyWith(
+                                          bodyFontPt: v.round(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 24,
+                                  child: Text(
+                                    '$kResumeBodyFontPtMax',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: muted,
+                                    ),
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                        child: Text(
+                          'Color',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          const outerLeftMargin = 20.0;
+                          const outerRightMargin = 20.0;
+                          const itemGap = 12.0;
+                          final items = <Widget>[
+                            for (
+                              var i = 0;
+                              i < kCorporateColorPresets.length;
+                              i++
+                            )
+                              _CoverLetterColorPresetCircle(
+                                preset: kCorporateColorPresets[i],
+                                selected: presetIndex == i,
+                                onTap: () {
+                                  viewModel.updateCoverLetter(
+                                    (current) => current.copyWith(
+                                      corporateColorPresetIndex: i,
+                                    ),
+                                  );
+                                },
+                              ),
+                            _CoverLetterColorPresetCircle(
+                              preset: CorporateColorPreset(
+                                titleColor: const Color(0xFF2E3135),
+                                headerColor: letter.template.accentColor,
+                              ),
+                              selected: selectedTemplateDefault,
+                              onTap: () {
+                                viewModel.updateCoverLetter(
+                                  (current) => current.copyWith(
+                                    corporateColorPresetIndex:
+                                        kTemplateDefaultColorPresetIndex,
+                                  ),
+                                );
+                              },
+                            ),
+                          ];
+                          final lastIndex = items.length - 1;
+
+                          return SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: EdgeInsets.zero,
+                            physics: const BouncingScrollPhysics(
+                              parent: AlwaysScrollableScrollPhysics(),
+                            ),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minWidth: constraints.maxWidth,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  for (var i = 0; i < items.length; i++)
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                        left: i == 0 ? outerLeftMargin : 0,
+                                        right: i == lastIndex
+                                            ? outerRightMargin
+                                            : itemGap,
+                                      ),
+                                      child: items[i],
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pdfService = context.read<ResumePdfService>();
     final theme = Theme.of(context);
     final scaffoldBg = theme.scaffoldBackgroundColor;
-    const barBg = Colors.white;
+    final barBg = theme.cardColor;
 
     return Consumer<CoverLetterEditorViewModel>(
       builder: (context, viewModel, _) {
@@ -127,7 +325,11 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
             : Theme.of(context).appBarTheme.titleTextStyle;
 
         return Scaffold(
+          backgroundColor: scaffoldBg,
           appBar: AppBar(
+            backgroundColor: barBg,
+            surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 0,
             leadingWidth: 56,
             titleSpacing: 2,
             title: Text(letter.displayTitle, style: baseTitleStyle),
@@ -156,7 +358,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                                   )
                                 : NativePdfPreview(
                                     key: ValueKey(
-                                      '${letter.template.name}-${letter.updatedAt.microsecondsSinceEpoch}',
+                                      '${letter.template.name}-${letter.bodyFontPt}-${letter.corporateColorPresetIndex}-${letter.updatedAt.microsecondsSinceEpoch}',
                                     ),
                                     documentKey:
                                         '${letter.id}-${letter.updatedAt.microsecondsSinceEpoch}',
@@ -176,6 +378,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                 backgroundColor: barBg,
                 onTemplate: _chooseTemplate,
                 onShare: _sharePdf,
+                onStyle: _showCoverLetterStyleSheet,
               ),
             ],
           ),
@@ -185,16 +388,62 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
   }
 }
 
+class _CoverLetterColorPresetCircle extends StatelessWidget {
+  const _CoverLetterColorPresetCircle({
+    required this.preset,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final CorporateColorPreset preset;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Ink(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: preset.headerColor,
+            border: preset.usesLightHeader
+                ? Border.all(
+                    color: Colors.black.withValues(alpha: 0.14),
+                    width: 1,
+                  )
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: selected ? 0.12 : 0.06),
+                blurRadius: selected ? 8 : 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CoverLetterPreviewBottomBar extends StatelessWidget {
   const _CoverLetterPreviewBottomBar({
     required this.backgroundColor,
     required this.onTemplate,
     required this.onShare,
+    required this.onStyle,
   });
 
   final Color backgroundColor;
   final VoidCallback onTemplate;
   final VoidCallback onShare;
+  final VoidCallback onStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -218,6 +467,11 @@ class _CoverLetterPreviewBottomBar extends StatelessWidget {
                 icon: Icons.ios_share_rounded,
                 label: 'Share',
                 onTap: onShare,
+              ),
+              _CoverLetterPreviewBottomAction(
+                icon: Icons.palette_outlined,
+                label: 'Color & Font',
+                onTap: onStyle,
               ),
             ],
           ),
