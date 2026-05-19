@@ -2099,8 +2099,18 @@ class ResumeImprovementResult {
 }
 
 class LocalAiResumeService {
-  Future<String> generateSummary(ResumeData resume) async {
-    return _simulate(() => _buildSummary(resume));
+  Future<String> generateSummary(
+    ResumeData resume, {
+    bool regenerate = false,
+    int attemptIndex = 0,
+  }) async {
+    return _simulate(
+      () => _buildSummary(
+        resume,
+        regenerate: regenerate,
+        attemptIndex: attemptIndex,
+      ),
+    );
   }
 
   Future<List<String>> generateJobBullets({
@@ -4175,18 +4185,380 @@ class LocalAiResumeService {
         .join(' ');
   }
 
-  String _buildSummary(ResumeData resume) {
-    final title = resume.jobTitle.trim().isEmpty
-        ? 'professional candidate'
-        : resume.jobTitle.trim();
-    final primarySkills = resume.skills.take(4).join(', ');
-    final experienceCount = math.max(1, resume.visibleWorkExperiences.length);
+  static const int _targetSummaryLinesMin = 4;
+  static const int _targetSummaryLinesMax = 5;
+  static const int _summaryVariantCount = 4;
 
-    return '${resume.fullName.trim().isEmpty ? 'Results-driven' : resume.fullName.trim()} '
-        'is a $title with $experienceCount standout experience ${experienceCount == 1 ? 'entry' : 'stories'} '
-        'across delivery, collaboration, and measurable execution. '
-        '${primarySkills.isEmpty ? 'Combines strong communication, problem solving, and ownership to create polished outcomes.' : 'Brings $primarySkills to build polished outcomes with real business impact.'} '
-        'Ready to contribute quickly in fast-moving teams.';
+  String _summaryEvidencePhrase(String source) {
+    final normalized = _normalizeSentenceForResume(source).replaceAll(
+      RegExp(r'\.$'),
+      '',
+    );
+    if (normalized.isEmpty) {
+      return normalized;
+    }
+    return normalized[0].toLowerCase() + normalized.substring(1);
+  }
+
+  String _finalizeSummaryLines(String summary, ResumeData resume) {
+    final lines = summary
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+
+    final capped = lines.length > _targetSummaryLinesMax
+        ? lines.take(_targetSummaryLinesMax).toList()
+        : lines;
+
+    if (capped.length >= _targetSummaryLinesMin) {
+      return capped.join('\n');
+    }
+
+    final padded = List<String>.from(capped);
+    for (final line in _summaryExpansionLines(resume)) {
+      if (padded.length >= _targetSummaryLinesMin) {
+        break;
+      }
+      if (!padded.contains(line)) {
+        padded.add(line);
+      }
+    }
+
+    var index = 0;
+    while (padded.length < _targetSummaryLinesMin) {
+      padded.add(_genericSummaryExpansionLine(index, resume));
+      index++;
+    }
+
+    return padded.take(_targetSummaryLinesMax).join('\n');
+  }
+
+  List<String> _summaryExpansionLines(ResumeData resume) {
+    final title = resume.jobTitle.trim().isEmpty
+        ? 'their field'
+        : resume.jobTitle.trim();
+    final skills = resume.skills
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    final skillPhrase = skills.isEmpty
+        ? 'communication, prioritization, and steady execution'
+        : skills.take(4).join(', ');
+
+    return [
+      'I stay calm under pressure and keep stakeholders aligned when priorities shift.',
+      'Colleagues describe me as thoughtful, dependable, and easy to partner with across functions.',
+      'I take time to understand the problem behind the request before proposing a path forward.',
+      'Whether the work is strategic or hands-on, I focus on outcomes that are useful, measurable, and easy to explain.',
+      'My experience in $title has strengthened how I plan work, communicate tradeoffs, and follow through.',
+      'I am comfortable with ambiguity and turning loosely defined goals into clear milestones.',
+      'Strengths in $skillPhrase show up in how I scope projects, review quality, and support teammates.',
+      'I value feedback, iterate when new information appears, and keep documentation clear for the next person.',
+    ];
+  }
+
+  String _genericSummaryExpansionLine(int index, ResumeData resume) {
+    final title = resume.jobTitle.trim().isEmpty
+        ? 'professional settings'
+        : resume.jobTitle.trim();
+    final variants = [
+      'I bring a practical mindset to $title work and stay focused on what matters most to the team and end users.',
+      'I am motivated by work where quality, clarity, and collaboration are shared responsibilities.',
+      'I contribute early in planning so execution stays realistic and well supported.',
+      'I am ready to add value quickly while learning the product, people, and priorities around me.',
+    ];
+    return variants[index % variants.length];
+  }
+
+  List<String> _composeSummaryLines(
+    ResumeData resume, {
+    int variantIndex = 0,
+  }) {
+    final variant = variantIndex % _summaryVariantCount;
+    final experiences = resume.visibleWorkExperiences
+        .where((item) => !item.isBlank)
+        .toList();
+    final experienceHighlightIndex = experiences.isEmpty
+        ? 0
+        : variantIndex % experiences.length;
+
+    final intro = _summaryIntroLine(resume, variant);
+    final breadth = _summaryExperienceBreadthLine(resume, variant);
+    final role = _summaryHighlightedRoleLine(
+      resume,
+      variant,
+      experienceIndex: experienceHighlightIndex,
+    );
+    final context = _summaryContextLine(resume, variant);
+    final closing = _summaryClosingLine(resume, variant);
+
+    final blocks = <String>[
+      intro,
+      breadth,
+      ?role,
+      ?context,
+      closing,
+    ];
+
+    return switch (variant) {
+      1 => <String>[
+        intro,
+        ?context,
+        ?role,
+        breadth,
+        closing,
+      ],
+      2 => <String>[
+        intro,
+        ?role,
+        breadth,
+        ?context,
+        closing,
+      ],
+      3 => <String>[
+        intro,
+        ?context,
+        breadth,
+        ?role,
+        closing,
+      ],
+      _ => blocks,
+    };
+  }
+
+  String _summaryIntroLine(ResumeData resume, int variant) {
+    final name = resume.fullName.trim();
+    final title = resume.jobTitle.trim().isEmpty
+        ? 'experienced contributor'
+        : resume.jobTitle.trim();
+
+    return switch (variant) {
+      1 =>
+        name.isEmpty
+            ? 'I am a $title who enjoys turning messy problems into clear plans and steady results.'
+            : "I'm $name, a $title who enjoys turning messy problems into clear plans and steady results.",
+      2 =>
+        name.isEmpty
+            ? 'As a $title, I focus on practical delivery, honest communication, and work that holds up after launch.'
+            : "I'm $name, a $title who focuses on practical delivery, honest communication, and work that holds up after launch.",
+      3 =>
+        name.isEmpty
+            ? 'I work as a $title and care most about useful outcomes, reliable follow-through, and strong teamwork.'
+            : "$name here — I work as a $title and care most about useful outcomes, reliable follow-through, and strong teamwork.",
+      _ =>
+        name.isEmpty
+            ? 'I am an $title focused on dependable delivery, clear communication, and collaborative work.'
+            : "I'm $name, an $title focused on dependable delivery, clear communication, and collaborative work.",
+    };
+  }
+
+  String _summaryExperienceBreadthLine(ResumeData resume, int variant) {
+    final experiences = resume.visibleWorkExperiences
+        .where((item) => !item.isBlank)
+        .toList();
+
+    if (experiences.isEmpty) {
+      return switch (variant) {
+        1 =>
+          'I learn quickly, clarify expectations early, and follow through in ways teammates can rely on.',
+        2 =>
+          'I am comfortable ramping on new tools and workflows while keeping stakeholders informed.',
+        3 =>
+          'I stay organized, ask thoughtful questions, and translate goals into work that is easy to review.',
+        _ =>
+          'I pick up context quickly, ask the right questions early, and turn goals into work teammates can trust.',
+      };
+    }
+
+    final countLabel =
+        '${experiences.length} ${experiences.length == 1 ? 'role' : 'roles'}';
+    return switch (variant) {
+      1 =>
+        'Over the last few years, I have grown through $countLabel with increasing ownership and clearer communication.',
+      2 =>
+        'My recent work spans $countLabel where planning, execution, and stakeholder alignment all mattered.',
+      3 =>
+        "I've learned the most in settings with real ownership — across $countLabel, that's been the common thread.",
+      _ =>
+        'Across $countLabel, I have built depth in planning, delivery, and the communication that keeps projects moving.',
+    };
+  }
+
+  String? _summaryHighlightedRoleLine(
+    ResumeData resume,
+    int variant, {
+    required int experienceIndex,
+  }) {
+    final experiences = resume.visibleWorkExperiences
+        .where((item) => !item.isBlank)
+        .toList();
+    if (experiences.isEmpty) {
+      return null;
+    }
+
+    final experience = experiences[experienceIndex % experiences.length];
+    final role = experience.role.trim().isEmpty
+        ? 'Contributor'
+        : experience.role.trim();
+    final company = experience.company.trim().isEmpty
+        ? 'my organization'
+        : experience.company.trim();
+    final dateRange = [
+      experience.startDate.trim(),
+      experience.endDate.trim(),
+    ].where((item) => item.isNotEmpty).join(' – ');
+    final evidenceSource = [
+      ...experience.bullets,
+      experience.description,
+    ]
+        .map((item) => _firstMeaningfulSentence(item))
+        .firstWhere(
+          (item) => item.trim().isNotEmpty,
+          orElse: () => '',
+        );
+    final evidence = evidenceSource.isEmpty
+        ? 'delivered meaningful results with clear ownership and steady follow-through'
+        : _summaryEvidencePhrase(evidenceSource);
+    final dateSuffix = dateRange.isEmpty ? '' : ' ($dateRange)';
+
+    return switch (variant) {
+      1 =>
+        'Most recently at $company, I worked as $role$dateSuffix and $evidence.',
+      2 => 'In my $role role at $company$dateSuffix, I $evidence.',
+      3 => 'At $company$dateSuffix, serving as $role, I $evidence.',
+      _ => 'As $role at $company$dateSuffix, I $evidence.',
+    };
+  }
+
+  String? _summaryContextLine(ResumeData resume, int variant) {
+    final skills = resume.skills
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    final education = resume.education
+        .where(
+          (item) =>
+              item.institution.trim().isNotEmpty ||
+              item.degree.trim().isNotEmpty,
+        )
+        .toList();
+    final projects = resume.visibleProjects
+        .where((item) => !item.isBlank)
+        .toList();
+    final titleSuggestions = _jobTitleSkillSuggestions(resume.jobTitle.trim());
+
+    if (skills.isNotEmpty) {
+      final skillList = skills.take(4).join(', ');
+      return switch (variant) {
+        1 =>
+          "I'm strongest in $skillList, and I apply them where they improve quality, pace, and clarity.",
+        2 =>
+          'Core skills: $skillList — I lean on these daily when scoping work and partnering across teams.',
+        3 =>
+          'Day to day, $skillList are the tools I reach for most to keep work focused and outcomes measurable.',
+        _ =>
+          'My strengths include $skillList, and I use them to support quality and speed.',
+      };
+    }
+
+    if (titleSuggestions.isNotEmpty) {
+      final suggestions = titleSuggestions.take(4).join(', ');
+      return switch (variant) {
+        1 =>
+          'I am comfortable with $suggestions and keep building depth through hands-on project work.',
+        2 =>
+          'I bring working knowledge of $suggestions and keep improving through practical delivery.',
+        3 =>
+          'Strengths around $suggestions show up in how I plan work, review quality, and support teammates.',
+        _ =>
+          'I am especially effective in $suggestions and keep sharpening those skills through real project work.',
+      };
+    }
+
+    if (education.isNotEmpty) {
+      final item = education.first;
+      final institution = item.institution.trim();
+      final degree = item.degree.trim();
+      final educationPhrase = [
+        if (degree.isNotEmpty) degree,
+        if (institution.isNotEmpty) 'from $institution',
+      ].join(' ');
+      if (educationPhrase.isEmpty) {
+        return null;
+      }
+      return switch (variant) {
+        1 =>
+          'My training in $educationPhrase informs how I structure problems and communicate with partners.',
+        2 =>
+          'Education in $educationPhrase gave me a solid foundation for analytical thinking and clear writing.',
+        3 =>
+          'With a background in $educationPhrase, I connect classroom concepts to practical team delivery.',
+        _ =>
+          'My background includes $educationPhrase, which shapes how I approach problems and communicate across teams.',
+      };
+    }
+
+    if (projects.isEmpty) {
+      return null;
+    }
+
+    final project = projects.first;
+    final projectTitle = project.title.trim().isEmpty
+        ? 'a recent project'
+        : project.title.trim();
+    final projectEvidence = [
+      ...project.bullets,
+      project.overview,
+      project.impact,
+      project.subtitle,
+    ]
+        .map((item) => _firstMeaningfulSentence(item.toString()))
+        .firstWhere(
+          (item) => item.trim().isNotEmpty,
+          orElse: () => '',
+        );
+    final projectDetail = projectEvidence.isEmpty
+        ? 'showed initiative, sound judgment, and attention to detail'
+        : _summaryEvidencePhrase(projectEvidence);
+
+    return switch (variant) {
+      1 => 'On $projectTitle, I $projectDetail.',
+      2 => 'Through $projectTitle, I $projectDetail.',
+      3 => 'A highlight project, $projectTitle, is where I $projectDetail.',
+      _ => 'In $projectTitle, I $projectDetail.',
+    };
+  }
+
+  String _summaryClosingLine(ResumeData resume, int variant) {
+    final title = resume.jobTitle.trim().isEmpty
+        ? 'experienced contributor'
+        : resume.jobTitle.trim();
+
+    return switch (variant) {
+      1 =>
+        "I'm interested in $title opportunities where I can add value quickly and keep growing.",
+      2 =>
+        "Next, I'm aiming for $title roles with clear goals, strong collaborators, and room to keep learning.",
+      3 =>
+        "I'm open to $title roles where thoughtful execution and good communication are part of the job.",
+      _ =>
+        'I am looking for roles where I can contribute as a $title and keep growing through clear, challenging work.',
+    };
+  }
+
+  String _buildSummary(
+    ResumeData resume, {
+    bool regenerate = false,
+    int attemptIndex = 0,
+  }) {
+    final variantIndex =
+        regenerate ? attemptIndex % _summaryVariantCount : 0;
+    final composed = _composeSummaryLines(
+      resume,
+      variantIndex: variantIndex,
+    ).join('\n');
+    return _finalizeSummaryLines(composed, resume);
   }
 
   String _buildTailoredSummary({

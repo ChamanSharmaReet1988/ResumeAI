@@ -187,6 +187,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
   Timer? _autoSaveTimer;
   Future<void> _autoSaveInFlight = Future<void>.value();
   bool _hasAutoSaveInFlight = false;
+  int _summarySuggestAttempt = 0;
 
   ResumeData get resume => _resume;
   int get currentStep => _currentStep;
@@ -474,8 +475,20 @@ class ResumeEditorViewModel extends ChangeNotifier {
   }
 
   Future<void> generateSummary() async {
+    final regenerate = _resume.summary.trim().isNotEmpty;
+    if (regenerate) {
+      _summarySuggestAttempt++;
+    } else {
+      _summarySuggestAttempt = 0;
+    }
+    final attemptIndex = regenerate ? _summarySuggestAttempt : 0;
+
     await _runBusy(() async {
-      final summary = await aiService.generateSummary(_resume);
+      final summary = await aiService.generateSummary(
+        _resume,
+        regenerate: regenerate,
+        attemptIndex: attemptIndex,
+      );
       updateResume((resume) => resume.copyWith(summary: summary));
     });
   }

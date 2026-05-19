@@ -376,4 +376,70 @@ Oxford Software Institute
       );
     },
   );
+
+  test('generateSummary uses resume identity and role context', () async {
+    final service = LocalAiResumeService();
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
+      fullName: 'Jane Doe',
+      jobTitle: 'Product Manager',
+      skills: const ['Roadmapping', 'Analytics'],
+      workExperiences: const [
+        WorkExperience(
+          role: 'Product Manager',
+          company: 'Acme',
+          startDate: 'Jan 2020',
+          endDate: 'Present',
+          description: 'Led product launches.',
+          bullets: ['Shipped roadmap items on schedule.'],
+        ),
+      ],
+    );
+
+    final summary = await service.generateSummary(resume);
+
+    expect(summary.trim(), isNotEmpty);
+    expect(summary, contains('Jane Doe'));
+    expect(summary, contains('Product Manager'));
+    final lineCount = summary
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .length;
+    expect(lineCount, greaterThanOrEqualTo(4));
+    expect(lineCount, lessThanOrEqualTo(5));
+  });
+
+  test(
+    'generateSummary regenerate uses alternate phrasing',
+    () async {
+      final service = LocalAiResumeService();
+      final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
+        fullName: 'Jane Doe',
+        jobTitle: 'Product Manager',
+        skills: const ['Roadmapping', 'Analytics'],
+        workExperiences: const [
+          WorkExperience(
+            role: 'Product Manager',
+            company: 'Acme',
+            startDate: 'Jan 2020',
+            endDate: 'Present',
+            description: 'Led product launches.',
+            bullets: ['Shipped roadmap items on schedule.'],
+          ),
+        ],
+      );
+
+      final first = await service.generateSummary(resume);
+      final second = await service.generateSummary(
+        resume,
+        regenerate: true,
+        attemptIndex: 1,
+      );
+
+      expect(second.trim(), isNotEmpty);
+      expect(second, isNot(equals(first)));
+      expect(second, contains('Jane Doe'));
+      expect(second, contains('Product Manager'));
+    },
+  );
 }

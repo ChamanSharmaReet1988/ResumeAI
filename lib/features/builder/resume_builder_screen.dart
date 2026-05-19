@@ -288,6 +288,29 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
+  Future<void> _generateSummary() async {
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final hadSummary = viewModel.resume.summary.trim().isNotEmpty;
+    await viewModel.generateSummary();
+    if (!mounted) {
+      return;
+    }
+
+    final summary =
+        context.read<ResumeEditorViewModel>().resume.summary.trim();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          summary.isEmpty
+              ? 'Unable to generate a professional summary right now.'
+              : hadSummary
+              ? 'Summary updated'
+              : 'Summary added',
+        ),
+      ),
+    );
+  }
+
   void _addSkillFromInput() {
     if (!mounted) {
       return;
@@ -1503,6 +1526,33 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         children: [
           const SizedBox(height: 18),
           personalFields,
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              TextButton.icon(
+                key: const Key('generate-summary-ai-button'),
+                onPressed: viewModel.isBusy ? null : _generateSummary,
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
+                icon: Icon(
+                  Icons.psychology_alt_outlined,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: const Text('Suggest summary'),
+              ),
+            ],
+          ),
           const SizedBox(height: 36),
           _buildProfilePhotoPicker(viewModel),
         ],
