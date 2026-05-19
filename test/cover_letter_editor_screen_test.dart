@@ -150,7 +150,7 @@ void main() {
     expect(saved.skillToHighlight, 'UX research, Prototyping');
     expect(saved.language, 'Hindi (हिन्दी)');
     expect(_textFieldByLabel('Cover letter content'), findsOneWidget);
-    expect(saved.content, contains('[Your Name]'));
+    expect(saved.content, contains('Avery Lee'));
     expect(saved.content, contains('भर्ती प्रबंधक'));
     expect(saved.content, contains('Acme Labs'));
     expect(saved.content, contains('Senior Product Designer'));
@@ -158,7 +158,7 @@ void main() {
     expect(saved.content, contains('हिन्दी'));
     expect(saved.content, contains('आदरणीय भर्ती प्रबंधक,'));
     expect(saved.content, isNot(contains('Dear Hiring Manager,')));
-    expect(saved.content, isNot(contains('Avery Lee')));
+    expect(saved.content, isNot(contains('[Your Name]')));
     expect(
       saved.content,
       isNot(

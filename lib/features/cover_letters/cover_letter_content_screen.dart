@@ -124,6 +124,21 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
                                   ),
                             ),
                             const SizedBox(height: 20),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton.icon(
+                                key: const Key('regenerate-cover-letter-button'),
+                                onPressed: viewModel.isBusy ||
+                                        !viewModel.canCreateCoverLetter
+                                    ? null
+                                    : () => unawaited(
+                                          viewModel.regenerateCoverLetter(),
+                                        ),
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: const Text('Regenerate'),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
                             _CoverLetterContentField(
                               value: viewModel.coverLetter.content,
                               onChanged: (value) {

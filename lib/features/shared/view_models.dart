@@ -764,6 +764,7 @@ class CoverLetterEditorViewModel extends ChangeNotifier {
 
   CoverLetterData _coverLetter;
   bool _isBusy = false;
+  int _coverLetterGenerateAttempt = 0;
 
   CoverLetterData get coverLetter => _coverLetter;
   bool get isBusy => _isBusy;
@@ -799,18 +800,65 @@ class CoverLetterEditorViewModel extends ChangeNotifier {
 
       final resume =
           resumeContext ?? ResumeData.empty(template: ResumeTemplate.corporate);
+      _coverLetterGenerateAttempt = 0;
       final generatedContent = await aiService.generateCoverLetter(
         resume: resume,
         company: normalized.company,
         role: normalized.role,
         skillToHighlight: normalized.skillToHighlight,
         language: normalized.language,
+        regenerate: false,
+        attemptIndex: 0,
       );
 
       _coverLetter = normalized.copyWith(
         title: normalized.title.trim().isNotEmpty
             ? normalized.title.trim()
             : '${normalized.role} · ${normalized.company}',
+        content: generatedContent,
+        updatedAt: DateTime.now(),
+      );
+
+      await repository.upsertCoverLetter(_coverLetter);
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> regenerateCoverLetter() async {
+    if (!canCreateCoverLetter) {
+      return;
+    }
+
+    _coverLetterGenerateAttempt++;
+    final attemptIndex = _coverLetterGenerateAttempt;
+
+    _isBusy = true;
+    notifyListeners();
+
+    try {
+      final normalized = _coverLetter.copyWith(
+        company: _coverLetter.company.trim(),
+        role: _coverLetter.role.trim(),
+        skillToHighlight: _coverLetter.skillToHighlight.trim(),
+        language: _coverLetter.language.trim(),
+        updatedAt: DateTime.now(),
+      );
+
+      final resume =
+          resumeContext ?? ResumeData.empty(template: ResumeTemplate.corporate);
+      final generatedContent = await aiService.generateCoverLetter(
+        resume: resume,
+        company: normalized.company,
+        role: normalized.role,
+        skillToHighlight: normalized.skillToHighlight,
+        language: normalized.language,
+        regenerate: true,
+        attemptIndex: attemptIndex,
+      );
+
+      _coverLetter = normalized.copyWith(
         content: generatedContent,
         updatedAt: DateTime.now(),
       );

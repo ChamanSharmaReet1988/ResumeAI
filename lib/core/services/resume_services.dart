@@ -2422,55 +2422,244 @@ class LocalAiResumeService {
     required String role,
     String skillToHighlight = '',
     String language = '',
+    bool regenerate = false,
+    int attemptIndex = 0,
   }) async {
-    return _simulate(() {
-      final fullName = '[Your Name]';
-      final addressLine = '[Your Address]';
-      final cityLine = '[City, State, Zip Code]';
-      final emailLine = '[Email Address]';
-      final phoneLine = '[Phone Number]';
-      final languageBase = _coverLetterLanguageName(language);
-      final languageNative = _coverLetterLanguageNativeName(language);
-      final locale = _coverLetterLocaleFor(languageBase);
-      final currentDate = _formatCoverLetterDate(
-        DateTime.now(),
-        languageBase: languageBase,
-      );
-      final companyName = company.trim().isEmpty ? 'Dekh Company' : company;
-      final roleName = role.trim().isEmpty ? 'Heheh' : role;
-      final highlightedSkills = skillToHighlight
-          .split(',')
-          .map((item) => item.trim())
-          .where((item) => item.isNotEmpty)
-          .toList();
-      final highlightedSkill = highlightedSkills.isNotEmpty
-          ? _joinNaturalListLocalized(highlightedSkills, languageBase)
-          : roleName;
-      final primarySkill = highlightedSkill.isEmpty
-          ? roleName
-          : highlightedSkill;
-      final languageSentence = language.trim().isEmpty
-          ? ''
-          : locale.languageSentence(languageNative);
+    return _simulate(
+      () => _buildCoverLetter(
+        resume: resume,
+        company: company,
+        role: role,
+        skillToHighlight: skillToHighlight,
+        language: language,
+        variantIndex: regenerate ? attemptIndex : 0,
+      ),
+    );
+  }
 
-      return '$fullName\n'
-          '$addressLine\n'
-          '$cityLine\n'
-          '$emailLine\n'
-          '$phoneLine\n'
-          '$currentDate\n\n'
-          '${locale.hiringManager}\n'
-          '$companyName\n'
-          '[Company Address]\n'
-          '[City, State, Zip Code]\n\n'
-          '${locale.greeting}\n\n'
-          '${locale.opening(roleName, companyName)}\n\n'
-          '${locale.fit(roleName, primarySkill)}\n\n'
-          '${locale.strengths(languageSentence)}\n\n'
-          '${locale.closing(companyName, roleName)}\n\n'
-          '${locale.sincerely}\n\n'
-          '$fullName';
-    });
+  static const int _coverLetterVariantCount = 6;
+
+  String _buildCoverLetter({
+    required ResumeData resume,
+    required String company,
+    required String role,
+    required String skillToHighlight,
+    required String language,
+    required int variantIndex,
+  }) {
+    final inputs = _coverLetterInputsFromResume(
+      resume: resume,
+      company: company,
+      role: role,
+      skillToHighlight: skillToHighlight,
+      language: language,
+    );
+    final variant = variantIndex % _coverLetterVariantCount;
+    final languageBase = inputs.languageBase.isEmpty
+        ? 'English'
+        : inputs.languageBase;
+    final locale = _coverLetterLocaleFor(languageBase);
+    final letterhead = _formatCoverLetterLetterhead(inputs, locale);
+    final body = languageBase == 'English'
+        ? _composeEnglishCoverLetterBody(inputs, locale, variant)
+        : _composeLocalizedCoverLetterBody(inputs, locale, variant);
+
+    return '$letterhead$body';
+  }
+
+  String _formatCoverLetterLetterhead(
+    _CoverLetterInputs inputs,
+    _CoverLetterLocale locale,
+  ) {
+    final currentDate = _formatCoverLetterDate(
+      DateTime.now(),
+      languageBase: inputs.languageBase.isEmpty ? 'English' : inputs.languageBase,
+    );
+
+    return '${inputs.senderName}\n'
+        '${inputs.addressLine}\n'
+        '${inputs.cityLine}\n'
+        '${inputs.emailLine}\n'
+        '${inputs.phoneLine}\n'
+        '$currentDate\n\n'
+        '${locale.hiringManager}\n'
+        '${inputs.companyName}\n'
+        '[Company Address]\n'
+        '[City, State, Zip Code]\n\n';
+  }
+
+  String _composeEnglishCoverLetterBody(
+    _CoverLetterInputs inputs,
+    _CoverLetterLocale locale,
+    int variant,
+  ) {
+    final greeting = _englishCoverLetterGreeting(inputs, variant);
+    final opening = _englishCoverLetterOpening(inputs, variant);
+    final fit = _englishCoverLetterFit(inputs, variant);
+    final strengths = _englishCoverLetterStrengths(inputs, locale, variant);
+    final closing = _englishCoverLetterClosing(inputs, variant);
+
+    return '$greeting\n\n'
+        '$opening\n\n'
+        '$fit\n\n'
+        '$strengths\n\n'
+        '$closing\n\n'
+        '${locale.sincerely}\n\n'
+        '${inputs.senderName}';
+  }
+
+  String _composeLocalizedCoverLetterBody(
+    _CoverLetterInputs inputs,
+    _CoverLetterLocale locale,
+    int variant,
+  ) {
+    final greeting = _localizedCoverLetterGreeting(inputs, locale, variant);
+    final opening = locale.opening(inputs.roleName, inputs.companyName);
+    final evidence = inputs.experienceEvidenceLine(variant);
+    final fitBase = locale.fit(inputs.roleName, inputs.primarySkill);
+    final fit = evidence.isEmpty ? fitBase : '$fitBase $evidence';
+    final languageSentence = inputs.language.trim().isEmpty
+        ? ''
+        : locale.languageSentence(inputs.languageNative);
+    final strengths = locale.strengths(languageSentence);
+    final closing = locale.closing(inputs.companyName, inputs.roleName);
+
+    return '$greeting\n\n'
+        '$opening\n\n'
+        '$fit\n\n'
+        '$strengths\n\n'
+        '$closing\n\n'
+        '${locale.sincerely}\n\n'
+        '${inputs.senderName}';
+  }
+
+  String _englishCoverLetterGreeting(_CoverLetterInputs inputs, int variant) {
+    return switch (variant % 3) {
+      0 => 'Dear Hiring Manager,',
+      1 => 'Dear ${inputs.companyName} team,',
+      _ => 'Hello,',
+    };
+  }
+
+  String _localizedCoverLetterGreeting(
+    _CoverLetterInputs inputs,
+    _CoverLetterLocale locale,
+    int variant,
+  ) {
+    if (variant % 3 != 1) {
+      return locale.greeting;
+    }
+    return _coverLetterGreetingForCompany(
+      inputs.languageBase.isEmpty ? 'English' : inputs.languageBase,
+      inputs.companyName,
+    );
+  }
+
+  String _coverLetterGreetingForCompany(String languageBase, String company) {
+    return switch (languageBase) {
+      'Arabic' => 'فريق $company المحترم،',
+      'Bengali' => 'প্রিয় $company টিম,',
+      'Chinese, Mandarin' => '尊敬的$company团队：',
+      'Dutch' => 'Geacht team van $company,',
+      'French' => 'Bonjour l’équipe $company,',
+      'German' => 'Guten Tag Team $company,',
+      'Hindi' => 'प्रिय $company टीम,',
+      'Italian' => 'Gentile team di $company,',
+      'Japanese' => '$company 採用チームの皆様',
+      'Korean' => '$company 채용팀께,',
+      'Portuguese' => 'Prezada equipe da $company,',
+      'Russian' => 'Уважаемая команда $company,',
+      'Spanish' => 'Estimado equipo de $company:',
+      'Turkish' => 'Sayın $company ekibi,',
+      'Urdu' => 'محترم $company ٹیم،',
+      'Vietnamese' => 'Kính gửi đội ngũ $company,',
+      _ => 'Dear $company team,',
+    };
+  }
+
+  String _englishCoverLetterOpening(_CoverLetterInputs inputs, int variant) {
+    final role = inputs.roleName;
+    final company = inputs.companyName;
+    return switch (variant % _coverLetterVariantCount) {
+      0 =>
+        'I am writing to apply for the $role position at $company. The role stood out to me because it lines up with the kind of work I have been doing and the impact I want to make next.',
+      1 =>
+        'When I saw the opening for $role at $company, it immediately caught my attention. The position sounds like a strong match for how I work: focused, collaborative, and oriented toward practical results.',
+      2 =>
+        'I would like to be considered for the $role role at $company. From what I understand about the team and the scope of the work, this is an opportunity where I could contribute quickly while continuing to grow.',
+      3 =>
+        'I am excited to apply for $role at $company. My recent work has centered on ${inputs.backgroundRole}, and this position feels like a natural next step.',
+      4 =>
+        'I am reaching out about the $role opportunity at $company. I admire teams that value clear communication and steady execution, and that is the environment where I do my best work.',
+      _ =>
+        'Please accept my application for the $role position at $company. I am motivated by roles where thoughtful planning and follow-through matter as much as the initial idea.',
+    };
+  }
+
+  String _englishCoverLetterFit(_CoverLetterInputs inputs, int variant) {
+    final role = inputs.roleName;
+    final skills = inputs.primarySkill;
+    final evidence = inputs.experienceEvidenceLine(variant);
+    final background = inputs.backgroundRole;
+
+    final evidenceSuffix = evidence.isEmpty ? '' : ' $evidence';
+
+    return switch (variant % _coverLetterVariantCount) {
+      0 =>
+        'In my work as $background, I have built depth in $skills and learned how to translate that into outcomes stakeholders can see. I am confident I can bring the same approach to $role at ${inputs.companyName}.$evidenceSuffix',
+      1 =>
+        'What I would bring to $role is a grounded mix of $skills, good judgment under pressure, and the habit of checking that the work actually solves the problem. That combination has served me well in $background roles.$evidenceSuffix',
+      2 =>
+        'I believe I am a strong fit for $role because I can connect day-to-day execution with the bigger picture. My strengths in $skills are backed by hands-on experience, not just resume keywords.$evidenceSuffix',
+      3 =>
+        'The $role position aligns with how I already work: scoped goals, steady communication, and attention to $skills where they matter most. I am used to partnering across functions and closing loops without a lot of overhead.$evidenceSuffix',
+      4 =>
+        'Hiring for $role often comes down to whether someone can learn the context quickly and deliver without drama. That is where I am most effective, especially when $skills are central to the work.$evidenceSuffix',
+      _ =>
+        'I am not looking for a generic next job; I am looking for a place where $skills and reliable delivery are valued. $role at ${inputs.companyName} looks like that kind of opportunity, and my background in $background supports that read.$evidenceSuffix',
+    };
+  }
+
+  String _englishCoverLetterStrengths(
+    _CoverLetterInputs inputs,
+    _CoverLetterLocale locale,
+    int variant,
+  ) {
+    final languageSentence = inputs.language.trim().isEmpty
+        ? ''
+        : locale.languageSentence(inputs.languageNative);
+    final summaryHook = inputs.summaryHook;
+
+    return switch (variant % 3) {
+      0 =>
+        'Colleagues tend to describe me as organized, direct, and easy to work with when priorities shift. I take ownership of my piece of the work and keep updates clear so nothing falls through the cracks.$languageSentence',
+      1 =>
+        'I communicate early when tradeoffs appear, document decisions that others will need later, and keep quality high even when timelines are tight. Those habits matter in collaborative environments.$languageSentence',
+      _ =>
+        summaryHook.isEmpty
+            ? 'I stay calm when plans change, break work into realistic steps, and make sure the final output is something the team can stand behind.$languageSentence'
+            : '$summaryHook$languageSentence',
+    };
+  }
+
+  String _englishCoverLetterClosing(_CoverLetterInputs inputs, int variant) {
+    final company = inputs.companyName;
+    final role = inputs.roleName;
+
+    return switch (variant % _coverLetterVariantCount) {
+      0 =>
+        'I would welcome the chance to discuss how I can support $company as $role. Thank you for your time and consideration.',
+      1 =>
+        'If my background looks like a fit, I would appreciate the opportunity to talk further about the $role role and how I can help the team. Thank you for reviewing my application.',
+      2 =>
+        'I am available to speak at your convenience and happy to share more detail on relevant projects. Thank you for considering me for $role at $company.',
+      3 =>
+        'I would be glad to walk through examples of my work and how they relate to your needs for $role. Thanks again for your consideration.',
+      4 =>
+        'I hope we can connect soon about $role. I am enthusiastic about the possibility of contributing to $company.',
+      _ =>
+        'Thank you for reading my application. I look forward to the possibility of joining $company as $role and learning more about your goals for the team.',
+    };
   }
 
   String _formatCoverLetterDate(DateTime date, {required String languageBase}) {
@@ -5482,10 +5671,158 @@ class LocalAiResumeService {
     }
   }
 
+  _CoverLetterInputs _coverLetterInputsFromResume({
+    required ResumeData resume,
+    required String company,
+    required String role,
+    required String skillToHighlight,
+    required String language,
+  }) {
+    final languageBase = _coverLetterLanguageName(language);
+    final languageNative = _coverLetterLanguageNativeName(language);
+    final companyName = company.trim().isEmpty ? 'the company' : company.trim();
+    final roleName = role.trim().isEmpty ? 'the role' : role.trim();
+    final highlightedSkills = skillToHighlight
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    final resumeSkills = resume.skills
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    final skillPool = highlightedSkills.isNotEmpty
+        ? highlightedSkills
+        : resumeSkills;
+    final primarySkill = skillPool.isEmpty
+        ? roleName
+        : _joinNaturalListLocalized(
+            skillPool.take(4).toList(),
+            languageBase.isEmpty ? 'English' : languageBase,
+          );
+    final backgroundRole = resume.jobTitle.trim().isEmpty
+        ? 'a professional'
+        : resume.jobTitle.trim();
+    final summaryHook = _summaryHookFromResume(resume);
+    final workExperiences = resume.visibleWorkExperiences
+        .where((item) => !item.isBlank)
+        .toList();
+
+    final fullName = resume.fullName.trim();
+    final location = resume.location.trim();
+    final email = resume.email.trim();
+    final phone = resume.phone.trim();
+
+    return _CoverLetterInputs(
+      senderName: fullName.isEmpty ? '[Your Name]' : fullName,
+      addressLine: location.isEmpty ? '[Your Address]' : location,
+      cityLine: location.isEmpty ? '[City, State, Zip Code]' : location,
+      emailLine: email.isEmpty ? '[Email Address]' : email,
+      phoneLine: phone.isEmpty ? '[Phone Number]' : phone,
+      companyName: companyName,
+      roleName: roleName,
+      primarySkill: primarySkill,
+      backgroundRole: backgroundRole,
+      language: language,
+      languageBase: languageBase,
+      languageNative: languageNative,
+      summaryHook: summaryHook,
+      workExperiences: workExperiences,
+      evidenceLineBuilder: (variant) =>
+          _coverLetterExperienceEvidenceLine(
+            workExperiences: workExperiences,
+            backgroundRole: backgroundRole,
+            variant: variant,
+          ),
+    );
+  }
+
+  String _summaryHookFromResume(ResumeData resume) {
+    final summary = resume.summary.trim();
+    if (summary.isEmpty) {
+      return '';
+    }
+    final sentence = _firstMeaningfulSentence(summary);
+    if (sentence.isEmpty) {
+      return '';
+    }
+    final normalized = _normalizeSentenceForResume(sentence);
+    if (RegExp(r'^I\b', caseSensitive: false).hasMatch(normalized)) {
+      return normalized.endsWith('.') ? normalized : '$normalized.';
+    }
+    final lowered = normalized[0].toLowerCase() + normalized.substring(1);
+    return 'A thread through my work is that I $lowered';
+  }
+
+  String _coverLetterExperienceEvidenceLine({
+    required List<WorkExperience> workExperiences,
+    required String backgroundRole,
+    required int variant,
+  }) {
+    if (workExperiences.isEmpty) {
+      return '';
+    }
+    final experience = workExperiences[variant % workExperiences.length];
+    final roleLabel = experience.role.trim().isEmpty
+        ? backgroundRole
+        : experience.role.trim();
+    final companyLabel = experience.company.trim().isEmpty
+        ? 'a previous team'
+        : experience.company.trim();
+    final bullet = [
+      experience.description,
+      ...experience.bullets,
+    ].map(_firstMeaningfulSentence).firstWhere((item) => item.isNotEmpty, orElse: () => '');
+    if (bullet.isEmpty) {
+      return 'Most recently, I worked as $roleLabel at $companyLabel.';
+    }
+    final normalized = _normalizeSentenceForResume(bullet);
+    final lowered = normalized[0].toLowerCase() + normalized.substring(1);
+    return 'In my role as $roleLabel at $companyLabel, $lowered';
+  }
+
   Future<T> _simulate<T>(T Function() action) async {
     await Future<void>.delayed(const Duration(milliseconds: 450));
     return action();
   }
+}
+
+class _CoverLetterInputs {
+  const _CoverLetterInputs({
+    required this.senderName,
+    required this.addressLine,
+    required this.cityLine,
+    required this.emailLine,
+    required this.phoneLine,
+    required this.companyName,
+    required this.roleName,
+    required this.primarySkill,
+    required this.backgroundRole,
+    required this.language,
+    required this.languageBase,
+    required this.languageNative,
+    required this.summaryHook,
+    required this.workExperiences,
+    required this.evidenceLineBuilder,
+  });
+
+  final String senderName;
+  final String addressLine;
+  final String cityLine;
+  final String emailLine;
+  final String phoneLine;
+  final String companyName;
+  final String roleName;
+  final String primarySkill;
+  final String backgroundRole;
+  final String language;
+  final String languageBase;
+  final String languageNative;
+  final String summaryHook;
+  final List<WorkExperience> workExperiences;
+  final String Function(int variant) evidenceLineBuilder;
+
+  String experienceEvidenceLine(int variant) => evidenceLineBuilder(variant);
 }
 
 class _CoverLetterLocale {

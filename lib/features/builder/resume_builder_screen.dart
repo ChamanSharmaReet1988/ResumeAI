@@ -32,6 +32,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   );
   static const Curve _stepAnimationCurve = Curves.easeInOutCubicEmphasized;
   static const double _calendarIconStroke = 1.65;
+  static const double _entryDividerHorizontalPadding = 20;
 
   final _skillController = TextEditingController();
   final _skillFocusNode = FocusNode();
@@ -1803,10 +1804,15 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   .withValues(alpha: 0.28);
               experienceWidgets.addAll([
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 1,
-                  child: ColoredBox(color: dividerColor),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _entryDividerHorizontalPadding,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 1,
+                    child: ColoredBox(color: dividerColor),
+                  ),
                 ),
                 const SizedBox(height: 18),
               ]);
@@ -2077,10 +2083,15 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   .withValues(alpha: 0.28);
               educationWidgets.addAll([
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 1,
-                  child: ColoredBox(color: dividerColor),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _entryDividerHorizontalPadding,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 1,
+                    child: ColoredBox(color: dividerColor),
+                  ),
                 ),
                 const SizedBox(height: 18),
               ]);
@@ -2443,10 +2454,15 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   .withValues(alpha: 0.28);
               projectWidgets.addAll([
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 1,
-                  child: ColoredBox(color: dividerColor),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _entryDividerHorizontalPadding,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 1,
+                    child: ColoredBox(color: dividerColor),
+                  ),
                 ),
                 const SizedBox(height: 18),
               ]);

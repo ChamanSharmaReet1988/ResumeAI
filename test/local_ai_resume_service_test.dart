@@ -442,4 +442,72 @@ Oxford Software Institute
       expect(second, contains('Product Manager'));
     },
   );
+
+  test('generateCoverLetter uses resume contact details and job context', () async {
+    final service = LocalAiResumeService();
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
+      fullName: 'Avery Lee',
+      jobTitle: 'Product Designer',
+      email: 'avery@example.com',
+      phone: '+1 555 0100',
+      location: 'San Francisco, CA',
+      skills: const ['UX research', 'Prototyping'],
+      workExperiences: const [
+        WorkExperience(
+          role: 'Product Designer',
+          company: 'North Studio',
+          startDate: '2023',
+          endDate: 'Present',
+          description:
+              'Led cross-functional design work for web and mobile products.',
+          bullets: const [
+            'Partnered with engineers to improve onboarding flows.',
+          ],
+        ),
+      ],
+    );
+
+    final letter = await service.generateCoverLetter(
+      resume: resume,
+      company: 'Acme Labs',
+      role: 'Senior Product Designer',
+      skillToHighlight: 'UX research, Prototyping',
+    );
+
+    expect(letter, contains('Avery Lee'));
+    expect(letter, contains('avery@example.com'));
+    expect(letter, contains('Acme Labs'));
+    expect(letter, contains('Senior Product Designer'));
+    expect(letter, contains('UX research'));
+    expect(letter, contains('North Studio'));
+    expect(letter, isNot(contains('[Your Name]')));
+    expect(letter, isNot(contains('Dekh Company')));
+  });
+
+  test('generateCoverLetter regenerate rotates opening and closing', () async {
+    final service = LocalAiResumeService();
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
+      fullName: 'Jordan Kim',
+      jobTitle: 'Software Engineer',
+      skills: const ['Flutter', 'Dart'],
+    );
+
+    final first = await service.generateCoverLetter(
+      resume: resume,
+      company: 'River Tech',
+      role: 'Mobile Engineer',
+    );
+    final second = await service.generateCoverLetter(
+      resume: resume,
+      company: 'River Tech',
+      role: 'Mobile Engineer',
+      regenerate: true,
+      attemptIndex: 1,
+    );
+
+    expect(second, isNot(equals(first)));
+    expect(second, contains('Jordan Kim'));
+    expect(second, contains('River Tech'));
+    expect(second, contains('Mobile Engineer'));
+  });
 }
