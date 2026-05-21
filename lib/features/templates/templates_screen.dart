@@ -757,33 +757,36 @@ class _TemplatePreviewArt extends StatelessWidget {
           child: SizedBox(
             width: 168,
             height: 252,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: DefaultTextStyle.merge(
-                    style: const TextStyle(fontFamily: 'Calibri'),
-                    child: ColoredBox(
-                      color: Colors.white,
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: preview,
+            child: _TemplateArtDisplayScale(
+              scale: safeScale,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: DefaultTextStyle.merge(
+                      style: const TextStyle(fontFamily: 'Calibri'),
+                      child: ColoredBox(
+                        color: Colors.white,
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: preview,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                if ((showPremiumBadgeOnTile || showPremiumBadgeOnPage) &&
-                    item.isPremium)
-                  Positioned(
-                    right: badgeRightPadding,
-                    bottom: badgeBottomPadding,
-                    child: Image.asset(
-                      'assets/premium_badge.png',
-                      width: badgeSize,
-                      height: badgeSize,
-                      fit: BoxFit.contain,
+                  if ((showPremiumBadgeOnTile || showPremiumBadgeOnPage) &&
+                      item.isPremium)
+                    Positioned(
+                      right: badgeRightPadding,
+                      bottom: badgeBottomPadding,
+                      child: Image.asset(
+                        'assets/premium_badge.png',
+                        width: badgeSize,
+                        height: badgeSize,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -941,6 +944,45 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
   }
 }
 
+/// [FittedBox] scale for template art in a constrained preview (detail or tile).
+class _TemplateArtDisplayScale extends InheritedWidget {
+  const _TemplateArtDisplayScale({
+    required this.scale,
+    required super.child,
+  });
+
+  final double scale;
+
+  static double of(BuildContext context) {
+    return context
+            .dependOnInheritedWidgetOfExactType<_TemplateArtDisplayScale>()
+            ?.scale ??
+        1.0;
+  }
+
+  @override
+  bool updateShouldNotify(covariant _TemplateArtDisplayScale oldWidget) =>
+      oldWidget.scale != scale;
+}
+
+/// Hairline rule: art height `1 / scale` so it renders ~1 logical px on screen.
+class _TemplateHairline extends StatelessWidget {
+  const _TemplateHairline({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = _TemplateArtDisplayScale.of(context);
+    final height = scale > 0 ? math.max(1.0 / scale, 0.125) : 1.0;
+    return SizedBox(
+      width: double.infinity,
+      height: height,
+      child: ColoredBox(color: color),
+    );
+  }
+}
+
 class _LargeTemplateArtPreview extends StatelessWidget {
   const _LargeTemplateArtPreview({
     required this.child,
@@ -966,23 +1008,26 @@ class _LargeTemplateArtPreview extends StatelessWidget {
           child: SizedBox(
             width: 240,
             height: 360,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: ColoredBox(color: Colors.white, child: child),
-                ),
-                if (showPremiumBadge)
-                  Positioned(
-                    right: badgeInset,
-                    bottom: badgeInset,
-                    child: Image.asset(
-                      'assets/premium_badge.png',
-                      width: badgeSize,
-                      height: badgeSize,
-                      fit: BoxFit.contain,
-                    ),
+            child: _TemplateArtDisplayScale(
+              scale: safeScale,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: ColoredBox(color: Colors.white, child: child),
                   ),
-              ],
+                  if (showPremiumBadge)
+                    Positioned(
+                      right: badgeInset,
+                      bottom: badgeInset,
+                      child: Image.asset(
+                        'assets/premium_badge.png',
+                        width: badgeSize,
+                        height: badgeSize,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         );
@@ -4932,6 +4977,8 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 5),
+                _TemplateHairline(color: line),
+                const SizedBox(height: 5),
                 const Text(
                   'March 30, 2026',
                   style: TextStyle(
@@ -4953,8 +5000,6 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Container(height: 1, color: line),
-                const SizedBox(height: 4),
                 const Text(
                   'Dear Hiring Manager,',
                   style: TextStyle(
@@ -4975,8 +5020,6 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                       'I recently led cross-functional campaigns and improved conversion by aligning creative direction, paid channels, and customer-facing messaging.',
                 ),
                 const Spacer(),
-                Container(height: 1, color: line),
-                const SizedBox(height: 4),
                 const Text(
                   'Sincerely,',
                   style: TextStyle(
@@ -5056,7 +5099,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 7),
-                Container(height: 1, color: accent),
+                _TemplateHairline(color: accent),
                 const SizedBox(height: 8),
                 const Align(
                   alignment: Alignment.centerLeft,
