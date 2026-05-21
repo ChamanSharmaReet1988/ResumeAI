@@ -6568,6 +6568,7 @@ class ResumePdfService {
       weight: ResumeFontWeight.w400,
       fontSize: _coverLetterBodyPt(coverLetter),
       color: _coverLetterBodyTextPdf(),
+      lineHeight: 1.55,
       fontFallback: fontFallback,
     );
     final recipientStyle = _coverLetterArialPdfStyle(
@@ -6643,6 +6644,7 @@ class ResumePdfService {
       weight: ResumeFontWeight.w400,
       fontSize: _coverLetterBodyPt(coverLetter),
       color: _coverLetterBodyTextPdf(),
+      lineHeight: 1.45,
       fontFallback: fontFallback,
     );
     final metaStyle = _coverLetterArialPdfStyle(
@@ -6650,6 +6652,7 @@ class ResumePdfService {
       weight: ResumeFontWeight.w500,
       fontSize: _coverLetterHeadingPt(coverLetter),
       color: PdfColor.fromHex('#3D4349'),
+      lineHeight: 1.38,
       fontFallback: fontFallback,
     );
     final recipientStyle = _coverLetterArialPdfStyle(
@@ -6657,6 +6660,7 @@ class ResumePdfService {
       weight: ResumeFontWeight.w500,
       fontSize: _coverLetterHeadingPt(coverLetter),
       color: _coverLetterBodyTextPdf(),
+      lineHeight: 1.38,
       fontFallback: fontFallback,
     );
     final headingStyle = _coverLetterArialPdfStyle(
@@ -6741,6 +6745,7 @@ class ResumePdfService {
       weight: ResumeFontWeight.w400,
       fontSize: _coverLetterBodyPt(coverLetter),
       color: _coverLetterBodyTextPdf(),
+      lineHeight: 1.55,
       fontFallback: fontFallback,
     );
     final mutedBodyStyle = _coverLetterArialPdfStyle(
@@ -6825,6 +6830,7 @@ class ResumePdfService {
       weight: ResumeFontWeight.w400,
       fontSize: _coverLetterPt(coverLetter, 10),
       color: PdfColor.fromHex('#E7EDF6'),
+      lineHeight: 1.45,
       fontFallback: fontFallback,
     );
     final initialsStyle = _coverLetterArialPdfStyle(
@@ -6867,6 +6873,7 @@ class ResumePdfService {
       weight: ResumeFontWeight.w400,
       fontSize: _coverLetterBodyPt(coverLetter),
       color: _coverLetterBodyTextPdf(),
+      lineHeight: 1.55,
       fontFallback: fontFallback,
     );
     final signatureStyle = _coverLetterArialPdfStyle(
@@ -7019,6 +7026,7 @@ class ResumePdfService {
     required int weight,
     required double fontSize,
     PdfColor? color,
+    double lineHeight = 1.45,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
     final normalizedWeight = ResumeFontWeight.normalize(weight);
@@ -7027,7 +7035,7 @@ class ResumePdfService {
       normalizedWeight,
       fontSize: fontSize,
       color: color,
-      lineSpacing: ResumeTypography.coverLetterPdfLineSpacingFor(fontSize),
+      lineSpacing: fontSize * (lineHeight - 1),
     ).copyWith(
       fontWeight: normalizedWeight >= ResumeFontWeight.w700
           ? pw.FontWeight.bold

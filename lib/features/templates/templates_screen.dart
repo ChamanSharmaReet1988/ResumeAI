@@ -4790,7 +4790,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
               fontFamily: 'Arimo',
               fontSize: 4.35,
               fontWeight: FontWeight.w400,
-              height: ResumeTypography.coverLetterTextLineHeight,
+              height: 1.34,
               color: text,
             ),
             child: Column(
@@ -4814,7 +4814,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                     fontFamily: 'Arimo',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w500,
-                    height: ResumeTypography.coverLetterTextLineHeight,
+                    height: 1.38,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -4892,7 +4892,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
               fontFamily: 'Arimo',
               fontSize: 4.45,
               fontWeight: FontWeight.w400,
-              height: ResumeTypography.coverLetterTextLineHeight,
+              height: 1.38,
               color: text,
             ),
             child: Column(
@@ -4949,7 +4949,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
-                    height: ResumeTypography.coverLetterTextLineHeight,
+                    height: 1.38,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -5028,7 +5028,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
               fontFamily: 'Arimo',
               fontSize: 4.6,
               fontWeight: FontWeight.w400,
-              height: ResumeTypography.coverLetterTextLineHeight,
+              height: 1.45,
               color: text,
             ),
             child: Column(
@@ -5159,7 +5159,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                   fontFamily: 'Arimo',
                   fontSize: 4.1,
                   fontWeight: FontWeight.w400,
-                  height: ResumeTypography.coverLetterTextLineHeight,
+                  height: 1.42,
                   color: Color(0xFFE7EDF6),
                 ),
                 child: Column(
@@ -5197,7 +5197,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                     fontFamily: 'Arimo',
                     fontSize: 4.6,
                     fontWeight: FontWeight.w400,
-                    height: ResumeTypography.coverLetterTextLineHeight,
+                    height: 1.45,
                     color: text,
                   ),
                   child: Column(
@@ -5295,7 +5295,6 @@ class _MiniCoverLetterParagraph extends StatelessWidget {
       overflow: TextOverflow.clip,
       style: const TextStyle(
         color: ResumeTypography.atsStructuredBodyTextColor,
-        height: ResumeTypography.coverLetterTextLineHeight,
       ),
     );
   }
