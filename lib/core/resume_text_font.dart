@@ -74,6 +74,13 @@ abstract final class ResumeTypography {
   static double bodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (bodyTextLineHeight - 1);
 
+  /// Cover letter body, greeting, recipient, and closing (preview + PDF).
+  static const double coverLetterTextLineHeight = 1.0;
+
+  /// PDF [lineSpacing] (pt) so line height = [coverLetterTextLineHeight] × [fontSizePt].
+  static double coverLetterPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (coverLetterTextLineHeight - 1);
+
   /// Modern Flow ATS (template 7) body paragraph line height (preview + PDF).
   static const double atsModernFlowBodyLineHeight = 1.2;
 
