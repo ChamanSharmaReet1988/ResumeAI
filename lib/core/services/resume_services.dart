@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
@@ -47,9 +46,6 @@ PdfColor _coverLetterHeaderPdf(CoverLetterData letter) =>
 PdfColor _coverLetterHeaderOnPdf(CoverLetterData letter) =>
     _pdfRgb(letter.corporateColorPreset.headerOnColor);
 
-PdfColor _coverLetterSidebarRailPdf(CoverLetterData letter) =>
-    _pdfRgb(letter.coverLetterSidebarRailColor);
-
 /// Cover letter body paragraphs (matches [ResumeTypography.atsStructuredBodyTextColor]).
 PdfColor _coverLetterBodyTextPdf() => PdfColors.black;
 
@@ -61,9 +57,6 @@ double _coverLetterHeadingPt(CoverLetterData letter, [double designPt = 14]) =>
 
 double _coverLetterNamePt(CoverLetterData letter, [double designPt = 24]) =>
     letter.coverLetterNameScaledPt(designPt);
-
-double _coverLetterPt(CoverLetterData letter, double designPt) =>
-    letter.coverLetterScaledPt(designPt);
 
 List<String> _corporateHeaderContactLines(List<String> items) {
   final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
@@ -6363,7 +6356,7 @@ class ResumePdfService {
           document,
           coverLetter,
           parsed,
-          arimo: await _ensureArimoPdfFonts(),
+          garamond: await _ensureGaramondPdfFonts(),
           fontFallback: fallbacks,
         );
         break;
@@ -6635,43 +6628,43 @@ class ResumePdfService {
     CoverLetterData coverLetter,
     _ParsedCoverLetterContent parsed,
     {
-    required ArimoPdfFonts arimo,
+    required GaramondPdfFonts garamond,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
     final (dateLine, _) = _classicLetterDatePrefix(parsed.senderLines);
-    final bodyStyle = _coverLetterArialPdfStyle(
-      arimo,
+    final bodyStyle = _coverLetterGaramondPdfStyle(
+      garamond,
       weight: ResumeFontWeight.w400,
       fontSize: _coverLetterBodyPt(coverLetter),
       color: _coverLetterBodyTextPdf(),
       lineHeight: 1.45,
       fontFallback: fontFallback,
     );
-    final metaStyle = _coverLetterArialPdfStyle(
-      arimo,
+    final metaStyle = _coverLetterGaramondPdfStyle(
+      garamond,
       weight: ResumeFontWeight.w500,
       fontSize: _coverLetterHeadingPt(coverLetter),
       color: PdfColor.fromHex('#3D4349'),
       lineHeight: 1.38,
       fontFallback: fontFallback,
     );
-    final recipientStyle = _coverLetterArialPdfStyle(
-      arimo,
+    final recipientStyle = _coverLetterGaramondPdfStyle(
+      garamond,
       weight: ResumeFontWeight.w500,
       fontSize: _coverLetterHeadingPt(coverLetter),
       color: _coverLetterBodyTextPdf(),
       lineHeight: 1.38,
       fontFallback: fontFallback,
     );
-    final headingStyle = _coverLetterArialPdfStyle(
-      arimo,
+    final headingStyle = _coverLetterGaramondPdfStyle(
+      garamond,
       weight: ResumeFontWeight.w500,
       fontSize: _coverLetterHeadingPt(coverLetter),
       color: _coverLetterBodyTextPdf(),
       fontFallback: fontFallback,
     );
-    final signatureStyle = _coverLetterArialPdfStyle(
-      arimo,
+    final signatureStyle = _coverLetterGaramondPdfStyle(
+      garamond,
       weight: ResumeFontWeight.w700,
       fontSize: _coverLetterHeadingPt(coverLetter),
       color: _coverLetterBodyTextPdf(),
@@ -6815,137 +6808,128 @@ class ResumePdfService {
     required ArimoPdfFonts arimo,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
-    final rail = _coverLetterSidebarRailPdf(coverLetter);
     final accent = _coverLetterHeaderPdf(coverLetter);
-    final text = PdfColor.fromHex('#2E3238');
-    final muted = PdfColor.fromHex('#717880');
-    final line = PdfColor.fromHex('#D8DDE3');
+    final text = _pdfRgb(coverLetter.corporateColorPreset.titleColor);
+    final muted = _pdfRgb(
+      Color.lerp(
+            coverLetter.corporateColorPreset.titleColor,
+            const Color(0xFFFFFFFF),
+            0.18,
+          ) ??
+          const Color(0xFF2A6F61),
+    );
+    final background = _pdfRgb(
+      Color.lerp(
+            const Color(0xFFFFFFFF),
+            coverLetter.corporateColorPreset.headerColor,
+            0.18,
+          ) ??
+          const Color(0xFFE7F4EC),
+    );
     final senderDetails = _sidebarCoverLetterSenderDetails(parsed);
-    final roleTitle = coverLetter.role.trim().isEmpty
-        ? 'COVER LETTER'
-        : coverLetter.role.trim().toUpperCase();
-    final metaLine = _sidebarCoverLetterMetaLine(coverLetter, parsed);
-    final sidebarDetailStyle = _coverLetterArialPdfStyle(
-      arimo,
-      weight: ResumeFontWeight.w400,
-      fontSize: _coverLetterPt(coverLetter, 10),
-      color: PdfColor.fromHex('#E7EDF6'),
-      lineHeight: 1.45,
-      fontFallback: fontFallback,
-    );
-    final initialsStyle = _coverLetterArialPdfStyle(
+    final dateLine =
+        parsed.senderDetails.cast<String?>().firstWhere(
+          (line) => line != null && _sidebarCoverLetterLineLooksLikeDate(line),
+          orElse: () => null,
+        )?.trim() ??
+        _pdfCoverLetterDateLabel(
+          coverLetter.updatedAt,
+          language: coverLetter.language,
+        );
+    final contactLine = senderDetails.join('  |  ');
+    final nameStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: _coverLetterPt(coverLetter, 27),
-      color: accent,
+      fontSize: _coverLetterNamePt(coverLetter, 32),
+      color: text,
       fontFallback: fontFallback,
-    );
-    final senderNameStyle = _coverLetterArialPdfStyle(
+    ).copyWith(letterSpacing: 0.35);
+    final contactStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w700,
-      fontSize: _coverLetterPt(coverLetter, 13),
-      color: PdfColors.white,
+      fontSize: _coverLetterHeadingPt(coverLetter, 13),
+      color: muted,
+      lineHeight: 1.35,
       fontFallback: fontFallback,
     );
-    final roleTitleStyle = _coverLetterArialPdfStyle(
+    final dateStyle = _coverLetterArialPdfStyle(
       arimo,
-      weight: ResumeFontWeight.w500,
+      weight: ResumeFontWeight.w700,
       fontSize: _coverLetterHeadingPt(coverLetter),
       color: text,
       fontFallback: fontFallback,
     );
-    final metaLineStyle = _coverLetterArialPdfStyle(
+    final recipientStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
-      fontSize: _coverLetterBodyPt(coverLetter),
-      color: muted,
+      fontSize: _coverLetterHeadingPt(coverLetter, 13),
+      color: text,
+      lineHeight: 1.42,
       fontFallback: fontFallback,
     );
-    final headingStyle = _coverLetterArialPdfStyle(
+    final greetingStyle = _coverLetterArialPdfStyle(
       arimo,
-      weight: ResumeFontWeight.w500,
+      weight: ResumeFontWeight.w700,
       fontSize: _coverLetterHeadingPt(coverLetter),
-      color: _coverLetterBodyTextPdf(),
+      color: text,
       fontFallback: fontFallback,
     );
     final bodyStyle = _coverLetterArialPdfStyle(
       arimo,
       weight: ResumeFontWeight.w400,
       fontSize: _coverLetterBodyPt(coverLetter),
-      color: _coverLetterBodyTextPdf(),
+      color: text,
       lineHeight: 1.55,
+      fontFallback: fontFallback,
+    );
+    final closingStyle = _coverLetterArialPdfStyle(
+      arimo,
+      weight: ResumeFontWeight.w400,
+      fontSize: _coverLetterHeadingPt(coverLetter, 13),
+      color: text,
       fontFallback: fontFallback,
     );
     final signatureStyle = _coverLetterArialPdfStyle(
       arimo,
-      weight: ResumeFontWeight.w700,
-      fontSize: _coverLetterHeadingPt(coverLetter),
-      color: _coverLetterBodyTextPdf(),
+      weight: ResumeFontWeight.w400,
+      fontSize: _coverLetterHeadingPt(coverLetter, 13),
+      color: text,
       fontFallback: fontFallback,
     );
 
     document.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.letter,
-        margin: const pw.EdgeInsets.fromLTRB(40, 45, 40, 45),
-        build: (context) => pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Container(
-              width: 128,
-              color: rail,
-              padding: const pw.EdgeInsets.fromLTRB(16, 22, 16, 22),
-              child: pw.DefaultTextStyle(
-                style: sidebarDetailStyle,
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      parsed.senderInitial,
-                      style: initialsStyle,
-                    ),
-                    pw.SizedBox(height: 12),
-                    pw.Text(
-                      parsed.senderName,
-                      style: senderNameStyle,
-                    ),
-                    pw.SizedBox(height: 12),
-                    for (final detail in senderDetails)
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.only(bottom: 8),
-                        child: pw.Text(detail),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            pw.SizedBox(width: 26),
-            pw.Expanded(
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(
-                    roleTitle,
-                    style: roleTitleStyle,
-                  ),
-                  if (metaLine.isNotEmpty) ...[
-                    pw.SizedBox(height: 6),
-                    pw.Text(metaLine, style: metaLineStyle),
-                  ],
-                  pw.SizedBox(height: 12),
-                  pw.Container(height: 1, color: line),
-                  pw.SizedBox(height: 12),
-                  ..._buildCoverLetterBodyWithStyles(
-                    parsed,
-                    bodyStyle: bodyStyle,
-                    headingStyle: headingStyle,
-                    signatureStyle: signatureStyle,
-                  ),
-                ],
-              ),
-            ),
-          ],
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageFormat.letter,
+          margin: const pw.EdgeInsets.fromLTRB(44, 42, 44, 46),
+          buildBackground: (context) => pw.FullPage(
+            ignoreMargins: true,
+            child: pw.Container(color: background),
+          ),
         ),
+        build: (context) => [
+          pw.Text(parsed.senderName.toUpperCase(), style: nameStyle),
+          if (contactLine.isNotEmpty) ...[
+            pw.SizedBox(height: 14),
+            pw.Text(contactLine, style: contactStyle),
+          ],
+          pw.SizedBox(height: 18),
+          pw.Container(height: 4, color: accent),
+          pw.SizedBox(height: 34),
+          pw.Text(dateLine, style: dateStyle),
+          pw.SizedBox(height: 28),
+          pw.Text(parsed.recipientLines.join('\n'), style: recipientStyle),
+          pw.SizedBox(height: 32),
+          pw.Text(parsed.greeting, style: greetingStyle),
+          pw.SizedBox(height: 18),
+          for (final paragraph in parsed.bodyParagraphs) ...[
+            pw.Text(paragraph, style: bodyStyle),
+            pw.SizedBox(height: 16),
+          ],
+          pw.Text(parsed.closing, style: closingStyle),
+          pw.SizedBox(height: 10),
+          pw.Text(parsed.signature, style: signatureStyle),
+        ],
       ),
     );
   }
@@ -6956,38 +6940,6 @@ class ResumePdfService {
     return parsed.senderDetails
         .where((line) => !_sidebarCoverLetterLineLooksLikeDate(line))
         .toList();
-  }
-
-  String _sidebarCoverLetterMetaLine(
-    CoverLetterData coverLetter,
-    _ParsedCoverLetterContent parsed,
-  ) {
-    final fallbackDate = _pdfCoverLetterDateLabel(
-      coverLetter.updatedAt,
-      language: coverLetter.language,
-    );
-    final parsedDate = parsed.senderDetails.cast<String?>().firstWhere(
-      (line) => line != null && _sidebarCoverLetterLineLooksLikeDate(line),
-      orElse: () => null,
-    );
-    final company = coverLetter.company.trim().isEmpty
-        ? parsed.recipientLines
-              .skip(1)
-              .firstWhere(
-                (line) => !line.trim().startsWith('['),
-                orElse: () => '',
-              )
-        : coverLetter.company.trim();
-    final location = parsed.recipientLines.reversed
-        .firstWhere((line) => !line.trim().startsWith('['), orElse: () => '')
-        .trim();
-
-    final parts = <String>[
-      (parsedDate ?? fallbackDate).trim(),
-      if (company.isNotEmpty) company,
-      if (location.isNotEmpty && location != company) location,
-    ];
-    return parts.join('  |  ');
   }
 
   bool _sidebarCoverLetterLineLooksLikeDate(String line) {
@@ -7040,6 +6992,26 @@ class ResumePdfService {
       fontWeight: normalizedWeight >= ResumeFontWeight.w700
           ? pw.FontWeight.bold
           : pw.FontWeight.normal,
+      fontFallback: fontFallback,
+    );
+  }
+
+  pw.TextStyle _coverLetterGaramondPdfStyle(
+    GaramondPdfFonts garamond, {
+    required int weight,
+    required double fontSize,
+    PdfColor? color,
+    double lineHeight = 1.45,
+    List<pw.Font> fontFallback = const <pw.Font>[],
+  }) {
+    final normalizedWeight = ResumeFontWeight.normalize(weight);
+    return garamondPdfTextStyle(
+      garamond,
+      normalizedWeight,
+      fontSize: fontSize,
+      color: color,
+      lineSpacing: fontSize * (lineHeight - 1),
+    ).copyWith(
       fontFallback: fontFallback,
     );
   }

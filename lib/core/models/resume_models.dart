@@ -171,14 +171,14 @@ extension CoverLetterTemplateX on CoverLetterTemplate {
   String get label => switch (this) {
     CoverLetterTemplate.executiveNote => 'Executive Note',
     CoverLetterTemplate.minimalLetter => 'Minimal Letter',
-    CoverLetterTemplate.sidebarLetter => 'Sidebar Letter',
+    CoverLetterTemplate.sidebarLetter => 'Mint Letter',
     CoverLetterTemplate.classicBusinessLetter => 'Classic Business',
   };
 
   Color get accentColor => switch (this) {
     CoverLetterTemplate.executiveNote => const Color(0xFF1F2937),
     CoverLetterTemplate.minimalLetter => const Color(0xFF9A6B2F),
-    CoverLetterTemplate.sidebarLetter => const Color(0xFFD5923B),
+    CoverLetterTemplate.sidebarLetter => const Color(0xFF4DBB82),
     CoverLetterTemplate.classicBusinessLetter => const Color(0xFF374151),
   };
 }

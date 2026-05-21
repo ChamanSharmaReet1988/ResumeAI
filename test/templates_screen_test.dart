@@ -170,7 +170,7 @@ void main() {
       await tester.tap(sidebarLetterTile);
       await tester.pumpAndSettle();
 
-      expect(find.text('Sidebar Letter'), findsOneWidget);
+      expect(find.text('Mint Letter'), findsOneWidget);
       expect(
         find.byKey(const Key('template-detail-preview-sidebar-letter')),
         findsOneWidget,

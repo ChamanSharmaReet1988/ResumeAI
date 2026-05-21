@@ -309,6 +309,12 @@ extension CoverLetterCorporateStyleX on CoverLetterData {
 
   CorporateColorPreset get corporateColorPreset {
     if (corporateColorPresetIndex == kTemplateDefaultColorPresetIndex) {
+      if (template == CoverLetterTemplate.sidebarLetter) {
+        return CorporateColorPreset(
+          titleColor: const Color(0xFF1B6759),
+          headerColor: template.accentColor,
+        );
+      }
       return CorporateColorPreset(
         titleColor: const Color(0xFF2E3135),
         headerColor: template.accentColor,

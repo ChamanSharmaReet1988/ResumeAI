@@ -567,8 +567,9 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     id: 'sidebar-letter',
     coverLetterTemplate: CoverLetterTemplate.sidebarLetter,
     previewKind: _TemplatePreviewKind.sidebarCoverLetter,
-    headline: 'Sidebar Letter',
-    caption: 'A bolder cover letter with a left rail for contact details.',
+    headline: 'Mint Letter',
+    caption:
+        'Oversized name, soft mint background, and a clean modern letter body.',
     isPremium: true,
   ),
   _TemplateTileData(
@@ -4832,7 +4833,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
           child: DefaultTextStyle(
             style: const TextStyle(
-              fontFamily: 'Arimo',
+              fontFamily: 'Garamond',
               fontSize: 4.35,
               fontWeight: FontWeight.w400,
               height: 1.34,
@@ -4844,7 +4845,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                 const Text(
                   'October 6, 2026',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Garamond',
                     color: muted,
                     fontWeight: FontWeight.w500,
                   ),
@@ -4856,7 +4857,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                   'Computers Forever\n'
                   '1224 Main Street, Allentown, PA 55555',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Garamond',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w500,
                     height: 1.38,
@@ -4866,7 +4867,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Dear Ms. Smith:',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Garamond',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w500,
                   ),
@@ -5177,143 +5178,132 @@ class _SidebarCoverLetterArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const rail = Color(0xFF262A31);
-    const gold = Color(0xFFD5923B);
-    const text = Color(0xFF2E3238);
-    const muted = Color(0xFF717880);
-    const line = Color(0xFFD8DDE3);
+    const bg = Color(0xFFE7F4EC);
+    const accent = Color(0xFF4DBB82);
+    const text = Color(0xFF1B6759);
+    const muted = Color(0xFF2A6F61);
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: bg,
         borderRadius: BorderRadius.zero,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.zero,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 42,
-              color: rail,
-              padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
-              child: const DefaultTextStyle(
-                style: TextStyle(
-                  fontFamily: 'Arimo',
-                  fontSize: 4.1,
-                  fontWeight: FontWeight.w400,
-                  height: 1.42,
-                  color: Color(0xFFE7EDF6),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'AK',
-                      style: TextStyle(
-                        fontFamily: 'Arimo',
-                        color: gold,
-                        fontSize: 8.4,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      'Aisha Khan',
-                      style: TextStyle(
-                        fontFamily: 'Arimo',
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: 6),
-                    Text('aisha.khan@mail.com\n+91 98765 43120\nMumbai, India'),
-                  ],
-                ),
-              ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+          child: DefaultTextStyle(
+            style: const TextStyle(
+              fontFamily: 'Arimo',
+              fontSize: 4.35,
+              fontWeight: FontWeight.w400,
+              height: 1.42,
+              color: text,
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(9, 10, 10, 12),
-                child: DefaultTextStyle(
-                  style: const TextStyle(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'DANIELLE BRASSEUR',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 8.2,
+                    fontWeight: FontWeight.w700,
+                    color: text,
+                    letterSpacing: 0.18,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  '4567 8th Avenue, Carson City, NV 10111  |  (313) 555-0100  |  danielle@example.com  |  www.linkedin.com',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.2,
+                    fontWeight: FontWeight.w700,
+                    color: muted,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.clip,
+                ),
+                const SizedBox(height: 6),
+                _TemplateHairline(color: accent),
+                const SizedBox(height: 8),
+                const Text(
+                  '4 April 20XX',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.65,
+                    fontWeight: FontWeight.w700,
+                    color: text,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Hiring Manager\nDowntown Credit Union\n123 Main Street\nSeattle, WA 87654',
+                  style: TextStyle(
                     fontFamily: 'Arimo',
                     fontSize: 4.6,
                     fontWeight: FontWeight.w400,
-                    height: 1.45,
                     color: text,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'OPERATIONS COORDINATOR',
-                        style: TextStyle(
-                          fontFamily: 'Arimo',
-                          fontSize: 7.2,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'April 1, 2026  |  Horizon Logistics  |  Pune, India',
-                        style: TextStyle(
-                          fontFamily: 'Arimo',
-                          color: muted,
-                          fontSize: 4.1,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(height: 1, color: line),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Dear Hiring Committee,',
-                        style: TextStyle(
-                          fontFamily: 'Arimo',
-                          color: ResumeTypography.atsStructuredBodyTextColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const _MiniCoverLetterParagraph(
-                        text:
-                            'I am applying for the Operations Coordinator opportunity at Horizon Logistics. I enjoy creating structure in fast-moving environments and supporting teams with dependable processes, communication, and follow-through.',
-                      ),
-                      const SizedBox(height: 4),
-                      const _MiniCoverLetterParagraph(
-                        text:
-                            'My recent work included coordinating schedules, tracking execution details, and improving reporting visibility so cross-functional teams could respond to issues more quickly and keep projects on pace.',
-                      ),
-                      const SizedBox(height: 4),
-                      const _MiniCoverLetterParagraph(
-                        text:
-                            'I would be excited to bring that organized, service-minded approach to Horizon Logistics. Thank you for your consideration.',
-                      ),
-                      const Spacer(),
-                      const Text(
-                        'Warm regards,',
-                        style: TextStyle(
-                          fontFamily: 'Arimo',
-                          color: ResumeTypography.atsStructuredBodyTextColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Aisha Khan',
-                        style: TextStyle(
-                          fontFamily: 'Arimo',
-                          color: ResumeTypography.atsStructuredBodyTextColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+                    height: 1.38,
                   ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Dear Guy Oz,',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.75,
+                    fontWeight: FontWeight.w700,
+                    color: text,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'I am writing to express my interest in the accountant position at Downtown Credit Union. My accounting degree and public accounting background align well with your team’s needs.',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.35,
+                    fontWeight: FontWeight.w400,
+                    color: text,
+                    height: 1.42,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                const Text(
+                  'At Trey Research and Bandter Real Estate, I supported tax prep, bookkeeping, payroll, and invoice workflows, and I would welcome the chance to contribute similar support to your organization.',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.35,
+                    fontWeight: FontWeight.w400,
+                    color: text,
+                    height: 1.42,
+                  ),
+                ),
+                const Spacer(),
+                const Text(
+                  'Sincerely,',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.5,
+                    fontWeight: FontWeight.w400,
+                    color: text,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Danielle Brasseur',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    fontSize: 4.65,
+                    fontWeight: FontWeight.w400,
+                    color: text,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -5323,17 +5313,14 @@ class _SidebarCoverLetterArt extends StatelessWidget {
 class _MiniCoverLetterParagraph extends StatelessWidget {
   const _MiniCoverLetterParagraph({
     required this.text,
-    this.textAlign = TextAlign.left,
   });
 
   final String text;
-  final TextAlign textAlign;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
-      textAlign: textAlign,
       maxLines: 5,
       overflow: TextOverflow.clip,
       style: const TextStyle(

@@ -6,6 +6,7 @@ import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
+import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/cover_letters/cover_letter_editor_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
@@ -65,6 +66,7 @@ void main() {
     tester,
   ) async {
     final repository = _FakeCoverLetterRepository();
+    final appPreferences = AppPreferences.inMemory(isPremium: true);
     final viewModel = CoverLetterEditorViewModel(
       repository: repository,
       aiService: LocalAiResumeService(),
@@ -95,6 +97,12 @@ void main() {
       MultiProvider(
         providers: [
           Provider<ResumePdfService>.value(value: ResumePdfService()),
+          ChangeNotifierProvider<PremiumPurchaseService>(
+            create: (_) => PremiumPurchaseService.inMemory(
+              appPreferences: appPreferences,
+              isPremium: true,
+            ),
+          ),
           ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
             value: viewModel,
           ),
