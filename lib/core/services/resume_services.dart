@@ -6588,7 +6588,7 @@ class ResumePdfService {
 
     document.addPage(
       pw.MultiPage(
-        margin: const pw.EdgeInsets.fromLTRB(28, 22, 28, 28),
+        margin: const pw.EdgeInsets.fromLTRB(40, 45, 40, 45),
         build: (context) => [
           pw.Container(
             width: double.infinity,
@@ -6680,7 +6680,7 @@ class ResumePdfService {
 
     document.addPage(
       pw.MultiPage(
-        margin: const pw.EdgeInsets.fromLTRB(40, 40, 40, 44),
+        margin: const pw.EdgeInsets.fromLTRB(40, 45, 40, 45),
         build: (context) => [
           if (dateLine != null) pw.Text(dateLine, style: metaStyle),
           if (dateLine != null) pw.SizedBox(height: 18),
@@ -6772,7 +6772,7 @@ class ResumePdfService {
 
     document.addPage(
       pw.MultiPage(
-        margin: const pw.EdgeInsets.fromLTRB(32, 26, 32, 28),
+        margin: const pw.EdgeInsets.fromLTRB(40, 45, 40, 45),
         build: (context) => [
           pw.Center(
             child: pw.Text(
@@ -6887,7 +6887,7 @@ class ResumePdfService {
     document.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.letter,
-        margin: const pw.EdgeInsets.fromLTRB(24, 24, 24, 28),
+        margin: const pw.EdgeInsets.fromLTRB(40, 45, 40, 45),
         build: (context) => pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
