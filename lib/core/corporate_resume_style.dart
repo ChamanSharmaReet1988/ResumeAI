@@ -289,6 +289,22 @@ extension CoverLetterCorporateStyleX on CoverLetterData {
   double get coverLetterFontScale =>
       effectiveBodyFontPt / kResumeBodyFontPtDefault;
 
+  /// Offset from default body size (12 → 0, 11 → −1, 13 → +1).
+  int get coverLetterBodyFontDelta =>
+      effectiveBodyFontPt - kResumeBodyFontPtDefault;
+
+  /// Body paragraphs and header meta at design 12 pt → [effectiveBodyFontPt].
+  double coverLetterBodyScaledPt() => effectiveBodyFontPt.toDouble();
+
+  /// Greeting, closing, recipient, signature (design 14 → body + 2).
+  double coverLetterHeadingScaledPt([double designPt = 14]) =>
+      designPt + coverLetterBodyFontDelta;
+
+  /// Header name (design 24 → body + 12).
+  double coverLetterNameScaledPt([double designPt = 24]) =>
+      designPt + coverLetterBodyFontDelta;
+
+  /// Sidebar and other elements that scale proportionally with body.
   double coverLetterScaledPt(double designPt) => designPt * coverLetterFontScale;
 
   CorporateColorPreset get corporateColorPreset {

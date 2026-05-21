@@ -560,7 +560,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     coverLetterTemplate: CoverLetterTemplate.minimalLetter,
     previewKind: _TemplatePreviewKind.minimalCoverLetter,
     headline: 'Minimal Letter',
-    caption: 'Centered and airy layout with restrained modern spacing.',
+    caption: 'Centered header with airy spacing and left-aligned body.',
     isPremium: true,
   ),
   _TemplateTileData(
@@ -4812,7 +4812,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                   '1224 Main Street, Allentown, PA 55555',
                   style: TextStyle(
                     fontFamily: 'Arimo',
-                    color: muted,
+                    color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w500,
                     height: 1.38,
                   ),
@@ -4822,6 +4822,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                   'Dear Ms. Smith:',
                   style: TextStyle(
                     fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -4845,6 +4846,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                   'Sincerely,',
                   style: TextStyle(
                     fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -4853,6 +4855,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                   'Martin Stein',
                   style: TextStyle(
                     fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -4943,7 +4946,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                   'Hiring Manager\nNorthpeak Studio\nNew York, NY',
                   style: TextStyle(
                     fontFamily: 'Arimo',
-                    color: muted,
+                    color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
                     height: 1.38,
@@ -4956,6 +4959,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                   'Dear Hiring Manager,',
                   style: TextStyle(
                     fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
                   ),
@@ -4977,6 +4981,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                   'Sincerely,',
                   style: TextStyle(
                     fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
                   ),
@@ -4986,6 +4991,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                   'Maya Fernandes',
                   style: TextStyle(
                     fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w700,
                   ),
@@ -5007,7 +5013,6 @@ class _MinimalCoverLetterArt extends StatelessWidget {
     const text = Color(0xFF2E3138);
     const muted = Color(0xFF7A818A);
     const accent = Color(0xFFB86D3A);
-    const line = Color(0xFFD9DDE3);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -5051,25 +5056,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 7),
-                Row(
-                  children: [
-                    Expanded(child: Container(height: 1, color: line)),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: Text(
-                        'COVER LETTER',
-                        style: TextStyle(
-                          fontFamily: 'Arimo',
-                          color: accent,
-                          fontSize: 4.9,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                    Expanded(child: Container(height: 1, color: line)),
-                  ],
-                ),
+                Container(height: 1, color: accent),
                 const SizedBox(height: 8),
                 const Align(
                   alignment: Alignment.centerLeft,
@@ -5077,28 +5064,35 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                     'Dear Product Team,',
                     style: TextStyle(
                       fontFamily: 'Arimo',
+                      color: ResumeTypography.atsStructuredBodyTextColor,
                       fontSize: 4.9,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
                 const SizedBox(height: 5),
-                const _MiniCoverLetterParagraph(
-                  text:
-                      'I am writing to express my interest in the Product Operations role at Atlas Cloud. My background combines systems thinking, stakeholder communication, and a steady focus on improving how teams deliver work.',
-                  textAlign: TextAlign.center,
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: _MiniCoverLetterParagraph(
+                    text:
+                        'I am writing to express my interest in the Product Operations role at Atlas Cloud. My background combines systems thinking, stakeholder communication, and a steady focus on improving how teams deliver work.',
+                  ),
                 ),
                 const SizedBox(height: 5),
-                const _MiniCoverLetterParagraph(
-                  text:
-                      'Across recent projects, I streamlined handoffs, documented repeatable workflows, and created lightweight reporting that helped leaders spot blockers faster and move with more confidence.',
-                  textAlign: TextAlign.center,
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: _MiniCoverLetterParagraph(
+                    text:
+                        'Across recent projects, I streamlined handoffs, documented repeatable workflows, and created lightweight reporting that helped leaders spot blockers faster and move with more confidence.',
+                  ),
                 ),
                 const SizedBox(height: 5),
-                const _MiniCoverLetterParagraph(
-                  text:
-                      'I would love to contribute that same blend of structure and adaptability to Atlas Cloud. Thank you for considering my application.',
-                  textAlign: TextAlign.center,
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: _MiniCoverLetterParagraph(
+                    text:
+                        'I would love to contribute that same blend of structure and adaptability to Atlas Cloud. Thank you for considering my application.',
+                  ),
                 ),
                 const Spacer(),
                 const Align(
@@ -5107,6 +5101,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                     'Best regards,',
                     style: TextStyle(
                       fontFamily: 'Arimo',
+                      color: ResumeTypography.atsStructuredBodyTextColor,
                       fontSize: 4.9,
                       fontWeight: FontWeight.w500,
                     ),
@@ -5119,6 +5114,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                     'Noah Park',
                     style: TextStyle(
                       fontFamily: 'Arimo',
+                      color: ResumeTypography.atsStructuredBodyTextColor,
                       fontSize: 4.9,
                       fontWeight: FontWeight.w700,
                     ),
@@ -5232,6 +5228,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                         'Dear Hiring Committee,',
                         style: TextStyle(
                           fontFamily: 'Arimo',
+                          color: ResumeTypography.atsStructuredBodyTextColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -5255,6 +5252,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                         'Warm regards,',
                         style: TextStyle(
                           fontFamily: 'Arimo',
+                          color: ResumeTypography.atsStructuredBodyTextColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -5263,6 +5261,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                         'Aisha Khan',
                         style: TextStyle(
                           fontFamily: 'Arimo',
+                          color: ResumeTypography.atsStructuredBodyTextColor,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -5294,6 +5293,9 @@ class _MiniCoverLetterParagraph extends StatelessWidget {
       textAlign: textAlign,
       maxLines: 5,
       overflow: TextOverflow.clip,
+      style: const TextStyle(
+        color: ResumeTypography.atsStructuredBodyTextColor,
+      ),
     );
   }
 }

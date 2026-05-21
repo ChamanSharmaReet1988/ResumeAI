@@ -650,4 +650,70 @@ void main() {
     expect(restored.corporateColorPresetIndex, 3);
     expect(restored.effectiveBodyFontPt, 11);
   });
+
+  test('cover letter font pt tracks body slider with +1 delta', () {
+    CoverLetterData letter(int bodyPt) =>
+        CoverLetterData.empty().copyWith(bodyFontPt: bodyPt);
+
+    expect(letter(12).coverLetterBodyScaledPt(), 12);
+    expect(letter(13).coverLetterBodyScaledPt(), 13);
+    expect(letter(11).coverLetterBodyScaledPt(), 11);
+
+    expect(letter(12).coverLetterHeadingScaledPt(), 14);
+    expect(letter(13).coverLetterHeadingScaledPt(), 15);
+    expect(letter(11).coverLetterHeadingScaledPt(), 13);
+
+    expect(letter(12).coverLetterNameScaledPt(), 24);
+    expect(letter(13).coverLetterNameScaledPt(), 25);
+    expect(letter(11).coverLetterNameScaledPt(), 23);
+  });
+
+  test(
+    'cover letter PDF greeting heading size tracks body slider per template',
+    () async {
+      final service = ResumePdfService();
+      const content =
+          'Alex Morgan\nalex@example.com\n\n'
+          'Hiring Manager\nAcme Labs\n\n'
+          'Dear Hiring Manager,\n\n'
+          'I am excited to apply for the role.\n\n'
+          'Sincerely,\nAlex Morgan';
+
+      const templates = <CoverLetterTemplate>[
+        CoverLetterTemplate.executiveNote,
+        CoverLetterTemplate.minimalLetter,
+        CoverLetterTemplate.sidebarLetter,
+        CoverLetterTemplate.classicBusinessLetter,
+      ];
+
+      for (final template in templates) {
+        final headingSizes = <int, double>{};
+        for (final bodyPt in <int>[11, 12, 13]) {
+          final letter = CoverLetterData.empty().copyWith(
+            template: template,
+            content: content,
+            bodyFontPt: bodyPt,
+          );
+          final bytes = await service.buildCoverLetterPdf(letter);
+          expect(bytes, isNotEmpty, reason: '${template.name} body $bodyPt');
+
+          final typography =
+              ResumePdfService.coverLetterTypographyFor(letter);
+          expect(typography.bodyPt, bodyPt.toDouble());
+          expect(typography.headingPt, bodyPt + 2.0);
+          expect(typography.namePt, bodyPt + 12.0);
+          headingSizes[bodyPt] = typography.headingPt;
+        }
+        expect(
+          headingSizes[11],
+          isNot(equals(headingSizes[13])),
+          reason: '${template.name} heading should differ at 11 vs 13 pt',
+        );
+        expect(headingSizes[11]! < headingSizes[13]!, isTrue);
+        expect(headingSizes[11], 13.0);
+        expect(headingSizes[12], 14.0);
+        expect(headingSizes[13], 15.0);
+      }
+    },
+  );
 }
