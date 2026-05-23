@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'google_drive_backup_screen.dart';
 import 'icloud_backup_screen.dart';
+import 'legal_web_view_screen.dart';
 import '../premium/go_premium_screen.dart';
 import '../premium/premium_gate.dart';
 import '../shell/app_shell_scope.dart';
@@ -256,6 +257,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const GoogleDriveBackupScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openLegalPage(
+    BuildContext context, {
+    required String title,
+    required Uri uri,
+  }) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LegalWebViewScreen(
+          title: title,
+          url: uri.toString(),
+        ),
       ),
     );
   }
@@ -509,7 +525,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Card(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _openExternalUrl(context, _privacyPolicyUri),
+                  onTap: () => _openLegalPage(
+                    context,
+                    title: 'Privacy Policy',
+                    uri: _privacyPolicyUri,
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -540,7 +560,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Card(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _openExternalUrl(context, _termsOfUseUri),
+                  onTap: () => _openLegalPage(
+                    context,
+                    title: 'Terms of Use',
+                    uri: _termsOfUseUri,
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
