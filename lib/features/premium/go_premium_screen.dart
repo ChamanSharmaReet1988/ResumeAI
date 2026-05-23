@@ -187,8 +187,10 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       return;
     }
 
-    final shouldShowWelcome =
-        _showWelcomeOnSuccess || premium.consumePremiumWelcomePending();
+    // Always consume pending first: `||` would skip consume when
+    // [_showWelcomeOnSuccess] is true, leaving a stale flag for [ensurePremiumAccess].
+    final hadPendingWelcome = premium.consumePremiumWelcomePending();
+    final shouldShowWelcome = _showWelcomeOnSuccess || hadPendingWelcome;
     _showWelcomeOnSuccess = false;
     if (shouldShowWelcome) {
       final planLabel = premiumWelcomePlanLabel(

@@ -1528,31 +1528,50 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           const SizedBox(height: 18),
           personalFields,
           const SizedBox(height: 4),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              TextButton.icon(
-                key: const Key('generate-summary-ai-button'),
-                onPressed: viewModel.isBusy ? null : _generateSummary,
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.primary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+          Builder(
+            builder: (context) {
+              final theme = Theme.of(context);
+              final primary = theme.colorScheme.primary;
+              final fill = primary.withValues(alpha: 0.16);
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  TextButton.icon(
+                    key: const Key('generate-summary-ai-button'),
+                    onPressed: viewModel.isBusy ? null : _generateSummary,
+                    style: TextButton.styleFrom(
+                      foregroundColor: primary,
+                      backgroundColor: fill,
+                      disabledForegroundColor: primary.withValues(alpha: 0.45),
+                      disabledBackgroundColor: fill.withValues(alpha: 0.72),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 13,
+                        vertical: 9,
+                      ),
+                      minimumSize: const Size(0, 46),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      textStyle: theme.textTheme.labelLarge?.copyWith(
+                        fontFamily: 'Outfit',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    icon: Icon(
+                      Icons.psychology_alt_outlined,
+                      size: 24,
+                      color: primary,
+                    ),
+                    label: const Text('Suggest summary'),
                   ),
-                  textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-                icon: Icon(
-                  Icons.psychology_alt_outlined,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                label: const Text('Suggest summary'),
-              ),
-            ],
+                ],
+              );
+            },
           ),
           const SizedBox(height: 36),
           _buildProfilePhotoPicker(viewModel),
