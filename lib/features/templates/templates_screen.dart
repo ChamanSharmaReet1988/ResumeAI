@@ -234,7 +234,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           ],
           if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
             Text(
-              'Professional',
+              'Professional Resumes',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -274,7 +274,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
             const SizedBox(height: 28),
             Text(
-              'ATS',
+              'ATS Resumes',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
