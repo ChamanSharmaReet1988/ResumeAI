@@ -55,7 +55,10 @@ class _AppShellState extends State<AppShell> {
     };
   }
 
-  Future<void> _openBuilder({ResumeData? seed}) async {
+  Future<void> _openBuilder({
+    ResumeData? seed,
+    bool backPopsToHome = false,
+  }) async {
     final repository = context.read<ResumeRepository>();
     final aiService = context.read<LocalAiResumeService>();
     final pdfService = context.read<ResumePdfService>();
@@ -78,6 +81,10 @@ class _AppShellState extends State<AppShell> {
 
     if (!mounted) {
       return;
+    }
+
+    if (backPopsToHome) {
+      _goToHomeResumeTab();
     }
 
     await library.loadResumes();
@@ -124,7 +131,7 @@ class _AppShellState extends State<AppShell> {
         'source': 'templates_tab',
       },
     );
-    await _openBuilder(seed: draft);
+    await _openBuilder(seed: draft, backPopsToHome: true);
   }
 
   Future<String?> _promptForResumeTitle({String initialTitle = ''}) async {

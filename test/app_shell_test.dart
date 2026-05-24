@@ -64,6 +64,19 @@ class _FakeAppShellRepository implements ResumeRepository {
   }
 }
 
+void _ignoreRenderOverflowErrors() {
+  final originalOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    if (details.exceptionAsString().contains('RenderFlex overflowed')) {
+      return;
+    }
+    originalOnError?.call(details);
+  };
+  addTearDown(() {
+    FlutterError.onError = originalOnError;
+  });
+}
+
 void main() {
   testWidgets(
     'resume add button prompts for title before opening the builder',
@@ -183,6 +196,166 @@ void main() {
 
       expect(find.text('Retail Sales Application'), findsOneWidget);
       expect(find.text('Cover letter title'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'template use flow returns to home when builder is dismissed',
+    (tester) async {
+      tester.view.physicalSize = const Size(1440, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      _ignoreRenderOverflowErrors();
+
+      final repository = _FakeAppShellRepository();
+      final resumeLibrary = ResumeLibraryViewModel(repository: repository);
+      final coverLetterLibrary = CoverLetterLibraryViewModel(
+        repository: repository,
+      );
+
+      await resumeLibrary.loadResumes();
+      await coverLetterLibrary.loadCoverLetters();
+
+      final appPreferences = AppPreferences.inMemory(isPremium: true);
+      final premiumPurchaseService = PremiumPurchaseService.inMemory(
+        appPreferences: appPreferences,
+        isPremium: true,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ResumeImportService>.value(value: ResumeImportService()),
+            Provider<ResumeRepository>.value(value: repository),
+            Provider<AppPreferences>.value(value: appPreferences),
+            ChangeNotifierProvider<PremiumPurchaseService>.value(
+              value: premiumPurchaseService,
+            ),
+            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
+            Provider<ResumePdfService>.value(value: ResumePdfService()),
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+              value: resumeLibrary,
+            ),
+            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
+              value: coverLetterLibrary,
+            ),
+            ChangeNotifierProvider<SettingsViewModel>(
+              create: (_) => SettingsViewModel(),
+            ),
+          ],
+          child: const MaterialApp(home: AppShell()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Templates'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FloatingActionButton), findsNothing);
+
+      final templateTile = find.byKey(
+        const Key('template-tile-profile-sidebar'),
+      );
+      await tester.ensureVisible(templateTile);
+      await tester.tap(templateTile);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
+
+      await tester.tap(find.byKey(const Key('use-template-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('resume-step-pages')), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('resume-step-pages')), findsNothing);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.text('Use template'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'template use flow returns to home when preview is dismissed',
+    (tester) async {
+      tester.view.physicalSize = const Size(1440, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      _ignoreRenderOverflowErrors();
+
+      final repository = _FakeAppShellRepository();
+      final resumeLibrary = ResumeLibraryViewModel(repository: repository);
+      final coverLetterLibrary = CoverLetterLibraryViewModel(
+        repository: repository,
+      );
+
+      await resumeLibrary.loadResumes();
+      await coverLetterLibrary.loadCoverLetters();
+
+      final appPreferences = AppPreferences.inMemory(isPremium: true);
+      final premiumPurchaseService = PremiumPurchaseService.inMemory(
+        appPreferences: appPreferences,
+        isPremium: true,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ResumeImportService>.value(value: ResumeImportService()),
+            Provider<ResumeRepository>.value(value: repository),
+            Provider<AppPreferences>.value(value: appPreferences),
+            ChangeNotifierProvider<PremiumPurchaseService>.value(
+              value: premiumPurchaseService,
+            ),
+            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
+            Provider<ResumePdfService>.value(value: ResumePdfService()),
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+              value: resumeLibrary,
+            ),
+            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
+              value: coverLetterLibrary,
+            ),
+            ChangeNotifierProvider<SettingsViewModel>(
+              create: (_) => SettingsViewModel(),
+            ),
+          ],
+          child: const MaterialApp(home: AppShell()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Templates'));
+      await tester.pumpAndSettle();
+
+      final templateTile = find.byKey(
+        const Key('template-tile-profile-sidebar'),
+      );
+      await tester.ensureVisible(templateTile);
+      await tester.tap(templateTile);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
+
+      await tester.tap(find.byKey(const Key('use-template-button')));
+      await tester.pumpAndSettle();
+
+      for (var step = 0; step < 4; step++) {
+        await tester.tap(find.text('Continue'));
+        await tester.pumpAndSettle();
+      }
+
+      await tester.tap(find.text('Preview'));
+      await tester.pump();
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      expect(find.byKey(const Key('resume-pdf-preview')), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('resume-pdf-preview')), findsNothing);
+      expect(find.byKey(const Key('resume-step-pages')), findsNothing);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.text('Use template'), findsNothing);
     },
   );
 }
