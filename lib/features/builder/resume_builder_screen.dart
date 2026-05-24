@@ -914,6 +914,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final typeOptionTitleStyle =
+                Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.normal,
+                    );
             return AlertDialog(
               backgroundColor: Theme.of(context).cardColor,
               surfaceTintColor: Colors.transparent,
@@ -964,7 +968,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           contentPadding: EdgeInsets.zero,
                           dense: true,
                           visualDensity: VisualDensity.compact,
-                          title: const Text('Normal'),
+                          title: Text(
+                            'Normal',
+                            style: typeOptionTitleStyle,
+                          ),
                           subtitle: const Text(
                             'Summary or bullet points',
                           ),
@@ -974,7 +981,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           contentPadding: EdgeInsets.zero,
                           dense: true,
                           visualDensity: VisualDensity.compact,
-                          title: const Text('Advance'),
+                          title: Text(
+                            'Advance',
+                            style: typeOptionTitleStyle,
+                          ),
                           subtitle: const Text(
                             'Project-style entries with title and bullets',
                           ),
