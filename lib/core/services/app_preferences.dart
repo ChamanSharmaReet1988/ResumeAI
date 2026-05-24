@@ -11,6 +11,8 @@ class AppPreferences {
     this._setGoogleDriveAutoSyncEnabled,
     this._getIsPremium,
     this._setIsPremium,
+    this._getPremiumEntitlementMissStreak,
+    this._setPremiumEntitlementMissStreak,
     this._getDebugPremiumOverrideEnabled,
     this._setDebugPremiumOverrideEnabled,
   );
@@ -19,6 +21,8 @@ class AppPreferences {
   static const _iCloudAutoSyncEnabledKey = 'icloud_auto_sync_enabled';
   static const _googleDriveAutoSyncEnabledKey = 'google_drive_auto_sync_enabled';
   static const _isPremiumKey = 'is_premium';
+  static const _premiumEntitlementMissStreakKey =
+      'premium_entitlement_miss_streak';
   static const _debugPremiumOverrideEnabledKey =
       'debug_premium_override_enabled';
 
@@ -30,6 +34,8 @@ class AppPreferences {
   final Future<void> Function(bool) _setGoogleDriveAutoSyncEnabled;
   final bool Function() _getIsPremium;
   final Future<void> Function(bool) _setIsPremium;
+  final int Function() _getPremiumEntitlementMissStreak;
+  final Future<void> Function(int) _setPremiumEntitlementMissStreak;
   final bool Function() _getDebugPremiumOverrideEnabled;
   final Future<void> Function(bool) _setDebugPremiumOverrideEnabled;
 
@@ -43,6 +49,9 @@ class AppPreferences {
     }
     if (!box.containsKey(_isPremiumKey)) {
       await box.put(_isPremiumKey, false);
+    }
+    if (!box.containsKey(_premiumEntitlementMissStreakKey)) {
+      await box.put(_premiumEntitlementMissStreakKey, 0);
     }
     if (!box.containsKey(_debugPremiumOverrideEnabledKey)) {
       await box.put(_debugPremiumOverrideEnabledKey, false);
@@ -66,6 +75,11 @@ class AppPreferences {
       },
       (value) async => box.put(_isPremiumKey, value),
       () {
+        final v = box.get(_premiumEntitlementMissStreakKey);
+        return v is int ? v : 0;
+      },
+      (value) async => box.put(_premiumEntitlementMissStreakKey, value),
+      () {
         final v = box.get(_debugPremiumOverrideEnabledKey);
         return v is bool ? v : false;
       },
@@ -79,12 +93,14 @@ class AppPreferences {
     bool iCloudAutoSyncEnabled = false,
     bool googleDriveAutoSyncEnabled = false,
     bool isPremium = false,
+    int premiumEntitlementMissStreak = 0,
     bool debugPremiumOverrideEnabled = false,
   }) {
     var dismissed = resumeOrderNudgeDismissed;
     var iCloudAuto = iCloudAutoSyncEnabled;
     var driveAuto = googleDriveAutoSyncEnabled;
     var premium = isPremium;
+    var premiumMissStreak = premiumEntitlementMissStreak;
     var debugPremiumOverride = debugPremiumOverrideEnabled;
     return AppPreferences._(
       () => dismissed,
@@ -103,6 +119,10 @@ class AppPreferences {
       (value) async {
         premium = value;
       },
+      () => premiumMissStreak,
+      (value) async {
+        premiumMissStreak = value;
+      },
       () => debugPremiumOverride,
       (value) async {
         debugPremiumOverride = value;
@@ -114,6 +134,7 @@ class AppPreferences {
   bool get iCloudAutoSyncEnabled => _getICloudAutoSyncEnabled();
   bool get googleDriveAutoSyncEnabled => _getGoogleDriveAutoSyncEnabled();
   bool get isPremium => _getIsPremium();
+  int get premiumEntitlementMissStreak => _getPremiumEntitlementMissStreak();
   bool get debugPremiumOverrideEnabled => _getDebugPremiumOverrideEnabled();
 
   Future<void> setResumeOrderNudgeDismissed(bool value) => _setDismissed(value);
@@ -125,6 +146,9 @@ class AppPreferences {
       _setGoogleDriveAutoSyncEnabled(value);
 
   Future<void> setIsPremium(bool value) => _setIsPremium(value);
+
+  Future<void> setPremiumEntitlementMissStreak(int value) =>
+      _setPremiumEntitlementMissStreak(value);
 
   Future<void> setDebugPremiumOverrideEnabled(bool value) =>
       _setDebugPremiumOverrideEnabled(value);

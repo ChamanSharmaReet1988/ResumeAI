@@ -36,4 +36,39 @@ void main() {
     expect(prefs.isPremium, isTrue);
     expect(service.hasPremiumWelcomePending, isFalse);
   });
+
+  test('first silent entitlement miss keeps existing premium access', () async {
+    final prefs = AppPreferences.inMemory(isPremium: true);
+    final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
+
+    await service.applyEntitlementForTest(
+      false,
+      reason: 'app_resume',
+      conservativeRevoke: true,
+    );
+
+    expect(prefs.isPremium, isTrue);
+    expect(service.isPremium, isTrue);
+    expect(prefs.premiumEntitlementMissStreak, 1);
+  });
+
+  test('second consecutive silent entitlement miss revokes premium access', () async {
+    final prefs = AppPreferences.inMemory(isPremium: true);
+    final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
+
+    await service.applyEntitlementForTest(
+      false,
+      reason: 'app_resume',
+      conservativeRevoke: true,
+    );
+    await service.applyEntitlementForTest(
+      false,
+      reason: 'app_resume',
+      conservativeRevoke: true,
+    );
+
+    expect(prefs.isPremium, isFalse);
+    expect(service.isPremium, isFalse);
+    expect(prefs.premiumEntitlementMissStreak, 0);
+  });
 }

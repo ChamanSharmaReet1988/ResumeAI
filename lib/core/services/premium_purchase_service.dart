@@ -75,6 +75,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   static const Duration _storeEntitlementSettleDelay = Duration(
     milliseconds: 3500,
   );
+  static const int _silentEntitlementMissesBeforeRevocation = 2;
 
   bool get storeAvailable => _storeAvailable;
   bool get isLoadingProducts => _isLoadingProducts;
@@ -121,8 +122,13 @@ class PremiumPurchaseService extends ChangeNotifier {
   Future<void> applyEntitlementForTest(
     bool entitled, {
     String reason = 'test',
+    bool conservativeRevoke = false,
   }) =>
-      _applyStoreEntitlement(entitled, reason: reason);
+      _applyStoreEntitlement(
+        entitled,
+        reason: reason,
+        conservativeRevoke: conservativeRevoke,
+      );
 
   ProductDetails? productFor(String productId) {
     for (final product in _products) {
@@ -246,7 +252,11 @@ class PremiumPurchaseService extends ChangeNotifier {
     try {
       await _refreshActiveSubscriptionFromStore(reason: reason);
       final entitled = _activeSubscriptionProductId != null;
-      await _applyStoreEntitlement(entitled, reason: reason);
+      await _applyStoreEntitlement(
+        entitled,
+        reason: reason,
+        conservativeRevoke: true,
+      );
       _logLocalPremiumState('after local verify');
     } catch (error, stackTrace) {
       PremiumDebugLog.log('local verify failed ($reason): $error');
@@ -710,6 +720,10 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   Future<void> _grantPremium() async {
+    if (_appPreferences.premiumEntitlementMissStreak != 0) {
+      PremiumDebugLog.log('grantPremium: clearing entitlement miss streak');
+      await _appPreferences.setPremiumEntitlementMissStreak(0);
+    }
     if (_appPreferences.isPremium) {
       PremiumDebugLog.log('grantPremium: already premium in local prefs');
       return;
@@ -721,6 +735,10 @@ class PremiumPurchaseService extends ChangeNotifier {
 
   Future<void> _revokePremium() async {
     _activeSubscriptionProductId = null;
+    if (_appPreferences.premiumEntitlementMissStreak != 0) {
+      PremiumDebugLog.log('revokePremium: clearing entitlement miss streak');
+      await _appPreferences.setPremiumEntitlementMissStreak(0);
+    }
     if (!_appPreferences.isPremium) {
       PremiumDebugLog.log('revokePremium: already not premium in local prefs');
       return;
@@ -736,6 +754,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   Future<void> _applyStoreEntitlement(
     bool entitled, {
     String reason = 'apply',
+    bool conservativeRevoke = false,
   }) async {
     if (kDebugMode && _developerProManuallyDisabled) {
       PremiumDebugLog.log(
@@ -772,6 +791,24 @@ class PremiumPurchaseService extends ChangeNotifier {
         PremiumDebugLog.log('Premium welcome dialog queued ($reason)');
       }
     } else {
+      if (conservativeRevoke && wasPremium) {
+        final nextMissCount = _appPreferences.premiumEntitlementMissStreak + 1;
+        await _appPreferences.setPremiumEntitlementMissStreak(nextMissCount);
+        if (nextMissCount < _silentEntitlementMissesBeforeRevocation) {
+          PremiumDebugLog.log(
+            'applyStoreEntitlement($reason): empty silent entitlement read '
+            'miss $nextMissCount/$_silentEntitlementMissesBeforeRevocation → '
+            'keeping current premium',
+          );
+          notifyListeners();
+          return;
+        }
+        PremiumDebugLog.log(
+          'applyStoreEntitlement($reason): empty silent entitlement read '
+          'miss $nextMissCount/$_silentEntitlementMissesBeforeRevocation → '
+          'revoking premium',
+        );
+      }
       await _revokePremium();
     }
     notifyListeners();
@@ -785,6 +822,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     PremiumDebugLog.log(
       'Local state ($moment): '
       'hiveIsPremium=${_appPreferences.isPremium} '
+      'missStreak=${_appPreferences.premiumEntitlementMissStreak} '
       'debugOverride=${_appPreferences.debugPremiumOverrideEnabled} '
       'activeProductId=${_activeSubscriptionProductId ?? "none"} '
       'isPremiumGetter=$isPremium',
