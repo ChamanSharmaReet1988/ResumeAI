@@ -895,7 +895,7 @@ class ProjectItem {
   }
 }
 
-enum CustomSectionLayoutMode { summary, bullets }
+enum CustomSectionLayoutMode { summary, bullets, projects }
 
 class CustomSectionItem {
   const CustomSectionItem({
@@ -903,28 +903,43 @@ class CustomSectionItem {
     required this.content,
     this.layoutMode = CustomSectionLayoutMode.summary,
     this.bullets = const [],
+    this.projectEntries = const [],
   });
 
   const CustomSectionItem.empty()
     : title = '',
       content = '',
       layoutMode = CustomSectionLayoutMode.summary,
-      bullets = const [];
+      bullets = const [],
+      projectEntries = const [];
 
   factory CustomSectionItem.fromJson(Map<String, dynamic> json) {
     final bulletsJson = json['bullets'] as List<dynamic>?;
     final parsedBullets =
         bulletsJson?.map((e) => e.toString()).toList() ?? const <String>[];
+    final projectsJson = json['projectEntries'] as List<dynamic>?;
+    final parsedProjects =
+        projectsJson
+            ?.map(
+              (item) => ProjectItem.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
+            .toList() ??
+        const <ProjectItem>[];
     final modeStr = json['layoutMode'] as String?;
-    final layoutMode = modeStr == 'bullets'
-        ? CustomSectionLayoutMode.bullets
-        : CustomSectionLayoutMode.summary;
+    final layoutMode = switch (modeStr) {
+      'bullets' => CustomSectionLayoutMode.bullets,
+      'projects' => CustomSectionLayoutMode.projects,
+      _ => CustomSectionLayoutMode.summary,
+    };
 
     return CustomSectionItem(
       title: json['title'] as String? ?? '',
       content: json['content'] as String? ?? '',
       layoutMode: layoutMode,
       bullets: parsedBullets,
+      projectEntries: parsedProjects,
     );
   }
 
@@ -932,15 +947,23 @@ class CustomSectionItem {
   final String content;
   final CustomSectionLayoutMode layoutMode;
   final List<String> bullets;
+  final List<ProjectItem> projectEntries;
+
+  List<ProjectItem> get visibleProjectEntries =>
+      projectEntries.where((item) => !item.isBlank).toList();
 
   bool get isBlank {
     if (title.trim().isNotEmpty) {
       return false;
     }
-    if (layoutMode == CustomSectionLayoutMode.summary) {
-      return content.trim().isEmpty;
-    }
-    return bullets.isEmpty || bullets.every((b) => b.trim().isEmpty);
+    return switch (layoutMode) {
+      CustomSectionLayoutMode.summary => content.trim().isEmpty,
+      CustomSectionLayoutMode.bullets =>
+        bullets.isEmpty || bullets.every((b) => b.trim().isEmpty),
+      CustomSectionLayoutMode.projects =>
+        projectEntries.isEmpty ||
+            projectEntries.every((entry) => entry.isBlank),
+    };
   }
 
   CustomSectionItem copyWith({
@@ -948,12 +971,14 @@ class CustomSectionItem {
     String? content,
     CustomSectionLayoutMode? layoutMode,
     List<String>? bullets,
+    List<ProjectItem>? projectEntries,
   }) {
     return CustomSectionItem(
       title: title ?? this.title,
       content: content ?? this.content,
       layoutMode: layoutMode ?? this.layoutMode,
       bullets: bullets ?? this.bullets,
+      projectEntries: projectEntries ?? this.projectEntries,
     );
   }
 
@@ -963,6 +988,7 @@ class CustomSectionItem {
       'content': content,
       'layoutMode': layoutMode.name,
       'bullets': bullets,
+      'projectEntries': projectEntries.map((item) => item.toJson()).toList(),
     };
   }
 }

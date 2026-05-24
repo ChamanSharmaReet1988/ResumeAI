@@ -811,8 +811,46 @@ class _CorporateProjectBlock extends StatelessWidget {
 
 Widget _corporateCustomSectionBody(
   CustomSectionItem item,
-  TextStyle bodyStyle,
-) {
+  TextStyle bodyStyle, {
+  TextStyle? titleStyle,
+}) {
+  if (item.layoutMode == CustomSectionLayoutMode.projects) {
+    final entries = item.visibleProjectEntries;
+    if (entries.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final entry in entries) ...[
+          if (titleStyle != null)
+            Text(
+              entry.title.trim().ifBlank('Project'),
+              style: titleStyle,
+            )
+          else
+            Text(
+              entry.title.trim().ifBlank('Project'),
+              style: bodyStyle.copyWith(fontWeight: FontWeight.w600),
+            ),
+          const SizedBox(height: 4),
+          ..._projectBulletLines(entry).map(
+            (bullet) => Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: bodyStyle),
+                  Expanded(child: Text(bullet, style: bodyStyle)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ],
+    );
+  }
   if (item.layoutMode == CustomSectionLayoutMode.summary) {
     return Text(item.content.trim(), style: bodyStyle);
   }
@@ -837,6 +875,73 @@ Widget _corporateCustomSectionBody(
       );
     }).toList(),
   );
+}
+
+List<Widget> _customSectionFlowPreviewWidgets(
+  CustomSectionItem section,
+  TextStyle bodyStyle, {
+  bool showAllContent = false,
+  TextStyle? titleStyle,
+}) {
+  if (section.layoutMode == CustomSectionLayoutMode.projects) {
+    final entries = section.visibleProjectEntries;
+    if (entries.isEmpty) {
+      return [
+        Text(
+          section.content.trim(),
+          style: bodyStyle,
+          maxLines: showAllContent ? null : 5,
+          overflow: showAllContent ? null : TextOverflow.ellipsis,
+        ),
+      ];
+    }
+    return [
+      for (final entry in entries) ...[
+        Text(
+          entry.title.trim().ifBlank('Project'),
+          style: titleStyle ?? bodyStyle.copyWith(fontWeight: FontWeight.w600),
+          maxLines: showAllContent ? null : 2,
+          overflow: showAllContent ? null : TextOverflow.ellipsis,
+        ),
+        ..._projectBulletLines(entry).map(
+          (bullet) => Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              '• ${bullet.trim()}',
+              style: bodyStyle,
+              maxLines: showAllContent ? null : 3,
+              overflow: showAllContent ? null : TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+      ],
+    ];
+  }
+  if (section.layoutMode == CustomSectionLayoutMode.bullets) {
+    return section.bullets
+        .where((b) => b.trim().isNotEmpty)
+        .map(
+          (b) => Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              '• ${b.trim()}',
+              style: bodyStyle,
+              maxLines: showAllContent ? null : 3,
+              overflow: showAllContent ? null : TextOverflow.ellipsis,
+            ),
+          ),
+        )
+        .toList();
+  }
+  return [
+    Text(
+      section.content.trim(),
+      style: bodyStyle,
+      maxLines: showAllContent ? null : 5,
+      overflow: showAllContent ? null : TextOverflow.ellipsis,
+    ),
+  ];
 }
 
 class _CreativePreview extends StatelessWidget {
@@ -1238,18 +1343,7 @@ class _CreativePreview extends StatelessWidget {
                           sectionTitlePt: sectionTitlePt,
                         ),
                         const SizedBox(height: headingGap),
-                        if (section.layoutMode == CustomSectionLayoutMode.bullets)
-                          _CreativeBulletColumn(
-                            items: section.bullets
-                                .where((b) => b.trim().isNotEmpty)
-                                .toList(),
-                            bodyStyle: bodyStyle,
-                          )
-                        else
-                          Text(
-                            section.content.trim(),
-                            style: bodyStyle,
-                          ),
+                        ..._customSectionFlowPreviewWidgets(section, bodyStyle),
                       ],
                     ],
                 ),
@@ -1961,28 +2055,11 @@ class _AtsStructuredPreview extends StatelessWidget {
             ink,
           ),
           const SizedBox(height: 6),
-          if (section.layoutMode == CustomSectionLayoutMode.bullets)
-            ...section.bullets
-                .where((b) => b.trim().isNotEmpty)
-                .map(
-                  (b) => Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      '• ${b.trim()}',
-                      style: bodyStyle,
-                      maxLines: showAllContent ? null : 3,
-                      overflow:
-                          showAllContent ? null : TextOverflow.ellipsis,
-                    ),
-                  ),
-                )
-          else
-            Text(
-              section.content.trim(),
-              style: bodyStyle,
-              maxLines: showAllContent ? null : 5,
-              overflow: showAllContent ? null : TextOverflow.ellipsis,
-            ),
+          ..._customSectionFlowPreviewWidgets(
+            section,
+            bodyStyle,
+            showAllContent: showAllContent,
+          ),
         ],
       ],
     );
@@ -2553,6 +2630,31 @@ class _AccentStripCustomSectionBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (item.layoutMode == CustomSectionLayoutMode.projects) {
+      final entries = item.visibleProjectEntries.take(2).toList();
+      if (entries.isEmpty) {
+        return Text(
+          'Add content',
+          style: bodyStyle,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
+        );
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final entry in entries)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _AccentStripProjectBlock(
+                item: entry,
+                titleStyle: bodyStyle.copyWith(fontWeight: FontWeight.w600),
+                bodyStyle: bodyStyle,
+              ),
+            ),
+        ],
+      );
+    }
     if (item.layoutMode == CustomSectionLayoutMode.bullets) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3072,27 +3174,7 @@ class _AtsModernFlowPreview extends StatelessWidget {
                 flowSection(
                   section.title.trim().ifBlank('Additional'),
                   [
-                    if (section.layoutMode == CustomSectionLayoutMode.bullets)
-                      ...section.bullets
-                          .where((b) => b.trim().isNotEmpty)
-                          .map(
-                            (b) => Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                '• ${b.trim()}',
-                                style: bodyStyle,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          )
-                    else
-                      Text(
-                        section.content.trim(),
-                        style: bodyStyle,
-                        maxLines: 6,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    ..._customSectionFlowPreviewWidgets(section, bodyStyle),
                   ],
                 ),
             ],
@@ -3349,27 +3431,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                   style: sectionTitleStyle,
                 ),
                 const SizedBox(height: 6),
-                if (section.layoutMode == CustomSectionLayoutMode.bullets)
-                  ...section.bullets
-                      .where((b) => b.trim().isNotEmpty)
-                      .map(
-                        (b) => Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            '• ${b.trim()}',
-                            style: bodyStyle,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      )
-                else
-                  Text(
-                    section.content.trim(),
-                    style: bodyStyle,
-                    maxLines: 6,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                ..._customSectionFlowPreviewWidgets(section, bodyStyle),
               ],
             ],
           ),
@@ -3851,27 +3913,7 @@ class _AtsExecutivePreview extends StatelessWidget {
                 executiveSection(
                   section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
                   [
-                    if (section.layoutMode == CustomSectionLayoutMode.bullets)
-                      ...section.bullets
-                          .where((b) => b.trim().isNotEmpty)
-                          .map(
-                            (b) => Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                '• ${b.trim()}',
-                                style: bodyStyle,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          )
-                    else
-                      Text(
-                        section.content.trim(),
-                        style: bodyStyle,
-                        maxLines: 6,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    ..._customSectionFlowPreviewWidgets(section, bodyStyle),
                   ],
                 ),
             ],
@@ -4185,6 +4227,36 @@ class _ClassicCustomSectionBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (item.layoutMode == CustomSectionLayoutMode.projects) {
+      final entries = item.visibleProjectEntries.take(2).toList();
+      if (entries.isEmpty) {
+        return Text(
+          'Add content',
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
+          style: bodyStyle.copyWith(color: mutedColor),
+        );
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final entry in entries)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _ClassicProjectBlock(
+                item: entry,
+                bodyStyle: bodyStyle.copyWith(color: mutedColor),
+                subtitleStyle: bodyStyle.copyWith(
+                  color: mutedColor,
+                  fontWeight: FontWeight.w600,
+                ),
+                mutedColor: mutedColor,
+                bulletColor: bulletColor,
+              ),
+            ),
+        ],
+      );
+    }
     if (item.layoutMode == CustomSectionLayoutMode.bullets) {
       return _ClassicBulletList(
         items: item.bullets.take(3).toList(),

@@ -908,44 +908,106 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Future<void> _showAddCustomCategoryDialog() async {
     final controller = TextEditingController();
-    final name = await showDialog<String>(
+    var sectionType = _CustomSectionCreationType.normal;
+    final result = await showDialog<_NewCustomSectionDialogResult>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).cardColor,
-          surfaceTintColor: Colors.transparent,
-          title: const Text('New section'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Title',
-              hintText: 'Certifications, Languages, Awards…',
-            ),
-            autofocus: true,
-            textCapitalization: TextCapitalization.sentences,
-            onSubmitted: (_) {
-              final t = controller.text.trim();
-              if (t.isNotEmpty) {
-                Navigator.pop(dialogContext, t);
-              }
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final t = controller.text.trim();
-                if (t.isEmpty) {
-                  return;
-                }
-                Navigator.pop(dialogContext, t);
-              },
-              child: const Text('OK'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Theme.of(context).cardColor,
+              surfaceTintColor: Colors.transparent,
+              title: const Text('New section'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      labelText: 'Title',
+                      hintText: 'Certifications, Languages, Awards…',
+                    ),
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.sentences,
+                    onSubmitted: (_) {
+                      final t = controller.text.trim();
+                      if (t.isNotEmpty) {
+                        Navigator.pop(
+                          dialogContext,
+                          _NewCustomSectionDialogResult(
+                            title: t,
+                            type: sectionType,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Type',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  RadioGroup<_CustomSectionCreationType>(
+                    groupValue: sectionType,
+                    onChanged: (value) {
+                      if (value == null) {
+                        return;
+                      }
+                      setDialogState(() => sectionType = value);
+                    },
+                    child: Column(
+                      children: [
+                        RadioListTile<_CustomSectionCreationType>(
+                          value: _CustomSectionCreationType.normal,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          title: const Text('Normal'),
+                          subtitle: const Text(
+                            'Summary or bullet points',
+                          ),
+                        ),
+                        RadioListTile<_CustomSectionCreationType>(
+                          value: _CustomSectionCreationType.advance,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          title: const Text('Advance'),
+                          subtitle: const Text(
+                            'Project-style entries with title and bullets',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final t = controller.text.trim();
+                    if (t.isEmpty) {
+                      return;
+                    }
+                    Navigator.pop(
+                      dialogContext,
+                      _NewCustomSectionDialogResult(
+                        title: t,
+                        type: sectionType,
+                      ),
+                    );
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -953,12 +1015,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       controller.dispose();
     });
 
-    if (!mounted || name == null || name.trim().isEmpty) {
+    if (!mounted || result == null || result.title.trim().isEmpty) {
       return;
     }
 
     final viewModel = context.read<ResumeEditorViewModel>();
-    viewModel.addCustomSectionWithTitle(name.trim());
+    viewModel.addCustomSectionWithTitle(
+      result.title.trim(),
+      layoutMode: result.type == _CustomSectionCreationType.advance
+          ? CustomSectionLayoutMode.projects
+          : CustomSectionLayoutMode.summary,
+    );
     final newIndex = viewModel.resume.customSections.length - 1;
     final targetStep = ResumeEditorViewModel.coreStepCount + newIndex;
     // Wait until PageView rebuilds with the new itemCount before animateToPage;
@@ -1895,6 +1962,19 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     int customIndex,
   ) {
     final item = vm.resume.customSections[customIndex];
+    if (item.layoutMode == CustomSectionLayoutMode.projects) {
+      return [
+        for (var pi = 0; pi < item.projectEntries.length; pi++)
+          for (var bi = 0; bi < item.projectEntries[pi].bullets.length; bi++)
+            _focusNodeForExtendedKeyboardField(
+              'custom-section-project-$customIndex-$pi-$bi',
+            ),
+        for (var pi = 0; pi < item.projectEntries.length; pi++)
+          _focusNodeForExtendedKeyboardField(
+            'custom-section-project-title-$customIndex-$pi',
+          ),
+      ];
+    }
     if (item.layoutMode == CustomSectionLayoutMode.summary) {
       return [
         _focusNodeForExtendedKeyboardField(
@@ -2516,7 +2596,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
     return _StepSurface(
       title: _customSectionStepTitle(item, index),
-      subtitle: '',
+      subtitle: item.layoutMode == CustomSectionLayoutMode.projects
+          ? 'Add entries with a title and bullet points, like the Projects section.'
+          : '',
       titleTrailing: IconButton(
         tooltip: 'Remove section',
         style: IconButton.styleFrom(
@@ -2532,7 +2614,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               },
         icon: const ImageIcon(AssetImage('assets/fonts/delete.png')),
       ),
-      child: Column(
+      child: item.layoutMode == CustomSectionLayoutMode.projects
+          ? _buildCustomSectionProjectsEditor(viewModel, index, item)
+          : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
@@ -2668,6 +2752,232 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       ),
     );
   }
+
+  Widget _buildCustomSectionProjectsEditor(
+    ResumeEditorViewModel viewModel,
+    int sectionIndex,
+    CustomSectionItem item,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        if (!_resumeOrderNudgeDismissed && item.projectEntries.length > 1) ...[
+          _HintBanner(
+            title: 'Resume order',
+            body:
+                'Entries stay in this order. Use arrows to move your strongest role to top.',
+            compact: true,
+            onDismiss: _onDismissResumeOrderNudge,
+          ),
+          const SizedBox(height: 10),
+        ],
+        ...item.projectEntries.asMap().entries.expand((entry) {
+          final index = entry.key;
+          final project = entry.value;
+          final isLast = index == item.projectEntries.length - 1;
+          final projectWidgets = <Widget>[
+            Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 20 : 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Entry ${index + 1}',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _resumeOrderLabel(index),
+                              style: _resumeOrderHintStyle(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (item.projectEntries.length > 1) ...[
+                        IconButton.filledTonal(
+                          tooltip: 'Move entry up',
+                          onPressed: index == 0
+                              ? null
+                              : () => viewModel.moveCustomSectionProjectUp(
+                                    sectionIndex,
+                                    index,
+                                  ),
+                          icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                        ),
+                        IconButton.filledTonal(
+                          tooltip: 'Move entry down',
+                          onPressed: index == item.projectEntries.length - 1
+                              ? null
+                              : () => viewModel.moveCustomSectionProjectDown(
+                                    sectionIndex,
+                                    index,
+                                  ),
+                          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                        ),
+                        IconButton(
+                          tooltip: 'Delete entry',
+                          onPressed: viewModel.isBusy
+                              ? null
+                              : () {
+                                  _confirmRemoval(
+                                    title: 'Delete entry?',
+                                    message:
+                                        'This will remove this entry and all of its bullet points. This cannot be undone.',
+                                    onConfirm: () => viewModel
+                                        .removeCustomSectionProject(
+                                          sectionIndex,
+                                          index,
+                                        ),
+                                  );
+                                },
+                          icon: const ImageIcon(
+                            AssetImage('assets/fonts/delete.png'),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  _ResponsiveFieldGroup(
+                    children: [
+                      _SyncTextField(
+                        key: Key(
+                          'custom-section-project-title-$sectionIndex-$index',
+                        ),
+                        label: 'Title',
+                        value: project.title,
+                        textCapitalization: TextCapitalization.sentences,
+                        focusNode: _focusNodeForExtendedKeyboardField(
+                          'custom-section-project-title-$sectionIndex-$index',
+                        ),
+                        onChanged: (value) =>
+                            viewModel.updateCustomSectionProject(
+                              sectionIndex,
+                              index,
+                              (current) => current.copyWith(title: value),
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 26),
+                  ...project.bullets.asMap().entries.map((bulletEntry) {
+                    final bi = bulletEntry.key;
+                    final text = bulletEntry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _BulletField(
+                        fieldKey: Key(
+                          'custom-section-project-$sectionIndex-$index-$bi',
+                        ),
+                        label: 'Bullet ${bi + 1}',
+                        value: text,
+                        hintText: 'Enter a bullet point',
+                        deleteEnabled: !viewModel.isBusy,
+                        focusNode: _focusNodeForExtendedKeyboardField(
+                          'custom-section-project-$sectionIndex-$index-$bi',
+                        ),
+                        onChanged: (value) =>
+                            viewModel.updateCustomSectionProject(
+                              sectionIndex,
+                              index,
+                              (current) {
+                                final next = List<String>.from(current.bullets);
+                                if (bi < next.length) {
+                                  next[bi] = value;
+                                }
+                                return current.copyWith(bullets: next);
+                              },
+                            ),
+                        onDelete: () {
+                          _confirmRemoval(
+                            title: 'Remove bullet?',
+                            message:
+                                'This bullet will be removed from this entry.',
+                            onConfirm: () {
+                              viewModel.updateCustomSectionProject(
+                                sectionIndex,
+                                index,
+                                (current) {
+                                  final next = List<String>.from(
+                                    current.bullets,
+                                  );
+                                  if (bi < next.length) {
+                                    next.removeAt(bi);
+                                  }
+                                  return current.copyWith(bullets: next);
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildAddBulletPointButton(
+                      onPressed: viewModel.isBusy
+                          ? null
+                          : () {
+                              viewModel.updateCustomSectionProject(
+                                sectionIndex,
+                                index,
+                                (current) => current.copyWith(
+                                  bullets: [...current.bullets, ''],
+                                ),
+                              );
+                            },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ];
+          if (!isLast) {
+            final dividerColor = Theme.of(context)
+                .colorScheme
+                .outlineVariant
+                .withValues(alpha: 0.28);
+            projectWidgets.addAll([
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: _entryDividerHorizontalPadding,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 1,
+                  child: ColoredBox(color: dividerColor),
+                ),
+              ),
+              const SizedBox(height: 18),
+            ]);
+          }
+          return projectWidgets;
+        }),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.icon(
+            onPressed: viewModel.isBusy
+                ? null
+                : () => viewModel.addCustomSectionProject(sectionIndex),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add entry'),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 String _customSectionStepTitle(CustomSectionItem item, int index) {
@@ -2676,6 +2986,18 @@ String _customSectionStepTitle(CustomSectionItem item, int index) {
     return 'Category ${index + 1}';
   }
   return t;
+}
+
+enum _CustomSectionCreationType { normal, advance }
+
+class _NewCustomSectionDialogResult {
+  const _NewCustomSectionDialogResult({
+    required this.title,
+    required this.type,
+  });
+
+  final String title;
+  final _CustomSectionCreationType type;
 }
 
 String _resumeCategoryChipLabel(CustomSectionItem item, int index) {

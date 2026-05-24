@@ -1503,6 +1503,23 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required double bodyPt,
     GaramondPdfFonts? garamond,
   }) {
+    if (item.layoutMode == CustomSectionLayoutMode.projects) {
+      final entries = item.visibleProjectEntries;
+      if (entries.isEmpty) {
+        return pw.SizedBox();
+      }
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          for (final entry in entries)
+            ..._pwCompactProjectWidgets(
+              entry,
+              garamond: garamond,
+              bodyFontPt: bodyPt,
+            ),
+        ],
+      );
+    }
     if (item.layoutMode == CustomSectionLayoutMode.bullets) {
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -1848,6 +1865,38 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required PdfColor accentColor,
     required double bodyPt,
   }) {
+    if (item.layoutMode == CustomSectionLayoutMode.projects) {
+      final entries = item.visibleProjectEntries;
+      if (entries.isEmpty) {
+        return pw.SizedBox();
+      }
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          for (final entry in entries) ...[
+            pw.Text(
+              entry.title.ifEmpty('Project'),
+              style: pw.TextStyle(
+                color: mutedColor,
+                fontSize: bodyPt,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+            for (final bullet in _projectBulletLinesPdf(entry))
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 4),
+                child: _detailsSidebarSkillRow(
+                  text: bullet,
+                  accentColor: accentColor,
+                  textColor: mutedColor,
+                  fontSize: bodyPt,
+                ),
+              ),
+            pw.SizedBox(height: 6),
+          ],
+        ],
+      );
+    }
     if (item.layoutMode == CustomSectionLayoutMode.bullets) {
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,

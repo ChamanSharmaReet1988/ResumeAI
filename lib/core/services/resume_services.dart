@@ -71,6 +71,78 @@ List<String> _corporateHeaderContactLines(List<String> items) {
   return <String>[firstLine, if (secondLine.isNotEmpty) secondLine];
 }
 
+List<String> _projectBulletLinesPdf(ProjectItem item) {
+  final nonEmptyBullets = item.bullets
+      .where((b) => b.trim().isNotEmpty)
+      .toList();
+  if (nonEmptyBullets.isNotEmpty) {
+    return nonEmptyBullets;
+  }
+  return [
+    item.overview.trim(),
+    item.impact.trim(),
+  ].where((part) => part.isNotEmpty).toList();
+}
+
+List<pw.Widget> _pwCompactProjectWidgets(
+  ProjectItem item, {
+  GaramondPdfFonts? garamond,
+  double bodyFontPt = ResumeTypography.bodyPt,
+  bool atsGaramondBody = false,
+  bool atsModernFlowGaramondBody = false,
+  bool atsExecutiveGaramondBody = false,
+}) {
+  final bullets = _projectBulletLinesPdf(item);
+  final subtitleWeight = atsGaramondBody
+      ? ResumeTypography.atsStructuredSubtitleWeight
+      : ResumeTypography.darkHeaderSubtitleWeight;
+  final subtitlePt = atsGaramondBody
+      ? ResumeTypography.atsStructuredSubtitlePt
+      : ResumeTypography.darkHeaderSubtitlePt;
+  final titleWidget = garamond != null
+      ? pw.Text(
+          item.title.ifEmpty('Project'),
+          style: garamondPdfTextStyle(
+            garamond,
+            subtitleWeight,
+            fontSize: subtitlePt,
+            color: const PdfColor.fromInt(0xFF141414),
+          ).copyWith(lineSpacing: 0),
+        )
+      : pw.Text(
+          item.title.ifEmpty('Project'),
+          style: pw.TextStyle(
+            color: PdfColors.black,
+            fontSize: subtitlePt,
+            fontWeight: pw.FontWeight.bold,
+          ),
+        );
+  final bulletStyle = garamond != null
+      ? (atsModernFlowGaramondBody
+            ? atsModernFlowBodyPdfTextStyle(garamond, bodyFontPt)
+            : atsExecutiveGaramondBody
+            ? atsExecutiveBodyPdfTextStyle(garamond, bodyFontPt)
+            : atsGaramondBody
+            ? atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
+            : corporateBodyPdfTextStyle(garamond, bodyFontPt))
+      : pw.TextStyle(
+          color: PdfColors.black,
+          fontSize: bodyFontPt,
+          lineSpacing: ResumeTypography.darkHeaderBodyPdfLineSpacingFor(
+            bodyFontPt,
+          ),
+        );
+  return [
+    titleWidget,
+    for (var i = 0; i < bullets.length; i++)
+      pw.Padding(
+        padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
+        child: pw.Bullet(text: bullets[i], style: bulletStyle),
+      ),
+    pw.SizedBox(height: 8),
+  ];
+}
+
 pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
   switch (item.layoutMode) {
     case CustomSectionLayoutMode.summary:
@@ -94,6 +166,17 @@ pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
                 ),
               ),
             ),
+        ],
+      );
+    case CustomSectionLayoutMode.projects:
+      final entries = item.visibleProjectEntries;
+      if (entries.isEmpty) {
+        return pw.SizedBox();
+      }
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          for (final entry in entries) ..._pwCompactProjectWidgets(entry),
         ],
       );
   }
@@ -151,6 +234,24 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
           pw.Padding(
             padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
             child: pw.Bullet(text: lines[i].trim(), style: bodyStyle),
+          ),
+      ];
+    case CustomSectionLayoutMode.projects:
+      final entries = item.visibleProjectEntries;
+      if (entries.isEmpty) {
+        return const <pw.Widget>[];
+      }
+      return [
+        for (final entry in entries)
+          ..._pwCompactProjectWidgets(
+            entry,
+            garamond: garamond,
+            bodyFontPt: bodyFontPt ?? ResumeTypography.bodyPt,
+            atsGaramondBody: accentStripGaramondBody ||
+                atsModernFlowGaramondBody ||
+                atsExecutiveGaramondBody,
+            atsModernFlowGaramondBody: atsModernFlowGaramondBody,
+            atsExecutiveGaramondBody: atsExecutiveGaramondBody,
           ),
       ];
   }
@@ -5353,10 +5454,21 @@ class LocalAiResumeService {
       ...resume.visibleCustomSections.expand(
         (section) => [
           section.title,
-          if (section.layoutMode == CustomSectionLayoutMode.summary)
-            section.content
-          else
-            ...section.bullets,
+          ...switch (section.layoutMode) {
+            CustomSectionLayoutMode.summary => [section.content],
+            CustomSectionLayoutMode.bullets => section.bullets,
+            CustomSectionLayoutMode.projects => section.visibleProjectEntries
+                .expand(
+                  (entry) => [
+                    entry.title,
+                    entry.subtitle,
+                    entry.overview,
+                    entry.impact,
+                    ...entry.bullets,
+                  ],
+                )
+                .toList(),
+          },
         ],
       ),
     ].where((item) => item.trim().isNotEmpty).join(' ').toLowerCase();

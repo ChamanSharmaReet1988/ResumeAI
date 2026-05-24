@@ -325,7 +325,43 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('New section'), findsOneWidget);
+    expect(find.text('Type'), findsOneWidget);
+    expect(find.text('Normal'), findsOneWidget);
+    expect(find.text('Advance'), findsOneWidget);
     expect(find.text('OK'), findsOneWidget);
+  });
+
+  testWidgets('Advance custom section uses project-style entries', (
+    tester,
+  ) async {
+    viewModel.addCustomSectionWithTitle(
+      'Case Studies',
+      layoutMode: CustomSectionLayoutMode.projects,
+    );
+    viewModel.setStep(5);
+
+    await pumpBuilder(tester);
+
+    expect(find.text('Case Studies'), findsWidgets);
+    expect(find.text('Entry 1'), findsOneWidget);
+    expect(find.text('Add entry'), findsOneWidget);
+    expect(find.byKey(const Key('custom-section-project-title-0-0')), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('custom-section-project-title-0-0')),
+      'Mobile Banking App',
+    );
+    await tester.pumpAndSettle(const Duration(milliseconds: 300));
+
+    expect(viewModel.resume.customSections, hasLength(1));
+    expect(
+      viewModel.resume.customSections.first.layoutMode,
+      CustomSectionLayoutMode.projects,
+    );
+    expect(
+      viewModel.resume.customSections.first.projectEntries.first.title,
+      'Mobile Banking App',
+    );
   });
 
   testWidgets('custom section category saves title and content on the resume', (

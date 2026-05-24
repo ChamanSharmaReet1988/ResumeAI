@@ -397,16 +397,86 @@ class ResumeEditorViewModel extends ChangeNotifier {
     addCustomSectionWithTitle('');
   }
 
-  void addCustomSectionWithTitle(String title) {
+  void addCustomSectionWithTitle(
+    String title, {
+    CustomSectionLayoutMode layoutMode = CustomSectionLayoutMode.summary,
+  }) {
     final trimmed = title.trim();
+    final section = layoutMode == CustomSectionLayoutMode.projects
+        ? CustomSectionItem(
+            title: trimmed,
+            content: '',
+            layoutMode: layoutMode,
+            projectEntries: const [ProjectItem.empty()],
+          )
+        : CustomSectionItem(title: trimmed, content: '');
     updateResume(
       (resume) => resume.copyWith(
-        customSections: [
-          ...resume.customSections,
-          CustomSectionItem(title: trimmed, content: ''),
-        ],
+        customSections: [...resume.customSections, section],
       ),
     );
+  }
+
+  void updateCustomSectionProject(
+    int sectionIndex,
+    int projectIndex,
+    ProjectItem Function(ProjectItem current) update,
+  ) {
+    updateCustomSection(sectionIndex, (section) {
+      final items = [...section.projectEntries];
+      if (projectIndex < 0 || projectIndex >= items.length) {
+        return section;
+      }
+      items[projectIndex] = update(items[projectIndex]);
+      return section.copyWith(projectEntries: items);
+    });
+  }
+
+  void addCustomSectionProject(int sectionIndex) {
+    updateCustomSection(
+      sectionIndex,
+      (section) => section.copyWith(
+        projectEntries: [...section.projectEntries, const ProjectItem.empty()],
+      ),
+    );
+  }
+
+  void removeCustomSectionProject(int sectionIndex, int projectIndex) {
+    updateCustomSection(sectionIndex, (section) {
+      final items = [...section.projectEntries]..removeAt(projectIndex);
+      return section.copyWith(
+        projectEntries: items.isEmpty
+            ? const [ProjectItem.empty()]
+            : items,
+      );
+    });
+  }
+
+  void moveCustomSectionProjectUp(int sectionIndex, int projectIndex) {
+    if (projectIndex <= 0) {
+      return;
+    }
+    updateCustomSection(sectionIndex, (section) {
+      final items = [...section.projectEntries];
+      if (projectIndex >= items.length) {
+        return section;
+      }
+      final item = items.removeAt(projectIndex);
+      items.insert(projectIndex - 1, item);
+      return section.copyWith(projectEntries: items);
+    });
+  }
+
+  void moveCustomSectionProjectDown(int sectionIndex, int projectIndex) {
+    updateCustomSection(sectionIndex, (section) {
+      final items = [...section.projectEntries];
+      if (projectIndex < 0 || projectIndex >= items.length - 1) {
+        return section;
+      }
+      final item = items.removeAt(projectIndex);
+      items.insert(projectIndex + 1, item);
+      return section.copyWith(projectEntries: items);
+    });
   }
 
   void removeCustomSection(int index) {
