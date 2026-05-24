@@ -24,6 +24,7 @@ class GoPremiumScreen extends StatefulWidget {
 class _GoPremiumScreenState extends State<GoPremiumScreen> {
   String? _selectedProductId = PremiumProducts.year;
   bool _didPop = false;
+  bool _isCompletingLeave = false;
   bool _isFullScreenLoading = false;
   String _loadingMessage = 'Processing…';
   bool _waitingForStoreResult = false;
@@ -157,9 +158,10 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
   }
 
   Future<void> _completeAndLeave(PremiumPurchaseService premium) async {
-    if (_didPop || !mounted) {
+    if (_didPop || _isCompletingLeave || !mounted) {
       return;
     }
+    _isCompletingLeave = true;
 
     final successSource = _pendingSuccessSource;
     _pendingSuccessSource = null;
@@ -182,26 +184,30 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       );
     }
     if (!mounted || _didPop) {
+      _isCompletingLeave = false;
       return;
     }
 
-    // Always consume pending first: `||` would skip consume when
-    // [_showWelcomeOnSuccess] is true, leaving a stale flag for [ensurePremiumAccess].
-    final hadPendingWelcome = premium.consumePremiumWelcomePending();
-    final shouldShowWelcome = _showWelcomeOnSuccess || hadPendingWelcome;
+    final shouldShowWelcome =
+        _showWelcomeOnSuccess || premium.hasPremiumWelcomePending;
     _showWelcomeOnSuccess = false;
     if (shouldShowWelcome) {
+      premium.consumePremiumWelcomePending();
       final planLabel = premiumWelcomePlanLabel(
         premium.activeSubscriptionProductId,
       );
       await showPremiumWelcomeDialog(context, planLabel: planLabel);
+    } else {
+      premium.consumePremiumWelcomePending();
     }
 
     if (!mounted || _didPop) {
+      _isCompletingLeave = false;
       return;
     }
 
     _didPop = true;
+    _isCompletingLeave = false;
     AppShellScope.goToSettings(context);
     Navigator.of(context).pop(true);
   }

@@ -17,8 +17,10 @@ class PremiumPurchaseService extends ChangeNotifier {
     InAppPurchase? inAppPurchase,
     bool enableStore = true,
   })  : _appPreferences = appPreferences,
-        _inAppPurchase = inAppPurchase ?? InAppPurchase.instance,
-        _enableStore = enableStore {
+        _enableStore = enableStore,
+        _inAppPurchase = enableStore
+            ? (inAppPurchase ?? InAppPurchase.instance)
+            : inAppPurchase {
     if (_enableStore) {
       _ensurePurchaseStreamListener();
     }
@@ -38,8 +40,16 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   final AppPreferences _appPreferences;
-  final InAppPurchase _inAppPurchase;
+  final InAppPurchase? _inAppPurchase;
   final bool _enableStore;
+
+  InAppPurchase get _store {
+    final store = _inAppPurchase;
+    if (store == null) {
+      throw StateError('In-app purchase store is not available.');
+    }
+    return store;
+  }
 
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
 
@@ -94,7 +104,10 @@ class PremiumPurchaseService extends ChangeNotifier {
         debugOverride: debugPremiumOverrideEnabled,
       );
 
-  /// Consumed by [SettingsScreen] to show the Pro welcome dialog once.
+  /// Whether a Pro welcome dialog should be shown after buy / restore.
+  bool get hasPremiumWelcomePending => _pendingPremiumWelcome;
+
+  /// Consumed by [GoPremiumScreen] / [ensurePremiumAccess] to show welcome once.
   bool consumePremiumWelcomePending() {
     if (!_pendingPremiumWelcome) {
       return false;
@@ -102,6 +115,14 @@ class PremiumPurchaseService extends ChangeNotifier {
     _pendingPremiumWelcome = false;
     return true;
   }
+
+  /// Test hook for entitlement + welcome side effects without a live store.
+  @visibleForTesting
+  Future<void> applyEntitlementForTest(
+    bool entitled, {
+    String reason = 'test',
+  }) =>
+      _applyStoreEntitlement(entitled, reason: reason);
 
   ProductDetails? productFor(String productId) {
     for (final product in _products) {
@@ -113,10 +134,10 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   void _ensurePurchaseStreamListener() {
-    if (!_enableStore || _purchaseSubscription != null) {
+    if (!_enableStore || _purchaseSubscription != null || _inAppPurchase == null) {
       return;
     }
-    _purchaseSubscription = _inAppPurchase.purchaseStream.listen(
+    _purchaseSubscription = _store.purchaseStream.listen(
       _onPurchaseUpdates,
       onError: (Object error) {
         _errorMessage = PremiumStoreMessages.friendly(
@@ -141,7 +162,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     }
 
     try {
-      _storeAvailable = await _inAppPurchase.isAvailable();
+      _storeAvailable = await _store.isAvailable();
       PremiumDebugLog.logPair('storeAvailable', _storeAvailable);
       if (!_storeAvailable) {
         _errorMessage =
@@ -186,7 +207,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     _ensurePurchaseStreamListener();
 
     if (!_storeAvailable) {
-      _storeAvailable = await _inAppPurchase.isAvailable();
+      _storeAvailable = await _store.isAvailable();
     }
     if (!_storeAvailable) {
       PremiumDebugLog.log(
@@ -215,7 +236,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     _ensurePurchaseStreamListener();
 
     if (!_storeAvailable) {
-      _storeAvailable = await _inAppPurchase.isAvailable();
+      _storeAvailable = await _store.isAvailable();
     }
     if (!_storeAvailable) {
       PremiumDebugLog.log('local verify skipped: store unavailable');
@@ -283,7 +304,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     _ensurePurchaseStreamListener();
 
     if (!_storeAvailable) {
-      _storeAvailable = await _inAppPurchase.isAvailable();
+      _storeAvailable = await _store.isAvailable();
     }
     PremiumDebugLog.logPair('storeAvailable', _storeAvailable);
     if (!_storeAvailable) {
@@ -300,7 +321,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     try {
       if (requestStoreRestore) {
         PremiumDebugLog.log('Calling restorePurchases() (user initiated)…');
-        await _inAppPurchase.restorePurchases();
+        await _store.restorePurchases();
         PremiumDebugLog.log(
           'Waiting ${_storeEntitlementSettleDelay.inMilliseconds}ms for purchase stream…',
         );
@@ -350,7 +371,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     notifyListeners();
 
     if (!_storeAvailable) {
-      _storeAvailable = await _inAppPurchase.isAvailable();
+      _storeAvailable = await _store.isAvailable();
       if (!_storeAvailable) {
         _errorMessage =
             'In-app purchases are not available on this device right now.';
@@ -422,7 +443,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   Future<ProductDetailsResponse> _queryStoreProducts() {
-    return _inAppPurchase.queryProductDetails(
+    return _store.queryProductDetails(
       PremiumProducts.subscriptionIds.toSet(),
     );
   }
@@ -466,7 +487,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     } else {
       purchaseParam = PurchaseParam(productDetails: product);
     }
-    final started = await _inAppPurchase.buyNonConsumable(
+    final started = await _store.buyNonConsumable(
       purchaseParam: purchaseParam,
     );
 
@@ -573,7 +594,7 @@ class PremiumPurchaseService extends ChangeNotifier {
       }
 
       if (purchase.pendingCompletePurchase) {
-        unawaited(_inAppPurchase.completePurchase(purchase));
+        unawaited(_store.completePurchase(purchase));
       }
     }
 
@@ -591,7 +612,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     }
     _activeSubscriptionProductId =
         await PremiumEntitlementResolver.resolveActiveProductId(
-      _inAppPurchase,
+      _store,
       reason: reason,
       preferredProductId: preferredProductId,
       requestAppStoreSync: requestAppStoreSync,
@@ -630,15 +651,12 @@ class PremiumPurchaseService extends ChangeNotifier {
     PremiumDebugLog.section(
       'Purchase stream → re-verify (${purchase.status.name})',
     );
-    await _refreshActiveSubscriptionFromStore(
-      reason: 'purchase_stream_${purchase.status.name}',
-      preferredProductId: purchase.productID,
+    final reason = 'purchase_stream_${purchase.status.name}';
+    final entitled = await _resolveEntitlementAfterPurchase(
+      purchase,
+      reason: reason,
     );
-    final entitled = _activeSubscriptionProductId != null;
-    await _applyStoreEntitlement(
-      entitled,
-      reason: 'purchase_stream_${purchase.status.name}',
-    );
+    await _applyStoreEntitlement(entitled, reason: reason);
     if (entitled) {
       _statusMessage = purchase.status == PurchaseStatus.restored
           ? 'Premium restored successfully.'
@@ -648,6 +666,47 @@ class PremiumPurchaseService extends ChangeNotifier {
           'No active subscription was found for this Apple ID or Google account.';
     }
     notifyListeners();
+  }
+
+  /// Re-reads StoreKit / Play Billing after a purchase stream event.
+  ///
+  /// Store entitlement APIs can lag behind [PurchaseStatus.purchased]; when
+  /// buy/restore is active we fall back to the stream product ID.
+  Future<bool> _resolveEntitlementAfterPurchase(
+    PurchaseDetails purchase, {
+    required String reason,
+  }) async {
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(Duration(milliseconds: 800 * attempt));
+      }
+      await _refreshActiveSubscriptionFromStore(
+        reason: reason,
+        preferredProductId: purchase.productID,
+      );
+      if (_activeSubscriptionProductId != null) {
+        return true;
+      }
+    }
+
+    if (!_shouldTrustPurchaseStream(purchase)) {
+      return false;
+    }
+
+    _activeSubscriptionProductId = purchase.productID;
+    PremiumDebugLog.log(
+      'Entitlement resolver empty after retries; trusting purchase stream '
+      'productId=${purchase.productID}',
+    );
+    return true;
+  }
+
+  bool _shouldTrustPurchaseStream(PurchaseDetails purchase) {
+    if (!PremiumProducts.subscriptionIds.contains(purchase.productID)) {
+      return false;
+    }
+    return purchase.status == PurchaseStatus.purchased ||
+        purchase.status == PurchaseStatus.restored;
   }
 
   Future<void> _grantPremium() async {
