@@ -1223,13 +1223,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     style: subtitleStyle,
                   ),
                 );
-                w.add(pw.SizedBox(height: 3));
-                final detailLine = [
-                  if (item.score.trim().isNotEmpty) item.score.trim(),
-                  if (range.isNotEmpty) range,
-                ].join(' | ');
-                if (detailLine.isNotEmpty) {
-                  w.add(pw.Text(detailLine, style: bodyStyle));
+                if (range.isNotEmpty) {
+                  w.add(pw.SizedBox(height: 3));
+                  w.add(pw.Text(range, style: bodyStyle));
                 }
                 w.add(pw.SizedBox(height: 8));
               }

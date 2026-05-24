@@ -3504,18 +3504,16 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    [
-                      if (e.score.trim().isNotEmpty) e.score.trim(),
-                      if (educationDateRangeLabel(e.startDate, e.endDate)
-                          .isNotEmpty)
-                        educationDateRangeLabel(e.startDate, e.endDate),
-                    ].join(' | '),
-                    style: body,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  if (educationDateRangeLabel(e.startDate, e.endDate)
+                      .isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      educationDateRangeLabel(e.startDate, e.endDate),
+                      style: body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                   const SizedBox(height: 5),
                 ],
               Text('SKILLS', style: sectionTitleStyle),

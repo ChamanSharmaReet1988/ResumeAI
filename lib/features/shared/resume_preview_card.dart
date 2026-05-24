@@ -3855,23 +3855,21 @@ class _AtsExecutivePreview extends StatelessWidget {
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              [
-                                if (item.score.trim().isNotEmpty) item.score.trim(),
-                                if (educationDateRangeLabel(
+                            if (educationDateRangeLabel(
+                              item.startDate,
+                              item.endDate,
+                            ).isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                educationDateRangeLabel(
                                   item.startDate,
                                   item.endDate,
-                                ).isNotEmpty)
-                                  educationDateRangeLabel(
-                                    item.startDate,
-                                    item.endDate,
-                                  ),
-                              ].join(' | '),
-                              style: bodyStyle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                                ),
+                                style: bodyStyle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                             const SizedBox(height: 8),
                           ],
                         ],
