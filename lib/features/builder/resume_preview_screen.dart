@@ -14,10 +14,10 @@ import '../shared/view_models.dart';
 class ResumePreviewScreen extends StatefulWidget {
   const ResumePreviewScreen({super.key, this.backPopsToHome = false});
 
-  /// When `true` (e.g. opened from home via preview action), the system/back
-  /// control pops with `null` so only the home screen remains. When `false`
-  /// (opened from the resume builder), back pops with the current step so the
-  /// builder is shown again.
+  /// When `true`, the system/back control pops with `null` so the caller can
+  /// return to the home screen (e.g. home preview, or builder preview where
+  /// the builder route is popped as well). When `false`, back pops with the
+  /// current step so the resume builder is shown again.
   final bool backPopsToHome;
 
   @override

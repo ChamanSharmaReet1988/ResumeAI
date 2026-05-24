@@ -439,7 +439,7 @@ void main() {
     expect(viewModel.resume.template, ResumeTemplate.creative);
   });
 
-  testWidgets('preview back returns to the resume builder', (tester) async {
+  testWidgets('preview back returns to the home screen', (tester) async {
     viewModel.setStep(5);
     addTearDown(viewModel.dispose);
 
@@ -486,9 +486,9 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    expect(find.text('Home screen'), findsNothing);
+    expect(find.text('Home screen'), findsOneWidget);
     expect(find.byKey(const Key('resume-pdf-preview')), findsNothing);
-    expect(find.text('Preview'), findsOneWidget);
+    expect(find.text('Preview'), findsNothing);
   });
 
   testWidgets('continue scrolls the next category to the top', (tester) async {

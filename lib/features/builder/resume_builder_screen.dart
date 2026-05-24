@@ -211,12 +211,19 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: viewModel,
-          child: const ResumePreviewScreen(),
+          child: const ResumePreviewScreen(backPopsToHome: true),
         ),
       ),
     );
 
-    if (!mounted || targetStep == null) {
+    if (!mounted) {
+      return;
+    }
+
+    if (targetStep == null) {
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
       return;
     }
 
