@@ -12,8 +12,6 @@ import '../shell/app_shell_scope.dart';
 import 'premium_store_loading_overlay.dart';
 import 'premium_welcome_dialog.dart';
 
-const Color _kGoPremiumLabelColor = Color.fromRGBO(20, 20, 20, 1);
-
 enum _PremiumSuccessSource { purchase, restore }
 
 class GoPremiumScreen extends StatefulWidget {
@@ -346,7 +344,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                                 'Choose a plan',
                                 style: theme.textTheme.labelLarge?.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  color: _kGoPremiumLabelColor,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -440,14 +438,18 @@ class _PremiumUpcomingHighlight extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final isDark = colorScheme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.28),
+        color: colorScheme.primaryContainer.withValues(
+          alpha: isDark ? 0.35 : 0.28,
+        ),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.2),
+          color: colorScheme.primary.withValues(alpha: isDark ? 0.35 : 0.2),
         ),
       ),
       child: Row(
@@ -468,7 +470,7 @@ class _PremiumUpcomingHighlight extends StatelessWidget {
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: _kGoPremiumLabelColor,
+                    color: colorScheme.onSurface,
                     height: 1.15,
                   ),
                 ),
@@ -541,6 +543,7 @@ class _PlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     final priceLabel = product?.price ?? '—';
 
     return Padding(
@@ -550,7 +553,9 @@ class _PlanCard extends StatelessWidget {
         children: [
           Material(
             color: selected
-                ? colorScheme.primary.withValues(alpha: 0.07)
+                ? colorScheme.primaryContainer.withValues(
+                    alpha: isDark ? 0.45 : 0.35,
+                  )
                 : theme.cardColor,
             borderRadius: BorderRadius.circular(10),
             child: InkWell(
@@ -563,7 +568,9 @@ class _PlanCard extends StatelessWidget {
                   border: Border.all(
                     color: selected
                         ? colorScheme.primary
-                        : colorScheme.outlineVariant.withValues(alpha: 0.65),
+                        : colorScheme.outlineVariant.withValues(
+                            alpha: isDark ? 0.45 : 0.65,
+                          ),
                   ),
                 ),
                 child: Row(
@@ -583,7 +590,7 @@ class _PlanCard extends StatelessWidget {
                         definition.title,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: _kGoPremiumLabelColor,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                     ),
@@ -610,7 +617,7 @@ class _PlanCard extends StatelessWidget {
                   fontSize: 11,
                   height: 1.15,
                   fontWeight: FontWeight.w300,
-                  color: _kGoPremiumLabelColor,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
