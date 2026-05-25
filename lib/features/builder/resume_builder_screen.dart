@@ -386,21 +386,35 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-  Widget _buildAddBulletPointButton({required VoidCallback? onPressed}) {
+  ButtonStyle _secondaryActionButtonStyle(BuildContext context) {
     final theme = Theme.of(context);
-    return FilledButton.icon(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        minimumSize: const Size(0, 34),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        textStyle: theme.textTheme.labelSmall?.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          height: 1.2,
-        ),
+    final primary = theme.colorScheme.primary;
+    final fill = primary.withValues(alpha: 0.16);
+    return TextButton.styleFrom(
+      foregroundColor: primary,
+      backgroundColor: fill,
+      disabledForegroundColor: primary.withValues(alpha: 0.45),
+      disabledBackgroundColor: fill.withValues(alpha: 0.72),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+      minimumSize: const Size(0, 46),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      textStyle: theme.textTheme.labelLarge?.copyWith(
+        fontFamily: 'Outfit',
+        fontSize: 18,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.2,
       ),
-      icon: const Icon(Icons.add_rounded, size: 17),
+    );
+  }
+
+  Widget _buildAddBulletPointButton({required VoidCallback? onPressed}) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return TextButton.icon(
+      onPressed: onPressed,
+      style: _secondaryActionButtonStyle(context),
+      icon: Icon(Icons.add_rounded, size: 24, color: primary),
       label: const Text('Add bullet point'),
     );
   }
@@ -1614,9 +1628,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           const SizedBox(height: 4),
           Builder(
             builder: (context) {
-              final theme = Theme.of(context);
-              final primary = theme.colorScheme.primary;
-              final fill = primary.withValues(alpha: 0.16);
+              final primary = Theme.of(context).colorScheme.primary;
               return Wrap(
                 spacing: 12,
                 runSpacing: 12,
@@ -1624,28 +1636,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   TextButton.icon(
                     key: const Key('generate-summary-ai-button'),
                     onPressed: viewModel.isBusy ? null : _generateSummary,
-                    style: TextButton.styleFrom(
-                      foregroundColor: primary,
-                      backgroundColor: fill,
-                      disabledForegroundColor: primary.withValues(alpha: 0.45),
-                      disabledBackgroundColor: fill.withValues(alpha: 0.72),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 13,
-                        vertical: 9,
-                      ),
-                      minimumSize: const Size(0, 46),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      textStyle: theme.textTheme.labelLarge?.copyWith(
-                        fontFamily: 'Outfit',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
+                    style: _secondaryActionButtonStyle(context),
                     icon: Icon(
                       Icons.psychology_alt_outlined,
                       size: 24,
@@ -2744,7 +2735,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             }),
             Align(
               alignment: Alignment.centerLeft,
-              child: FilledButton.icon(
+              child: _buildAddBulletPointButton(
                 onPressed: viewModel.isBusy
                     ? null
                     : () {
@@ -2753,8 +2744,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           (c) => c.copyWith(bullets: [...c.bullets, '']),
                         );
                       },
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Add bullet point'),
               ),
             ),
           ],
