@@ -8,6 +8,7 @@ import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
+import 'package:resume_app/features/cover_letters/cover_letter_content_screen.dart';
 import 'package:resume_app/features/cover_letters/cover_letter_editor_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
 
@@ -202,4 +203,115 @@ void main() {
 
     expect(viewModel.coverLetter.template, CoverLetterTemplate.minimalLetter);
   });
+
+  testWidgets(
+    'preview back with backPopsToHome dismisses editor and content screens',
+    (tester) async {
+      final repository = _FakeCoverLetterRepository();
+      final appPreferences = AppPreferences.inMemory(isPremium: true);
+      final viewModel = CoverLetterEditorViewModel(
+        repository: repository,
+        aiService: LocalAiResumeService(),
+        resumeContext: ResumeData.empty(template: ResumeTemplate.corporate)
+            .copyWith(
+              fullName: 'Avery Lee',
+              jobTitle: 'Product Designer',
+            ),
+        seedCoverLetter: CoverLetterData.empty(),
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ResumePdfService>.value(value: ResumePdfService()),
+            ChangeNotifierProvider<PremiumPurchaseService>(
+              create: (_) => PremiumPurchaseService.inMemory(
+                appPreferences: appPreferences,
+                isPremium: true,
+              ),
+            ),
+            ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
+              value: viewModel,
+            ),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                ChangeNotifierProvider<
+                                  CoverLetterEditorViewModel
+                                >.value(
+                                  value: viewModel,
+                                  child: const CoverLetterEditorScreen(
+                                    backPopsToHome: true,
+                                  ),
+                                ),
+                          ),
+                        );
+                      },
+                      child: const Text('Open editor'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Open editor'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(_textFieldByLabel('Company name'), 'Acme Labs');
+      await tester.enterText(
+        _textFieldByLabel('Job position name'),
+        'Senior Product Designer',
+      );
+      await tester.enterText(
+        _textFieldByLabel('Skill to highlight'),
+        'UX research',
+      );
+      await tester.tap(find.byKey(const Key('cover-letter-skill-add-button')));
+      await tester.pumpAndSettle();
+      final languageDropdown = tester.widget<DropdownButtonFormField<String>>(
+        find.byKey(const Key('cover-letter-language-dropdown')),
+      );
+      languageDropdown.onChanged?.call('English (English)');
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Create cover letter'));
+      await tester.tap(find.text('Create cover letter'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CoverLetterContentScreen), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('preview-cover-letter-button')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('cover-letter-preview-screen')),
+        findsOneWidget,
+      );
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Open editor'), findsOneWidget);
+      expect(find.byType(CoverLetterEditorScreen), findsNothing);
+      expect(find.byType(CoverLetterContentScreen), findsNothing);
+      expect(
+        find.byKey(const Key('cover-letter-preview-screen')),
+        findsNothing,
+      );
+    },
+  );
 }

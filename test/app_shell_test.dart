@@ -358,4 +358,128 @@ void main() {
       expect(find.text('Use template'), findsNothing);
     },
   );
+
+  testWidgets(
+    'new cover letter flow returns to home when preview is dismissed',
+    (tester) async {
+      tester.view.physicalSize = const Size(1440, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      _ignoreRenderOverflowErrors();
+
+      final repository = _FakeAppShellRepository();
+      final resumeLibrary = ResumeLibraryViewModel(repository: repository);
+      final coverLetterLibrary = CoverLetterLibraryViewModel(
+        repository: repository,
+      );
+
+      await resumeLibrary.loadResumes();
+      await coverLetterLibrary.loadCoverLetters();
+
+      final appPreferences = AppPreferences.inMemory(isPremium: true);
+      final premiumPurchaseService = PremiumPurchaseService.inMemory(
+        appPreferences: appPreferences,
+        isPremium: true,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ResumeImportService>.value(value: ResumeImportService()),
+            Provider<ResumeRepository>.value(value: repository),
+            Provider<AppPreferences>.value(value: appPreferences),
+            ChangeNotifierProvider<PremiumPurchaseService>.value(
+              value: premiumPurchaseService,
+            ),
+            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
+            Provider<ResumePdfService>.value(value: ResumePdfService()),
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+              value: resumeLibrary,
+            ),
+            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
+              value: coverLetterLibrary,
+            ),
+            ChangeNotifierProvider<SettingsViewModel>(
+              create: (_) => SettingsViewModel(),
+            ),
+          ],
+          child: const MaterialApp(home: AppShell()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cover Letter').first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('cover-letter-title-dialog-field')),
+        'Retail Sales Application',
+      );
+      await tester.tap(find.text('Create'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is TextField &&
+              widget.decoration?.labelText == 'Company name',
+        ),
+        'Acme Labs',
+      );
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is TextField &&
+              widget.decoration?.labelText == 'Job position name',
+        ),
+        'Senior Product Designer',
+      );
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is TextField &&
+              widget.decoration?.labelText == 'Skill to highlight',
+        ),
+        'UX research',
+      );
+      await tester.tap(find.byKey(const Key('cover-letter-skill-add-button')));
+      await tester.pumpAndSettle();
+
+      final languageDropdown = tester.widget<DropdownButtonFormField<String>>(
+        find.byKey(const Key('cover-letter-language-dropdown')),
+      );
+      languageDropdown.onChanged?.call('English (English)');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Create cover letter'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('preview-cover-letter-button')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('cover-letter-preview-screen')),
+        findsOneWidget,
+      );
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('cover-letter-preview-screen')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('preview-cover-letter-button')),
+        findsNothing,
+      );
+      expect(find.text('Create cover letter'), findsNothing);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    },
+  );
 }

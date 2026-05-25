@@ -48,6 +48,13 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
+  void _goToHomeCoverLetterTab() {
+    setState(() {
+      _currentIndex = 0;
+      _homeSegment = HomeSegment.coverLetters;
+    });
+  }
+
   String get _activeHeaderTitle {
     return switch (_currentIndex) {
       2 => 'Optimize Resume',
@@ -150,7 +157,7 @@ class _AppShellState extends State<AppShell> {
     }
 
     final draft = library.newDraft().copyWith(title: enteredTitle.trim());
-    await _openCoverLetterEditor(seed: draft);
+    await _openCoverLetterEditor(seed: draft, backPopsToHome: true);
   }
 
   Future<String?> _promptForCoverLetterTitle() async {
@@ -204,7 +211,10 @@ class _AppShellState extends State<AppShell> {
     await library.loadResumes();
   }
 
-  Future<void> _openCoverLetterEditor({CoverLetterData? seed}) async {
+  Future<void> _openCoverLetterEditor({
+    CoverLetterData? seed,
+    bool backPopsToHome = false,
+  }) async {
     final library = context.read<CoverLetterLibraryViewModel>();
     final viewModel = _buildCoverLetterViewModel(
       seed: seed ?? library.newDraft(),
@@ -215,13 +225,17 @@ class _AppShellState extends State<AppShell> {
         builder: (_) =>
             ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
               value: viewModel,
-              child: const CoverLetterEditorScreen(),
+              child: CoverLetterEditorScreen(backPopsToHome: backPopsToHome),
             ),
       ),
     );
 
     if (!mounted) {
       return;
+    }
+
+    if (backPopsToHome) {
+      _goToHomeCoverLetterTab();
     }
 
     await library.loadCoverLetters();

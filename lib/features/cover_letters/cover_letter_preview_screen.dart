@@ -12,7 +12,13 @@ import '../shared/view_models.dart';
 import '../templates/templates_screen.dart';
 
 class CoverLetterPreviewScreen extends StatefulWidget {
-  const CoverLetterPreviewScreen({super.key});
+  const CoverLetterPreviewScreen({super.key, this.backPopsToHome = false});
+
+  /// When `true`, the system/back control pops with `null` so the caller can
+  /// return to the home screen (e.g. home preview, or editor preview where
+  /// the editor routes are popped as well). When `false`, back returns to the
+  /// cover letter content screen underneath.
+  final bool backPopsToHome;
 
   @override
   State<CoverLetterPreviewScreen> createState() =>
@@ -110,6 +116,18 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
         'source': 'cover_letter_preview',
       },
     );
+  }
+
+  void _onBackPressed() {
+    final navigator = Navigator.of(context);
+    if (!navigator.canPop()) {
+      return;
+    }
+    if (widget.backPopsToHome) {
+      navigator.pop<bool?>(null);
+      return;
+    }
+    navigator.pop(true);
   }
 
   Future<void> _showCoverLetterStyleSheet() async {
@@ -324,16 +342,28 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
               )
             : Theme.of(context).appBarTheme.titleTextStyle;
 
-        return Scaffold(
-          backgroundColor: scaffoldBg,
-          appBar: AppBar(
-            backgroundColor: barBg,
-            surfaceTintColor: Colors.transparent,
-            scrolledUnderElevation: 0,
-            leadingWidth: 56,
-            titleSpacing: 2,
-            title: Text(letter.displayTitle, style: baseTitleStyle),
-          ),
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) {
+              return;
+            }
+            _onBackPressed();
+          },
+          child: Scaffold(
+            backgroundColor: scaffoldBg,
+            appBar: AppBar(
+              backgroundColor: barBg,
+              surfaceTintColor: Colors.transparent,
+              scrolledUnderElevation: 0,
+              leadingWidth: 56,
+              automaticallyImplyLeading: Navigator.of(context).canPop(),
+              leading: Navigator.of(context).canPop()
+                  ? BackButton(onPressed: _onBackPressed)
+                  : null,
+              titleSpacing: 2,
+              title: Text(letter.displayTitle, style: baseTitleStyle),
+            ),
           body: Column(
             children: [
               Expanded(
@@ -381,6 +411,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                 onStyle: _showCoverLetterStyleSheet,
               ),
             ],
+          ),
           ),
         );
       },

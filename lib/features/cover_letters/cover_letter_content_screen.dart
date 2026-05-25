@@ -7,7 +7,9 @@ import 'cover_letter_preview_screen.dart';
 import '../shared/view_models.dart';
 
 class CoverLetterContentScreen extends StatefulWidget {
-  const CoverLetterContentScreen({super.key});
+  const CoverLetterContentScreen({super.key, this.backPopsToHome = false});
+
+  final bool backPopsToHome;
 
   @override
   State<CoverLetterContentScreen> createState() =>
@@ -44,14 +46,24 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    final previewResult = await Navigator.of(context).push<bool?>(
+      MaterialPageRoute<bool?>(
         builder: (_) => ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
           value: viewModel,
-          child: const CoverLetterPreviewScreen(),
+          child: CoverLetterPreviewScreen(
+            backPopsToHome: widget.backPopsToHome,
+          ),
         ),
       ),
     );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (widget.backPopsToHome && previewResult == null) {
+      Navigator.of(context).pop(true);
+    }
   }
 
   @override

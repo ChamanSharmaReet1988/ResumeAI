@@ -94,7 +94,9 @@ void _scheduleEnsureVisible(BuildContext context) {
 }
 
 class CoverLetterEditorScreen extends StatelessWidget {
-  const CoverLetterEditorScreen({super.key});
+  const CoverLetterEditorScreen({super.key, this.backPopsToHome = false});
+
+  final bool backPopsToHome;
 
   @override
   Widget build(BuildContext context) {
@@ -213,18 +215,27 @@ class CoverLetterEditorScreen extends StatelessWidget {
                                       if (!context.mounted) {
                                         return;
                                       }
-                                      await Navigator.of(context).push(
-                                        MaterialPageRoute<void>(
+                                      final exitToHome =
+                                          await Navigator.of(context).push<bool>(
+                                        MaterialPageRoute<bool>(
                                           builder: (_) =>
                                               ChangeNotifierProvider<
                                                 CoverLetterEditorViewModel
                                               >.value(
                                                 value: viewModel,
-                                                child:
-                                                    const CoverLetterContentScreen(),
+                                                child: CoverLetterContentScreen(
+                                                  backPopsToHome:
+                                                      backPopsToHome,
+                                                ),
                                               ),
                                         ),
                                       );
+                                      if (!context.mounted) {
+                                        return;
+                                      }
+                                      if (backPopsToHome && exitToHome == true) {
+                                        Navigator.of(context).pop();
+                                      }
                                     },
                               child: viewModel.isBusy
                                   ? const SizedBox(
