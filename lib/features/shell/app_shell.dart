@@ -241,22 +241,29 @@ class _AppShellState extends State<AppShell> {
     await library.loadCoverLetters();
   }
 
-  Future<void> _openCoverLetterContent({required CoverLetterData seed}) async {
+  Future<void> _openCoverLetterContent({
+    required CoverLetterData seed,
+    bool backPopsToHome = false,
+  }) async {
     final library = context.read<CoverLetterLibraryViewModel>();
     final viewModel = _buildCoverLetterViewModel(seed: seed);
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (_) =>
             ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
               value: viewModel,
-              child: const CoverLetterContentScreen(),
+              child: CoverLetterContentScreen(backPopsToHome: backPopsToHome),
             ),
       ),
     );
 
     if (!mounted) {
       return;
+    }
+
+    if (backPopsToHome) {
+      _goToHomeCoverLetterTab();
     }
 
     await library.loadCoverLetters();
@@ -334,8 +341,10 @@ class _AppShellState extends State<AppShell> {
         onPreviewResume: (resume) => _openPreview(seed: resume),
         onPreviewCoverLetter: (coverLetter) =>
             _openCoverLetterPreview(seed: coverLetter),
-        onEditCoverLetter: (coverLetter) =>
-            _openCoverLetterContent(seed: coverLetter),
+        onEditCoverLetter: (coverLetter) => _openCoverLetterContent(
+          seed: coverLetter,
+          backPopsToHome: true,
+        ),
       ),
       TemplatesScreen(onCreateResume: _createResumeFromTemplatesTab),
       ResumeAnalyserScreen(

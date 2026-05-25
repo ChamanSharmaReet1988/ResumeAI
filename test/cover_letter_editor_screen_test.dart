@@ -10,6 +10,7 @@ import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/cover_letters/cover_letter_content_screen.dart';
 import 'package:resume_app/features/cover_letters/cover_letter_editor_screen.dart';
+import 'package:resume_app/features/cover_letters/cover_letter_preview_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
 
 class _FakeCoverLetterRepository implements ResumeRepository {
@@ -312,6 +313,92 @@ void main() {
         find.byKey(const Key('cover-letter-preview-screen')),
         findsNothing,
       );
+    },
+  );
+
+  testWidgets(
+    'content preview back with backPopsToHome dismisses content screen',
+    (tester) async {
+      final repository = _FakeCoverLetterRepository();
+      final appPreferences = AppPreferences.inMemory(isPremium: true);
+      final viewModel = CoverLetterEditorViewModel(
+        repository: repository,
+        aiService: LocalAiResumeService(),
+        resumeContext: ResumeData.empty(template: ResumeTemplate.corporate)
+            .copyWith(
+              fullName: 'Avery Lee',
+              jobTitle: 'Product Designer',
+            ),
+        seedCoverLetter: CoverLetterData.empty().copyWith(
+          title: 'Retail Sales Application',
+          company: 'Acme Labs',
+          role: 'Senior Product Designer',
+          content: 'Dear Hiring Manager,\n\nI am excited to apply.',
+        ),
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ResumePdfService>.value(value: ResumePdfService()),
+            ChangeNotifierProvider<PremiumPurchaseService>(
+              create: (_) => PremiumPurchaseService.inMemory(
+                appPreferences: appPreferences,
+                isPremium: true,
+              ),
+            ),
+            ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
+              value: viewModel,
+            ),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                ChangeNotifierProvider<
+                                  CoverLetterEditorViewModel
+                                >.value(
+                                  value: viewModel,
+                                  child: const CoverLetterContentScreen(
+                                    backPopsToHome: true,
+                                  ),
+                                ),
+                          ),
+                        );
+                      },
+                      child: const Text('Open content'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Open content'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CoverLetterContentScreen), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('preview-cover-letter-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CoverLetterPreviewScreen), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Open content'), findsOneWidget);
+      expect(find.byType(CoverLetterContentScreen), findsNothing);
+      expect(find.byType(CoverLetterPreviewScreen), findsNothing);
     },
   );
 }

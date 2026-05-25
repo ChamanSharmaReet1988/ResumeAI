@@ -482,4 +482,100 @@ void main() {
       expect(find.byType(FloatingActionButton), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'edit cover letter flow returns to home when preview is dismissed',
+    (tester) async {
+      tester.view.physicalSize = const Size(1440, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      _ignoreRenderOverflowErrors();
+
+      final repository = _FakeAppShellRepository();
+      final existingCoverLetter = CoverLetterData.empty().copyWith(
+        id: 'cover-existing',
+        title: 'Retail Sales Application',
+        company: 'Zara',
+        role: 'Retail Sales Associate',
+        content: 'Generated cover letter content for preview.',
+      );
+      repository.coverLetters.add(existingCoverLetter);
+
+      final resumeLibrary = ResumeLibraryViewModel(repository: repository);
+      final coverLetterLibrary = CoverLetterLibraryViewModel(
+        repository: repository,
+      );
+
+      await resumeLibrary.loadResumes();
+      await coverLetterLibrary.loadCoverLetters();
+
+      final appPreferences = AppPreferences.inMemory(isPremium: true);
+      final premiumPurchaseService = PremiumPurchaseService.inMemory(
+        appPreferences: appPreferences,
+        isPremium: true,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ResumeImportService>.value(value: ResumeImportService()),
+            Provider<ResumeRepository>.value(value: repository),
+            Provider<AppPreferences>.value(value: appPreferences),
+            ChangeNotifierProvider<PremiumPurchaseService>.value(
+              value: premiumPurchaseService,
+            ),
+            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
+            Provider<ResumePdfService>.value(value: ResumePdfService()),
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+              value: resumeLibrary,
+            ),
+            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
+              value: coverLetterLibrary,
+            ),
+            ChangeNotifierProvider<SettingsViewModel>(
+              create: (_) => SettingsViewModel(),
+            ),
+          ],
+          child: const MaterialApp(home: AppShell()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cover Letter').first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Retail Sales Application'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Edit'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('preview-cover-letter-button')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const Key('preview-cover-letter-button')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('cover-letter-preview-screen')),
+        findsOneWidget,
+      );
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('cover-letter-preview-screen')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('preview-cover-letter-button')),
+        findsNothing,
+      );
+      expect(find.text('Cover letter content'), findsNothing);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    },
+  );
 }
