@@ -16,11 +16,11 @@ class PremiumPurchaseService extends ChangeNotifier {
     required AppPreferences appPreferences,
     InAppPurchase? inAppPurchase,
     bool enableStore = true,
-  })  : _appPreferences = appPreferences,
-        _enableStore = enableStore,
-        _inAppPurchase = enableStore
-            ? (inAppPurchase ?? InAppPurchase.instance)
-            : inAppPurchase {
+  }) : _appPreferences = appPreferences,
+       _enableStore = enableStore,
+       _inAppPurchase = enableStore
+           ? (inAppPurchase ?? InAppPurchase.instance)
+           : inAppPurchase {
     if (_enableStore) {
       _ensurePurchaseStreamListener();
     }
@@ -75,6 +75,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   static const Duration _storeEntitlementSettleDelay = Duration(
     milliseconds: 3500,
   );
+  static const Duration _postLaunchEntitlementRetryDelay = Duration(seconds: 2);
   static const int _silentEntitlementMissesBeforeRevocation = 2;
 
   bool get storeAvailable => _storeAvailable;
@@ -88,6 +89,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     return _appPreferences.isPremium ||
         (kDebugMode && _appPreferences.debugPremiumOverrideEnabled);
   }
+
   bool get debugPremiumOverrideEnabled =>
       kDebugMode && _appPreferences.debugPremiumOverrideEnabled;
   String? get statusMessage => _statusMessage;
@@ -101,9 +103,9 @@ class PremiumPurchaseService extends ChangeNotifier {
       PremiumProducts.planLabelFor(_activeSubscriptionProductId);
 
   String alreadySubscribedMessage() => PremiumProducts.alreadySubscribedMessage(
-        productId: _activeSubscriptionProductId,
-        debugOverride: debugPremiumOverrideEnabled,
-      );
+    productId: _activeSubscriptionProductId,
+    debugOverride: debugPremiumOverrideEnabled,
+  );
 
   /// Whether a Pro welcome dialog should be shown after buy / restore.
   bool get hasPremiumWelcomePending => _pendingPremiumWelcome;
@@ -123,12 +125,11 @@ class PremiumPurchaseService extends ChangeNotifier {
     bool entitled, {
     String reason = 'test',
     bool conservativeRevoke = false,
-  }) =>
-      _applyStoreEntitlement(
-        entitled,
-        reason: reason,
-        conservativeRevoke: conservativeRevoke,
-      );
+  }) => _applyStoreEntitlement(
+    entitled,
+    reason: reason,
+    conservativeRevoke: conservativeRevoke,
+  );
 
   ProductDetails? productFor(String productId) {
     for (final product in _products) {
@@ -140,7 +141,9 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   void _ensurePurchaseStreamListener() {
-    if (!_enableStore || _purchaseSubscription != null || _inAppPurchase == null) {
+    if (!_enableStore ||
+        _purchaseSubscription != null ||
+        _inAppPurchase == null) {
       return;
     }
     _purchaseSubscription = _store.purchaseStream.listen(
@@ -182,6 +185,9 @@ class PremiumPurchaseService extends ChangeNotifier {
 
       await _loadProducts();
       await verifyPremiumLocally(reason: 'app_launch');
+      if (!_appPreferences.isPremium) {
+        unawaited(_retryLaunchEntitlementCheckOnce());
+      }
       _logLocalPremiumState('after initialize');
     } catch (error, stackTrace) {
       PremiumDebugLog.log('initialize failed: $error');
@@ -423,8 +429,7 @@ class PremiumPurchaseService extends ChangeNotifier {
           }
           _errorMessage = PremiumStoreMessages.productsUnavailable;
         } else {
-          _errorMessage =
-              'Could not load subscription prices. Try again.';
+          _errorMessage = 'Could not load subscription prices. Try again.';
         }
       } else {
         _errorMessage = null;
@@ -453,9 +458,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   Future<ProductDetailsResponse> _queryStoreProducts() {
-    return _store.queryProductDetails(
-      PremiumProducts.subscriptionIds.toSet(),
-    );
+    return _store.queryProductDetails(PremiumProducts.subscriptionIds.toSet());
   }
 
   String _friendlyProductLoadError(String message) {
@@ -468,9 +471,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   List<ProductDetails> _sortProducts(List<ProductDetails> products) {
     final order = PremiumProducts.subscriptionIds;
     final sorted = [...products];
-    sorted.sort(
-      (a, b) => order.indexOf(a.id).compareTo(order.indexOf(b.id)),
-    );
+    sorted.sort((a, b) => order.indexOf(a.id).compareTo(order.indexOf(b.id)));
     return sorted;
   }
 
@@ -497,9 +498,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     } else {
       purchaseParam = PurchaseParam(productDetails: product);
     }
-    final started = await _store.buyNonConsumable(
-      purchaseParam: purchaseParam,
-    );
+    final started = await _store.buyNonConsumable(purchaseParam: purchaseParam);
 
     if (!started) {
       _isPurchasing = false;
@@ -590,16 +589,14 @@ class PremiumPurchaseService extends ChangeNotifier {
           break;
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          final handleStreamUpdate =
+          final allowPurchaseStreamFallback =
               _isPurchasing || _isRestoring || _ongoingStoreSync != null;
-          if (!handleStreamUpdate) {
-            PremiumDebugLog.log(
-              'Ignoring purchase stream ${purchase.status.name} '
-              '(no active buy/restore)',
-            );
-            break;
-          }
-          unawaited(_finalizePurchaseFromStream(purchase));
+          unawaited(
+            _finalizePurchaseFromStream(
+              purchase,
+              allowPurchaseStreamFallback: allowPurchaseStreamFallback,
+            ),
+          );
           break;
       }
 
@@ -609,6 +606,23 @@ class PremiumPurchaseService extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> _retryLaunchEntitlementCheckOnce() async {
+    await Future<void>.delayed(_postLaunchEntitlementRetryDelay);
+    if (!_enableStore ||
+        _isPurchasing ||
+        _isRestoring ||
+        _ongoingStoreSync != null ||
+        _appPreferences.isPremium) {
+      return;
+    }
+
+    PremiumDebugLog.log(
+      'Launch entitlement retry after '
+      '${_postLaunchEntitlementRetryDelay.inMilliseconds}ms',
+    );
+    await verifyPremiumLocally(reason: 'app_launch_retry');
   }
 
   Future<void> _refreshActiveSubscriptionFromStore({
@@ -622,11 +636,11 @@ class PremiumPurchaseService extends ChangeNotifier {
     }
     _activeSubscriptionProductId =
         await PremiumEntitlementResolver.resolveActiveProductId(
-      _store,
-      reason: reason,
-      preferredProductId: preferredProductId,
-      requestAppStoreSync: requestAppStoreSync,
-    );
+          _store,
+          reason: reason,
+          preferredProductId: preferredProductId,
+          requestAppStoreSync: requestAppStoreSync,
+        );
     PremiumDebugLog.logPair(
       'cachedActiveProductId',
       _activeSubscriptionProductId ?? 'none',
@@ -634,7 +648,10 @@ class PremiumPurchaseService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _finalizePurchaseFromStream(PurchaseDetails purchase) async {
+  Future<void> _finalizePurchaseFromStream(
+    PurchaseDetails purchase, {
+    required bool allowPurchaseStreamFallback,
+  }) async {
     final wasBuying = _isPurchasing;
     try {
       if (_ongoingStoreSync != null) {
@@ -646,7 +663,10 @@ class PremiumPurchaseService extends ChangeNotifier {
       if (purchase.status == PurchaseStatus.purchased) {
         await Future<void>.delayed(const Duration(milliseconds: 800));
       }
-      await _refreshPremiumFromStoreAfterPurchase(purchase);
+      await _refreshPremiumFromStoreAfterPurchase(
+        purchase,
+        allowPurchaseStreamFallback: allowPurchaseStreamFallback,
+      );
     } finally {
       if (wasBuying) {
         _isPurchasing = false;
@@ -656,8 +676,9 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   Future<void> _refreshPremiumFromStoreAfterPurchase(
-    PurchaseDetails purchase,
-  ) async {
+    PurchaseDetails purchase, {
+    required bool allowPurchaseStreamFallback,
+  }) async {
     PremiumDebugLog.section(
       'Purchase stream → re-verify (${purchase.status.name})',
     );
@@ -665,6 +686,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     final entitled = await _resolveEntitlementAfterPurchase(
       purchase,
       reason: reason,
+      allowPurchaseStreamFallback: allowPurchaseStreamFallback,
     );
     await _applyStoreEntitlement(entitled, reason: reason);
     if (entitled) {
@@ -685,6 +707,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   Future<bool> _resolveEntitlementAfterPurchase(
     PurchaseDetails purchase, {
     required String reason,
+    required bool allowPurchaseStreamFallback,
   }) async {
     for (var attempt = 0; attempt < 3; attempt++) {
       if (attempt > 0) {
@@ -699,7 +722,13 @@ class PremiumPurchaseService extends ChangeNotifier {
       }
     }
 
-    if (!_shouldTrustPurchaseStream(purchase)) {
+    if (!allowPurchaseStreamFallback || !_shouldTrustPurchaseStream(purchase)) {
+      if (!allowPurchaseStreamFallback) {
+        PremiumDebugLog.log(
+          'Entitlement resolver empty after retries; '
+          'not trusting purchase stream outside active buy/restore',
+        );
+      }
       return false;
     }
 
