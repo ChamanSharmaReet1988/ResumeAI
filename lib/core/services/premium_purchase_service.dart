@@ -531,7 +531,7 @@ class PremiumPurchaseService extends ChangeNotifier {
         silent: silent,
         reason: 'manual_restore',
         requestStoreRestore: true,
-        requestAppStoreSync: true,
+        requestAppStoreSync: false,
       );
       if (!silent) {
         final hasActiveStoreSubscription = _activeSubscriptionProductId != null;

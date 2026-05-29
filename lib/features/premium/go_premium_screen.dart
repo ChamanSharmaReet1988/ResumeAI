@@ -73,7 +73,9 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     if (premium.isPurchasing || premium.isRestoring) {
       if (_isFullScreenLoading) {
         setState(() {
-          _loadingMessage = 'Completing your purchase…';
+          _loadingMessage = premium.isRestoring
+              ? 'Restoring your subscription…'
+              : 'Completing your purchase…';
         });
       }
       return;
@@ -417,7 +419,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                               onPressed: _isFullScreenLoading
                                   ? null
                                   : () => _onRestorePressed(premium),
-                              child: const Text('Restore purchases'),
+                              child: const Text('Restore'),
                             ),
                           ],
                         ),
