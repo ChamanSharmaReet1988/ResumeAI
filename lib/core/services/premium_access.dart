@@ -44,4 +44,5 @@ abstract final class PremiumAccess {
   }
 
   static const bool iCloudBackupRequiresPremium = true;
+  static const bool googleDriveBackupRequiresPremium = true;
 }

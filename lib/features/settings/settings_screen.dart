@@ -254,6 +254,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
       return;
     }
+    final allowed = await ensurePremiumForGoogleDriveBackup(context);
+    if (!allowed || !context.mounted) {
+      return;
+    }
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const GoogleDriveBackupScreen(),

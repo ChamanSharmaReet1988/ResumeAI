@@ -8,6 +8,6 @@ abstract final class GoogleSignInConfig {
       '48903946368-qbqg3as76gkf99cbbi4b59ji8474tnso.apps.googleusercontent.com';
 
   /// Web client ID from Google Cloud Console (Android / server token flow).
-  /// Leave null until configured; Drive sign-in on Android may fail until set.
-  static const String? androidServerClientId = null;
+  static const String androidServerClientId =
+      '84500423167-5is6rbbks07npmbek8f55qkgknsljttp.apps.googleusercontent.com';
 }

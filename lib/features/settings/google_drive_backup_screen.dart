@@ -1,11 +1,15 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/app_preferences.dart';
 import '../../core/services/google_drive_resume_service.dart';
 import '../../core/services/resume_services.dart';
+import '../premium/premium_gate.dart';
 import '../shared/view_models.dart';
 
 class GoogleDriveBackupScreen extends StatefulWidget {
@@ -34,10 +38,25 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   void initState() {
     super.initState();
     _autoSyncEnabled = _preferences.googleDriveAutoSyncEnabled;
-    _bootstrap();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      if (!readPremiumAccess(context)) {
+        Navigator.of(context).pop();
+        return;
+      }
+      unawaited(_bootstrap());
+    });
   }
 
   Future<void> _setAutoSyncEnabled(bool value) async {
+    if (value && !readPremiumAccess(context)) {
+      final allowed = await ensurePremiumForGoogleDriveBackup(context);
+      if (!allowed || !mounted) {
+        return;
+      }
+    }
     await _preferences.setGoogleDriveAutoSyncEnabled(value);
     if (!mounted) {
       return;
@@ -59,13 +78,12 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
         _isSignedIn = signedIn;
         _driveResumes = items;
       });
-    } on Exception catch (error) {
+    } on Exception {
       if (mounted) {
         setState(() {
           _isSignedIn = false;
           _driveResumes = const [];
         });
-        _showMessage('Could not restore Google session: $error');
       }
     } finally {
       if (mounted) {
@@ -228,6 +246,100 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _showDriveResumeActions({
+    required GoogleDriveResumeSummary item,
+    required _DriveResumeStatus status,
+  }) async {
+    final canDownload = switch (status) {
+      _DriveResumeStatus.driveOnly => true,
+      _DriveResumeStatus.driveNewer => true,
+      _DriveResumeStatus.localNewer => false,
+      _DriveResumeStatus.synced => false,
+    };
+
+    final action = await showModalBottomSheet<_DriveResumeAction>(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      builder: (sheetContext) {
+        final sheetTheme = Theme.of(sheetContext);
+        final primaryColor = sheetTheme.colorScheme.primary;
+        final actionTextColor = sheetTheme.colorScheme.onSurface;
+        const disabledOpacity = 0.38;
+        final disabledIconColor = primaryColor.withValues(alpha: disabledOpacity);
+        final disabledTextColor = actionTextColor.withValues(
+          alpha: disabledOpacity,
+        );
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: BottomSheetInsets.topSpacing),
+                ListTile(
+                  leading: Icon(
+                    Icons.download_rounded,
+                    color: canDownload ? primaryColor : disabledIconColor,
+                  ),
+                  title: Text(
+                    canDownload ? 'Download' : 'Already downloaded',
+                    style: sheetTheme.textTheme.bodyLarge?.copyWith(
+                      color: canDownload ? actionTextColor : disabledTextColor,
+                    ),
+                  ),
+                  enabled: canDownload,
+                  onTap: canDownload
+                      ? () => Navigator.of(
+                          sheetContext,
+                        ).pop(_DriveResumeAction.download)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null) {
+      return;
+    }
+
+    switch (action) {
+      case _DriveResumeAction.download:
+        await _downloadResume(item);
+    }
+  }
+
+  Widget _buildDriveResumeCard({
+    required GoogleDriveResumeSummary item,
+    required _DriveResumeStatus status,
+    required DateFormat dateFormat,
+  }) {
+    final isBusy = _downloadingIds.contains(item.id);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: isBusy
+              ? null
+              : () => _showDriveResumeActions(item: item, status: status),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+            child: _DriveResumeContent(
+              summary: item,
+              dateFormat: dateFormat,
+              showProgress: isBusy,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -237,7 +349,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Google Drive Backup'),
+        title: const Text('Google Drive backup'),
         actions: [
           if (_isSignedIn)
             TextButton(
@@ -465,28 +577,18 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                       )
                     else ...[
                       Text(
-                        'Resumes on Drive',
+                        'Resumes in Google Drive',
                         style: theme.textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
                       for (final item in _driveResumes)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: _DriveResumeRow(
-                                summary: item,
-                                status: _statusFor(
-                                  localResume: localById[item.id],
-                                  driveResume: item,
-                                ),
-                                dateFormat: dateFormat,
-                                isBusy: _downloadingIds.contains(item.id),
-                                onDownload: () => _downloadResume(item),
-                              ),
-                            ),
+                        _buildDriveResumeCard(
+                          item: item,
+                          status: _statusFor(
+                            localResume: localById[item.id],
+                            driveResume: item,
                           ),
+                          dateFormat: dateFormat,
                         ),
                     ],
                   ],
@@ -515,20 +617,18 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
 
 enum _DriveResumeStatus { driveOnly, driveNewer, localNewer, synced }
 
-class _DriveResumeRow extends StatelessWidget {
-  const _DriveResumeRow({
+enum _DriveResumeAction { download }
+
+class _DriveResumeContent extends StatelessWidget {
+  const _DriveResumeContent({
     required this.summary,
-    required this.status,
     required this.dateFormat,
-    required this.isBusy,
-    required this.onDownload,
+    required this.showProgress,
   });
 
   final GoogleDriveResumeSummary summary;
-  final _DriveResumeStatus status;
   final DateFormat dateFormat;
-  final bool isBusy;
-  final VoidCallback onDownload;
+  final bool showProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -537,16 +637,9 @@ class _DriveResumeRow extends StatelessWidget {
         ? ResumeData.defaultTitle
         : summary.title.trim();
     final metadataStyle = theme.textTheme.bodySmall?.copyWith(
-      fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 2,
+      fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 3,
       height: 1.2,
     );
-
-    final (buttonText, isDownloadEnabled) = switch (status) {
-      _DriveResumeStatus.driveOnly => ('Download', true),
-      _DriveResumeStatus.driveNewer => ('Download', true),
-      _DriveResumeStatus.localNewer => ('Downloaded', false),
-      _DriveResumeStatus.synced => ('Downloaded', false),
-    };
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -554,7 +647,12 @@ class _DriveResumeRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: theme.textTheme.titleSmall),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(height: 6),
               Text(
                 'Updated: ${dateFormat.format(summary.updatedAt)}',
@@ -564,25 +662,19 @@ class _DriveResumeRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(0, 32),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            textStyle: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-            ),
+        if (showProgress)
+          const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        else
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            key: Key('drive-card-arrow-${summary.id}'),
+            size: 20,
+            color: theme.colorScheme.primary,
           ),
-          onPressed: !isDownloadEnabled || isBusy ? null : onDownload,
-          child: isBusy
-              ? const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(buttonText),
-        ),
       ],
     );
   }

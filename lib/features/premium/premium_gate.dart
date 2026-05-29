@@ -98,3 +98,10 @@ Future<bool> ensurePremiumForICloudBackup(BuildContext context) async {
   }
   return ensurePremiumAccess(context);
 }
+
+Future<bool> ensurePremiumForGoogleDriveBackup(BuildContext context) async {
+  if (!PremiumAccess.googleDriveBackupRequiresPremium) {
+    return true;
+  }
+  return ensurePremiumAccess(context);
+}
