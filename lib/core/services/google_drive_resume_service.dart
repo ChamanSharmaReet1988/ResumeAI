@@ -262,4 +262,9 @@ class GoogleDriveResumeService {
     }
     return ResumeData.fromJson(Map<String, dynamic>.from(map));
   }
+
+  Future<void> deleteResume(String driveFileId) async {
+    final api = await _api();
+    await api.files.delete(driveFileId);
+  }
 }

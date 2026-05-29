@@ -27,6 +27,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   bool _isSyncing = false;
   bool _autoSyncEnabled = false;
   Set<String> _downloadingIds = <String>{};
+  Set<String> _deletingIds = <String>{};
   List<GoogleDriveResumeSummary> _driveResumes = const [];
 
   GoogleDriveResumeService get _service =>
@@ -104,13 +105,15 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
         _isSignedIn = true;
         _driveResumes = items;
       });
-    } on UnsupportedError catch (error) {
+    } on UnsupportedError {
       if (mounted) {
-        _showMessage('$error');
+        _showMessage('Google sign-in is not available on this device.');
       }
-    } on Exception catch (error) {
+    } on Exception {
       if (mounted) {
-        _showMessage('Sign-in failed: $error');
+        _showMessage(
+          'Could not sign in to Google Drive right now. Try again.',
+        );
       }
     } finally {
       if (mounted) {
@@ -141,9 +144,11 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
         return;
       }
       setState(() => _driveResumes = items);
-    } on Exception catch (error) {
+    } on Exception {
       if (mounted) {
-        _showMessage('Could not load Drive resumes: $error');
+        _showMessage(
+          'Could not load your Google Drive resumes right now. Try again.',
+        );
       }
     } finally {
       if (mounted) {
@@ -202,9 +207,11 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       } else {
         _showMessage('Synced $uploadedCount resumes to Google Drive.');
       }
-    } on Exception catch (error) {
+    } on Exception {
       if (mounted) {
-        _showMessage('Could not sync to Drive: $error');
+        _showMessage(
+          'Could not sync resumes to Google Drive right now. Try again.',
+        );
       }
     } finally {
       if (mounted) {
@@ -229,13 +236,64 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       if (mounted) {
         _showMessage('Downloaded ${item.title}.');
       }
-    } on Exception catch (error) {
+    } on Exception {
       if (mounted) {
-        _showMessage('Could not download resume: $error');
+        _showMessage(
+          'Could not download this resume from Google Drive. Try again.',
+        );
       }
     } finally {
       if (mounted) {
         setState(() => _downloadingIds = {..._downloadingIds}..remove(item.id));
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteFromDrive(GoogleDriveResumeSummary item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Remove from Google Drive?'),
+          content: Text(
+            'Remove "${item.title}" from Google Drive? This will not delete the copy on this device.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Remove'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+    await _deleteFromDrive(item);
+  }
+
+  Future<void> _deleteFromDrive(GoogleDriveResumeSummary item) async {
+    setState(() => _deletingIds = {..._deletingIds, item.id});
+    try {
+      await _service.deleteResume(item.driveFileId);
+      await _loadDriveResumes();
+      if (mounted) {
+        _showMessage('Removed ${item.title} from Google Drive.');
+      }
+    } on Exception {
+      if (mounted) {
+        _showMessage(
+          'Could not remove this resume from Google Drive. Try again.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _deletingIds = {..._deletingIds}..remove(item.id));
       }
     }
   }
@@ -260,43 +318,63 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     final action = await showModalBottomSheet<_DriveResumeAction>(
       context: context,
       backgroundColor: Theme.of(context).cardColor,
+      useSafeArea: true,
       builder: (sheetContext) {
         final sheetTheme = Theme.of(sheetContext);
         final primaryColor = sheetTheme.colorScheme.primary;
         final actionTextColor = sheetTheme.colorScheme.onSurface;
+        final bottomInset = MediaQuery.viewPaddingOf(sheetContext).bottom;
         const disabledOpacity = 0.38;
         final disabledIconColor = primaryColor.withValues(alpha: disabledOpacity);
         final disabledTextColor = actionTextColor.withValues(
           alpha: disabledOpacity,
         );
 
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: BottomSheetInsets.topSpacing),
-                ListTile(
-                  leading: Icon(
-                    Icons.download_rounded,
-                    color: canDownload ? primaryColor : disabledIconColor,
-                  ),
-                  title: Text(
-                    canDownload ? 'Download' : 'Already downloaded',
-                    style: sheetTheme.textTheme.bodyLarge?.copyWith(
-                      color: canDownload ? actionTextColor : disabledTextColor,
-                    ),
-                  ),
-                  enabled: canDownload,
-                  onTap: canDownload
-                      ? () => Navigator.of(
-                          sheetContext,
-                        ).pop(_DriveResumeAction.download)
-                      : null,
+        return Padding(
+          padding: EdgeInsets.only(
+            left: BottomSheetInsets.leftPadding,
+            bottom: bottomInset + BottomSheetInsets.bottomSpacing,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: BottomSheetInsets.topSpacing),
+              ListTile(
+                leading: Icon(
+                  Icons.download_rounded,
+                  color: canDownload ? primaryColor : disabledIconColor,
                 ),
-              ],
-            ),
+                title: Text(
+                  canDownload ? 'Download' : 'Already downloaded',
+                  style: sheetTheme.textTheme.bodyLarge?.copyWith(
+                    color: canDownload ? actionTextColor : disabledTextColor,
+                  ),
+                ),
+                enabled: canDownload,
+                onTap: canDownload
+                    ? () => Navigator.of(
+                        sheetContext,
+                      ).pop(_DriveResumeAction.download)
+                    : null,
+              ),
+              ListTile(
+                leading: IconTheme(
+                  data: IconThemeData(color: primaryColor),
+                  child: const ImageIcon(
+                    AssetImage('assets/fonts/delete.png'),
+                  ),
+                ),
+                title: Text(
+                  'Remove from Google Drive',
+                  style: sheetTheme.textTheme.bodyLarge?.copyWith(
+                    color: actionTextColor,
+                  ),
+                ),
+                onTap: () => Navigator.of(
+                  sheetContext,
+                ).pop(_DriveResumeAction.delete),
+              ),
+            ],
           ),
         );
       },
@@ -309,6 +387,8 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     switch (action) {
       case _DriveResumeAction.download:
         await _downloadResume(item);
+      case _DriveResumeAction.delete:
+        await _confirmDeleteFromDrive(item);
     }
   }
 
@@ -317,7 +397,8 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     required _DriveResumeStatus status,
     required DateFormat dateFormat,
   }) {
-    final isBusy = _downloadingIds.contains(item.id);
+    final isBusy =
+        _downloadingIds.contains(item.id) || _deletingIds.contains(item.id);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -617,7 +698,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
 
 enum _DriveResumeStatus { driveOnly, driveNewer, localNewer, synced }
 
-enum _DriveResumeAction { download }
+enum _DriveResumeAction { download, delete }
 
 class _DriveResumeContent extends StatelessWidget {
   const _DriveResumeContent({

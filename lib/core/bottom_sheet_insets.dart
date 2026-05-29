@@ -6,4 +6,7 @@ abstract final class BottomSheetInsets {
   /// Extra inset from the leading edge for sheet content (Material list tiles are
   /// often flush; this adds breathing room on the left).
   static const double leftPadding = 12;
+
+  /// Extra breathing room above gesture/navigation bars.
+  static const double bottomSpacing = 8;
 }
