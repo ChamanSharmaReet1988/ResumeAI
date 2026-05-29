@@ -47,7 +47,11 @@ String _coverLetterSkillsToValue(List<String> skills) {
       .join(', ');
 }
 
-void _scheduleEnsureVisible(BuildContext context) {
+void _scheduleEnsureVisible(
+  BuildContext context, {
+  double extraVisibleHeight = 0,
+  bool alignNearTop = false,
+}) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
     Future<void>.delayed(const Duration(milliseconds: 260), () {
       if (!context.mounted) {
@@ -60,6 +64,16 @@ void _scheduleEnsureVisible(BuildContext context) {
         return;
       }
 
+      if (alignNearTop) {
+        Scrollable.ensureVisible(
+          context,
+          alignment: 0.08,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+        );
+        return;
+      }
+
       final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
       if (keyboardInset <= 0) {
         return;
@@ -69,7 +83,8 @@ void _scheduleEnsureVisible(BuildContext context) {
       final fieldBottom = fieldTop + renderObject.size.height;
       final visibleBottom =
           MediaQuery.sizeOf(context).height - keyboardInset - 12;
-      final overlap = fieldBottom - visibleBottom;
+      final requiredBottom = fieldBottom + extraVisibleHeight;
+      final overlap = requiredBottom - visibleBottom;
 
       if (overlap <= 0) {
         return;
@@ -447,6 +462,9 @@ class _SkillSuggestionField extends StatefulWidget {
 }
 
 class _SkillSuggestionFieldState extends State<_SkillSuggestionField> {
+  static const double _suggestionRowHeight = 49;
+  static const double _suggestionMaxHeight = 220;
+
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
 
@@ -460,11 +478,24 @@ class _SkillSuggestionFieldState extends State<_SkillSuggestionField> {
 
   void _handleFocusChange() {
     if (_focusNode.hasFocus) {
-      _scheduleEnsureVisible(context);
+      _scheduleEnsureVisible(
+        context,
+        extraVisibleHeight: _suggestionMaxHeight,
+        alignNearTop: true,
+      );
       setState(() {});
     } else {
       setState(() {});
     }
+  }
+
+  double _estimatedSuggestionHeight(int suggestionCount) {
+    if (suggestionCount <= 0) {
+      return _suggestionMaxHeight;
+    }
+    return (suggestionCount * _suggestionRowHeight)
+        .clamp(_suggestionRowHeight, _suggestionMaxHeight)
+        .toDouble();
   }
 
   @override
@@ -523,7 +554,18 @@ class _SkillSuggestionFieldState extends State<_SkillSuggestionField> {
           focusNode: _focusNode,
           textCapitalization: TextCapitalization.words,
           textInputAction: TextInputAction.done,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) {
+            setState(() {});
+            if (_focusNode.hasFocus) {
+              _scheduleEnsureVisible(
+                context,
+                extraVisibleHeight: _estimatedSuggestionHeight(
+                  suggestions.length,
+                ),
+                alignNearTop: true,
+              );
+            }
+          },
           onSubmitted: (_) => _commitInput(),
           decoration: InputDecoration(
             labelText: widget.label,
@@ -534,46 +576,6 @@ class _SkillSuggestionFieldState extends State<_SkillSuggestionField> {
             ),
           ),
         ),
-        if (currentSkills.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: currentSkills.map((skill) {
-              return InputChip(
-                label: Text(
-                  skill,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 1,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                visualDensity: const VisualDensity(
-                  horizontal: -2,
-                  vertical: -2,
-                ),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.only(
-                  left: 14,
-                  right: 6,
-                  top: 0,
-                  bottom: 0,
-                ),
-                deleteIcon: const Icon(Icons.close_rounded, size: 16),
-                onDeleted: () {
-                  final updated = currentSkills
-                      .where(
-                        (item) => item.toLowerCase() != skill.toLowerCase(),
-                      )
-                      .toList();
-                  widget.onChanged(_coverLetterSkillsToValue(updated));
-                  setState(() {});
-                },
-              );
-            }).toList(),
-          ),
-        ],
         if (_focusNode.hasFocus && suggestions.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -619,6 +621,46 @@ class _SkillSuggestionFieldState extends State<_SkillSuggestionField> {
               ),
             ),
           ),
+        if (currentSkills.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: currentSkills.map((skill) {
+              return InputChip(
+                label: Text(
+                  skill,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 1,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                visualDensity: const VisualDensity(
+                  horizontal: -2,
+                  vertical: -2,
+                ),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                padding: const EdgeInsets.only(
+                  left: 14,
+                  right: 6,
+                  top: 0,
+                  bottom: 0,
+                ),
+                deleteIcon: const Icon(Icons.close_rounded, size: 16),
+                onDeleted: () {
+                  final updated = currentSkills
+                      .where(
+                        (item) => item.toLowerCase() != skill.toLowerCase(),
+                      )
+                      .toList();
+                  widget.onChanged(_coverLetterSkillsToValue(updated));
+                  setState(() {});
+                },
+              );
+            }).toList(),
+          ),
+        ],
       ],
     );
   }
