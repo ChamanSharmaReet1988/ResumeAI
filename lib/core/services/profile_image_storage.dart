@@ -61,17 +61,24 @@ class ProfileImageStorage {
         ? extension.toLowerCase()
         : '.${extension.toLowerCase()}';
 
-    for (final ext in _extensions) {
-      if (ext == normalizedExt) {
+    for (final entity in dir.listSync(followLinks: false)) {
+      if (entity is! File) {
         continue;
       }
-      final other = File('${dir.path}/$resumeId$ext');
-      if (other.existsSync()) {
-        await other.delete();
+      final name = entity.uri.pathSegments.last;
+      final matchesResume =
+          name.startsWith('$resumeId.') || name.startsWith('${resumeId}_');
+      if (!matchesResume) {
+        continue;
+      }
+      final ext = extensionFromPath(name);
+      if (_extensions.contains(ext)) {
+        await entity.delete();
       }
     }
 
-    final target = File('${dir.path}/$resumeId$normalizedExt');
+    final version = DateTime.now().microsecondsSinceEpoch;
+    final target = File('${dir.path}/${resumeId}_$version$normalizedExt');
     await target.writeAsBytes(bytes, flush: true);
     return target.path;
   }
