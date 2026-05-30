@@ -8,6 +8,7 @@ import '../../core/services/analytics_events.dart';
 import '../../core/services/premium_products.dart';
 import '../../core/services/premium_purchase_service.dart';
 import '../../core/services/premium_store_messages.dart';
+import '../settings/legal_web_view_screen.dart';
 import '../shell/app_shell_scope.dart';
 import 'premium_store_loading_overlay.dart';
 import 'premium_welcome_dialog.dart';
@@ -22,6 +23,13 @@ class GoPremiumScreen extends StatefulWidget {
 }
 
 class _GoPremiumScreenState extends State<GoPremiumScreen> {
+  static final Uri _privacyPolicyUri = Uri.parse(
+    'https://sites.google.com/mindplexapp.com/resumeapp/privacy-policy',
+  );
+  static final Uri _termsOfUseUri = Uri.parse(
+    'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+  );
+
   String? _selectedProductId = PremiumProducts.year;
   bool _didPop = false;
   bool _isCompletingLeave = false;
@@ -308,6 +316,20 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     }
   }
 
+  Future<void> _openLegalPage({
+    required String title,
+    required Uri uri,
+  }) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LegalWebViewScreen(
+          title: title,
+          url: uri.toString(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -420,6 +442,40 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                                   ? null
                                   : () => _onRestorePressed(premium),
                               child: const Text('Restore'),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'By continuing, you agree to our Terms of Use and Privacy Policy.',
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                height: 1.35,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 4,
+                              children: [
+                                TextButton(
+                                  onPressed: _isFullScreenLoading
+                                      ? null
+                                      : () => _openLegalPage(
+                                          title: 'Terms of Use',
+                                          uri: _termsOfUseUri,
+                                        ),
+                                  child: const Text('Terms of Use'),
+                                ),
+                                TextButton(
+                                  onPressed: _isFullScreenLoading
+                                      ? null
+                                      : () => _openLegalPage(
+                                          title: 'Privacy Policy',
+                                          uri: _privacyPolicyUri,
+                                        ),
+                                  child: const Text('Privacy Policy'),
+                                ),
+                              ],
                             ),
                           ],
                         ),
