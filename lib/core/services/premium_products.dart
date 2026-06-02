@@ -4,11 +4,7 @@ abstract final class PremiumProducts {
   static const String month = 'gp_pro_month';
   static const String year = 'gp_pro_year';
 
-  static const List<String> subscriptionIds = [
-    week,
-    month,
-    year,
-  ];
+  static const List<String> subscriptionIds = [week, month, year];
 
   static String planTitleFor(String? productId) {
     return switch (productId) {
@@ -50,6 +46,26 @@ abstract final class PremiumProducts {
       _ =>
         'You have an active ResumeApp Pro subscription. All premium features '
             'are included in your plan.',
+    };
+  }
+
+  /// Body copy shown when the user tries to buy while another active plan
+  /// already exists on the same store account.
+  static String restoreInsteadMessage({required String? productId}) {
+    return switch (productId) {
+      week =>
+        'A weekly subscription was found for this Apple ID or Google account. '
+            'Use Restore to activate it on this device instead of buying again.',
+      month =>
+        'A monthly subscription was found for this Apple ID or Google account. '
+            'Use Restore to activate it on this device instead of buying again.',
+      year =>
+        'A yearly subscription was found for this Apple ID or Google account. '
+            'Use Restore to activate it on this device instead of buying again.',
+      _ =>
+        'An active ResumeApp Pro subscription was found for this Apple ID or '
+            'Google account. Use Restore to activate it on this device '
+            'instead of buying again.',
     };
   }
 }
@@ -113,8 +129,9 @@ String? premiumYearlySavingsLabel({
   if (monthlyBilledYearly <= yearlyPrice) {
     return null;
   }
-  final percent =
-      ((1 - yearlyPrice / monthlyBilledYearly) * 100).round().clamp(1, 99);
+  final percent = ((1 - yearlyPrice / monthlyBilledYearly) * 100).round().clamp(
+    1,
+    99,
+  );
   return 'Save $percent% with yearly billing';
 }
-

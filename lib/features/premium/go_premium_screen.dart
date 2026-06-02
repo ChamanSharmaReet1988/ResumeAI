@@ -220,22 +220,19 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     Navigator.of(context).pop(true);
   }
 
-  Future<void> _showAlreadySubscribedDialog(
+  Future<bool> _showAlreadySubscribedDialog(
     PremiumPurchaseService premium,
     String productId,
   ) async {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    await showDialog<void>(
+    final shouldRestore = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Already subscribed'),
+          title: const Text('Subscription found'),
           content: Text(
-            PremiumProducts.alreadySubscribedMessage(
-              productId: productId,
-              debugOverride: premium.debugPremiumOverrideEnabled,
-            ),
+            PremiumProducts.restoreInsteadMessage(productId: productId),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
               height: 1.4,
@@ -243,13 +240,18 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('OK'),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Restore'),
             ),
           ],
         );
       },
     );
+    return shouldRestore ?? false;
   }
 
   Future<void> _onContinuePressed(PremiumPurchaseService premium) async {
@@ -273,7 +275,13 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
         _isFullScreenLoading = false;
         _waitingForStoreResult = false;
       });
-      await _showAlreadySubscribedDialog(premium, existingProductId);
+      final shouldRestore = await _showAlreadySubscribedDialog(
+        premium,
+        existingProductId,
+      );
+      if (shouldRestore && mounted) {
+        await _onRestorePressed(premium);
+      }
       return;
     }
     _showWelcomeOnSuccess = true;

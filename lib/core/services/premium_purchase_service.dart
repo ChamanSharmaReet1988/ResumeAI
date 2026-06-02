@@ -608,12 +608,12 @@ class PremiumPurchaseService extends ChangeNotifier {
           break;
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          final allowPurchaseStreamFallback =
-              _isPurchasing || _isRestoring || _ongoingStoreSync != null;
+          final isUserInitiatedActivationFlow = _isPurchasing || _isRestoring;
           unawaited(
             _finalizePurchaseFromStream(
               purchase,
-              allowPurchaseStreamFallback: allowPurchaseStreamFallback,
+              allowPurchaseStreamFallback: isUserInitiatedActivationFlow,
+              userInitiated: isUserInitiatedActivationFlow,
             ),
           );
           break;
@@ -670,6 +670,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   Future<void> _finalizePurchaseFromStream(
     PurchaseDetails purchase, {
     required bool allowPurchaseStreamFallback,
+    required bool userInitiated,
   }) async {
     final wasBuying = _isPurchasing;
     try {
@@ -685,6 +686,7 @@ class PremiumPurchaseService extends ChangeNotifier {
       await _refreshPremiumFromStoreAfterPurchase(
         purchase,
         allowPurchaseStreamFallback: allowPurchaseStreamFallback,
+        userInitiated: userInitiated,
       );
     } finally {
       if (wasBuying) {
@@ -697,17 +699,24 @@ class PremiumPurchaseService extends ChangeNotifier {
   Future<void> _refreshPremiumFromStoreAfterPurchase(
     PurchaseDetails purchase, {
     required bool allowPurchaseStreamFallback,
+    required bool userInitiated,
   }) async {
     PremiumDebugLog.section(
       'Purchase stream → re-verify (${purchase.status.name})',
     );
-    final reason = 'purchase_stream_${purchase.status.name}';
+    final reason = userInitiated
+        ? 'purchase_stream_${purchase.status.name}'
+        : 'passive_purchase_stream_${purchase.status.name}';
     final entitled = await _resolveEntitlementAfterPurchase(
       purchase,
       reason: reason,
       allowPurchaseStreamFallback: allowPurchaseStreamFallback,
     );
     await _applyStoreEntitlement(entitled, reason: reason);
+    if (!userInitiated) {
+      notifyListeners();
+      return;
+    }
     if (entitled) {
       _statusMessage = purchase.status == PurchaseStatus.restored
           ? 'Premium restored successfully.'
@@ -850,8 +859,8 @@ class PremiumPurchaseService extends ChangeNotifier {
           await _appPreferences.setPremiumEntitlementMissStreak(0);
         }
         PremiumDebugLog.log(
-          'applyStoreEntitlement($reason): fresh install requires manual '
-          'restore → keeping free access',
+          'applyStoreEntitlement($reason): silent entitlement check cannot '
+          'activate premium from free state → keeping free access',
         );
         notifyListeners();
         return;
@@ -893,9 +902,6 @@ class PremiumPurchaseService extends ChangeNotifier {
     required bool wasPremium,
   }) {
     if (wasPremium) {
-      return true;
-    }
-    if (!_appPreferences.premiumManualRestoreRequired) {
       return true;
     }
     return _isExplicitPremiumActivationReason(reason);

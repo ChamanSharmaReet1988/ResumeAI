@@ -30,13 +30,13 @@ void main() {
     },
   );
 
-  test('silent verify does not queue welcome dialog', () async {
+  test('silent verify does not unlock premium from free state', () async {
     final prefs = AppPreferences.inMemory(isPremium: false);
     final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
 
     await service.applyEntitlementForTest(true, reason: 'app_launch');
 
-    expect(prefs.isPremium, isTrue);
+    expect(prefs.isPremium, isFalse);
     expect(service.hasPremiumWelcomePending, isFalse);
   });
 
@@ -69,6 +69,48 @@ void main() {
     expect(prefs.isPremium, isTrue);
     expect(service.isPremium, isTrue);
     expect(prefs.premiumManualRestoreRequired, isFalse);
+  });
+
+  test(
+    'non-fresh install still does not auto-unlock premium from silent entitlement',
+    () async {
+      final prefs = AppPreferences.inMemory(
+        isPremium: false,
+        premiumManualRestoreRequired: false,
+      );
+      final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
+
+      await service.applyEntitlementForTest(true, reason: 'app_resume');
+
+      expect(prefs.isPremium, isFalse);
+      expect(service.isPremium, isFalse);
+    },
+  );
+
+  test(
+    'passive purchase stream does not auto-unlock premium from free state',
+    () async {
+      final prefs = AppPreferences.inMemory(isPremium: false);
+      final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
+
+      await service.applyEntitlementForTest(
+        true,
+        reason: 'passive_purchase_stream_restored',
+      );
+
+      expect(prefs.isPremium, isFalse);
+      expect(service.isPremium, isFalse);
+    },
+  );
+
+  test('silent verify keeps premium when user is already premium', () async {
+    final prefs = AppPreferences.inMemory(isPremium: true);
+    final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
+
+    await service.applyEntitlementForTest(true, reason: 'app_resume');
+
+    expect(prefs.isPremium, isTrue);
+    expect(service.isPremium, isTrue);
   });
 
   test('first silent entitlement miss keeps existing premium access', () async {
