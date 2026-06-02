@@ -139,7 +139,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         : _selectedSegment == _TemplateSegment.resume
         ? _resumeTemplateCards
         : _coverLetterTemplateCards;
-    final showResumeTemplatesSection = isResumeTemplatePicker ||
+    final showResumeTemplatesSection =
+        isResumeTemplatePicker ||
         (!isCoverLetterTemplatePicker &&
             _selectedSegment == _TemplateSegment.resume);
     final isCupertino = Theme.of(context).platform == TargetPlatform.iOS;
@@ -235,9 +236,9 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
             Text(
               'Professional Resumes',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 20),
           ],
@@ -266,8 +267,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                 item: item,
                 selected: selected,
                 paletteSeed: library?.selectedResume,
-                onTap: () =>
-                    _onTemplateTileTapped(context, item, library),
+                onTap: () => _onTemplateTileTapped(context, item, library),
               );
             },
           ),
@@ -275,9 +275,9 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             const SizedBox(height: 28),
             Text(
               'ATS Resumes',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 20),
             GridView.builder(
@@ -293,7 +293,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
               ),
               itemBuilder: (context, index) {
                 final item = _atsResumeCards[index];
-                final selected = isResumeTemplatePicker &&
+                final selected =
+                    isResumeTemplatePicker &&
                     item.resumeTemplate != null &&
                     item.resumeTemplate == activeTemplate;
 
@@ -301,8 +302,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   item: item,
                   selected: selected,
                   paletteSeed: library?.selectedResume,
-                  onTap: () =>
-                      _onTemplateTileTapped(context, item, library),
+                  onTap: () => _onTemplateTileTapped(context, item, library),
                 );
               },
             ),
@@ -642,6 +642,7 @@ class _TemplatePreviewArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasPremiumAccess = readPremiumAccess(context);
     final preview = switch (item.previewKind) {
       _TemplatePreviewKind.darkHeaderResume => _ResumeTemplatePreviewArt(
         resume: _applyTemplatePreviewPalette(
@@ -650,13 +651,14 @@ class _TemplatePreviewArt extends StatelessWidget {
         ),
         fit: _ResumeTemplatePreviewFit.tile,
       ),
-      _TemplatePreviewKind.profileSidebarResume => _ProfileSidebarTemplateArtCompact(
-        resume: _applyTemplatePreviewPalette(
-          _profileSidebarTemplateResume,
-          paletteSeed,
+      _TemplatePreviewKind.profileSidebarResume =>
+        _ProfileSidebarTemplateArtCompact(
+          resume: _applyTemplatePreviewPalette(
+            _profileSidebarTemplateResume,
+            paletteSeed,
+          ),
+          detailed: true,
         ),
-        detailed: true,
-      ),
       _TemplatePreviewKind.classicSidebarResume =>
         showPremiumBadgeOnPage
             ? _ResumeTemplatePreviewArt(
@@ -775,16 +777,12 @@ class _TemplatePreviewArt extends StatelessWidget {
                     ),
                   ),
                   if ((showPremiumBadgeOnTile || showPremiumBadgeOnPage) &&
-                      item.isPremium)
+                      item.isPremium &&
+                      !hasPremiumAccess)
                     Positioned(
                       right: badgeRightPadding,
                       bottom: badgeBottomPadding,
-                      child: Image.asset(
-                        'assets/premium_badge.png',
-                        width: badgeSize,
-                        height: badgeSize,
-                        fit: BoxFit.contain,
-                      ),
+                      child: _PremiumLockBadge(size: badgeSize),
                     ),
                 ],
               ),
@@ -807,8 +805,7 @@ class _TemplateDetailPdfPreview extends StatelessWidget {
     final pdfService = context.read<ResumePdfService>();
     final viewerBackground = Theme.of(context).scaffoldBackgroundColor;
     return NativePdfPreview(
-      documentKey:
-          'template-detail-${resume.id}-${resume.template.name}',
+      documentKey: 'template-detail-${resume.id}-${resume.template.name}',
       viewerBackground: viewerBackground,
       bytesFuture: pdfService.buildPdf(resume),
     );
@@ -947,10 +944,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
 
 /// [FittedBox] scale for template art in a constrained preview (detail or tile).
 class _TemplateArtDisplayScale extends InheritedWidget {
-  const _TemplateArtDisplayScale({
-    required this.scale,
-    required super.child,
-  });
+  const _TemplateArtDisplayScale({required this.scale, required super.child});
 
   final double scale;
 
@@ -1020,12 +1014,7 @@ class _LargeTemplateArtPreview extends StatelessWidget {
                     Positioned(
                       right: badgeInset,
                       bottom: badgeInset,
-                      child: Image.asset(
-                        'assets/premium_badge.png',
-                        width: badgeSize,
-                        height: badgeSize,
-                        fit: BoxFit.contain,
-                      ),
+                      child: _PremiumLockBadge(size: badgeSize),
                     ),
                 ],
               ),
@@ -1034,6 +1023,17 @@ class _LargeTemplateArtPreview extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class _PremiumLockBadge extends StatelessWidget {
+  const _PremiumLockBadge({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(Icons.lock_rounded, size: size, color: const Color(0xFFC98910));
   }
 }
 
@@ -1539,7 +1539,10 @@ final ResumeData _profileSidebarTemplateResume = _atsFullSampleResume.copyWith(
       title: 'Languages',
       content: '',
       layoutMode: CustomSectionLayoutMode.bullets,
-      bullets: ['English (native)', 'Spanish (professional working proficiency)'],
+      bullets: [
+        'English (native)',
+        'Spanish (professional working proficiency)',
+      ],
     ),
   ],
   corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
@@ -1823,6 +1826,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
 
   /// Matches [PdfPageFormat.a4] width in points (same as PDF export).
   static const double _pageWidth = 595.28;
+
   /// Screen padding below the scaled page on the full template screen.
   static const double _detailBottomInset = 64;
 
@@ -1887,9 +1891,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
                       bottom: 0,
                       child: ColoredBox(
                         color: resume.corporateColorPreset.headerColor,
-                        child: SizedBox(
-                          width: targetWidth * (34 / _pageWidth),
-                        ),
+                        child: SizedBox(width: targetWidth * (34 / _pageWidth)),
                       ),
                     ),
                   Padding(
@@ -1911,9 +1913,10 @@ List<String> _templateArtProjectBullets(ProjectItem p) {
   if (lines.isNotEmpty) {
     return lines;
   }
-  return [p.overview.trim(), p.impact.trim()]
-      .where((s) => s.isNotEmpty)
-      .toList();
+  return [
+    p.overview.trim(),
+    p.impact.trim(),
+  ].where((s) => s.isNotEmpty).toList();
 }
 
 class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
@@ -1931,10 +1934,10 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
   static double _scaledPt(double pt) => pt * _layoutScale;
 
   TextStyle _bodyStyle() => ResumeTypography.sidebarBodyPreviewStyle(
-        fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
-        color: ResumeTypography.creativeBodyTextColor,
-        height: ResumeTypography.creativeBodyLineHeight,
-      );
+    fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
+    color: ResumeTypography.creativeBodyTextColor,
+    height: ResumeTypography.creativeBodyLineHeight,
+  );
 
   static TextStyle _subtitleStyle({bool italic = false}) =>
       ResumeTypography.garamondPreviewStyle(
@@ -1945,14 +1948,15 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
       ).copyWith(fontStyle: italic ? FontStyle.italic : null);
 
   static TextStyle _nameStyle() => ResumeTypography.garamondPreviewStyle(
-        weight: ResumeTypography.creativeNameWeight,
-        fontSize: _scaledPt(ResumeTypography.creativeNamePt),
-        color: ResumeTypography.creativeBodyTextColor,
-        height: 1,
-        letterSpacing: 0.2,
-      );
+    weight: ResumeTypography.creativeNameWeight,
+    fontSize: _scaledPt(ResumeTypography.creativeNamePt),
+    color: ResumeTypography.creativeBodyTextColor,
+    height: 1,
+    letterSpacing: 0.2,
+  );
 
-  static TextStyle _sectionHeadingStyle() => ResumeTypography.garamondPreviewStyle(
+  static TextStyle _sectionHeadingStyle() =>
+      ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.creativeSectionTitleWeight,
         fontSize: _scaledPt(ResumeTypography.creativeSectionTitlePt),
         color: ResumeTypography.creativeBodyTextColor,
@@ -1961,11 +1965,11 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
       );
 
   TextStyle _sidebarStyle() => ResumeTypography.garamondPreviewStyle(
-        weight: ResumeTypography.creativeSidebarContentWeight,
-        fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
-        color: ResumeTypography.creativeBodyTextColor,
-        height: ResumeTypography.creativeBodyLineHeight,
-      );
+    weight: ResumeTypography.creativeSidebarContentWeight,
+    fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
+    color: ResumeTypography.creativeBodyTextColor,
+    height: ResumeTypography.creativeBodyLineHeight,
+  );
 
   TextStyle _experienceDateStyle() =>
       _bodyStyle().copyWith(fontStyle: FontStyle.italic);
@@ -2014,10 +2018,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                   style: initialsStyle,
                 ),
               )
-            : Text(
-                _miniClassicInitials(resume.fullName),
-                style: initialsStyle,
-              ),
+            : Text(_miniClassicInitials(resume.fullName), style: initialsStyle),
       ),
     );
   }
@@ -2064,273 +2065,287 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-            Container(
-              width: 58,
-              color: railColor,
-              padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
-              child: DefaultTextStyle(
-                style: sidebarStyle,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    _buildAvatar(
-                      resume: resume,
-                      avatarFill: avatarFill,
-                      accentColor: accentColor,
-                    ),
-                    const SizedBox(height: 6),
-                    Container(width: 44, height: 1, color: line),
-                    const SizedBox(height: 6),
-                    for (final lineText in contacts)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 5),
-                        child: _ProfileSidebarContactRow(
-                          text: lineText,
+                Container(
+                  width: 58,
+                  color: railColor,
+                  padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+                  child: DefaultTextStyle(
+                    style: sidebarStyle,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _buildAvatar(
+                          resume: resume,
+                          avatarFill: avatarFill,
                           accentColor: accentColor,
-                          style: sidebarStyle,
                         ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  6,
-                  _mainColumnTopPadding,
-                  _mainColumnRightPadding,
-                  _mainColumnBottomPadding,
-                ),
-                child: DefaultTextStyle(
-                  style: bodyStyle,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return ClipRect(
-                        child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minWidth: constraints.maxWidth,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                          Text(
-                            _miniClassicNameLine(resume.fullName),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: _nameStyle(),
-                          ),
-                          if (resume.jobTitle.trim().isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              resume.jobTitle.trim(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: _subtitleStyle(italic: true),
-                            ),
-                          ],
-                          const SizedBox(height: 6),
-                          _MiniSidebarHeading(
-                            title: 'SUMMARY',
-                            lineColor: line,
-                            titleStyle: _sectionHeadingStyle(),
-                            lineHeight: _sectionRuleHeight,
-                            titleGap: _sectionTitleRuleGap,
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            summary,
-                            maxLines: detailed ? 6 : 5,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          _MiniSidebarHeading(
-                            title: 'EXPERIENCE',
-                            lineColor: line,
-                            titleStyle: _sectionHeadingStyle(),
-                            lineHeight: _sectionRuleHeight,
-                            titleGap: _sectionTitleRuleGap,
-                          ),
-                          const SizedBox(height: 3),
-                          for (final item in experiences) ...[
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: RichText(
-                                    maxLines: detailed ? 3 : 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    text: TextSpan(
-                                      style: subtitleStyle,
-                                      children: [
-                                        TextSpan(
-                                          text: item.role.trim().isEmpty
-                                              ? 'Role'
-                                              : item.role.trim().toUpperCase(),
-                                        ),
-                                        TextSpan(
-                                          text:
-                                              ' / ${item.company.trim().isEmpty ? 'Company' : item.company.trim()}',
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if (_profileSidebarCreativeDateRange(
-                                  item.startDate,
-                                  item.endDate,
-                                ).isNotEmpty) ...[
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _profileSidebarCreativeDateRange(
-                                      item.startDate,
-                                      item.endDate,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.right,
-                                    style: experienceDateStyle,
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                          ],
-                          const SizedBox(height: 6),
-                          _MiniSidebarHeading(
-                            title: 'EDUCATION',
-                            lineColor: line,
-                            titleStyle: _sectionHeadingStyle(),
-                            lineHeight: _sectionRuleHeight,
-                            titleGap: _sectionTitleRuleGap,
-                          ),
-                          const SizedBox(height: 3),
-                          for (final item in education) ...[
-                            Text(
-                              item.degree.trim().isEmpty
-                                  ? 'Degree'
-                                  : item.degree.trim(),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: subtitleStyle,
-                            ),
-                            const SizedBox(height: 1),
-                            Text(
-                              item.institution.trim().isEmpty
-                                  ? 'Institution'
-                                  : item.institution.trim(),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: bodyStyle,
-                            ),
-                            if (_profileSidebarCreativeDateRange(
-                              item.startDate,
-                              item.endDate,
-                            ).isNotEmpty) ...[
-                              const SizedBox(height: 1),
-                              Text(
-                                _profileSidebarCreativeDateRange(
-                                  item.startDate,
-                                  item.endDate,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: bodyStyle,
-                              ),
-                            ],
-                            const SizedBox(height: 3),
-                          ],
-                          if (projects.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            _MiniSidebarHeading(
-                              title: 'PROJECTS',
-                              lineColor: line,
-                              titleStyle: _sectionHeadingStyle(),
-                              lineHeight: _sectionRuleHeight,
-                              titleGap: _sectionTitleRuleGap,
-                            ),
-                            const SizedBox(height: 3),
-                            for (final project in projects) ...[
-                              Text(
-                                project.title.trim().isEmpty
-                                    ? 'Project'
-                                    : project.title.trim(),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: subtitleStyle,
-                              ),
-                              if (project.overview.trim().isNotEmpty ||
-                                  project.impact.trim().isNotEmpty) ...[
-                                const SizedBox(height: 1),
-                                Text(
-                                  [
-                                    project.overview.trim(),
-                                    project.impact.trim(),
-                                  ].where((s) => s.isNotEmpty).join(' · '),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: bodyStyle,
-                                ),
-                              ],
-                              if (_templateArtProjectBullets(project)
-                                  .isNotEmpty) ...[
-                                const SizedBox(height: 2),
-                                _MiniBulletColumn(
-                                  items: _templateArtProjectBullets(project)
-                                      .take(detailed ? 3 : 2)
-                                      .toList(),
-                                  bulletColor:
-                                      ResumeTypography.creativeBodyTextColor,
-                                  textStyle: bodyStyle,
-                                ),
-                              ],
-                            ],
-                          ],
-                          if (leftSkills.isNotEmpty || rightSkills.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            _MiniSidebarHeading(
-                              title: 'SKILLS',
-                              lineColor: line,
-                              titleStyle: _sectionHeadingStyle(),
-                              lineHeight: _sectionRuleHeight,
-                              titleGap: _sectionTitleRuleGap,
-                            ),
-                            const SizedBox(height: 3),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: _MiniBulletColumn(
-                                    items: leftSkills,
-                                    bulletColor:
-                                        ResumeTypography.creativeBodyTextColor,
-                                    textStyle: bodyStyle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _MiniBulletColumn(
-                                    items: rightSkills,
-                                    bulletColor:
-                                        ResumeTypography.creativeBodyTextColor,
-                                    textStyle: bodyStyle,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                              ],
+                        const SizedBox(height: 6),
+                        Container(width: 44, height: 1, color: line),
+                        const SizedBox(height: 6),
+                        for (final lineText in contacts)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 5),
+                            child: _ProfileSidebarContactRow(
+                              text: lineText,
+                              accentColor: accentColor,
+                              style: sidebarStyle,
                             ),
                           ),
-                        ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      6,
+                      _mainColumnTopPadding,
+                      _mainColumnRightPadding,
+                      _mainColumnBottomPadding,
+                    ),
+                    child: DefaultTextStyle(
+                      style: bodyStyle,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return ClipRect(
+                            child: SingleChildScrollView(
+                              physics: const NeverScrollableScrollPhysics(),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minWidth: constraints.maxWidth,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      _miniClassicNameLine(resume.fullName),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: _nameStyle(),
+                                    ),
+                                    if (resume.jobTitle.trim().isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        resume.jobTitle.trim(),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: _subtitleStyle(italic: true),
+                                      ),
+                                    ],
+                                    const SizedBox(height: 6),
+                                    _MiniSidebarHeading(
+                                      title: 'SUMMARY',
+                                      lineColor: line,
+                                      titleStyle: _sectionHeadingStyle(),
+                                      lineHeight: _sectionRuleHeight,
+                                      titleGap: _sectionTitleRuleGap,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      summary,
+                                      maxLines: detailed ? 6 : 5,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    _MiniSidebarHeading(
+                                      title: 'EXPERIENCE',
+                                      lineColor: line,
+                                      titleStyle: _sectionHeadingStyle(),
+                                      lineHeight: _sectionRuleHeight,
+                                      titleGap: _sectionTitleRuleGap,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    for (final item in experiences) ...[
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: RichText(
+                                              maxLines: detailed ? 3 : 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              text: TextSpan(
+                                                style: subtitleStyle,
+                                                children: [
+                                                  TextSpan(
+                                                    text:
+                                                        item.role.trim().isEmpty
+                                                        ? 'Role'
+                                                        : item.role
+                                                              .trim()
+                                                              .toUpperCase(),
+                                                  ),
+                                                  TextSpan(
+                                                    text:
+                                                        ' / ${item.company.trim().isEmpty ? 'Company' : item.company.trim()}',
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          if (_profileSidebarCreativeDateRange(
+                                            item.startDate,
+                                            item.endDate,
+                                          ).isNotEmpty) ...[
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _profileSidebarCreativeDateRange(
+                                                item.startDate,
+                                                item.endDate,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.right,
+                                              style: experienceDateStyle,
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                    ],
+                                    const SizedBox(height: 6),
+                                    _MiniSidebarHeading(
+                                      title: 'EDUCATION',
+                                      lineColor: line,
+                                      titleStyle: _sectionHeadingStyle(),
+                                      lineHeight: _sectionRuleHeight,
+                                      titleGap: _sectionTitleRuleGap,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    for (final item in education) ...[
+                                      Text(
+                                        item.degree.trim().isEmpty
+                                            ? 'Degree'
+                                            : item.degree.trim(),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: subtitleStyle,
+                                      ),
+                                      const SizedBox(height: 1),
+                                      Text(
+                                        item.institution.trim().isEmpty
+                                            ? 'Institution'
+                                            : item.institution.trim(),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: bodyStyle,
+                                      ),
+                                      if (_profileSidebarCreativeDateRange(
+                                        item.startDate,
+                                        item.endDate,
+                                      ).isNotEmpty) ...[
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          _profileSidebarCreativeDateRange(
+                                            item.startDate,
+                                            item.endDate,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: bodyStyle,
+                                        ),
+                                      ],
+                                      const SizedBox(height: 3),
+                                    ],
+                                    if (projects.isNotEmpty) ...[
+                                      const SizedBox(height: 6),
+                                      _MiniSidebarHeading(
+                                        title: 'PROJECTS',
+                                        lineColor: line,
+                                        titleStyle: _sectionHeadingStyle(),
+                                        lineHeight: _sectionRuleHeight,
+                                        titleGap: _sectionTitleRuleGap,
+                                      ),
+                                      const SizedBox(height: 3),
+                                      for (final project in projects) ...[
+                                        Text(
+                                          project.title.trim().isEmpty
+                                              ? 'Project'
+                                              : project.title.trim(),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: subtitleStyle,
+                                        ),
+                                        if (project.overview
+                                                .trim()
+                                                .isNotEmpty ||
+                                            project.impact
+                                                .trim()
+                                                .isNotEmpty) ...[
+                                          const SizedBox(height: 1),
+                                          Text(
+                                            [
+                                                  project.overview.trim(),
+                                                  project.impact.trim(),
+                                                ]
+                                                .where((s) => s.isNotEmpty)
+                                                .join(' · '),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: bodyStyle,
+                                          ),
+                                        ],
+                                        if (_templateArtProjectBullets(
+                                          project,
+                                        ).isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          _MiniBulletColumn(
+                                            items: _templateArtProjectBullets(
+                                              project,
+                                            ).take(detailed ? 3 : 2).toList(),
+                                            bulletColor: ResumeTypography
+                                                .creativeBodyTextColor,
+                                            textStyle: bodyStyle,
+                                          ),
+                                        ],
+                                      ],
+                                    ],
+                                    if (leftSkills.isNotEmpty ||
+                                        rightSkills.isNotEmpty) ...[
+                                      const SizedBox(height: 6),
+                                      _MiniSidebarHeading(
+                                        title: 'SKILLS',
+                                        lineColor: line,
+                                        titleStyle: _sectionHeadingStyle(),
+                                        lineHeight: _sectionRuleHeight,
+                                        titleGap: _sectionTitleRuleGap,
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: _MiniBulletColumn(
+                                              items: leftSkills,
+                                              bulletColor: ResumeTypography
+                                                  .creativeBodyTextColor,
+                                              textStyle: bodyStyle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: _MiniBulletColumn(
+                                              items: rightSkills,
+                                              bulletColor: ResumeTypography
+                                                  .creativeBodyTextColor,
+                                              textStyle: bodyStyle,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -2368,13 +2383,15 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
 
   static double _scaledPt(double pt) => pt * _layoutScale;
 
-  TextStyle _garamondBody(double fontSize, {int weight = ResumeTypography.atsStructuredBodyWeight}) =>
-      ResumeTypography.garamondPreviewStyle(
-        weight: weight,
-        fontSize: fontSize,
-        color: ResumeTypography.atsStructuredBodyTextColor,
-        height: ResumeTypography.textLineHeight,
-      );
+  TextStyle _garamondBody(
+    double fontSize, {
+    int weight = ResumeTypography.atsStructuredBodyWeight,
+  }) => ResumeTypography.garamondPreviewStyle(
+    weight: weight,
+    fontSize: fontSize,
+    color: ResumeTypography.atsStructuredBodyTextColor,
+    height: ResumeTypography.textLineHeight,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -2399,91 +2416,97 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
         ? pageInset
         : ResumeTypography.atsStructuredGridBottomInsetPx;
     final pageContent = Padding(
-          padding: EdgeInsets.fromLTRB(pageInset, pageInset, pageInset, bottomInset),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+      padding: EdgeInsets.fromLTRB(
+        pageInset,
+        pageInset,
+        pageInset,
+        bottomInset,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            resume.fullName.trim().toUpperCase(),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: _garamondBody(
+              _scaledPt(ResumeTypography.atsStructuredNamePt),
+              weight: ResumeTypography.atsStructuredNameWeight,
+            ),
+          ),
+          if (resume.jobTitle.trim().isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              resume.jobTitle.trim(),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: _garamondBody(
+                _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
+                weight: ResumeTypography.atsStructuredTitleWeight,
+              ),
+            ),
+          ],
+          if (contactLines.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            for (final line in contactLines)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  line,
+                  textAlign: TextAlign.center,
+                  maxLines: detailed ? 3 : 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: contactStyle,
+                ),
+              ),
+          ],
+          const SizedBox(height: 5),
+          Container(
+            height: 1,
+            color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+              alpha: 0.85,
+            ),
+          ),
+          _atsGrayBandLabel('SUMMARY'),
+          Text(
+            resume.summary.trim(),
+            maxLines: detailed ? 12 : 5,
+            overflow: TextOverflow.ellipsis,
+            style: body,
+          ),
+          _atsGrayBandLabel('EXPERIENCE'),
+          ..._atsStructuredJobs(works, body, subtitleStyle),
+          _atsGrayBandLabel('EDUCATION'),
+          ..._atsStructuredSchools(edu, body, subtitleStyle),
+          _atsGrayBandLabel('SKILLS'),
+          _atsStructuredSkillsGrid(skills, body),
+          if (projects.isNotEmpty) ...[
+            _atsGrayBandLabel('PROJECTS'),
+            for (final p in projects.take(detailed ? 3 : 1)) ...[
               Text(
-                resume.fullName.trim().toUpperCase(),
-                textAlign: TextAlign.center,
+                p.title.trim(),
+                style: subtitleStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: _garamondBody(
-                  _scaledPt(ResumeTypography.atsStructuredNamePt),
-                  weight: ResumeTypography.atsStructuredNameWeight,
-                ),
               ),
-              if (resume.jobTitle.trim().isNotEmpty) ...[
+              if (_templateArtProjectBullets(p).isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
-                  resume.jobTitle.trim(),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
+                  '• ${_templateArtProjectBullets(p).first}',
+                  style: body,
+                  maxLines: detailed ? 4 : 2,
                   overflow: TextOverflow.ellipsis,
-                  style: _garamondBody(
-                    _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
-                    weight: ResumeTypography.atsStructuredTitleWeight,
-                  ),
                 ),
               ],
-              if (contactLines.isNotEmpty) ...[
-                const SizedBox(height: 3),
-                for (final line in contactLines)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      line,
-                      textAlign: TextAlign.center,
-                      maxLines: detailed ? 3 : 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: contactStyle,
-                    ),
-                  ),
-              ],
-              const SizedBox(height: 5),
-              Container(
-                height: 1,
-                color: ResumeTypography.atsStructuredBodyTextColor
-                    .withValues(alpha: 0.85),
-              ),
-              _atsGrayBandLabel('SUMMARY'),
-              Text(
-                resume.summary.trim(),
-                maxLines: detailed ? 12 : 5,
-                overflow: TextOverflow.ellipsis,
-                style: body,
-              ),
-              _atsGrayBandLabel('EXPERIENCE'),
-              ..._atsStructuredJobs(works, body, subtitleStyle),
-              _atsGrayBandLabel('EDUCATION'),
-              ..._atsStructuredSchools(edu, body, subtitleStyle),
-              _atsGrayBandLabel('SKILLS'),
-              _atsStructuredSkillsGrid(skills, body),
-              if (projects.isNotEmpty) ...[
-                _atsGrayBandLabel('PROJECTS'),
-                for (final p in projects.take(detailed ? 3 : 1)) ...[
-                  Text(
-                    p.title.trim(),
-                    style: subtitleStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (_templateArtProjectBullets(p).isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      '• ${_templateArtProjectBullets(p).first}',
-                      style: body,
-                      maxLines: detailed ? 4 : 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                ],
-              ],
+              const SizedBox(height: 4),
             ],
-          ),
-        );
+          ],
+        ],
+      ),
+    );
 
     // Grid + detail: scale full page art to fit (same as Profile Sidebar tile).
     return DecoratedBox(
@@ -2491,11 +2514,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
       child: FittedBox(
         fit: BoxFit.contain,
         alignment: Alignment.topCenter,
-        child: SizedBox(
-          width: 240,
-          height: 360,
-          child: pageContent,
-        ),
+        child: SizedBox(width: 240, height: 360, child: pageContent),
       ),
     );
   }
@@ -2514,7 +2533,9 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
               textAlign: TextAlign.center,
               style: ResumeTypography.garamondPreviewStyle(
                 weight: ResumeTypography.atsStructuredTitleWeight,
-                fontSize: _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
+                fontSize: _scaledPt(
+                  ResumeTypography.atsStructuredSectionTitlePt,
+                ),
                 color: ResumeTypography.atsStructuredBodyTextColor,
                 height: ResumeTypography.textLineHeight,
               ).copyWith(decoration: TextDecoration.underline),
@@ -2555,9 +2576,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
                 child: Text(
                   dr,
                   textAlign: TextAlign.right,
-                  style: body.copyWith(
-                    fontSize: (body.fontSize ?? 4.5) - 0.25,
-                  ),
+                  style: body.copyWith(fontSize: (body.fontSize ?? 4.5) - 0.25),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2720,10 +2739,7 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
       ? _scaledPt(ResumeTypography.atsSerifRulesSectionContentTopGapPt)
       : ResumeTypography.atsSerifRulesGridSectionContentTopGapPx;
 
-  TextStyle _garamond({
-    required double fontSize,
-    required int weight,
-  }) =>
+  TextStyle _garamond({required double fontSize, required int weight}) =>
       ResumeTypography.garamondPreviewStyle(
         weight: weight,
         fontSize: fontSize,
@@ -2767,206 +2783,214 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
     final rightContacts = resume.atsSerifRulesRightContactLines();
     final linkStyle = body.copyWith(fontStyle: FontStyle.italic);
-    final hInset = _scaledPt(ResumeTypography.atsSerifRulesPageHorizontalInsetPt);
+    final hInset = _scaledPt(
+      ResumeTypography.atsSerifRulesPageHorizontalInsetPt,
+    );
 
     final pageContent = Padding(
-          padding: EdgeInsets.fromLTRB(
-            hInset,
-            detailed ? 11 : 9,
-            hInset,
-            detailed ? 10 : 8,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      padding: EdgeInsets.fromLTRB(
+        hInset,
+        detailed ? 11 : 9,
+        hInset,
+        detailed ? 10 : 8,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      resume.serifRulesDisplayName,
+                      style: nameStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (resume.jobTitle.trim().isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        resume.jobTitle.trim(),
+                        style: jobStyle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 3),
+                    if (resume.location.trim().isNotEmpty)
+                      Text(
+                        resume.location.trim(),
+                        style: contactStyle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    if (resume.phone.trim().isNotEmpty)
+                      Text(
+                        resume.phone.trim(),
+                        style: contactStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+              if (rightContacts.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (var i = 0; i < rightContacts.length; i++)
+                      Padding(
+                        padding: EdgeInsets.only(top: i == 0 ? 0 : 2),
+                        child: Text(
+                          rightContacts[i],
+                          style: linkStyle,
+                          textAlign: TextAlign.right,
+                          maxLines: detailed ? 3 : 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+          SizedBox(height: _sectionLeadGap()),
+          Text('Summary', style: sectionTitleStyle),
+          SizedBox(height: _titleToRuleGap()),
+          Container(
+            height: 1,
+            color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+              alpha: 0.35,
+            ),
+          ),
+          SizedBox(height: _contentTopGap()),
+          Text(
+            resume.summary.trim(),
+            style: body,
+            maxLines: detailed ? 10 : 4,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (works.isNotEmpty) ...[
+            SizedBox(height: _sectionGap()),
+            Text('Experience', style: sectionTitleStyle),
+            SizedBox(height: _titleToRuleGap()),
+            Container(
+              height: 1,
+              color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+                alpha: 0.35,
+              ),
+            ),
+            SizedBox(height: _contentTopGap()),
+            for (final w in works.take(detailed ? 2 : 1)) ...[
+              Text(
+                w.role.trim(),
+                style: subtitleStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          resume.serifRulesDisplayName,
-                          style: nameStyle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (resume.jobTitle.trim().isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            resume.jobTitle.trim(),
-                            style: jobStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                        const SizedBox(height: 3),
-                        if (resume.location.trim().isNotEmpty)
-                          Text(
-                            resume.location.trim(),
-                            style: contactStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        if (resume.phone.trim().isNotEmpty)
-                          Text(
-                            resume.phone.trim(),
-                            style: contactStyle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                      ],
+                    child: Text(
+                      w.company.trim(),
+                      style: body.copyWith(fontStyle: FontStyle.italic),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (rightContacts.isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        for (var i = 0; i < rightContacts.length; i++)
-                          Padding(
-                            padding: EdgeInsets.only(top: i == 0 ? 0 : 2),
-                            child: Text(
-                              rightContacts[i],
-                              style: linkStyle,
-                              textAlign: TextAlign.right,
-                              maxLines: detailed ? 3 : 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
-                    ),
-                ],
-              ),
-              SizedBox(height: _sectionLeadGap()),
-              Text('Summary', style: sectionTitleStyle),
-              SizedBox(height: _titleToRuleGap()),
-              Container(
-                height: 1,
-                color: ResumeTypography.atsStructuredBodyTextColor
-                    .withValues(alpha: 0.35),
-              ),
-              SizedBox(height: _contentTopGap()),
-              Text(
-                resume.summary.trim(),
-                style: body,
-                maxLines: detailed ? 10 : 4,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (works.isNotEmpty) ...[
-                SizedBox(height: _sectionGap()),
-                Text('Experience', style: sectionTitleStyle),
-                SizedBox(height: _titleToRuleGap()),
-                Container(
-                  height: 1,
-                  color: ResumeTypography.atsStructuredBodyTextColor
-                      .withValues(alpha: 0.35),
-                ),
-                SizedBox(height: _contentTopGap()),
-                for (final w in works.take(detailed ? 2 : 1)) ...[
-                  Text(
-                    w.role.trim(),
-                    style: subtitleStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          w.company.trim(),
-                          style: body.copyWith(fontStyle: FontStyle.italic),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (educationDateRangeLabel(w.startDate, w.endDate)
-                          .isNotEmpty)
-                        Flexible(
-                          child: Text(
-                            educationDateRangeLabel(w.startDate, w.endDate),
-                            textAlign: TextAlign.right,
-                            style: body.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: ResumeTypography.atsStructuredBodyTextColor
-                                  .withValues(alpha: 0.72),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  for (
-                    var i = 0;
-                    i <
-                        w.bullets
-                            .where((b) => b.trim().isNotEmpty)
-                            .length
-                            .clamp(0, detailed ? 3 : 1);
-                    i++
-                  )
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 2),
+                  if (educationDateRangeLabel(
+                    w.startDate,
+                    w.endDate,
+                  ).isNotEmpty)
+                    Flexible(
                       child: Text(
-                        '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
-                        style: body,
-                        maxLines: 3,
+                        educationDateRangeLabel(w.startDate, w.endDate),
+                        textAlign: TextAlign.right,
+                        style: body.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: ResumeTypography.atsStructuredBodyTextColor
+                              .withValues(alpha: 0.72),
+                        ),
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  SizedBox(height: detailed ? 5 : 3),
                 ],
-              ],
-              if (edu.isNotEmpty) ...[
-                SizedBox(height: _sectionGap()),
-                Text('Education', style: sectionTitleStyle),
-                SizedBox(height: _titleToRuleGap()),
-                Container(
-                  height: 1,
-                  color: ResumeTypography.atsStructuredBodyTextColor
-                      .withValues(alpha: 0.35),
-                ),
-                SizedBox(height: _contentTopGap()),
-                for (final e in edu.take(detailed ? 2 : 1)) ...[
-                  Text(
-                    '${e.degree.trim()} · ${educationDateRangeLabel(e.startDate, e.endDate)}',
-                    style: subtitleStyle,
+              ),
+              const SizedBox(height: 3),
+              for (
+                var i = 0;
+                i <
+                    w.bullets
+                        .where((b) => b.trim().isNotEmpty)
+                        .length
+                        .clamp(0, detailed ? 3 : 1);
+                i++
+              )
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
+                    style: body,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    e.institution.trim(),
-                    style: body,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: detailed ? 5 : 3),
-                ],
-              ],
-              if (skills.isNotEmpty) ...[
-                SizedBox(height: _sectionGap()),
-                Text('Skills', style: sectionTitleStyle),
-                SizedBox(height: _titleToRuleGap()),
-                Container(
-                  height: 1,
-                  color: ResumeTypography.atsStructuredBodyTextColor
-                      .withValues(alpha: 0.35),
                 ),
-                SizedBox(height: _contentTopGap()),
-                _serifRulesSkillsTwoColumn(
-                  skills.take(detailed ? 8 : 5).toList(),
-                  skillsBody,
-                ),
-              ],
+              SizedBox(height: detailed ? 5 : 3),
             ],
-          ),
-        );
+          ],
+          if (edu.isNotEmpty) ...[
+            SizedBox(height: _sectionGap()),
+            Text('Education', style: sectionTitleStyle),
+            SizedBox(height: _titleToRuleGap()),
+            Container(
+              height: 1,
+              color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+                alpha: 0.35,
+              ),
+            ),
+            SizedBox(height: _contentTopGap()),
+            for (final e in edu.take(detailed ? 2 : 1)) ...[
+              Text(
+                '${e.degree.trim()} · ${educationDateRangeLabel(e.startDate, e.endDate)}',
+                style: subtitleStyle,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                e.institution.trim(),
+                style: body,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: detailed ? 5 : 3),
+            ],
+          ],
+          if (skills.isNotEmpty) ...[
+            SizedBox(height: _sectionGap()),
+            Text('Skills', style: sectionTitleStyle),
+            SizedBox(height: _titleToRuleGap()),
+            Container(
+              height: 1,
+              color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+                alpha: 0.35,
+              ),
+            ),
+            SizedBox(height: _contentTopGap()),
+            _serifRulesSkillsTwoColumn(
+              skills.take(detailed ? 8 : 5).toList(),
+              skillsBody,
+            ),
+          ],
+        ],
+      ),
+    );
 
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
@@ -2985,7 +3009,12 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
 
   Widget _serifRulesSkillsTwoColumn(List<String> skills, TextStyle body) {
     if (skills.isEmpty) {
-      return Text('Add skills.', style: body, maxLines: 2, overflow: TextOverflow.ellipsis);
+      return Text(
+        'Add skills.',
+        style: body,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      );
     }
     final midpoint = (skills.length / 2).ceil();
     return Row(
@@ -3032,9 +3061,7 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
 }
 
 class _AtsModernFlowTemplateArt extends StatelessWidget {
-  const _AtsModernFlowTemplateArt({
-    required this.resume,
-  });
+  const _AtsModernFlowTemplateArt({required this.resume});
 
   final ResumeData resume;
 
@@ -3046,13 +3073,12 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
     double fontSize, {
     int weight = ResumeTypography.atsStructuredBodyWeight,
     double? height,
-  }) =>
-      ResumeTypography.garamondPreviewStyle(
-        weight: weight,
-        fontSize: fontSize,
-        color: ResumeTypography.atsStructuredBodyTextColor,
-        height: height ?? ResumeTypography.atsModernFlowBodyLineHeight,
-      );
+  }) => ResumeTypography.garamondPreviewStyle(
+    weight: weight,
+    fontSize: fontSize,
+    color: ResumeTypography.atsStructuredBodyTextColor,
+    height: height ?? ResumeTypography.atsModernFlowBodyLineHeight,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -3073,9 +3099,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
       weight: ResumeTypography.atsStructuredTitleWeight,
       height: ResumeTypography.textLineHeight,
     );
-    final skillsBody = _garamondBody(
-      _scaledPt(math.max(9.0, bodyPt - 1.35)),
-    );
+    final skillsBody = _garamondBody(_scaledPt(math.max(9.0, bodyPt - 1.35)));
     final contactLines = resume.atsStructuredHeaderContactLines();
     final edu = resume.visibleEducation;
     final works = resume.visibleWorkExperiences;
@@ -3083,218 +3107,223 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
     final projects = resume.visibleProjects;
 
     final pageContent = Padding(
-          padding: const EdgeInsets.fromLTRB(10, 9, 10, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+      padding: const EdgeInsets.fromLTRB(10, 9, 10, 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            resume.fullName.trim(),
+            textAlign: TextAlign.center,
+            style: _garamondBody(
+              _scaledPt(ResumeTypography.atsStructuredNamePt),
+              weight: ResumeTypography.atsStructuredNameWeight,
+              height: ResumeTypography.textLineHeight,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (resume.jobTitle.trim().isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              resume.jobTitle.trim(),
+              textAlign: TextAlign.center,
+              style: _garamondBody(
+                _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
+                weight: ResumeTypography.atsStructuredTitleWeight,
+                height: ResumeTypography.textLineHeight,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          if (contactLines.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            for (final line in contactLines)
               Text(
-                resume.fullName.trim(),
+                line,
                 textAlign: TextAlign.center,
-                style: _garamondBody(
-                  _scaledPt(ResumeTypography.atsStructuredNamePt),
-                  weight: ResumeTypography.atsStructuredNameWeight,
-                  height: ResumeTypography.textLineHeight,
-                ),
+                style: contactStyle,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+          const SizedBox(height: 6),
+          Container(
+            height: 1,
+            color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+              alpha: 0.85,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text('Professional Summary', style: sectionTitleStyle),
+          const SizedBox(height: 5),
+          Text(
+            resume.summary.trim(),
+            style: body,
+            maxLines: 5,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          Container(
+            height: 1,
+            color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+              alpha: 0.22,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text('Education', style: sectionTitleStyle),
+          const SizedBox(height: 5),
+          if (edu.isEmpty)
+            Text('Add education.', style: body)
+          else
+            for (final e in edu.take(1)) ...[
+              Text(
+                e.degree.trim(),
+                style: subtitleStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (resume.jobTitle.trim().isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  resume.jobTitle.trim(),
-                  textAlign: TextAlign.center,
-                  style: _garamondBody(
-                    _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
-                    weight: ResumeTypography.atsStructuredTitleWeight,
-                    height: ResumeTypography.textLineHeight,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              if (contactLines.isNotEmpty) ...[
-                const SizedBox(height: 3),
-                for (final line in contactLines)
-                  Text(
-                    line,
-                    textAlign: TextAlign.center,
-                    style: contactStyle,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-              const SizedBox(height: 6),
-              Container(
-                height: 1,
-                color: ResumeTypography.atsStructuredBodyTextColor
-                    .withValues(alpha: 0.85),
-              ),
-              const SizedBox(height: 7),
-              Text('Professional Summary', style: sectionTitleStyle),
-              const SizedBox(height: 5),
+              const SizedBox(height: 2),
               Text(
-                resume.summary.trim(),
+                '${e.institution.trim()}'
+                '${educationDateRangeLabel(e.startDate, e.endDate).isNotEmpty ? '  |  Graduated: ${educationDateRangeLabel(e.startDate, e.endDate)}' : ''}',
                 style: body,
-                maxLines: 5,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 6),
-              Container(
-                height: 1,
-                color: ResumeTypography.atsStructuredBodyTextColor
-                    .withValues(alpha: 0.22),
-              ),
-              const SizedBox(height: 7),
-              Text('Education', style: sectionTitleStyle),
-              const SizedBox(height: 5),
-              if (edu.isEmpty)
-                Text('Add education.', style: body)
-              else
-                for (final e in edu.take(1)) ...[
-                  Text(
-                    e.degree.trim(),
-                    style: subtitleStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${e.institution.trim()}'
-                    '${educationDateRangeLabel(e.startDate, e.endDate).isNotEmpty ? '  |  Graduated: ${educationDateRangeLabel(e.startDate, e.endDate)}' : ''}',
-                    style: body,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (e.score.trim().isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      e.score.trim(),
-                      style: body,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: 6),
-                ],
-              Container(
-                height: 1,
-                color: ResumeTypography.atsStructuredBodyTextColor
-                    .withValues(alpha: 0.22),
-              ),
-              const SizedBox(height: 7),
-              Text('Skills', style: sectionTitleStyle),
-              const SizedBox(height: 5),
-              _MiniBulletColumn(
-                items: skills.take(4).toList(),
-                textStyle: skillsBody,
-              ),
-              const SizedBox(height: 6),
-              Container(
-                height: 1,
-                color: ResumeTypography.atsStructuredBodyTextColor
-                    .withValues(alpha: 0.22),
-              ),
-              const SizedBox(height: 7),
-              Text('Experience', style: sectionTitleStyle),
-              const SizedBox(height: 5),
-              if (works.isEmpty)
-                Text('Add roles.', style: body)
-              else
-                for (final w in works.take(1)) ...[
-                  Text(
-                    '${w.role.trim()} — ${w.company.trim()}',
-                    style: subtitleStyle,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
-                    Text(
-                      educationDateRangeLabel(w.startDate, w.endDate),
-                      style: body,
-                    ),
-                  for (
-                    var i = 0;
-                    i <
-                        w.bullets
-                            .where((b) => b.trim().isNotEmpty)
-                            .length
-                            .clamp(0, 1);
-                    i++
-                  )
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
-                        style: body,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  const SizedBox(height: 6),
-                ],
-              if (projects.isNotEmpty) ...[
-                Container(
-                  height: 1,
-                  color: ResumeTypography.atsStructuredBodyTextColor
-                      .withValues(alpha: 0.22),
-                ),
-                const SizedBox(height: 7),
-                Text('Projects', style: sectionTitleStyle),
-                const SizedBox(height: 5),
-                for (final p in projects.take(1)) ...[
-                  Text(
-                    p.title.trim(),
-                    style: subtitleStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (_templateArtProjectBullets(p).isNotEmpty)
-                    Text(
-                      _templateArtProjectBullets(p).first,
-                      style: body,
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  const SizedBox(height: 5),
-                ],
-              ],
-              for (final section
-                  in resume.visibleCustomSections.take(1)) ...[
-                Container(
-                  height: 1,
-                  color: ResumeTypography.atsStructuredBodyTextColor
-                      .withValues(alpha: 0.22),
-                ),
-                const SizedBox(height: 7),
+              if (e.score.trim().isNotEmpty) ...[
+                const SizedBox(height: 2),
                 Text(
-                  section.title.trim().isEmpty
-                      ? 'Additional'
-                      : section.title.trim(),
-                  style: sectionTitleStyle,
+                  e.score.trim(),
+                  style: body,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 5),
-                if (section.layoutMode == CustomSectionLayoutMode.bullets)
-                  _MiniBulletColumn(
-                    items: section.bullets
+              ],
+              const SizedBox(height: 6),
+            ],
+          Container(
+            height: 1,
+            color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+              alpha: 0.22,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text('Skills', style: sectionTitleStyle),
+          const SizedBox(height: 5),
+          _MiniBulletColumn(
+            items: skills.take(4).toList(),
+            textStyle: skillsBody,
+          ),
+          const SizedBox(height: 6),
+          Container(
+            height: 1,
+            color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+              alpha: 0.22,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text('Experience', style: sectionTitleStyle),
+          const SizedBox(height: 5),
+          if (works.isEmpty)
+            Text('Add roles.', style: body)
+          else
+            for (final w in works.take(1)) ...[
+              Text(
+                '${w.role.trim()} — ${w.company.trim()}',
+                style: subtitleStyle,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
+                Text(
+                  educationDateRangeLabel(w.startDate, w.endDate),
+                  style: body,
+                ),
+              for (
+                var i = 0;
+                i <
+                    w.bullets
                         .where((b) => b.trim().isNotEmpty)
-                        .take(2)
-                        .toList(),
-                    textStyle: body,
-                  )
-                else if (section.content.trim().isNotEmpty)
-                  Text(
-                    section.content.trim(),
+                        .length
+                        .clamp(0, 1);
+                i++
+              )
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
                     style: body,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-              ],
+                ),
+              const SizedBox(height: 6),
             ],
-          ),
-        );
+          if (projects.isNotEmpty) ...[
+            Container(
+              height: 1,
+              color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+                alpha: 0.22,
+              ),
+            ),
+            const SizedBox(height: 7),
+            Text('Projects', style: sectionTitleStyle),
+            const SizedBox(height: 5),
+            for (final p in projects.take(1)) ...[
+              Text(
+                p.title.trim(),
+                style: subtitleStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (_templateArtProjectBullets(p).isNotEmpty)
+                Text(
+                  _templateArtProjectBullets(p).first,
+                  style: body,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              const SizedBox(height: 5),
+            ],
+          ],
+          for (final section in resume.visibleCustomSections.take(1)) ...[
+            Container(
+              height: 1,
+              color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+                alpha: 0.22,
+              ),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              section.title.trim().isEmpty
+                  ? 'Additional'
+                  : section.title.trim(),
+              style: sectionTitleStyle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 5),
+            if (section.layoutMode == CustomSectionLayoutMode.bullets)
+              _MiniBulletColumn(
+                items: section.bullets
+                    .where((b) => b.trim().isNotEmpty)
+                    .take(2)
+                    .toList(),
+                textStyle: body,
+              )
+            else if (section.content.trim().isNotEmpty)
+              Text(
+                section.content.trim(),
+                style: body,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ],
+      ),
+    );
 
     // Scale to fit tile/detail bounds (Structured ATS uses a 240×360 box; these
     // layouts are taller in grid mode, so width-only lets FittedBox shrink height).
@@ -3310,10 +3339,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
 }
 
 class _AtsExecutiveTemplateArt extends StatelessWidget {
-  const _AtsExecutiveTemplateArt({
-    required this.resume,
-    this.detailed = false,
-  });
+  const _AtsExecutiveTemplateArt({required this.resume, this.detailed = false});
 
   final ResumeData resume;
   final bool detailed;
@@ -3326,13 +3352,12 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
     double fontSize, {
     int weight = ResumeTypography.atsStructuredBodyWeight,
     double? height,
-  }) =>
-      ResumeTypography.garamondPreviewStyle(
-        weight: weight,
-        fontSize: fontSize,
-        color: ResumeTypography.atsStructuredBodyTextColor,
-        height: height ?? ResumeTypography.atsExecutiveBodyLineHeight,
-      );
+  }) => ResumeTypography.garamondPreviewStyle(
+    weight: weight,
+    fontSize: fontSize,
+    color: ResumeTypography.atsStructuredBodyTextColor,
+    height: height ?? ResumeTypography.atsExecutiveBodyLineHeight,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -3353,255 +3378,262 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
       weight: ResumeTypography.atsStructuredTitleWeight,
       height: ResumeTypography.textLineHeight,
     );
-    final skillsBody = _garamondBody(
-      _scaledPt(math.max(9.0, bodyPt - 1.35)),
-    );
+    final skillsBody = _garamondBody(_scaledPt(math.max(9.0, bodyPt - 1.35)));
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
     final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
     final mid = skills.length ~/ 2;
     final left = skills.take(mid == 0 ? skills.length : mid).toList();
-    final right = mid == 0
-        ? const <String>[]
-        : skills.skip(mid).toList();
+    final right = mid == 0 ? const <String>[] : skills.skip(mid).toList();
 
     final pageContent = Padding(
-          padding: EdgeInsets.fromLTRB(10, detailed ? 11 : 9, 10, detailed ? 10 : 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (resume.jobTitle.trim().isNotEmpty)
-                Text(
-                  resume.jobTitle.trim().toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: _garamondBody(
-                    _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
-                    weight: ResumeTypography.atsStructuredTitleWeight,
-                    height: ResumeTypography.textLineHeight,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              if (resume.jobTitle.trim().isNotEmpty) const SizedBox(height: 3),
-              Text(
-                resume.fullName.trim(),
-                textAlign: TextAlign.center,
-                style: _garamondBody(
-                  _scaledPt(ResumeTypography.atsStructuredNamePt),
-                  weight: ResumeTypography.atsStructuredNameWeight,
-                  height: ResumeTypography.textLineHeight,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+      padding: EdgeInsets.fromLTRB(
+        10,
+        detailed ? 11 : 9,
+        10,
+        detailed ? 10 : 8,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (resume.jobTitle.trim().isNotEmpty)
+            Text(
+              resume.jobTitle.trim().toUpperCase(),
+              textAlign: TextAlign.center,
+              style: _garamondBody(
+                _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
+                weight: ResumeTypography.atsStructuredTitleWeight,
+                height: ResumeTypography.textLineHeight,
               ),
-              if (resume.location.trim().isNotEmpty) ...[
-                const SizedBox(height: 3),
-                Text(
-                  resume.location.trim(),
-                  textAlign: TextAlign.center,
-                  style: contactStyle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              if (resume.email.trim().isNotEmpty ||
-                  resume.phone.trim().isNotEmpty) ...[
-                const SizedBox(height: 3),
-                Text(
-                  [
-                    if (resume.email.trim().isNotEmpty) resume.email.trim(),
-                    if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
-                  ].join('   '),
-                  textAlign: TextAlign.center,
-                  style: contactStyle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              const SizedBox(height: 6),
-              Container(
-                height: 1,
-                color: ResumeTypography.atsStructuredBodyTextColor
-                    .withValues(alpha: 0.85),
-              ),
-              const SizedBox(height: 7),
-              Text('SUMMARY', style: sectionTitleStyle),
-              const SizedBox(height: 5),
-              Text(
-                resume.summary.trim(),
-                style: body,
-                maxLines: detailed ? 10 : 5,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 7),
-              Text('EXPERIENCE', style: sectionTitleStyle),
-              const SizedBox(height: 5),
-              if (works.isEmpty)
-                Text('Add experience.', style: body)
-              else
-                for (final w in works.take(detailed ? 2 : 1)) ...[
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          w.role.trim().toUpperCase(),
-                          style: subtitleStyle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (educationDateRangeLabel(w.startDate, w.endDate)
-                          .isNotEmpty)
-                        Flexible(
-                          child: Text(
-                            educationDateRangeLabel(w.startDate, w.endDate),
-                            textAlign: TextAlign.right,
-                            style: subtitleStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    w.company.trim(),
-                    style: body,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  for (
-                    var i = 0;
-                    i <
-                        w.bullets
-                            .where((b) => b.trim().isNotEmpty)
-                            .length
-                            .clamp(0, detailed ? 3 : 1);
-                    i++
-                  )
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
-                        style: body,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  const SizedBox(height: 6),
-                ],
-              Text('EDUCATION', style: sectionTitleStyle),
-              const SizedBox(height: 5),
-              if (edu.isEmpty)
-                Text('Add education.', style: body)
-              else
-                for (final e in edu.take(detailed ? 2 : 1)) ...[
-                  Text(
-                    '${e.institution.trim()} | ${e.degree.trim()}',
-                    style: subtitleStyle,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (educationDateRangeLabel(e.startDate, e.endDate)
-                      .isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      educationDateRangeLabel(e.startDate, e.endDate),
-                      style: body,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          if (resume.jobTitle.trim().isNotEmpty) const SizedBox(height: 3),
+          Text(
+            resume.fullName.trim(),
+            textAlign: TextAlign.center,
+            style: _garamondBody(
+              _scaledPt(ResumeTypography.atsStructuredNamePt),
+              weight: ResumeTypography.atsStructuredNameWeight,
+              height: ResumeTypography.textLineHeight,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (resume.location.trim().isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              resume.location.trim(),
+              textAlign: TextAlign.center,
+              style: contactStyle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          if (resume.email.trim().isNotEmpty ||
+              resume.phone.trim().isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              [
+                if (resume.email.trim().isNotEmpty) resume.email.trim(),
+                if (resume.phone.trim().isNotEmpty) resume.phone.trim(),
+              ].join('   '),
+              textAlign: TextAlign.center,
+              style: contactStyle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const SizedBox(height: 6),
+          Container(
+            height: 1,
+            color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+              alpha: 0.85,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text('SUMMARY', style: sectionTitleStyle),
+          const SizedBox(height: 5),
+          Text(
+            resume.summary.trim(),
+            style: body,
+            maxLines: detailed ? 10 : 5,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 7),
+          Text('EXPERIENCE', style: sectionTitleStyle),
+          const SizedBox(height: 5),
+          if (works.isEmpty)
+            Text('Add experience.', style: body)
+          else
+            for (final w in works.take(detailed ? 2 : 1)) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      w.role.trim().toUpperCase(),
+                      style: subtitleStyle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                  const SizedBox(height: 5),
-                ],
-              Text('SKILLS', style: sectionTitleStyle),
-              const SizedBox(height: 5),
-              if (skills.isEmpty)
-                Text('Add skills.', style: skillsBody)
-              else
-                for (var r = 0; r < math.max(left.length, right.length); r++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 2),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: r < left.length
-                              ? Text(
-                                  '• ${left[r]}',
-                                  style: skillsBody,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                )
-                              : const SizedBox(),
-                        ),
-                        Expanded(
-                          child: r < right.length
-                              ? Text(
-                                  '• ${right[r]}',
-                                  style: skillsBody,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                )
-                              : const SizedBox(),
-                        ),
-                      ],
-                    ),
                   ),
-              if (detailed && resume.visibleProjects.isNotEmpty) ...[
-                const SizedBox(height: 7),
-                Text('PROJECTS', style: sectionTitleStyle),
-                const SizedBox(height: 5),
-                for (final p in resume.visibleProjects.take(detailed ? 3 : 1)) ...[
-                  Text(
-                    p.title.trim(),
-                    style: subtitleStyle,
-                    maxLines: 2,
+                  if (educationDateRangeLabel(
+                    w.startDate,
+                    w.endDate,
+                  ).isNotEmpty)
+                    Flexible(
+                      child: Text(
+                        educationDateRangeLabel(w.startDate, w.endDate),
+                        textAlign: TextAlign.right,
+                        style: subtitleStyle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                w.company.trim(),
+                style: body,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              for (
+                var i = 0;
+                i <
+                    w.bullets
+                        .where((b) => b.trim().isNotEmpty)
+                        .length
+                        .clamp(0, detailed ? 3 : 1);
+                i++
+              )
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
+                    style: body,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (_templateArtProjectBullets(p).isNotEmpty)
-                    Text(
-                      _templateArtProjectBullets(p).first,
-                      style: body,
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  const SizedBox(height: 5),
-                ],
-              ],
-              for (final section
-                  in resume.visibleCustomSections.take(detailed ? 3 : 1)) ...[
-                const SizedBox(height: 7),
+                ),
+              const SizedBox(height: 6),
+            ],
+          Text('EDUCATION', style: sectionTitleStyle),
+          const SizedBox(height: 5),
+          if (edu.isEmpty)
+            Text('Add education.', style: body)
+          else
+            for (final e in edu.take(detailed ? 2 : 1)) ...[
+              Text(
+                '${e.institution.trim()} | ${e.degree.trim()}',
+                style: subtitleStyle,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (educationDateRangeLabel(
+                e.startDate,
+                e.endDate,
+              ).isNotEmpty) ...[
+                const SizedBox(height: 2),
                 Text(
-                  section.title.trim().isEmpty
-                      ? 'ADDITIONAL'
-                      : section.title.trim().toUpperCase(),
-                  style: sectionTitleStyle,
+                  educationDateRangeLabel(e.startDate, e.endDate),
+                  style: body,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 5),
-                if (section.layoutMode == CustomSectionLayoutMode.bullets)
-                  _MiniBulletColumn(
-                    items: section.bullets
-                        .where((b) => b.trim().isNotEmpty)
-                        .take(detailed ? 4 : 2)
-                        .toList(),
-                    textStyle: body,
-                  )
-                else if (section.content.trim().isNotEmpty)
-                  Text(
-                    section.content.trim(),
-                    style: body,
-                    maxLines: detailed ? 6 : 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
               ],
+              const SizedBox(height: 5),
             ],
-          ),
-        );
+          Text('SKILLS', style: sectionTitleStyle),
+          const SizedBox(height: 5),
+          if (skills.isEmpty)
+            Text('Add skills.', style: skillsBody)
+          else
+            for (var r = 0; r < math.max(left.length, right.length); r++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: r < left.length
+                          ? Text(
+                              '• ${left[r]}',
+                              style: skillsBody,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          : const SizedBox(),
+                    ),
+                    Expanded(
+                      child: r < right.length
+                          ? Text(
+                              '• ${right[r]}',
+                              style: skillsBody,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          : const SizedBox(),
+                    ),
+                  ],
+                ),
+              ),
+          if (detailed && resume.visibleProjects.isNotEmpty) ...[
+            const SizedBox(height: 7),
+            Text('PROJECTS', style: sectionTitleStyle),
+            const SizedBox(height: 5),
+            for (final p in resume.visibleProjects.take(detailed ? 3 : 1)) ...[
+              Text(
+                p.title.trim(),
+                style: subtitleStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (_templateArtProjectBullets(p).isNotEmpty)
+                Text(
+                  _templateArtProjectBullets(p).first,
+                  style: body,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              const SizedBox(height: 5),
+            ],
+          ],
+          for (final section in resume.visibleCustomSections.take(
+            detailed ? 3 : 1,
+          )) ...[
+            const SizedBox(height: 7),
+            Text(
+              section.title.trim().isEmpty
+                  ? 'ADDITIONAL'
+                  : section.title.trim().toUpperCase(),
+              style: sectionTitleStyle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 5),
+            if (section.layoutMode == CustomSectionLayoutMode.bullets)
+              _MiniBulletColumn(
+                items: section.bullets
+                    .where((b) => b.trim().isNotEmpty)
+                    .take(detailed ? 4 : 2)
+                    .toList(),
+                textStyle: body,
+              )
+            else if (section.content.trim().isNotEmpty)
+              Text(
+                section.content.trim(),
+                style: body,
+                maxLines: detailed ? 6 : 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ],
+      ),
+    );
 
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
@@ -3632,13 +3664,12 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
     int weight = ResumeTypography.atsStructuredBodyWeight,
     double? height,
     Color? color,
-  }) =>
-      ResumeTypography.arialPreviewStyle(
-        weight: weight,
-        fontSize: fontSize,
-        color: color ?? ResumeTypography.atsStructuredBodyTextColor,
-        height: height ?? ResumeTypography.atsCenterClassicBodyLineHeight,
-      );
+  }) => ResumeTypography.arialPreviewStyle(
+    weight: weight,
+    fontSize: fontSize,
+    color: color ?? ResumeTypography.atsStructuredBodyTextColor,
+    height: height ?? ResumeTypography.atsCenterClassicBodyLineHeight,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -3680,8 +3711,9 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
       if (resume.location.trim().isNotEmpty) resume.location.trim(),
     ].join(' | ');
     final ink = ResumeTypography.atsStructuredBodyTextColor;
-    final horizontalInset =
-        _scaledPt(ResumeTypography.atsStructuredPageInsetPt);
+    final horizontalInset = _scaledPt(
+      ResumeTypography.atsStructuredPageInsetPt,
+    );
 
     Widget sectionRule() => Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
@@ -3757,14 +3789,22 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
+                  if (educationDateRangeLabel(
+                    w.startDate,
+                    w.endDate,
+                  ).isNotEmpty)
                     Text(
                       educationDateRangeLabel(w.startDate, w.endDate),
                       style: sectionSubtitleStyle,
                     ),
                 ],
               ),
-              Text(w.role.trim(), style: body, maxLines: 2, overflow: TextOverflow.ellipsis),
+              Text(
+                w.role.trim(),
+                style: body,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               const SizedBox(height: 4),
             ],
           sectionRule(),
@@ -3811,8 +3851,9 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
               const SizedBox(height: 4),
             ],
           ],
-          for (final section
-              in resume.visibleCustomSections.take(detailed ? 3 : 1)) ...[
+          for (final section in resume.visibleCustomSections.take(
+            detailed ? 3 : 1,
+          )) ...[
             sectionRule(),
             Text(
               section.title.trim().isEmpty
@@ -3896,13 +3937,12 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
     int weight = ResumeTypography.atsStructuredBodyWeight,
     double? height,
     Color? color,
-  }) =>
-      ResumeTypography.arialPreviewStyle(
-        weight: weight,
-        fontSize: fontSize,
-        color: color ?? ResumeTypography.atsStructuredBodyTextColor,
-        height: height ?? ResumeTypography.atsProfessionalBlueBodyLineHeight,
-      );
+  }) => ResumeTypography.arialPreviewStyle(
+    weight: weight,
+    fontSize: fontSize,
+    color: color ?? ResumeTypography.atsStructuredBodyTextColor,
+    height: height ?? ResumeTypography.atsProfessionalBlueBodyLineHeight,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -3938,10 +3978,13 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
     final skillRows = columns
         .map((c) => c.length)
         .fold<int>(0, (a, b) => a > b ? a : b);
-    final horizontalInset =
-        _scaledPt(ResumeTypography.atsStructuredPageInsetPt);
+    final horizontalInset = _scaledPt(
+      ResumeTypography.atsStructuredPageInsetPt,
+    );
 
-    final extraTop = _scaledPt(ResumeTypography.atsProfessionalBlueExtraTopPaddingPt);
+    final extraTop = _scaledPt(
+      ResumeTypography.atsProfessionalBlueExtraTopPaddingPt,
+    );
     final pageContent = Padding(
       padding: EdgeInsets.fromLTRB(
         horizontalInset,
@@ -4029,10 +4072,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
-          Text(
-            'Professional Experience',
-            style: sectionTitleStyle,
-          ),
+          Text('Professional Experience', style: sectionTitleStyle),
           const SizedBox(height: 4),
           if (works.isEmpty)
             Text('Add roles.', style: body)
@@ -4048,14 +4088,22 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
+                  if (educationDateRangeLabel(
+                    w.startDate,
+                    w.endDate,
+                  ).isNotEmpty)
                     Text(
                       educationDateRangeLabel(w.startDate, w.endDate),
                       style: subtitleStyle,
                     ),
                 ],
               ),
-              Text(w.role.trim(), style: body, maxLines: 2, overflow: TextOverflow.ellipsis),
+              Text(
+                w.role.trim(),
+                style: body,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               const SizedBox(height: 4),
             ],
           if (detailed && edu.isNotEmpty) ...[
@@ -4097,7 +4145,10 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                                   Container(
                                     width: 3,
                                     height: 3,
-                                    margin: const EdgeInsets.only(top: 2, right: 3),
+                                    margin: const EdgeInsets.only(
+                                      top: 2,
+                                      right: 3,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: accent,
                                       shape: BoxShape.circle,
@@ -4226,10 +4277,10 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   static double get _mainColumnRightPadding => _scaledPt(40);
 
   TextStyle _bodyStyle() => ResumeTypography.sidebarBodyPreviewStyle(
-        fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
-        color: ResumeTypography.classicSidebarBodyTextColor,
-        height: ResumeTypography.classicSidebarBodyLineHeight,
-      );
+    fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
+    color: ResumeTypography.classicSidebarBodyTextColor,
+    height: ResumeTypography.classicSidebarBodyLineHeight,
+  );
 
   static TextStyle _subtitleStyle({bool italic = false}) =>
       ResumeTypography.garamondPreviewStyle(
@@ -4240,19 +4291,19 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
       ).copyWith(fontStyle: italic ? FontStyle.italic : null);
 
   static TextStyle _nameStyle() => ResumeTypography.garamondPreviewStyle(
-        weight: ResumeTypography.classicSidebarNameWeight,
-        fontSize: _scaledPt(ResumeTypography.classicSidebarNamePt),
-        color: ResumeTypography.classicSidebarBodyTextColor,
-        height: 1,
-        letterSpacing: 0.2,
-      );
+    weight: ResumeTypography.classicSidebarNameWeight,
+    fontSize: _scaledPt(ResumeTypography.classicSidebarNamePt),
+    color: ResumeTypography.classicSidebarBodyTextColor,
+    height: 1,
+    letterSpacing: 0.2,
+  );
 
   /// Matches [_ClassicSidebarPreview] avatar initials sizing, scaled for tile art.
   static double _avatarInitialsFontSize(ResumeData resume) => _scaledPt(
-        ResumeTypography.classicSidebarAvatarInitialsFontPt(
-          resume.classicSidebarScaledPt(ResumeTypography.classicSidebarNamePt),
-        ),
-      );
+    ResumeTypography.classicSidebarAvatarInitialsFontPt(
+      resume.classicSidebarScaledPt(ResumeTypography.classicSidebarNamePt),
+    ),
+  );
 
   static TextStyle _avatarInitialsStyle(ResumeData resume) =>
       ResumeTypography.garamondPreviewStyle(
@@ -4262,7 +4313,8 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
         height: 1,
       );
 
-  static TextStyle _sectionHeadingStyle() => ResumeTypography.garamondPreviewStyle(
+  static TextStyle _sectionHeadingStyle() =>
+      ResumeTypography.garamondPreviewStyle(
         weight: ResumeTypography.classicSidebarSectionTitleWeight,
         fontSize: _scaledPt(ResumeTypography.classicSidebarSectionTitlePt),
         color: ResumeTypography.classicSidebarBodyTextColor,
@@ -4271,11 +4323,11 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
       );
 
   TextStyle _sidebarStyle() => ResumeTypography.garamondPreviewStyle(
-        weight: ResumeTypography.classicSidebarSidebarContentWeight,
-        fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
-        color: ResumeTypography.classicSidebarBodyTextColor,
-        height: ResumeTypography.classicSidebarBodyLineHeight,
-      );
+    weight: ResumeTypography.classicSidebarSidebarContentWeight,
+    fontSize: _scaledPt(resume.effectiveBodyFontPt.toDouble()),
+    color: ResumeTypography.classicSidebarBodyTextColor,
+    height: ResumeTypography.classicSidebarBodyLineHeight,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -4323,258 +4375,263 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
     return DefaultTextStyle.merge(
       style: const TextStyle(fontFamily: 'Garamond'),
       child: DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.white),
-      child: ClipRRect(
-        borderRadius: BorderRadius.zero,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 60,
-              color: rail,
-              padding: const EdgeInsets.fromLTRB(6, 10, 6, 8),
-              child: DefaultTextStyle(
-                style: sidebarStyle,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: SizedBox(
-                        width: 52,
-                        height: 52,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: avatar,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              _miniClassicInitials(resume.fullName),
-                              textAlign: TextAlign.center,
-                              style: avatarInitialsStyle.copyWith(color: title),
-                              textHeightBehavior: const TextHeightBehavior(
-                                applyHeightToFirstAscent: false,
-                                applyHeightToLastDescent: false,
+        decoration: const BoxDecoration(color: Colors.white),
+        child: ClipRRect(
+          borderRadius: BorderRadius.zero,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 60,
+                color: rail,
+                padding: const EdgeInsets.fromLTRB(6, 10, 6, 8),
+                child: DefaultTextStyle(
+                  style: sidebarStyle,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: SizedBox(
+                          width: 52,
+                          height: 52,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: avatar,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                _miniClassicInitials(resume.fullName),
+                                textAlign: TextAlign.center,
+                                style: avatarInitialsStyle.copyWith(
+                                  color: title,
+                                ),
+                                textHeightBehavior: const TextHeightBehavior(
+                                  applyHeightToFirstAscent: false,
+                                  applyHeightToLastDescent: false,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(height: 1, color: line),
-                    const SizedBox(height: 6),
-                    Text(
-                      'SKILLS',
-                      style: sectionHeadingStyle.copyWith(color: title),
-                    ),
-                    SizedBox(
-                      height: _matchPreviewSpacing(
-                        _ClassicSidebarPreviewSkillsSpacing.headingGap,
+                      const SizedBox(height: 8),
+                      Container(height: 1, color: line),
+                      const SizedBox(height: 6),
+                      Text(
+                        'SKILLS',
+                        style: sectionHeadingStyle.copyWith(color: title),
                       ),
-                    ),
-                    _MiniBulletColumn(
-                      items: skills,
-                      bulletColor: accent,
-                      textStyle: bodyStyle,
-                      itemBottom: _matchPreviewSpacing(
-                        _ClassicSidebarPreviewSkillsSpacing.itemGap,
+                      SizedBox(
+                        height: _matchPreviewSpacing(
+                          _ClassicSidebarPreviewSkillsSpacing.headingGap,
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: _matchPreviewSpacing(
-                        _ClassicSidebarPreviewSkillsSpacing.afterSectionGap,
+                      _MiniBulletColumn(
+                        items: skills,
+                        bulletColor: accent,
+                        textStyle: bodyStyle,
+                        itemBottom: _matchPreviewSpacing(
+                          _ClassicSidebarPreviewSkillsSpacing.itemGap,
+                        ),
                       ),
-                    ),
-                    Container(height: 1, color: line),
-                    SizedBox(
-                      height: _matchPreviewSpacing(
-                        _ClassicSidebarPreviewSkillsSpacing.beforeNextTitleGap,
+                      SizedBox(
+                        height: _matchPreviewSpacing(
+                          _ClassicSidebarPreviewSkillsSpacing.afterSectionGap,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'LANGUAGES',
-                      style: sectionHeadingStyle.copyWith(color: title),
-                    ),
-                    SizedBox(
-                      height: _matchPreviewSpacing(
-                        _ClassicSidebarPreviewSkillsSpacing.languagesHeadingGap,
+                      Container(height: 1, color: line),
+                      SizedBox(
+                        height: _matchPreviewSpacing(
+                          _ClassicSidebarPreviewSkillsSpacing
+                              .beforeNextTitleGap,
+                        ),
                       ),
-                    ),
-                    _MiniBulletColumn(
-                      items: languages,
-                      bulletColor: accent,
-                      textStyle: bodyStyle,
-                    ),
-                  ],
+                      Text(
+                        'LANGUAGES',
+                        style: sectionHeadingStyle.copyWith(color: title),
+                      ),
+                      SizedBox(
+                        height: _matchPreviewSpacing(
+                          _ClassicSidebarPreviewSkillsSpacing
+                              .languagesHeadingGap,
+                        ),
+                      ),
+                      _MiniBulletColumn(
+                        items: languages,
+                        bulletColor: accent,
+                        textStyle: bodyStyle,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  9,
-                  14,
-                  _mainColumnRightPadding,
-                  6,
-                ),
-                child: DefaultTextStyle(
-                  style: bodyStyle,
-                  child: ClipRect(
-                    child: SingleChildScrollView(
-                      physics: const NeverScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            nameLine,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: nameStyle.copyWith(color: title),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            resume.jobTitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: subtitleStyle.copyWith(
-                              color: muted,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                          SizedBox(height: detailed ? 5 : 3),
-                          _MiniClassicInfoLine(text: resume.email),
-                          SizedBox(height: detailed ? 4 : 3),
-                          _MiniClassicInfoLine(text: resume.location),
-                          SizedBox(height: detailed ? 4 : 3),
-                          _MiniClassicInfoLine(text: resume.phone),
-                          if (resume.githubLink.trim().isNotEmpty) ...[
-                            SizedBox(height: detailed ? 4 : 3),
-                            _MiniClassicInfoLine(text: resume.githubLink.trim()),
-                          ],
-                          if (resume.linkedinLink.trim().isNotEmpty) ...[
-                            SizedBox(height: detailed ? 4 : 3),
-                            _MiniClassicInfoLine(
-                              text: resume.linkedinLink.trim(),
-                            ),
-                          ],
-                          const SizedBox(height: 10),
-                          Text(
-                            'SUMMARY',
-                            style: sectionHeadingStyle.copyWith(color: title),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            summary,
-                            maxLines: detailed ? 5 : 2,
-                            overflow: TextOverflow.clip,
-                            style: bodyStyle,
-                          ),
-                          SizedBox(height: detailed ? 4 : 2),
-                          Container(height: 1, color: line),
-                          SizedBox(height: detailed ? 4 : 2),
-                          Text(
-                            'EXPERIENCE',
-                            style: sectionHeadingStyle.copyWith(color: title),
-                          ),
-                          const SizedBox(height: 4),
-                          if (experiences.isNotEmpty) ...[
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    9,
+                    14,
+                    _mainColumnRightPadding,
+                    6,
+                  ),
+                  child: DefaultTextStyle(
+                    style: bodyStyle,
+                    child: ClipRect(
+                      child: SingleChildScrollView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              experiences.first.role,
-                              style: subtitleStyle.copyWith(color: title),
-                            ),
-                            Text(
-                              _classicSidebarExperienceCompanyDatesLine(
-                                experiences.first,
-                              ),
-                              style: bodyStyle,
-                            ),
-                            const SizedBox(height: 3),
-                            _MiniBulletColumn(
-                              items: [
-                                ...experiences.first.bullets.take(1),
-                                if (experiences.first.bullets.isEmpty &&
-                                    experiences.first.description
-                                        .trim()
-                                        .isNotEmpty)
-                                  experiences.first.description.trim(),
-                              ],
-                              bulletColor: accent,
-                            ),
-                          ],
-                          SizedBox(height: detailed ? 4 : 2),
-                          Container(height: 1, color: line),
-                          SizedBox(height: detailed ? 4 : 2),
-                          Text(
-                            'EDUCATION',
-                            style: sectionHeadingStyle.copyWith(color: title),
-                          ),
-                          const SizedBox(height: 4),
-                          for (final item in education) ...[
-                            Text(
-                              '${item.degree.trim().isEmpty ? 'Degree' : item.degree.trim()}, '
-                              '${item.institution.trim().isEmpty ? 'Institution' : item.institution.trim()}',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: subtitleStyle.copyWith(color: title),
-                            ),
-                            if ([
-                              item.startDate.trim(),
-                              item.endDate.trim(),
-                            ].where((value) => value.isNotEmpty).isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  [
-                                    item.startDate.trim(),
-                                    item.endDate.trim(),
-                                  ].where((value) => value.isNotEmpty).join(' - '),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: mutedBodyStyle.copyWith(
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                            SizedBox(height: detailed ? 8 : 6),
-                          ],
-                          SizedBox(height: detailed ? 3 : 2),
-                          Container(height: 1, color: line),
-                          SizedBox(height: detailed ? 4 : 2),
-                          Text(
-                            'PROJECTS',
-                            style: sectionHeadingStyle.copyWith(color: title),
-                          ),
-                          const SizedBox(height: 4),
-                          for (final item in projects) ...[
-                            Text(
-                              item.title,
-                              style: subtitleStyle.copyWith(color: title),
+                              nameLine,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
+                              style: nameStyle.copyWith(color: title),
                             ),
-                            _MiniBulletColumn(
-                              items: [
-                                ...item.bullets.take(1),
-                                if (item.bullets.isEmpty &&
-                                    item.overview.trim().isNotEmpty)
-                                  item.overview.trim(),
-                              ],
-                              bulletColor: accent,
+                            const SizedBox(height: 3),
+                            Text(
+                              resume.jobTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: subtitleStyle.copyWith(
+                                color: muted,
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
-                            SizedBox(height: detailed ? 3 : 1),
+                            SizedBox(height: detailed ? 5 : 3),
+                            _MiniClassicInfoLine(text: resume.email),
+                            SizedBox(height: detailed ? 4 : 3),
+                            _MiniClassicInfoLine(text: resume.location),
+                            SizedBox(height: detailed ? 4 : 3),
+                            _MiniClassicInfoLine(text: resume.phone),
+                            if (resume.githubLink.trim().isNotEmpty) ...[
+                              SizedBox(height: detailed ? 4 : 3),
+                              _MiniClassicInfoLine(
+                                text: resume.githubLink.trim(),
+                              ),
+                            ],
+                            if (resume.linkedinLink.trim().isNotEmpty) ...[
+                              SizedBox(height: detailed ? 4 : 3),
+                              _MiniClassicInfoLine(
+                                text: resume.linkedinLink.trim(),
+                              ),
+                            ],
+                            const SizedBox(height: 10),
+                            Text(
+                              'SUMMARY',
+                              style: sectionHeadingStyle.copyWith(color: title),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              summary,
+                              maxLines: detailed ? 5 : 2,
+                              overflow: TextOverflow.clip,
+                              style: bodyStyle,
+                            ),
+                            SizedBox(height: detailed ? 4 : 2),
+                            Container(height: 1, color: line),
+                            SizedBox(height: detailed ? 4 : 2),
+                            Text(
+                              'EXPERIENCE',
+                              style: sectionHeadingStyle.copyWith(color: title),
+                            ),
+                            const SizedBox(height: 4),
+                            if (experiences.isNotEmpty) ...[
+                              Text(
+                                experiences.first.role,
+                                style: subtitleStyle.copyWith(color: title),
+                              ),
+                              Text(
+                                _classicSidebarExperienceCompanyDatesLine(
+                                  experiences.first,
+                                ),
+                                style: bodyStyle,
+                              ),
+                              const SizedBox(height: 3),
+                              _MiniBulletColumn(
+                                items: [
+                                  ...experiences.first.bullets.take(1),
+                                  if (experiences.first.bullets.isEmpty &&
+                                      experiences.first.description
+                                          .trim()
+                                          .isNotEmpty)
+                                    experiences.first.description.trim(),
+                                ],
+                                bulletColor: accent,
+                              ),
+                            ],
+                            SizedBox(height: detailed ? 4 : 2),
+                            Container(height: 1, color: line),
+                            SizedBox(height: detailed ? 4 : 2),
+                            Text(
+                              'EDUCATION',
+                              style: sectionHeadingStyle.copyWith(color: title),
+                            ),
+                            const SizedBox(height: 4),
+                            for (final item in education) ...[
+                              Text(
+                                '${item.degree.trim().isEmpty ? 'Degree' : item.degree.trim()}, '
+                                '${item.institution.trim().isEmpty ? 'Institution' : item.institution.trim()}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: subtitleStyle.copyWith(color: title),
+                              ),
+                              if ([
+                                item.startDate.trim(),
+                                item.endDate.trim(),
+                              ].where((value) => value.isNotEmpty).isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    [item.startDate.trim(), item.endDate.trim()]
+                                        .where((value) => value.isNotEmpty)
+                                        .join(' - '),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: mutedBodyStyle.copyWith(
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              SizedBox(height: detailed ? 8 : 6),
+                            ],
+                            SizedBox(height: detailed ? 3 : 2),
+                            Container(height: 1, color: line),
+                            SizedBox(height: detailed ? 4 : 2),
+                            Text(
+                              'PROJECTS',
+                              style: sectionHeadingStyle.copyWith(color: title),
+                            ),
+                            const SizedBox(height: 4),
+                            for (final item in projects) ...[
+                              Text(
+                                item.title,
+                                style: subtitleStyle.copyWith(color: title),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              _MiniBulletColumn(
+                                items: [
+                                  ...item.bullets.take(1),
+                                  if (item.bullets.isEmpty &&
+                                      item.overview.trim().isNotEmpty)
+                                    item.overview.trim(),
+                                ],
+                                bulletColor: accent,
+                              ),
+                              SizedBox(height: detailed ? 3 : 1),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -5182,10 +5239,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
     const muted = Color(0xFF2A6F61);
 
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.zero,
-      ),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.zero),
       child: ClipRRect(
         borderRadius: BorderRadius.zero,
         child: Padding(
@@ -5309,9 +5363,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
 }
 
 class _MiniCoverLetterParagraph extends StatelessWidget {
-  const _MiniCoverLetterParagraph({
-    required this.text,
-  });
+  const _MiniCoverLetterParagraph({required this.text});
 
   final String text;
 
@@ -5354,11 +5406,7 @@ class _ProfileSidebarContactRow extends StatelessWidget {
           height: firstLineExtent,
           child: Align(
             alignment: Alignment.center,
-            child: Icon(
-              Icons.square,
-              size: _squareSize,
-              color: accentColor,
-            ),
+            child: Icon(Icons.square, size: _squareSize, color: accentColor),
           ),
         ),
         const SizedBox(width: 3),
@@ -5400,7 +5448,8 @@ class _MiniSidebarHeading extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: titleStyle ??
+            style:
+                titleStyle ??
                 const TextStyle(
                   fontFamily: 'Garamond',
                   fontSize: 5.8,
@@ -5509,8 +5558,7 @@ class _MiniBulletColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final base =
-        textStyle ?? DefaultTextStyle.of(context).style;
+    final base = textStyle ?? DefaultTextStyle.of(context).style;
     final fontSize = base.fontSize ?? 4.2;
     final lineHeight = base.height ?? 1.2;
     final firstLineExtent = fontSize * lineHeight;
@@ -5539,9 +5587,7 @@ class _MiniBulletColumn extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: _bulletTextGap),
-                Expanded(
-                  child: Text(item, style: base),
-                ),
+                Expanded(child: Text(item, style: base)),
               ],
             ),
           ),
