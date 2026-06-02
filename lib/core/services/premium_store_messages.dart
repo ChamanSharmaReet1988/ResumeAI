@@ -7,7 +7,7 @@ abstract final class PremiumStoreMessages {
   static const String restoreFailed =
       'We could not restore your subscription. Please try again.';
   static const String noSubscriptionToRestore =
-      'No active subscription was found for this Apple ID or Google account.';
+      'No active subscription was found for this Apple ID.';
   static const String storeUnavailable =
       'Purchases are not available on this device right now.';
   static const String connectFailed =

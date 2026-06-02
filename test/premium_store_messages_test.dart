@@ -25,8 +25,7 @@ void main() {
   test('maps restore-without-purchase cases to no-subscription message', () {
     expect(
       PremiumStoreMessages.friendly(
-        rawMessage:
-            'No active subscription was found for this Apple ID or Google account.',
+        rawMessage: 'No active subscription was found for this Apple ID.',
         fallback: PremiumStoreMessages.restoreFailed,
       ),
       PremiumStoreMessages.noSubscriptionToRestore,

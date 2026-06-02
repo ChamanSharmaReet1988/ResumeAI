@@ -54,18 +54,17 @@ abstract final class PremiumProducts {
   static String restoreInsteadMessage({required String? productId}) {
     return switch (productId) {
       week =>
-        'A weekly subscription was found for this Apple ID or Google account. '
+        'A weekly subscription was found for this Apple ID. '
             'Use Restore to activate it on this device instead of buying again.',
       month =>
-        'A monthly subscription was found for this Apple ID or Google account. '
+        'A monthly subscription was found for this Apple ID. '
             'Use Restore to activate it on this device instead of buying again.',
       year =>
-        'A yearly subscription was found for this Apple ID or Google account. '
+        'A yearly subscription was found for this Apple ID. '
             'Use Restore to activate it on this device instead of buying again.',
       _ =>
-        'An active ResumeApp Pro subscription was found for this Apple ID or '
-            'Google account. Use Restore to activate it on this device '
-            'instead of buying again.',
+        'An active ResumeApp Pro subscription was found for this Apple ID. '
+            'Use Restore to activate it on this device instead of buying again.',
     };
   }
 }

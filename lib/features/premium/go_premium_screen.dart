@@ -220,13 +220,13 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     Navigator.of(context).pop(true);
   }
 
-  Future<bool> _showAlreadySubscribedDialog(
+  Future<void> _showAlreadySubscribedDialog(
     PremiumPurchaseService premium,
     String productId,
   ) async {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final shouldRestore = await showDialog<bool>(
+    await showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -240,18 +240,13 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Restore'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('OK'),
             ),
           ],
         );
       },
     );
-    return shouldRestore ?? false;
   }
 
   Future<void> _onContinuePressed(PremiumPurchaseService premium) async {
@@ -275,13 +270,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
         _isFullScreenLoading = false;
         _waitingForStoreResult = false;
       });
-      final shouldRestore = await _showAlreadySubscribedDialog(
-        premium,
-        existingProductId,
-      );
-      if (shouldRestore && mounted) {
-        await _onRestorePressed(premium);
-      }
+      await _showAlreadySubscribedDialog(premium, existingProductId);
       return;
     }
     _showWelcomeOnSuccess = true;
