@@ -6,6 +6,8 @@ abstract final class PremiumStoreMessages {
       'We could not complete your purchase. Please try again.';
   static const String restoreFailed =
       'We could not restore your subscription. Please try again.';
+  static const String noSubscriptionToRestore =
+      'No active subscription was found for this Apple ID or Google account.';
   static const String storeUnavailable =
       'Purchases are not available on this device right now.';
   static const String connectFailed =
@@ -34,6 +36,15 @@ abstract final class PremiumStoreMessages {
 
     if (_looksCanceled(lower)) {
       return 'Purchase canceled.';
+    }
+
+    if (lower.contains('no active subscription was found') ||
+        lower.contains('nothing to restore') ||
+        lower.contains('item not owned') ||
+        lower.contains('product not owned') ||
+        lower.contains('not owned by the user') ||
+        lower.contains('user does not own')) {
+      return noSubscriptionToRestore;
     }
 
     if (lower.contains('not available') &&

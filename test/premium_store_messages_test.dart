@@ -11,9 +11,7 @@ void main() {
       PremiumStoreMessages.productsUnavailable,
     );
     expect(
-      PremiumStoreMessages.friendly(
-        rawMessage: 'SKError payment cancelled',
-      ),
+      PremiumStoreMessages.friendly(rawMessage: 'SKError payment cancelled'),
       'Purchase canceled.',
     );
     expect(
@@ -21,6 +19,24 @@ void main() {
         rawMessage: 'some unknown PlatformException(code: xyz)',
       ),
       isNot(contains('PlatformException')),
+    );
+  });
+
+  test('maps restore-without-purchase cases to no-subscription message', () {
+    expect(
+      PremiumStoreMessages.friendly(
+        rawMessage:
+            'No active subscription was found for this Apple ID or Google account.',
+        fallback: PremiumStoreMessages.restoreFailed,
+      ),
+      PremiumStoreMessages.noSubscriptionToRestore,
+    );
+    expect(
+      PremiumStoreMessages.friendly(
+        rawMessage: 'BillingClient: item not owned',
+        fallback: PremiumStoreMessages.restoreFailed,
+      ),
+      PremiumStoreMessages.noSubscriptionToRestore,
     );
   });
 }

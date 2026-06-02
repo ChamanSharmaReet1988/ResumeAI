@@ -48,7 +48,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
         return;
       }
       final premium = context.read<PremiumPurchaseService>();
-      if (premium.isPremium) {
+      if (premium.hasConfirmedPremiumStatus) {
         unawaited(_completeAndLeave(premium));
         return;
       }
@@ -110,6 +110,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       return;
     }
     _showWelcomeOnSuccess = false;
+    final failureSource = _pendingSuccessSource;
     _pendingSuccessSource = null;
     setState(() {
       _isFullScreenLoading = false;
@@ -122,19 +123,16 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       _showMessage(
         PremiumStoreMessages.friendly(
           rawMessage: error,
-          fallback: PremiumStoreMessages.purchaseFailed,
+          fallback: failureSource == _PremiumSuccessSource.restore
+              ? PremiumStoreMessages.restoreFailed
+              : PremiumStoreMessages.purchaseFailed,
         ),
         isError: true,
       );
     } else if (status != null &&
         status.isNotEmpty &&
         !_isPendingPurchaseStatus(status)) {
-      _showMessage(
-        PremiumStoreMessages.friendly(
-          rawMessage: status,
-          fallback: PremiumStoreMessages.purchaseFailed,
-        ),
-      );
+      _showMessage(status);
     }
     premium.clearMessages();
   }
@@ -316,16 +314,10 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     }
   }
 
-  Future<void> _openLegalPage({
-    required String title,
-    required Uri uri,
-  }) async {
+  Future<void> _openLegalPage({required String title, required Uri uri}) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => LegalWebViewScreen(
-          title: title,
-          url: uri.toString(),
-        ),
+        builder: (_) => LegalWebViewScreen(title: title, url: uri.toString()),
       ),
     );
   }
@@ -429,7 +421,8 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             FilledButton(
-                              onPressed: _isFullScreenLoading ||
+                              onPressed:
+                                  _isFullScreenLoading ||
                                       premium.isLoadingProducts ||
                                       _selectedProductId == null
                                   ? null
@@ -557,10 +550,7 @@ class _PremiumUpcomingHighlight extends StatelessWidget {
 }
 
 class _BenefitRow extends StatelessWidget {
-  const _BenefitRow({
-    required this.text,
-    required this.color,
-  });
+  const _BenefitRow({required this.text, required this.color});
 
   final String text;
   final Color color;
@@ -577,9 +567,9 @@ class _BenefitRow extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                height: 1.32,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(height: 1.32),
             ),
           ),
         ],
@@ -626,7 +616,10 @@ class _PlanCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               onTap: onTap,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(

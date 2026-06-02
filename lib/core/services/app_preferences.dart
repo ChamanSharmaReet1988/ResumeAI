@@ -11,6 +11,8 @@ class AppPreferences {
     this._setGoogleDriveAutoSyncEnabled,
     this._getIsPremium,
     this._setIsPremium,
+    this._getPremiumManualRestoreRequired,
+    this._setPremiumManualRestoreRequired,
     this._getPremiumEntitlementMissStreak,
     this._setPremiumEntitlementMissStreak,
     this._getDebugPremiumOverrideEnabled,
@@ -19,8 +21,11 @@ class AppPreferences {
 
   static const _resumeOrderNudgeDismissedKey = 'resume_order_nudge_dismissed';
   static const _iCloudAutoSyncEnabledKey = 'icloud_auto_sync_enabled';
-  static const _googleDriveAutoSyncEnabledKey = 'google_drive_auto_sync_enabled';
+  static const _googleDriveAutoSyncEnabledKey =
+      'google_drive_auto_sync_enabled';
   static const _isPremiumKey = 'is_premium';
+  static const _premiumManualRestoreRequiredKey =
+      'premium_manual_restore_required';
   static const _premiumEntitlementMissStreakKey =
       'premium_entitlement_miss_streak';
   static const _debugPremiumOverrideEnabledKey =
@@ -34,6 +39,8 @@ class AppPreferences {
   final Future<void> Function(bool) _setGoogleDriveAutoSyncEnabled;
   final bool Function() _getIsPremium;
   final Future<void> Function(bool) _setIsPremium;
+  final bool Function() _getPremiumManualRestoreRequired;
+  final Future<void> Function(bool) _setPremiumManualRestoreRequired;
   final int Function() _getPremiumEntitlementMissStreak;
   final Future<void> Function(int) _setPremiumEntitlementMissStreak;
   final bool Function() _getDebugPremiumOverrideEnabled;
@@ -41,6 +48,7 @@ class AppPreferences {
 
   static Future<AppPreferences> open() async {
     final box = await Hive.openBox<dynamic>('app_prefs');
+    final isFreshInstall = box.isEmpty;
     if (!box.containsKey(_iCloudAutoSyncEnabledKey)) {
       await box.put(_iCloudAutoSyncEnabledKey, false);
     }
@@ -49,6 +57,9 @@ class AppPreferences {
     }
     if (!box.containsKey(_isPremiumKey)) {
       await box.put(_isPremiumKey, false);
+    }
+    if (!box.containsKey(_premiumManualRestoreRequiredKey)) {
+      await box.put(_premiumManualRestoreRequiredKey, isFreshInstall);
     }
     if (!box.containsKey(_premiumEntitlementMissStreakKey)) {
       await box.put(_premiumEntitlementMissStreakKey, 0);
@@ -75,6 +86,11 @@ class AppPreferences {
       },
       (value) async => box.put(_isPremiumKey, value),
       () {
+        final v = box.get(_premiumManualRestoreRequiredKey);
+        return v is bool ? v : false;
+      },
+      (value) async => box.put(_premiumManualRestoreRequiredKey, value),
+      () {
         final v = box.get(_premiumEntitlementMissStreakKey);
         return v is int ? v : 0;
       },
@@ -93,6 +109,7 @@ class AppPreferences {
     bool iCloudAutoSyncEnabled = false,
     bool googleDriveAutoSyncEnabled = false,
     bool isPremium = false,
+    bool premiumManualRestoreRequired = false,
     int premiumEntitlementMissStreak = 0,
     bool debugPremiumOverrideEnabled = false,
   }) {
@@ -100,6 +117,7 @@ class AppPreferences {
     var iCloudAuto = iCloudAutoSyncEnabled;
     var driveAuto = googleDriveAutoSyncEnabled;
     var premium = isPremium;
+    var manualRestoreRequired = premiumManualRestoreRequired;
     var premiumMissStreak = premiumEntitlementMissStreak;
     var debugPremiumOverride = debugPremiumOverrideEnabled;
     return AppPreferences._(
@@ -119,6 +137,10 @@ class AppPreferences {
       (value) async {
         premium = value;
       },
+      () => manualRestoreRequired,
+      (value) async {
+        manualRestoreRequired = value;
+      },
       () => premiumMissStreak,
       (value) async {
         premiumMissStreak = value;
@@ -134,6 +156,7 @@ class AppPreferences {
   bool get iCloudAutoSyncEnabled => _getICloudAutoSyncEnabled();
   bool get googleDriveAutoSyncEnabled => _getGoogleDriveAutoSyncEnabled();
   bool get isPremium => _getIsPremium();
+  bool get premiumManualRestoreRequired => _getPremiumManualRestoreRequired();
   int get premiumEntitlementMissStreak => _getPremiumEntitlementMissStreak();
   bool get debugPremiumOverrideEnabled => _getDebugPremiumOverrideEnabled();
 
@@ -146,6 +169,9 @@ class AppPreferences {
       _setGoogleDriveAutoSyncEnabled(value);
 
   Future<void> setIsPremium(bool value) => _setIsPremium(value);
+
+  Future<void> setPremiumManualRestoreRequired(bool value) =>
+      _setPremiumManualRestoreRequired(value);
 
   Future<void> setPremiumEntitlementMissStreak(int value) =>
       _setPremiumEntitlementMissStreak(value);

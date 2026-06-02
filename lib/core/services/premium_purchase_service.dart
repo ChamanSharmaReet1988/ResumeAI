@@ -90,6 +90,24 @@ class PremiumPurchaseService extends ChangeNotifier {
         (kDebugMode && _appPreferences.debugPremiumOverrideEnabled);
   }
 
+  /// User-facing confirmed Pro state.
+  ///
+  /// This is stricter than [isPremium]: it avoids showing "already Pro" from a
+  /// stale local flag before the store has confirmed an active entitlement.
+  bool get hasConfirmedPremiumStatus {
+    if (kDebugMode && _developerProManuallyDisabled) {
+      return false;
+    }
+    if (!_enableStore) {
+      return _appPreferences.isPremium ||
+          (kDebugMode && _appPreferences.debugPremiumOverrideEnabled);
+    }
+    if (kDebugMode && _appPreferences.debugPremiumOverrideEnabled) {
+      return true;
+    }
+    return _appPreferences.isPremium && _activeSubscriptionProductId != null;
+  }
+
   bool get debugPremiumOverrideEnabled =>
       kDebugMode && _appPreferences.debugPremiumOverrideEnabled;
   String? get statusMessage => _statusMessage;
@@ -538,8 +556,7 @@ class PremiumPurchaseService extends ChangeNotifier {
         if (hasActiveStoreSubscription) {
           _statusMessage = 'Your Premium subscription has been restored.';
         } else {
-          _statusMessage =
-              'No active subscription was found for this Apple ID or Google account.';
+          _statusMessage = PremiumStoreMessages.noSubscriptionToRestore;
         }
       }
     } catch (error) {
@@ -580,7 +597,9 @@ class PremiumPurchaseService extends ChangeNotifier {
           _isPurchasing = false;
           _errorMessage = PremiumStoreMessages.friendly(
             rawMessage: purchase.error?.message,
-            fallback: PremiumStoreMessages.purchaseFailed,
+            fallback: _isRestoring
+                ? PremiumStoreMessages.restoreFailed
+                : PremiumStoreMessages.purchaseFailed,
           );
           break;
         case PurchaseStatus.canceled:
@@ -694,8 +713,7 @@ class PremiumPurchaseService extends ChangeNotifier {
           ? 'Premium restored successfully.'
           : 'Welcome to ResumeApp Pro!';
     } else if (purchase.status == PurchaseStatus.restored) {
-      _statusMessage =
-          'No active subscription was found for this Apple ID or Google account.';
+      _statusMessage = PremiumStoreMessages.noSubscriptionToRestore;
     }
     notifyListeners();
   }
@@ -762,6 +780,16 @@ class PremiumPurchaseService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _allowSilentPremiumSyncOnThisInstall() async {
+    if (!_appPreferences.premiumManualRestoreRequired) {
+      return;
+    }
+    PremiumDebugLog.log(
+      'allowSilentPremiumSyncOnThisInstall: disabling manual-restore gate',
+    );
+    await _appPreferences.setPremiumManualRestoreRequired(false);
+  }
+
   Future<void> _revokePremium() async {
     _activeSubscriptionProductId = null;
     if (_appPreferences.premiumEntitlementMissStreak != 0) {
@@ -814,6 +842,23 @@ class PremiumPurchaseService extends ChangeNotifier {
 
     final wasPremium = _appPreferences.isPremium;
     if (entitled) {
+      if (!_canGrantPremiumFromEntitlement(
+        reason: reason,
+        wasPremium: wasPremium,
+      )) {
+        if (_appPreferences.premiumEntitlementMissStreak != 0) {
+          await _appPreferences.setPremiumEntitlementMissStreak(0);
+        }
+        PremiumDebugLog.log(
+          'applyStoreEntitlement($reason): fresh install requires manual '
+          'restore → keeping free access',
+        );
+        notifyListeners();
+        return;
+      }
+      if (_isExplicitPremiumActivationReason(reason)) {
+        await _allowSilentPremiumSyncOnThisInstall();
+      }
       await _grantPremium();
       if (!wasPremium && _shouldCelebratePremiumActivation(reason)) {
         _pendingPremiumWelcome = true;
@@ -843,14 +888,32 @@ class PremiumPurchaseService extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _shouldCelebratePremiumActivation(String reason) {
+  bool _canGrantPremiumFromEntitlement({
+    required String reason,
+    required bool wasPremium,
+  }) {
+    if (wasPremium) {
+      return true;
+    }
+    if (!_appPreferences.premiumManualRestoreRequired) {
+      return true;
+    }
+    return _isExplicitPremiumActivationReason(reason);
+  }
+
+  bool _isExplicitPremiumActivationReason(String reason) {
     return reason.startsWith('purchase_stream') || reason == 'manual_restore';
+  }
+
+  bool _shouldCelebratePremiumActivation(String reason) {
+    return _isExplicitPremiumActivationReason(reason);
   }
 
   void _logLocalPremiumState(String moment) {
     PremiumDebugLog.log(
       'Local state ($moment): '
       'hiveIsPremium=${_appPreferences.isPremium} '
+      'manualRestoreRequired=${_appPreferences.premiumManualRestoreRequired} '
       'missStreak=${_appPreferences.premiumEntitlementMissStreak} '
       'debugOverride=${_appPreferences.debugPremiumOverrideEnabled} '
       'activeProductId=${_activeSubscriptionProductId ?? "none"} '

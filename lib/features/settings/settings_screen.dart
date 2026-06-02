@@ -144,15 +144,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!context.mounted) {
       return;
     }
-    if (premium.isPremium) {
+    if (premium.hasConfirmedPremiumStatus) {
       await _showActivePremiumSheet(context, premium);
       return;
     }
 
     final unlocked = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (_) => const GoPremiumScreen(),
-      ),
+      MaterialPageRoute<bool>(builder: (_) => const GoPremiumScreen()),
     );
 
     if (!context.mounted) {
@@ -259,9 +257,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const GoogleDriveBackupScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const GoogleDriveBackupScreen()),
     );
   }
 
@@ -272,10 +268,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => LegalWebViewScreen(
-          title: title,
-          url: uri.toString(),
-        ),
+        builder: (_) => LegalWebViewScreen(title: title, url: uri.toString()),
       ),
     );
   }
@@ -285,9 +278,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const _DeveloperToolsScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const _DeveloperToolsScreen()),
     );
   }
 
@@ -298,10 +289,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
         final isIos = defaultTargetPlatform == TargetPlatform.iOS;
-        final backupLabel =
-            isIos ? 'iCloud Backup' : 'Google Drive Backup';
-        final backupIcon =
-            isIos ? Icons.cloud_done_outlined : Icons.cloud_queue_outlined;
+        final backupLabel = isIos ? 'iCloud Backup' : 'Google Drive Backup';
+        final backupIcon = isIos
+            ? Icons.cloud_done_outlined
+            : Icons.cloud_queue_outlined;
         final rowLabelStyle = theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w400,
         );
@@ -330,307 +321,337 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                      Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.palette_outlined,
-                        size: 22,
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text('Appearance', style: rowLabelStyle)),
-                      DropdownButtonHideUnderline(
-                        child: Theme(
-                          data: theme.copyWith(
-                            shadowColor: colorScheme.shadow.withValues(
-                              alpha: 0.24,
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.palette_outlined,
+                                    size: 22,
+                                    color: colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Appearance',
+                                      style: rowLabelStyle,
+                                    ),
+                                  ),
+                                  DropdownButtonHideUnderline(
+                                    child: Theme(
+                                      data: theme.copyWith(
+                                        shadowColor: colorScheme.shadow
+                                            .withValues(alpha: 0.24),
+                                      ),
+                                      child: DropdownButton<ThemeMode>(
+                                        value: settings.themeMode,
+                                        borderRadius: BorderRadius.circular(12),
+                                        elevation: 16,
+                                        dropdownColor: theme.cardColor,
+                                        iconEnabledColor: colorScheme.primary,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: colorScheme.onSurface,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                        onChanged: (value) {
+                                          if (value != null) {
+                                            settings.updateThemeMode(value);
+                                          }
+                                        },
+                                        items: const [
+                                          DropdownMenuItem(
+                                            value: ThemeMode.system,
+                                            child: Text('System'),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: ThemeMode.light,
+                                            child: Text('Light'),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: ThemeMode.dark,
+                                            child: Text('Dark'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          child: DropdownButton<ThemeMode>(
-                            value: settings.themeMode,
-                            borderRadius: BorderRadius.circular(12),
-                            elevation: 16,
-                            dropdownColor: theme.cardColor,
-                            iconEnabledColor: colorScheme.primary,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurface,
-                              fontWeight: FontWeight.w400,
+                          const SizedBox(height: 12),
+                          Card(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () => _openBackup(context),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      backupIcon,
+                                      size: 22,
+                                      color: colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        backupLabel,
+                                        style: rowLabelStyle,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            onChanged: (value) {
-                              if (value != null) {
-                                settings.updateThemeMode(value);
-                              }
-                            },
-                            items: const [
-                              DropdownMenuItem(
-                                value: ThemeMode.system,
-                                child: Text('System'),
-                              ),
-                              DropdownMenuItem(
-                                value: ThemeMode.light,
-                                child: Text('Light'),
-                              ),
-                              DropdownMenuItem(
-                                value: ThemeMode.dark,
-                                child: Text('Dark'),
-                              ),
-                            ],
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _openBackup(context),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          backupIcon,
-                          size: 22,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(backupLabel, style: rowLabelStyle),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: _isCheckingPremiumStatus
-                      ? null
-                      : () => _openGoPremium(context),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.workspace_premium_outlined,
-                          size: 22,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            premium.isPremium
-                                ? 'You are a Pro user'
-                                : 'Go Premium',
-                            style: rowLabelStyle,
-                          ),
-                        ),
-                        if (!_isCheckingPremiumStatus) ...[
-                          if (premium.isPremium) ...[
-                            const Icon(
-                              Icons.workspace_premium_rounded,
-                              size: 18,
-                              color: Color(0xFFC98910),
+                          const SizedBox(height: 12),
+                          Card(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: _isCheckingPremiumStatus
+                                  ? null
+                                  : () => _openGoPremium(context),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.workspace_premium_outlined,
+                                      size: 22,
+                                      color: colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        premium.hasConfirmedPremiumStatus
+                                            ? 'You are a Pro user'
+                                            : 'Go Premium',
+                                        style: rowLabelStyle,
+                                      ),
+                                    ),
+                                    if (!_isCheckingPremiumStatus) ...[
+                                      if (premium
+                                          .hasConfirmedPremiumStatus) ...[
+                                        const Icon(
+                                          Icons.workspace_premium_rounded,
+                                          size: 18,
+                                          color: Color(0xFFC98910),
+                                        ),
+                                        const SizedBox(width: 10),
+                                      ],
+                                      Icon(
+                                        Icons.arrow_forward_ios_rounded,
+                                        size: 16,
+                                        color: colorScheme.primary,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ),
-                            const SizedBox(width: 10),
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () => _openFeedbackComposer(context),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.feedback_outlined,
+                                      size: 22,
+                                      color: colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Feedback',
+                                        style: rowLabelStyle,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () => _rateApp(context),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.star_outline_rounded,
+                                      size: 22,
+                                      color: colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Rate app',
+                                        style: rowLabelStyle,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () => _openLegalPage(
+                                context,
+                                title: 'Privacy Policy',
+                                uri: _privacyPolicyUri,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.privacy_tip_outlined,
+                                      size: 22,
+                                      color: colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Privacy Policy',
+                                        style: rowLabelStyle,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () => _openLegalPage(
+                                context,
+                                title: 'Terms of Use',
+                                uri: _termsOfUseUri,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.description_outlined,
+                                      size: 22,
+                                      color: colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Terms of Use',
+                                        style: rowLabelStyle,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () => _shareApp(context),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.ios_share,
+                                      size: 22,
+                                      color: colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Share',
+                                        style: rowLabelStyle,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          if (kDebugMode) ...[
+                            const SizedBox(height: 20),
+                            _SettingsVersionFooter(
+                              onTap: () => _openDeveloperTools(context),
+                            ),
                           ],
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 16,
-                            color: colorScheme.primary,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _openFeedbackComposer(context),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.feedback_outlined,
-                          size: 22,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text('Feedback', style: rowLabelStyle)),
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _rateApp(context),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.star_outline_rounded,
-                          size: 22,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text('Rate app', style: rowLabelStyle)),
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _openLegalPage(
-                    context,
-                    title: 'Privacy Policy',
-                    uri: _privacyPolicyUri,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.privacy_tip_outlined,
-                          size: 22,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text('Privacy Policy', style: rowLabelStyle),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _openLegalPage(
-                    context,
-                    title: 'Terms of Use',
-                    uri: _termsOfUseUri,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.description_outlined,
-                          size: 22,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text('Terms of Use', style: rowLabelStyle),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _shareApp(context),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.ios_share,
-                          size: 22,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text('Share', style: rowLabelStyle)),
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                      ),
-                      const Spacer(),
-                      if (kDebugMode) ...[
-                        const SizedBox(height: 20),
-                        _SettingsVersionFooter(
-                          onTap: () => _openDeveloperTools(context),
-                        ),
-                      ],
                         ],
                       ),
                     ),

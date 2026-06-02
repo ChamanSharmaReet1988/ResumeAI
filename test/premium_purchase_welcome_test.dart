@@ -11,21 +11,24 @@ void main() {
     expect(service.consumePremiumWelcomePending(), isFalse);
   });
 
-  test('purchase_stream grant persists premium and queues welcome once', () async {
-    final prefs = AppPreferences.inMemory(isPremium: false);
-    final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
+  test(
+    'purchase_stream grant persists premium and queues welcome once',
+    () async {
+      final prefs = AppPreferences.inMemory(isPremium: false);
+      final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
 
-    await service.applyEntitlementForTest(
-      true,
-      reason: 'purchase_stream_purchased',
-    );
+      await service.applyEntitlementForTest(
+        true,
+        reason: 'purchase_stream_purchased',
+      );
 
-    expect(prefs.isPremium, isTrue);
-    expect(service.isPremium, isTrue);
-    expect(service.hasPremiumWelcomePending, isTrue);
-    expect(service.consumePremiumWelcomePending(), isTrue);
-    expect(service.consumePremiumWelcomePending(), isFalse);
-  });
+      expect(prefs.isPremium, isTrue);
+      expect(service.isPremium, isTrue);
+      expect(service.hasPremiumWelcomePending, isTrue);
+      expect(service.consumePremiumWelcomePending(), isTrue);
+      expect(service.consumePremiumWelcomePending(), isFalse);
+    },
+  );
 
   test('silent verify does not queue welcome dialog', () async {
     final prefs = AppPreferences.inMemory(isPremium: false);
@@ -35,6 +38,37 @@ void main() {
 
     expect(prefs.isPremium, isTrue);
     expect(service.hasPremiumWelcomePending, isFalse);
+  });
+
+  test(
+    'fresh install does not auto-unlock premium from silent entitlement',
+    () async {
+      final prefs = AppPreferences.inMemory(
+        isPremium: false,
+        premiumManualRestoreRequired: true,
+      );
+      final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
+
+      await service.applyEntitlementForTest(true, reason: 'app_launch');
+
+      expect(prefs.isPremium, isFalse);
+      expect(service.isPremium, isFalse);
+      expect(prefs.premiumManualRestoreRequired, isTrue);
+    },
+  );
+
+  test('manual restore clears fresh-install gate and grants premium', () async {
+    final prefs = AppPreferences.inMemory(
+      isPremium: false,
+      premiumManualRestoreRequired: true,
+    );
+    final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
+
+    await service.applyEntitlementForTest(true, reason: 'manual_restore');
+
+    expect(prefs.isPremium, isTrue);
+    expect(service.isPremium, isTrue);
+    expect(prefs.premiumManualRestoreRequired, isFalse);
   });
 
   test('first silent entitlement miss keeps existing premium access', () async {
@@ -52,23 +86,26 @@ void main() {
     expect(prefs.premiumEntitlementMissStreak, 1);
   });
 
-  test('second consecutive silent entitlement miss revokes premium access', () async {
-    final prefs = AppPreferences.inMemory(isPremium: true);
-    final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
+  test(
+    'second consecutive silent entitlement miss revokes premium access',
+    () async {
+      final prefs = AppPreferences.inMemory(isPremium: true);
+      final service = PremiumPurchaseService.inMemory(appPreferences: prefs);
 
-    await service.applyEntitlementForTest(
-      false,
-      reason: 'app_resume',
-      conservativeRevoke: true,
-    );
-    await service.applyEntitlementForTest(
-      false,
-      reason: 'app_resume',
-      conservativeRevoke: true,
-    );
+      await service.applyEntitlementForTest(
+        false,
+        reason: 'app_resume',
+        conservativeRevoke: true,
+      );
+      await service.applyEntitlementForTest(
+        false,
+        reason: 'app_resume',
+        conservativeRevoke: true,
+      );
 
-    expect(prefs.isPremium, isFalse);
-    expect(service.isPremium, isFalse);
-    expect(prefs.premiumEntitlementMissStreak, 0);
-  });
+      expect(prefs.isPremium, isFalse);
+      expect(service.isPremium, isFalse);
+      expect(prefs.premiumEntitlementMissStreak, 0);
+    },
+  );
 }
