@@ -99,6 +99,7 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.atsExecutive => 0,
     ResumeTemplate.atsCenterClassic => 0,
     ResumeTemplate.atsProfessionalBlue => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.atsLatexClassic => 0,
   };
 }
 

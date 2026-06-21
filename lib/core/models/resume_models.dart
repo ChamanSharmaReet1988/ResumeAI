@@ -28,6 +28,8 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.atsCenterClassic;
     case 'atsProfessionalBlue':
       return ResumeTemplate.atsProfessionalBlue;
+    case 'atsLatexClassic':
+      return ResumeTemplate.atsLatexClassic;
     default:
       return ResumeTemplate.corporate;
   }
@@ -57,6 +59,9 @@ enum ResumeTemplate {
 
   /// Blue accent, contact top-right, three-column skills.
   atsProfessionalBlue,
+
+  /// LaTeX-inspired one-page academic ATS format with ruled sections.
+  atsLatexClassic,
 }
 
 enum CoverLetterTemplate {
@@ -74,7 +79,7 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.classicSidebar,
   ResumeTemplate.accentStrip,
   ResumeTemplate.atsStructured,
-  ResumeTemplate.atsSerifRules,
+  ResumeTemplate.atsLatexClassic,
   ResumeTemplate.atsModernFlow,
   ResumeTemplate.atsExecutive,
   ResumeTemplate.atsCenterClassic,
@@ -96,6 +101,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsExecutive => 'Executive ATS',
     ResumeTemplate.atsCenterClassic => 'Center Classic ATS',
     ResumeTemplate.atsProfessionalBlue => 'Professional Blue ATS',
+    ResumeTemplate.atsLatexClassic => 'LaTeX Classic ATS',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -121,6 +127,8 @@ extension ResumeTemplateX on ResumeTemplate {
       'Centered Arial header with ruled sections and inline skills.',
     ResumeTemplate.atsProfessionalBlue =>
       'Blue accent headings, right-aligned contact, and three-column skills.',
+    ResumeTemplate.atsLatexClassic =>
+      'LaTeX-style ruled sections with compact academic project emphasis.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -135,6 +143,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsExecutive => const Color(0xFF1F2937),
     ResumeTemplate.atsCenterClassic => const Color(0xFF374151),
     ResumeTemplate.atsProfessionalBlue => const Color(0xFF4A90C4),
+    ResumeTemplate.atsLatexClassic => const Color(0xFF111827),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -149,6 +158,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsExecutive => const Color(0xFFF3F4F6),
     ResumeTemplate.atsCenterClassic => const Color(0xFFF9FAFB),
     ResumeTemplate.atsProfessionalBlue => const Color(0xFFE8F2FC),
+    ResumeTemplate.atsLatexClassic => const Color(0xFFF9FAFB),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -164,6 +174,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsExecutive => 'Garamond · executive ATS',
     ResumeTemplate.atsCenterClassic => 'Arial · center ATS',
     ResumeTemplate.atsProfessionalBlue => 'Arial · blue ATS',
+    ResumeTemplate.atsLatexClassic => 'Garamond · LaTeX ATS',
   };
 }
 
@@ -921,9 +932,8 @@ class CustomSectionItem {
     final parsedProjects =
         projectsJson
             ?.map(
-              (item) => ProjectItem.fromJson(
-                Map<String, dynamic>.from(item as Map),
-              ),
+              (item) =>
+                  ProjectItem.fromJson(Map<String, dynamic>.from(item as Map)),
             )
             .toList() ??
         const <ProjectItem>[];

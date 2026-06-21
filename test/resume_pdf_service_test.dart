@@ -453,17 +453,18 @@ void main() {
 
   test('resume PDF contact links are clickable annotations', () async {
     final service = ResumePdfService();
-    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
-      fullName: 'Link Tester',
-      jobTitle: 'Software Engineer',
-      email: 'link@example.com',
-      phone: '555-0100',
-      website: 'portfolio.example.com',
-      githubLink: 'github.com/linktester',
-      linkedinLink: 'linkedin.com/in/linktester',
-      summary: 'Engineer focused on reliable app delivery.',
-      skills: const ['Flutter', 'Dart'],
-    );
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate)
+        .copyWith(
+          fullName: 'Link Tester',
+          jobTitle: 'Software Engineer',
+          email: 'link@example.com',
+          phone: '555-0100',
+          website: 'portfolio.example.com',
+          githubLink: 'github.com/linktester',
+          linkedinLink: 'linkedin.com/in/linktester',
+          summary: 'Engineer focused on reliable app delivery.',
+          skills: const ['Flutter', 'Dart'],
+        );
 
     final pdfBytes = await service.buildPdf(resume);
     final pdfSource = latin1.decode(pdfBytes, allowInvalid: true);
@@ -607,28 +608,27 @@ void main() {
     },
   );
 
-  test('ATS template PDFs build for all six layouts', () async {
+  test('ATS template PDFs build for all layouts', () async {
     final service = ResumePdfService();
-    final base = ResumeData.empty(
-      template: ResumeTemplate.atsStructured,
-    ).copyWith(
-      fullName: 'ATS Sample',
-      jobTitle: 'Engineer',
-      email: 'a@b.com',
-      phone: '555-0100',
-      location: 'Remote',
-      summary: 'Builder focused on clean exports.',
-      workExperiences: const [
-        WorkExperience(
-          role: 'Engineer',
-          company: 'Acme',
-          startDate: '2020',
-          endDate: 'Present',
-          description: '',
-          bullets: ['Shipped features with measurable impact.'],
-        ),
-      ],
-    );
+    final base = ResumeData.empty(template: ResumeTemplate.atsStructured)
+        .copyWith(
+          fullName: 'ATS Sample',
+          jobTitle: 'Engineer',
+          email: 'a@b.com',
+          phone: '555-0100',
+          location: 'Remote',
+          summary: 'Builder focused on clean exports.',
+          workExperiences: const [
+            WorkExperience(
+              role: 'Engineer',
+              company: 'Acme',
+              startDate: '2020',
+              endDate: 'Present',
+              description: '',
+              bullets: ['Shipped features with measurable impact.'],
+            ),
+          ],
+        );
     for (final template in <ResumeTemplate>[
       ResumeTemplate.atsStructured,
       ResumeTemplate.atsSerifRules,
@@ -636,10 +636,9 @@ void main() {
       ResumeTemplate.atsExecutive,
       ResumeTemplate.atsCenterClassic,
       ResumeTemplate.atsProfessionalBlue,
+      ResumeTemplate.atsLatexClassic,
     ]) {
-      final bytes = await service.buildPdf(
-        base.copyWith(template: template),
-      );
+      final bytes = await service.buildPdf(base.copyWith(template: template));
       expect(bytes, isNotEmpty, reason: template.toString());
     }
   });
@@ -722,8 +721,7 @@ void main() {
           final bytes = await service.buildCoverLetterPdf(letter);
           expect(bytes, isNotEmpty, reason: '${template.name} body $bodyPt');
 
-          final typography =
-              ResumePdfService.coverLetterTypographyFor(letter);
+          final typography = ResumePdfService.coverLetterTypographyFor(letter);
           expect(typography.bodyPt, bodyPt.toDouble());
           expect(typography.headingPt, bodyPt + 2.0);
           expect(typography.namePt, bodyPt + 12.0);

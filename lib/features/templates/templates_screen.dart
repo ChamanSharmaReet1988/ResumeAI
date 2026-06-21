@@ -339,24 +339,38 @@ class _TemplateDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: KeyedSubtree(
-                    key: Key('template-detail-preview-${item.id}'),
-                    child: item.resumeTemplate != null
-                        ? _ResumeTemplateDetailPreview(
-                            item: item,
-                            paletteSeed: paletteSeed,
-                          )
-                        : _TemplatePreviewArt(
-                            item: item,
-                            paletteSeed: paletteSeed,
-                            showPremiumBadgeOnPage: true,
-                            premiumBadgeRightPadding: 10,
-                            premiumBadgeSize: 18,
-                            badgeMetricsInScreenPixels: true,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final previewHeight = math.max(
+                      constraints.maxHeight * 1.2,
+                      constraints.maxWidth * 1.5,
+                    );
+
+                    return SingleChildScrollView(
+                      child: SizedBox(
+                        height: previewHeight,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: KeyedSubtree(
+                            key: Key('template-detail-preview-${item.id}'),
+                            child: item.resumeTemplate != null
+                                ? _ResumeTemplateDetailPreview(
+                                    item: item,
+                                    paletteSeed: paletteSeed,
+                                  )
+                                : _TemplatePreviewArt(
+                                    item: item,
+                                    paletteSeed: paletteSeed,
+                                    showPremiumBadgeOnPage: true,
+                                    premiumBadgeRightPadding: 10,
+                                    premiumBadgeSize: 18,
+                                    badgeMetricsInScreenPixels: true,
+                                  ),
                           ),
-                  ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               if (onUseTemplate != null) ...[
@@ -505,11 +519,11 @@ const _atsResumeCards = <_TemplateTileData>[
     isPremium: false,
   ),
   _TemplateTileData(
-    id: 'ats-serif-rules',
-    resumeTemplate: ResumeTemplate.atsSerifRules,
-    previewKind: _TemplatePreviewKind.atsSerifRulesResume,
-    headline: 'Serif Rules ATS',
-    caption: 'Classic rules, bold headings, and aligned dates.',
+    id: 'ats-latex-classic',
+    resumeTemplate: ResumeTemplate.atsLatexClassic,
+    previewKind: _TemplatePreviewKind.atsLatexClassicResume,
+    headline: 'LaTeX Classic ATS',
+    caption: 'Academic ruled sections inspired by classic LaTeX resumes.',
     isPremium: true,
   ),
   _TemplateTileData(
@@ -615,6 +629,7 @@ enum _TemplatePreviewKind {
   atsExecutiveResume,
   atsCenterClassicResume,
   atsProfessionalBlueResume,
+  atsLatexClassicResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
   sidebarCoverLetter,
@@ -731,6 +746,13 @@ class _TemplatePreviewArt extends StatelessWidget {
             paletteSeed,
           ),
         ),
+      _TemplatePreviewKind.atsLatexClassicResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsLatexClassic),
+          paletteSeed,
+        ),
+        fit: _ResumeTemplatePreviewFit.tile,
+      ),
       _TemplatePreviewKind.executiveNoteCoverLetter =>
         const _ExecutiveNoteCoverLetterArt(),
       _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
@@ -934,6 +956,14 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
             paletteSeed,
           ),
           detailed: true,
+        ),
+      );
+    }
+    if (template == ResumeTemplate.atsLatexClassic) {
+      return _TemplateDetailPdfPreview(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsLatexClassic),
+          paletteSeed,
         ),
       );
     }
@@ -1190,6 +1220,10 @@ final ResumeData _atsFullSampleResume = ResumeData(
 ResumeData _atsSampleFor(ResumeTemplate template) => switch (template) {
   ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
   ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
+  ResumeTemplate.atsLatexClassic => _atsFullSampleResume.copyWith(
+    template: ResumeTemplate.atsLatexClassic,
+    title: 'LaTeX Classic ATS Sample',
+  ),
   _ => _atsFullSampleResume.copyWith(template: template),
 };
 
@@ -2514,7 +2548,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
       child: FittedBox(
         fit: BoxFit.contain,
         alignment: Alignment.topCenter,
-        child: SizedBox(width: 240, height: 360, child: pageContent),
+        child: SizedBox(width: 240, child: pageContent),
       ),
     );
   }
@@ -2838,23 +2872,27 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
                   ],
                 ),
               ),
-              if (rightContacts.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    for (var i = 0; i < rightContacts.length; i++)
-                      Padding(
-                        padding: EdgeInsets.only(top: i == 0 ? 0 : 2),
-                        child: Text(
-                          rightContacts[i],
-                          style: linkStyle,
-                          textAlign: TextAlign.right,
-                          maxLines: detailed ? 3 : 2,
-                          overflow: TextOverflow.ellipsis,
+              if (rightContacts.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      for (var i = 0; i < rightContacts.length; i++)
+                        Padding(
+                          padding: EdgeInsets.only(top: i == 0 ? 0 : 2),
+                          child: Text(
+                            rightContacts[i],
+                            style: linkStyle,
+                            textAlign: TextAlign.right,
+                            maxLines: detailed ? 3 : 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
+              ],
             ],
           ),
           SizedBox(height: _sectionLeadGap()),

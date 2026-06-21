@@ -251,18 +251,18 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
 }) {
   final bodyStyle = arimo != null && bodyFontPt != null
       ? atsCenterClassicArimoBody
-      ? atsCenterClassicBodyPdfTextStyle(arimo, bodyFontPt)
-      : atsProfessionalBlueArimoBody
-      ? atsProfessionalBlueBodyPdfTextStyle(arimo, bodyFontPt)
-      : atsCenterClassicBodyPdfTextStyle(arimo, bodyFontPt)
+            ? atsCenterClassicBodyPdfTextStyle(arimo, bodyFontPt)
+            : atsProfessionalBlueArimoBody
+            ? atsProfessionalBlueBodyPdfTextStyle(arimo, bodyFontPt)
+            : atsCenterClassicBodyPdfTextStyle(arimo, bodyFontPt)
       : garamond != null && bodyFontPt != null
       ? accentStripGaramondBody
-      ? accentStripBodyPdfTextStyle(garamond, bodyFontPt)
-      : atsModernFlowGaramondBody
-      ? atsModernFlowBodyPdfTextStyle(garamond, bodyFontPt)
-      : atsExecutiveGaramondBody
-      ? atsExecutiveBodyPdfTextStyle(garamond, bodyFontPt)
-      : atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
+            ? accentStripBodyPdfTextStyle(garamond, bodyFontPt)
+            : atsModernFlowGaramondBody
+            ? atsModernFlowBodyPdfTextStyle(garamond, bodyFontPt)
+            : atsExecutiveGaramondBody
+            ? atsExecutiveBodyPdfTextStyle(garamond, bodyFontPt)
+            : atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
       : calibri != null && bodyFontPt != null
       ? nunitoBodyPdfTextStyle(calibri, bodyFontPt)
       : inter != null && bodyFontPt != null
@@ -301,7 +301,8 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
             entry,
             garamond: garamond,
             bodyFontPt: bodyFontPt ?? ResumeTypography.bodyPt,
-            atsGaramondBody: accentStripGaramondBody ||
+            atsGaramondBody:
+                accentStripGaramondBody ||
                 atsModernFlowGaramondBody ||
                 atsExecutiveGaramondBody,
             atsModernFlowGaramondBody: atsModernFlowGaramondBody,
@@ -461,11 +462,7 @@ pw.TextStyle _classicSidebarPdfTextStyle(
   pw.FontStyle fontStyle = pw.FontStyle.normal,
 }) {
   if (garamond == null) {
-    return pw.TextStyle(
-      color: color,
-      fontSize: fontSize,
-      fontStyle: fontStyle,
-    );
+    return pw.TextStyle(color: color, fontSize: fontSize, fontStyle: fontStyle);
   }
   if (weight == ResumeTypography.classicSidebarBodyWeight) {
     return accentStripBodyPdfTextStyle(
@@ -532,11 +529,7 @@ pw.PageTheme _creativeSidebarPageTheme({
                   ],
                 ),
                 if (firstPageSidebar != null)
-                  pw.Positioned(
-                    left: 0,
-                    top: 0,
-                    child: firstPageSidebar,
-                  ),
+                  pw.Positioned(left: 0, top: 0, child: firstPageSidebar),
               ],
             )
           : pw.Container(color: PdfColors.white),
@@ -568,10 +561,7 @@ pw.Widget _creativeSectionHeadingRow({
   return pw.Row(
     crossAxisAlignment: pw.CrossAxisAlignment.center,
     children: [
-      pw.Text(
-        title.toUpperCase(),
-        style: headingStyle,
-      ),
+      pw.Text(title.toUpperCase(), style: headingStyle),
       pw.SizedBox(width: 8),
       pw.Expanded(child: pw.Container(height: 1.2, color: lineColor)),
     ],
@@ -594,8 +584,8 @@ pw.Widget _classicSidebarMainColumnChild(
 
 pw.Widget _classicSidebarFirstPageBottomSpacer(pw.Context context) =>
     context.pageNumber == 1
-        ? pw.SizedBox(height: _classicSidebarFirstPageExtraBottomPaddingPt)
-        : pw.SizedBox();
+    ? pw.SizedBox(height: _classicSidebarFirstPageExtraBottomPaddingPt)
+    : pw.SizedBox();
 
 class _CreativePageAwareInset extends pw.SingleChildWidget {
   _CreativePageAwareInset({required pw.Widget child}) : super(child: child);
@@ -673,9 +663,7 @@ class _ClassicSidebarDynamicInset extends pw.Widget with pw.SpanningWidget {
     bool parentUsesSize = false,
   }) {
     _wrapped = pw.Padding(
-      padding: pw.EdgeInsets.only(
-        left: _leftInsetFor(context),
-      ),
+      padding: pw.EdgeInsets.only(left: _leftInsetFor(context)),
       child: child,
     );
     _wrapped!.layout(context, constraints, parentUsesSize: parentUsesSize);
@@ -737,10 +725,7 @@ pw.Widget _creativeSidebarContactRow(
           color: textColor,
           lineSpacing: ResumeTypography.creativeBodyPdfLineSpacingFor(bodyPt),
         )
-      : pw.TextStyle(
-          color: textColor,
-          fontSize: bodyPt,
-        );
+      : pw.TextStyle(color: textColor, fontSize: bodyPt);
   const squareSize = 7.0;
   final firstLineExtent = bodyPt * ResumeTypography.creativeBodyLineHeight;
 
@@ -764,12 +749,7 @@ pw.Widget _creativeSidebarContactRow(
             ),
           ),
         ),
-        pw.Expanded(
-          child: _pdfContactText(
-            value,
-            style: textStyle,
-          ),
-        ),
+        pw.Expanded(child: _pdfContactText(value, style: textStyle)),
       ],
     ),
   );
@@ -902,8 +882,9 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
       if (pageSections.isNotEmpty) {
         availableHeights[pageIndex] -= _classicSidebarInterSectionHeight();
       }
-      availableHeights[pageIndex] -=
-          _classicSidebarSectionTitleHeight(sectionTitlePt);
+      availableHeights[pageIndex] -= _classicSidebarSectionTitleHeight(
+        sectionTitlePt,
+      );
 
       final pageItems = <String>[];
       while (itemIndex < section.items.length) {
@@ -1175,10 +1156,7 @@ pw.Widget _classicSidebarListSection({
   );
 }
 
-pw.Widget _highlightedPdfLineText(
-  String text, {
-  required pw.TextStyle style,
-}) {
+pw.Widget _highlightedPdfLineText(String text, {required pw.TextStyle style}) {
   return pw.Text(text, style: style);
 }
 
@@ -1774,41 +1752,22 @@ pw.Widget _creativeSidebarEducationEntry(
           fontSize: subtitlePt,
           color: bodyColor,
         )
-      : pw.TextStyle(
-          color: bodyColor,
-          fontSize: subtitlePt,
-        );
+      : pw.TextStyle(color: bodyColor, fontSize: subtitlePt);
   final bodyStyle = garamond != null
-      ? accentStripBodyPdfTextStyle(
-          garamond,
-          bodyPt,
-          color: bodyColor,
-        )
-      : pw.TextStyle(
-          color: bodyColor,
-          fontSize: bodyPt,
-        );
+      ? accentStripBodyPdfTextStyle(garamond, bodyPt, color: bodyColor)
+      : pw.TextStyle(color: bodyColor, fontSize: bodyPt);
 
   return pw.Padding(
     padding: const pw.EdgeInsets.only(bottom: 9),
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text(
-          item.degree.ifEmpty('Degree'),
-          style: subtitleStyle,
-        ),
+        pw.Text(item.degree.ifEmpty('Degree'), style: subtitleStyle),
         pw.SizedBox(height: 2),
-        pw.Text(
-          item.institution.ifEmpty('Institution'),
-          style: bodyStyle,
-        ),
+        pw.Text(item.institution.ifEmpty('Institution'), style: bodyStyle),
         if (dates.isNotEmpty) ...[
           pw.SizedBox(height: 1.5),
-          pw.Text(
-            dates,
-            style: bodyStyle,
-          ),
+          pw.Text(dates, style: bodyStyle),
         ],
       ],
     ),
@@ -1951,11 +1910,10 @@ class ResumeRepository {
   }
 
   Future<List<ResumeData>> loadResumes() async {
-    final raw =
-        _resumeBox.values
-            .whereType<Map>()
-            .map((item) => ResumeData.fromJson(Map<String, dynamic>.from(item)))
-            .toList();
+    final raw = _resumeBox.values
+        .whereType<Map>()
+        .map((item) => ResumeData.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
     final items = <ResumeData>[];
     for (final resume in raw) {
       final storedPath = resume.profileImagePath.trim();
@@ -2128,8 +2086,9 @@ class ResumeRepository {
           continue;
         }
 
-        final uploadedLetterIds =
-            await service.uploadCoverLetters(lettersToUpload);
+        final uploadedLetterIds = await service.uploadCoverLetters(
+          lettersToUpload,
+        );
         if (uploadedLetterIds.isEmpty) {
           continue;
         }
@@ -2423,9 +2382,9 @@ class LocalAiResumeService {
     );
     final missingKeywords = analysis.missingSkills;
     final targetKeywords = normalizedJobDescription.isEmpty
-        ? _prepareTargetKeywords(_extractKeywords(normalizedJobDescription))
-            .take(6)
-            .toList()
+        ? _prepareTargetKeywords(
+            _extractKeywords(normalizedJobDescription),
+          ).take(6).toList()
         : _atsKeywordsFromJobDescription(
             jobDescription: normalizedJobDescription,
             missingFromResume: missingKeywords,
@@ -2434,8 +2393,9 @@ class LocalAiResumeService {
 
     var optimizedJobTitle = resume.jobTitle;
     if (normalizedJobDescription.isNotEmpty) {
-      final jobTitleFromPosting =
-          _jobTitleFromJobDescription(normalizedJobDescription);
+      final jobTitleFromPosting = _jobTitleFromJobDescription(
+        normalizedJobDescription,
+      );
       if (jobTitleFromPosting != null &&
           (resume.jobTitle.trim().isEmpty ||
               resume.jobTitle.trim().length < 4)) {
@@ -2515,10 +2475,12 @@ class LocalAiResumeService {
           .toList();
       final hasWeakBullets =
           nonEmptyBullets.where((bullet) => bullet.length > 45).length < 2;
-      final needsBulletSupport = !item.isBlank &&
+      final needsBulletSupport =
+          !item.isBlank &&
           (nonEmptyBullets.isEmpty ||
               hasWeakBullets ||
-              (item.description.trim().isNotEmpty && nonEmptyBullets.length < 2));
+              (item.description.trim().isNotEmpty &&
+                  nonEmptyBullets.length < 2));
       if (!needsBulletSupport) {
         if (normalizedJobDescription.isEmpty || item.isBlank) {
           return item;
@@ -2530,10 +2492,7 @@ class LocalAiResumeService {
         );
         final polished = nonEmptyBullets
             .map(
-              (bullet) => _polishBulletForAts(
-                bullet,
-                keywords: roleKeywords,
-              ),
+              (bullet) => _polishBulletForAts(bullet, keywords: roleKeywords),
             )
             .take(4)
             .toList();
@@ -2645,7 +2604,9 @@ class LocalAiResumeService {
   ) {
     final currentDate = _formatCoverLetterDate(
       DateTime.now(),
-      languageBase: inputs.languageBase.isEmpty ? 'English' : inputs.languageBase,
+      languageBase: inputs.languageBase.isEmpty
+          ? 'English'
+          : inputs.languageBase,
     );
 
     return '${inputs.senderName}\n'
@@ -4551,10 +4512,9 @@ class LocalAiResumeService {
   static const int _summaryVariantCount = 4;
 
   String _summaryEvidencePhrase(String source) {
-    final normalized = _normalizeSentenceForResume(source).replaceAll(
-      RegExp(r'\.$'),
-      '',
-    );
+    final normalized = _normalizeSentenceForResume(
+      source,
+    ).replaceAll(RegExp(r'\.$'), '');
     if (normalized.isEmpty) {
       return normalized;
     }
@@ -4653,10 +4613,7 @@ class LocalAiResumeService {
     return variants[index % variants.length];
   }
 
-  List<String> _composeSummaryLines(
-    ResumeData resume, {
-    int variantIndex = 0,
-  }) {
+  List<String> _composeSummaryLines(ResumeData resume, {int variantIndex = 0}) {
     final variant = variantIndex % _summaryVariantCount;
     final experiences = resume.visibleWorkExperiences
         .where((item) => !item.isBlank)
@@ -4686,27 +4643,9 @@ class LocalAiResumeService {
     ];
 
     return switch (variant) {
-      1 => <String>[
-        intro,
-        ?titleFocus,
-        ?context,
-        ?role,
-        closing,
-      ],
-      2 => <String>[
-        intro,
-        ?role,
-        ?titleFocus,
-        ?context,
-        closing,
-      ],
-      3 => <String>[
-        intro,
-        ?context,
-        ?titleFocus,
-        ?role,
-        closing,
-      ],
+      1 => <String>[intro, ?titleFocus, ?context, ?role, closing],
+      2 => <String>[intro, ?role, ?titleFocus, ?context, closing],
+      3 => <String>[intro, ?context, ?titleFocus, ?role, closing],
       _ => blocks,
     };
   }
@@ -4789,23 +4728,16 @@ class LocalAiResumeService {
       experience.startDate.trim(),
       experience.endDate.trim(),
     ].where((item) => item.isNotEmpty).join(' – ');
-    final evidenceSource = [
-      ...experience.bullets,
-      experience.description,
-    ]
+    final evidenceSource = [...experience.bullets, experience.description]
         .map((item) => _firstMeaningfulSentence(item))
-        .firstWhere(
-          (item) => item.trim().isNotEmpty,
-          orElse: () => '',
-        );
+        .firstWhere((item) => item.trim().isNotEmpty, orElse: () => '');
     final evidence = evidenceSource.isEmpty
         ? 'delivered meaningful results with clear ownership and steady follow-through'
         : _summaryEvidencePhrase(evidenceSource);
     final dateSuffix = dateRange.isEmpty ? '' : ' ($dateRange)';
 
     return switch (variant) {
-      1 =>
-        'Most recently, I worked as a $role$dateSuffix and $evidence.',
+      1 => 'Most recently, I worked as a $role$dateSuffix and $evidence.',
       2 => 'In my $role role$dateSuffix, I $evidence.',
       3 => 'Serving as a $role$dateSuffix, I $evidence.',
       _ => 'As a $role$dateSuffix, I $evidence.',
@@ -4914,17 +4846,10 @@ class LocalAiResumeService {
     final projectTitle = project.title.trim().isEmpty
         ? 'a recent project'
         : project.title.trim();
-    final projectEvidence = [
-      ...project.bullets,
-      project.overview,
-      project.impact,
-      project.subtitle,
-    ]
-        .map((item) => _firstMeaningfulSentence(item.toString()))
-        .firstWhere(
-          (item) => item.trim().isNotEmpty,
-          orElse: () => '',
-        );
+    final projectEvidence =
+        [...project.bullets, project.overview, project.impact, project.subtitle]
+            .map((item) => _firstMeaningfulSentence(item.toString()))
+            .firstWhere((item) => item.trim().isNotEmpty, orElse: () => '');
     final projectDetail = projectEvidence.isEmpty
         ? 'showed initiative, sound judgment, and attention to detail'
         : _summaryEvidencePhrase(projectEvidence);
@@ -4959,8 +4884,7 @@ class LocalAiResumeService {
     bool regenerate = false,
     int attemptIndex = 0,
   }) {
-    final variantIndex =
-        regenerate ? attemptIndex % _summaryVariantCount : 0;
+    final variantIndex = regenerate ? attemptIndex % _summaryVariantCount : 0;
     final composed = _composeSummaryLines(
       resume,
       variantIndex: variantIndex,
@@ -5004,8 +4928,8 @@ class LocalAiResumeService {
     final skillsClause = atsSkillLine.isNotEmpty
         ? atsSkillLine
         : (primarySkills.isEmpty
-            ? 'delivery, collaboration, and execution'
-            : primarySkills);
+              ? 'delivery, collaboration, and execution'
+              : primarySkills);
 
     return '$name is a $role with hands-on experience in $skillsClause. '
         '${keywordPhrase.isEmpty ? '' : 'Well aligned to opportunities requiring $keywordPhrase. '}'
@@ -5017,7 +4941,9 @@ class LocalAiResumeService {
     required String company,
     required String targetJobTitle,
   }) {
-    final focus = _jobTitleSkillSuggestions(targetJobTitle).take(2).join(' and ');
+    final focus = _jobTitleSkillSuggestions(
+      targetJobTitle,
+    ).take(2).join(' and ');
     final normalizedRole = role.trim().isEmpty
         ? 'team member'
         : role.trim().toLowerCase();
@@ -5073,21 +4999,23 @@ class LocalAiResumeService {
     }
 
     final lower = polished.toLowerCase();
-    final missing = keywords
-        .map((keyword) => keyword.trim())
-        .where((keyword) => keyword.isNotEmpty)
-        .where((keyword) => !lower.contains(keyword.toLowerCase()))
-        .toList()
-      ..sort((a, b) => b.length.compareTo(a.length));
+    final missing =
+        keywords
+            .map((keyword) => keyword.trim())
+            .where((keyword) => keyword.isNotEmpty)
+            .where((keyword) => !lower.contains(keyword.toLowerCase()))
+            .toList()
+          ..sort((a, b) => b.length.compareTo(a.length));
     if (missing.isEmpty) {
       return polished;
     }
     missing.removeRange(1, missing.length);
     final keyword = missing.first;
     final body = polished.replaceAll(RegExp(r'[.!?]+$'), '');
-    if (RegExp(r'\b(led|built|delivered|implemented|improved|managed)\b',
-            caseSensitive: false)
-        .hasMatch(body)) {
+    if (RegExp(
+      r'\b(led|built|delivered|implemented|improved|managed)\b',
+      caseSensitive: false,
+    ).hasMatch(body)) {
       return '$body, applying $keyword to improve outcomes.';
     }
     return '$body, with demonstrated experience in $keyword.';
@@ -5108,7 +5036,9 @@ class LocalAiResumeService {
     if (existingBullets.length >= 2 &&
         existingBullets.where((bullet) => bullet.length > 40).length >= 2) {
       return existingBullets
-          .map((bullet) => _polishBulletForAts(bullet, keywords: keywordsToWeave))
+          .map(
+            (bullet) => _polishBulletForAts(bullet, keywords: keywordsToWeave),
+          )
           .take(4)
           .toList();
     }
@@ -5124,10 +5054,7 @@ class LocalAiResumeService {
         .map((bullet) => _polishBulletForAts(bullet, keywords: keywordsToWeave))
         .toList();
 
-    final merged = <String>[
-      ...descriptionBullets,
-      ...polishedExisting,
-    ];
+    final merged = <String>[...descriptionBullets, ...polishedExisting];
 
     if (merged.isEmpty) {
       return _buildJobBullets(
@@ -5194,19 +5121,21 @@ class LocalAiResumeService {
     }
 
     final combined = bullets.join(' ').toLowerCase();
-    final missing = keywords
-        .map((keyword) => keyword.trim())
-        .where((keyword) => keyword.isNotEmpty)
-        .where((keyword) => !combined.contains(keyword.toLowerCase()))
-        .toList()
-      ..sort((a, b) => b.length.compareTo(a.length));
+    final missing =
+        keywords
+            .map((keyword) => keyword.trim())
+            .where((keyword) => keyword.isNotEmpty)
+            .where((keyword) => !combined.contains(keyword.toLowerCase()))
+            .toList()
+          ..sort((a, b) => b.length.compareTo(a.length));
     if (missing.isEmpty) {
       return bullets;
     }
     missing.removeRange(1, missing.length);
     final lastIndex = bullets.length - 1;
     final body = bullets[lastIndex].replaceAll(RegExp(r'[.!?]+$'), '');
-    bullets[lastIndex] = '$body, applying ${missing.first} in production delivery.';
+    bullets[lastIndex] =
+        '$body, applying ${missing.first} in production delivery.';
     return bullets;
   }
 
@@ -5282,10 +5211,13 @@ class LocalAiResumeService {
       }
     }
 
-    for (final keyword
-        in _prepareTargetKeywords(_extractKeywords(jobDescription))) {
+    for (final keyword in _prepareTargetKeywords(
+      _extractKeywords(jobDescription),
+    )) {
       if (keyword.length < 4 &&
-          ordered.any((item) => item.toLowerCase().contains(keyword.toLowerCase()))) {
+          ordered.any(
+            (item) => item.toLowerCase().contains(keyword.toLowerCase()),
+          )) {
         continue;
       }
       add(keyword);
@@ -5298,9 +5230,7 @@ class LocalAiResumeService {
     return keywords.where((keyword) {
       final lower = keyword.toLowerCase();
       if (lower == 'rest' || lower == 'api' || lower == 'apis') {
-        return !keywords.any(
-          (item) => item.toLowerCase().contains('rest api'),
-        );
+        return !keywords.any((item) => item.toLowerCase().contains('rest api'));
       }
       return true;
     }).toList();
@@ -5317,8 +5247,7 @@ class LocalAiResumeService {
     final start = entryIndex == primaryIndex ? 0 : 1;
     return [
       allKeywords[start % allKeywords.length],
-      if (allKeywords.length > 1)
-        allKeywords[(start + 1) % allKeywords.length],
+      if (allKeywords.length > 1) allKeywords[(start + 1) % allKeywords.length],
     ];
   }
 
@@ -5557,17 +5486,18 @@ class LocalAiResumeService {
           ...switch (section.layoutMode) {
             CustomSectionLayoutMode.summary => [section.content],
             CustomSectionLayoutMode.bullets => section.bullets,
-            CustomSectionLayoutMode.projects => section.visibleProjectEntries
-                .expand(
-                  (entry) => [
-                    entry.title,
-                    entry.subtitle,
-                    entry.overview,
-                    entry.impact,
-                    ...entry.bullets,
-                  ],
-                )
-                .toList(),
+            CustomSectionLayoutMode.projects =>
+              section.visibleProjectEntries
+                  .expand(
+                    (entry) => [
+                      entry.title,
+                      entry.subtitle,
+                      entry.overview,
+                      entry.impact,
+                      ...entry.bullets,
+                    ],
+                  )
+                  .toList(),
           },
         ],
       ),
@@ -5957,12 +5887,11 @@ class LocalAiResumeService {
       languageNative: languageNative,
       summaryHook: summaryHook,
       workExperiences: workExperiences,
-      evidenceLineBuilder: (variant) =>
-          _coverLetterExperienceEvidenceLine(
-            workExperiences: workExperiences,
-            backgroundRole: backgroundRole,
-            variant: variant,
-          ),
+      evidenceLineBuilder: (variant) => _coverLetterExperienceEvidenceLine(
+        workExperiences: workExperiences,
+        backgroundRole: backgroundRole,
+        variant: variant,
+      ),
     );
   }
 
@@ -5998,10 +5927,9 @@ class LocalAiResumeService {
     final companyLabel = experience.company.trim().isEmpty
         ? 'a previous team'
         : experience.company.trim();
-    final bullet = [
-      experience.description,
-      ...experience.bullets,
-    ].map(_firstMeaningfulSentence).firstWhere((item) => item.isNotEmpty, orElse: () => '');
+    final bullet = [experience.description, ...experience.bullets]
+        .map(_firstMeaningfulSentence)
+        .firstWhere((item) => item.isNotEmpty, orElse: () => '');
     if (bullet.isEmpty) {
       return 'Most recently, I worked as $roleLabel at $companyLabel.';
     }
@@ -6249,6 +6177,13 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsLatexClassic) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsLatexClassicTemplatePage(document, resume, garamond: garamond);
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -6294,6 +6229,8 @@ class ResumePdfService {
       case ResumeTemplate.atsCenterClassic:
         break;
       case ResumeTemplate.atsProfessionalBlue:
+        break;
+      case ResumeTemplate.atsLatexClassic:
         break;
     }
 
@@ -6455,6 +6392,20 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsLatexClassic) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsLatexClassicTemplatePage(
+        document,
+        resume,
+        garamond: garamond,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -6507,6 +6458,8 @@ class ResumePdfService {
       case ResumeTemplate.atsCenterClassic:
         break;
       case ResumeTemplate.atsProfessionalBlue:
+        break;
+      case ResumeTemplate.atsLatexClassic:
         break;
     }
 
@@ -6739,8 +6692,7 @@ class ResumePdfService {
   void _addExecutiveNoteCoverLetterPage(
     pw.Document document,
     CoverLetterData coverLetter,
-    _ParsedCoverLetterContent parsed,
-    {
+    _ParsedCoverLetterContent parsed, {
     required ArimoPdfFonts arimo,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
@@ -6805,10 +6757,7 @@ class ResumePdfService {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(
-                  parsed.senderName,
-                  style: nameStyle,
-                ),
+                pw.Text(parsed.senderName, style: nameStyle),
                 if (parsed.senderDetails.isNotEmpty) ...[
                   pw.SizedBox(height: 8),
                   pw.Text(
@@ -6838,8 +6787,7 @@ class ResumePdfService {
   void _addClassicBusinessCoverLetterPage(
     pw.Document document,
     CoverLetterData coverLetter,
-    _ParsedCoverLetterContent parsed,
-    {
+    _ParsedCoverLetterContent parsed, {
     required GaramondPdfFonts garamond,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
@@ -6925,8 +6873,7 @@ class ResumePdfService {
   void _addMinimalCoverLetterPage(
     pw.Document document,
     CoverLetterData coverLetter,
-    _ParsedCoverLetterContent parsed,
-    {
+    _ParsedCoverLetterContent parsed, {
     required ArimoPdfFonts arimo,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
@@ -7015,8 +6962,7 @@ class ResumePdfService {
   void _addSidebarCoverLetterPage(
     pw.Document document,
     CoverLetterData coverLetter,
-    _ParsedCoverLetterContent parsed,
-    {
+    _ParsedCoverLetterContent parsed, {
     required ArimoPdfFonts arimo,
     List<pw.Font> fontFallback = const <pw.Font>[],
   }) {
@@ -7040,10 +6986,14 @@ class ResumePdfService {
     );
     final senderDetails = _sidebarCoverLetterSenderDetails(parsed);
     final dateLine =
-        parsed.senderDetails.cast<String?>().firstWhere(
-          (line) => line != null && _sidebarCoverLetterLineLooksLikeDate(line),
-          orElse: () => null,
-        )?.trim() ??
+        parsed.senderDetails
+            .cast<String?>()
+            .firstWhere(
+              (line) =>
+                  line != null && _sidebarCoverLetterLineLooksLikeDate(line),
+              orElse: () => null,
+            )
+            ?.trim() ??
         _pdfCoverLetterDateLabel(
           coverLetter.updatedAt,
           language: coverLetter.language,
@@ -7185,6 +7135,7 @@ class ResumePdfService {
     ];
     return '${monthNames[date.month - 1]} ${date.day}, ${date.year}';
   }
+
   pw.TextStyle _coverLetterArialPdfStyle(
     ArimoPdfFonts arimo, {
     required int weight,
@@ -7223,9 +7174,7 @@ class ResumePdfService {
       fontSize: fontSize,
       color: color,
       lineSpacing: fontSize * (lineHeight - 1),
-    ).copyWith(
-      fontFallback: fontFallback,
-    );
+    ).copyWith(fontFallback: fontFallback);
   }
 
   List<pw.Widget> _buildCoverLetterBodyWithStyles(
@@ -7236,25 +7185,13 @@ class ResumePdfService {
     pw.TextAlign bodyTextAlign = pw.TextAlign.left,
   }) {
     return [
-      pw.Text(
-        parsed.greeting,
-        style: headingStyle,
-        textAlign: bodyTextAlign,
-      ),
+      pw.Text(parsed.greeting, style: headingStyle, textAlign: bodyTextAlign),
       pw.SizedBox(height: 12),
       for (final paragraph in parsed.bodyParagraphs) ...[
-        pw.Text(
-          paragraph,
-          style: bodyStyle,
-          textAlign: bodyTextAlign,
-        ),
+        pw.Text(paragraph, style: bodyStyle, textAlign: bodyTextAlign),
         pw.SizedBox(height: 12),
       ],
-      pw.Text(
-        parsed.closing,
-        style: headingStyle,
-        textAlign: bodyTextAlign,
-      ),
+      pw.Text(parsed.closing, style: headingStyle, textAlign: bodyTextAlign),
       pw.SizedBox(height: 20),
       pw.Text(
         parsed.signature,
@@ -7410,8 +7347,7 @@ class ResumePdfService {
     pw.TextStyle? bulletStyle,
   }) {
     final resolvedBulletStyle =
-        bulletStyle ??
-        pw.TextStyle(color: PdfColors.black, fontSize: fontSize);
+        bulletStyle ?? pw.TextStyle(color: PdfColors.black, fontSize: fontSize);
     final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
     if (cleaned.isEmpty) {
       return const <pw.Widget>[];
@@ -7425,10 +7361,7 @@ class ResumePdfService {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Expanded(
-                child: pw.Bullet(
-                  text: cleaned[i],
-                  style: resolvedBulletStyle,
-                ),
+                child: pw.Bullet(text: cleaned[i], style: resolvedBulletStyle),
               ),
               pw.SizedBox(width: columnGap),
               pw.Expanded(
@@ -7564,10 +7497,7 @@ class ResumePdfService {
                 color: highlightedBullets.contains(bullet)
                     ? highlightColor
                     : PdfColors.white,
-                child: _highlightedPdfLineText(
-                  bullet,
-                  style: bodyStyle,
-                ),
+                child: _highlightedPdfLineText(bullet, style: bodyStyle),
               ),
             );
           });
@@ -7585,8 +7515,7 @@ class ResumePdfService {
     pw.TextStyle? bulletStyle,
   }) {
     final resolvedBulletStyle =
-        bulletStyle ??
-        pw.TextStyle(color: PdfColors.black, fontSize: fontSize);
+        bulletStyle ?? pw.TextStyle(color: PdfColors.black, fontSize: fontSize);
     final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
     if (cleaned.isEmpty) {
       return pw.SizedBox();
@@ -7654,8 +7583,7 @@ class ResumePdfService {
     pw.TextStyle? bulletStyle,
   }) {
     final resolvedBulletStyle =
-        bulletStyle ??
-        pw.TextStyle(color: PdfColors.black, fontSize: fontSize);
+        bulletStyle ?? pw.TextStyle(color: PdfColors.black, fontSize: fontSize);
     final cleaned = items.where((item) => item.trim().isNotEmpty).toList();
     if (cleaned.isEmpty) {
       return const <pw.Widget>[];
@@ -7727,15 +7655,8 @@ class ResumePdfService {
         : pw.TextStyle(fontSize: subtitlePt);
     final bodyColor = _creativeBodyTextColorPdf();
     final bodyStyle = garamond != null
-        ? accentStripBodyPdfTextStyle(
-            garamond,
-            bodyPt,
-            color: bodyColor,
-          )
-        : pw.TextStyle(
-            color: bodyColor,
-            fontSize: bodyPt,
-          );
+        ? accentStripBodyPdfTextStyle(garamond, bodyPt, color: bodyColor)
+        : pw.TextStyle(color: bodyColor, fontSize: bodyPt);
     final titleStyleWithColor = titleStyle.copyWith(color: bodyColor);
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
@@ -7746,10 +7667,7 @@ class ResumePdfService {
           for (var i = 0; i < bullets.length; i++)
             pw.Padding(
               padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
-              child: pw.Bullet(
-                text: bullets[i],
-                style: bodyStyle,
-              ),
+              child: pw.Bullet(text: bullets[i], style: bodyStyle),
             ),
         ],
       ),
@@ -7790,20 +7708,10 @@ class ResumePdfService {
             fontSize: subtitlePt,
             color: bodyColor,
           )
-        : pw.TextStyle(
-            fontSize: subtitlePt,
-            color: bodyColor,
-          );
+        : pw.TextStyle(fontSize: subtitlePt, color: bodyColor);
     final bodyStyle = garamond != null
-        ? accentStripBodyPdfTextStyle(
-            garamond,
-            bodyPt,
-            color: bodyColor,
-          )
-        : pw.TextStyle(
-            fontSize: bodyPt,
-            color: bodyColor,
-          );
+        ? accentStripBodyPdfTextStyle(garamond, bodyPt, color: bodyColor)
+        : pw.TextStyle(fontSize: bodyPt, color: bodyColor);
     final dateStyle = garamond != null
         ? accentStripBodyPdfTextStyle(
             garamond,
@@ -7866,15 +7774,9 @@ class ResumePdfService {
                       color: highlightedBullets.contains(bullet)
                           ? highlightColor
                           : PdfColors.white,
-                      child: _highlightedPdfLineText(
-                        bullet,
-                        style: bodyStyle,
-                      ),
+                      child: _highlightedPdfLineText(bullet, style: bodyStyle),
                     )
-                  : pw.Bullet(
-                      text: bullet,
-                      style: bodyStyle,
-                    ),
+                  : pw.Bullet(text: bullet, style: bodyStyle),
             ),
         ],
       ),
