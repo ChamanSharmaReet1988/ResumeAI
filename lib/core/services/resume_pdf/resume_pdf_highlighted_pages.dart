@@ -82,7 +82,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                             padding: pw.EdgeInsets.only(
                               top: index == 0 ? 0 : 3,
                             ),
-                            child: pw.Text(
+                            child: _pdfContactText(
                               headerContactLines[index],
                               style: garamondPdfTextStyle(
                                 garamond,

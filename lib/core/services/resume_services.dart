@@ -31,6 +31,60 @@ part 'resume_pdf/resume_pdf_ats_pages.dart';
 
 PdfColor _pdfRgb(Color c) => PdfColor(c.r, c.g, c.b);
 
+final RegExp _pdfContactUrlPattern = RegExp(
+  r'((?:https?:\/\/)?(?:www\.)?(?:github\.com|linkedin\.com|[a-z0-9-]+(?:\.[a-z0-9-]+)+)\/[^\s|,;)]*|(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+)',
+  caseSensitive: false,
+);
+
+String? _pdfContactDestination(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty ||
+      trimmed.contains('@') ||
+      !_pdfContactUrlPattern.hasMatch(trimmed)) {
+    return null;
+  }
+  if (trimmed.startsWith(RegExp(r'https?:\/\/', caseSensitive: false))) {
+    return trimmed;
+  }
+  return 'https://$trimmed';
+}
+
+pw.Widget _pdfContactText(
+  String value, {
+  required pw.TextStyle style,
+  pw.TextAlign? textAlign,
+}) {
+  final matches = _pdfContactUrlPattern.allMatches(value).toList();
+  if (matches.isEmpty) {
+    return pw.Text(value, style: style, textAlign: textAlign);
+  }
+
+  var cursor = 0;
+  final spans = <pw.InlineSpan>[];
+  for (final match in matches) {
+    if (match.start > cursor) {
+      spans.add(pw.TextSpan(text: value.substring(cursor, match.start)));
+    }
+    final linkText = value.substring(match.start, match.end);
+    final destination = _pdfContactDestination(linkText);
+    spans.add(
+      pw.TextSpan(
+        text: linkText,
+        annotation: destination == null ? null : pw.AnnotationUrl(destination),
+      ),
+    );
+    cursor = match.end;
+  }
+  if (cursor < value.length) {
+    spans.add(pw.TextSpan(text: value.substring(cursor)));
+  }
+
+  return pw.RichText(
+    textAlign: textAlign ?? pw.TextAlign.left,
+    text: pw.TextSpan(style: style, children: spans),
+  );
+}
+
 PdfColor _corporateTitlePdf(ResumeData resume) =>
     _pdfRgb(resume.corporateColorPreset.titleColor);
 
@@ -711,7 +765,7 @@ pw.Widget _creativeSidebarContactRow(
           ),
         ),
         pw.Expanded(
-          child: pw.Text(
+          child: _pdfContactText(
             value,
             style: textStyle,
           ),
@@ -1629,7 +1683,7 @@ pw.Widget _detailsSidebarInfoRow({
         ),
       ),
       pw.Expanded(
-        child: pw.Text(
+        child: _pdfContactText(
           text,
           style: pw.TextStyle(color: textColor, fontSize: fontSize),
         ),
@@ -4510,7 +4564,7 @@ class LocalAiResumeService {
   String _finalizeSummaryLines(String summary, ResumeData resume) {
     final lines = summary
         .split('\n')
-        .map((line) => line.trim())
+        .map((line) => _withoutCompanyNames(line, resume).trim())
         .where((line) => line.isNotEmpty)
         .toList();
 
@@ -4539,6 +4593,27 @@ class LocalAiResumeService {
     }
 
     return padded.take(_targetSummaryLinesMax).join('\n');
+  }
+
+  String _withoutCompanyNames(String value, ResumeData resume) {
+    var result = value;
+    for (final experience in resume.visibleWorkExperiences) {
+      final company = experience.company.trim();
+      if (company.isEmpty) {
+        continue;
+      }
+      result = result.replaceAll(
+        RegExp(RegExp.escape(company), caseSensitive: false),
+        'the organization',
+      );
+    }
+    return result
+        .replaceAll(
+          RegExp(r'\bat the organization\b', caseSensitive: false),
+          'in that role',
+        )
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
   }
 
   List<String> _summaryExpansionLines(ResumeData resume) {
@@ -4597,6 +4672,7 @@ class LocalAiResumeService {
       variant,
       experienceIndex: experienceHighlightIndex,
     );
+    final titleFocus = _summaryTitleFocusLine(resume, variant);
     final context = _summaryContextLine(resume, variant);
     final closing = _summaryClosingLine(resume, variant);
 
@@ -4604,6 +4680,7 @@ class LocalAiResumeService {
       intro,
       breadth,
       ?role,
+      ?titleFocus,
       ?context,
       closing,
     ];
@@ -4611,22 +4688,22 @@ class LocalAiResumeService {
     return switch (variant) {
       1 => <String>[
         intro,
+        ?titleFocus,
         ?context,
         ?role,
-        breadth,
         closing,
       ],
       2 => <String>[
         intro,
         ?role,
-        breadth,
+        ?titleFocus,
         ?context,
         closing,
       ],
       3 => <String>[
         intro,
         ?context,
-        breadth,
+        ?titleFocus,
         ?role,
         closing,
       ],
@@ -4708,9 +4785,6 @@ class LocalAiResumeService {
     final role = experience.role.trim().isEmpty
         ? 'Contributor'
         : experience.role.trim();
-    final company = experience.company.trim().isEmpty
-        ? 'my organization'
-        : experience.company.trim();
     final dateRange = [
       experience.startDate.trim(),
       experience.endDate.trim(),
@@ -4731,10 +4805,36 @@ class LocalAiResumeService {
 
     return switch (variant) {
       1 =>
-        'Most recently at $company, I worked as $role$dateSuffix and $evidence.',
-      2 => 'In my $role role at $company$dateSuffix, I $evidence.',
-      3 => 'At $company$dateSuffix, serving as $role, I $evidence.',
-      _ => 'As $role at $company$dateSuffix, I $evidence.',
+        'Most recently, I worked as a $role$dateSuffix and $evidence.',
+      2 => 'In my $role role$dateSuffix, I $evidence.',
+      3 => 'Serving as a $role$dateSuffix, I $evidence.',
+      _ => 'As a $role$dateSuffix, I $evidence.',
+    };
+  }
+
+  String? _summaryTitleFocusLine(ResumeData resume, int variant) {
+    final title = resume.jobTitle.trim();
+    if (title.isEmpty) {
+      return null;
+    }
+
+    final titleSkills = _jobTitleSkillSuggestions(title)
+        .where((item) => item != 'Communication' && item != 'Problem Solving')
+        .take(3)
+        .toList();
+    final focus = titleSkills.isEmpty
+        ? 'clear ownership, practical execution, and measurable progress'
+        : titleSkills.join(', ');
+
+    return switch (variant) {
+      1 =>
+        'For $title roles, I bring energy around $focus and turn ambiguous needs into next steps people can act on.',
+      2 =>
+        'The $title work I want most is hands-on, collaborative, and centered on $focus.',
+      3 =>
+        'I approach $title responsibilities with curiosity, pace, and a strong bias for $focus.',
+      _ =>
+        'My $title focus combines $focus with clear communication and dependable follow-through.',
     };
   }
 

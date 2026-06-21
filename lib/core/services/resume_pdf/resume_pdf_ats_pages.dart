@@ -289,7 +289,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     for (var i = 0; i < contact.length; i++)
                       pw.Padding(
                         padding: pw.EdgeInsets.only(top: i == 0 ? 0 : 2),
-                        child: pw.Text(
+                        child: _pdfContactText(
                           contact[i],
                           textAlign: pw.TextAlign.center,
                           style: contactStyle,
@@ -884,7 +884,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     for (var i = 0; i < contact.length; i++)
                       pw.Padding(
                         padding: pw.EdgeInsets.only(top: i == 0 ? 0 : 2),
-                        child: pw.Text(
+                        child: _pdfContactText(
                           contact[i],
                           textAlign: pw.TextAlign.center,
                           style: contactStyle,
@@ -1473,7 +1473,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   ],
                   if (contactPipe.isNotEmpty) ...[
                     pw.SizedBox(height: 5),
-                    pw.Text(
+                    _pdfContactText(
                       contactPipe,
                       textAlign: pw.TextAlign.center,
                       style: contactStyle,
@@ -1723,7 +1723,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       for (final line in contactLines)
                         pw.Padding(
                           padding: const pw.EdgeInsets.only(bottom: 2),
-                          child: pw.Text(
+                          child: _pdfContactText(
                             line,
                             textAlign: pw.TextAlign.right,
                             style: contactStyle,
@@ -2041,7 +2041,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
             ),
             if (contactLine.isNotEmpty) ...[
               pw.SizedBox(height: 14),
-              pw.Text(
+              _pdfContactText(
                 contactLine,
                 style: garamondPdfTextStyle(
                   garamond,

@@ -400,6 +400,8 @@ Oxford Software Institute
     expect(summary.trim(), isNotEmpty);
     expect(summary, contains('Jane Doe'));
     expect(summary, contains('Product Manager'));
+    expect(summary, isNot(contains('Acme')));
+    expect(summary, contains('Product Strategy'));
     final lineCount = summary
         .split('\n')
         .map((line) => line.trim())

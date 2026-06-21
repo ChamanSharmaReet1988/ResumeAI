@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:resume_app/core/corporate_resume_style.dart';
@@ -447,6 +449,29 @@ void main() {
     final pdfBytes = await service.buildPdf(buildClassicSidebarResume());
 
     expect(pdfBytes, isNotEmpty);
+  });
+
+  test('resume PDF contact links are clickable annotations', () async {
+    final service = ResumePdfService();
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
+      fullName: 'Link Tester',
+      jobTitle: 'Software Engineer',
+      email: 'link@example.com',
+      phone: '555-0100',
+      website: 'portfolio.example.com',
+      githubLink: 'github.com/linktester',
+      linkedinLink: 'linkedin.com/in/linktester',
+      summary: 'Engineer focused on reliable app delivery.',
+      skills: const ['Flutter', 'Dart'],
+    );
+
+    final pdfBytes = await service.buildPdf(resume);
+    final pdfSource = latin1.decode(pdfBytes, allowInvalid: true);
+
+    expect(pdfSource, contains('/URI'));
+    expect(pdfSource, contains('https://portfolio.example.com'));
+    expect(pdfSource, contains('https://github.com/linktester'));
+    expect(pdfSource, contains('https://linkedin.com/in/linktester'));
   });
 
   test('highlighted classic sidebar template PDF renders successfully', () async {
