@@ -28,7 +28,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   bool _autoSyncEnabled = false;
   Set<String> _downloadingIds = <String>{};
   Set<String> _deletingIds = <String>{};
-  List<GoogleDriveResumeSummary> _driveResumes = const [];
+  List<GoogleDriveResumeSummary> _driveItems = const [];
 
   GoogleDriveResumeService get _service =>
       context.read<GoogleDriveResumeService>();
@@ -48,6 +48,9 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
         return;
       }
       unawaited(_bootstrap());
+      unawaited(
+        context.read<CoverLetterLibraryViewModel>().loadCoverLetters(),
+      );
     });
   }
 
@@ -77,13 +80,13 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       }
       setState(() {
         _isSignedIn = signedIn;
-        _driveResumes = items;
+        _driveItems = items;
       });
     } on Exception {
       if (mounted) {
         setState(() {
           _isSignedIn = false;
-          _driveResumes = const [];
+          _driveItems = const [];
         });
       }
     } finally {
@@ -103,7 +106,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       }
       setState(() {
         _isSignedIn = true;
-        _driveResumes = items;
+        _driveItems = items;
       });
     } on UnsupportedError {
       if (mounted) {
@@ -129,11 +132,11 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     }
     setState(() {
       _isSignedIn = false;
-      _driveResumes = const [];
+      _driveItems = const [];
     });
   }
 
-  Future<void> _loadDriveResumes() async {
+  Future<void> _loadDriveItems() async {
     if (!_isSignedIn) {
       return;
     }
@@ -143,11 +146,11 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       if (!mounted) {
         return;
       }
-      setState(() => _driveResumes = items);
+      setState(() => _driveItems = items);
     } on Exception {
       if (mounted) {
         _showMessage(
-          'Could not load your Google Drive resumes right now. Try again.',
+          'Could not load your Google Drive items right now. Try again.',
         );
       }
     } finally {
@@ -158,32 +161,57 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   }
 
   Future<void> _syncToDrive() async {
-    final library = context.read<ResumeLibraryViewModel>();
+    final resumeLibrary = context.read<ResumeLibraryViewModel>();
+    final coverLibrary = context.read<CoverLetterLibraryViewModel>();
     final repository = context.read<ResumeRepository>();
-    final localResumes = library.resumes;
-    if (localResumes.isEmpty) {
-      _showMessage('No local resumes available to sync.');
+    final localResumes = resumeLibrary.resumes;
+    await coverLibrary.loadCoverLetters();
+    final localCoverLetters = coverLibrary.coverLetters;
+
+    if (localResumes.isEmpty && localCoverLetters.isEmpty) {
+      _showMessage('No local resumes or cover letters available to sync.');
       return;
     }
 
     setState(() => _isSyncing = true);
     try {
-      final cloudById = {for (final item in _driveResumes) item.id: item};
+      final cloudResumeById = {
+        for (final item in _driveItems)
+          if (!item.isCoverLetter) item.id: item,
+      };
+      final cloudCoverById = {
+        for (final item in _driveItems)
+          if (item.isCoverLetter) item.id: item,
+      };
+
       final resumesToUpload = localResumes.where((resume) {
-        final cloud = cloudById[resume.id];
+        final cloud = cloudResumeById[resume.id];
         return cloud == null || !cloud.updatedAt.isAfter(resume.updatedAt);
       }).toList();
-      final skippedCount = localResumes.length - resumesToUpload.length;
+      final lettersToUpload = localCoverLetters.where((letter) {
+        final cloud = cloudCoverById[letter.id];
+        return cloud == null || !cloud.updatedAt.isAfter(letter.updatedAt);
+      }).toList();
 
-      if (resumesToUpload.isEmpty) {
-        _showMessage('All resumes are already up to date on Drive.');
+      final resumeSkipped = localResumes.length - resumesToUpload.length;
+      final letterSkipped =
+          localCoverLetters.length - lettersToUpload.length;
+
+      if (resumesToUpload.isEmpty && lettersToUpload.isEmpty) {
+        _showMessage('Everything is already up to date on Google Drive.');
         return;
       }
 
-      final uploadedIds = await _service.uploadResumes(resumesToUpload);
+      final uploadedResumeIds = resumesToUpload.isEmpty
+          ? const <String>[]
+          : await _service.uploadResumes(resumesToUpload);
+      final uploadedLetterIds = lettersToUpload.isEmpty
+          ? const <String>[]
+          : await _service.uploadCoverLetters(lettersToUpload);
+
       final syncedAt = DateTime.now();
       for (final resume in localResumes) {
-        if (!uploadedIds.contains(resume.id)) {
+        if (!uploadedResumeIds.contains(resume.id)) {
           continue;
         }
         await repository.upsertResume(
@@ -191,26 +219,46 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
           scheduleAutoSync: false,
         );
       }
+      for (final letter in localCoverLetters) {
+        if (!uploadedLetterIds.contains(letter.id)) {
+          continue;
+        }
+        await repository.upsertCoverLetter(
+          letter.copyWith(lastSyncedAt: syncedAt),
+          scheduleAutoSync: false,
+        );
+      }
 
-      await library.loadResumes();
-      await _loadDriveResumes();
+      await resumeLibrary.loadResumes();
+      await coverLibrary.loadCoverLetters();
+      await _loadDriveItems();
 
       if (!mounted) {
         return;
       }
 
-      final uploadedCount = uploadedIds.length;
-      if (skippedCount > 0) {
+      final resumeCount = uploadedResumeIds.length;
+      final letterCount = uploadedLetterIds.length;
+      final parts = <String>[];
+      if (resumeCount > 0) {
+        parts.add('$resumeCount resume${resumeCount == 1 ? '' : 's'}');
+      }
+      if (letterCount > 0) {
+        parts.add('$letterCount cover letter${letterCount == 1 ? '' : 's'}');
+      }
+      final uploadedSummary = parts.join(' and ');
+      final skipped = resumeSkipped + letterSkipped;
+      if (skipped > 0) {
         _showMessage(
-          'Synced $uploadedCount resumes. $skippedCount newer Drive version${skippedCount == 1 ? '' : 's'} left untouched.',
+          'Synced $uploadedSummary. $skipped newer Drive item${skipped == 1 ? '' : 's'} left untouched.',
         );
       } else {
-        _showMessage('Synced $uploadedCount resumes to Google Drive.');
+        _showMessage('Synced $uploadedSummary to Google Drive.');
       }
     } on Exception {
       if (mounted) {
         _showMessage(
-          'Could not sync resumes to Google Drive right now. Try again.',
+          'Could not sync to Google Drive right now. Try again.',
         );
       }
     } finally {
@@ -220,26 +268,42 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     }
   }
 
-  Future<void> _downloadResume(GoogleDriveResumeSummary item) async {
+  Future<void> _downloadItem(GoogleDriveResumeSummary item) async {
     setState(() => _downloadingIds = {..._downloadingIds, item.id});
     try {
       final repository = context.read<ResumeRepository>();
-      final library = context.read<ResumeLibraryViewModel>();
-      final downloaded =
-          await _service.downloadResume(item.id, item.driveFileId);
-      await repository.upsertResume(
-        downloaded.copyWith(lastSyncedAt: DateTime.now()),
-        scheduleAutoSync: false,
-      );
-      await library.loadResumes();
-      await _loadDriveResumes();
+      final resumeLibrary = context.read<ResumeLibraryViewModel>();
+      final coverLibrary = context.read<CoverLetterLibraryViewModel>();
+
+      if (item.isCoverLetter) {
+        final downloaded = await _service.downloadCoverLetter(
+          item.id,
+          item.driveFileId,
+        );
+        await repository.upsertCoverLetter(
+          downloaded.copyWith(lastSyncedAt: DateTime.now()),
+          scheduleAutoSync: false,
+        );
+        await coverLibrary.loadCoverLetters();
+      } else {
+        final downloaded = await _service.downloadResume(
+          item.id,
+          item.driveFileId,
+        );
+        await repository.upsertResume(
+          downloaded.copyWith(lastSyncedAt: DateTime.now()),
+          scheduleAutoSync: false,
+        );
+        await resumeLibrary.loadResumes();
+      }
+      await _loadDriveItems();
       if (mounted) {
         _showMessage('Downloaded ${item.title}.');
       }
     } on Exception {
       if (mounted) {
         _showMessage(
-          'Could not download this resume from Google Drive. Try again.',
+          'Could not download this item from Google Drive. Try again.',
         );
       }
     } finally {
@@ -250,6 +314,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   }
 
   Future<void> _confirmDeleteFromDrive(GoogleDriveResumeSummary item) async {
+    final label = item.isCoverLetter ? 'cover letter' : 'resume';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -265,7 +330,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Remove'),
+              child: Text('Remove $label'),
             ),
           ],
         );
@@ -280,15 +345,19 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   Future<void> _deleteFromDrive(GoogleDriveResumeSummary item) async {
     setState(() => _deletingIds = {..._deletingIds, item.id});
     try {
-      await _service.deleteResume(item.driveFileId);
-      await _loadDriveResumes();
+      if (item.isCoverLetter) {
+        await _service.deleteCoverLetter(item.driveFileId);
+      } else {
+        await _service.deleteResume(item.driveFileId);
+      }
+      await _loadDriveItems();
       if (mounted) {
         _showMessage('Removed ${item.title} from Google Drive.');
       }
     } on Exception {
       if (mounted) {
         _showMessage(
-          'Could not remove this resume from Google Drive. Try again.',
+          'Could not remove this item from Google Drive. Try again.',
         );
       }
     } finally {
@@ -304,18 +373,18 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _showDriveResumeActions({
+  Future<void> _showDriveItemActions({
     required GoogleDriveResumeSummary item,
-    required _DriveResumeStatus status,
+    required _DriveItemStatus status,
   }) async {
     final canDownload = switch (status) {
-      _DriveResumeStatus.driveOnly => true,
-      _DriveResumeStatus.driveNewer => true,
-      _DriveResumeStatus.localNewer => false,
-      _DriveResumeStatus.synced => false,
+      _DriveItemStatus.driveOnly => true,
+      _DriveItemStatus.driveNewer => true,
+      _DriveItemStatus.localNewer => false,
+      _DriveItemStatus.synced => false,
     };
 
-    final action = await showModalBottomSheet<_DriveResumeAction>(
+    final action = await showModalBottomSheet<_DriveItemAction>(
       context: context,
       backgroundColor: Theme.of(context).cardColor,
       useSafeArea: true,
@@ -354,7 +423,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                 onTap: canDownload
                     ? () => Navigator.of(
                         sheetContext,
-                      ).pop(_DriveResumeAction.download)
+                      ).pop(_DriveItemAction.download)
                     : null,
               ),
               ListTile(
@@ -372,7 +441,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                 ),
                 onTap: () => Navigator.of(
                   sheetContext,
-                ).pop(_DriveResumeAction.delete),
+                ).pop(_DriveItemAction.delete),
               ),
             ],
           ),
@@ -385,16 +454,16 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     }
 
     switch (action) {
-      case _DriveResumeAction.download:
-        await _downloadResume(item);
-      case _DriveResumeAction.delete:
+      case _DriveItemAction.download:
+        await _downloadItem(item);
+      case _DriveItemAction.delete:
         await _confirmDeleteFromDrive(item);
     }
   }
 
-  Widget _buildDriveResumeCard({
+  Widget _buildDriveItemCard({
     required GoogleDriveResumeSummary item,
-    required _DriveResumeStatus status,
+    required _DriveItemStatus status,
     required DateFormat dateFormat,
   }) {
     final isBusy =
@@ -407,10 +476,10 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
           borderRadius: BorderRadius.circular(24),
           onTap: isBusy
               ? null
-              : () => _showDriveResumeActions(item: item, status: status),
+              : () => _showDriveItemActions(item: item, status: status),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-            child: _DriveResumeContent(
+            child: _DriveItemContent(
               summary: item,
               dateFormat: dateFormat,
               showProgress: isBusy,
@@ -425,8 +494,17 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('MMM d, y');
-    final library = context.watch<ResumeLibraryViewModel>();
-    final localById = {for (final item in library.resumes) item.id: item};
+    final resumeLibrary = context.watch<ResumeLibraryViewModel>();
+    final coverLibrary = context.watch<CoverLetterLibraryViewModel>();
+    final localResumeById = {for (final r in resumeLibrary.resumes) r.id: r};
+    final localCoverById = {
+      for (final c in coverLibrary.coverLetters) c.id: c,
+    };
+
+    final driveResumes =
+        _driveItems.where((e) => !e.isCoverLetter).toList(growable: false);
+    final driveCoverLetters =
+        _driveItems.where((e) => e.isCoverLetter).toList(growable: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -442,7 +520,14 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: _isSignedIn ? _loadDriveResumes : _bootstrap,
+              onRefresh: _isSignedIn
+                  ? () async {
+                      await context
+                          .read<CoverLetterLibraryViewModel>()
+                          .loadCoverLetters();
+                      await _loadDriveItems();
+                    }
+                  : _bootstrap,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -455,7 +540,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
-                              'Back up resumes to a ResumeApp folder on your Google Drive. '
+                              'Back up resumes and cover letters to a ResumeApp folder on your Google Drive. '
                               'Only files created by this app are accessible.',
                               style: theme.textTheme.bodyMedium,
                             ),
@@ -646,31 +731,51 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    if (_driveResumes.isEmpty)
+                    if (driveResumes.isEmpty && driveCoverLetters.isEmpty)
                       Card(
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
-                            'No resumes are stored on Drive yet.',
+                            'No resumes or cover letters are stored on Drive yet.',
                             style: theme.textTheme.bodyMedium,
                           ),
                         ),
                       )
                     else ...[
-                      Text(
-                        'Resumes in Google Drive',
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      for (final item in _driveResumes)
-                        _buildDriveResumeCard(
-                          item: item,
-                          status: _statusFor(
-                            localResume: localById[item.id],
-                            driveResume: item,
-                          ),
-                          dateFormat: dateFormat,
+                      if (driveResumes.isNotEmpty) ...[
+                        Text(
+                          'Resumes in Google Drive',
+                          style: theme.textTheme.titleMedium,
                         ),
+                        const SizedBox(height: 12),
+                        for (final item in driveResumes)
+                          _buildDriveItemCard(
+                            item: item,
+                            status: _statusForResume(
+                              localResume: localResumeById[item.id],
+                              driveResume: item,
+                            ),
+                            dateFormat: dateFormat,
+                          ),
+                        if (driveCoverLetters.isNotEmpty)
+                          const SizedBox(height: 8),
+                      ],
+                      if (driveCoverLetters.isNotEmpty) ...[
+                        Text(
+                          'Cover letters in Google Drive',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        for (final item in driveCoverLetters)
+                          _buildDriveItemCard(
+                            item: item,
+                            status: _statusForCoverLetter(
+                              localLetter: localCoverById[item.id],
+                              driveItem: item,
+                            ),
+                            dateFormat: dateFormat,
+                          ),
+                      ],
                     ],
                   ],
                 ],
@@ -679,29 +784,45 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     );
   }
 
-  _DriveResumeStatus _statusFor({
+  _DriveItemStatus _statusForResume({
     required ResumeData? localResume,
     required GoogleDriveResumeSummary driveResume,
   }) {
     if (localResume == null) {
-      return _DriveResumeStatus.driveOnly;
+      return _DriveItemStatus.driveOnly;
     }
     if (driveResume.updatedAt.isAfter(localResume.updatedAt)) {
-      return _DriveResumeStatus.driveNewer;
+      return _DriveItemStatus.driveNewer;
     }
     if (localResume.updatedAt.isAfter(driveResume.updatedAt)) {
-      return _DriveResumeStatus.localNewer;
+      return _DriveItemStatus.localNewer;
     }
-    return _DriveResumeStatus.synced;
+    return _DriveItemStatus.synced;
+  }
+
+  _DriveItemStatus _statusForCoverLetter({
+    required CoverLetterData? localLetter,
+    required GoogleDriveResumeSummary driveItem,
+  }) {
+    if (localLetter == null) {
+      return _DriveItemStatus.driveOnly;
+    }
+    if (driveItem.updatedAt.isAfter(localLetter.updatedAt)) {
+      return _DriveItemStatus.driveNewer;
+    }
+    if (localLetter.updatedAt.isAfter(driveItem.updatedAt)) {
+      return _DriveItemStatus.localNewer;
+    }
+    return _DriveItemStatus.synced;
   }
 }
 
-enum _DriveResumeStatus { driveOnly, driveNewer, localNewer, synced }
+enum _DriveItemStatus { driveOnly, driveNewer, localNewer, synced }
 
-enum _DriveResumeAction { download, delete }
+enum _DriveItemAction { download, delete }
 
-class _DriveResumeContent extends StatelessWidget {
-  const _DriveResumeContent({
+class _DriveItemContent extends StatelessWidget {
+  const _DriveItemContent({
     required this.summary,
     required this.dateFormat,
     required this.showProgress,
@@ -715,7 +836,9 @@ class _DriveResumeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final title = summary.title.trim().isEmpty
-        ? ResumeData.defaultTitle
+        ? (summary.isCoverLetter
+            ? 'Untitled Cover Letter'
+            : ResumeData.defaultTitle)
         : summary.title.trim();
     final metadataStyle = theme.textTheme.bodySmall?.copyWith(
       fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 3,

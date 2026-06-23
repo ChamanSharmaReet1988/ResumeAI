@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "84500423167-kompa94i2uj82k5i1absvl05kee9mpul.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.quickresume",
+            "certificate_hash": "fb9a6cd3512c2195902ce840a31e213953df468c"
+          }
+        },
+        {
           "client_id": "84500423167-5is6rbbks07npmbek8f55qkgknsljttp.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -32,10 +32,6 @@ Future<void> main() async {
   final repository = await ResumeRepository.create();
   final appPreferences = await AppPreferences.open();
   final googleDriveResumeService = GoogleDriveResumeService();
-  repository.configureGoogleDriveAutoSync(
-    appPreferences: appPreferences,
-    service: googleDriveResumeService,
-  );
   if (defaultTargetPlatform == TargetPlatform.iOS) {
     // Ignore the deprecation here intentionally; this is a targeted fallback
     // for real-device product lookup failures coming from the StoreKit2 path.
@@ -45,6 +41,11 @@ Future<void> main() async {
   }
   final premiumPurchaseService = PremiumPurchaseService(
     appPreferences: appPreferences,
+  );
+  repository.configureGoogleDriveAutoSync(
+    appPreferences: appPreferences,
+    service: googleDriveResumeService,
+    hasPremium: () => premiumPurchaseService.isPremium,
   );
   repository.configureICloudAutoSync(
     appPreferences: appPreferences,
