@@ -1,4 +1,4 @@
-/// Google Cloud project: `resumeapp-496318`
+/// Firebase / Google Cloud project: `resumeapp-be8a3`
 ///
 /// iOS OAuth client ID (type: iOS). Android also needs a **Web application**
 /// OAuth client ID for [serverClientId] if `google-services.json` has no

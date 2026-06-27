@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "84500423167-vfbuonqhrk4jus02u38dqhppo0eip9b9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.quickresume",
+            "certificate_hash": "50288d095b1e0395a279c7aaf2a677828656b080"
+          }
+        },
+        {
           "client_id": "84500423167-5is6rbbks07npmbek8f55qkgknsljttp.apps.googleusercontent.com",
           "client_type": 3
         }

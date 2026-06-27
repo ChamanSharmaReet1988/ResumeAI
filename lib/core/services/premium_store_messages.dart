@@ -6,12 +6,16 @@ abstract final class PremiumStoreMessages {
       'We could not complete your purchase. Please try again.';
   static const String restoreFailed =
       'We could not restore your subscription. Please try again.';
-  static const String noSubscriptionToRestore =
-      'No active subscription was found for this Apple ID.';
+  static String get noSubscriptionToRestore =>
+      defaultTargetPlatform == TargetPlatform.android
+      ? 'No active subscription was found for this Google account.'
+      : 'No active subscription was found for this Apple ID.';
   static const String storeUnavailable =
       'Purchases are not available on this device right now.';
-  static const String connectFailed =
-      'We could not connect to the App Store. Please try again later.';
+  static String get connectFailed =>
+      defaultTargetPlatform == TargetPlatform.android
+      ? 'We could not connect to Google Play. Please try again later.'
+      : 'We could not connect to the App Store. Please try again later.';
   static const String verifyFailed =
       'We could not verify your subscription. Please try again.';
   static const String productsUnavailable =

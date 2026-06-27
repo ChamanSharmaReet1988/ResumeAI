@@ -1,10 +1,25 @@
+import 'package:flutter/foundation.dart';
+
 /// Store product identifiers for ResumeAI Pro subscriptions.
+///
+/// The same IDs are configured in App Store Connect (iOS) and Google Play
+/// Console (Android).
 abstract final class PremiumProducts {
   static const String week = 'gp_pro_week';
   static const String month = 'gp_pro_month';
   static const String year = 'gp_pro_year';
 
   static const List<String> subscriptionIds = [week, month, year];
+
+  static String get storeAccountLabel =>
+      defaultTargetPlatform == TargetPlatform.android
+      ? 'Google account'
+      : 'Apple ID';
+
+  static String get backupSyncBenefit =>
+      defaultTargetPlatform == TargetPlatform.android
+      ? 'Google Drive backup'
+      : 'iCloud backup';
 
   static String planTitleFor(String? productId) {
     return switch (productId) {
@@ -33,16 +48,17 @@ abstract final class PremiumProducts {
       return 'Developer Pro override is on. All Pro features are unlocked '
           'for testing on this device.';
     }
+    final backup = backupSyncBenefit;
     return switch (productId) {
       week =>
-        'You have an active weekly subscription. All Pro templates, iCloud '
-            'backup, and premium features are included.',
+        'You have an active weekly subscription. All Pro templates, $backup, '
+            'and premium features are included.',
       month =>
-        'You have an active monthly subscription. All Pro templates, iCloud '
-            'backup, and premium features are included.',
+        'You have an active monthly subscription. All Pro templates, $backup, '
+            'and premium features are included.',
       year =>
-        'You have an active yearly subscription. All Pro templates, iCloud '
-            'backup, and premium features are included.',
+        'You have an active yearly subscription. All Pro templates, $backup, '
+            'and premium features are included.',
       _ =>
         'You have an active ResumeApp Pro subscription. All premium features '
             'are included in your plan.',
@@ -52,18 +68,19 @@ abstract final class PremiumProducts {
   /// Body copy shown when the user tries to buy while another active plan
   /// already exists on the same store account.
   static String restoreInsteadMessage({required String? productId}) {
+    final account = storeAccountLabel;
     return switch (productId) {
       week =>
-        'A weekly subscription was found for this Apple ID. '
+        'A weekly subscription was found for this $account. '
             'Use Restore to activate it on this device instead of buying again.',
       month =>
-        'A monthly subscription was found for this Apple ID. '
+        'A monthly subscription was found for this $account. '
             'Use Restore to activate it on this device instead of buying again.',
       year =>
-        'A yearly subscription was found for this Apple ID. '
+        'A yearly subscription was found for this $account. '
             'Use Restore to activate it on this device instead of buying again.',
       _ =>
-        'An active ResumeApp Pro subscription was found for this Apple ID. '
+        'An active ResumeApp Pro subscription was found for this $account. '
             'Use Restore to activate it on this device instead of buying again.',
     };
   }
@@ -103,9 +120,11 @@ const List<PremiumPlanDefinition> kPremiumPlanDefinitions = [
   ),
 ];
 
-const List<String> kPremiumBenefits = [
+List<String> get kPremiumBenefits => [
   'Unlock every professional and ATS resume layout beyond the free templates',
-  'Back up and sync resumes with iCloud',
+  defaultTargetPlatform == TargetPlatform.android
+      ? 'Back up and sync resumes with Google Drive'
+      : 'Back up and sync resumes with iCloud',
 ];
 
 /// Highlighted on Go Premium — upcoming Pro content shipped in a future release.

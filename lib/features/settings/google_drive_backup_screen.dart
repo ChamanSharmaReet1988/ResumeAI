@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -112,6 +113,11 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       if (mounted) {
         _showMessage('Google sign-in is not available on this device.');
       }
+    } on GoogleSignInException catch (error) {
+      if (!mounted || error.code == GoogleSignInExceptionCode.canceled) {
+        return;
+      }
+      _showMessage(_googleSignInErrorMessage(error));
     } on Exception {
       if (mounted) {
         _showMessage(
@@ -371,6 +377,25 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _googleSignInErrorMessage(GoogleSignInException error) {
+    switch (error.code) {
+      case GoogleSignInExceptionCode.clientConfigurationError:
+      case GoogleSignInExceptionCode.providerConfigurationError:
+        return 'Google Sign-In is not configured for this build. Add your '
+            'debug and release SHA-1 fingerprints in Firebase (see '
+            'android/GOOGLE_SIGN_IN_SETUP.md), re-download '
+            'google-services.json, and rebuild.';
+      case GoogleSignInExceptionCode.uiUnavailable:
+        return 'Could not open the Google sign-in screen. Try again.';
+      case GoogleSignInExceptionCode.interrupted:
+        return 'Google sign-in was interrupted. Try again.';
+      case GoogleSignInExceptionCode.canceled:
+      case GoogleSignInExceptionCode.userMismatch:
+      case GoogleSignInExceptionCode.unknownError:
+        return 'Could not sign in to Google Drive right now. Try again.';
+    }
   }
 
   Future<void> _showDriveItemActions({

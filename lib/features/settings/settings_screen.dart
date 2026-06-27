@@ -293,8 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final backupIcon = isIos
             ? Icons.cloud_done_outlined
             : Icons.cloud_queue_outlined;
-        final showBackupPremiumIcon =
-            isIos && !premium.hasConfirmedPremiumStatus;
+        final showBackupPremiumIcon = !premium.hasConfirmedPremiumStatus;
         final rowLabelStyle = theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w400,
         );

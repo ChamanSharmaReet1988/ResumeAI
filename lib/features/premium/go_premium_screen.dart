@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +28,9 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     'https://sites.google.com/mindplexapp.com/resumeapp/privacy-policy',
   );
   static final Uri _termsOfUseUri = Uri.parse(
-    'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+    defaultTargetPlatform == TargetPlatform.android
+        ? 'https://sites.google.com/mindplexapp.com/resumeapp/terms'
+        : 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
   );
 
   String? _selectedProductId = PremiumProducts.year;
