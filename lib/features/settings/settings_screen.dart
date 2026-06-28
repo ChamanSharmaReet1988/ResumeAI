@@ -43,7 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Uri _buildFeedbackMailtoUri() {
     final subject = Uri.encodeComponent('ResumeApp Feedback');
-    return Uri.parse('mailto:hello@mindplexapp.com?subject=$subject');
+    return Uri.parse('mailto:hello@reetinfotech.com?subject=$subject');
   }
 
   Future<void> _openFeedbackComposer(BuildContext context) async {
