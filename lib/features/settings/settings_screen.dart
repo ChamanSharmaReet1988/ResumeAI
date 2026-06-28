@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -13,6 +14,7 @@ import '../premium/go_premium_screen.dart';
 import '../premium/premium_gate.dart';
 import '../shell/app_shell_scope.dart';
 import '../shared/view_models.dart';
+import '../../core/services/firebase_app_services.dart';
 import '../../core/services/premium_purchase_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -273,10 +275,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  // TEMPORARY: dev screen reachable from release builds for internal testing.
   Future<void> _openDeveloperTools(BuildContext context) async {
-    if (!kDebugMode) {
-      return;
-    }
     await Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const _DeveloperToolsScreen()),
     );
@@ -655,12 +655,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           const Spacer(),
-                          if (kDebugMode) ...[
-                            const SizedBox(height: 20),
-                            _SettingsVersionFooter(
-                              onTap: () => _openDeveloperTools(context),
-                            ),
-                          ],
+                          // TEMPORARY: show version in all builds for internal testing.
+                          const SizedBox(height: 20),
+                          _SettingsVersionFooter(
+                            onTap: () => _openDeveloperTools(context),
+                          ),
                         ],
                       ),
                     ),
@@ -748,52 +747,206 @@ class _SettingsVersionFooterState extends State<_SettingsVersionFooter> {
   }
 }
 
-class _DeveloperToolsScreen extends StatelessWidget {
+class _DeveloperToolsScreen extends StatefulWidget {
   const _DeveloperToolsScreen();
+
+  @override
+  State<_DeveloperToolsScreen> createState() => _DeveloperToolsScreenState();
+}
+
+class _DeveloperToolsScreenState extends State<_DeveloperToolsScreen> {
+  late final Future<PackageInfo?> _packageInfoFuture = _loadPackageInfo();
+
+  Future<PackageInfo?> _loadPackageInfo() async {
+    try {
+      return await PackageInfo.fromPlatform();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _buildModeLabel() {
+    if (kReleaseMode) {
+      return 'Release';
+    }
+    if (kProfileMode) {
+      return 'Profile';
+    }
+    return 'Debug';
+  }
+
+  String _platformLabel() {
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.iOS => 'iOS',
+      TargetPlatform.android => 'Android',
+      TargetPlatform.macOS => 'macOS',
+      TargetPlatform.windows => 'Windows',
+      TargetPlatform.linux => 'Linux',
+      TargetPlatform.fuchsia => 'Fuchsia',
+    };
+  }
+
+  String _firebaseProjectLabel(FirebaseAppServices firebase) {
+    if (!firebase.isEnabled) {
+      return 'Not configured';
+    }
+    try {
+      return Firebase.app().options.projectId;
+    } catch (_) {
+      return 'Unavailable';
+    }
+  }
+
+  String _premiumStatusLabel(PremiumPurchaseService premium) {
+    if (premium.debugPremiumOverrideEnabled) {
+      return 'Pro (dev override)';
+    }
+    if (premium.hasConfirmedPremiumStatus) {
+      return 'Pro (subscribed)';
+    }
+    if (premium.isPremium) {
+      return 'Pro';
+    }
+    return 'Free';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final firebase = context.watch<FirebaseAppServices>();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Developer Tools')),
+      body: SafeArea(
+        child: FutureBuilder<PackageInfo?>(
+          future: _packageInfoFuture,
+          builder: (context, snapshot) {
+            final packageInfo = snapshot.data;
+
+            return Consumer<PremiumPurchaseService>(
+              builder: (context, premium, _) {
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  children: [
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'App info',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _DevInfoRow(
+                              label: 'Version',
+                              value: packageInfo?.version ?? '—',
+                            ),
+                            _DevInfoRow(
+                              label: 'Build',
+                              value: packageInfo?.buildNumber ?? '—',
+                            ),
+                            _DevInfoRow(
+                              label: 'Package',
+                              value: packageInfo?.packageName ?? '—',
+                            ),
+                            _DevInfoRow(
+                              label: 'Platform',
+                              value: _platformLabel(),
+                            ),
+                            _DevInfoRow(
+                              label: 'Build mode',
+                              value: _buildModeLabel(),
+                            ),
+                            _DevInfoRow(
+                              label: 'Premium',
+                              value: _premiumStatusLabel(premium),
+                            ),
+                            _DevInfoRow(
+                              label: 'Firebase',
+                              value: _firebaseProjectLabel(firebase),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: SwitchListTile(
+                        value: premium.isPremium,
+                        onChanged: (value) async {
+                          await premium.setDeveloperProAccessEnabled(value);
+                        },
+                        title: Text(
+                          'Enable Pro feature',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          premium.isPremium
+                              ? 'Pro access is on. Turn off to test the free experience.'
+                              : 'Turn on to enable Pro templates and features for testing.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _DevInfoRow extends StatelessWidget {
+  const _DevInfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Developer Tools')),
-      body: SafeArea(
-        child: Consumer<PremiumPurchaseService>(
-          builder: (context, premium, _) {
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-              children: [
-                Card(
-                  child: SwitchListTile(
-                    value: premium.isPremium,
-                    onChanged: (value) async {
-                      await premium.setDeveloperProAccessEnabled(value);
-                    },
-                    title: Text(
-                      'Enable Pro feature',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: Text(
-                      premium.isPremium
-                          ? 'Pro access is on. Turn off to test the free experience.'
-                          : 'Turn on to enable Pro templates and features for testing.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 92,
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

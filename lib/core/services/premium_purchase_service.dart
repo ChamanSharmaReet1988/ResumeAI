@@ -83,11 +83,11 @@ class PremiumPurchaseService extends ChangeNotifier {
   bool get isPurchasing => _isPurchasing;
   bool get isRestoring => _isRestoring;
   bool get isPremium {
-    if (kDebugMode && _developerProManuallyDisabled) {
+    if (_developerProManuallyDisabled) {
       return false;
     }
     return _appPreferences.isPremium ||
-        (kDebugMode && _appPreferences.debugPremiumOverrideEnabled);
+        _appPreferences.debugPremiumOverrideEnabled;
   }
 
   /// User-facing confirmed Pro state.
@@ -95,21 +95,21 @@ class PremiumPurchaseService extends ChangeNotifier {
   /// This is stricter than [isPremium]: it avoids showing "already Pro" from a
   /// stale local flag before the store has confirmed an active entitlement.
   bool get hasConfirmedPremiumStatus {
-    if (kDebugMode && _developerProManuallyDisabled) {
+    if (_developerProManuallyDisabled) {
       return false;
     }
     if (!_enableStore) {
       return _appPreferences.isPremium ||
-          (kDebugMode && _appPreferences.debugPremiumOverrideEnabled);
+          _appPreferences.debugPremiumOverrideEnabled;
     }
-    if (kDebugMode && _appPreferences.debugPremiumOverrideEnabled) {
+    if (_appPreferences.debugPremiumOverrideEnabled) {
       return true;
     }
     return _appPreferences.isPremium && _activeSubscriptionProductId != null;
   }
 
   bool get debugPremiumOverrideEnabled =>
-      kDebugMode && _appPreferences.debugPremiumOverrideEnabled;
+      _appPreferences.debugPremiumOverrideEnabled;
   String? get statusMessage => _statusMessage;
   String? get errorMessage => _errorMessage;
   List<ProductDetails> get products => _products;
@@ -530,7 +530,7 @@ class PremiumPurchaseService extends ChangeNotifier {
       return;
     }
 
-    if (kDebugMode && _developerProManuallyDisabled) {
+    if (_developerProManuallyDisabled) {
       PremiumDebugLog.log(
         'manual restore: clearing developer forced-free mode',
       );
@@ -822,7 +822,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     String reason = 'apply',
     bool conservativeRevoke = false,
   }) async {
-    if (kDebugMode && _developerProManuallyDisabled) {
+    if (_developerProManuallyDisabled) {
       PremiumDebugLog.log(
         'applyStoreEntitlement($reason): developer Pro toggle OFF → '
         'keeping free access',
@@ -832,7 +832,7 @@ class PremiumPurchaseService extends ChangeNotifier {
       return;
     }
 
-    if (kDebugMode && _appPreferences.debugPremiumOverrideEnabled) {
+    if (_appPreferences.debugPremiumOverrideEnabled) {
       PremiumDebugLog.log(
         'applyStoreEntitlement($reason): debug override ON → '
         'skip revoke; isPremium getter=$isPremium',
@@ -929,10 +929,6 @@ class PremiumPurchaseService extends ChangeNotifier {
 
   /// Developer Tools switch: mirrors [isPremium]; turning off forces free access.
   Future<void> setDeveloperProAccessEnabled(bool enabled) async {
-    if (!kDebugMode) {
-      return;
-    }
-
     PremiumDebugLog.log(
       'setDeveloperProAccessEnabled: $enabled '
       '(was isPremium=$isPremium)',
