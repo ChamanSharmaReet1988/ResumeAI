@@ -27,10 +27,10 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   static const String _appStoreId = '6768385894';
   static final Uri _privacyPolicyUri = Uri.parse(
-    'https://sites.google.com/mindplexapp.com/resumeapp/privacy-policy',
+    'https://reetinfotech.com/apps/resume-builder/privacy-policy/',
   );
   static final Uri _termsOfUseUri = Uri.parse(
-    'https://sites.google.com/mindplexapp.com/resumeapp/terms',
+    'https://reetinfotech.com/apps/resume-builder/terms-of-use/',
   );
   static final Uri _appStoreUri = Uri.parse(
     'https://apps.apple.com/us/app/resume-builder/id6768385894',

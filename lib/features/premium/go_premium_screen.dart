@@ -25,11 +25,11 @@ class GoPremiumScreen extends StatefulWidget {
 
 class _GoPremiumScreenState extends State<GoPremiumScreen> {
   static final Uri _privacyPolicyUri = Uri.parse(
-    'https://sites.google.com/mindplexapp.com/resumeapp/privacy-policy',
+    'https://reetinfotech.com/apps/resume-builder/privacy-policy/',
   );
   static final Uri _termsOfUseUri = Uri.parse(
     defaultTargetPlatform == TargetPlatform.android
-        ? 'https://sites.google.com/mindplexapp.com/resumeapp/terms'
+        ? 'https://reetinfotech.com/apps/resume-builder/terms-of-use/'
         : 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
   );
 
