@@ -4438,6 +4438,10 @@ class LocalAiResumeService {
           ),
         ) ??
         '';
+    final scoreHasPercent = RegExp(r'%\s*$').hasMatch(score.trim());
+    final normalizedScore = scoreHasPercent
+        ? score.trim().replaceFirst(RegExp(r'%\s*$'), '').trim()
+        : score.trim();
     final degree = entry.firstWhere(
       (line) => RegExp(
         r'(bachelor|master|diploma|degree|b\.tech|btech|mba|bsc|msc|ba|bs|phd|certificate|certification|associate)',
@@ -4456,7 +4460,8 @@ class LocalAiResumeService {
       degree: degree,
       startDate: dates.$1,
       endDate: dates.$2,
-      score: score,
+      score: normalizedScore,
+      showScoreAsPercent: scoreHasPercent,
     );
   }
 

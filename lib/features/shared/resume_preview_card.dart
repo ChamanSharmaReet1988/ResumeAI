@@ -2421,7 +2421,11 @@ class _AtsLatexClassicPreview extends StatelessWidget {
         if (resume.includeSkillsInResume &&
             _pdfAlignedSkills(resume).isNotEmpty) ...[
           _latexPreviewSection('Skills', sectionStyle, ink),
-          _latexPreviewSkills(_pdfAlignedSkills(resume), bodyStyle, boldStyle),
+          _atsStructuredSkillsGrid(
+            skills: _pdfAlignedSkills(resume),
+            bodyStyle: bodyStyle,
+            showAllContent: showAllContent,
+          ),
         ],
         for (final section in resume.visibleCustomSections.take(
           showAllContent ? 99 : 2,
@@ -2573,40 +2577,6 @@ List<Widget> _latexPreviewProjects(
         ),
       ),
   ];
-}
-
-Widget _latexPreviewSkills(
-  List<String> skills,
-  TextStyle bodyStyle,
-  TextStyle boldStyle,
-) {
-  final items = skills.take(12).toList();
-  final midpoint = (items.length / 2).ceil();
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      if (items.take(midpoint).isNotEmpty)
-        Text.rich(
-          TextSpan(
-            style: bodyStyle,
-            children: [
-              TextSpan(text: 'Languages: ', style: boldStyle),
-              TextSpan(text: items.take(midpoint).join(', ')),
-            ],
-          ),
-        ),
-      if (items.skip(midpoint).isNotEmpty)
-        Text.rich(
-          TextSpan(
-            style: bodyStyle,
-            children: [
-              TextSpan(text: 'Tools: ', style: boldStyle),
-              TextSpan(text: items.skip(midpoint).join(', ')),
-            ],
-          ),
-        ),
-    ],
-  );
 }
 
 class _AccentStripPreview extends StatelessWidget {
@@ -3404,10 +3374,10 @@ class _AtsModernFlowPreview extends StatelessWidget {
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            if (item.score.trim().isNotEmpty) ...[
+                            if (educationScoreDisplayLabel(item).isNotEmpty) ...[
                               const SizedBox(height: 2),
                               Text(
-                                item.score.trim(),
+                                educationScoreDisplayLabel(item),
                                 style: bodyStyle,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,

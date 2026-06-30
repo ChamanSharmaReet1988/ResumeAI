@@ -3230,10 +3230,10 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (e.score.trim().isNotEmpty) ...[
+              if (educationScoreDisplayLabel(e).isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
-                  e.score.trim(),
+                  educationScoreDisplayLabel(e),
                   style: body,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

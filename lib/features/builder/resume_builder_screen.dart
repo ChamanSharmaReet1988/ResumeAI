@@ -2166,11 +2166,23 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ),
                         ),
                         _SyncTextField(
-                          label: 'Marks / score (%)',
+                          label: 'Marks / score',
                           value: item.score,
-                          hintText: '8.6 CGPA, 92%, or 780/800',
+                          hintText: '8.6 CGPA, 92, or 780/800',
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
+                          ),
+                          suffixIcon: _EducationScorePercentToggle(
+                            active: item.showScoreAsPercent,
+                            onPressed: viewModel.isBusy
+                                ? null
+                                : () => viewModel.updateEducation(
+                                    index,
+                                    (current) => current.copyWith(
+                                      showScoreAsPercent:
+                                          !current.showScoreAsPercent,
+                                    ),
+                                  ),
                           ),
                           onChanged: (value) => viewModel.updateEducation(
                             index,
@@ -3596,6 +3608,62 @@ class _BulletField extends StatelessWidget {
   }
 }
 
+class _EducationScorePercentToggle extends StatelessWidget {
+  const _EducationScorePercentToggle({
+    required this.active,
+    required this.onPressed,
+  });
+
+  final bool active;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    const toggleSize = 24.0;
+    const borderRadius = 4.0;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 19),
+      child: Material(
+        color: active
+            ? primary.withValues(alpha: 0.15)
+            : theme.colorScheme.outline.withValues(alpha: 0.1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(borderRadius),
+          splashFactory: NoSplash.splashFactory,
+          highlightColor: primary.withValues(alpha: 0.08),
+          child: Tooltip(
+            message: active
+                ? 'Showing % on resume — tap to hide'
+                : 'Tap to show % on resume',
+            child: SizedBox.square(
+              dimension: toggleSize,
+              child: Center(
+                child: Text(
+                  '%',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    height: 1,
+                    color: active ? primary : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SyncTextField extends StatefulWidget {
   const _SyncTextField({
     super.key,
@@ -3611,6 +3679,7 @@ class _SyncTextField extends StatefulWidget {
     this.onSubmitted,
     this.fullWidth = false,
     this.textCapitalization = TextCapitalization.none,
+    this.suffixIcon,
   });
 
   final String label;
@@ -3625,6 +3694,7 @@ class _SyncTextField extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final bool fullWidth;
   final TextCapitalization textCapitalization;
+  final Widget? suffixIcon;
 
   @override
   State<_SyncTextField> createState() => _SyncTextFieldState();
@@ -3693,6 +3763,16 @@ class _SyncTextFieldState extends State<_SyncTextField> {
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hintText,
+        suffixIcon: widget.suffixIcon,
+        suffixIconConstraints: widget.suffixIcon != null
+            ? const BoxConstraints(
+                minWidth: 43,
+                minHeight: 24,
+                maxWidth: 44,
+                maxHeight: 24,
+              )
+            : null,
+        isDense: widget.suffixIcon != null,
       ),
     );
   }

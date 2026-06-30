@@ -1805,10 +1805,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
             style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
           ),
         ],
-        if (item.score.trim().isNotEmpty) ...[
+        if (educationScoreDisplayLabel(item).isNotEmpty) ...[
           pw.SizedBox(height: 3),
           pw.Text(
-            item.score.trim(),
+            educationScoreDisplayLabel(item),
             style: pw.TextStyle(color: mutedColor, fontSize: bodyPt - 0.2),
           ),
         ],

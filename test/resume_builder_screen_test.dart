@@ -652,4 +652,37 @@ void main() {
     expect(repository.savedResumes, isNotEmpty);
     expect(repository.savedResumes.last.fullName, 'Auto Saved Name');
   });
+
+  testWidgets('education score % toggle updates resume JSON', (tester) async {
+    viewModel.setStep(2);
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        education: const [
+          EducationItem(
+            institution: 'Alpha University',
+            degree: 'B.Tech',
+            startDate: '2020',
+            endDate: '2024',
+            score: '92',
+          ),
+        ],
+      ),
+    );
+
+    await pumpBuilder(tester);
+
+    expect(viewModel.resume.education.first.showScoreAsPercent, isFalse);
+
+    await tester.tap(find.text('%'));
+    await tester.pumpAndSettle();
+
+    expect(viewModel.resume.education.first.showScoreAsPercent, isTrue);
+    expect(educationScoreDisplayLabel(viewModel.resume.education.first), '92%');
+
+    await tester.tap(find.text('%'));
+    await tester.pumpAndSettle();
+
+    expect(viewModel.resume.education.first.showScoreAsPercent, isFalse);
+    expect(educationScoreDisplayLabel(viewModel.resume.education.first), '92');
+  });
 }

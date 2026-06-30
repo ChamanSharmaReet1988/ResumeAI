@@ -756,6 +756,7 @@ class EducationItem {
     required this.startDate,
     required this.endDate,
     this.score = '',
+    this.showScoreAsPercent = false,
   });
 
   const EducationItem.empty()
@@ -763,15 +764,32 @@ class EducationItem {
       degree = '',
       startDate = '',
       endDate = '',
-      score = '';
+      score = '',
+      showScoreAsPercent = false;
 
   factory EducationItem.fromJson(Map<String, dynamic> json) {
+    final rawScore = json['score'] as String? ?? '';
+    final showFromJson = json['showScoreAsPercent'] as bool?;
+    final bool showScoreAsPercent;
+    final String score;
+    if (showFromJson != null) {
+      showScoreAsPercent = showFromJson;
+      score = rawScore;
+    } else if (rawScore.trim().endsWith('%')) {
+      showScoreAsPercent = true;
+      score = rawScore.trim().replaceFirst(RegExp(r'%\s*$'), '').trim();
+    } else {
+      showScoreAsPercent = false;
+      score = rawScore;
+    }
+
     return EducationItem(
       institution: json['institution'] as String? ?? '',
       degree: json['degree'] as String? ?? '',
       startDate: json['startDate'] as String? ?? '',
       endDate: json['endDate'] as String? ?? (json['year'] as String? ?? ''),
-      score: json['score'] as String? ?? '',
+      score: score,
+      showScoreAsPercent: showScoreAsPercent,
     );
   }
 
@@ -780,6 +798,7 @@ class EducationItem {
   final String startDate;
   final String endDate;
   final String score;
+  final bool showScoreAsPercent;
 
   bool get isBlank =>
       institution.trim().isEmpty &&
@@ -794,6 +813,7 @@ class EducationItem {
     String? startDate,
     String? endDate,
     String? score,
+    bool? showScoreAsPercent,
   }) {
     return EducationItem(
       institution: institution ?? this.institution,
@@ -801,6 +821,7 @@ class EducationItem {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       score: score ?? this.score,
+      showScoreAsPercent: showScoreAsPercent ?? this.showScoreAsPercent,
     );
   }
 
@@ -811,8 +832,21 @@ class EducationItem {
       'startDate': startDate,
       'endDate': endDate,
       'score': score,
+      'showScoreAsPercent': showScoreAsPercent,
     };
   }
+}
+
+/// Resume label for an education score, honoring the % display toggle.
+String educationScoreDisplayLabel(EducationItem item) {
+  final raw = item.score.trim();
+  if (raw.isEmpty) return '';
+  final base = raw.replaceAll(RegExp(r'%\s*$'), '').trim();
+  if (base.isEmpty) return '';
+  if (item.showScoreAsPercent) {
+    return '$base%';
+  }
+  return base;
 }
 
 /// `2014 - 2018`, or a single year if only one side is set (matches template card).

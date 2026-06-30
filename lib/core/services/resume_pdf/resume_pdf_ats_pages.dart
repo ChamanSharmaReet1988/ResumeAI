@@ -949,8 +949,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     '${range.isNotEmpty ? '  |  Graduated: $range' : ''}';
                 w.add(pw.SizedBox(height: 2));
                 w.add(pw.Text(line, style: bodyStyle));
-                if (item.score.trim().isNotEmpty) {
-                  w.add(pw.Text(item.score, style: bodyStyle));
+                final scoreLabel = educationScoreDisplayLabel(item);
+                if (scoreLabel.isNotEmpty) {
+                  w.add(pw.Text(scoreLabel, style: bodyStyle));
                 }
                 w.add(pw.SizedBox(height: 8));
               }
@@ -1127,10 +1128,13 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 item.institution.ifEmpty('Institution'),
                 style: italicStyle,
               ),
-              if (item.score.trim().isNotEmpty)
+              if (educationScoreDisplayLabel(item).isNotEmpty)
                 pw.Align(
                   alignment: pw.Alignment.centerRight,
-                  child: pw.Text(item.score.trim(), style: bodyStyle),
+                  child: pw.Text(
+                    educationScoreDisplayLabel(item),
+                    style: bodyStyle,
+                  ),
                 ),
             ],
           ),
@@ -1220,37 +1224,40 @@ extension _ResumePdfAtsPages on ResumePdfService {
 
   pw.Widget _atsLatexSkillsBlock(
     List<String> skills, {
+    required GaramondPdfFonts garamond,
     required pw.TextStyle bodyStyle,
-    required pw.TextStyle labelStyle,
     required Set<String> highlightedSkills,
     required PdfColor highlightColor,
+    required double bodyPt,
   }) {
     if (skills.isEmpty) {
       return pw.Text('Add targeted skills.', style: bodyStyle);
     }
-    final midpoint = (skills.length / 2).ceil();
-    final groups = <String, List<String>>{
-      'Languages': skills.take(midpoint).toList(),
-      'Tools': skills.skip(midpoint).toList(),
-    };
+    final skillsBodyStyle = garamondPdfTextStyle(
+      garamond,
+      ResumeTypography.atsStructuredBodyWeight,
+      fontSize: _atsPdfSkillsBodyPt(bodyPt),
+      color: PdfColors.black,
+      lineSpacing: bodyPt * 0.1,
+    );
+    if (highlightedSkills.isNotEmpty) {
+      return _twoColumnBulletListWithHighlights(
+        skills,
+        highlightedSkills,
+        highlightColor,
+        fontSize: _atsPdfSkillsBodyPt(bodyPt),
+        bulletStyle: skillsBodyStyle,
+      );
+    }
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        for (final entry in groups.entries)
-          if (entry.value.isNotEmpty)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 2),
-              child: pw.RichText(
-                text: pw.TextSpan(
-                  style: bodyStyle,
-                  children: [
-                    pw.TextSpan(text: '${entry.key}: ', style: labelStyle),
-                    pw.TextSpan(text: entry.value.join(', ')),
-                  ],
-                ),
-              ),
-            ),
-      ],
+      children: _twoColumnBulletRows(
+        skills,
+        columnGap: 16,
+        itemBottom: 3,
+        fontSize: _atsPdfSkillsBodyPt(bodyPt),
+        bulletStyle: skillsBodyStyle,
+      ),
     );
   }
 
@@ -1415,10 +1422,11 @@ extension _ResumePdfAtsPages on ResumePdfService {
             w.add(
               _atsLatexSkillsBlock(
                 _skillsForDisplay(resume),
+                garamond: garamond,
                 bodyStyle: bodyStyle,
-                labelStyle: subtitleStyle,
                 highlightedSkills: highlightedSkills,
                 highlightColor: highlightColor,
+                bodyPt: bodyPt,
               ),
             );
           }
