@@ -4059,6 +4059,17 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
     final extraTop = _scaledPt(
       ResumeTypography.atsProfessionalBlueExtraTopPaddingPt,
     );
+
+    Widget sectionTitleWithRule(String title) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: sectionTitleStyle),
+        const SizedBox(height: 3),
+        Container(height: 1, color: accent.withValues(alpha: 0.55)),
+        const SizedBox(height: 4),
+      ],
+    );
+
     final pageContent = Padding(
       padding: EdgeInsets.fromLTRB(
         horizontalInset,
@@ -4146,8 +4157,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
-          Text('Professional Experience', style: sectionTitleStyle),
-          const SizedBox(height: 4),
+          sectionTitleWithRule('Professional Experience'),
           if (works.isEmpty)
             Text('Add roles.', style: body)
           else
@@ -4182,8 +4192,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
             ],
           if (detailed && edu.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text('Education', style: sectionTitleStyle),
-            const SizedBox(height: 4),
+            sectionTitleWithRule('Education'),
             for (final e in edu.take(1)) ...[
               Text(
                 e.degree.trim(),
@@ -4200,8 +4209,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
             ],
           ],
           const SizedBox(height: 4),
-          Text('Areas of Expertise', style: sectionTitleStyle),
-          const SizedBox(height: 4),
+          sectionTitleWithRule('Areas of Expertise'),
           if (skills.isEmpty)
             Text('Add skills.', style: body)
           else
@@ -4249,8 +4257,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
               resume.includeProjectsInResume &&
               projects.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text('Projects', style: sectionTitleStyle),
-            const SizedBox(height: 4),
+            sectionTitleWithRule('Projects'),
             for (final p in projects.take(detailed ? 3 : 1)) ...[
               Text(
                 p.title.trim(),

@@ -2021,11 +2021,17 @@ extension _ResumePdfAtsPages on ResumePdfService {
 
   pw.Widget _atsProfessionalBlueSectionTitle(
     String title,
-    pw.TextStyle sectionTitleStyle,
-  ) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 6),
-      child: pw.Text(title, style: sectionTitleStyle),
+    pw.TextStyle sectionTitleStyle, {
+    required PdfColor ruleColor,
+  }) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        pw.Text(title, style: sectionTitleStyle),
+        pw.SizedBox(height: 4),
+        _atsSolidRule(color: ruleColor),
+        pw.SizedBox(height: 6),
+      ],
     );
   }
 
@@ -2155,6 +2161,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               _atsProfessionalBlueSectionTitle(
                 'Professional Experience',
                 sectionTitleStyle,
+                ruleColor: accent,
               ),
             );
             final items = resume.visibleWorkExperiences;
@@ -2205,7 +2212,11 @@ extension _ResumePdfAtsPages on ResumePdfService {
 
           if (resume.includeEducationInResume) {
             w.add(
-              _atsProfessionalBlueSectionTitle('Education', sectionTitleStyle),
+              _atsProfessionalBlueSectionTitle(
+                'Education',
+                sectionTitleStyle,
+                ruleColor: accent,
+              ),
             );
             final edu = resume.visibleEducation;
             if (edu.isEmpty) {
@@ -2230,6 +2241,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               _atsProfessionalBlueSectionTitle(
                 'Areas of Expertise',
                 sectionTitleStyle,
+                ruleColor: accent,
               ),
             );
             if (skills.isEmpty) {
@@ -2312,7 +2324,11 @@ extension _ResumePdfAtsPages on ResumePdfService {
           if (resume.includeProjectsInResume &&
               resume.visibleProjects.isNotEmpty) {
             w.add(
-              _atsProfessionalBlueSectionTitle('Projects', sectionTitleStyle),
+              _atsProfessionalBlueSectionTitle(
+                'Projects',
+                sectionTitleStyle,
+                ruleColor: accent,
+              ),
             );
             for (final p in resume.visibleProjects) {
               w.add(pw.Text(p.title.ifEmpty('Project'), style: subtitleStyle));
@@ -2339,6 +2355,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               _atsProfessionalBlueSectionTitle(
                 section.title.ifEmpty('Additional'),
                 sectionTitleStyle,
+                ruleColor: accent,
               ),
             );
             for (final widget in _pwCustomSectionBodyWidgets(

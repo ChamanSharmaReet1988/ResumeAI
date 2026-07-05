@@ -3801,6 +3801,16 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
     final works = resume.visibleWorkExperiences.take(4).toList();
     final projects = resume.visibleProjects.take(2).toList();
 
+    Widget sectionTitleWithRule(String title) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: sectionTitleStyle),
+        const SizedBox(height: 4),
+        Container(height: 1, color: accent.withValues(alpha: 0.55)),
+        const SizedBox(height: 6),
+      ],
+    );
+
     return ColoredBox(
       color: Colors.white,
       child: Padding(
@@ -3902,8 +3912,7 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
               ),
               if (works.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                Text('Professional Experience', style: sectionTitleStyle),
-                const SizedBox(height: 6),
+                sectionTitleWithRule('Professional Experience'),
                 for (final item in works)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
@@ -3945,8 +3954,7 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
               ],
               if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                Text('Projects', style: sectionTitleStyle),
-                const SizedBox(height: 6),
+                sectionTitleWithRule('Projects'),
                 for (final project in projects)
                   ..._atsStructuredProjectBlocks(
                     project: project,
