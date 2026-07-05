@@ -130,7 +130,13 @@ Future<_PdfFontSlots> _loadPdfFonts(ResumeTextFont font) async {
         boldItalic: bold,
       );
     case ResumeTextFont.arial:
-      final f = await loadPdfTtf('assets/fonts/arimo/Arimo-Variable.ttf');
-      return _PdfFontSlots(base: f, bold: f, italic: f, boldItalic: f);
+      final upright = await loadPdfTtf('assets/fonts/arimo/Arimo-Variable.ttf');
+      final italic = await loadPdfTtf('assets/fonts/arimo/Arimo-Italic.ttf');
+      return _PdfFontSlots(
+        base: upright,
+        bold: upright,
+        italic: italic,
+        boldItalic: italic,
+      );
   }
 }

@@ -102,6 +102,7 @@ flutter:
     - assets/fonts/nunito/Nunito-SemiBold.ttf
     - assets/fonts/nunito/Nunito-ExtraBold.ttf
     - assets/fonts/arimo/Arimo-Variable.ttf
+    - assets/fonts/arimo/Arimo-Italic.ttf
     - assets/fonts/worksans/WorkSans-Variable.ttf
     - assets/fonts/inter/Inter-Thin.ttf
     - assets/fonts/inter/Inter-ExtraLight.ttf
@@ -233,6 +234,9 @@ flutter:
     - family: Arimo
       fonts:
         - asset: assets/fonts/arimo/Arimo-Variable.ttf
+        - asset: assets/fonts/arimo/Arimo-Italic.ttf
+          weight: 400
+          style: italic
     - family: Work Sans
       fonts:
         - asset: assets/fonts/worksans/WorkSans-Variable.ttf

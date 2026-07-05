@@ -3250,10 +3250,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
           const SizedBox(height: 7),
           Text('Skills', style: sectionTitleStyle),
           const SizedBox(height: 5),
-          _MiniBulletColumn(
-            items: skills.take(4).toList(),
-            textStyle: skillsBody,
-          ),
+          _modernFlowSkillsTwoColumn(skills.take(8).toList(), skillsBody),
           const SizedBox(height: 6),
           Container(
             height: 1,
@@ -3372,6 +3369,31 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
         alignment: Alignment.topCenter,
         child: SizedBox(width: 240, child: pageContent),
       ),
+    );
+  }
+
+  Widget _modernFlowSkillsTwoColumn(List<String> skills, TextStyle body) {
+    if (skills.isEmpty) {
+      return Text('Add skills.', style: body);
+    }
+    final midpoint = (skills.length / 2).ceil();
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _MiniBulletColumn(
+            items: skills.take(midpoint).toList(),
+            textStyle: body,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _MiniBulletColumn(
+            items: skills.skip(midpoint).toList(),
+            textStyle: body,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -3702,11 +3724,13 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
     int weight = ResumeTypography.atsStructuredBodyWeight,
     double? height,
     Color? color,
+    FontStyle fontStyle = FontStyle.normal,
   }) => ResumeTypography.arialPreviewStyle(
     weight: weight,
     fontSize: fontSize,
     color: color ?? ResumeTypography.atsStructuredBodyTextColor,
     height: height ?? ResumeTypography.atsCenterClassicBodyLineHeight,
+    fontStyle: fontStyle,
   );
 
   @override
@@ -3729,6 +3753,13 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       color: accent,
       height: ResumeTypography.textLineHeight,
+    );
+    final highlightStyle = _arialBody(
+      _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
+      weight: ResumeTypography.atsStructuredSubtitleWeight,
+      color: accent,
+      height: ResumeTypography.textLineHeight,
+      fontStyle: FontStyle.italic,
     );
     final sectionTitleStyle = _arialBody(
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
@@ -3822,7 +3853,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
                   Expanded(
                     child: Text(
                       w.company.trim(),
-                      style: sectionSubtitleStyle,
+                      style: highlightStyle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -3863,22 +3894,27 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
             for (final p in projects.take(detailed ? 3 : 1)) ...[
               Text(
                 p.title.trim(),
-                style: sectionSubtitleStyle,
+                style: highlightStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (p.overview.trim().isNotEmpty) ...[
+              if (p.subtitle.trim().isNotEmpty || p.overview.trim().isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
-                  p.overview.trim(),
-                  style: body,
+                  p.subtitle.trim().isNotEmpty
+                      ? p.subtitle.trim()
+                      : p.overview.trim(),
+                  style: highlightStyle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
               if (_templateArtProjectBullets(p).isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.only(
+                    left: ResumeTypography.atsCenterClassicBulletIndentPt,
+                    top: 2,
+                  ),
                   child: Text(
                     '• ${_templateArtProjectBullets(p).first}',
                     style: body,
@@ -3925,13 +3961,13 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
             for (final e in edu.take(1)) ...[
               Text(
                 e.degree.trim(),
-                style: sectionSubtitleStyle,
+                style: highlightStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
                 '${e.institution.trim()} (${educationDateRangeLabel(e.startDate, e.endDate)})',
-                style: body,
+                style: highlightStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

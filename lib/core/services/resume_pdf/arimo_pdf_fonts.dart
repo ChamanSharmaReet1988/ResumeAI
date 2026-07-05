@@ -7,13 +7,19 @@ import 'resume_pdf_theme.dart';
 
 /// Embedded Arimo (Arial metric match) for PDF export.
 class ArimoPdfFonts {
-  ArimoPdfFonts._({required pw.Font variable}) : _variable = variable;
+  ArimoPdfFonts._({required pw.Font variable, required pw.Font italic})
+    : _variable = variable,
+      _italic = italic;
 
   final pw.Font _variable;
+  final pw.Font _italic;
 
-  pw.Font fontFor(int weight, {bool useItalic = false}) => _variable;
+  pw.Font fontFor(int weight, {bool useItalic = false}) =>
+      useItalic ? _italic : _variable;
 
   pw.Font get w400 => _variable;
+
+  pw.Font get italic => _italic;
 }
 
 pw.TextStyle arimoPdfTextStyle(
@@ -30,10 +36,10 @@ pw.TextStyle arimoPdfTextStyle(
     inherit: false,
     color: color ?? PdfColors.black,
     font: font,
-    fontNormal: font,
-    fontBold: font,
-    fontItalic: font,
-    fontBoldItalic: font,
+    fontNormal: fonts.w400,
+    fontBold: fonts.w400,
+    fontItalic: fonts.italic,
+    fontBoldItalic: fonts.italic,
     fontSize: fontSize ?? ResumeTypography.bodyPt,
     fontWeight: pw.FontWeight.normal,
     fontStyle: useItalic ? pw.FontStyle.italic : pw.FontStyle.normal,
@@ -81,7 +87,8 @@ pw.TextStyle atsProfessionalBlueBodyPdfTextStyle(
 
 Future<ArimoPdfFonts> loadArimoPdfFonts() async {
   final variable = await loadPdfTtf('assets/fonts/arimo/Arimo-Variable.ttf');
-  return ArimoPdfFonts._(variable: variable);
+  final italic = await loadPdfTtf('assets/fonts/arimo/Arimo-Italic.ttf');
+  return ArimoPdfFonts._(variable: variable, italic: italic);
 }
 
 Future<pw.ThemeData> resumePdfThemeForArimo(
@@ -105,8 +112,8 @@ Future<pw.ThemeData> resumePdfThemeForArimo(
   final theme = pw.ThemeData.withFont(
     base: fonts.w400,
     bold: fonts.w400,
-    italic: fonts.w400,
-    boldItalic: fonts.w400,
+    italic: fonts.italic,
+    boldItalic: fonts.italic,
   ).copyWith(
     defaultTextStyle: bodyStyle,
     bulletStyle: bodyStyle,

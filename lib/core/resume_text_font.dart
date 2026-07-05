@@ -1,6 +1,6 @@
 import 'dart:ui' show Color;
 
-import 'package:flutter/painting.dart' show TextStyle;
+import 'package:flutter/painting.dart' show FontStyle, TextStyle;
 
 import 'resume_font_weight.dart';
 
@@ -88,6 +88,9 @@ abstract final class ResumeTypography {
 
   /// Center Classic ATS (template 9) body paragraph line height (preview + PDF).
   static const double atsCenterClassicBodyLineHeight = 1.2;
+
+  /// Left inset for experience/project bullets under title + company lines.
+  static const double atsCenterClassicBulletIndentPt = 12;
 
   static double atsCenterClassicBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (atsCenterClassicBodyLineHeight - 1);
@@ -293,15 +296,21 @@ abstract final class ResumeTypography {
     Color? color,
     double? height,
     double? letterSpacing,
-  }) =>
-      TextStyle(
-        fontFamily: ResumeTextFont.arial.flutterFontFamily,
-        fontWeight: ResumeFontWeight.toFlutter(weight),
-        fontSize: fontSize,
-        color: color,
-        height: height,
-        letterSpacing: letterSpacing,
-      );
+    FontStyle fontStyle = FontStyle.normal,
+  }) {
+    // Arimo ships a static Regular Italic face only; w500+italic would not match.
+    final resolvedWeight =
+        fontStyle == FontStyle.italic ? ResumeFontWeight.w400 : weight;
+    return TextStyle(
+      fontFamily: ResumeTextFont.arial.flutterFontFamily,
+      fontWeight: ResumeFontWeight.toFlutter(resolvedWeight),
+      fontStyle: fontStyle,
+      fontSize: fontSize,
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+  }
 
   /// Inter text style for in-app resume previews.
   static TextStyle interPreviewStyle({

@@ -3400,16 +3400,11 @@ class _AtsModernFlowPreview extends StatelessWidget {
                           ),
                         ]
                       : [
-                          for (final skill in skills)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 3),
-                              child: Text(
-                                skill,
-                                style: bodyStyle,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
+                          _atsStructuredSkillsGrid(
+                            skills: skills,
+                            bodyStyle: bodyStyle,
+                            showAllContent: false,
+                          ),
                         ],
                 ),
               if (resume.includeWorkInResume)
@@ -3519,6 +3514,13 @@ class _AtsCenterClassicPreview extends StatelessWidget {
       color: accent,
       height: ResumeTypography.textLineHeight,
     );
+    final highlightStyle = ResumeTypography.arialPreviewStyle(
+      weight: ResumeTypography.atsStructuredSubtitleWeight,
+      fontSize: ResumeTypography.atsStructuredSubtitlePt,
+      color: accent,
+      height: ResumeTypography.textLineHeight,
+      fontStyle: FontStyle.italic,
+    );
     final tagline = [
       if (resume.jobTitle.trim().isNotEmpty) resume.jobTitle.trim(),
       ..._pdfAlignedSkills(resume).take(3),
@@ -3617,7 +3619,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 item.company.trim().ifBlank('Company'),
-                                style: sectionSubtitleStyle,
+                                style: highlightStyle,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -3641,6 +3643,20 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        for (final bullet in _workBulletLines(item).take(3))
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: ResumeTypography
+                                  .atsCenterClassicBulletIndentPt,
+                              top: 2,
+                            ),
+                            child: Text(
+                              '• ${bullet.trim()}',
+                              style: bodyStyle,
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -3665,15 +3681,18 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                 for (final project in projects) ...[
                   Text(
                     project.title.trim().ifBlank('Course'),
-                    style: sectionSubtitleStyle,
+                    style: highlightStyle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (project.overview.trim().isNotEmpty) ...[
+                  if (project.subtitle.trim().isNotEmpty ||
+                      project.overview.trim().isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
-                      project.overview.trim(),
-                      style: bodyStyle,
+                      project.subtitle.trim().isNotEmpty
+                          ? project.subtitle.trim()
+                          : project.overview.trim(),
+                      style: highlightStyle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -3683,7 +3702,10 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                           .where((b) => b.trim().isNotEmpty)
                           .take(3))
                     Padding(
-                      padding: const EdgeInsets.only(top: 2),
+                      padding: const EdgeInsets.only(
+                        left: ResumeTypography.atsCenterClassicBulletIndentPt,
+                        top: 2,
+                      ),
                       child: Text(
                         '• ${bullet.trim()}',
                         style: bodyStyle,
@@ -3709,7 +3731,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                   for (final item in education) ...[
                     Text(
                       item.degree.trim().ifBlank('Degree'),
-                      style: sectionSubtitleStyle,
+                      style: highlightStyle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -3717,7 +3739,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                     Text(
                       '${item.institution.trim().ifBlank('School')}'
                       '${educationDateRangeLabel(item.startDate, item.endDate).isNotEmpty ? ' (${educationDateRangeLabel(item.startDate, item.endDate)})' : ''}',
-                      style: bodyStyle,
+                      style: highlightStyle,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
