@@ -9,6 +9,7 @@ import 'premium_debug_log.dart';
 import 'premium_entitlement_resolver.dart';
 import 'premium_products.dart';
 import 'premium_store_messages.dart';
+import 'premium_store_product_selection.dart';
 
 /// Loads subscription products, handles purchases, and persists premium access.
 class PremiumPurchaseService extends ChangeNotifier {
@@ -61,6 +62,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   String? _statusMessage;
   String? _errorMessage;
   List<ProductDetails> _products = const [];
+  List<ProductDetails> _allStoreProducts = const [];
   String? _activeSubscriptionProductId;
 
   /// Debug-only: user turned Pro off in Developer Tools; ignore store until re-enabled.
@@ -157,6 +159,20 @@ class PremiumPurchaseService extends ChangeNotifier {
     }
     return null;
   }
+
+  /// Recurring paywall price for [productId] (handles Play trial/intro offers).
+  String? displayPriceFor(String productId) =>
+      PremiumStoreProductSelection.displayPriceFor(
+        productId,
+        _allStoreProducts,
+      );
+
+  /// Numeric recurring price for savings labels.
+  double? displayRawPriceFor(String productId) =>
+      PremiumStoreProductSelection.displayRawPriceFor(
+        productId,
+        _allStoreProducts,
+      );
 
   void _ensurePurchaseStreamListener() {
     if (!_enableStore ||
@@ -434,10 +450,17 @@ class PremiumPurchaseService extends ChangeNotifier {
     if (resolved.error != null) {
       _notFoundProductIds = const [];
       _errorMessage = _friendlyProductLoadError(resolved.error!.message);
+      _allStoreProducts = const [];
       _products = const [];
     } else {
       _notFoundProductIds = resolved.notFoundIDs;
-      _products = _sortProducts(resolved.productDetails);
+      _allStoreProducts = resolved.productDetails;
+      _products = _sortProducts(
+        PremiumStoreProductSelection.collapseSubscriptionProducts(
+          _allStoreProducts,
+        ),
+      );
+      PremiumStoreProductSelection.logResolvedPrices(_allStoreProducts);
       if (_products.isEmpty) {
         if (_notFoundProductIds.isNotEmpty) {
           if (kDebugMode) {
@@ -461,7 +484,14 @@ class PremiumPurchaseService extends ChangeNotifier {
 
     if (kDebugMode) {
       debugPrint(
-        'Premium products loaded: ${_products.map((p) => '${p.id}=${p.price}').join(', ')}',
+        'Premium products loaded: '
+        '${PremiumProducts.subscriptionIds.map((id) {
+          final display = PremiumStoreProductSelection.displayPriceFor(
+            id,
+            _allStoreProducts,
+          );
+          return '$id=${display ?? "missing"}';
+        }).join(', ')}',
       );
       if (_errorMessage == null && _notFoundProductIds.isNotEmpty) {
         debugPrint('Premium products not found: $_notFoundProductIds');

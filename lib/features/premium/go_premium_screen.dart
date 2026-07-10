@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/services/analytics_events.dart';
@@ -383,20 +382,19 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                                 for (final plan in kPremiumPlanDefinitions)
                                   _PlanCard(
                                     definition: plan,
-                                    product: premium.productFor(plan.productId),
+                                    priceLabel:
+                                        premium.displayPriceFor(plan.productId),
                                     savingsLabel:
                                         plan.productId == PremiumProducts.year
                                         ? premiumYearlySavingsLabel(
                                             yearlyPrice: premium
-                                                .productFor(
+                                                .displayRawPriceFor(
                                                   PremiumProducts.year,
-                                                )
-                                                ?.rawPrice,
+                                                ),
                                             monthlyPrice: premium
-                                                .productFor(
+                                                .displayRawPriceFor(
                                                   PremiumProducts.month,
-                                                )
-                                                ?.rawPrice,
+                                                ),
                                           )
                                         : null,
                                     selected:
@@ -581,14 +579,14 @@ class _BenefitRow extends StatelessWidget {
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
     required this.definition,
-    required this.product,
+    required this.priceLabel,
     this.savingsLabel,
     required this.selected,
     required this.onTap,
   });
 
   final PremiumPlanDefinition definition;
-  final ProductDetails? product;
+  final String? priceLabel;
   final String? savingsLabel;
   final bool selected;
   final VoidCallback? onTap;
@@ -598,7 +596,7 @@ class _PlanCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = colorScheme.brightness == Brightness.dark;
-    final priceLabel = product?.price ?? '—';
+    final resolvedPriceLabel = priceLabel ?? '—';
 
     return Padding(
       padding: EdgeInsets.only(bottom: savingsLabel != null ? 6 : 10),
@@ -652,7 +650,7 @@ class _PlanCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      priceLabel,
+                      resolvedPriceLabel,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: colorScheme.primary,
