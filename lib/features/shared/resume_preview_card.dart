@@ -2390,29 +2390,19 @@ class _AtsLatexClassicPreview extends StatelessWidget {
             overflow: showAllContent ? null : TextOverflow.ellipsis,
           ),
         ],
-        if (resume.includeEducationInResume) ...[
-          _latexPreviewSection('Education', sectionStyle, ink),
-          ..._latexPreviewEducation(
-            resume.visibleEducation,
-            bodyStyle,
-            boldStyle,
-            italicStyle,
-          ),
-        ],
-        if (resume.includeProjectsInResume &&
-            resume.visibleProjects.isNotEmpty) ...[
-          _latexPreviewSection('Projects', sectionStyle, ink),
-          ..._latexPreviewProjects(
-            resume.visibleProjects,
-            bodyStyle,
-            boldStyle,
-            italicStyle,
-          ),
-        ],
         if (resume.includeWorkInResume) ...[
           _latexPreviewSection('Experience', sectionStyle, ink),
           ..._latexPreviewExperience(
             resume.visibleWorkExperiences,
+            bodyStyle,
+            boldStyle,
+            italicStyle,
+          ),
+        ],
+        if (resume.includeEducationInResume) ...[
+          _latexPreviewSection('Education', sectionStyle, ink),
+          ..._latexPreviewEducation(
+            resume.visibleEducation,
             bodyStyle,
             boldStyle,
             italicStyle,
@@ -2425,6 +2415,16 @@ class _AtsLatexClassicPreview extends StatelessWidget {
             skills: _pdfAlignedSkills(resume),
             bodyStyle: bodyStyle,
             showAllContent: showAllContent,
+          ),
+        ],
+        if (resume.includeProjectsInResume &&
+            resume.visibleProjects.isNotEmpty) ...[
+          _latexPreviewSection('Projects', sectionStyle, ink),
+          ..._latexPreviewProjects(
+            resume.visibleProjects,
+            bodyStyle,
+            boldStyle,
+            italicStyle,
           ),
         ],
         for (final section in resume.visibleCustomSections.take(
@@ -3346,6 +3346,56 @@ class _AtsModernFlowPreview extends StatelessWidget {
                 maxLines: 8,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (resume.includeWorkInResume)
+                flowSection(
+                  'Experience',
+                  works.isEmpty
+                      ? [
+                          Text(
+                            'Add roles with outcomes.',
+                            style: bodyStyle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ]
+                      : [
+                          for (final item in works) ...[
+                            Text(
+                              '${item.role.trim().ifBlank('Role')} — ${item.company.trim().ifBlank('Company')}',
+                              style: subtitleStyle,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (educationDateRangeLabel(
+                              item.startDate,
+                              item.endDate,
+                            ).isNotEmpty)
+                              Text(
+                                educationDateRangeLabel(
+                                  item.startDate,
+                                  item.endDate,
+                                ),
+                                style: bodyStyle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            for (final bullet
+                                in item.bullets
+                                    .where((b) => b.trim().isNotEmpty)
+                                    .take(3))
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  '• ${bullet.trim()}',
+                                  style: bodyStyle,
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            const SizedBox(height: 8),
+                          ],
+                        ],
+                ),
               if (resume.includeEducationInResume)
                 flowSection(
                   'Education',
@@ -3405,56 +3455,6 @@ class _AtsModernFlowPreview extends StatelessWidget {
                             bodyStyle: bodyStyle,
                             showAllContent: false,
                           ),
-                        ],
-                ),
-              if (resume.includeWorkInResume)
-                flowSection(
-                  'Experience',
-                  works.isEmpty
-                      ? [
-                          Text(
-                            'Add roles with outcomes.',
-                            style: bodyStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ]
-                      : [
-                          for (final item in works) ...[
-                            Text(
-                              '${item.role.trim().ifBlank('Role')} — ${item.company.trim().ifBlank('Company')}',
-                              style: subtitleStyle,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (educationDateRangeLabel(
-                              item.startDate,
-                              item.endDate,
-                            ).isNotEmpty)
-                              Text(
-                                educationDateRangeLabel(
-                                  item.startDate,
-                                  item.endDate,
-                                ),
-                                style: bodyStyle,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            for (final bullet
-                                in item.bullets
-                                    .where((b) => b.trim().isNotEmpty)
-                                    .take(3))
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  '• ${bullet.trim()}',
-                                  style: bodyStyle,
-                                  maxLines: 4,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            const SizedBox(height: 8),
-                          ],
                         ],
                 ),
               if (resume.includeProjectsInResume && projects.isNotEmpty)
@@ -3661,6 +3661,36 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                     ),
                   ),
               ],
+              if (resume.includeEducationInResume) ...[
+                sectionRule(),
+                Text('EDUCATION', style: sectionTitleStyle),
+                const SizedBox(height: 6),
+                if (education.isEmpty)
+                  Text(
+                    'Add degree and institution.',
+                    style: bodyStyle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                else
+                  for (final item in education) ...[
+                    Text(
+                      item.degree.trim().ifBlank('Degree'),
+                      style: highlightStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${item.institution.trim().ifBlank('School')}'
+                      '${educationDateRangeLabel(item.startDate, item.endDate).isNotEmpty ? ' (${educationDateRangeLabel(item.startDate, item.endDate)})' : ''}',
+                      style: highlightStyle,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+              ],
               if (resume.includeSkillsInResume) ...[
                 sectionRule(),
                 Text('SKILLS', style: sectionTitleStyle),
@@ -3716,36 +3746,6 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                   const SizedBox(height: 8),
                 ],
               ],
-              if (resume.includeEducationInResume) ...[
-                sectionRule(),
-                Text('EDUCATION', style: sectionTitleStyle),
-                const SizedBox(height: 6),
-                if (education.isEmpty)
-                  Text(
-                    'Add degree and institution.',
-                    style: bodyStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                else
-                  for (final item in education) ...[
-                    Text(
-                      item.degree.trim().ifBlank('Degree'),
-                      style: highlightStyle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${item.institution.trim().ifBlank('School')}'
-                      '${educationDateRangeLabel(item.startDate, item.endDate).isNotEmpty ? ' (${educationDateRangeLabel(item.startDate, item.endDate)})' : ''}',
-                      style: highlightStyle,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-              ],
               for (final section in customSections) ...[
                 sectionRule(),
                 Text(
@@ -3799,6 +3799,8 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
       height: ResumeTypography.textLineHeight,
     );
     final works = resume.visibleWorkExperiences.take(4).toList();
+    final education = resume.visibleEducation.take(2).toList();
+    final skills = _pdfAlignedSkills(resume);
     final projects = resume.visibleProjects.take(2).toList();
 
     Widget sectionTitleWithRule(String title) => Column(
@@ -3950,6 +3952,52 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+              ],
+              if (resume.includeEducationInResume) ...[
+                const SizedBox(height: 12),
+                sectionTitleWithRule('Education'),
+                if (education.isEmpty)
+                  Text(
+                    'Add schools and programs.',
+                    style: bodyStyle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                else
+                  for (final item in education) ...[
+                    Text(
+                      item.degree.trim().ifBlank('Program'),
+                      style: subtitleStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.institution.trim().ifBlank('School'),
+                      style: bodyStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+              ],
+              if (resume.includeSkillsInResume) ...[
+                const SizedBox(height: 12),
+                sectionTitleWithRule('Areas of Expertise'),
+                if (skills.isEmpty)
+                  Text(
+                    'Add skills aligned to your target roles.',
+                    style: bodyStyle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                else
+                  Text(
+                    skills.take(8).join(', '),
+                    style: bodyStyle,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
                   ),
               ],
               if (resume.includeProjectsInResume && projects.isNotEmpty) ...[

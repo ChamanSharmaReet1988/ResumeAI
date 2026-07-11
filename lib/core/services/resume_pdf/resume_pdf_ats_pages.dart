@@ -929,6 +929,47 @@ extension _ResumePdfAtsPages on ResumePdfService {
             pw.SizedBox(height: 12),
           ];
 
+          if (resume.includeWorkInResume) {
+            w.add(pw.Text('Experience', style: sectionTitleStyle));
+            w.add(pw.SizedBox(height: 6));
+            final items = resume.visibleWorkExperiences;
+            if (items.isEmpty) {
+              w.add(pw.Text('Add roles with outcomes.', style: bodyStyle));
+            } else {
+              for (var i = 0; i < items.length; i++) {
+                final item = items[i];
+                w.add(
+                  pw.Text(
+                    '${item.role.ifEmpty('Role')} — ${item.company.ifEmpty('Company')}',
+                    style: subtitleStyle,
+                  ),
+                );
+                final dr = _atsWorkDateRange(item);
+                if (dr.isNotEmpty) {
+                  w.add(pw.Text(dr, style: bodyStyle));
+                }
+                final highlightedBullets =
+                    highlightedBulletsByExperience[i] ?? const <String>{};
+                for (final b in _workBulletLines(item)) {
+                  w.add(
+                    _atsHighlightedBulletLine(
+                      b,
+                      style: bodyStyle,
+                      isHighlighted: highlightedBullets.contains(b),
+                      highlightColor: highlightColor,
+                    ),
+                  );
+                }
+                if (i < items.length - 1) {
+                  w.add(pw.SizedBox(height: 10));
+                }
+              }
+            }
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+            w.add(_atsSolidRule(color: PdfColor.fromHex('#CCCCCC')));
+            w.add(pw.SizedBox(height: 12));
+          }
+
           if (resume.includeEducationInResume) {
             w.add(pw.Text('Education', style: sectionTitleStyle));
             w.add(pw.SizedBox(height: 6));
@@ -989,47 +1030,6 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 bulletStyle: skillsBodyStyle,
               )) {
                 w.add(row);
-              }
-            }
-            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
-            w.add(_atsSolidRule(color: PdfColor.fromHex('#CCCCCC')));
-            w.add(pw.SizedBox(height: 12));
-          }
-
-          if (resume.includeWorkInResume) {
-            w.add(pw.Text('Experience', style: sectionTitleStyle));
-            w.add(pw.SizedBox(height: 6));
-            final items = resume.visibleWorkExperiences;
-            if (items.isEmpty) {
-              w.add(pw.Text('Add roles with outcomes.', style: bodyStyle));
-            } else {
-              for (var i = 0; i < items.length; i++) {
-                final item = items[i];
-                w.add(
-                  pw.Text(
-                    '${item.role.ifEmpty('Role')} — ${item.company.ifEmpty('Company')}',
-                    style: subtitleStyle,
-                  ),
-                );
-                final dr = _atsWorkDateRange(item);
-                if (dr.isNotEmpty) {
-                  w.add(pw.Text(dr, style: bodyStyle));
-                }
-                final highlightedBullets =
-                    highlightedBulletsByExperience[i] ?? const <String>{};
-                for (final b in _workBulletLines(item)) {
-                  w.add(
-                    _atsHighlightedBulletLine(
-                      b,
-                      style: bodyStyle,
-                      isHighlighted: highlightedBullets.contains(b),
-                      highlightColor: highlightColor,
-                    ),
-                  );
-                }
-                if (i < items.length - 1) {
-                  w.add(pw.SizedBox(height: 10));
-                }
               }
             }
             w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
@@ -1375,33 +1375,6 @@ extension _ResumePdfAtsPages on ResumePdfService {
             );
           }
 
-          if (resume.includeEducationInResume) {
-            w.add(pw.SizedBox(height: 14));
-            w.add(_atsLatexSectionTitle('Education', sectionTitleStyle));
-            w.addAll(
-              _atsLatexEducationEntries(
-                resume,
-                bodyStyle: bodyStyle,
-                subtitleStyle: subtitleStyle,
-                italicStyle: italicStyle,
-              ),
-            );
-          }
-
-          if (resume.includeProjectsInResume &&
-              resume.visibleProjects.isNotEmpty) {
-            w.add(pw.SizedBox(height: 12));
-            w.add(_atsLatexSectionTitle('Projects', sectionTitleStyle));
-            w.addAll(
-              _atsLatexProjectEntries(
-                resume,
-                bodyStyle: bodyStyle,
-                subtitleStyle: subtitleStyle,
-                italicStyle: italicStyle,
-              ),
-            );
-          }
-
           if (resume.includeWorkInResume) {
             w.add(pw.SizedBox(height: 12));
             w.add(_atsLatexSectionTitle('Experience', sectionTitleStyle));
@@ -1417,6 +1390,19 @@ extension _ResumePdfAtsPages on ResumePdfService {
             );
           }
 
+          if (resume.includeEducationInResume) {
+            w.add(pw.SizedBox(height: 14));
+            w.add(_atsLatexSectionTitle('Education', sectionTitleStyle));
+            w.addAll(
+              _atsLatexEducationEntries(
+                resume,
+                bodyStyle: bodyStyle,
+                subtitleStyle: subtitleStyle,
+                italicStyle: italicStyle,
+              ),
+            );
+          }
+
           if (resume.includeSkillsInResume) {
             w.add(pw.SizedBox(height: 12));
             w.add(_atsLatexSectionTitle('Skills', sectionTitleStyle));
@@ -1428,6 +1414,20 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 highlightedSkills: highlightedSkills,
                 highlightColor: highlightColor,
                 bodyPt: bodyPt,
+              ),
+            );
+          }
+
+          if (resume.includeProjectsInResume &&
+              resume.visibleProjects.isNotEmpty) {
+            w.add(pw.SizedBox(height: 12));
+            w.add(_atsLatexSectionTitle('Projects', sectionTitleStyle));
+            w.addAll(
+              _atsLatexProjectEntries(
+                resume,
+                bodyStyle: bodyStyle,
+                subtitleStyle: subtitleStyle,
+                italicStyle: italicStyle,
               ),
             );
           }
@@ -1922,6 +1922,39 @@ extension _ResumePdfAtsPages on ResumePdfService {
             w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
           }
 
+          if (resume.includeEducationInResume) {
+            w.add(
+              _atsCenterClassicSectionTitle('Education', sectionTitleStyle),
+            );
+            final edu = resume.visibleEducation;
+            if (edu.isEmpty) {
+              w.add(pw.Text('Add degree and institution.', style: bodyStyle));
+            } else {
+              for (final item in edu) {
+                final range = educationDateRangeLabel(
+                  item.startDate,
+                  item.endDate,
+                );
+                w.add(
+                  pw.Text(
+                    item.degree.ifEmpty('Degree'),
+                    style: highlightStyle,
+                  ),
+                );
+                w.add(pw.SizedBox(height: 2));
+                w.add(
+                  pw.Text(
+                    '${item.institution.ifEmpty('School')}'
+                    '${range.isNotEmpty ? ' ($range)' : ''}',
+                    style: highlightStyle,
+                  ),
+                );
+                w.add(pw.SizedBox(height: 8));
+              }
+            }
+            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
+          }
+
           if (resume.includeSkillsInResume) {
             w.add(_atsCenterClassicSectionTitle('Skills', sectionTitleStyle));
             if (skills.isEmpty) {
@@ -1958,39 +1991,6 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 );
               }
               w.add(pw.SizedBox(height: 8));
-            }
-            w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
-          }
-
-          if (resume.includeEducationInResume) {
-            w.add(
-              _atsCenterClassicSectionTitle('Education', sectionTitleStyle),
-            );
-            final edu = resume.visibleEducation;
-            if (edu.isEmpty) {
-              w.add(pw.Text('Add degree and institution.', style: bodyStyle));
-            } else {
-              for (final item in edu) {
-                final range = educationDateRangeLabel(
-                  item.startDate,
-                  item.endDate,
-                );
-                w.add(
-                  pw.Text(
-                    item.degree.ifEmpty('Degree'),
-                    style: highlightStyle,
-                  ),
-                );
-                w.add(pw.SizedBox(height: 2));
-                w.add(
-                  pw.Text(
-                    '${item.institution.ifEmpty('School')}'
-                    '${range.isNotEmpty ? ' ($range)' : ''}',
-                    style: highlightStyle,
-                  ),
-                );
-                w.add(pw.SizedBox(height: 8));
-              }
             }
             w.add(pw.SizedBox(height: ResumeTypography.sectionGapPdfPt));
           }

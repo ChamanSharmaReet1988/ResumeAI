@@ -2282,6 +2282,41 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                                       ],
                                       const SizedBox(height: 3),
                                     ],
+                                    if (leftSkills.isNotEmpty ||
+                                        rightSkills.isNotEmpty) ...[
+                                      const SizedBox(height: 6),
+                                      _MiniSidebarHeading(
+                                        title: 'SKILLS',
+                                        lineColor: line,
+                                        titleStyle: _sectionHeadingStyle(),
+                                        lineHeight: _sectionRuleHeight,
+                                        titleGap: _sectionTitleRuleGap,
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: _MiniBulletColumn(
+                                              items: leftSkills,
+                                              bulletColor: ResumeTypography
+                                                  .creativeBodyTextColor,
+                                              textStyle: bodyStyle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: _MiniBulletColumn(
+                                              items: rightSkills,
+                                              bulletColor: ResumeTypography
+                                                  .creativeBodyTextColor,
+                                              textStyle: bodyStyle,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                     if (projects.isNotEmpty) ...[
                                       const SizedBox(height: 6),
                                       _MiniSidebarHeading(
@@ -2334,41 +2369,6 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                                           ),
                                         ],
                                       ],
-                                    ],
-                                    if (leftSkills.isNotEmpty ||
-                                        rightSkills.isNotEmpty) ...[
-                                      const SizedBox(height: 6),
-                                      _MiniSidebarHeading(
-                                        title: 'SKILLS',
-                                        lineColor: line,
-                                        titleStyle: _sectionHeadingStyle(),
-                                        lineHeight: _sectionRuleHeight,
-                                        titleGap: _sectionTitleRuleGap,
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: _MiniBulletColumn(
-                                              items: leftSkills,
-                                              bulletColor: ResumeTypography
-                                                  .creativeBodyTextColor,
-                                              textStyle: bodyStyle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: _MiniBulletColumn(
-                                              items: rightSkills,
-                                              bulletColor: ResumeTypography
-                                                  .creativeBodyTextColor,
-                                              textStyle: bodyStyle,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
                                     ],
                                   ],
                                 ),
@@ -3210,6 +3210,50 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 7),
+          Text('Experience', style: sectionTitleStyle),
+          const SizedBox(height: 5),
+          if (works.isEmpty)
+            Text('Add roles.', style: body)
+          else
+            for (final w in works.take(1)) ...[
+              Text(
+                '${w.role.trim()} — ${w.company.trim()}',
+                style: subtitleStyle,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
+                Text(
+                  educationDateRangeLabel(w.startDate, w.endDate),
+                  style: body,
+                ),
+              for (
+                var i = 0;
+                i <
+                    w.bullets
+                        .where((b) => b.trim().isNotEmpty)
+                        .length
+                        .clamp(0, 1);
+                i++
+              )
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
+                    style: body,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              const SizedBox(height: 6),
+            ],
+          Container(
+            height: 1,
+            color: ResumeTypography.atsStructuredBodyTextColor.withValues(
+              alpha: 0.22,
+            ),
+          ),
+          const SizedBox(height: 7),
           Text('Education', style: sectionTitleStyle),
           const SizedBox(height: 5),
           if (edu.isEmpty)
@@ -3252,50 +3296,6 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
           const SizedBox(height: 5),
           _modernFlowSkillsTwoColumn(skills.take(8).toList(), skillsBody),
           const SizedBox(height: 6),
-          Container(
-            height: 1,
-            color: ResumeTypography.atsStructuredBodyTextColor.withValues(
-              alpha: 0.22,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text('Experience', style: sectionTitleStyle),
-          const SizedBox(height: 5),
-          if (works.isEmpty)
-            Text('Add roles.', style: body)
-          else
-            for (final w in works.take(1)) ...[
-              Text(
-                '${w.role.trim()} — ${w.company.trim()}',
-                style: subtitleStyle,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (educationDateRangeLabel(w.startDate, w.endDate).isNotEmpty)
-                Text(
-                  educationDateRangeLabel(w.startDate, w.endDate),
-                  style: body,
-                ),
-              for (
-                var i = 0;
-                i <
-                    w.bullets
-                        .where((b) => b.trim().isNotEmpty)
-                        .length
-                        .clamp(0, 1);
-                i++
-              )
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    '• ${w.bullets.where((b) => b.trim().isNotEmpty).toList()[i]}',
-                    style: body,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              const SizedBox(height: 6),
-            ],
           if (projects.isNotEmpty) ...[
             Container(
               height: 1,
@@ -3877,6 +3877,27 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
               const SizedBox(height: 4),
             ],
           sectionRule(),
+          Text('EDUCATION', style: sectionTitleStyle),
+          const SizedBox(height: 4),
+          if (edu.isEmpty)
+            Text('Add education.', style: body)
+          else
+            for (final e in edu.take(detailed ? 2 : 1)) ...[
+              Text(
+                e.degree.trim(),
+                style: highlightStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                '${e.institution.trim()} (${educationDateRangeLabel(e.startDate, e.endDate)})',
+                style: highlightStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+            ],
+          sectionRule(),
           Text('SKILLS', style: sectionTitleStyle),
           const SizedBox(height: 4),
           Text(
@@ -3953,25 +3974,6 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
                 maxLines: detailed ? 6 : 3,
                 overflow: TextOverflow.ellipsis,
               ),
-          ],
-          if (detailed && edu.isNotEmpty) ...[
-            sectionRule(),
-            Text('EDUCATION', style: sectionTitleStyle),
-            const SizedBox(height: 4),
-            for (final e in edu.take(1)) ...[
-              Text(
-                e.degree.trim(),
-                style: highlightStyle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                '${e.institution.trim()} (${educationDateRangeLabel(e.startDate, e.endDate)})',
-                style: highlightStyle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
           ],
         ],
       ),
