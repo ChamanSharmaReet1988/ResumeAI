@@ -264,11 +264,14 @@ extension ResumeCorporateStyleX on ResumeData {
 
   Color get detailsSidebarAccentColor => corporateColorPreset.headerColor;
 
+  /// Preview color picker accent — section titles, rules, and highlights.
+  Color get atsAccentColor => corporateColorPreset.headerColor;
+
   /// Center Classic ATS experience, education, and project subtitles.
-  Color get atsCenterClassicAccentColor => corporateColorPreset.headerColor;
+  Color get atsCenterClassicAccentColor => atsAccentColor;
 
   /// Professional Blue ATS section titles, name, contact, and skill bullets.
-  Color get atsProfessionalBlueAccentColor => corporateColorPreset.headerColor;
+  Color get atsProfessionalBlueAccentColor => atsAccentColor;
 
   Color get detailsSidebarRailColor => const Color(0xFFF3F4F6);
 

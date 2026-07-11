@@ -1921,6 +1921,7 @@ class _AtsStructuredPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const ink = ResumeTypography.atsStructuredBodyTextColor;
+    final accent = resume.atsAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
@@ -1998,7 +1999,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         const SizedBox(height: 8),
         Container(height: 1, color: ink.withValues(alpha: 0.85)),
         const SizedBox(height: 10),
-        _atsBandTitle('SUMMARY', ink),
+        _atsBandTitle('SUMMARY', accent),
         const SizedBox(height: 6),
         Text(
           resume.summary.trim().ifBlank(
@@ -2010,7 +2011,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ),
         if (resume.includeWorkInResume) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('EXPERIENCE', ink),
+          _atsBandTitle('EXPERIENCE', accent),
           const SizedBox(height: 6),
           ..._atsStructuredExperienceBlocks(
             works: works,
@@ -2021,7 +2022,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ],
         if (resume.includeEducationInResume) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('EDUCATION', ink),
+          _atsBandTitle('EDUCATION', accent),
           const SizedBox(height: 6),
           ..._atsStructuredEducationBlocks(
             items: education,
@@ -2032,7 +2033,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ],
         if (resume.includeSkillsInResume && skills.isNotEmpty) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('SKILLS', ink),
+          _atsBandTitle('SKILLS', accent),
           const SizedBox(height: 6),
           _atsStructuredSkillsGrid(
             skills: skills,
@@ -2042,7 +2043,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ],
         if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('PROJECTS', ink),
+          _atsBandTitle('PROJECTS', accent),
           const SizedBox(height: 6),
           for (final project in projects)
             ..._atsStructuredProjectBlocks(
@@ -2056,7 +2057,7 @@ class _AtsStructuredPreview extends StatelessWidget {
           const SizedBox(height: _sectionGap),
           _atsBandTitle(
             section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
-            ink,
+            accent,
           ),
           const SizedBox(height: 6),
           ..._customSectionFlowPreviewWidgets(
@@ -2079,7 +2080,7 @@ class _AtsStructuredPreview extends StatelessWidget {
     );
   }
 
-  Widget _atsBandTitle(String title, Color ink) {
+  Widget _atsBandTitle(String title, Color accent) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -2090,7 +2091,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         style: ResumeTypography.garamondPreviewStyle(
           weight: ResumeTypography.atsStructuredTitleWeight,
           fontSize: _atsPreviewSectionTitleFontSize,
-          color: ink,
+          color: accent,
           height: ResumeTypography.textLineHeight,
         ).copyWith(decoration: TextDecoration.underline),
       ),
@@ -2302,6 +2303,7 @@ class _AtsLatexClassicPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const ink = ResumeTypography.atsStructuredBodyTextColor;
+    final accent = resume.atsAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
@@ -2319,7 +2321,7 @@ class _AtsLatexClassicPreview extends StatelessWidget {
     final sectionStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredTitleWeight,
       fontSize: bodyPt + 5,
-      color: ink,
+      color: accent,
       height: 1.05,
       letterSpacing: 1.2,
     );
@@ -3009,22 +3011,24 @@ class _AtsSerifRulesPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final accent = resume.atsAccentColor;
+    const ink = ResumeTypography.atsStructuredBodyTextColor;
     final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
       fontSize: bodyPt,
-      color: _ink,
+      color: ink,
       height: ResumeTypography.textLineHeight,
     );
     final contactStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredContactWeight,
       fontSize: bodyPt,
-      color: _ink,
+      color: ink,
       height: ResumeTypography.textLineHeight,
     );
     final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredTitleWeight,
       fontSize: _atsPreviewSectionTitleFontSize,
-      color: _ink,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final subtitleStyle = ResumeTypography.garamondPreviewStyle(
@@ -3238,6 +3242,7 @@ class _AtsModernFlowPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const ink = ResumeTypography.atsStructuredBodyTextColor;
+    final accent = resume.atsAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
@@ -3248,7 +3253,7 @@ class _AtsModernFlowPreview extends StatelessWidget {
     final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredTitleWeight,
       fontSize: _atsPreviewSectionTitleFontSize,
-      color: ink,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final subtitleStyle = ResumeTypography.garamondPreviewStyle(
@@ -4029,6 +4034,7 @@ class _AtsExecutivePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const ink = ResumeTypography.atsStructuredBodyTextColor;
+    final accent = resume.atsAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
@@ -4039,7 +4045,7 @@ class _AtsExecutivePreview extends StatelessWidget {
     final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredTitleWeight,
       fontSize: _atsPreviewSectionTitleFontSize,
-      color: ink,
+      color: accent,
       height: ResumeTypography.textLineHeight,
     );
     final subtitleStyle = ResumeTypography.garamondPreviewStyle(

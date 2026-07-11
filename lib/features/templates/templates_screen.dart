@@ -2554,6 +2554,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
   }
 
   Widget _atsGrayBandLabel(String title) {
+    final accent = resume.atsAccentColor;
     return Padding(
       padding: const EdgeInsets.only(top: 5),
       child: Column(
@@ -2570,7 +2571,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
                 fontSize: _scaledPt(
                   ResumeTypography.atsStructuredSectionTitlePt,
                 ),
-                color: ResumeTypography.atsStructuredBodyTextColor,
+                color: accent,
                 height: ResumeTypography.textLineHeight,
               ).copyWith(decoration: TextDecoration.underline),
             ),
@@ -2795,7 +2796,7 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
     final sectionTitleStyle = _garamond(
       fontSize: _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
-    );
+    ).copyWith(color: resume.atsAccentColor);
     final subtitleStyle = _garamond(
       fontSize: _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
@@ -3136,7 +3137,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
       height: ResumeTypography.textLineHeight,
-    );
+    ).copyWith(color: resume.atsAccentColor);
     final skillsBody = _garamondBody(_scaledPt(math.max(9.0, bodyPt - 1.35)));
     final contactLines = resume.atsStructuredHeaderContactLines();
     final edu = resume.visibleEducation;
@@ -3437,7 +3438,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
       height: ResumeTypography.textLineHeight,
-    );
+    ).copyWith(color: resume.atsAccentColor);
     final skillsBody = _garamondBody(_scaledPt(math.max(9.0, bodyPt - 1.35)));
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
@@ -3735,7 +3736,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = ResumeTemplate.atsCenterClassic.accentColor;
+    final accent = resume.atsAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final body = _arialBody(_scaledPt(bodyPt));
     final contactStyle = _arialBody(
@@ -4022,7 +4023,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = ResumeTemplate.atsProfessionalBlue.accentColor;
+    final accent = resume.atsAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final body = _arialBody(_scaledPt(bodyPt));
     final contactStyle = _arialBody(

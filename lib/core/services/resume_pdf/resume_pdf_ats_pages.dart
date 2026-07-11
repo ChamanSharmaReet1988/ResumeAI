@@ -83,7 +83,13 @@ extension _ResumePdfAtsPages on ResumePdfService {
     return pw.Container(height: 1, color: color);
   }
 
-  pw.Widget _atsGraySectionTitle(String title, GaramondPdfFonts garamond) {
+  PdfColor _atsAccentPdf(ResumeData resume) => _pdfRgb(resume.atsAccentColor);
+
+  pw.Widget _atsGraySectionTitle(
+    String title,
+    GaramondPdfFonts garamond,
+    PdfColor accent,
+  ) {
     return pw.Container(
       width: double.infinity,
       color: _atsGrayBand,
@@ -95,7 +101,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
             garamond,
             ResumeTypography.atsStructuredTitleWeight,
             fontSize: ResumeTypography.atsStructuredSectionTitlePt,
-            color: PdfColors.black,
+            color: accent,
           ).copyWith(decoration: pw.TextDecoration.underline),
         ),
       ),
@@ -235,6 +241,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     final job = resume.jobTitle.trim();
     final contact = _atsHeaderContactLines(resume);
     final skills = _skillsForDisplay(resume);
+    final accent = _atsAccentPdf(resume);
 
     document.addPage(
       pw.MultiPage(
@@ -287,7 +294,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
             pw.SizedBox(height: 10),
             _atsSolidRule(),
             pw.SizedBox(height: 12),
-            _atsGraySectionTitle('Summary', garamond),
+            _atsGraySectionTitle('Summary', garamond, accent),
             pw.SizedBox(height: 6),
             _atsHighlightedSummaryText(
               resume.summary.trim().ifEmpty(
@@ -302,7 +309,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
           ];
 
           if (resume.includeWorkInResume) {
-            w.add(_atsGraySectionTitle('Experience', garamond));
+            w.add(_atsGraySectionTitle('Experience', garamond, accent));
             w.add(pw.SizedBox(height: 6));
             final items = resume.visibleWorkExperiences;
             if (items.isEmpty) {
@@ -325,7 +332,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
           }
 
           if (resume.includeEducationInResume) {
-            w.add(_atsGraySectionTitle('Education', garamond));
+            w.add(_atsGraySectionTitle('Education', garamond, accent));
             w.add(pw.SizedBox(height: 6));
             final edu = resume.visibleEducation;
             if (edu.isEmpty) {
@@ -384,7 +391,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
           }
 
           if (resume.includeSkillsInResume) {
-            w.add(_atsGraySectionTitle('Skills', garamond));
+            w.add(_atsGraySectionTitle('Skills', garamond, accent));
             w.add(pw.SizedBox(height: 6));
             final skillsBodyStyle = atsStructuredBodyPdfTextStyle(
               garamond,
@@ -422,7 +429,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
           }
 
           if (resume.includeProjectsInResume) {
-            w.add(_atsGraySectionTitle('Projects', garamond));
+            w.add(_atsGraySectionTitle('Projects', garamond, accent));
             w.add(pw.SizedBox(height: 6));
             final projects = resume.visibleProjects;
             if (projects.isEmpty) {
@@ -449,6 +456,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
               _atsGraySectionTitle(
                 section.title.ifEmpty('Additional'),
                 garamond,
+                accent,
               ),
             );
             w.add(pw.SizedBox(height: 6));
@@ -478,6 +486,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   }) {
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final accent = _atsAccentPdf(resume);
     final bodyStyle = atsStructuredBodyPdfTextStyle(garamond, bodyPt);
     final contactStyle = garamondPdfTextStyle(
       garamond,
@@ -490,7 +499,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
       garamond,
       ResumeTypography.atsStructuredTitleWeight,
       fontSize: ResumeTypography.atsStructuredSectionTitlePt,
-      color: PdfColors.black,
+      color: accent,
     );
     final subtitleStyle = garamondPdfTextStyle(
       garamond,
@@ -831,6 +840,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   }) {
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final accent = _atsAccentPdf(resume);
     final bodyStyle = atsModernFlowBodyPdfTextStyle(garamond, bodyPt);
     final contactStyle = garamondPdfTextStyle(
       garamond,
@@ -843,7 +853,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
       garamond,
       ResumeTypography.atsStructuredTitleWeight,
       fontSize: ResumeTypography.atsStructuredSectionTitlePt,
-      color: PdfColors.black,
+      color: accent,
     );
     final subtitleStyle = garamondPdfTextStyle(
       garamond,
@@ -1272,6 +1282,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   }) {
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final accent = _atsAccentPdf(resume);
     final bodyStyle = garamondPdfTextStyle(
       garamond,
       ResumeTypography.atsStructuredBodyWeight,
@@ -1298,7 +1309,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
       garamond,
       ResumeTypography.atsStructuredTitleWeight,
       fontSize: bodyPt + 5.5,
-      color: PdfColors.black,
+      color: accent,
     ).copyWith(letterSpacing: 1.1);
     final nameStyle = garamondPdfTextStyle(
       garamond,
@@ -1465,6 +1476,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   }) {
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final accent = _atsAccentPdf(resume);
     final bodyStyle = atsExecutiveBodyPdfTextStyle(garamond, bodyPt);
     final contactStyle = garamondPdfTextStyle(
       garamond,
@@ -1477,7 +1489,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
       garamond,
       ResumeTypography.atsStructuredTitleWeight,
       fontSize: ResumeTypography.atsStructuredSectionTitlePt,
-      color: PdfColors.black,
+      color: accent,
     );
     final subtitleStyle = garamondPdfTextStyle(
       garamond,
