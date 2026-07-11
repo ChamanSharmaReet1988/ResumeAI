@@ -62,7 +62,6 @@ pw.Widget _atsHighlightedBulletLine(
 
 /// Single-column ATS PDF layouts (no sidebars, minimal decoration).
 extension _ResumePdfAtsPages on ResumePdfService {
-  PdfColor get _atsGrayBand => PdfColor.fromHex('#E6E6E6');
   PdfColor get _atsMuted => PdfColor.fromHex('#5C5C5C');
 
   String _atsWorkDateRange(WorkExperience item) {
@@ -89,10 +88,11 @@ extension _ResumePdfAtsPages on ResumePdfService {
     String title,
     GaramondPdfFonts garamond,
     PdfColor accent,
+    PdfColor band,
   ) {
     return pw.Container(
       width: double.infinity,
-      color: _atsGrayBand,
+      color: band,
       padding: const pw.EdgeInsets.symmetric(vertical: 12, horizontal: 6),
       child: pw.Center(
         child: pw.Text(
@@ -242,6 +242,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     final contact = _atsHeaderContactLines(resume);
     final skills = _skillsForDisplay(resume);
     final accent = _atsAccentPdf(resume);
+    final band = _pdfRgb(resume.atsStructuredSectionBandColor);
 
     document.addPage(
       pw.MultiPage(
@@ -294,7 +295,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
             pw.SizedBox(height: 10),
             _atsSolidRule(),
             pw.SizedBox(height: 12),
-            _atsGraySectionTitle('Summary', garamond, accent),
+            _atsGraySectionTitle('Summary', garamond, accent, band),
             pw.SizedBox(height: 6),
             _atsHighlightedSummaryText(
               resume.summary.trim().ifEmpty(
@@ -309,7 +310,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
           ];
 
           if (resume.includeWorkInResume) {
-            w.add(_atsGraySectionTitle('Experience', garamond, accent));
+            w.add(_atsGraySectionTitle('Experience', garamond, accent, band));
             w.add(pw.SizedBox(height: 6));
             final items = resume.visibleWorkExperiences;
             if (items.isEmpty) {
@@ -332,7 +333,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
           }
 
           if (resume.includeEducationInResume) {
-            w.add(_atsGraySectionTitle('Education', garamond, accent));
+            w.add(_atsGraySectionTitle('Education', garamond, accent, band));
             w.add(pw.SizedBox(height: 6));
             final edu = resume.visibleEducation;
             if (edu.isEmpty) {
@@ -391,7 +392,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
           }
 
           if (resume.includeSkillsInResume) {
-            w.add(_atsGraySectionTitle('Skills', garamond, accent));
+            w.add(_atsGraySectionTitle('Skills', garamond, accent, band));
             w.add(pw.SizedBox(height: 6));
             final skillsBodyStyle = atsStructuredBodyPdfTextStyle(
               garamond,
@@ -429,7 +430,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
           }
 
           if (resume.includeProjectsInResume) {
-            w.add(_atsGraySectionTitle('Projects', garamond, accent));
+            w.add(_atsGraySectionTitle('Projects', garamond, accent, band));
             w.add(pw.SizedBox(height: 6));
             final projects = resume.visibleProjects;
             if (projects.isEmpty) {
@@ -457,6 +458,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 section.title.ifEmpty('Additional'),
                 garamond,
                 accent,
+                band,
               ),
             );
             w.add(pw.SizedBox(height: 6));

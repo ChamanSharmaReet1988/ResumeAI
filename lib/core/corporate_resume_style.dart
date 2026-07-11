@@ -267,6 +267,11 @@ extension ResumeCorporateStyleX on ResumeData {
   /// Preview color picker accent — section titles, rules, and highlights.
   Color get atsAccentColor => corporateColorPreset.headerColor;
 
+  /// Structured ATS gray section bands — tinted from the selected accent.
+  Color get atsStructuredSectionBandColor =>
+      Color.lerp(const Color(0xFFE6E6E6), atsAccentColor, 0.38) ??
+      const Color(0xFFE6E6E6);
+
   /// Center Classic ATS experience, education, and project subtitles.
   Color get atsCenterClassicAccentColor => atsAccentColor;
 

@@ -1915,13 +1915,13 @@ class _AtsStructuredPreview extends StatelessWidget {
   final bool showAllContent;
   final bool scrollable;
 
-  static const Color _band = Color(0xFFE6E6E6);
   static const double _sectionGap = 20;
 
   @override
   Widget build(BuildContext context) {
     const ink = ResumeTypography.atsStructuredBodyTextColor;
     final accent = resume.atsAccentColor;
+    final band = resume.atsStructuredSectionBandColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
@@ -1999,7 +1999,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         const SizedBox(height: 8),
         Container(height: 1, color: ink.withValues(alpha: 0.85)),
         const SizedBox(height: 10),
-        _atsBandTitle('SUMMARY', accent),
+        _atsBandTitle('SUMMARY', accent, band),
         const SizedBox(height: 6),
         Text(
           resume.summary.trim().ifBlank(
@@ -2011,7 +2011,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ),
         if (resume.includeWorkInResume) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('EXPERIENCE', accent),
+          _atsBandTitle('EXPERIENCE', accent, band),
           const SizedBox(height: 6),
           ..._atsStructuredExperienceBlocks(
             works: works,
@@ -2022,7 +2022,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ],
         if (resume.includeEducationInResume) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('EDUCATION', accent),
+          _atsBandTitle('EDUCATION', accent, band),
           const SizedBox(height: 6),
           ..._atsStructuredEducationBlocks(
             items: education,
@@ -2033,7 +2033,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ],
         if (resume.includeSkillsInResume && skills.isNotEmpty) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('SKILLS', accent),
+          _atsBandTitle('SKILLS', accent, band),
           const SizedBox(height: 6),
           _atsStructuredSkillsGrid(
             skills: skills,
@@ -2043,7 +2043,7 @@ class _AtsStructuredPreview extends StatelessWidget {
         ],
         if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
           const SizedBox(height: _sectionGap),
-          _atsBandTitle('PROJECTS', accent),
+          _atsBandTitle('PROJECTS', accent, band),
           const SizedBox(height: 6),
           for (final project in projects)
             ..._atsStructuredProjectBlocks(
@@ -2058,6 +2058,7 @@ class _AtsStructuredPreview extends StatelessWidget {
           _atsBandTitle(
             section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
             accent,
+            band,
           ),
           const SizedBox(height: 6),
           ..._customSectionFlowPreviewWidgets(
@@ -2080,11 +2081,11 @@ class _AtsStructuredPreview extends StatelessWidget {
     );
   }
 
-  Widget _atsBandTitle(String title, Color accent) {
+  Widget _atsBandTitle(String title, Color accent, Color band) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 4),
-      color: _band,
+      color: band,
       child: Text(
         title,
         textAlign: TextAlign.center,

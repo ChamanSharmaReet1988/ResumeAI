@@ -2410,8 +2410,6 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
   final ResumeData resume;
   final bool detailed;
 
-  static const Color _band = Color(0xFFE5E7EB);
-
   /// Matches [_ResumeTemplatePreviewArt] / PDF A4 width (240px tile art).
   static const double _layoutScale = 240 / 595.28;
 
@@ -2555,6 +2553,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
 
   Widget _atsGrayBandLabel(String title) {
     final accent = resume.atsAccentColor;
+    final band = resume.atsStructuredSectionBandColor;
     return Padding(
       padding: const EdgeInsets.only(top: 5),
       child: Column(
@@ -2562,7 +2561,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 3),
-            color: _band,
+            color: band,
             child: Text(
               title,
               textAlign: TextAlign.center,
