@@ -141,7 +141,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             ),
           if (resume.includeSkillsInResume)
             ..._darkHeaderSkillsSectionWidgets(
-              _skillsForDisplay(resume),
+              resume,
               lineColor,
               sectionTitleColor,
               garamond,
@@ -269,13 +269,34 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   }
 
   List<pw.Widget> _darkHeaderSkillsSectionWidgets(
-    List<String> skills,
+    ResumeData resume,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
     GaramondPdfFonts garamond,
     double bodyPt,
   ) {
     final bulletStyle = corporateBodyPdfTextStyle(garamond, bodyPt);
+    final categoryStyle = _skillCategorySubtitlePdfStyle(
+      garamond,
+      weight: ResumeTypography.darkHeaderSubtitleWeight,
+      fontSize: ResumeTypography.darkHeaderSubtitlePt,
+      color: const PdfColor.fromInt(0xFF141414),
+    );
+    final skillBody = _skillsPdfBodyWidgets(
+      resume,
+      bodyStyle: bulletStyle,
+      categoryStyle: categoryStyle,
+      flatBuilder: (skills) => [
+        for (final row in _twoColumnBulletRows(
+          skills,
+          columnGap: 24,
+          itemBottom: 5,
+          fontSize: bodyPt,
+          bulletStyle: bulletStyle,
+        ))
+          row,
+      ],
+    );
     return [
       ..._darkHeaderSectionPrefixWidgets(
         title: 'Skills',
@@ -283,21 +304,15 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
       ),
-      for (final row in _twoColumnBulletRows(
-        skills,
-        columnGap: 24,
-        itemBottom: 5,
-        fontSize: bodyPt,
-        bulletStyle: bulletStyle,
-      ))
+      for (final widget in skillBody)
         pw.Padding(
           padding: pw.EdgeInsets.fromLTRB(
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-        ),
-          child: row,
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+          ),
+          child: widget,
         ),
       ..._darkHeaderSectionSuffixWidgets(),
     ];
@@ -697,7 +712,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 ),
               ),
           ],
-          if (resume.includeSkillsInResume && template2Skills.isNotEmpty) ...[
+          if (resume.includeSkillsInResume &&
+              (resume.showCategorisedSkills || template2Skills.isNotEmpty)) ...[
             pw.SizedBox(height: _creativeSectionGapPt),
             _creativeMainColumnChild(
               _creativeSectionHeadingRow(
@@ -709,10 +725,9 @@ ResumeTypography.darkHeaderSubtitleWeight,
               ),
             ),
             pw.SizedBox(height: _creativeHeadingBodyGapPt),
-            for (final row in _twoColumnBulletRows(
-              _skillsForDisplay(resume),
-              fontSize: bodyPt,
-              bulletStyle: garamond != null
+            for (final widget in _skillsPdfBodyWidgets(
+              resume,
+              bodyStyle: garamond != null
                   ? accentStripBodyPdfTextStyle(
                       garamond,
                       bodyPt,
@@ -722,8 +737,33 @@ ResumeTypography.darkHeaderSubtitleWeight,
                       fontSize: bodyPt,
                       color: bodyColor,
                     ),
+              categoryStyle: _skillCategorySubtitlePdfStyle(
+                garamond,
+                weight: ResumeTypography.creativeSubtitleWeight,
+                fontSize: resume.creativeScaledPt(
+                  ResumeTypography.creativeSubtitlePt,
+                ),
+                color: bodyColor,
+              ),
+              flatBuilder: (skills) => [
+                for (final row in _twoColumnBulletRows(
+                  skills,
+                  fontSize: bodyPt,
+                  bulletStyle: garamond != null
+                      ? accentStripBodyPdfTextStyle(
+                          garamond,
+                          bodyPt,
+                          color: bodyColor,
+                        )
+                      : pw.TextStyle(
+                          fontSize: bodyPt,
+                          color: bodyColor,
+                        ),
+                ))
+                  row,
+              ],
             ))
-              _creativeMainColumnChild(row),
+              _creativeMainColumnChild(widget),
           ],
           if (resume.includeProjectsInResume) ...[
             pw.SizedBox(height: _creativeSectionGapPt),

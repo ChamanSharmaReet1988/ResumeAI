@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/skill_auto_categorizer.dart';
 import '../../core/services/profile_image_storage.dart';
 import '../../core/services/resume_services.dart';
 
@@ -498,6 +499,231 @@ class ResumeEditorViewModel extends ChangeNotifier {
     updateResume((resume) => resume.copyWith(includeSkillsInResume: value));
   }
 
+  /// Toggle simple skill chips vs grouped skills with subheadings.
+  void setUseSkillSubheadings(bool value) {
+    if (value == _resume.useSkillSubheadings) {
+      return;
+    }
+    if (value) {
+      // Restore the user's last categories when possible; only auto-categorize
+      // the first time (or when no saved groups exist).
+      final groups = _skillGroupsForCategorisedMode();
+      updateResume(
+        (resume) => resume.copyWith(
+          useSkillSubheadings: true,
+          skillGroups: groups,
+          skills: _flattenSkillGroups(groups),
+        ),
+      );
+      return;
+    }
+
+    // Keep skillGroups in memory so Categorised can restore them later.
+    final flattened = _flattenSkillGroups(_resume.skillGroups);
+    updateResume(
+      (resume) => resume.copyWith(
+        useSkillSubheadings: false,
+        skills: flattened.isNotEmpty ? flattened : resume.skills,
+      ),
+    );
+  }
+
+  /// Prefers the user's saved [ResumeData.skillGroups]; syncs with simple-list
+  /// adds/removes. Auto-categorizes only when there is nothing to restore.
+  List<SkillGroup> _skillGroupsForCategorisedMode() {
+    final currentSkills = _resume.skills
+        .map((skill) => skill.trim())
+        .where((skill) => skill.isNotEmpty)
+        .toList();
+    if (currentSkills.isEmpty) {
+      final savedEmpty = _resume.skillGroups
+          .where((group) => group.heading.trim().isNotEmpty)
+          .map((group) => group.copyWith(skills: const []))
+          .toList();
+      return savedEmpty.isNotEmpty
+          ? savedEmpty
+          : const [SkillGroup(heading: '', skills: [])];
+    }
+
+    final savedGroups = _resume.skillGroups
+        .where(
+          (group) =>
+              group.heading.trim().isNotEmpty ||
+              group.skills.any((skill) => skill.trim().isNotEmpty),
+        )
+        .toList();
+    if (savedGroups.isEmpty) {
+      return SkillAutoCategorizer.categorize(currentSkills);
+    }
+
+    return _syncSavedSkillGroupsWithFlatSkills(savedGroups, currentSkills);
+  }
+
+  /// Keeps category names and skill placement from [savedGroups], drops skills
+  /// removed in simple list, and places newly added skills into categories.
+  List<SkillGroup> _syncSavedSkillGroupsWithFlatSkills(
+    List<SkillGroup> savedGroups,
+    List<String> currentSkills,
+  ) {
+    final remainingByLower = <String, String>{
+      for (final skill in currentSkills) skill.toLowerCase(): skill,
+    };
+
+    final preserved = <SkillGroup>[];
+    for (final group in savedGroups) {
+      final kept = <String>[];
+      for (final skill in group.skills) {
+        final match = remainingByLower.remove(skill.trim().toLowerCase());
+        if (match != null) {
+          kept.add(match);
+        }
+      }
+      if (kept.isNotEmpty || group.heading.trim().isNotEmpty) {
+        preserved.add(group.copyWith(skills: kept));
+      }
+    }
+
+    final newlyAdded = remainingByLower.values.toList();
+    if (newlyAdded.isEmpty) {
+      return preserved.isEmpty
+          ? SkillAutoCategorizer.categorize(currentSkills)
+          : _orderSkillGroups(preserved);
+    }
+
+    // Place only the new skills; merge into existing headings when possible.
+    final autoForNew = SkillAutoCategorizer.categorize(newlyAdded);
+    final merged = [...preserved];
+    for (final autoGroup in autoForNew) {
+      final index = merged.indexWhere(
+        (group) =>
+            group.heading.trim().toLowerCase() ==
+            autoGroup.heading.trim().toLowerCase(),
+      );
+      if (index >= 0) {
+        merged[index] = merged[index].copyWith(
+          skills: [...merged[index].skills, ...autoGroup.skills],
+        );
+      } else {
+        merged.add(autoGroup);
+      }
+    }
+    return _orderSkillGroups(merged);
+  }
+
+  List<SkillGroup> _orderSkillGroups(List<SkillGroup> groups) {
+    final order = SkillAutoCategorizer.categoryOrder;
+    int rank(SkillGroup group) {
+      final heading = group.heading.trim().toLowerCase();
+      final index = order.indexWhere((name) => name.toLowerCase() == heading);
+      return index >= 0 ? index : order.length;
+    }
+
+    final sorted = [...groups]
+      ..sort((a, b) {
+        final byRank = rank(a).compareTo(rank(b));
+        if (byRank != 0) {
+          return byRank;
+        }
+        return a.heading.toLowerCase().compareTo(b.heading.toLowerCase());
+      });
+    return sorted;
+  }
+
+  void addSkillGroup({String heading = ''}) {
+    final groups = [
+      ..._resume.skillGroups,
+      SkillGroup(heading: heading, skills: const []),
+    ];
+    updateResume(
+      (resume) => resume.copyWith(
+        useSkillSubheadings: true,
+        skillGroups: groups,
+        skills: _flattenSkillGroups(groups),
+      ),
+    );
+  }
+
+  void removeSkillGroup(int index) {
+    if (index < 0 || index >= _resume.skillGroups.length) {
+      return;
+    }
+    final groups = [..._resume.skillGroups]..removeAt(index);
+    updateResume(
+      (resume) => resume.copyWith(
+        skillGroups: groups,
+        skills: _flattenSkillGroups(groups),
+      ),
+    );
+  }
+
+  void updateSkillGroupHeading(int index, String heading) {
+    if (index < 0 || index >= _resume.skillGroups.length) {
+      return;
+    }
+    final groups = [..._resume.skillGroups];
+    groups[index] = groups[index].copyWith(heading: heading);
+    updateResume((resume) => resume.copyWith(skillGroups: groups));
+  }
+
+  bool addSkillToGroup(int index, String skill) {
+    final value = skill.trim();
+    if (value.isEmpty || index < 0 || index >= _resume.skillGroups.length) {
+      return false;
+    }
+    if (_resume.skills.any((s) => s.toLowerCase() == value.toLowerCase())) {
+      return false;
+    }
+    final groups = [..._resume.skillGroups];
+    final current = groups[index];
+    groups[index] = current.copyWith(
+      skills: [...current.skills, value],
+    );
+    updateResume(
+      (resume) => resume.copyWith(
+        skillGroups: groups,
+        skills: _flattenSkillGroups(groups),
+      ),
+    );
+    return true;
+  }
+
+  void removeSkillFromGroup(int index, String skill) {
+    if (index < 0 || index >= _resume.skillGroups.length) {
+      return;
+    }
+    final groups = [..._resume.skillGroups];
+    final current = groups[index];
+    groups[index] = current.copyWith(
+      skills: [...current.skills]..remove(skill),
+    );
+    updateResume(
+      (resume) => resume.copyWith(
+        skillGroups: groups,
+        skills: _flattenSkillGroups(groups),
+      ),
+    );
+  }
+
+  List<String> _flattenSkillGroups(List<SkillGroup> groups) {
+    final seen = <String>{};
+    final items = <String>[];
+    for (final group in groups) {
+      for (final skill in group.skills) {
+        final value = skill.trim();
+        if (value.isEmpty) {
+          continue;
+        }
+        if (seen.add(value.toLowerCase())) {
+          items.add(value);
+        }
+      }
+    }
+    items.sort(
+      (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
+    );
+    return items;
+  }
+
   void setIncludeProjectsInResume(bool value) {
     updateResume((resume) => resume.copyWith(includeProjectsInResume: value));
   }
@@ -530,16 +756,49 @@ class ResumeEditorViewModel extends ChangeNotifier {
       return false;
     }
 
-    if (_resume.skills.contains(value)) {
+    if (_resume.skills.any((s) => s.toLowerCase() == value.toLowerCase())) {
       return false;
     }
 
-    final items = {..._resume.skills, value}.toList()..sort();
+    if (_resume.useSkillSubheadings) {
+      if (_resume.skillGroups.isEmpty) {
+        final groups = [
+          SkillGroup(heading: 'Skills', skills: [value]),
+        ];
+        updateResume(
+          (resume) => resume.copyWith(
+            skillGroups: groups,
+            skills: _flattenSkillGroups(groups),
+          ),
+        );
+        return true;
+      }
+      return addSkillToGroup(_resume.skillGroups.length - 1, value);
+    }
+
+    final items = {..._resume.skills, value}.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     updateResume((resume) => resume.copyWith(skills: items));
     return true;
   }
 
   void removeSkill(String skill) {
+    if (_resume.useSkillSubheadings) {
+      final groups = _resume.skillGroups
+          .map(
+            (group) => group.copyWith(
+              skills: [...group.skills]..remove(skill),
+            ),
+          )
+          .toList();
+      updateResume(
+        (resume) => resume.copyWith(
+          skillGroups: groups,
+          skills: _flattenSkillGroups(groups),
+        ),
+      );
+      return;
+    }
     final items = [..._resume.skills]..remove(skill);
     updateResume((resume) => resume.copyWith(skills: items));
   }
@@ -594,7 +853,40 @@ class ResumeEditorViewModel extends ChangeNotifier {
   Future<void> suggestSkills() async {
     await _runBusy(() async {
       final suggestions = await aiService.suggestSkills(resume: _resume);
-      final items = {..._resume.skills, ...suggestions}.toList()..sort();
+      final newSkills = suggestions
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .where(
+            (s) => !_resume.skills.any(
+              (existing) => existing.toLowerCase() == s.toLowerCase(),
+            ),
+          )
+          .toList();
+      if (newSkills.isEmpty) {
+        return;
+      }
+
+      if (_resume.useSkillSubheadings) {
+        final groups = [..._resume.skillGroups];
+        if (groups.isEmpty) {
+          groups.add(SkillGroup(heading: 'Skills', skills: newSkills));
+        } else {
+          final last = groups.last;
+          groups[groups.length - 1] = last.copyWith(
+            skills: [...last.skills, ...newSkills],
+          );
+        }
+        updateResume(
+          (resume) => resume.copyWith(
+            skillGroups: groups,
+            skills: _flattenSkillGroups(groups),
+          ),
+        );
+        return;
+      }
+
+      final items = {..._resume.skills, ...newSkills}.toList()
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       updateResume((resume) => resume.copyWith(skills: items));
     });
   }

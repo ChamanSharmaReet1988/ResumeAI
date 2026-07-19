@@ -838,12 +838,15 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
           Set<String> highlightedItems,
         })
       >[
-        if (resume.skillsForResume.isNotEmpty)
+        if (resume.showCategorisedSkills ||
+            resume.skillsLinesForDisplay.isNotEmpty)
           (
             type: _ClassicSidebarSectionType.skills,
-            items: resume.skillsForResume
-                .where((item) => item.trim().isNotEmpty)
-                .toList(),
+            items: resume.showCategorisedSkills
+                ? resume.skillGroupsForResume
+                      .map((group) => group.skillsCommaSeparated)
+                      .toList()
+                : resume.skillsLinesForDisplay,
             highlightedItems: highlightedSkills,
           ),
         if (_classicSidebarLanguageLines(resume).isNotEmpty)
@@ -1061,34 +1064,83 @@ pw.Widget _classicSidebarPanel({
             pw.Container(height: 1.2, color: dividerColor),
             pw.SizedBox(height: 10),
           ],
-          _classicSidebarListSection(
-            title:
-                pageSlice.sections[index].type ==
-                    _ClassicSidebarSectionType.skills
-                ? 'Skills'
-                : 'Languages',
-            items: pageSlice.sections[index].items,
-            titleColor: titleColor,
-            bulletColor: accentColor,
-            textColor: titleColor,
-            fontSize: bodyPt,
-            sectionTitlePt: sectionTitlePt,
-            garamond: garamond,
-            textWeight: ResumeTypography.classicSidebarBodyWeight,
-            highlightedItems: pageSlice.sections[index].highlightedItems,
-            highlightColor: highlightColor,
-            showTitle: pageSlice.sections[index].showSectionTitle,
-            itemBottom:
-                pageSlice.sections[index].type ==
-                    _ClassicSidebarSectionType.skills
-                ? 6
-                : 8,
-            titleBottomGap:
-                pageSlice.sections[index].type ==
-                    _ClassicSidebarSectionType.skills
-                ? 14
-                : 8,
-          ),
+          if (pageSlice.sections[index].type ==
+                  _ClassicSidebarSectionType.skills &&
+              resume.showCategorisedSkills)
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                if (pageSlice.sections[index].showSectionTitle) ...[
+                  pw.Text(
+                    'Skills',
+                    style: garamond != null
+                        ? garamondPdfTextStyle(
+                            garamond,
+                            ResumeTypography.classicSidebarSectionTitleWeight,
+                            fontSize: sectionTitlePt,
+                            color: titleColor,
+                          )
+                        : pw.TextStyle(
+                            fontSize: sectionTitlePt,
+                            fontWeight: pw.FontWeight.bold,
+                            color: titleColor,
+                          ),
+                  ),
+                  pw.SizedBox(height: 14),
+                ],
+                ..._categorisedSkillsPdfWidgets(
+                  resume,
+                  bodyStyle: garamond != null
+                      ? garamondPdfTextStyle(
+                          garamond,
+                          ResumeTypography.classicSidebarBodyWeight,
+                          fontSize: bodyPt,
+                          color: titleColor,
+                        )
+                      : pw.TextStyle(
+                          fontSize: bodyPt,
+                          color: titleColor,
+                        ),
+                  categoryStyle: _skillCategorySubtitlePdfStyle(
+                    garamond,
+                    weight: ResumeTypography.classicSidebarSubtitleWeight,
+                    fontSize: resume.classicSidebarScaledPt(
+                      ResumeTypography.classicSidebarSubtitlePt,
+                    ),
+                    color: titleColor,
+                  ),
+                ),
+              ],
+            )
+          else
+            _classicSidebarListSection(
+              title:
+                  pageSlice.sections[index].type ==
+                      _ClassicSidebarSectionType.skills
+                  ? 'Skills'
+                  : 'Languages',
+              items: pageSlice.sections[index].items,
+              titleColor: titleColor,
+              bulletColor: accentColor,
+              textColor: titleColor,
+              fontSize: bodyPt,
+              sectionTitlePt: sectionTitlePt,
+              garamond: garamond,
+              textWeight: ResumeTypography.classicSidebarBodyWeight,
+              highlightedItems: pageSlice.sections[index].highlightedItems,
+              highlightColor: highlightColor,
+              showTitle: pageSlice.sections[index].showSectionTitle,
+              itemBottom:
+                  pageSlice.sections[index].type ==
+                      _ClassicSidebarSectionType.skills
+                  ? 6
+                  : 8,
+              titleBottomGap:
+                  pageSlice.sections[index].type ==
+                      _ClassicSidebarSectionType.skills
+                  ? 14
+                  : 8,
+            ),
         ],
       ],
     ),
@@ -1332,9 +1384,7 @@ List<_DetailsSidebarPageSlice> _detailsSidebarPageSlices({
   required Set<String> highlightedSkills,
   required PdfPageFormat pageFormat,
 }) {
-  final skills = resume.includeSkillsInResume
-      ? resume.skills.where((item) => item.trim().isNotEmpty).toList()
-      : const <String>[];
+  final skills = resume.skillsLinesForDisplay;
   final infoItems = _detailsSidebarInfoItems(resume);
   final hasJobTitle = resume.jobTitle.trim().isNotEmpty;
 
@@ -1594,7 +1644,18 @@ pw.Widget _detailsSidebarPanel({
             dividerColor: dividerColor,
           ),
           pw.SizedBox(height: 12),
-          if (pageSlice.skills.isEmpty)
+          if (resume.showCategorisedSkills && pageSlice.showSkillsHeading)
+            ..._categorisedSkillsPdfWidgets(
+              resume,
+              bodyStyle: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
+              categoryStyle: _skillCategorySubtitlePdfStyle(
+                null,
+                weight: ResumeTypography.darkHeaderSubtitleWeight,
+                fontSize: ResumeTypography.darkHeaderSubtitlePt,
+                color: titleColor,
+              ),
+            )
+          else if (pageSlice.skills.isEmpty)
             pw.Text(
               pageSlice.showIdentity ? 'Add skills' : '',
               style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
@@ -6139,6 +6200,56 @@ class CoverLetterPdfTypography {
   final double namePt;
 }
 
+/// Same weight/size as experience/education subtitles in most templates.
+pw.TextStyle _skillCategorySubtitlePdfStyle(
+  GaramondPdfFonts? garamond, {
+  PdfColor color = PdfColors.black,
+  int weight = ResumeTypography.atsStructuredSubtitleWeight,
+  double fontSize = ResumeTypography.atsStructuredSubtitlePt,
+}) {
+  if (garamond != null) {
+    return garamondPdfTextStyle(
+      garamond,
+      weight,
+      fontSize: fontSize,
+      color: color,
+    );
+  }
+  return pw.TextStyle(
+    fontSize: fontSize,
+    fontWeight: weight >= 600 ? pw.FontWeight.bold : pw.FontWeight.normal,
+    color: color,
+  );
+}
+
+/// Category subtitle, then comma-separated skills underneath (PDF).
+List<pw.Widget> _categorisedSkillsPdfWidgets(
+  ResumeData resume, {
+  required pw.TextStyle bodyStyle,
+  pw.TextStyle? categoryStyle,
+  double groupSpacing = 7,
+}) {
+  final groups = resume.skillGroupsForResume;
+  if (groups.isEmpty) {
+    return const <pw.Widget>[];
+  }
+  final headingStyle =
+      categoryStyle ??
+      bodyStyle.copyWith(
+        fontWeight: pw.FontWeight.normal,
+        fontSize: ResumeTypography.atsStructuredSubtitlePt,
+      );
+  return [
+    for (var i = 0; i < groups.length; i++) ...[
+      if (groups[i].heading.trim().isNotEmpty)
+        pw.Text(groups[i].heading.trim(), style: headingStyle),
+      if (groups[i].heading.trim().isNotEmpty) pw.SizedBox(height: 2),
+      pw.Text(groups[i].skillsCommaSeparated, style: bodyStyle),
+      if (i < groups.length - 1) pw.SizedBox(height: groupSpacing),
+    ],
+  ];
+}
+
 class ResumePdfService {
   InterPdfFonts? _interPdfFontsCache;
   CalibriPdfFonts? _calibriPdfFontsCache;
@@ -7400,13 +7511,24 @@ class ResumePdfService {
       resume.resumeContactItems();
 
   List<String> _skillsForDisplay(ResumeData resume) {
-    if (!resume.includeSkillsInResume) {
-      return const [];
+    return resume.skillsLinesForDisplay;
+  }
+
+  /// Skills body: categorised blocks, or [flatBuilder] for simple list.
+  List<pw.Widget> _skillsPdfBodyWidgets(
+    ResumeData resume, {
+    required pw.TextStyle bodyStyle,
+    pw.TextStyle? categoryStyle,
+    required List<pw.Widget> Function(List<String> skills) flatBuilder,
+  }) {
+    if (resume.showCategorisedSkills) {
+      return _categorisedSkillsPdfWidgets(
+        resume,
+        bodyStyle: bodyStyle,
+        categoryStyle: categoryStyle,
+      );
     }
-    if (resume.skills.isNotEmpty) {
-      return resume.skills;
-    }
-    return const <String>[];
+    return flatBuilder(_skillsForDisplay(resume));
   }
 
   pw.Widget _corporateHeadingText(

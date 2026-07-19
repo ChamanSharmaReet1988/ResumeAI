@@ -487,8 +487,14 @@ class _DarkHeaderPreview extends StatelessWidget {
           title: 'SKILLS',
           titleColor: preset.titleColor,
           lineColor: _CorporatePdfMetrics.lineColor,
-          hasContent: skills.isNotEmpty,
-          child: _CorporateSkillsColumns(skills: skills, bodyStyle: bodyStyle),
+          hasContent:
+              resume.showCategorisedSkills || skills.isNotEmpty,
+          child: _CorporateSkillsColumns(
+            skills: skills,
+            bodyStyle: bodyStyle,
+            resume: resume,
+            categoryStyle: subtitleStyle,
+          ),
         ),
         if (resume.includeProjectsInResume)
           _CorporatePdfLikeSection(
@@ -598,13 +604,25 @@ class _CorporateSkillsColumns extends StatelessWidget {
   const _CorporateSkillsColumns({
     required this.skills,
     required this.bodyStyle,
+    this.resume,
+    this.categoryStyle,
   });
 
   final List<String> skills;
   final TextStyle bodyStyle;
+  final ResumeData? resume;
+  final TextStyle? categoryStyle;
 
   @override
   Widget build(BuildContext context) {
+    if (resume != null && resume!.showCategorisedSkills) {
+      return _categorisedSkillsPreview(
+        groups: resume!.skillGroupsForResume,
+        bodyStyle: bodyStyle,
+        categoryStyle: categoryStyle,
+      );
+    }
+
     final midpoint = (skills.length / 2).ceil();
     final left = skills.take(midpoint).toList();
     final right = skills.skip(midpoint).toList();
@@ -1272,24 +1290,31 @@ class _CreativePreview extends StatelessWidget {
                       sectionTitlePt: sectionTitlePt,
                     ),
                     const SizedBox(height: headingGap),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _CreativeBulletColumn(
-                            items: skills.take(midpoint).toList(),
-                            bodyStyle: bodyStyle,
+                    if (resume.showCategorisedSkills)
+                      _categorisedSkillsPreview(
+                        groups: resume.skillGroupsForResume,
+                        bodyStyle: bodyStyle,
+                        categoryStyle: subtitleStyle,
+                      )
+                    else
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _CreativeBulletColumn(
+                              items: skills.take(midpoint).toList(),
+                              bodyStyle: bodyStyle,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _CreativeBulletColumn(
-                            items: skills.skip(midpoint).toList(),
-                            bodyStyle: bodyStyle,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _CreativeBulletColumn(
+                              items: skills.skip(midpoint).toList(),
+                              bodyStyle: bodyStyle,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                     const SizedBox(height: sectionGap),
                     _CreativeSidebarHeading(
                       title: 'PROJECTS',
@@ -1486,16 +1511,27 @@ class _ClassicSidebarPreview extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _ClassicSidebarListSection(
-                            title: 'SKILLS',
-                            items: skills,
-                            bulletColor: accentColor,
-                            titleStyle: sectionTitleStyle,
-                            textStyle: bodyStyle,
-                            maxLines: 2,
-                            headingGap: 14,
-                            itemGap: 14,
-                          ),
+                          if (resume.showCategorisedSkills) ...[
+                            Text('SKILLS', style: sectionTitleStyle),
+                            SizedBox(height: 14),
+                            _categorisedSkillsPreview(
+                              groups: resume.skillGroupsForResume,
+                              bodyStyle: bodyStyle,
+                              categoryStyle: subtitleStyle.copyWith(
+                                color: titleColor,
+                              ),
+                            ),
+                          ] else
+                            _ClassicSidebarListSection(
+                              title: 'SKILLS',
+                              items: skills,
+                              bulletColor: accentColor,
+                              titleStyle: sectionTitleStyle,
+                              textStyle: bodyStyle,
+                              maxLines: 2,
+                              headingGap: 14,
+                              itemGap: 14,
+                            ),
                           if (languages.isNotEmpty) ...[
                             SizedBox(height: _sectionGap),
                             Container(height: 1.1, color: dividerColor),
@@ -1756,7 +1792,18 @@ class _DetailsSidebarPreview extends StatelessWidget {
                     dividerColor: dividerColor,
                   ),
                   const SizedBox(height: 10),
-                  if (skills.isEmpty)
+                  if (resume.showCategorisedSkills)
+                    _categorisedSkillsPreview(
+                      groups: resume.skillGroupsForResume,
+                      bodyStyle: bodyStyle.copyWith(color: titleColor),
+                      categoryStyle: ResumeTypography.garamondPreviewStyle(
+                        weight: ResumeTypography.darkHeaderSubtitleWeight,
+                        fontSize: ResumeTypography.darkHeaderSubtitlePt,
+                        color: titleColor,
+                        height: ResumeTypography.textLineHeight,
+                      ),
+                    )
+                  else if (skills.isEmpty)
                     Text(
                       'Add skills',
                       style: bodyStyle.copyWith(color: mutedColor),
@@ -2031,7 +2078,8 @@ class _AtsStructuredPreview extends StatelessWidget {
             showAllContent: showAllContent,
           ),
         ],
-        if (resume.includeSkillsInResume && skills.isNotEmpty) ...[
+        if (resume.includeSkillsInResume &&
+            (resume.showCategorisedSkills || skills.isNotEmpty)) ...[
           const SizedBox(height: _sectionGap),
           _atsBandTitle('SKILLS', accent, band),
           const SizedBox(height: 6),
@@ -2039,6 +2087,8 @@ class _AtsStructuredPreview extends StatelessWidget {
             skills: skills,
             bodyStyle: bodyStyle,
             showAllContent: showAllContent,
+            resume: resume,
+            categoryStyle: subtitleStyle,
           ),
         ],
         if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
@@ -2213,7 +2263,17 @@ Widget _atsStructuredSkillsGrid({
   required List<String> skills,
   required TextStyle bodyStyle,
   required bool showAllContent,
+  ResumeData? resume,
+  TextStyle? categoryStyle,
 }) {
+  if (resume != null && resume.showCategorisedSkills) {
+    return _categorisedSkillsPreview(
+      groups: resume.skillGroupsForResume,
+      bodyStyle: bodyStyle,
+      categoryStyle: categoryStyle,
+    );
+  }
+
   final items = showAllContent ? skills : skills.take(8).toList();
   if (items.isEmpty) {
     return Text('List relevant tools and competencies.', style: bodyStyle);
@@ -2412,12 +2472,15 @@ class _AtsLatexClassicPreview extends StatelessWidget {
           ),
         ],
         if (resume.includeSkillsInResume &&
-            _pdfAlignedSkills(resume).isNotEmpty) ...[
+            (resume.showCategorisedSkills ||
+                _pdfAlignedSkills(resume).isNotEmpty)) ...[
           _latexPreviewSection('Skills', sectionStyle, ink),
           _atsStructuredSkillsGrid(
             skills: _pdfAlignedSkills(resume),
             bodyStyle: bodyStyle,
             showAllContent: showAllContent,
+            resume: resume,
+            categoryStyle: boldStyle,
           ),
         ],
         if (resume.includeProjectsInResume &&
@@ -2723,23 +2786,31 @@ class _AccentStripPreview extends StatelessWidget {
                                 ),
                               ),
                           ],
-                          if (skills.isNotEmpty) ...[
+                          if (resume.showCategorisedSkills ||
+                              skills.isNotEmpty) ...[
                             SizedBox(height: sectionGap - 6),
                             _AccentStripSectionTitle(
                               title: 'SKILLS',
                               style: headingStyle,
                             ),
                             const SizedBox(height: 10),
-                            Wrap(
-                              spacing: 18,
-                              runSpacing: 6,
-                              children: skills
-                                  .map(
-                                    (skill) =>
-                                        Text('• $skill', style: bodyStyle),
-                                  )
-                                  .toList(),
-                            ),
+                            if (resume.showCategorisedSkills)
+                              _categorisedSkillsPreview(
+                                groups: resume.skillGroupsForResume,
+                                bodyStyle: bodyStyle,
+                                categoryStyle: subsectionStyle,
+                              )
+                            else
+                              Wrap(
+                                spacing: 18,
+                                runSpacing: 6,
+                                children: skills
+                                    .map(
+                                      (skill) =>
+                                          Text('• $skill', style: bodyStyle),
+                                    )
+                                    .toList(),
+                              ),
                           ],
                           if (projects.isNotEmpty) ...[
                             SizedBox(height: sectionGap - 6),
@@ -3207,12 +3278,15 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                     const SizedBox(height: 4),
                   ],
                 ]),
-              if (resume.includeSkillsInResume && skills.isNotEmpty)
+              if (resume.includeSkillsInResume &&
+                  (resume.showCategorisedSkills || skills.isNotEmpty))
                 ruledSection('Skills', [
                   _atsStructuredSkillsGrid(
                     skills: skills,
                     bodyStyle: bodyStyle,
                     showAllContent: false,
+                    resume: resume,
+                    categoryStyle: subtitleStyle,
                   ),
                 ]),
               if (resume.includeProjectsInResume && projects.isNotEmpty)
@@ -3460,6 +3534,8 @@ class _AtsModernFlowPreview extends StatelessWidget {
                             skills: skills,
                             bodyStyle: bodyStyle,
                             showAllContent: false,
+                            resume: resume,
+                            categoryStyle: subtitleStyle,
                           ),
                         ],
                 ),
@@ -3701,14 +3777,21 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                 sectionRule(),
                 Text('SKILLS', style: sectionTitleStyle),
                 const SizedBox(height: 6),
-                Text(
-                  skills.isEmpty
-                      ? 'List tools and competencies.'
-                      : skills.join(', '),
-                  style: bodyStyle,
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                if (resume.showCategorisedSkills)
+                  _categorisedSkillsPreview(
+                    groups: resume.skillGroupsForResume,
+                    bodyStyle: bodyStyle,
+                    categoryStyle: sectionSubtitleStyle,
+                  )
+                else
+                  Text(
+                    skills.isEmpty
+                        ? 'List tools and competencies.'
+                        : skills.join(', '),
+                    style: bodyStyle,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
               ],
               if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
                 sectionRule(),
@@ -3991,7 +4074,13 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
               if (resume.includeSkillsInResume) ...[
                 const SizedBox(height: 12),
                 sectionTitleWithRule('Areas of Expertise'),
-                if (skills.isEmpty)
+                if (resume.showCategorisedSkills)
+                  _categorisedSkillsPreview(
+                    groups: resume.skillGroupsForResume,
+                    bodyStyle: bodyStyle,
+                    categoryStyle: subtitleStyle,
+                  )
+                else if (skills.isEmpty)
                   Text(
                     'Add skills aligned to your target roles.',
                     style: bodyStyle,
@@ -4270,6 +4359,8 @@ class _AtsExecutivePreview extends StatelessWidget {
                             skills: skills,
                             bodyStyle: bodyStyle,
                             showAllContent: false,
+                            resume: resume,
+                            categoryStyle: subtitleStyle,
                           ),
                         ],
                 ),
@@ -5298,12 +5389,41 @@ String _pdfAlignedInitials(ResumeData resume) {
 List<String> _pdfAlignedContactItems(ResumeData resume) =>
     resume.resumeContactItems();
 
-/// Same fallback skills as [ResumePdfService._skillsForDisplay].
+/// Same display lines as [ResumePdfService._skillsForDisplay].
 List<String> _pdfAlignedSkills(ResumeData resume) {
-  if (resume.skills.isNotEmpty) {
-    return resume.skills;
+  return resume.skillsLinesForDisplay;
+}
+
+/// Category subtitle, then comma-separated skills under each heading.
+Widget _categorisedSkillsPreview({
+  required List<SkillGroup> groups,
+  required TextStyle bodyStyle,
+  TextStyle? categoryStyle,
+  double groupSpacing = 8,
+}) {
+  if (groups.isEmpty) {
+    return Text('Add skills.', style: bodyStyle);
   }
-  return const <String>[];
+  // Match experience/education subtitle scale when a style is not provided.
+  final headingStyle =
+      categoryStyle ??
+      bodyStyle.copyWith(
+        fontWeight: FontWeight.w500,
+        fontSize: ResumeTypography.atsStructuredSubtitlePt,
+      );
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      for (var i = 0; i < groups.length; i++) ...[
+        if (groups[i].heading.trim().isNotEmpty)
+          Text(groups[i].heading.trim(), style: headingStyle),
+        if (groups[i].heading.trim().isNotEmpty) const SizedBox(height: 2),
+        Text(groups[i].skillsCommaSeparated, style: bodyStyle),
+        if (i < groups.length - 1) SizedBox(height: groupSpacing),
+      ],
+    ],
+  );
 }
 
 List<String> _darkHeaderContactLines(List<String> items) {

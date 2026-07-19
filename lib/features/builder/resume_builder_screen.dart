@@ -36,6 +36,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   final _skillController = TextEditingController();
   final _skillFocusNode = FocusNode();
+  final Map<int, TextEditingController> _groupSkillControllers = {};
   final _imagePicker = ImagePicker();
   final _personalFieldFocusNodes = List<FocusNode>.generate(
     8,
@@ -182,6 +183,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       ..removeListener(_handleSkillFocusChange)
       ..dispose();
     _skillController.dispose();
+    for (final controller in _groupSkillControllers.values) {
+      controller.dispose();
+    }
     _pageController.dispose();
     for (final controller in _stepScrollControllers.values) {
       controller.dispose();
@@ -274,28 +278,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     await context.read<ResumeEditorViewModel>().printPdf();
   }
 
-  Future<void> _suggestSkills() async {
-    final viewModel = context.read<ResumeEditorViewModel>();
-    final previousCount = viewModel.resume.skills.length;
-    await viewModel.suggestSkills();
-    if (!mounted) {
-      return;
-    }
-
-    final addedCount =
-        context.read<ResumeEditorViewModel>().resume.skills.length -
-        previousCount;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          addedCount > 0
-              ? 'AI added $addedCount skill${addedCount == 1 ? '' : 's'} to the draft.'
-              : 'No new skills were added.',
-        ),
-      ),
-    );
-  }
-
   Future<void> _generateSummary() async {
     final viewModel = context.read<ResumeEditorViewModel>();
     final hadSummary = viewModel.resume.summary.trim().isNotEmpty;
@@ -328,16 +310,58 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (trimmed.isEmpty) {
       return;
     }
-    if (viewModel.resume.skills.contains(trimmed)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This skill is already in your list.')),
-      );
+    if (viewModel.resume.skills.any(
+      (s) => s.toLowerCase() == trimmed.toLowerCase(),
+    )) {
+      _showDuplicateSkillMessage();
       return;
     }
     final added = viewModel.addSkill(_skillController.text);
     if (added) {
       _skillController.clear();
+      setState(() {});
     }
+  }
+
+  TextEditingController _groupSkillController(int index) {
+    return _groupSkillControllers.putIfAbsent(
+      index,
+      TextEditingController.new,
+    );
+  }
+
+  void _addSkillToGroupFromInput(int index) {
+    if (!mounted) {
+      return;
+    }
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final controller = _groupSkillController(index);
+    final trimmed = controller.text.trim();
+    if (trimmed.isEmpty) {
+      return;
+    }
+    final added = viewModel.addSkillToGroup(index, trimmed);
+    if (added) {
+      controller.clear();
+      setState(() {});
+    } else {
+      _showDuplicateSkillMessage();
+    }
+  }
+
+  void _reindexGroupSkillControllersAfterRemove(int removedIndex) {
+    final next = <int, TextEditingController>{};
+    for (final entry in _groupSkillControllers.entries) {
+      if (entry.key == removedIndex) {
+        entry.value.dispose();
+        continue;
+      }
+      final newKey = entry.key > removedIndex ? entry.key - 1 : entry.key;
+      next[newKey] = entry.value;
+    }
+    _groupSkillControllers
+      ..clear()
+      ..addAll(next);
   }
 
   void _showDuplicateSkillMessage() {
@@ -1625,29 +1649,31 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         children: [
           const SizedBox(height: 18),
           personalFields,
-          const SizedBox(height: 4),
-          Builder(
-            builder: (context) {
-              final primary = Theme.of(context).colorScheme.primary;
-              return Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  TextButton.icon(
-                    key: const Key('generate-summary-ai-button'),
-                    onPressed: viewModel.isBusy ? null : _generateSummary,
-                    style: _secondaryActionButtonStyle(context),
-                    icon: Icon(
-                      Icons.psychology_alt_outlined,
-                      size: 24,
-                      color: primary,
+          if (viewModel.resume.jobTitle.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Builder(
+              builder: (context) {
+                final primary = Theme.of(context).colorScheme.primary;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    TextButton.icon(
+                      key: const Key('generate-summary-ai-button'),
+                      onPressed: viewModel.isBusy ? null : _generateSummary,
+                      style: _secondaryActionButtonStyle(context),
+                      icon: Icon(
+                        Icons.psychology_alt_outlined,
+                        size: 24,
+                        color: primary,
+                      ),
+                      label: const Text('Suggest summary'),
                     ),
-                    label: const Text('Suggest summary'),
-                  ),
-                ],
-              );
-            },
-          ),
+                  ],
+                );
+              },
+            ),
+          ],
           const SizedBox(height: 36),
           _buildProfilePhotoPicker(viewModel),
         ],
@@ -2231,10 +2257,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   Widget _buildSkillsStep(ResumeEditorViewModel viewModel) {
+    final useSubheadings = viewModel.resume.useSkillSubheadings;
+    final chipLabelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      fontSize: (Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14) - 2,
+      fontWeight: FontWeight.w400,
+    );
+
     return _StepSurface(
       title: 'Skills',
       subtitle:
-          'Add job-specific tools and keywords. Suggest skills prioritizes each work experience role, then descriptions and bullets, then your target job title and the rest of the resume.',
+          'Add job-specific tools and keywords. Choose a simple list, or categorise skills under headings (for example Languages, Tools).',
       titleTrailing: _resumeSectionVisibilityLead(
         viewModel: viewModel,
         included: viewModel.resume.includeSkillsInResume,
@@ -2251,138 +2283,269 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 8),
-          Builder(
-            builder: (context) {
-              final inset = MediaQuery.viewInsetsOf(context).bottom;
-              final skillSuggestions = skillSuggestionsForQuery(
-                _skillController.text,
-                excludeLowercase: viewModel.resume.skills
-                    .map((s) => s.toLowerCase())
-                    .toSet(),
-              ).toList();
-              final theme = Theme.of(context);
-              final dividerColor = theme.colorScheme.outlineVariant.withValues(
-                alpha: 0.28,
-              );
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: _skillController,
-                    focusNode: _skillFocusNode,
-                    textInputAction: TextInputAction.done,
-                    onChanged: (_) => setState(() {}),
-                    onSubmitted: (_) => _addSkillFromInput(),
-                    scrollPadding: EdgeInsets.only(
-                      left: 20,
-                      top: 20,
-                      right: 20,
-                      bottom: inset + 120,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Add a skill',
-                      helperText:
-                          'Type to see suggestions or add your own skill',
-                      helperStyle: Theme.of(context).textTheme.labelSmall
-                          ?.copyWith(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                            fontSize: 11,
-                            height: 1.35,
-                          ),
-                      suffixIcon: IconButton(
-                        onPressed: _addSkillFromInput,
-                        icon: const Icon(Icons.add_rounded),
-                      ),
-                    ),
+          const SizedBox(height: 12),
+          RadioGroup<bool>(
+            groupValue: useSubheadings,
+            onChanged: (bool? value) {
+              if (value == null || viewModel.isBusy) {
+                return;
+              }
+              viewModel.setUseSkillSubheadings(value);
+              setState(() {});
+            },
+            child: Row(
+              children: [
+                Expanded(
+                  child: _SkillsModeRadioOption(
+                    value: false,
+                    label: 'Simple list',
+                    enabled: !viewModel.isBusy,
                   ),
-                  if (_skillFocusNode.hasFocus && skillSuggestions.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Material(
-                        elevation: 6,
-                        shadowColor: Colors.black26,
-                        surfaceTintColor: Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        color: theme.cardColor,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 360),
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            padding: EdgeInsets.zero,
-                            itemCount: skillSuggestions.length,
-                            separatorBuilder: (_, _) =>
-                                Divider(height: 1, color: dividerColor),
-                            itemBuilder: (context, index) {
-                              final option = skillSuggestions[index];
-                              return InkWell(
-                                onTap: () {
-                                  final added = viewModel.addSkill(option);
-                                  if (added) {
-                                    _skillController.clear();
-                                    setState(() {});
-                                  } else {
-                                    _showDuplicateSkillMessage();
-                                  }
-                                  _skillFocusNode.unfocus();
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  child: Text(
-                                    option,
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      color: theme.colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                ),
+                Expanded(
+                  child: _SkillsModeRadioOption(
+                    value: true,
+                    label: 'Categorised',
+                    enabled: !viewModel.isBusy,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (!useSubheadings) ...[
+            Builder(
+              builder: (context) {
+                final inset = MediaQuery.viewInsetsOf(context).bottom;
+                final skillSuggestions = skillSuggestionsForQuery(
+                  _skillController.text,
+                  excludeLowercase: viewModel.resume.skills
+                      .map((s) => s.toLowerCase())
+                      .toSet(),
+                ).toList();
+                final theme = Theme.of(context);
+                final dividerColor = theme.colorScheme.outlineVariant
+                    .withValues(alpha: 0.28);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _skillController,
+                      focusNode: _skillFocusNode,
+                      textInputAction: TextInputAction.done,
+                      onChanged: (_) => setState(() {}),
+                      onSubmitted: (_) => _addSkillFromInput(),
+                      scrollPadding: EdgeInsets.only(
+                        left: 20,
+                        top: 20,
+                        right: 20,
+                        bottom: inset + 120,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Add a skill',
+                        helperText:
+                            'Type to see suggestions or add your own skill',
+                        helperStyle: Theme.of(context).textTheme.labelSmall
+                            ?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                              height: 1.35,
+                            ),
+                        suffixIcon: IconButton(
+                          onPressed: _addSkillFromInput,
+                          icon: const Icon(Icons.add_rounded),
                         ),
                       ),
                     ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              FilledButton.tonalIcon(
-                onPressed: viewModel.isBusy ? null : _suggestSkills,
-                style: _mediumTonalButtonStyle(context),
-                icon: const Icon(Icons.psychology_alt_outlined),
-                label: const Text('Suggest skills'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          if (viewModel.resume.skills.isNotEmpty)
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: viewModel.resume.skills.map((skill) {
-                return InputChip(
-                  label: Text(skill),
-                  labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize:
-                        (Theme.of(context).textTheme.bodyMedium?.fontSize ??
-                            14) -
-                        2,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  onDeleted: () => viewModel.removeSkill(skill),
+                    if (_skillFocusNode.hasFocus &&
+                        skillSuggestions.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Material(
+                          elevation: 6,
+                          shadowColor: Colors.black26,
+                          surfaceTintColor: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          color: theme.cardColor,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 360),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              itemCount: skillSuggestions.length,
+                              separatorBuilder: (_, _) =>
+                                  Divider(height: 1, color: dividerColor),
+                              itemBuilder: (context, index) {
+                                final option = skillSuggestions[index];
+                                return InkWell(
+                                  onTap: () {
+                                    final added = viewModel.addSkill(option);
+                                    if (added) {
+                                      _skillController.clear();
+                                      setState(() {});
+                                    } else {
+                                      _showDuplicateSkillMessage();
+                                    }
+                                    _skillFocusNode.unfocus();
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    child: Text(
+                                      option,
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 );
-              }).toList(),
+              },
             ),
+            const SizedBox(height: 18),
+            if (viewModel.resume.skills.isNotEmpty)
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: viewModel.resume.skills.map((skill) {
+                  return InputChip(
+                    label: Text(skill),
+                    labelStyle: chipLabelStyle,
+                    onDeleted: () => viewModel.removeSkill(skill),
+                  );
+                }).toList(),
+              ),
+          ] else ...[
+            const SizedBox(height: 8),
+            ...viewModel.resume.skillGroups.asMap().entries.map((entry) {
+              final index = entry.key;
+              final group = entry.value;
+              final groupController = _groupSkillController(index);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 16, 8, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: _SyncTextField(
+                                key: Key('skill-group-heading-$index'),
+                                label: 'Category',
+                                value: group.heading,
+                                hintText:
+                                    'Programming Languages, Tools, Frameworks, etc.',
+                                textCapitalization:
+                                    TextCapitalization.words,
+                                onChanged: (value) => viewModel
+                                    .updateSkillGroupHeading(index, value),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Remove category',
+                              style: IconButton.styleFrom(
+                                padding: const EdgeInsetsDirectional.only(
+                                  start: 6,
+                                  end: 2,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: viewModel.isBusy
+                                  ? null
+                                  : () {
+                                      _confirmRemoval(
+                                        title: 'Delete category?',
+                                        message:
+                                            'This will remove this category and all of its skills. This cannot be undone.',
+                                        onConfirm: () {
+                                          viewModel.removeSkillGroup(index);
+                                          _reindexGroupSkillControllersAfterRemove(
+                                            index,
+                                          );
+                                          setState(() {});
+                                        },
+                                      );
+                                    },
+                              icon: const ImageIcon(
+                                AssetImage('assets/fonts/delete.png'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: groupController,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _addSkillToGroupFromInput(index),
+                          decoration: InputDecoration(
+                            labelText: 'Add a skill',
+                            isDense: true,
+                            suffixIcon: IconButton(
+                              onPressed: () =>
+                                  _addSkillToGroupFromInput(index),
+                              icon: const Icon(Icons.add_rounded),
+                            ),
+                          ),
+                        ),
+                        if (group.skills.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: group.skills.map((skill) {
+                              return InputChip(
+                                label: Text(skill),
+                                labelStyle: chipLabelStyle,
+                                onDeleted: () => viewModel
+                                    .removeSkillFromGroup(index, skill),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+            FilledButton.tonalIcon(
+              onPressed: viewModel.isBusy
+                  ? null
+                  : () {
+                      viewModel.addSkillGroup();
+                      setState(() {});
+                    },
+              style: _mediumTonalButtonStyle(context),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add category'),
+            ),
+          ],
         ],
       ),
     );
@@ -3469,6 +3632,60 @@ class _ThinCalendarIcon extends StatelessWidget {
         painter: _ThinCalendarIconPainter(
           color: color ?? Colors.black,
           strokeWidth: strokeWidth,
+        ),
+      ),
+    );
+  }
+}
+
+/// Larger radio + label for Skills layout mode (Simple list / Categorised).
+class _SkillsModeRadioOption extends StatelessWidget {
+  const _SkillsModeRadioOption({
+    required this.value,
+    required this.label,
+    required this.enabled,
+  });
+
+  final bool value;
+  final String label;
+  final bool enabled;
+
+  static const double _radioScale = 1.45;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+      fontWeight: FontWeight.w500,
+      fontSize: (Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16) + 1,
+    );
+
+    return InkWell(
+      onTap: enabled
+          ? () => RadioGroup.maybeOf<bool>(context)?.onChanged(value)
+          : null,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Transform.scale(
+              scale: _radioScale,
+              child: Radio<bool>(
+                value: value,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: labelStyle,
+              ),
+            ),
+          ],
         ),
       ),
     );

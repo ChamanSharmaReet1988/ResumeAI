@@ -211,6 +211,8 @@ class ResumeData {
     required this.workExperiences,
     required this.education,
     required this.skills,
+    this.useSkillSubheadings = false,
+    this.skillGroups = const [],
     required this.projects,
     required this.customSections,
     required this.updatedAt,
@@ -243,6 +245,8 @@ class ResumeData {
       workExperiences: const [WorkExperience.empty()],
       education: const [EducationItem.empty()],
       skills: const [],
+      useSkillSubheadings: false,
+      skillGroups: const [],
       projects: const [ProjectItem.empty()],
       customSections: const [],
       createdAt: DateTime.now(),
@@ -290,6 +294,14 @@ class ResumeData {
       skills: (json['skills'] as List<dynamic>? ?? [])
           .map((item) => item.toString())
           .where((item) => item.trim().isNotEmpty)
+          .toList(),
+      useSkillSubheadings: json['useSkillSubheadings'] as bool? ?? false,
+      skillGroups: (json['skillGroups'] as List<dynamic>? ?? [])
+          .map(
+            (item) =>
+                SkillGroup.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
+          .where((group) => !group.isBlank)
           .toList(),
       projects: (json['projects'] as List<dynamic>? ?? [])
           .map(
@@ -339,6 +351,13 @@ class ResumeData {
   final List<WorkExperience> workExperiences;
   final List<EducationItem> education;
   final List<String> skills;
+
+  /// When true, preview/PDF show [skillGroups] with headings; [skills] stays flat for ATS/AI.
+  final bool useSkillSubheadings;
+
+  /// Grouped skills used when [useSkillSubheadings] is enabled.
+  final List<SkillGroup> skillGroups;
+
   final List<ProjectItem> projects;
   final List<CustomSectionItem> customSections;
   final DateTime createdAt;
@@ -371,9 +390,35 @@ class ResumeData {
       ? projects.where((item) => !item.isBlank).toList()
       : const <ProjectItem>[];
 
-  /// Skills shown on preview/PDF when the section is included.
+  /// Flat skill names for ATS matching, jobs, and AI (always individual skills).
   List<String> get skillsForResume =>
       includeSkillsInResume ? skills : const <String>[];
+
+  /// True when Skills should render as category subtitle + comma-separated skills.
+  bool get showCategorisedSkills =>
+      includeSkillsInResume &&
+      useSkillSubheadings &&
+      skillGroupsForResume.isNotEmpty;
+
+  /// Non-empty skill groups for preview/PDF when categorised mode is on.
+  List<SkillGroup> get skillGroupsForResume {
+    if (!includeSkillsInResume || !useSkillSubheadings) {
+      return const <SkillGroup>[];
+    }
+    return skillGroups
+        .where((group) => group.skillsCommaSeparated.isNotEmpty)
+        .toList();
+  }
+
+  /// Flat skill lines for simple-list mode (and legacy callers).
+  /// Prefer [showCategorisedSkills] + [skillGroupsForResume] for categorised UI.
+  List<String> get skillsLinesForDisplay {
+    if (!includeSkillsInResume) {
+      return const <String>[];
+    }
+    // Keep flat skill names for simple list. Categorised layouts use groups.
+    return skills.where((item) => item.trim().isNotEmpty).toList();
+  }
 
   List<CustomSectionItem> get visibleCustomSections =>
       customSections.where((item) => !item.isBlank).toList();
@@ -422,6 +467,8 @@ class ResumeData {
     List<WorkExperience>? workExperiences,
     List<EducationItem>? education,
     List<String>? skills,
+    bool? useSkillSubheadings,
+    List<SkillGroup>? skillGroups,
     List<ProjectItem>? projects,
     List<CustomSectionItem>? customSections,
     DateTime? createdAt,
@@ -452,6 +499,8 @@ class ResumeData {
       workExperiences: workExperiences ?? this.workExperiences,
       education: education ?? this.education,
       skills: skills ?? this.skills,
+      useSkillSubheadings: useSkillSubheadings ?? this.useSkillSubheadings,
+      skillGroups: skillGroups ?? this.skillGroups,
       projects: projects ?? this.projects,
       customSections: customSections ?? this.customSections,
       createdAt: createdAt ?? this.createdAt,
@@ -491,6 +540,8 @@ class ResumeData {
       'workExperiences': workExperiences.map((item) => item.toJson()).toList(),
       'education': education.map((item) => item.toJson()).toList(),
       'skills': skills,
+      'useSkillSubheadings': useSkillSubheadings,
+      'skillGroups': skillGroups.map((item) => item.toJson()).toList(),
       'projects': projects.map((item) => item.toJson()).toList(),
       'customSections': customSections.map((item) => item.toJson()).toList(),
       'createdAt': createdAt.toIso8601String(),
@@ -506,6 +557,67 @@ class ResumeData {
       'includeProjectsInResume': includeProjectsInResume,
       'bodyFontPt': bodyFontPt,
       'corporateColorPresetIndex': corporateColorPresetIndex,
+    };
+  }
+}
+
+/// A labeled group of skills (e.g. "Languages", "Tools").
+class SkillGroup {
+  const SkillGroup({
+    required this.heading,
+    required this.skills,
+  });
+
+  const SkillGroup.empty()
+      : heading = '',
+        skills = const [];
+
+  factory SkillGroup.fromJson(Map<String, dynamic> json) {
+    return SkillGroup(
+      heading: json['heading'] as String? ?? '',
+      skills: (json['skills'] as List<dynamic>? ?? [])
+          .map((item) => item.toString())
+          .where((item) => item.trim().isNotEmpty)
+          .toList(),
+    );
+  }
+
+  final String heading;
+  final List<String> skills;
+
+  bool get isBlank =>
+      heading.trim().isEmpty && skills.every((s) => s.trim().isEmpty);
+
+  /// Comma-separated skills for resume body under the category subtitle.
+  String get skillsCommaSeparated => skills
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .join(', ');
+
+  /// Legacy single-line form: `Heading: skill1, skill2`.
+  String get displayLine {
+    final joined = skillsCommaSeparated;
+    if (joined.isEmpty) {
+      return '';
+    }
+    final label = heading.trim();
+    return label.isEmpty ? joined : '$label: $joined';
+  }
+
+  SkillGroup copyWith({
+    String? heading,
+    List<String>? skills,
+  }) {
+    return SkillGroup(
+      heading: heading ?? this.heading,
+      skills: skills ?? this.skills,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'heading': heading,
+      'skills': skills,
     };
   }
 }

@@ -398,7 +398,19 @@ extension _ResumePdfAtsPages on ResumePdfService {
               garamond,
               _atsPdfSkillsBodyPt(bodyPt),
             );
-            if (skills.isEmpty) {
+            if (resume.showCategorisedSkills) {
+              w.addAll(
+                _categorisedSkillsPdfWidgets(
+                  resume,
+                  bodyStyle: skillsBodyStyle,
+                  categoryStyle: _skillCategorySubtitlePdfStyle(
+                    garamond,
+                    weight: ResumeTypography.atsStructuredSubtitleWeight,
+                    fontSize: ResumeTypography.atsStructuredSubtitlePt,
+                  ),
+                ),
+              );
+            } else if (skills.isEmpty) {
               w.add(
                 pw.Text(
                   'List relevant tools and competencies.',
@@ -741,7 +753,19 @@ extension _ResumePdfAtsPages on ResumePdfService {
               ),
             );
             final skills = _skillsForDisplay(resume);
-            if (skills.isEmpty) {
+            if (resume.showCategorisedSkills) {
+              w.addAll(
+                _categorisedSkillsPdfWidgets(
+                  resume,
+                  bodyStyle: skillsBodyStyle,
+                  categoryStyle: _skillCategorySubtitlePdfStyle(
+                    garamond,
+                    weight: ResumeTypography.atsStructuredSubtitleWeight,
+                    fontSize: ResumeTypography.atsStructuredSubtitlePt,
+                  ),
+                ),
+              );
+            } else if (skills.isEmpty) {
               w.add(pw.Text('Add targeted skills.', style: bodyStyle));
             } else if (highlightedSkills.isNotEmpty) {
               w.add(
@@ -1017,7 +1041,19 @@ extension _ResumePdfAtsPages on ResumePdfService {
           if (resume.includeSkillsInResume) {
             w.add(pw.Text('Skills', style: sectionTitleStyle));
             w.add(pw.SizedBox(height: 6));
-            if (skills.isEmpty) {
+            if (resume.showCategorisedSkills) {
+              w.addAll(
+                _categorisedSkillsPdfWidgets(
+                  resume,
+                  bodyStyle: skillsBodyStyle,
+                  categoryStyle: _skillCategorySubtitlePdfStyle(
+                    garamond,
+                    weight: ResumeTypography.atsStructuredSubtitleWeight,
+                    fontSize: ResumeTypography.atsStructuredSubtitlePt,
+                  ),
+                ),
+              );
+            } else if (skills.isEmpty) {
               w.add(
                 pw.Text(
                   'Add skills that mirror job postings.',
@@ -1242,10 +1278,8 @@ extension _ResumePdfAtsPages on ResumePdfService {
     required Set<String> highlightedSkills,
     required PdfColor highlightColor,
     required double bodyPt,
+    ResumeData? resume,
   }) {
-    if (skills.isEmpty) {
-      return pw.Text('Add targeted skills.', style: bodyStyle);
-    }
     final skillsBodyStyle = garamondPdfTextStyle(
       garamond,
       ResumeTypography.atsStructuredBodyWeight,
@@ -1253,6 +1287,23 @@ extension _ResumePdfAtsPages on ResumePdfService {
       color: PdfColors.black,
       lineSpacing: bodyPt * 0.1,
     );
+    if (resume != null && resume.showCategorisedSkills) {
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: _categorisedSkillsPdfWidgets(
+          resume,
+          bodyStyle: skillsBodyStyle,
+          categoryStyle: _skillCategorySubtitlePdfStyle(
+            garamond,
+            weight: ResumeTypography.atsStructuredSubtitleWeight,
+            fontSize: ResumeTypography.atsStructuredSubtitlePt,
+          ),
+        ),
+      );
+    }
+    if (skills.isEmpty) {
+      return pw.Text('Add targeted skills.', style: bodyStyle);
+    }
     if (highlightedSkills.isNotEmpty) {
       return _twoColumnBulletListWithHighlights(
         skills,
@@ -1427,6 +1478,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 highlightedSkills: highlightedSkills,
                 highlightColor: highlightColor,
                 bodyPt: bodyPt,
+                resume: resume,
               ),
             );
           }
@@ -1638,7 +1690,19 @@ extension _ResumePdfAtsPages on ResumePdfService {
 
           w.add(pw.Text('SKILLS', style: sectionTitleStyle));
           w.add(pw.SizedBox(height: 6));
-          if (resume.includeSkillsInResume && skills.isNotEmpty) {
+          if (resume.includeSkillsInResume && resume.showCategorisedSkills) {
+            w.addAll(
+              _categorisedSkillsPdfWidgets(
+                resume,
+                bodyStyle: skillsBodyStyle,
+                categoryStyle: _skillCategorySubtitlePdfStyle(
+                  garamond,
+                  weight: ResumeTypography.atsStructuredSubtitleWeight,
+                  fontSize: ResumeTypography.atsStructuredSubtitlePt,
+                ),
+              ),
+            );
+          } else if (resume.includeSkillsInResume && skills.isNotEmpty) {
             if (highlightedSkills.isNotEmpty) {
               w.add(
                 _twoColumnBulletListWithHighlights(
@@ -1971,7 +2035,15 @@ extension _ResumePdfAtsPages on ResumePdfService {
 
           if (resume.includeSkillsInResume) {
             w.add(_atsCenterClassicSectionTitle('Skills', sectionTitleStyle));
-            if (skills.isEmpty) {
+            if (resume.showCategorisedSkills) {
+              w.addAll(
+                _categorisedSkillsPdfWidgets(
+                  resume,
+                  bodyStyle: bodyStyle,
+                  categoryStyle: sectionSubtitleStyle,
+                ),
+              );
+            } else if (skills.isEmpty) {
               w.add(pw.Text('List tools and competencies.', style: bodyStyle));
             } else {
               w.add(pw.Text(skills.join(', '), style: bodyStyle));
@@ -2258,7 +2330,15 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 ruleColor: accent,
               ),
             );
-            if (skills.isEmpty) {
+            if (resume.showCategorisedSkills) {
+              w.addAll(
+                _categorisedSkillsPdfWidgets(
+                  resume,
+                  bodyStyle: skillsBodyStyle,
+                  categoryStyle: subtitleStyle,
+                ),
+              );
+            } else if (skills.isEmpty) {
               w.add(
                 pw.Text(
                   'Add skills aligned to your target roles.',
@@ -2616,7 +2696,15 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 accent: accent,
               ),
             );
-            if (skills.isEmpty) {
+            if (resume.showCategorisedSkills) {
+              widgets.addAll(
+                _categorisedSkillsPdfWidgets(
+                  resume,
+                  bodyStyle: _accentStripBodyPdfStyle(garamond, bodyPt),
+                  categoryStyle: _accentStripSubsectionPdfStyle(garamond),
+                ),
+              );
+            } else if (skills.isEmpty) {
               widgets.add(
                 pw.Text(
                   'Add skills aligned to the target role.',

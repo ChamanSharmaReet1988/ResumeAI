@@ -133,7 +133,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             ),
           if (resume.includeSkillsInResume)
             ..._highlightedCorporateSkillsSectionWidgets(
-              _skillsForDisplay(resume),
+              resume,
               highlightedSkills,
               lineColor,
               sectionTitleColor,
@@ -321,7 +321,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   }
 
   List<pw.Widget> _highlightedCorporateSkillsSectionWidgets(
-    List<String> skills,
+    ResumeData resume,
     Set<String> highlightedSkills,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
@@ -330,26 +330,38 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
     double bodyPt,
   ) {
     final bulletStyle = corporateBodyPdfTextStyle(garamond, bodyPt);
+    final skillBody = resume.showCategorisedSkills
+        ? _categorisedSkillsPdfWidgets(
+            resume,
+            bodyStyle: bulletStyle,
+            categoryStyle: _skillCategorySubtitlePdfStyle(
+              garamond,
+              weight: ResumeTypography.darkHeaderSubtitleWeight,
+              fontSize: ResumeTypography.darkHeaderSubtitlePt,
+              color: const PdfColor.fromInt(0xFF141414),
+            ),
+          )
+        : _twoColumnBulletRowsWithHighlights(
+            _skillsForDisplay(resume),
+            highlightedSkills,
+            highlightColor,
+            fontSize: bodyPt,
+            bulletStyle: bulletStyle,
+          );
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
         title: 'Skills',
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
       ),
-      for (final row in _twoColumnBulletRowsWithHighlights(
-        skills,
-        highlightedSkills,
-        highlightColor,
-        fontSize: bodyPt,
-        bulletStyle: bulletStyle,
-      ))
+      for (final row in skillBody)
         pw.Padding(
           padding: pw.EdgeInsets.fromLTRB(
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-        ),
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+          ),
           child: row,
         ),
       ..._highlightedCorporateSectionSuffixWidgets(lineColor),

@@ -2076,7 +2076,7 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
         .where((item) => !item.isBlank)
         .take(2)
         .toList();
-    final skillItems = resume.skills
+    final skillItems = resume.skillsLinesForDisplay
         .where((item) => item.trim().isNotEmpty)
         .take(detailed ? 6 : 4)
         .toList();
@@ -2439,7 +2439,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
     );
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
-    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final skills = resume.skillsLinesForDisplay;
     final projects = resume.visibleProjects;
     final contactLines = resume.atsStructuredHeaderContactLines();
 
@@ -2514,7 +2514,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
           _atsGrayBandLabel('EDUCATION'),
           ..._atsStructuredSchools(edu, body, subtitleStyle),
           _atsGrayBandLabel('SKILLS'),
-          _atsStructuredSkillsGrid(skills, body),
+          _atsStructuredSkillsGrid(skills, body, resume: resume),
           if (projects.isNotEmpty) ...[
             _atsGrayBandLabel('PROJECTS'),
             for (final p in projects.take(detailed ? 3 : 1)) ...[
@@ -2690,7 +2690,38 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
     return out;
   }
 
-  Widget _atsStructuredSkillsGrid(List<String> skills, TextStyle body) {
+  Widget _atsStructuredSkillsGrid(
+    List<String> skills,
+    TextStyle body, {
+    ResumeData? resume,
+  }) {
+    if (resume != null && resume.showCategorisedSkills) {
+      final groups = resume.skillGroupsForResume.take(detailed ? 4 : 2);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final group in groups) ...[
+            if (group.heading.trim().isNotEmpty)
+              Text(
+                group.heading.trim(),
+                style: body.copyWith(
+                  fontWeight: FontWeight.w500,
+                  fontSize: ResumeTypography.atsStructuredSubtitlePt,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            Text(
+              group.skillsCommaSeparated,
+              style: body,
+              maxLines: detailed ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: _scaledPt(4)),
+          ],
+        ],
+      );
+    }
     final items = skills.take(8).toList();
     if (items.isEmpty) {
       return Text(
@@ -2814,7 +2845,7 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
     );
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
-    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final skills = resume.skillsLinesForDisplay;
     final rightContacts = resume.atsSerifRulesRightContactLines();
     final linkStyle = body.copyWith(fontStyle: FontStyle.italic);
     final hInset = _scaledPt(
@@ -3141,7 +3172,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
     final contactLines = resume.atsStructuredHeaderContactLines();
     final edu = resume.visibleEducation;
     final works = resume.visibleWorkExperiences;
-    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final skills = resume.skillsLinesForDisplay;
     final projects = resume.visibleProjects;
 
     final pageContent = Padding(
@@ -3441,7 +3472,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
     final skillsBody = _garamondBody(_scaledPt(math.max(9.0, bodyPt - 1.35)));
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
-    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final skills = resume.skillsLinesForDisplay;
     final mid = skills.length ~/ 2;
     final left = skills.take(mid == 0 ? skills.length : mid).toList();
     final right = mid == 0 ? const <String>[] : skills.skip(mid).toList();
@@ -3769,7 +3800,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
     final projects = resume.visibleProjects;
-    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final skills = resume.skillsLinesForDisplay;
     final tagline = [
       if (resume.jobTitle.trim().isNotEmpty) resume.jobTitle.trim(),
       ...skills.take(3),
@@ -4046,7 +4077,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
     final projects = resume.visibleProjects;
-    final skills = resume.skills.where((s) => s.trim().isNotEmpty).toList();
+    final skills = resume.skillsLinesForDisplay;
     final columns = <List<String>>[[], [], []];
     for (var i = 0; i < skills.length; i++) {
       columns[i % 3].add(skills[i]);
@@ -4420,7 +4451,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
     const title = Color(0xFF1F2937);
     const muted = Color(0xFF667085);
     final line = Color.lerp(accent, Colors.white, 0.7)!;
-    final skills = resume.skills.take(detailed ? 3 : 2).toList();
+    final skills = resume.skillsLinesForDisplay.take(detailed ? 3 : 2).toList();
     final languages = resume.customSections
         .where((item) => item.title.trim().toLowerCase() == 'languages')
         .expand(
@@ -4743,7 +4774,7 @@ class _DetailsSidebarTemplateArtCompact extends StatelessWidget {
         .where((item) => !item.isBlank)
         .take(1)
         .toList();
-    final skills = resume.skills.take(detailed ? 6 : 4).toList();
+    final skills = resume.skillsLinesForDisplay.take(detailed ? 6 : 4).toList();
     final summary = resume.summary.trim();
 
     return DecoratedBox(
