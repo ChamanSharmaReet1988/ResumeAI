@@ -232,6 +232,50 @@ const List<String> kSkillSuggestionCore = [
   'yarn',
 ];
 
+/// Shown when the skill field is focused with an empty query.
+const List<String> kSkillSuggestionPopular = [
+  'Python',
+  'JavaScript',
+  'TypeScript',
+  'Java',
+  'SQL',
+  'React',
+  'Node.js',
+  'Flutter',
+  'AWS',
+  'Docker',
+  'Kubernetes',
+  'Git',
+  'Communication',
+  'Leadership',
+  'Problem Solving',
+  'Project Management',
+  'Excel',
+  'Power BI',
+  'Figma',
+  'Machine Learning',
+  'Data Analysis',
+  'Agile',
+  'Scrum',
+  'CI/CD',
+  'REST APIs',
+  'HTML',
+  'CSS',
+  'Swift',
+  'Kotlin',
+  'Go',
+  'MongoDB',
+  'PostgreSQL',
+  'Terraform',
+  'Prompt Engineering',
+  'ChatGPT',
+  'Teamwork',
+  'Time Management',
+  'Customer Service',
+  'Salesforce',
+  'Tableau',
+];
+
 /// Core + extended + cross-industry lists (deduped case-insensitively when matching).
 const List<String> kSkillSuggestionPool = [
   ...kSkillSuggestionCore,
@@ -240,15 +284,35 @@ const List<String> kSkillSuggestionPool = [
 ];
 
 /// Returns up to [maxItems] suggestions for the current query.
-/// [excludeLowercase] should hold [skill.toLowerCase()] for skills already added.
+///
+/// When [rawQuery] is empty, returns popular defaults so the list appears on
+/// focus. [excludeLowercase] should hold [skill.toLowerCase()] for skills
+/// already added.
 Iterable<String> skillSuggestionsForQuery(
   String rawQuery, {
   required Set<String> excludeLowercase,
-  int maxItems = 16,
+  int maxItems = 20,
 }) {
-  final q = rawQuery.trim().toLowerCase();
-  if (q.isEmpty || maxItems <= 0) {
+  if (maxItems <= 0) {
     return const Iterable.empty();
+  }
+
+  final q = rawQuery.trim().toLowerCase();
+  if (q.isEmpty) {
+    final popular = <String>[];
+    final seenLower = <String>{};
+    for (final skill in kSkillSuggestionPopular) {
+      final lower = skill.toLowerCase();
+      if (excludeLowercase.contains(lower) || seenLower.contains(lower)) {
+        continue;
+      }
+      seenLower.add(lower);
+      popular.add(skill);
+      if (popular.length >= maxItems) {
+        break;
+      }
+    }
+    return popular;
   }
 
   final prefix = <String>[];

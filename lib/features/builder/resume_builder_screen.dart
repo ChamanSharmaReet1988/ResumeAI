@@ -36,7 +36,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   final _skillController = TextEditingController();
   final _skillFocusNode = FocusNode();
+  final _skillInputKey = GlobalKey();
+  static const double _skillSuggestionMaxHeight = 280;
   final Map<int, TextEditingController> _groupSkillControllers = {};
+  final Map<int, FocusNode> _groupSkillFocusNodes = {};
+  final Map<int, GlobalKey> _groupSkillInputKeys = {};
   final _imagePicker = ImagePicker();
   final _personalFieldFocusNodes = List<FocusNode>.generate(
     8,
@@ -125,8 +129,50 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   void _handleSkillFocusChange() {
-    if (_skillFocusNode.hasFocus && mounted) {
-      _scheduleEnsureVisible(context);
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+    if (_skillFocusNode.hasFocus) {
+      final fieldContext = _skillInputKey.currentContext;
+      if (fieldContext != null) {
+        _scheduleEnsureVisible(
+          fieldContext,
+          extraVisibleHeight: _skillSuggestionMaxHeight,
+          alignNearTop: true,
+        );
+      }
+    }
+  }
+
+  FocusNode _groupSkillFocusNode(int index) {
+    return _groupSkillFocusNodes.putIfAbsent(index, () {
+      final node = FocusNode();
+      node.addListener(() => _handleGroupSkillFocusChange(index));
+      return node;
+    });
+  }
+
+  GlobalKey _groupSkillInputKey(int index) {
+    return _groupSkillInputKeys.putIfAbsent(index, GlobalKey.new);
+  }
+
+  void _handleGroupSkillFocusChange(int index) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+    final node = _groupSkillFocusNodes[index];
+    if (node == null || !node.hasFocus) {
+      return;
+    }
+    final fieldContext = _groupSkillInputKeys[index]?.currentContext;
+    if (fieldContext != null) {
+      _scheduleEnsureVisible(
+        fieldContext,
+        extraVisibleHeight: _skillSuggestionMaxHeight,
+        alignNearTop: true,
+      );
     }
   }
 
@@ -186,6 +232,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     for (final controller in _groupSkillControllers.values) {
       controller.dispose();
     }
+    for (final node in _groupSkillFocusNodes.values) {
+      node.dispose();
+    }
+    _groupSkillFocusNodes.clear();
+    _groupSkillInputKeys.clear();
     _pageController.dispose();
     for (final controller in _stepScrollControllers.values) {
       controller.dispose();
@@ -350,18 +401,25 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   void _reindexGroupSkillControllersAfterRemove(int removedIndex) {
-    final next = <int, TextEditingController>{};
+    final nextControllers = <int, TextEditingController>{};
     for (final entry in _groupSkillControllers.entries) {
       if (entry.key == removedIndex) {
         entry.value.dispose();
         continue;
       }
       final newKey = entry.key > removedIndex ? entry.key - 1 : entry.key;
-      next[newKey] = entry.value;
+      nextControllers[newKey] = entry.value;
     }
     _groupSkillControllers
       ..clear()
-      ..addAll(next);
+      ..addAll(nextControllers);
+
+    // Recreate focus/key maps so listener indexes stay correct.
+    for (final node in _groupSkillFocusNodes.values) {
+      node.dispose();
+    }
+    _groupSkillFocusNodes.clear();
+    _groupSkillInputKeys.clear();
   }
 
   void _showDuplicateSkillMessage() {
@@ -2324,93 +2382,71 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       .toSet(),
                 ).toList();
                 final theme = Theme.of(context);
-                final dividerColor = theme.colorScheme.outlineVariant
-                    .withValues(alpha: 0.28);
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: _skillController,
-                      focusNode: _skillFocusNode,
-                      textInputAction: TextInputAction.done,
-                      onChanged: (_) => setState(() {}),
-                      onSubmitted: (_) => _addSkillFromInput(),
-                      scrollPadding: EdgeInsets.only(
-                        left: 20,
-                        top: 20,
-                        right: 20,
-                        bottom: inset + 120,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'Add a skill',
-                        helperText:
-                            'Type to see suggestions or add your own skill',
-                        helperStyle: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                              fontSize: 11,
-                              height: 1.35,
-                            ),
-                        suffixIcon: IconButton(
-                          onPressed: _addSkillFromInput,
-                          icon: const Icon(Icons.add_rounded),
+                return KeyedSubtree(
+                  key: _skillInputKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: _skillController,
+                        focusNode: _skillFocusNode,
+                        textCapitalization: TextCapitalization.words,
+                        textInputAction: TextInputAction.done,
+                        onChanged: (_) {
+                          setState(() {});
+                          if (_skillFocusNode.hasFocus) {
+                            final fieldContext = _skillInputKey.currentContext;
+                            if (fieldContext != null) {
+                              _scheduleEnsureVisible(
+                                fieldContext,
+                                extraVisibleHeight: _skillSuggestionMaxHeight,
+                                alignNearTop: true,
+                              );
+                            }
+                          }
+                        },
+                        onSubmitted: (_) => _addSkillFromInput(),
+                        scrollPadding: EdgeInsets.only(
+                          left: 20,
+                          top: 20,
+                          right: 20,
+                          bottom: inset + _skillSuggestionMaxHeight + 48,
                         ),
-                      ),
-                    ),
-                    if (_skillFocusNode.hasFocus &&
-                        skillSuggestions.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Material(
-                          elevation: 6,
-                          shadowColor: Colors.black26,
-                          surfaceTintColor: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          color: theme.cardColor,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 360),
-                            child: ListView.separated(
-                              shrinkWrap: true,
-                              padding: EdgeInsets.zero,
-                              itemCount: skillSuggestions.length,
-                              separatorBuilder: (_, _) =>
-                                  Divider(height: 1, color: dividerColor),
-                              itemBuilder: (context, index) {
-                                final option = skillSuggestions[index];
-                                return InkWell(
-                                  onTap: () {
-                                    final added = viewModel.addSkill(option);
-                                    if (added) {
-                                      _skillController.clear();
-                                      setState(() {});
-                                    } else {
-                                      _showDuplicateSkillMessage();
-                                    }
-                                    _skillFocusNode.unfocus();
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
-                                    child: Text(
-                                      option,
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                        decoration: InputDecoration(
+                          labelText: 'Add a skill',
+                          helperText:
+                              'Tap for suggestions, or type to search and add your own',
+                          helperStyle: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                                height: 1.35,
+                              ),
+                          suffixIcon: IconButton(
+                            onPressed: _addSkillFromInput,
+                            icon: const Icon(Icons.add_rounded),
                           ),
                         ),
                       ),
-                  ],
+                      if (_skillFocusNode.hasFocus &&
+                          skillSuggestions.isNotEmpty)
+                        _buildSkillSuggestionPanel(
+                          theme: theme,
+                          suggestions: skillSuggestions,
+                          onSelect: (option) {
+                            final added = viewModel.addSkill(option);
+                            if (added) {
+                              _skillController.clear();
+                              setState(() {});
+                            } else {
+                              _showDuplicateSkillMessage();
+                            }
+                          },
+                        ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -2433,6 +2469,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               final index = entry.key;
               final group = entry.value;
               final groupController = _groupSkillController(index);
+              final groupFocus = _groupSkillFocusNode(index);
+              final groupInputKey = _groupSkillInputKey(index);
+              final inset = MediaQuery.viewInsetsOf(context).bottom;
+              final groupSuggestions = skillSuggestionsForQuery(
+                groupController.text,
+                excludeLowercase: {
+                  ...viewModel.resume.skills.map((s) => s.toLowerCase()),
+                  ...group.skills.map((s) => s.toLowerCase()),
+                },
+              ).toList();
+              final theme = Theme.of(context);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: DecoratedBox(
@@ -2499,18 +2546,69 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        TextField(
-                          controller: groupController,
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _addSkillToGroupFromInput(index),
-                          decoration: InputDecoration(
-                            labelText: 'Add a skill',
-                            isDense: true,
-                            suffixIcon: IconButton(
-                              onPressed: () =>
-                                  _addSkillToGroupFromInput(index),
-                              icon: const Icon(Icons.add_rounded),
-                            ),
+                        KeyedSubtree(
+                          key: groupInputKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextField(
+                                controller: groupController,
+                                focusNode: groupFocus,
+                                textCapitalization: TextCapitalization.words,
+                                textInputAction: TextInputAction.done,
+                                onChanged: (_) {
+                                  setState(() {});
+                                  if (groupFocus.hasFocus) {
+                                    final fieldContext =
+                                        groupInputKey.currentContext;
+                                    if (fieldContext != null) {
+                                      _scheduleEnsureVisible(
+                                        fieldContext,
+                                        extraVisibleHeight:
+                                            _skillSuggestionMaxHeight,
+                                        alignNearTop: true,
+                                      );
+                                    }
+                                  }
+                                },
+                                onSubmitted: (_) =>
+                                    _addSkillToGroupFromInput(index),
+                                scrollPadding: EdgeInsets.only(
+                                  left: 20,
+                                  top: 20,
+                                  right: 20,
+                                  bottom:
+                                      inset + _skillSuggestionMaxHeight + 48,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Add a skill',
+                                  isDense: true,
+                                  suffixIcon: IconButton(
+                                    onPressed: () =>
+                                        _addSkillToGroupFromInput(index),
+                                    icon: const Icon(Icons.add_rounded),
+                                  ),
+                                ),
+                              ),
+                              if (groupFocus.hasFocus &&
+                                  groupSuggestions.isNotEmpty)
+                                _buildSkillSuggestionPanel(
+                                  theme: theme,
+                                  suggestions: groupSuggestions,
+                                  onSelect: (option) {
+                                    final added = viewModel.addSkillToGroup(
+                                      index,
+                                      option,
+                                    );
+                                    if (added) {
+                                      groupController.clear();
+                                      setState(() {});
+                                    } else {
+                                      _showDuplicateSkillMessage();
+                                    }
+                                  },
+                                ),
+                            ],
                           ),
                         ),
                         if (group.skills.isNotEmpty) ...[
@@ -2550,6 +2648,59 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       ),
     );
   }
+
+  Widget _buildSkillSuggestionPanel({
+    required ThemeData theme,
+    required List<String> suggestions,
+    required ValueChanged<String> onSelect,
+  }) {
+    final dividerColor = theme.colorScheme.outlineVariant.withValues(
+      alpha: 0.28,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Material(
+        elevation: 6,
+        shadowColor: Colors.black26,
+        surfaceTintColor: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        color: theme.cardColor,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxHeight: _skillSuggestionMaxHeight,
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            itemCount: suggestions.length,
+            separatorBuilder: (_, _) =>
+                Divider(height: 1, color: dividerColor),
+            itemBuilder: (context, index) {
+              final option = suggestions[index];
+              return InkWell(
+                onTap: () => onSelect(option),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Text(
+                    option,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+
 
   Widget _buildProjectsStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
@@ -3487,9 +3638,13 @@ class _ResponsiveFieldGroup extends StatelessWidget {
   }
 }
 
-void _scheduleEnsureVisible(BuildContext context) {
+void _scheduleEnsureVisible(
+  BuildContext context, {
+  double extraVisibleHeight = 0,
+  bool alignNearTop = false,
+}) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    Future<void>.delayed(const Duration(milliseconds: 180), () {
+    Future<void>.delayed(const Duration(milliseconds: 220), () {
       if (!context.mounted) {
         return;
       }
@@ -3500,6 +3655,20 @@ void _scheduleEnsureVisible(BuildContext context) {
         return;
       }
 
+      if (alignNearTop) {
+        try {
+          Scrollable.ensureVisible(
+            context,
+            alignment: 0.08,
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+          );
+        } catch (_) {
+          // Focus may outlive its scroll context briefly during transitions.
+        }
+        return;
+      }
+
       final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
       if (keyboardInset <= 0) {
         return;
@@ -3507,10 +3676,11 @@ void _scheduleEnsureVisible(BuildContext context) {
 
       final fieldTop = renderObject.localToGlobal(Offset.zero).dy;
       final fieldBottom = fieldTop + renderObject.size.height;
-      // Keep focused field clearly above iOS keyboard + accessory toolbar.
+      // Keep focused field clearly above keyboard + suggestion list.
       final visibleBottom =
           MediaQuery.sizeOf(context).height - keyboardInset - 96;
-      final overlap = fieldBottom - visibleBottom;
+      final requiredBottom = fieldBottom + extraVisibleHeight;
+      final overlap = requiredBottom - visibleBottom;
 
       if (overlap <= 0) {
         return;
