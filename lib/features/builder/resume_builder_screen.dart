@@ -2466,7 +2466,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         decoration: InputDecoration(
                           labelText: 'Add a skill',
                           helperText:
-                              'Tap for suggestions, or type to search and add your own',
+                              'Type to see suggestions or add your own skill',
                           helperStyle: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: Theme.of(
