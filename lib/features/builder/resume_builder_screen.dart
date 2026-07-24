@@ -148,7 +148,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   FocusNode _groupSkillFocusNode(int index) {
     return _groupSkillFocusNodes.putIfAbsent(index, () {
       final node = FocusNode();
-      node.addListener(() => _handleGroupSkillFocusChange(index));
+      node.addListener(() {
+        if (!mounted) {
+          return;
+        }
+        final currentIndex = _groupSkillFocusNodes.entries
+            .where((entry) => identical(entry.value, node))
+            .map((entry) => entry.key)
+            .firstOrNull;
+        if (currentIndex != null) {
+          _handleGroupSkillFocusChange(currentIndex);
+        }
+      });
       return node;
     });
   }
@@ -979,6 +990,46 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         viewModel.moveProjectDown(index);
       }
     });
+  }
+
+  void _moveSkillGroup({required int index, required bool moveUp}) {
+    FocusScope.of(context).unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      final viewModel = context.read<ResumeEditorViewModel>();
+      if (moveUp) {
+        viewModel.moveSkillGroupUp(index);
+        _swapGroupSkillInputState(index, index - 1);
+      } else {
+        viewModel.moveSkillGroupDown(index);
+        _swapGroupSkillInputState(index, index + 1);
+      }
+      setState(() {});
+    });
+  }
+
+  void _swapGroupSkillInputState(int a, int b) {
+    void swapMap<T>(Map<int, T> map) {
+      final va = map[a];
+      final vb = map[b];
+      if (va != null) {
+        map[b] = va;
+      } else {
+        map.remove(b);
+      }
+      if (vb != null) {
+        map[a] = vb;
+      } else {
+        map.remove(a);
+      }
+    }
+
+    swapMap(_groupSkillControllers);
+    swapMap(_groupSkillFocusNodes);
+    swapMap(_groupSkillInputKeys);
   }
 
   ScrollController _scrollControllerForStep(int step) {
@@ -2512,6 +2563,59 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                     .updateSkillGroupHeading(index, value),
                               ),
                             ),
+                            if (viewModel.resume.skillGroups.length > 1) ...[
+                              IconButton(
+                                tooltip: 'Move category up',
+                                style: IconButton.styleFrom(
+                                  padding: const EdgeInsetsDirectional.only(
+                                    start: 4,
+                                    end: 0,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                onPressed: viewModel.isBusy || index == 0
+                                    ? null
+                                    : () => _moveSkillGroup(
+                                          index: index,
+                                          moveUp: true,
+                                        ),
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_up_rounded,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Move category down',
+                                style: IconButton.styleFrom(
+                                  padding: const EdgeInsetsDirectional.only(
+                                    start: 0,
+                                    end: 2,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                onPressed:
+                                    viewModel.isBusy ||
+                                        index ==
+                                            viewModel
+                                                    .resume
+                                                    .skillGroups
+                                                    .length -
+                                                1
+                                    ? null
+                                    : () => _moveSkillGroup(
+                                          index: index,
+                                          moveUp: false,
+                                        ),
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                ),
+                              ),
+                            ],
                             IconButton(
                               tooltip: 'Remove category',
                               style: IconButton.styleFrom(

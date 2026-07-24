@@ -656,6 +656,36 @@ class ResumeEditorViewModel extends ChangeNotifier {
     );
   }
 
+  void moveSkillGroupUp(int index) {
+    if (index <= 0 || index >= _resume.skillGroups.length) {
+      return;
+    }
+    final groups = [..._resume.skillGroups];
+    final group = groups.removeAt(index);
+    groups.insert(index - 1, group);
+    updateResume(
+      (resume) => resume.copyWith(
+        skillGroups: groups,
+        skills: _flattenSkillGroups(groups),
+      ),
+    );
+  }
+
+  void moveSkillGroupDown(int index) {
+    if (index < 0 || index >= _resume.skillGroups.length - 1) {
+      return;
+    }
+    final groups = [..._resume.skillGroups];
+    final group = groups.removeAt(index);
+    groups.insert(index + 1, group);
+    updateResume(
+      (resume) => resume.copyWith(
+        skillGroups: groups,
+        skills: _flattenSkillGroups(groups),
+      ),
+    );
+  }
+
   void updateSkillGroupHeading(int index, String heading) {
     if (index < 0 || index >= _resume.skillGroups.length) {
       return;
