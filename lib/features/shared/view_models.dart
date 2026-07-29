@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/corporate_resume_style.dart';
+import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/skill_auto_categorizer.dart';
 import '../../core/services/profile_image_storage.dart';
@@ -197,19 +198,70 @@ class ResumeEditorViewModel extends ChangeNotifier {
   JobDescriptionInsights? get jobInsights => _jobInsights;
   String get coverLetter => _coverLetter;
 
-  /// Fixed builder steps (horizontal chips before user-defined categories).
+  /// Fixed first builder step label (not reorderable).
+  static const personalStepTitle = 'Personal Information';
+
+  /// Labels for the default body steps (order comes from [ResumeData.builderSectionOrder]).
   static const coreStepTitles = [
-    'Personal Information',
+    personalStepTitle,
     'Work Experience',
     'Education',
     'Skills',
     'Projects',
   ];
 
+  /// Personal + body/custom sections from [orderedSectionIds].
+  static const int personalStepIndex = 0;
+
+  List<String> get orderedSectionIds => _resume.effectiveBuilderSectionOrder;
+
+  /// Total swipeable steps: Personal + ordered body/custom sections.
+  int get totalStepCount => 1 + orderedSectionIds.length;
+
+  /// Legacy count of default core pages including Personal (kept for older call sites).
   static const int coreStepCount = 5;
 
-  /// Total swipeable steps: core + one page per [ResumeData.customSections] entry.
-  int get totalStepCount => coreStepCount + _resume.customSections.length;
+  String? sectionIdAtStep(int step) {
+    if (step <= personalStepIndex) {
+      return null;
+    }
+    final ids = orderedSectionIds;
+    final index = step - 1;
+    if (index < 0 || index >= ids.length) {
+      return null;
+    }
+    return ids[index];
+  }
+
+  int stepForSectionId(String sectionId) {
+    final index = orderedSectionIds.indexOf(sectionId);
+    if (index < 0) {
+      return personalStepIndex;
+    }
+    return index + 1;
+  }
+
+  bool isSectionStep(String sectionId) =>
+      sectionIdAtStep(_currentStep) == sectionId;
+
+  int? customIndexAtStep(int step) {
+    final id = sectionIdAtStep(step);
+    if (id == null) {
+      return null;
+    }
+    return ResumeBuilderSectionIds.customIndex(id);
+  }
+
+  String titleForStep(int step) {
+    if (step == personalStepIndex) {
+      return personalStepTitle;
+    }
+    final id = sectionIdAtStep(step);
+    if (id == null) {
+      return '';
+    }
+    return ResumeBuilderSectionIds.titleFor(id, _resume.customSections);
+  }
 
   void setStep(int value) {
     final maxStep = totalStepCount - 1;
@@ -222,6 +274,73 @@ class ResumeEditorViewModel extends ChangeNotifier {
     } else {
       notifyListeners();
     }
+  }
+
+  /// Reorders horizontal chips. [oldIndex]/[newIndex] include Personal (0) and
+  /// the trailing Add chip (last). Personal and Add cannot move.
+  void reorderBuilderSectionChips(int oldIndex, int newIndex) {
+    final sectionCount = orderedSectionIds.length;
+    final addIndex = sectionCount + 1;
+    if (oldIndex <= personalStepIndex || oldIndex >= addIndex) {
+      return;
+    }
+    if (newIndex <= personalStepIndex) {
+      newIndex = personalStepIndex + 1;
+    }
+    if (newIndex > addIndex) {
+      newIndex = addIndex;
+    }
+    if (oldIndex == newIndex || oldIndex == newIndex - 1) {
+      return;
+    }
+
+    final selectedId = sectionIdAtStep(_currentStep);
+    final selectedCustomIndex = selectedId == null
+        ? null
+        : ResumeBuilderSectionIds.customIndex(selectedId);
+    final selectedCustom = selectedCustomIndex == null
+        ? null
+        : _resume.customSections[selectedCustomIndex];
+
+    final order = [...orderedSectionIds];
+    final from = oldIndex - 1;
+    var to = newIndex - 1;
+    if (to > from) {
+      to -= 1;
+    }
+    if (from < 0 || from >= order.length) {
+      return;
+    }
+    to = to.clamp(0, order.length - 1);
+    final item = order.removeAt(from);
+    order.insert(to, item);
+
+    final canonical = canonicalizeBuilderSectionOrder(
+      order,
+      _resume.customSections,
+    );
+    updateResume(
+      (resume) => resume.copyWith(
+        builderSectionOrder: canonical.order,
+        customSections: canonical.customSections,
+      ),
+    );
+
+    if (selectedCustom != null) {
+      final newCustomIndex = canonical.customSections.indexWhere(
+        (item) => identical(item, selectedCustom),
+      );
+      if (newCustomIndex >= 0) {
+        _currentStep = stepForSectionId(
+          ResumeBuilderSectionIds.custom(newCustomIndex),
+        );
+      }
+    } else if (selectedId != null) {
+      _currentStep = stepForSectionId(selectedId);
+    } else {
+      _currentStep = personalStepIndex;
+    }
+    notifyListeners();
   }
 
   void nextStep() {
@@ -412,9 +531,18 @@ class ResumeEditorViewModel extends ChangeNotifier {
           )
         : CustomSectionItem(title: trimmed, content: '');
     updateResume(
-      (resume) => resume.copyWith(
-        customSections: [...resume.customSections, section],
-      ),
+      (resume) {
+        final order = normalizeBuilderSectionOrder(
+          resume.builderSectionOrder,
+          resume.customSections.length,
+        )..add(
+            ResumeBuilderSectionIds.custom(resume.customSections.length),
+          );
+        return resume.copyWith(
+          customSections: [...resume.customSections, section],
+          builderSectionOrder: order,
+        );
+      },
     );
   }
 
@@ -481,10 +609,38 @@ class ResumeEditorViewModel extends ChangeNotifier {
   }
 
   void removeCustomSection(int index) {
+    if (index < 0 || index >= _resume.customSections.length) {
+      return;
+    }
     final items = [..._resume.customSections]..removeAt(index);
+    final previousOrder = normalizeBuilderSectionOrder(
+      _resume.builderSectionOrder,
+      _resume.customSections.length,
+    );
+    final newOrder = <String>[];
+    for (final id in previousOrder) {
+      final customIndex = ResumeBuilderSectionIds.customIndex(id);
+      if (customIndex == null) {
+        newOrder.add(id);
+        continue;
+      }
+      if (customIndex == index) {
+        continue;
+      }
+      if (customIndex > index) {
+        newOrder.add(ResumeBuilderSectionIds.custom(customIndex - 1));
+      } else {
+        newOrder.add(ResumeBuilderSectionIds.custom(customIndex));
+      }
+    }
     final newCount = items.length;
-    _currentStep = _currentStep.clamp(0, coreStepCount + newCount - 1);
-    updateResume((resume) => resume.copyWith(customSections: items));
+    _currentStep = _currentStep.clamp(0, 1 + newOrder.length - 1);
+    updateResume(
+      (resume) => resume.copyWith(
+        customSections: items,
+        builderSectionOrder: normalizeBuilderSectionOrder(newOrder, newCount),
+      ),
+    );
   }
 
   void setIncludeWorkInResume(bool value) {

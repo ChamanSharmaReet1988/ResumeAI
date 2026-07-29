@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/bottom_sheet_insets.dart';
+import '../../core/models/resume_builder_section_order.dart';
 import '../../core/services/analytics_events.dart';
 import '../../core/services/profile_image_storage.dart';
 import '../../core/models/resume_models.dart';
@@ -1197,7 +1198,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           : CustomSectionLayoutMode.summary,
     );
     final newIndex = viewModel.resume.customSections.length - 1;
-    final targetStep = ResumeEditorViewModel.coreStepCount + newIndex;
+    final targetStep = viewModel.stepForSectionId(
+      ResumeBuilderSectionIds.custom(newIndex),
+    );
     // Wait until PageView rebuilds with the new itemCount before animateToPage;
     // otherwise the index can be out of range and the framework asserts.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1440,18 +1443,19 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             keyboardInset > 0 && viewModel.currentStep == 0;
         final showProjectKeyboardBar =
             keyboardInset > 0 &&
-            viewModel.currentStep == 4 &&
+            viewModel.isSectionStep(ResumeBuilderSectionIds.projects) &&
             _isProjectKeyboardHideFieldFocused;
         final showCustomKeyboardBar =
             keyboardInset > 0 &&
-            viewModel.currentStep >= ResumeEditorViewModel.coreStepCount &&
+            viewModel.customIndexAtStep(viewModel.currentStep) != null &&
             _isCustomKeyboardHideFieldFocused;
         final showWorkKeyboardHideButton =
             keyboardInset > 0 &&
-            viewModel.currentStep == 1 &&
+            viewModel.isSectionStep(ResumeBuilderSectionIds.work) &&
             _isWorkKeyboardHideFieldFocused;
         final showEducationKeyboardHideButton =
-            keyboardInset > 0 && viewModel.currentStep == 2;
+            keyboardInset > 0 &&
+            viewModel.isSectionStep(ResumeBuilderSectionIds.education);
         final iosTitleStyle = Theme.of(
           context,
         ).cupertinoOverrideTheme?.textTheme?.navTitleTextStyle;
@@ -1477,9 +1481,32 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     _StepProgressHeader(
                       currentStep: viewModel.currentStep,
                       totalStepCount: viewModel.totalStepCount,
+                      sectionIds: viewModel.orderedSectionIds,
                       customSections: viewModel.resume.customSections,
                       onSelectStep: _goToStep,
                       onAddCategory: _showAddCustomCategoryDialog,
+                      onReorderChips: (oldIndex, newIndex) {
+                        FocusScope.of(context).unfocus();
+                        final selectedBefore = viewModel.currentStep;
+                        viewModel.reorderBuilderSectionChips(
+                          oldIndex,
+                          newIndex,
+                        );
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) {
+                            return;
+                          }
+                          final target = context
+                              .read<ResumeEditorViewModel>()
+                              .currentStep;
+                          if (_pageController.hasClients &&
+                              _pageController.page?.round() != target) {
+                            _pageController.jumpToPage(target);
+                          } else if (selectedBefore != target) {
+                            _goToStep(target);
+                          }
+                        });
+                      },
                     ),
                     if (viewModel.isBusy) const LinearProgressIndicator(),
                     Expanded(
@@ -1643,18 +1670,24 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   Widget _buildStepContentForStep(int step, ResumeEditorViewModel viewModel) {
-    if (step < ResumeEditorViewModel.coreStepCount) {
-      return switch (step) {
-        0 => _buildPersonalStep(viewModel),
-        1 => _buildWorkStep(viewModel),
-        2 => _buildEducationStep(viewModel),
-        3 => _buildSkillsStep(viewModel),
-        4 => _buildProjectsStep(viewModel),
-        _ => const SizedBox.shrink(),
-      };
+    if (step == ResumeEditorViewModel.personalStepIndex) {
+      return _buildPersonalStep(viewModel);
     }
-    final customIndex = step - ResumeEditorViewModel.coreStepCount;
-    return _buildSingleCustomSectionStep(viewModel, customIndex);
+    final sectionId = viewModel.sectionIdAtStep(step);
+    if (sectionId == null) {
+      return const SizedBox.shrink();
+    }
+    final customIndex = ResumeBuilderSectionIds.customIndex(sectionId);
+    if (customIndex != null) {
+      return _buildSingleCustomSectionStep(viewModel, customIndex);
+    }
+    return switch (sectionId) {
+      ResumeBuilderSectionIds.work => _buildWorkStep(viewModel),
+      ResumeBuilderSectionIds.education => _buildEducationStep(viewModel),
+      ResumeBuilderSectionIds.skills => _buildSkillsStep(viewModel),
+      ResumeBuilderSectionIds.projects => _buildProjectsStep(viewModel),
+      _ => const SizedBox.shrink(),
+    };
   }
 
   Widget _buildPersonalStep(ResumeEditorViewModel viewModel) {
@@ -2075,34 +2108,40 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   void _focusPreviousKeyboardField(int currentStep) {
+    final viewModel = context.read<ResumeEditorViewModel>();
     if (currentStep == 0) {
       _movePersonalFieldFocus(delta: -1);
       return;
     }
-    if (currentStep == 4) {
+    if (viewModel.isSectionStep(ResumeBuilderSectionIds.projects)) {
       _moveFocusInOrder(_projectKeyboardFocusOrder, delta: -1);
       return;
     }
-    if (currentStep >= ResumeEditorViewModel.coreStepCount) {
-      final i = currentStep - ResumeEditorViewModel.coreStepCount;
-      final vm = context.read<ResumeEditorViewModel>();
-      _moveFocusInOrder(_customKeyboardFocusOrderForIndex(vm, i), delta: -1);
+    final customIndex = viewModel.customIndexAtStep(currentStep);
+    if (customIndex != null) {
+      _moveFocusInOrder(
+        _customKeyboardFocusOrderForIndex(viewModel, customIndex),
+        delta: -1,
+      );
     }
   }
 
   void _focusNextKeyboardField(int currentStep) {
+    final viewModel = context.read<ResumeEditorViewModel>();
     if (currentStep == 0) {
       _movePersonalFieldFocus(delta: 1);
       return;
     }
-    if (currentStep == 4) {
+    if (viewModel.isSectionStep(ResumeBuilderSectionIds.projects)) {
       _moveFocusInOrder(_projectKeyboardFocusOrder, delta: 1);
       return;
     }
-    if (currentStep >= ResumeEditorViewModel.coreStepCount) {
-      final i = currentStep - ResumeEditorViewModel.coreStepCount;
-      final vm = context.read<ResumeEditorViewModel>();
-      _moveFocusInOrder(_customKeyboardFocusOrderForIndex(vm, i), delta: 1);
+    final customIndex = viewModel.customIndexAtStep(currentStep);
+    if (customIndex != null) {
+      _moveFocusInOrder(
+        _customKeyboardFocusOrderForIndex(viewModel, customIndex),
+        delta: 1,
+      );
     }
   }
 
@@ -3442,29 +3481,24 @@ class _NewCustomSectionDialogResult {
   final _CustomSectionCreationType type;
 }
 
-String _resumeCategoryChipLabel(CustomSectionItem item, int index) {
-  final t = item.title.trim();
-  final raw = t.isEmpty ? 'Category ${index + 1}' : t;
-  if (raw.length > 22) {
-    return '${raw.substring(0, 21)}…';
-  }
-  return raw;
-}
-
 class _StepProgressHeader extends StatefulWidget {
   const _StepProgressHeader({
     required this.currentStep,
     required this.totalStepCount,
+    required this.sectionIds,
     required this.customSections,
     required this.onSelectStep,
     required this.onAddCategory,
+    required this.onReorderChips,
   });
 
   final int currentStep;
   final int totalStepCount;
+  final List<String> sectionIds;
   final List<CustomSectionItem> customSections;
   final ValueChanged<int> onSelectStep;
   final VoidCallback onAddCategory;
+  final void Function(int oldIndex, int newIndex) onReorderChips;
 
   @override
   State<_StepProgressHeader> createState() => _StepProgressHeaderState();
@@ -3488,6 +3522,7 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
   void didUpdateWidget(covariant _StepProgressHeader oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentStep != widget.currentStep ||
+        oldWidget.sectionIds.length != widget.sectionIds.length ||
         oldWidget.customSections.length != widget.customSections.length) {
       _scrollSelectedChip();
     }
@@ -3529,57 +3564,12 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
       context,
     ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400);
 
-    final rowChildren = <Widget>[];
-
-    for (var i = 0; i < ResumeEditorViewModel.coreStepCount; i++) {
-      rowChildren.add(
-        Padding(
-          key: _chipKeyFor(i),
-          padding: const EdgeInsets.only(right: 10),
-          child: ChoiceChip(
-            label: Text(
-              ResumeEditorViewModel.coreStepTitles[i],
-              style: chipStyle,
-            ),
-            selected: widget.currentStep == i,
-            onSelected: (_) => widget.onSelectStep(i),
-          ),
-        ),
-      );
-    }
-
-    for (var j = 0; j < widget.customSections.length; j++) {
-      final step = ResumeEditorViewModel.coreStepCount + j;
-      rowChildren.add(
-        Padding(
-          key: _chipKeyFor(step),
-          padding: const EdgeInsets.only(right: 10),
-          child: ChoiceChip(
-            label: Text(
-              _resumeCategoryChipLabel(widget.customSections[j], j),
-              style: chipStyle,
-            ),
-            selected: widget.currentStep == step,
-            onSelected: (_) => widget.onSelectStep(step),
-          ),
-        ),
-      );
-    }
-
     final addIconColor = Theme.of(context).brightness == Brightness.dark
         ? Colors.white
         : Colors.black;
-    rowChildren.add(
-      Padding(
-        padding: EdgeInsets.zero,
-        child: ChoiceChip(
-          avatar: Icon(Icons.add_rounded, size: 24, color: addIconColor),
-          label: Text('Add', style: chipStyle),
-          selected: false,
-          onSelected: (_) => widget.onAddCategory(),
-        ),
-      ),
-    );
+
+    // Children: Personal + ordered sections + Add
+    final chipCount = 1 + widget.sectionIds.length + 1;
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -3608,13 +3598,91 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
           ),
           const SizedBox(height: 12),
           SizedBox(
+            height: 48,
             width: double.infinity,
-            child: SingleChildScrollView(
+            child: ReorderableListView.builder(
               key: const Key('step-progress-scroll'),
-              controller: _scrollController,
+              scrollController: _scrollController,
               scrollDirection: Axis.horizontal,
+              buildDefaultDragHandles: false,
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(children: rowChildren),
+              proxyDecorator: (child, index, animation) {
+                return AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, child) {
+                    final t = Curves.easeInOut.transform(animation.value);
+                    return Material(
+                      elevation: 2 + 4 * t,
+                      color: Colors.transparent,
+                      shadowColor: Colors.black26,
+                      borderRadius: BorderRadius.circular(20),
+                      child: child,
+                    );
+                  },
+                  child: child,
+                );
+              },
+              onReorder: widget.onReorderChips,
+              itemCount: chipCount,
+              itemBuilder: (context, index) {
+                final isPersonal = index == 0;
+                final isAdd = index == chipCount - 1;
+                final Widget chip;
+                if (isPersonal) {
+                  chip = ChoiceChip(
+                    key: _chipKeyFor(0),
+                    label: Text(
+                      ResumeEditorViewModel.personalStepTitle,
+                      style: chipStyle,
+                    ),
+                    selected: widget.currentStep == 0,
+                    onSelected: (_) => widget.onSelectStep(0),
+                  );
+                } else if (isAdd) {
+                  chip = ChoiceChip(
+                    avatar: Icon(
+                      Icons.add_rounded,
+                      size: 24,
+                      color: addIconColor,
+                    ),
+                    label: Text('Add', style: chipStyle),
+                    selected: false,
+                    onSelected: (_) => widget.onAddCategory(),
+                  );
+                } else {
+                  final sectionId = widget.sectionIds[index - 1];
+                  chip = ChoiceChip(
+                    key: _chipKeyFor(index),
+                    label: Text(
+                      ResumeBuilderSectionIds.titleFor(
+                        sectionId,
+                        widget.customSections,
+                      ),
+                      style: chipStyle,
+                    ),
+                    selected: widget.currentStep == index,
+                    onSelected: (_) => widget.onSelectStep(index),
+                  );
+                }
+
+                final padded = Padding(
+                  padding: EdgeInsets.only(right: isAdd ? 0 : 10),
+                  child: chip,
+                );
+
+                if (isPersonal || isAdd) {
+                  return KeyedSubtree(
+                    key: ValueKey(isPersonal ? 'chip-personal' : 'chip-add'),
+                    child: padded,
+                  );
+                }
+
+                return ReorderableDelayedDragStartListener(
+                  key: ValueKey('chip-${widget.sectionIds[index - 1]}'),
+                  index: index,
+                  child: padded,
+                );
+              },
             ),
           ),
         ],

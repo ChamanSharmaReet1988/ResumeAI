@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../corporate_resume_style.dart';
 import '../resume_text_font.dart';
+import 'resume_builder_section_order.dart';
 
 /// Maps stored template ids; legacy removed layouts default to [ResumeTemplate.corporate].
 ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
@@ -228,6 +229,7 @@ class ResumeData {
     required this.includeProjectsInResume,
     required this.bodyFontPt,
     required this.corporateColorPresetIndex,
+    this.builderSectionOrder = ResumeBuilderSectionIds.bodyDefaults,
   }) : createdAt = createdAt ?? updatedAt;
 
   factory ResumeData.empty({required ResumeTemplate template}) {
@@ -262,6 +264,7 @@ class ResumeData {
       includeProjectsInResume: true,
       bodyFontPt: kResumeBodyFontPtDefault,
       corporateColorPresetIndex: 0,
+      builderSectionOrder: ResumeBuilderSectionIds.bodyDefaults,
     );
   }
 
@@ -335,6 +338,12 @@ class ResumeData {
           (json['bodyFontPt'] as num?)?.toInt() ?? kResumeBodyFontPtDefault,
       corporateColorPresetIndex:
           (json['corporateColorPresetIndex'] as num?)?.toInt() ?? 0,
+      builderSectionOrder: normalizeBuilderSectionOrder(
+        (json['builderSectionOrder'] as List<dynamic>?)
+            ?.map((item) => item.toString())
+            .toList(),
+        (json['customSections'] as List<dynamic>? ?? []).length,
+      ),
     );
   }
 
@@ -377,6 +386,15 @@ class ResumeData {
 
   /// Index 0–4 for Dark Header title + top bar colors (see `corporate_resume_style.dart`).
   final int corporateColorPresetIndex;
+
+  /// Order of builder steps after Personal (work/education/skills/projects/custom:N).
+  final List<String> builderSectionOrder;
+
+  /// Normalized section order used by the builder chips and content pages.
+  List<String> get effectiveBuilderSectionOrder => normalizeBuilderSectionOrder(
+    builderSectionOrder,
+    customSections.length,
+  );
 
   List<WorkExperience> get visibleWorkExperiences => includeWorkInResume
       ? workExperiences.where((item) => !item.isBlank).toList()
@@ -484,6 +502,7 @@ class ResumeData {
     bool? includeProjectsInResume,
     int? bodyFontPt,
     int? corporateColorPresetIndex,
+    List<String>? builderSectionOrder,
   }) {
     return ResumeData(
       id: id ?? this.id,
@@ -522,6 +541,7 @@ class ResumeData {
       bodyFontPt: bodyFontPt ?? this.bodyFontPt,
       corporateColorPresetIndex:
           corporateColorPresetIndex ?? this.corporateColorPresetIndex,
+      builderSectionOrder: builderSectionOrder ?? this.builderSectionOrder,
     );
   }
 
@@ -557,6 +577,7 @@ class ResumeData {
       'includeProjectsInResume': includeProjectsInResume,
       'bodyFontPt': bodyFontPt,
       'corporateColorPresetIndex': corporateColorPresetIndex,
+      'builderSectionOrder': effectiveBuilderSectionOrder,
     };
   }
 }
