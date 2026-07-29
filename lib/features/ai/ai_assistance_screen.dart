@@ -33,6 +33,7 @@ class AiAssistanceScreen extends ResumeAnalyserScreen {
 
 enum _OptimizedResumeSaveChoice { newCopy, existingResume }
 
+
 class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     with WidgetsBindingObserver {
   static const double _fieldHorizontalPadding = 12;
@@ -43,6 +44,9 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
   bool _isBusy = false;
   List<String> _appliedChanges = const [];
   ResumeOptimizeHighlightData? _previewData;
+  ResumeData? _createdResume;
+  int _atsCreateAttempt = 0;
+  String? _atsAttemptSourceId;
 
   @override
   void initState() {
@@ -73,7 +77,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     if (!mounted) {
       return;
     }
-    setState(_resetOptimizationPreview);
+    setState(_resetAtsCreateProgress);
   }
 
   void _handleJobDescriptionFocusChanged() {
@@ -148,6 +152,13 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
   void _resetOptimizationPreview() {
     _appliedChanges = const [];
     _previewData = null;
+    _createdResume = null;
+  }
+
+  void _resetAtsCreateProgress() {
+    _atsCreateAttempt = 0;
+    _atsAttemptSourceId = null;
+    _resetOptimizationPreview();
   }
 
   Future<void> _runTask(Future<void> Function() task) async {
@@ -165,20 +176,11 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     }
   }
 
-  Future<void> _applyAtsFixes({
+  Future<void> _createAtsResume({
     required LocalAiResumeService aiService,
     required ResumeData? selectedResume,
   }) async {
     _dismissKeyboard();
-
-    final jobDescription = _jobDescriptionController.text.trim();
-
-    if (jobDescription.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Paste a job description first.')),
-      );
-      return;
-    }
 
     if (selectedResume == null || !selectedResume.hasMeaningfulContent) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -189,41 +191,54 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
       return;
     }
 
+    final jobDescription = _jobDescriptionController.text.trim();
+    if (_atsAttemptSourceId != selectedResume.id) {
+      _atsAttemptSourceId = selectedResume.id;
+      _atsCreateAttempt = 0;
+      _createdResume = null;
+    }
+
+    final sourceForPass = _createdResume ?? selectedResume;
+    final attemptIndex = _atsCreateAttempt;
+
     await _runTask(() async {
-      final beforeResume = selectedResume;
-      final result = await aiService.improveResumeForAts(
-        resume: beforeResume,
+      final result = await aiService.createAtsResumeWithAi(
+        sourceResume: sourceForPass,
         jobDescription: jobDescription,
+        attemptIndex: attemptIndex,
       );
-      final improvedResume = result.resume.copyWith(updatedAt: DateTime.now());
+      final created = result.resume.copyWith(updatedAt: DateTime.now());
 
       if (!mounted) {
         return;
       }
 
       setState(() {
+        _createdResume = created;
+        _atsCreateAttempt = attemptIndex + 1;
         _appliedChanges = result.appliedChanges;
         _previewData = buildResumeOptimizeHighlightData(
-          beforeResume: beforeResume,
-          afterResume: improvedResume,
+          beforeResume: sourceForPass,
+          afterResume: created,
         );
       });
     });
   }
 
-  Future<void> _openOptimizedResumePreview({
-    required ResumeData sourceResume,
-  }) async {
+  Future<void> _openCreatedAtsResumePreview() async {
     final previewData = _previewData;
-    if (previewData == null) {
+    final created = _createdResume;
+    if (previewData == null || created == null) {
       return;
     }
 
     await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => _OptimizedResumePreviewScreen(
-          sourceResume: sourceResume,
+          sourceResume: created,
           previewData: previewData,
+          saveAsNewCopyOnly: true,
+          newCopyTitleSuffix: ' (ATS)',
         ),
       ),
     );
@@ -233,7 +248,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     }
 
     _jobDescriptionController.clear();
-    setState(_resetOptimizationPreview);
+    setState(_resetAtsCreateProgress);
   }
 
   @override
@@ -242,125 +257,122 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     final library = context.watch<ResumeLibraryViewModel>();
     final resumes = library.resumes;
     final selectedResume = library.selectedResume;
-    final hasSelectedResume = selectedResume != null;
 
     return ListenableBuilder(
       listenable: _jobDescriptionController,
       builder: (context, _) {
-        final enableOptimize = resumes.isNotEmpty &&
-            hasSelectedResume &&
-            _jobDescriptionController.text.trim().isNotEmpty;
+        final enableCreate = resumes.isNotEmpty &&
+            selectedResume != null &&
+            selectedResume.hasMeaningfulContent;
+        final isFurtherPass = _createdResume != null &&
+            _atsAttemptSourceId == selectedResume?.id &&
+            _atsCreateAttempt > 0;
 
         return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (resumes.isEmpty) ...[
-            Card(
-              child: InkWell(
-                key: const Key('optimize-empty-go-home-button'),
-                borderRadius: BorderRadius.circular(12),
-                onTap: widget.onGoToHomeTab,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 14, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'No resume available right now.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Create a resume first, then come back here to optimize it for a job description.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 11,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: _fieldHorizontalPadding,
+                ),
+                child: Text(
+                  'Select a resume and AI will create a ChatGPT/Claude-style ATS resume. Each time you tap Create again, AI further optimizes the same ATS draft. Job description is optional.',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          if (resumes.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _fieldHorizontalPadding,
-              ),
-              child: Text(
-                'Select resume',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(height: 8),
-            KeyedSubtree(
-              key: const Key('tailor-resume-selector'),
-              child: DropdownButtonFormField<String>(
-                key: ValueKey(
-                  'tailor-resume-selector-${selectedResume?.id ?? resumes.first.id}',
-                ),
-                initialValue: selectedResume?.id ?? resumes.first.id,
-                isExpanded: true,
-                borderRadius: BorderRadius.circular(12),
-                alignment: AlignmentDirectional.centerStart,
-                dropdownColor: Theme.of(context).cardColor,
-                elevation: 6,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                menuMaxHeight: 360,
-                icon: Icon(
-                  Icons.arrow_drop_down_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: _fieldHorizontalPadding,
-                    vertical: 14,
-                  ),
-                ),
-                selectedItemBuilder: (context) {
-                  return resumes.map((resume) {
-                    final title = resume.title.trim().isEmpty
-                        ? ResumeData.defaultTitle
-                        : resume.title;
-                    return Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        title,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    );
-                  }).toList();
-                },
-                items: resumes
-                    .map(
-                      (resume) => DropdownMenuItem<String>(
-                        value: resume.id,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: _fieldHorizontalPadding,
-                            vertical: 12,
+              const SizedBox(height: 16),
+              if (resumes.isEmpty) ...[
+                Card(
+                  child: InkWell(
+                    key: const Key('optimize-empty-go-home-button'),
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: widget.onGoToHomeTab,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 14, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'No resume available right now.',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Create a resume first, then come back here to generate an ATS version.',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontSize: 11,
+                                  height: 1.3,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (resumes.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _fieldHorizontalPadding,
+                  ),
+                  child: Text(
+                    'Select resume',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                KeyedSubtree(
+                  key: const Key('tailor-resume-selector'),
+                  child: DropdownButtonFormField<String>(
+                    key: ValueKey(
+                      'tailor-resume-selector-${selectedResume?.id ?? resumes.first.id}',
+                    ),
+                    initialValue: selectedResume?.id ?? resumes.first.id,
+                    isExpanded: true,
+                    borderRadius: BorderRadius.circular(12),
+                    alignment: AlignmentDirectional.centerStart,
+                    dropdownColor: Theme.of(context).cardColor,
+                    elevation: 6,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    menuMaxHeight: 360,
+                    icon: Icon(
+                      Icons.arrow_drop_down_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    decoration: const InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: _fieldHorizontalPadding,
+                        vertical: 14,
+                      ),
+                    ),
+                    selectedItemBuilder: (context) {
+                      return resumes.map((resume) {
+                        final title = resume.title.trim().isEmpty
+                            ? ResumeData.defaultTitle
+                            : resume.title;
+                        return Align(
+                          alignment: Alignment.centerLeft,
                           child: Text(
-                            resume.title.trim().isEmpty
-                                ? ResumeData.defaultTitle
-                                : resume.title,
+                            title,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
@@ -368,109 +380,123 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value == null) {
-                    return;
-                  }
-                  library.selectResume(value);
-                  setState(_resetOptimizationPreview);
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _fieldHorizontalPadding,
-              ),
-              child: Text(
-                'Select a saved resume, paste the target job description, and let AI rewrite the resume for that role automatically.',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 11,
+                        );
+                      }).toList();
+                    },
+                    items: resumes
+                        .map(
+                          (resume) => DropdownMenuItem<String>(
+                            value: resume.id,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: _fieldHorizontalPadding,
+                                vertical: 12,
+                              ),
+                              child: Text(
+                                resume.title.trim().isEmpty
+                                    ? ResumeData.defaultTitle
+                                    : resume.title,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) {
+                        return;
+                      }
+                      library.selectResume(value);
+                      setState(_resetAtsCreateProgress);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              TextField(
+                controller: _jobDescriptionController,
+                focusNode: _jobDescriptionFocusNode,
+                minLines: 5,
+                maxLines: 7,
+                onChanged: (_) => _handleInputChanged(),
+                decoration: const InputDecoration(
+                  labelText: 'Job description (optional)',
+                  hintText:
+                      'Paste a job post to tailor the ATS resume, or leave blank.',
+                  alignLabelWithHint: true,
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          TextField(
-            controller: _jobDescriptionController,
-            focusNode: _jobDescriptionFocusNode,
-            minLines: 5,
-            maxLines: 7,
-            onChanged: (_) => _handleInputChanged(),
-            decoration: const InputDecoration(
-              labelText: 'Job description',
-              hintText:
-                  'Paste the target job post to compare your resume against it.',
-              alignLabelWithHint: true,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FilledButton(
-                key: const Key('tailor-resume-ai-button'),
-                onPressed: enableOptimize
-                    ? () => _applyAtsFixes(
-                        aiService: aiService,
-                        selectedResume: selectedResume,
-                      )
-                    : null,
-                child: const Text('Optimize resume'),
-              ),
-            ],
-          ),
-          if (_isBusy)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: LinearProgressIndicator(),
-            ),
-          const SizedBox(height: 20),
-          if (_appliedChanges.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text(
-              'Applied changes',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            ..._appliedChanges.map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.check_circle_outline, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(item)),
-                  ],
-                ),
-              ),
-            ),
-            if (_previewData != null && selectedResume != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  FilledButton.tonal(
-                    key: const Key('show-optimized-resume-button'),
-                    onPressed: () => _openOptimizedResumePreview(
-                      sourceResume: selectedResume,
+                  FilledButton(
+                    key: const Key('create-ats-resume-ai-button'),
+                    onPressed: enableCreate
+                        ? () => _createAtsResume(
+                            aiService: aiService,
+                            selectedResume: selectedResume,
+                          )
+                        : null,
+                    child: Text(
+                      isFurtherPass
+                          ? 'Further optimize ATS (pass ${_atsCreateAttempt + 1})'
+                          : 'Create ATS resume',
                     ),
-                    child: const Text('Show resume'),
                   ),
                 ],
               ),
+              if (_isBusy)
+                const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: LinearProgressIndicator(),
+                ),
+              const SizedBox(height: 20),
+              if (_appliedChanges.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Applied changes',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ..._appliedChanges.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.check_circle_outline, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(item)),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_previewData != null && _createdResume != null) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FilledButton.tonal(
+                        key: const Key('show-created-ats-resume-button'),
+                        onPressed: _openCreatedAtsResumePreview,
+                        child: const Text('Show ATS resume'),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             ],
-          ],
-        ],
-      ),
+          ),
         );
       },
     );
@@ -543,10 +569,14 @@ class _OptimizedResumePreviewScreen extends StatefulWidget {
   const _OptimizedResumePreviewScreen({
     required this.sourceResume,
     required this.previewData,
+    this.saveAsNewCopyOnly = false,
+    this.newCopyTitleSuffix = ' (Optimized)',
   });
 
   final ResumeData sourceResume;
   final ResumeOptimizeHighlightData previewData;
+  final bool saveAsNewCopyOnly;
+  final String newCopyTitleSuffix;
 
   @override
   State<_OptimizedResumePreviewScreen> createState() =>
@@ -627,9 +657,8 @@ class _OptimizedResumePreviewScreenState
   String _optimizedCopyTitle(String title) {
     final trimmed = title.trim();
     final baseTitle = trimmed.isEmpty ? ResumeData.defaultTitle : trimmed;
-    return baseTitle.endsWith(' (Optimized)')
-        ? baseTitle
-        : '$baseTitle (Optimized)';
+    final suffix = widget.newCopyTitleSuffix;
+    return baseTitle.endsWith(suffix) ? baseTitle : '$baseTitle$suffix';
   }
 
   Future<String?> _promptNewCopyTitle() {
@@ -646,7 +675,12 @@ class _OptimizedResumePreviewScreenState
       return;
     }
 
-    final choice = await _promptSaveChoice();
+    final _OptimizedResumeSaveChoice? choice;
+    if (widget.saveAsNewCopyOnly) {
+      choice = _OptimizedResumeSaveChoice.newCopy;
+    } else {
+      choice = await _promptSaveChoice();
+    }
     if (!mounted || choice == null) {
       return;
     }

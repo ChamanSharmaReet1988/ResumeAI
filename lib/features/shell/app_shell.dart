@@ -57,7 +57,7 @@ class _AppShellState extends State<AppShell> {
 
   String get _activeHeaderTitle {
     return switch (_currentIndex) {
-      2 => 'Optimize Resume',
+      2 => 'AI Resume',
       _ => _destinations[_currentIndex].label,
     };
   }
@@ -486,9 +486,9 @@ class _AppShellState extends State<AppShell> {
           selectedIcon: CupertinoIcons.rectangle_stack_fill,
         ),
         _ShellDestination(
-          label: 'Optimize',
-          icon: CupertinoIcons.checkmark_seal,
-          selectedIcon: CupertinoIcons.checkmark_seal_fill,
+          label: 'AI Resume',
+          icon: CupertinoIcons.wand_stars,
+          selectedIcon: CupertinoIcons.wand_stars,
         ),
         _ShellDestination(
           label: 'Settings',
@@ -510,9 +510,9 @@ class _AppShellState extends State<AppShell> {
         selectedIcon: Icons.dashboard_customize_rounded,
       ),
       _ShellDestination(
-        label: 'Optimize',
-        icon: Icons.track_changes_outlined,
-        selectedIcon: Icons.track_changes,
+        label: 'AI Resume',
+        icon: Icons.smart_toy_outlined,
+        selectedIcon: Icons.smart_toy,
       ),
       _ShellDestination(
         label: 'Settings',

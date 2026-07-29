@@ -2694,6 +2694,448 @@ class LocalAiResumeService {
     );
   }
 
+  /// Builds a Claude/GPT-style ATS resume from [sourceResume].
+  ///
+  /// Uses LaTeX Classic ATS (clean single-column rules), rewrites summary and
+  /// bullets in a professional AI-assistant voice, and flattens skills for
+  /// reliable ATS parsing. [jobDescription] is optional for role targeting.
+  Future<ResumeImprovementResult> createAtsResumeWithAi({
+    required ResumeData sourceResume,
+    String jobDescription = '',
+    int attemptIndex = 0,
+  }) async {
+    if (!sourceResume.hasMeaningfulContent) {
+      throw ArgumentError('Select a saved resume with content first.');
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 520));
+
+    final pass = attemptIndex < 0 ? 0 : attemptIndex;
+    const atsTemplate = ResumeTemplate.atsLatexClassic;
+    final normalizedJobDescription = jobDescription.trim();
+    final hasJobDescription = normalizedJobDescription.isNotEmpty;
+    final keywordBudget = (8 + pass * 3).clamp(8, 16);
+    final skillBudget = (18 - pass).clamp(12, 18);
+    final bulletLimit = (4 + (pass > 0 ? 1 : 0)).clamp(4, 5);
+    final appliedChanges = <String>[
+      if (pass == 0)
+        'Applied a clean LaTeX Classic ATS layout (single column, clear headings) like ChatGPT/Claude resumes.'
+      else
+        'Pass ${pass + 1}: further optimized the ATS draft for stronger keyword match and clearer impact.',
+    ];
+
+    final analysis = _buildAnalysis(
+      resume: sourceResume,
+      jobDescription: normalizedJobDescription,
+    );
+    final missingKeywords = analysis.missingSkills;
+    final targetKeywords = hasJobDescription
+        ? _atsKeywordsFromJobDescription(
+            jobDescription: normalizedJobDescription,
+            missingFromResume: missingKeywords,
+          ).take(keywordBudget).toList()
+        : _prepareTargetKeywords(
+            [
+              ...sourceResume.skills,
+              ..._jobTitleSkillSuggestions(sourceResume.jobTitle),
+              ...missingKeywords,
+            ],
+          ).take(keywordBudget).toList();
+
+    var optimizedJobTitle = sourceResume.jobTitle.trim();
+    if (hasJobDescription) {
+      final jobTitleFromPosting = _jobTitleFromJobDescription(
+        normalizedJobDescription,
+      );
+      if (jobTitleFromPosting != null &&
+          (optimizedJobTitle.isEmpty || optimizedJobTitle.length < 4)) {
+        optimizedJobTitle = jobTitleFromPosting;
+        appliedChanges.add(
+          'Aligned the job title with the pasted job description.',
+        );
+      }
+    }
+    if (optimizedJobTitle.isEmpty) {
+      optimizedJobTitle = sourceResume.title.trim().isEmpty
+          ? 'Professional'
+          : sourceResume.title.trim();
+    }
+
+    final workingResume = sourceResume.copyWith(
+      jobTitle: optimizedJobTitle,
+      template: atsTemplate,
+    );
+
+    final updatedSummary = _buildAiAtsFriendlySummary(
+      resume: workingResume,
+      targetJobTitle: optimizedJobTitle,
+      keywords: targetKeywords,
+      jobDescription: normalizedJobDescription,
+      attemptIndex: pass,
+    );
+    appliedChanges.add(
+      pass == 0
+          ? (hasJobDescription
+                ? 'Wrote a ChatGPT/Claude-style professional summary tailored to the role.'
+                : 'Wrote a ChatGPT/Claude-style professional summary optimized for ATS scanners.')
+          : 'Refined the summary with stronger ATS keywords and clearer positioning (pass ${pass + 1}).',
+    );
+
+    int? primaryWorkIndex;
+    for (var i = 0; i < sourceResume.workExperiences.length; i++) {
+      if (!sourceResume.workExperiences[i].isBlank) {
+        primaryWorkIndex = i;
+        break;
+      }
+    }
+
+    var workChanged = false;
+    final updatedWork = sourceResume.workExperiences.asMap().entries.map((
+      entry,
+    ) {
+      final index = entry.key;
+      final item = entry.value;
+      if (item.isBlank) {
+        return item;
+      }
+      final roleKeywords = _keywordsForWorkEntry(
+        entryIndex: index,
+        primaryIndex: primaryWorkIndex,
+        allKeywords: targetKeywords,
+      );
+      final improvedBullets = _tailorWorkExperienceBullets(
+        item: item,
+        targetJobTitle: optimizedJobTitle,
+        keywords: roleKeywords,
+        weaveJobKeywords: true,
+      )
+          .map(
+            (bullet) => pass > 0
+                ? _strengthenAiAtsBulletForPass(bullet, pass, roleKeywords)
+                : _formatAiAtsBullet(bullet),
+          )
+          .where((bullet) => bullet.isNotEmpty)
+          .take(bulletLimit)
+          .toList();
+      final existing = item.bullets
+          .map((bullet) => bullet.trim())
+          .where((bullet) => bullet.isNotEmpty)
+          .toList();
+      if (_unorderedListEquals(existing, improvedBullets)) {
+        return item.copyWith(bullets: improvedBullets);
+      }
+      workChanged = true;
+      return item.copyWith(bullets: improvedBullets);
+    }).toList();
+    if (workChanged || pass > 0) {
+      appliedChanges.add(
+        pass == 0
+            ? 'Rewrote experience bullets with strong action verbs and measurable impact.'
+            : 'Further strengthened experience bullets with denser keywords and outcomes (pass ${pass + 1}).',
+      );
+    }
+
+    var projectsChanged = false;
+    final updatedProjects = sourceResume.projects.map((project) {
+      if (project.isBlank) {
+        return project;
+      }
+      final existing = project.bullets
+          .map((bullet) => bullet.trim())
+          .where((bullet) => bullet.isNotEmpty)
+          .toList();
+      final polished = existing
+          .map(
+            (bullet) => _formatAiAtsBullet(
+              _polishBulletForAts(
+                bullet,
+                keywords: targetKeywords.take(3).toList(),
+              ),
+            ),
+          )
+          .where((bullet) => bullet.isNotEmpty)
+          .toList();
+      if (polished.length >= 2) {
+        if (!_unorderedListEquals(existing, polished.take(4).toList())) {
+          projectsChanged = true;
+        }
+        return project.copyWith(bullets: polished.take(4).toList());
+      }
+
+      final generated = <String>[
+        if (project.overview.trim().isNotEmpty)
+          _formatAiAtsBullet(
+            _polishBulletForAts(
+              project.overview.trim(),
+              keywords: targetKeywords.take(2).toList(),
+            ),
+          ),
+        if (project.impact.trim().isNotEmpty)
+          _formatAiAtsBullet(
+            _polishBulletForAts(
+              project.impact.trim(),
+              keywords: targetKeywords.take(2).toList(),
+            ),
+          ),
+        ...polished,
+      ];
+      if (generated.where((item) => item.isNotEmpty).length < 2) {
+        final title = project.title.trim().isEmpty
+            ? 'project'
+            : project.title.trim();
+        generated.addAll([
+          'Designed and delivered $title with clear scope, milestones, and production-ready quality.',
+          targetKeywords.isEmpty
+              ? 'Collaborated with stakeholders to ship reliable features on schedule.'
+              : 'Implemented ${targetKeywords.take(2).join(' and ')} to improve reliability and delivery speed.',
+        ]);
+      }
+      final seen = <String>{};
+      final normalized = <String>[];
+      for (final bullet in generated) {
+        final cleaned = _formatAiAtsBullet(bullet);
+        final key = cleaned.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+        if (key.isEmpty || !seen.add(key)) {
+          continue;
+        }
+        normalized.add(cleaned);
+      }
+      projectsChanged = true;
+      return project.copyWith(bullets: normalized.take(4).toList());
+    }).toList();
+    if (projectsChanged) {
+      appliedChanges.add(
+        'Improved project bullets for clear outcomes and ATS-friendly wording.',
+      );
+    }
+
+    final flatSkills = <String>{
+      ...sourceResume.skills,
+      for (final group in sourceResume.skillGroups) ...group.skills,
+    };
+    final suggestedSkills = {
+      ..._resumeSkillSuggestions(
+        resume: workingResume,
+        targetJobTitle: optimizedJobTitle,
+      ),
+      ...targetKeywords.take(8),
+      if (!hasJobDescription) ...missingKeywords.take(4),
+    };
+    final mergedSkills = [...flatSkills, ...suggestedSkills];
+    final cappedSkills = _orderSkillsForAts(
+      skills: mergedSkills,
+      priorityKeywords: targetKeywords,
+    ).take(skillBudget).toList();
+    appliedChanges.add(
+      pass == 0
+          ? (hasJobDescription
+                ? 'Built a concise, keyword-prioritized skills section for ATS matching.'
+                : 'Built a concise, comma-friendly skills section for ATS parsing.')
+          : 'Re-ranked skills for higher ATS relevance (pass ${pass + 1}).',
+    );
+
+    final suggestedTitle = optimizedJobTitle.trim().isEmpty
+        ? 'ATS Resume'
+        : '$optimizedJobTitle (ATS)';
+
+    return ResumeImprovementResult(
+      resume: sourceResume.copyWith(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        title: suggestedTitle,
+        jobTitle: optimizedJobTitle,
+        summary: updatedSummary,
+        skills: cappedSkills,
+        useSkillSubheadings: false,
+        skillGroups: const [],
+        workExperiences: updatedWork,
+        projects: updatedProjects,
+        template: atsTemplate,
+        includeWorkInResume: true,
+        includeEducationInResume: true,
+        includeSkillsInResume: true,
+        includeProjectsInResume: sourceResume.includeProjectsInResume,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        lastSyncedAt: null,
+      ),
+      appliedChanges: appliedChanges,
+    );
+  }
+
+  /// Professional summary in the style ChatGPT/Claude typically write for ATS.
+  String _buildAiAtsFriendlySummary({
+    required ResumeData resume,
+    required String targetJobTitle,
+    required List<String> keywords,
+    String jobDescription = '',
+    int attemptIndex = 0,
+  }) {
+    final roleFromPosting = jobDescription.trim().isEmpty
+        ? null
+        : _jobTitleFromJobDescription(jobDescription);
+    final role = (roleFromPosting ?? targetJobTitle).trim().isEmpty
+        ? 'professional'
+        : (roleFromPosting ?? targetJobTitle).trim();
+
+    final yearsHint = resume.visibleWorkExperiences.isEmpty
+        ? ''
+        : resume.visibleWorkExperiences.length >= 3
+        ? ' with extensive hands-on experience'
+        : ' with proven hands-on experience';
+
+    final skillFocusCount = (5 + attemptIndex).clamp(5, 8);
+    final skillPool = [
+      ...keywords,
+      ...resume.skills,
+    ];
+    final uniqueSkills = <String>[];
+    final seen = <String>{};
+    for (final skill in skillPool) {
+      final value = skill.trim();
+      final key = value.toLowerCase();
+      if (value.isEmpty || !seen.add(key)) {
+        continue;
+      }
+      uniqueSkills.add(value);
+      if (uniqueSkills.length >= skillFocusCount) {
+        break;
+      }
+    }
+    final skillsPhrase = uniqueSkills.isEmpty
+        ? 'delivery, collaboration, and problem solving'
+        : uniqueSkills.length == 1
+        ? uniqueSkills.first
+        : '${uniqueSkills.take(uniqueSkills.length - 1).join(', ')}, and ${uniqueSkills.last}';
+
+    final evidence = resume.visibleWorkExperiences
+        .expand((item) => [...item.bullets, item.description])
+        .map(_firstMeaningfulSentence)
+        .where((item) => item.isNotEmpty)
+        .map(_normalizeSentenceForResume)
+        .take(1)
+        .join();
+    final evidenceSentence = evidence.isEmpty
+        ? 'Known for shipping reliable work, collaborating across teams, and communicating clearly with stakeholders.'
+        : evidence.endsWith('.')
+        ? evidence
+        : '$evidence.';
+
+    final keywordTake = (4 + attemptIndex).clamp(4, 7);
+    final targeting = switch (attemptIndex % 3) {
+      1 => jobDescription.trim().isEmpty
+          ? 'Emphasizes measurable delivery, cross-functional collaboration, and ATS-friendly keyword coverage.'
+          : 'Optimized for openings that value ${keywords.take(keywordTake).isEmpty ? role : keywords.take(keywordTake).join(', ')}.',
+      2 => jobDescription.trim().isEmpty
+          ? 'Highlights ownership, reliability, and the technical keywords applicant tracking systems scan for.'
+          : 'Directly aligned to requirements around ${keywords.take(keywordTake).isEmpty ? role : keywords.take(keywordTake).join(', ')}.',
+      _ => jobDescription.trim().isEmpty
+          ? 'Focused on clear impact, measurable outcomes, and keywords recruiters and ATS tools expect.'
+          : 'Well positioned for roles emphasizing ${keywords.take(keywordTake).isEmpty ? role : keywords.take(keywordTake).join(', ')}.',
+    };
+
+    final opener = switch (attemptIndex % 3) {
+      1 => 'Accomplished $role$yearsHint spanning $skillsPhrase.',
+      2 => 'Highly effective $role$yearsHint across $skillsPhrase.',
+      _ => 'Results-driven $role$yearsHint in $skillsPhrase.',
+    };
+
+    return '$opener $evidenceSentence $targeting';
+  }
+
+  String _strengthenAiAtsBulletForPass(
+    String raw,
+    int pass,
+    List<String> keywords,
+  ) {
+    var bullet = _formatAiAtsBullet(raw);
+    if (bullet.isEmpty || pass <= 0) {
+      return bullet;
+    }
+    final cleanedKeywords = keywords
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    if (cleanedKeywords.isEmpty) {
+      return bullet;
+    }
+    final keyword =
+        cleanedKeywords[(pass - 1).clamp(0, cleanedKeywords.length - 1)];
+    final lower = bullet.toLowerCase();
+    if (lower.contains(keyword.toLowerCase())) {
+      return bullet;
+    }
+    final withoutPeriod = bullet.endsWith('.')
+        ? bullet.substring(0, bullet.length - 1)
+        : bullet;
+    return '$withoutPeriod using $keyword.';
+  }
+
+  /// Normalizes a bullet to ChatGPT/Claude ATS style (action verb, no leading dash).
+  String _formatAiAtsBullet(String raw) {
+    var bullet = raw.trim();
+    if (bullet.isEmpty) {
+      return '';
+    }
+    bullet = bullet.replaceFirst(RegExp(r'^[-•*\u2022]\s*'), '');
+    bullet = bullet.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (bullet.isEmpty) {
+      return '';
+    }
+
+    const actionVerbs = <String>{
+      'led',
+      'built',
+      'designed',
+      'developed',
+      'implemented',
+      'delivered',
+      'improved',
+      'created',
+      'managed',
+      'owned',
+      'drove',
+      'launched',
+      'optimized',
+      'automated',
+      'collaborated',
+      'partnered',
+      'reduced',
+      'increased',
+      'migrated',
+      'architected',
+      'engineered',
+      'shipped',
+      'supported',
+      'coordinated',
+      'analyzed',
+      'established',
+      'streamlined',
+      'maintained',
+      'resolved',
+      'wrote',
+      'configured',
+      'deployed',
+      'integrated',
+      'tested',
+      'mentored',
+    };
+
+    final words = bullet.split(' ');
+    final first = words.first;
+    final firstLower = first.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+    if (!actionVerbs.contains(firstLower)) {
+      bullet = 'Delivered $bullet';
+    } else {
+      words[0] = '${first[0].toUpperCase()}${first.substring(1)}';
+      bullet = words.join(' ');
+    }
+
+    if (!RegExp(r'[.!?]$').hasMatch(bullet)) {
+      bullet = '$bullet.';
+    }
+    return bullet;
+  }
+
   Future<String> generateCoverLetter({
     required ResumeData resume,
     required String company,

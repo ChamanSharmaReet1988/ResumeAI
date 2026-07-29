@@ -19,6 +19,7 @@ class _FakeAnalyserRepository implements ResumeRepository {
   void configureGoogleDriveAutoSync({
     required AppPreferences appPreferences,
     required GoogleDriveResumeService service,
+    bool Function()? hasPremium,
   }) {}
 
   @override
@@ -113,7 +114,7 @@ void main() {
   );
 
   testWidgets(
-    'resume analyser opens preview, asks for a title on new copy, and clears the optimize screen on return',
+    'AI screen creates an ATS resume copy from a selected resume',
     (tester) async {
       final untouchedResume =
           ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
@@ -172,15 +173,20 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('tailor-resume-selector')), findsOneWidget);
-      expect(find.byKey(const Key('tailor-resume-ai-button')), findsOneWidget);
+      expect(
+        find.byKey(const Key('create-ats-resume-ai-button')),
+        findsOneWidget,
+      );
+      expect(find.text('Optimize'), findsNothing);
+      expect(find.text('Create ATS'), findsNothing);
       expect(find.byKey(const Key('upload-resume-button')), findsNothing);
 
       await tester.enterText(
-        _fieldByLabel('Job description'),
+        _fieldByLabel('Job description (optional)'),
         'Hiring a Flutter mobile engineer with REST APIs, Firebase, analytics, and stakeholder communication experience.',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('tailor-resume-ai-button')));
+      await tester.tap(find.byKey(const Key('create-ats-resume-ai-button')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();
@@ -196,14 +202,14 @@ void main() {
       expect(unchangedUntouchedResume.updatedAt, untouchedResume.updatedAt);
       expect(find.text('Applied changes'), findsOneWidget);
       expect(
-        find.byKey(const Key('show-optimized-resume-button')),
+        find.byKey(const Key('show-created-ats-resume-button')),
         findsOneWidget,
       );
 
       await tester.ensureVisible(
-        find.byKey(const Key('show-optimized-resume-button')),
+        find.byKey(const Key('show-created-ats-resume-button')),
       );
-      await tester.tap(find.byKey(const Key('show-optimized-resume-button')));
+      await tester.tap(find.byKey(const Key('show-created-ats-resume-button')));
       await tester.pumpAndSettle();
 
       expect(
@@ -212,14 +218,6 @@ void main() {
       );
 
       await tester.tap(find.byKey(const Key('save-optimized-resume-button')));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.byKey(const Key('save-optimized-new-copy-button')),
-        findsOneWidget,
-      );
-
-      await tester.tap(find.byKey(const Key('save-optimized-new-copy-button')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -251,6 +249,7 @@ void main() {
       expect(savedSelectedResume.updatedAt, selectedResume.updatedAt);
       expect(savedUntouchedResume.updatedAt, untouchedResume.updatedAt);
       expect(savedCopy.id, isNot(selectedResume.id));
+      expect(savedCopy.template, ResumeTemplate.atsLatexClassic);
       expect(savedCopy.skills, isNotEmpty);
       expect(savedCopy.summary, isNot(equals(selectedResume.summary)));
       expect(savedCopy.workExperiences.first.bullets, isNotEmpty);
@@ -264,11 +263,11 @@ void main() {
       );
       expect(find.text('Applied changes'), findsNothing);
       expect(
-        find.byKey(const Key('show-optimized-resume-button')),
+        find.byKey(const Key('show-created-ats-resume-button')),
         findsNothing,
       );
       final jobDescriptionField = tester.widget<TextField>(
-        _fieldByLabel('Job description'),
+        _fieldByLabel('Job description (optional)'),
       );
       expect(jobDescriptionField.controller?.text ?? '', isEmpty);
     },
