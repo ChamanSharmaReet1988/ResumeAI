@@ -1101,6 +1101,10 @@ class ResumeEditorViewModel extends ChangeNotifier {
     await _runBusy(() => pdfService.shareResume(_resume));
   }
 
+  Future<void> shareDocx() async {
+    await _runBusy(() => pdfService.shareResumeDocx(_resume));
+  }
+
   Future<void> printPdf() async {
     await _runBusy(() => pdfService.printResume(_resume));
   }

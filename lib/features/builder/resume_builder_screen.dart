@@ -14,6 +14,7 @@ import '../../core/skill_autocomplete_suggestions.dart';
 import '../../core/services/app_preferences.dart';
 import 'resume_preview_screen.dart';
 import '../shared/resume_preview_card.dart';
+import '../shared/resume_share_format_sheet.dart';
 import '../shared/view_models.dart';
 
 class ResumeBuilderScreen extends StatefulWidget {
@@ -322,16 +323,28 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Future<void> _shareResume() async {
     final viewModel = context.read<ResumeEditorViewModel>();
-    await viewModel.sharePdf();
+    final format = await showResumeShareFormatSheet(context);
+    if (!mounted || format == null) {
+      return;
+    }
+
+    if (format == ResumeShareFormat.pdf) {
+      await viewModel.sharePdf();
+    } else {
+      await viewModel.shareDocx();
+    }
     if (!mounted) {
       return;
     }
     await logAnalyticsEvent(
       context,
-      AnalyticsEvents.resumeSharedPdf,
+      format == ResumeShareFormat.pdf
+          ? AnalyticsEvents.resumeSharedPdf
+          : AnalyticsEvents.resumeSharedDocx,
       parameters: {
         ...resumeTemplateAnalytics(viewModel.resume.template.userFacingTemplate),
         'source': 'resume_builder',
+        'format': format.name,
       },
     );
   }

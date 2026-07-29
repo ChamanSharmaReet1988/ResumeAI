@@ -9,6 +9,7 @@ abstract final class AnalyticsEvents {
   static const String resumeCreated = 'resume_created';
   static const String resumeExportedPdf = 'resume_exported_pdf';
   static const String resumeSharedPdf = 'resume_shared_pdf';
+  static const String resumeSharedDocx = 'resume_shared_docx';
   static const String resumeTemplateSelected = 'resume_template_selected';
   static const String coverLetterCreated = 'cover_letter_created';
   static const String coverLetterSharedPdf = 'cover_letter_shared_pdf';

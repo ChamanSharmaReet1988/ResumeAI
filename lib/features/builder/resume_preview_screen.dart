@@ -8,6 +8,7 @@ import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
+import '../shared/resume_share_format_sheet.dart';
 import '../templates/templates_screen.dart';
 import '../shared/view_models.dart';
 
@@ -40,15 +41,28 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
   Future<void> _shareResume() async {
     final viewModel = context.read<ResumeEditorViewModel>();
     try {
-      // Brief delay before opening the share sheet.
+      final format = await showResumeShareFormatSheet(context);
+      if (!mounted || format == null) {
+        return;
+      }
+
       await Future<void>.delayed(const Duration(milliseconds: 160));
-      final file = await viewModel.pdfService.savePdfToDevice(viewModel.resume);
+      final file = format == ResumeShareFormat.pdf
+          ? await viewModel.pdfService.savePdfToDevice(viewModel.resume)
+          : await viewModel.pdfService.saveDocxToDevice(viewModel.resume);
       if (!mounted) {
         return;
       }
       final box = context.findRenderObject() as RenderBox?;
       await Share.shareXFiles(
-        [XFile(file.path)],
+        [
+          XFile(
+            file.path,
+            mimeType: format == ResumeShareFormat.pdf
+                ? 'application/pdf'
+                : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          ),
+        ],
         subject: '${viewModel.resume.title} resume',
         text: 'Shared from ResumeAI',
         sharePositionOrigin: box == null
@@ -60,12 +74,15 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
       }
       await logAnalyticsEvent(
         context,
-        AnalyticsEvents.resumeSharedPdf,
+        format == ResumeShareFormat.pdf
+            ? AnalyticsEvents.resumeSharedPdf
+            : AnalyticsEvents.resumeSharedDocx,
         parameters: {
           ...resumeTemplateAnalytics(
             viewModel.resume.template.userFacingTemplate,
           ),
           'source': 'resume_preview',
+          'format': format.name,
         },
       );
     } catch (_) {

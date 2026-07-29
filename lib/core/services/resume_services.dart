@@ -19,6 +19,7 @@ import '../resume_text_font.dart';
 import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
 import 'profile_image_storage.dart';
+import 'resume_docx_exporter.dart';
 import 'resume_pdf/arimo_pdf_fonts.dart';
 import 'resume_pdf/calibri_pdf_fonts.dart' hide darkHeaderInitialsPdfStyle;
 import 'resume_pdf/garamond_pdf_fonts.dart';
@@ -8599,6 +8600,19 @@ class ResumePdfService {
     final file = await savePdfToDevice(resume);
     await Share.shareXFiles(
       [XFile(file.path)],
+      subject: '${resume.title} resume',
+      text: 'Shared from ResumeAI',
+    );
+  }
+
+  Future<File> saveDocxToDevice(ResumeData resume) {
+    return const ResumeDocxExporter().saveToDevice(resume);
+  }
+
+  Future<void> shareResumeDocx(ResumeData resume) async {
+    final file = await saveDocxToDevice(resume);
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')],
       subject: '${resume.title} resume',
       text: 'Shared from ResumeAI',
     );
