@@ -339,38 +339,26 @@ class _TemplateDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final previewHeight = math.max(
-                      constraints.maxHeight * 1.2,
-                      constraints.maxWidth * 1.5,
-                    );
-
-                    return SingleChildScrollView(
-                      child: SizedBox(
-                        height: previewHeight,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: KeyedSubtree(
-                            key: Key('template-detail-preview-${item.id}'),
-                            child: item.resumeTemplate != null
-                                ? _ResumeTemplateDetailPreview(
-                                    item: item,
-                                    paletteSeed: paletteSeed,
-                                  )
-                                : _TemplatePreviewArt(
-                                    item: item,
-                                    paletteSeed: paletteSeed,
-                                    showPremiumBadgeOnPage: true,
-                                    premiumBadgeRightPadding: 10,
-                                    premiumBadgeSize: 18,
-                                    badgeMetricsInScreenPixels: true,
-                                  ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: KeyedSubtree(
+                    key: Key('template-detail-preview-${item.id}'),
+                    child: item.resumeTemplate != null
+                        ? _ResumeTemplateDetailPreview(
+                            item: item,
+                            paletteSeed: paletteSeed,
+                          )
+                        : SingleChildScrollView(
+                            child: _TemplatePreviewArt(
+                              item: item,
+                              paletteSeed: paletteSeed,
+                              showPremiumBadgeOnPage: true,
+                              premiumBadgeRightPadding: 10,
+                              premiumBadgeSize: 18,
+                              badgeMetricsInScreenPixels: true,
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
+                  ),
                 ),
               ),
               if (onUseTemplate != null) ...[
