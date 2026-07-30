@@ -341,6 +341,8 @@ class ResumeEditorViewModel extends ChangeNotifier {
       _currentStep = personalStepIndex;
     }
     notifyListeners();
+    // Persist immediately so order is kept without tapping Continue.
+    unawaited(persistResumeSilently());
   }
 
   void nextStep() {
@@ -1224,6 +1226,29 @@ class ResumeEditorViewModel extends ChangeNotifier {
     });
   }
 
+  /// Writes the current resume without the busy spinner (chip reorder, dispose).
+  Future<void> persistResumeSilently() async {
+    _autoSaveTimer?.cancel();
+    if (_hasAutoSaveInFlight) {
+      try {
+        await _autoSaveInFlight;
+      } catch (_) {}
+    }
+
+    final draftResume = _resume.copyWith(
+      title: _normalizeResumeTitle(_resume.title),
+      updatedAt: DateTime.now(),
+    );
+    _resume = draftResume;
+    _hasAutoSaveInFlight = true;
+    _autoSaveInFlight = repository.upsertResume(draftResume).whenComplete(() {
+      _hasAutoSaveInFlight = false;
+    });
+    try {
+      await _autoSaveInFlight;
+    } catch (_) {}
+  }
+
   void _scheduleAutoSave() {
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(_autoSaveDelay, () {
@@ -1297,7 +1322,11 @@ class ResumeEditorViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    final hadPendingAutoSave = _autoSaveTimer?.isActive ?? false;
     _autoSaveTimer?.cancel();
+    if (hadPendingAutoSave) {
+      unawaited(persistResumeSilently());
+    }
     super.dispose();
   }
 }
