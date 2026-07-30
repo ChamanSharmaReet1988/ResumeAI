@@ -4,19 +4,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/corporate_resume_style.dart';
+import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_font_weight.dart';
 import '../../core/resume_text_font.dart';
+
+List<Widget> _mapPreviewBodySections(
+  List<String> order,
+  Widget? Function(String sectionId) buildSection,
+) {
+  final widgets = <Widget>[];
+  for (final id in order) {
+    final widget = buildSection(id);
+    if (widget != null) widgets.add(widget);
+  }
+  return widgets;
+}
 
 class ResumePreviewCard extends StatelessWidget {
   const ResumePreviewCard({
     super.key,
     required this.resume,
     this.showDebugLabel = kDebugMode,
+    this.followBuilderSectionOrder = true,
   });
 
   final ResumeData resume;
   final bool showDebugLabel;
+  final bool followBuilderSectionOrder;
   static const double _a4AspectRatio = 1 / 1.4142;
 
   @override
@@ -47,6 +62,7 @@ class ResumePreviewCard extends StatelessWidget {
         child: ResumePreviewCanvas(
           resume: resume,
           showDebugLabel: showDebugLabel,
+          followBuilderSectionOrder: followBuilderSectionOrder,
         ),
       ),
     );
@@ -60,6 +76,7 @@ class ResumePreviewCanvas extends StatelessWidget {
     this.showDebugLabel = false,
     this.scrollable = true,
     this.showAllContent = false,
+    this.followBuilderSectionOrder = true,
   });
 
   final ResumeData resume;
@@ -70,6 +87,9 @@ class ResumePreviewCanvas extends StatelessWidget {
 
   /// When true, lists are not truncated for template previews.
   final bool showAllContent;
+
+  /// When true, body sections follow [ResumeData.effectiveBuilderSectionOrder].
+  final bool followBuilderSectionOrder;
 
   @override
   Widget build(BuildContext context) {
@@ -160,32 +180,56 @@ class ResumePreviewCanvas extends StatelessWidget {
         resume: resume,
         scrollable: scrollable,
         showAllContent: showAllContent,
+        followBuilderSectionOrder: followBuilderSectionOrder,
       ),
       ResumeTemplate.creative => _CreativePreview(
         resume: resume,
         showAllContent: showAllContent,
+        followBuilderSectionOrder: followBuilderSectionOrder,
       ),
-      ResumeTemplate.classicSidebar => _ClassicSidebarPreview(resume: resume),
-      ResumeTemplate.detailsSidebar => _DetailsSidebarPreview(resume: resume),
-      ResumeTemplate.accentStrip => _AccentStripPreview(resume: resume),
+      ResumeTemplate.classicSidebar => _ClassicSidebarPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
+      ResumeTemplate.detailsSidebar => _DetailsSidebarPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
+      ResumeTemplate.accentStrip => _AccentStripPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
       ResumeTemplate.atsStructured => _AtsStructuredPreview(
         resume: resume,
         showAllContent: showAllContent,
         scrollable: scrollable,
+        followBuilderSectionOrder: followBuilderSectionOrder,
       ),
-      ResumeTemplate.atsSerifRules => _AtsSerifRulesPreview(resume: resume),
-      ResumeTemplate.atsModernFlow => _AtsModernFlowPreview(resume: resume),
-      ResumeTemplate.atsExecutive => _AtsExecutivePreview(resume: resume),
+      ResumeTemplate.atsSerifRules => _AtsSerifRulesPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
+      ResumeTemplate.atsModernFlow => _AtsModernFlowPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
+      ResumeTemplate.atsExecutive => _AtsExecutivePreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
       ResumeTemplate.atsCenterClassic => _AtsCenterClassicPreview(
         resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
       ),
       ResumeTemplate.atsProfessionalBlue => _AtsProfessionalBluePreview(
         resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
       ),
       ResumeTemplate.atsLatexClassic => _AtsLatexClassicPreview(
         resume: resume,
         showAllContent: showAllContent,
         scrollable: scrollable,
+        followBuilderSectionOrder: followBuilderSectionOrder,
       ),
     };
 
@@ -273,11 +317,13 @@ class _DarkHeaderPreview extends StatelessWidget {
     required this.resume,
     this.scrollable = true,
     this.showAllContent = false,
+    this.followBuilderSectionOrder = true,
   });
 
   final ResumeData resume;
   final bool scrollable;
   final bool showAllContent;
+  final bool followBuilderSectionOrder;
   static const double _darkHeaderExtraLineSpacingPx = 0.0;
 
   /// Extra space at end of template thumbnails (not in PDF export).
@@ -433,101 +479,124 @@ class _DarkHeaderPreview extends StatelessWidget {
               ? Text(resume.summary.trim(), style: bodyStyle)
               : const SizedBox.shrink(),
         ),
-        if (resume.includeWorkInResume)
-          _CorporatePdfLikeSection(
-            outerPadding: _CorporatePdfMetrics.sectionOuter(),
-            title: 'EXPERIENCE',
-            titleColor: preset.titleColor,
-            lineColor: _CorporatePdfMetrics.lineColor,
-            hasContent: resume.visibleWorkExperiences.isNotEmpty,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final item in workExperiences)
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: _CorporatePdfMetrics.experienceBlockBottom,
-                    ),
-                    child: _CorporateExperienceBlock(
-                      item: item,
-                      dateColor: _CorporatePdfMetrics.dateMutedColor,
-                      bodyStyle: bodyStyle,
-                      subtitleStyle: subtitleStyle,
-                    ),
+        ..._mapPreviewBodySections(
+          previewBodySectionOrder(
+            resume,
+            followOrder: followBuilderSectionOrder,
+          ),
+          (id) {
+            final customIndex = ResumeBuilderSectionIds.customIndex(id);
+            if (customIndex != null) {
+              if (customIndex >= resume.customSections.length) return null;
+              final item = resume.customSections[customIndex];
+              if (item.isBlank || !customSections.contains(item)) {
+                return null;
+              }
+              return _CorporatePdfLikeSection(
+                outerPadding: _CorporatePdfMetrics.sectionOuter(),
+                title: item.title.ifBlank('Custom section').toUpperCase(),
+                titleColor: preset.titleColor,
+                lineColor: _CorporatePdfMetrics.lineColor,
+                child: _corporateCustomSectionBody(item, bodyStyle),
+              );
+            }
+            switch (id) {
+              case ResumeBuilderSectionIds.work:
+                if (!resume.includeWorkInResume) return null;
+                return _CorporatePdfLikeSection(
+                  outerPadding: _CorporatePdfMetrics.sectionOuter(),
+                  title: 'EXPERIENCE',
+                  titleColor: preset.titleColor,
+                  lineColor: _CorporatePdfMetrics.lineColor,
+                  hasContent: resume.visibleWorkExperiences.isNotEmpty,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final item in workExperiences)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: _CorporatePdfMetrics.experienceBlockBottom,
+                          ),
+                          child: _CorporateExperienceBlock(
+                            item: item,
+                            dateColor: _CorporatePdfMetrics.dateMutedColor,
+                            bodyStyle: bodyStyle,
+                            subtitleStyle: subtitleStyle,
+                          ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
-          ),
-        if (resume.includeEducationInResume)
-          _CorporatePdfLikeSection(
-            outerPadding: _CorporatePdfMetrics.sectionOuter(),
-            title: 'EDUCATION',
-            titleColor: preset.titleColor,
-            lineColor: _CorporatePdfMetrics.lineColor,
-            hasContent: resume.visibleEducation.isNotEmpty,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final item in educationItems)
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: _CorporatePdfMetrics.educationBlockBottom,
-                    ),
-                    child: _CorporateEducationBlock(
-                      item: item,
-                      bodyStyle: bodyStyle,
-                      subtitleStyle: subtitleStyle,
-                    ),
+                );
+              case ResumeBuilderSectionIds.education:
+                if (!resume.includeEducationInResume) return null;
+                return _CorporatePdfLikeSection(
+                  outerPadding: _CorporatePdfMetrics.sectionOuter(),
+                  title: 'EDUCATION',
+                  titleColor: preset.titleColor,
+                  lineColor: _CorporatePdfMetrics.lineColor,
+                  hasContent: resume.visibleEducation.isNotEmpty,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final item in educationItems)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: _CorporatePdfMetrics.educationBlockBottom,
+                          ),
+                          child: _CorporateEducationBlock(
+                            item: item,
+                            bodyStyle: bodyStyle,
+                            subtitleStyle: subtitleStyle,
+                          ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
-          ),
-        _CorporatePdfLikeSection(
-          outerPadding: _CorporatePdfMetrics.sectionOuter(),
-          title: 'SKILLS',
-          titleColor: preset.titleColor,
-          lineColor: _CorporatePdfMetrics.lineColor,
-          hasContent:
-              resume.showCategorisedSkills || skills.isNotEmpty,
-          child: _CorporateSkillsColumns(
-            skills: skills,
-            bodyStyle: bodyStyle,
-            resume: resume,
-            categoryStyle: subtitleStyle,
-          ),
+                );
+              case ResumeBuilderSectionIds.skills:
+                return _CorporatePdfLikeSection(
+                  outerPadding: _CorporatePdfMetrics.sectionOuter(),
+                  title: 'SKILLS',
+                  titleColor: preset.titleColor,
+                  lineColor: _CorporatePdfMetrics.lineColor,
+                  hasContent:
+                      resume.showCategorisedSkills || skills.isNotEmpty,
+                  child: _CorporateSkillsColumns(
+                    skills: skills,
+                    bodyStyle: bodyStyle,
+                    resume: resume,
+                    categoryStyle: subtitleStyle,
+                  ),
+                );
+              case ResumeBuilderSectionIds.projects:
+                if (!resume.includeProjectsInResume) return null;
+                return _CorporatePdfLikeSection(
+                  outerPadding: _CorporatePdfMetrics.sectionOuter(),
+                  title: 'PROJECTS',
+                  titleColor: preset.titleColor,
+                  lineColor: _CorporatePdfMetrics.lineColor,
+                  hasContent: resume.visibleProjects.isNotEmpty,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final item in projectItems)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: _CorporatePdfMetrics.projectBlockBottom,
+                          ),
+                          child: _CorporateProjectBlock(
+                            item: item,
+                            bodyStyle: bodyStyle,
+                            subtitleStyle: subtitleStyle,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              default:
+                return null;
+            }
+          },
         ),
-        if (resume.includeProjectsInResume)
-          _CorporatePdfLikeSection(
-            outerPadding: _CorporatePdfMetrics.sectionOuter(),
-            title: 'PROJECTS',
-            titleColor: preset.titleColor,
-            lineColor: _CorporatePdfMetrics.lineColor,
-            hasContent: resume.visibleProjects.isNotEmpty,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final item in projectItems)
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: _CorporatePdfMetrics.projectBlockBottom,
-                    ),
-                    child: _CorporateProjectBlock(
-                      item: item,
-                      bodyStyle: bodyStyle,
-                      subtitleStyle: subtitleStyle,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        for (final item in customSections)
-          _CorporatePdfLikeSection(
-            outerPadding: _CorporatePdfMetrics.sectionOuter(),
-            title: item.title.ifBlank('Custom section').toUpperCase(),
-            titleColor: preset.titleColor,
-            lineColor: _CorporatePdfMetrics.lineColor,
-            child: _corporateCustomSectionBody(item, bodyStyle),
-          ),
         SizedBox(height: scrollable ? 10 : _templatePreviewBottomMargin),
       ],
     );
@@ -964,10 +1033,15 @@ List<Widget> _customSectionFlowPreviewWidgets(
 }
 
 class _CreativePreview extends StatelessWidget {
-  const _CreativePreview({required this.resume, this.showAllContent = false});
+  const _CreativePreview({
+    required this.resume,
+    this.showAllContent = false,
+    this.followBuilderSectionOrder = true,
+  });
 
   final ResumeData resume;
   final bool showAllContent;
+  final bool followBuilderSectionOrder;
   static const double _avatarBackgroundOpacity = 0.4;
   static const double _avatarWidth = 138.0;
   static const double _avatarHeight = 161.0;
@@ -1160,216 +1234,290 @@ class _CreativePreview extends StatelessWidget {
                           : TextOverflow.ellipsis,
                       style: bodyStyle,
                     ),
-                    const SizedBox(height: sectionGap),
-                    _CreativeSidebarHeading(
-                      title: 'EXPERIENCE',
-                      lineColor: lineColor,
-                      sectionTitlePt: sectionTitlePt,
-                    ),
-                    const SizedBox(height: headingGap),
-                    if (experiences.isNotEmpty)
-                      ...experiences.map((item) {
-                        final bullets = _workBulletLines(item);
-                        final dateLabel = _creativeExperienceDateRange(
-                          item.startDate,
-                          item.endDate,
-                        );
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Column(
+                    ..._mapPreviewBodySections(
+                      previewBodySectionOrder(
+                        resume,
+                        followOrder: followBuilderSectionOrder,
+                      ),
+                      (id) {
+                        final customIndex =
+                            ResumeBuilderSectionIds.customIndex(id);
+                        if (customIndex != null) {
+                          if (customIndex >= resume.customSections.length) {
+                            return null;
+                          }
+                          final section = resume.customSections[customIndex];
+                          if (section.isBlank ||
+                              !customSections.contains(section)) {
+                            return null;
+                          }
+                          return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: RichText(
-                                      maxLines: showAllContent ? null : 2,
-                                      overflow: showAllContent
-                                          ? TextOverflow.clip
-                                          : TextOverflow.ellipsis,
-                                      text: TextSpan(
-                                        style: subtitleStyle,
+                              const SizedBox(height: sectionGap),
+                              _CreativeSidebarHeading(
+                                title: section.title.ifBlank(
+                                  'Custom Section',
+                                ),
+                                lineColor: lineColor,
+                                sectionTitlePt: sectionTitlePt,
+                              ),
+                              const SizedBox(height: headingGap),
+                              ..._customSectionFlowPreviewWidgets(
+                                section,
+                                bodyStyle,
+                              ),
+                            ],
+                          );
+                        }
+                        switch (id) {
+                          case ResumeBuilderSectionIds.work:
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: sectionGap),
+                                _CreativeSidebarHeading(
+                                  title: 'EXPERIENCE',
+                                  lineColor: lineColor,
+                                  sectionTitlePt: sectionTitlePt,
+                                ),
+                                const SizedBox(height: headingGap),
+                                if (experiences.isNotEmpty)
+                                  ...experiences.map((item) {
+                                    final bullets = _workBulletLines(item);
+                                    final dateLabel =
+                                        _creativeExperienceDateRange(
+                                      item.startDate,
+                                      item.endDate,
+                                    );
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 8,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          TextSpan(
-                                            text: item.role
-                                                .ifBlank('Role')
-                                                .toUpperCase(),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: RichText(
+                                                  maxLines: showAllContent
+                                                      ? null
+                                                      : 2,
+                                                  overflow: showAllContent
+                                                      ? TextOverflow.clip
+                                                      : TextOverflow.ellipsis,
+                                                  text: TextSpan(
+                                                    style: subtitleStyle,
+                                                    children: [
+                                                      TextSpan(
+                                                        text: item.role
+                                                            .ifBlank('Role')
+                                                            .toUpperCase(),
+                                                      ),
+                                                      TextSpan(
+                                                        text:
+                                                            ' / ${item.company.ifBlank('Company')}',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              if (dateLabel.isNotEmpty) ...[
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  dateLabel,
+                                                  maxLines: showAllContent
+                                                      ? null
+                                                      : 1,
+                                                  overflow: showAllContent
+                                                      ? null
+                                                      : TextOverflow.ellipsis,
+                                                  textAlign: TextAlign.right,
+                                                  style: bodyStyle.copyWith(
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
                                           ),
-                                          TextSpan(
-                                            text:
-                                                ' / ${item.company.ifBlank('Company')}',
+                                          _CreativeBulletColumn(
+                                            items: showAllContent
+                                                ? bullets
+                                                : bullets.take(1).toList(),
+                                            bodyStyle: bodyStyle,
+                                            maxLines:
+                                                showAllContent ? null : 1,
                                           ),
                                         ],
                                       ),
+                                    );
+                                  })
+                                else
+                                  Text(
+                                    'Add your work experience details.',
+                                    style: bodyStyle,
+                                  ),
+                              ],
+                            );
+                          case ResumeBuilderSectionIds.education:
+                            if (education.isEmpty) return null;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: sectionGap),
+                                _CreativeSidebarHeading(
+                                  title: 'EDUCATION',
+                                  lineColor: lineColor,
+                                  sectionTitlePt: sectionTitlePt,
+                                ),
+                                const SizedBox(height: headingGap),
+                                ...education.map(
+                                  (item) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 7),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.degree.ifBlank('Degree'),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: subtitleStyle,
+                                        ),
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          item.institution.ifBlank(
+                                            'Institution',
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: bodyStyle,
+                                        ),
+                                        if (_creativeExperienceDateRange(
+                                          item.startDate,
+                                          item.endDate,
+                                        ).isNotEmpty) ...[
+                                          const SizedBox(height: 1.5),
+                                          Text(
+                                            _creativeExperienceDateRange(
+                                              item.startDate,
+                                              item.endDate,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: bodyStyle,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
-                                  if (dateLabel.isNotEmpty) ...[
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      dateLabel,
-                                      maxLines: showAllContent ? null : 1,
-                                      overflow: showAllContent
-                                          ? null
-                                          : TextOverflow.ellipsis,
-                                      textAlign: TextAlign.right,
-                                      style: bodyStyle.copyWith(
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              _CreativeBulletColumn(
-                                items: showAllContent
-                                    ? bullets
-                                    : bullets.take(1).toList(),
-                                bodyStyle: bodyStyle,
-                                maxLines: showAllContent ? null : 1,
-                              ),
-                            ],
-                          ),
-                        );
-                      })
-                    else
-                      Text(
-                        'Add your work experience details.',
-                        style: bodyStyle,
-                      ),
-                    if (education.isNotEmpty) ...[
-                      const SizedBox(height: sectionGap),
-                      _CreativeSidebarHeading(
-                        title: 'EDUCATION',
-                        lineColor: lineColor,
-                        sectionTitlePt: sectionTitlePt,
-                      ),
-                      const SizedBox(height: headingGap),
-                      ...education.map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 7),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.degree.ifBlank('Degree'),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: subtitleStyle,
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                item.institution.ifBlank('Institution'),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: bodyStyle,
-                              ),
-                              if (_creativeExperienceDateRange(
-                                item.startDate,
-                                item.endDate,
-                              ).isNotEmpty) ...[
-                                const SizedBox(height: 1.5),
-                                Text(
-                                  _creativeExperienceDateRange(
-                                    item.startDate,
-                                    item.endDate,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: bodyStyle,
                                 ),
                               ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: sectionGap),
-                    _CreativeSidebarHeading(
-                      title: 'SKILLS',
-                      lineColor: lineColor,
-                      sectionTitlePt: sectionTitlePt,
-                    ),
-                    const SizedBox(height: headingGap),
-                    if (resume.showCategorisedSkills)
-                      _categorisedSkillsPreview(
-                        groups: resume.skillGroupsForResume,
-                        bodyStyle: bodyStyle,
-                        categoryStyle: subtitleStyle,
-                      )
-                    else
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _CreativeBulletColumn(
-                              items: skills.take(midpoint).toList(),
-                              bodyStyle: bodyStyle,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _CreativeBulletColumn(
-                              items: skills.skip(midpoint).toList(),
-                              bodyStyle: bodyStyle,
-                            ),
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: sectionGap),
-                    _CreativeSidebarHeading(
-                      title: 'PROJECTS',
-                      lineColor: lineColor,
-                      sectionTitlePt: sectionTitlePt,
-                    ),
-                    const SizedBox(height: headingGap),
-                    if (projects.isEmpty)
-                      Text('Add projects', style: bodyStyle)
-                    else if (showAllContent)
-                      ...projects.map((item) {
-                        final lines = _projectBulletLines(item);
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.title.ifBlank('Project'),
-                                style: subtitleStyle,
-                              ),
-                              if (lines.isNotEmpty)
-                                _CreativeBulletColumn(
-                                  items: lines,
-                                  bodyStyle: bodyStyle,
+                            );
+                          case ResumeBuilderSectionIds.skills:
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: sectionGap),
+                                _CreativeSidebarHeading(
+                                  title: 'SKILLS',
+                                  lineColor: lineColor,
+                                  sectionTitlePt: sectionTitlePt,
                                 ),
-                            ],
-                          ),
-                        );
-                      })
-                    else ...[
-                      Text(
-                        projects.first.title.ifBlank('Project'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: subtitleStyle,
-                      ),
-                      if (firstProjectLine.isNotEmpty)
-                        Text(
-                          firstProjectLine,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: bodyStyle,
-                        ),
-                    ],
-                    for (final section in customSections) ...[
-                      const SizedBox(height: sectionGap),
-                      _CreativeSidebarHeading(
-                        title: section.title.ifBlank('Custom Section'),
-                        lineColor: lineColor,
-                        sectionTitlePt: sectionTitlePt,
-                      ),
-                      const SizedBox(height: headingGap),
-                      ..._customSectionFlowPreviewWidgets(section, bodyStyle),
-                    ],
+                                const SizedBox(height: headingGap),
+                                if (resume.showCategorisedSkills)
+                                  _categorisedSkillsPreview(
+                                    groups: resume.skillGroupsForResume,
+                                    bodyStyle: bodyStyle,
+                                    categoryStyle: subtitleStyle,
+                                  )
+                                else
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: _CreativeBulletColumn(
+                                          items:
+                                              skills.take(midpoint).toList(),
+                                          bodyStyle: bodyStyle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _CreativeBulletColumn(
+                                          items:
+                                              skills.skip(midpoint).toList(),
+                                          bodyStyle: bodyStyle,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            );
+                          case ResumeBuilderSectionIds.projects:
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: sectionGap),
+                                _CreativeSidebarHeading(
+                                  title: 'PROJECTS',
+                                  lineColor: lineColor,
+                                  sectionTitlePt: sectionTitlePt,
+                                ),
+                                const SizedBox(height: headingGap),
+                                if (projects.isEmpty)
+                                  Text('Add projects', style: bodyStyle)
+                                else if (showAllContent)
+                                  ...projects.map((item) {
+                                    final lines = _projectBulletLines(item);
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 8,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.title.ifBlank('Project'),
+                                            style: subtitleStyle,
+                                          ),
+                                          if (lines.isNotEmpty)
+                                            _CreativeBulletColumn(
+                                              items: lines,
+                                              bodyStyle: bodyStyle,
+                                            ),
+                                        ],
+                                      ),
+                                    );
+                                  })
+                                else ...[
+                                  Text(
+                                    projects.first.title.ifBlank('Project'),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: subtitleStyle,
+                                  ),
+                                  if (firstProjectLine.isNotEmpty)
+                                    Text(
+                                      firstProjectLine,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: bodyStyle,
+                                    ),
+                                ],
+                              ],
+                            );
+                          default:
+                            return null;
+                        }
+                      },
+                    ),
                   ],
                 ),
               ],
@@ -1382,9 +1530,13 @@ class _CreativePreview extends StatelessWidget {
 }
 
 class _ClassicSidebarPreview extends StatelessWidget {
-  const _ClassicSidebarPreview({required this.resume});
+  const _ClassicSidebarPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
 
   final ResumeData resume;
+  final bool followBuilderSectionOrder;
 
   static const double _sidebarWidth = 122;
   static const double _avatarSize = 114;
@@ -1454,6 +1606,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
     final skills = _pdfAlignedSkills(resume).take(5).toList();
     final languages = _classicSidebarLanguages(resume).take(4).toList();
     final remainingCustomSections = _classicSidebarMainCustomSections(resume);
+    final allowedMainCustoms = remainingCustomSections.take(2).toList();
     final avatarPath = resume.profileImagePath.trim();
     final hasProfileImage =
         avatarPath.isNotEmpty && File(avatarPath).existsSync();
@@ -1609,93 +1762,131 @@ class _ClassicSidebarPreview extends StatelessWidget {
                           style: bodyStyle,
                         ),
                       ),
-                      _ClassicContentSection(
-                        title: 'EXPERIENCE',
-                        titleStyle: sectionTitleStyle,
-                        topDividerColor: sectionBorderColor,
-                        child: experiences.isEmpty
-                            ? Text(
-                                'Add your work experience details.',
-                                style: bodyStyle.copyWith(color: mutedColor),
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  for (final item in experiences)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 10,
-                                      ),
-                                      child: _ClassicExperienceBlock(
-                                        item: item,
-                                        bodyStyle: bodyStyle,
-                                        subtitleStyle: subtitleStyle,
-                                        bulletColor: titleColor,
-                                        maxBulletLines: 2,
-                                      ),
-                                    ),
-                                ],
+                      ..._mapPreviewBodySections(
+                        previewBodySectionOrder(
+                          resume,
+                          followOrder: followBuilderSectionOrder,
+                          exclude: {ResumeBuilderSectionIds.skills},
+                        ),
+                        (id) {
+                          final customIndex =
+                              ResumeBuilderSectionIds.customIndex(id);
+                          if (customIndex != null) {
+                            if (customIndex >= resume.customSections.length) {
+                              return null;
+                            }
+                            final section = resume.customSections[customIndex];
+                            if (section.isBlank ||
+                                !allowedMainCustoms.contains(section)) {
+                              return null;
+                            }
+                            return _ClassicContentSection(
+                              title: section.title.trim().toUpperCase(),
+                              titleStyle: sectionTitleStyle,
+                              topDividerColor: sectionBorderColor,
+                              child: _ClassicCustomSectionBlock(
+                                item: section,
+                                bodyStyle: bodyStyle,
+                                mutedColor: mutedColor,
+                                bulletColor: titleColor,
                               ),
-                      ),
-                      _ClassicContentSection(
-                        title: 'EDUCATION',
-                        titleStyle: sectionTitleStyle,
-                        topDividerColor: sectionBorderColor,
-                        child: education.isEmpty
-                            ? Text(
-                                'Add your education details.',
-                                style: bodyStyle.copyWith(color: mutedColor),
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  for (final item in education)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      child: _ClassicEducationBlock(
-                                        item: item,
-                                        bodyStyle: bodyStyle,
-                                        subtitleStyle: subtitleStyle,
-                                        mutedColor: mutedColor,
+                            );
+                          }
+                          switch (id) {
+                            case ResumeBuilderSectionIds.work:
+                              return _ClassicContentSection(
+                                title: 'EXPERIENCE',
+                                titleStyle: sectionTitleStyle,
+                                topDividerColor: sectionBorderColor,
+                                child: experiences.isEmpty
+                                    ? Text(
+                                        'Add your work experience details.',
+                                        style: bodyStyle.copyWith(
+                                          color: mutedColor,
+                                        ),
+                                      )
+                                    : Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          for (final item in experiences)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 10,
+                                              ),
+                                              child: _ClassicExperienceBlock(
+                                                item: item,
+                                                bodyStyle: bodyStyle,
+                                                subtitleStyle: subtitleStyle,
+                                                bulletColor: titleColor,
+                                                maxBulletLines: 2,
+                                              ),
+                                            ),
+                                        ],
                                       ),
-                                    ),
-                                ],
-                              ),
-                      ),
-                      if (projects.isNotEmpty)
-                        _ClassicContentSection(
-                          title: 'PROJECTS',
-                          titleStyle: sectionTitleStyle,
-                          topDividerColor: sectionBorderColor,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              for (final item in projects)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: _ClassicProjectBlock(
-                                    item: item,
-                                    bodyStyle: bodyStyle,
-                                    subtitleStyle: subtitleStyle,
-                                    mutedColor: mutedColor,
-                                    bulletColor: titleColor,
-                                  ),
+                              );
+                            case ResumeBuilderSectionIds.education:
+                              return _ClassicContentSection(
+                                title: 'EDUCATION',
+                                titleStyle: sectionTitleStyle,
+                                topDividerColor: sectionBorderColor,
+                                child: education.isEmpty
+                                    ? Text(
+                                        'Add your education details.',
+                                        style: bodyStyle.copyWith(
+                                          color: mutedColor,
+                                        ),
+                                      )
+                                    : Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          for (final item in education)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 8,
+                                              ),
+                                              child: _ClassicEducationBlock(
+                                                item: item,
+                                                bodyStyle: bodyStyle,
+                                                subtitleStyle: subtitleStyle,
+                                                mutedColor: mutedColor,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                              );
+                            case ResumeBuilderSectionIds.projects:
+                              if (projects.isEmpty) return null;
+                              return _ClassicContentSection(
+                                title: 'PROJECTS',
+                                titleStyle: sectionTitleStyle,
+                                topDividerColor: sectionBorderColor,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    for (final item in projects)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
+                                        child: _ClassicProjectBlock(
+                                          item: item,
+                                          bodyStyle: bodyStyle,
+                                          subtitleStyle: subtitleStyle,
+                                          mutedColor: mutedColor,
+                                          bulletColor: titleColor,
+                                        ),
+                                      ),
+                                  ],
                                 ),
-                            ],
-                          ),
-                        ),
-                      for (final section in remainingCustomSections.take(2))
-                        _ClassicContentSection(
-                          title: section.title.trim().toUpperCase(),
-                          titleStyle: sectionTitleStyle,
-                          topDividerColor: sectionBorderColor,
-                          child: _ClassicCustomSectionBlock(
-                            item: section,
-                            bodyStyle: bodyStyle,
-                            mutedColor: mutedColor,
-                            bulletColor: titleColor,
-                          ),
-                        ),
+                              );
+                            default:
+                              return null;
+                          }
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -1709,9 +1900,13 @@ class _ClassicSidebarPreview extends StatelessWidget {
 }
 
 class _DetailsSidebarPreview extends StatelessWidget {
-  const _DetailsSidebarPreview({required this.resume});
+  const _DetailsSidebarPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
 
   final ResumeData resume;
+  final bool followBuilderSectionOrder;
 
   static const double _sidebarWidth = 128;
   static const double _sectionGap = 18;
@@ -1731,6 +1926,7 @@ class _DetailsSidebarPreview extends StatelessWidget {
     );
     final skills = _pdfAlignedSkills(resume).take(7).toList();
     final projects = resume.visibleProjects.take(2).toList();
+    final allowedCustoms = resume.visibleCustomSections.take(2).toList();
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1842,94 +2038,135 @@ class _DetailsSidebarPreview extends StatelessWidget {
                         style: bodyStyle.copyWith(color: titleColor),
                       ),
                     ),
-                    _DetailsSidebarContentSection(
-                      title: 'EXPERIENCE',
-                      titleColor: titleColor,
-                      dividerColor: dividerColor,
-                      child: resume.visibleWorkExperiences.isEmpty
-                          ? Text(
-                              'Add your work experience details.',
-                              style: bodyStyle.copyWith(color: mutedColor),
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                for (final item
-                                    in resume.visibleWorkExperiences.take(2))
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: _DetailsSidebarExperienceBlock(
-                                      item: item,
-                                      bodyStyle: bodyStyle,
-                                      titleColor: titleColor,
-                                      mutedColor: mutedColor,
-                                      bulletColor: titleColor,
-                                    ),
-                                  ),
-                              ],
+                    ..._mapPreviewBodySections(
+                      previewBodySectionOrder(
+                        resume,
+                        followOrder: followBuilderSectionOrder,
+                        exclude: {ResumeBuilderSectionIds.skills},
+                      ),
+                      (id) {
+                        final customIndex =
+                            ResumeBuilderSectionIds.customIndex(id);
+                        if (customIndex != null) {
+                          if (customIndex >= resume.customSections.length) {
+                            return null;
+                          }
+                          final section = resume.customSections[customIndex];
+                          if (section.isBlank ||
+                              !allowedCustoms.contains(section)) {
+                            return null;
+                          }
+                          return _DetailsSidebarContentSection(
+                            title: section.title.trim().toUpperCase(),
+                            titleColor: titleColor,
+                            dividerColor: dividerColor,
+                            child: _ClassicCustomSectionBlock(
+                              item: section,
+                              bodyStyle: bodyStyle,
+                              mutedColor: mutedColor,
+                              bulletColor: titleColor,
                             ),
-                    ),
-                    _DetailsSidebarContentSection(
-                      title: 'EDUCATION',
-                      titleColor: titleColor,
-                      dividerColor: dividerColor,
-                      child: resume.visibleEducation.isEmpty
-                          ? Text(
-                              'Add your education details.',
-                              style: bodyStyle.copyWith(color: mutedColor),
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                for (final item in resume.visibleEducation.take(
-                                  2,
-                                ))
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: _DetailsSidebarEducationBlock(
-                                      item: item,
-                                      bodyStyle: bodyStyle,
-                                      titleColor: titleColor,
-                                      mutedColor: mutedColor,
+                          );
+                        }
+                        switch (id) {
+                          case ResumeBuilderSectionIds.work:
+                            return _DetailsSidebarContentSection(
+                              title: 'EXPERIENCE',
+                              titleColor: titleColor,
+                              dividerColor: dividerColor,
+                              child: resume.visibleWorkExperiences.isEmpty
+                                  ? Text(
+                                      'Add your work experience details.',
+                                      style: bodyStyle.copyWith(
+                                        color: mutedColor,
+                                      ),
+                                    )
+                                  : Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        for (final item
+                                            in resume.visibleWorkExperiences
+                                                .take(2))
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 12,
+                                            ),
+                                            child:
+                                                _DetailsSidebarExperienceBlock(
+                                              item: item,
+                                              bodyStyle: bodyStyle,
+                                              titleColor: titleColor,
+                                              mutedColor: mutedColor,
+                                              bulletColor: titleColor,
+                                            ),
+                                          ),
+                                      ],
                                     ),
-                                  ),
-                              ],
-                            ),
-                    ),
-                    if (projects.isNotEmpty)
-                      _DetailsSidebarContentSection(
-                        title: 'PROJECTS',
-                        titleColor: titleColor,
-                        dividerColor: dividerColor,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final item in projects)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: _DetailsSidebarProjectBlock(
-                                  item: item,
-                                  bodyStyle: bodyStyle,
-                                  titleColor: titleColor,
-                                  mutedColor: mutedColor,
-                                  bulletColor: titleColor,
-                                ),
+                            );
+                          case ResumeBuilderSectionIds.education:
+                            return _DetailsSidebarContentSection(
+                              title: 'EDUCATION',
+                              titleColor: titleColor,
+                              dividerColor: dividerColor,
+                              child: resume.visibleEducation.isEmpty
+                                  ? Text(
+                                      'Add your education details.',
+                                      style: bodyStyle.copyWith(
+                                        color: mutedColor,
+                                      ),
+                                    )
+                                  : Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        for (final item
+                                            in resume.visibleEducation.take(2))
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 10,
+                                            ),
+                                            child:
+                                                _DetailsSidebarEducationBlock(
+                                              item: item,
+                                              bodyStyle: bodyStyle,
+                                              titleColor: titleColor,
+                                              mutedColor: mutedColor,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                            );
+                          case ResumeBuilderSectionIds.projects:
+                            if (projects.isEmpty) return null;
+                            return _DetailsSidebarContentSection(
+                              title: 'PROJECTS',
+                              titleColor: titleColor,
+                              dividerColor: dividerColor,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  for (final item in projects)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 10,
+                                      ),
+                                      child: _DetailsSidebarProjectBlock(
+                                        item: item,
+                                        bodyStyle: bodyStyle,
+                                        titleColor: titleColor,
+                                        mutedColor: mutedColor,
+                                        bulletColor: titleColor,
+                                      ),
+                                    ),
+                                ],
                               ),
-                          ],
-                        ),
-                      ),
-                    for (final section in resume.visibleCustomSections.take(2))
-                      _DetailsSidebarContentSection(
-                        title: section.title.trim().toUpperCase(),
-                        titleColor: titleColor,
-                        dividerColor: dividerColor,
-                        child: _ClassicCustomSectionBlock(
-                          item: section,
-                          bodyStyle: bodyStyle,
-                          mutedColor: mutedColor,
-                          bulletColor: titleColor,
-                        ),
-                      ),
+                            );
+                          default:
+                            return null;
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -1956,11 +2193,13 @@ class _AtsStructuredPreview extends StatelessWidget {
     required this.resume,
     this.showAllContent = false,
     this.scrollable = true,
+    this.followBuilderSectionOrder = true,
   });
 
   final ResumeData resume;
   final bool showAllContent;
   final bool scrollable;
+  final bool followBuilderSectionOrder;
 
   static const double _sectionGap = 20;
 
@@ -2056,67 +2295,114 @@ class _AtsStructuredPreview extends StatelessWidget {
           maxLines: showAllContent ? null : 6,
           overflow: showAllContent ? null : TextOverflow.ellipsis,
         ),
-        if (resume.includeWorkInResume) ...[
-          const SizedBox(height: _sectionGap),
-          _atsBandTitle('EXPERIENCE', accent, band),
-          const SizedBox(height: 6),
-          ..._atsStructuredExperienceBlocks(
-            works: works,
-            bodyStyle: bodyStyle,
-            subtitleStyle: subtitleStyle,
-            showAllContent: showAllContent,
+        ..._mapPreviewBodySections(
+          previewBodySectionOrder(
+            resume,
+            followOrder: followBuilderSectionOrder,
           ),
-        ],
-        if (resume.includeEducationInResume) ...[
-          const SizedBox(height: _sectionGap),
-          _atsBandTitle('EDUCATION', accent, band),
-          const SizedBox(height: 6),
-          ..._atsStructuredEducationBlocks(
-            items: education,
-            bodyStyle: bodyStyle,
-            subtitleStyle: subtitleStyle,
-            showAllContent: showAllContent,
-          ),
-        ],
-        if (resume.includeSkillsInResume &&
-            (resume.showCategorisedSkills || skills.isNotEmpty)) ...[
-          const SizedBox(height: _sectionGap),
-          _atsBandTitle('SKILLS', accent, band),
-          const SizedBox(height: 6),
-          _atsStructuredSkillsGrid(
-            skills: skills,
-            bodyStyle: bodyStyle,
-            showAllContent: showAllContent,
-            resume: resume,
-            categoryStyle: subtitleStyle,
-          ),
-        ],
-        if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
-          const SizedBox(height: _sectionGap),
-          _atsBandTitle('PROJECTS', accent, band),
-          const SizedBox(height: 6),
-          for (final project in projects)
-            ..._atsStructuredProjectBlocks(
-              project: project,
-              bodyStyle: bodyStyle,
-              subtitleStyle: subtitleStyle,
-              showAllContent: showAllContent,
-            ),
-        ],
-        for (final section in customSections) ...[
-          const SizedBox(height: _sectionGap),
-          _atsBandTitle(
-            section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
-            accent,
-            band,
-          ),
-          const SizedBox(height: 6),
-          ..._customSectionFlowPreviewWidgets(
-            section,
-            bodyStyle,
-            showAllContent: showAllContent,
-          ),
-        ],
+          (id) {
+            final customIndex = ResumeBuilderSectionIds.customIndex(id);
+            if (customIndex != null) {
+              if (customIndex >= resume.customSections.length) return null;
+              final section = resume.customSections[customIndex];
+              if (section.isBlank || !customSections.contains(section)) {
+                return null;
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: _sectionGap),
+                  _atsBandTitle(
+                    section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
+                    accent,
+                    band,
+                  ),
+                  const SizedBox(height: 6),
+                  ..._customSectionFlowPreviewWidgets(
+                    section,
+                    bodyStyle,
+                    showAllContent: showAllContent,
+                  ),
+                ],
+              );
+            }
+            switch (id) {
+              case ResumeBuilderSectionIds.work:
+                if (!resume.includeWorkInResume) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: _sectionGap),
+                    _atsBandTitle('EXPERIENCE', accent, band),
+                    const SizedBox(height: 6),
+                    ..._atsStructuredExperienceBlocks(
+                      works: works,
+                      bodyStyle: bodyStyle,
+                      subtitleStyle: subtitleStyle,
+                      showAllContent: showAllContent,
+                    ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.education:
+                if (!resume.includeEducationInResume) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: _sectionGap),
+                    _atsBandTitle('EDUCATION', accent, band),
+                    const SizedBox(height: 6),
+                    ..._atsStructuredEducationBlocks(
+                      items: education,
+                      bodyStyle: bodyStyle,
+                      subtitleStyle: subtitleStyle,
+                      showAllContent: showAllContent,
+                    ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.skills:
+                if (!resume.includeSkillsInResume ||
+                    !(resume.showCategorisedSkills || skills.isNotEmpty)) {
+                  return null;
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: _sectionGap),
+                    _atsBandTitle('SKILLS', accent, band),
+                    const SizedBox(height: 6),
+                    _atsStructuredSkillsGrid(
+                      skills: skills,
+                      bodyStyle: bodyStyle,
+                      showAllContent: showAllContent,
+                      resume: resume,
+                      categoryStyle: subtitleStyle,
+                    ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.projects:
+                if (!resume.includeProjectsInResume || projects.isEmpty) {
+                  return null;
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: _sectionGap),
+                    _atsBandTitle('PROJECTS', accent, band),
+                    const SizedBox(height: 6),
+                    for (final project in projects)
+                      ..._atsStructuredProjectBlocks(
+                        project: project,
+                        bodyStyle: bodyStyle,
+                        subtitleStyle: subtitleStyle,
+                        showAllContent: showAllContent,
+                      ),
+                  ],
+                );
+              default:
+                return null;
+            }
+          },
+        ),
       ],
     );
 
@@ -2355,11 +2641,13 @@ class _AtsLatexClassicPreview extends StatelessWidget {
     required this.resume,
     this.showAllContent = false,
     this.scrollable = true,
+    this.followBuilderSectionOrder = true,
   });
 
   final ResumeData resume;
   final bool showAllContent;
   final bool scrollable;
+  final bool followBuilderSectionOrder;
 
   @override
   Widget build(BuildContext context) {
@@ -2453,60 +2741,108 @@ class _AtsLatexClassicPreview extends StatelessWidget {
             overflow: showAllContent ? null : TextOverflow.ellipsis,
           ),
         ],
-        if (resume.includeWorkInResume) ...[
-          _latexPreviewSection('Experience', sectionStyle, ink),
-          ..._latexPreviewExperience(
-            resume.visibleWorkExperiences,
-            bodyStyle,
-            boldStyle,
-            italicStyle,
+        ..._mapPreviewBodySections(
+          previewBodySectionOrder(
+            resume,
+            followOrder: followBuilderSectionOrder,
           ),
-        ],
-        if (resume.includeEducationInResume) ...[
-          _latexPreviewSection('Education', sectionStyle, ink),
-          ..._latexPreviewEducation(
-            resume.visibleEducation,
-            bodyStyle,
-            boldStyle,
-            italicStyle,
-          ),
-        ],
-        if (resume.includeSkillsInResume &&
-            (resume.showCategorisedSkills ||
-                _pdfAlignedSkills(resume).isNotEmpty)) ...[
-          _latexPreviewSection('Skills', sectionStyle, ink),
-          _atsStructuredSkillsGrid(
-            skills: _pdfAlignedSkills(resume),
-            bodyStyle: bodyStyle,
-            showAllContent: showAllContent,
-            resume: resume,
-            categoryStyle: boldStyle,
-          ),
-        ],
-        if (resume.includeProjectsInResume &&
-            resume.visibleProjects.isNotEmpty) ...[
-          _latexPreviewSection('Projects', sectionStyle, ink),
-          ..._latexPreviewProjects(
-            resume.visibleProjects,
-            bodyStyle,
-            boldStyle,
-            italicStyle,
-          ),
-        ],
-        for (final section in resume.visibleCustomSections.take(
-          showAllContent ? 99 : 2,
-        )) ...[
-          _latexPreviewSection(
-            section.title.trim().ifBlank('Additional'),
-            sectionStyle,
-            ink,
-          ),
-          ..._customSectionFlowPreviewWidgets(
-            section,
-            bodyStyle,
-            showAllContent: showAllContent,
-          ),
-        ],
+          (id) {
+            final customIndex = ResumeBuilderSectionIds.customIndex(id);
+            if (customIndex != null) {
+              if (customIndex >= resume.customSections.length) return null;
+              final section = resume.customSections[customIndex];
+              final allowedCustoms = resume.visibleCustomSections.take(
+                showAllContent ? 99 : 2,
+              );
+              if (section.isBlank || !allowedCustoms.contains(section)) {
+                return null;
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _latexPreviewSection(
+                    section.title.trim().ifBlank('Additional'),
+                    sectionStyle,
+                    ink,
+                  ),
+                  ..._customSectionFlowPreviewWidgets(
+                    section,
+                    bodyStyle,
+                    showAllContent: showAllContent,
+                  ),
+                ],
+              );
+            }
+            switch (id) {
+              case ResumeBuilderSectionIds.work:
+                if (!resume.includeWorkInResume) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _latexPreviewSection('Experience', sectionStyle, ink),
+                    ..._latexPreviewExperience(
+                      resume.visibleWorkExperiences,
+                      bodyStyle,
+                      boldStyle,
+                      italicStyle,
+                    ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.education:
+                if (!resume.includeEducationInResume) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _latexPreviewSection('Education', sectionStyle, ink),
+                    ..._latexPreviewEducation(
+                      resume.visibleEducation,
+                      bodyStyle,
+                      boldStyle,
+                      italicStyle,
+                    ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.skills:
+                if (!resume.includeSkillsInResume ||
+                    !(resume.showCategorisedSkills ||
+                        _pdfAlignedSkills(resume).isNotEmpty)) {
+                  return null;
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _latexPreviewSection('Skills', sectionStyle, ink),
+                    _atsStructuredSkillsGrid(
+                      skills: _pdfAlignedSkills(resume),
+                      bodyStyle: bodyStyle,
+                      showAllContent: showAllContent,
+                      resume: resume,
+                      categoryStyle: boldStyle,
+                    ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.projects:
+                if (!resume.includeProjectsInResume ||
+                    resume.visibleProjects.isEmpty) {
+                  return null;
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _latexPreviewSection('Projects', sectionStyle, ink),
+                    ..._latexPreviewProjects(
+                      resume.visibleProjects,
+                      bodyStyle,
+                      boldStyle,
+                      italicStyle,
+                    ),
+                  ],
+                );
+              default:
+                return null;
+            }
+          },
+        ),
       ],
     );
 
@@ -2646,9 +2982,13 @@ List<Widget> _latexPreviewProjects(
 }
 
 class _AccentStripPreview extends StatelessWidget {
-  const _AccentStripPreview({required this.resume});
+  const _AccentStripPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
 
   final ResumeData resume;
+  final bool followBuilderSectionOrder;
 
   @override
   Widget build(BuildContext context) {
@@ -2751,96 +3091,159 @@ class _AccentStripPreview extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
-                          if (works.isNotEmpty) ...[
-                            SizedBox(height: sectionGap),
-                            _AccentStripSectionTitle(
-                              title: 'EXPERIENCE',
-                              style: headingStyle,
+                          ..._mapPreviewBodySections(
+                            previewBodySectionOrder(
+                              resume,
+                              followOrder: followBuilderSectionOrder,
                             ),
-                            const SizedBox(height: 10),
-                            for (final item in works)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: _AccentStripExperienceBlock(
-                                  item: item,
-                                  dateStyle: subsectionStyle,
-                                  bodyStyle: bodyStyle,
-                                  roleStyle: subsectionStyle,
-                                ),
-                              ),
-                          ],
-                          if (education.isNotEmpty) ...[
-                            SizedBox(height: sectionGap - 4),
-                            _AccentStripSectionTitle(
-                              title: 'EDUCATION',
-                              style: headingStyle,
-                            ),
-                            const SizedBox(height: 10),
-                            for (final item in education)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _AccentStripEducationBlock(
-                                  item: item,
-                                  titleStyle: subsectionStyle,
-                                  bodyStyle: bodyStyle,
-                                ),
-                              ),
-                          ],
-                          if (resume.showCategorisedSkills ||
-                              skills.isNotEmpty) ...[
-                            SizedBox(height: sectionGap - 6),
-                            _AccentStripSectionTitle(
-                              title: 'SKILLS',
-                              style: headingStyle,
-                            ),
-                            const SizedBox(height: 10),
-                            if (resume.showCategorisedSkills)
-                              _categorisedSkillsPreview(
-                                groups: resume.skillGroupsForResume,
-                                bodyStyle: bodyStyle,
-                                categoryStyle: subsectionStyle,
-                              )
-                            else
-                              Wrap(
-                                spacing: 18,
-                                runSpacing: 6,
-                                children: skills
-                                    .map(
-                                      (skill) =>
-                                          Text('• $skill', style: bodyStyle),
-                                    )
-                                    .toList(),
-                              ),
-                          ],
-                          if (projects.isNotEmpty) ...[
-                            SizedBox(height: sectionGap - 6),
-                            _AccentStripSectionTitle(
-                              title: 'PROJECTS',
-                              style: headingStyle,
-                            ),
-                            const SizedBox(height: 10),
-                            for (final item in projects)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _AccentStripProjectBlock(
-                                  item: item,
-                                  titleStyle: subsectionStyle,
-                                  bodyStyle: bodyStyle,
-                                ),
-                              ),
-                          ],
-                          for (final item in customSections) ...[
-                            SizedBox(height: sectionGap - 6),
-                            _AccentStripSectionTitle(
-                              title: item.title.trim().toUpperCase(),
-                              style: headingStyle,
-                            ),
-                            const SizedBox(height: 10),
-                            _AccentStripCustomSectionBlock(
-                              item: item,
-                              bodyStyle: bodyStyle,
-                            ),
-                          ],
+                            (id) {
+                              final customIndex =
+                                  ResumeBuilderSectionIds.customIndex(id);
+                              if (customIndex != null) {
+                                if (customIndex >=
+                                    resume.customSections.length) {
+                                  return null;
+                                }
+                                final item =
+                                    resume.customSections[customIndex];
+                                if (item.isBlank ||
+                                    !customSections.contains(item)) {
+                                  return null;
+                                }
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: sectionGap - 6),
+                                    _AccentStripSectionTitle(
+                                      title: item.title.trim().toUpperCase(),
+                                      style: headingStyle,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    _AccentStripCustomSectionBlock(
+                                      item: item,
+                                      bodyStyle: bodyStyle,
+                                    ),
+                                  ],
+                                );
+                              }
+                              switch (id) {
+                                case ResumeBuilderSectionIds.work:
+                                  if (works.isEmpty) return null;
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: sectionGap),
+                                      _AccentStripSectionTitle(
+                                        title: 'EXPERIENCE',
+                                        style: headingStyle,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      for (final item in works)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 16,
+                                          ),
+                                          child: _AccentStripExperienceBlock(
+                                            item: item,
+                                            dateStyle: subsectionStyle,
+                                            bodyStyle: bodyStyle,
+                                            roleStyle: subsectionStyle,
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                case ResumeBuilderSectionIds.education:
+                                  if (education.isEmpty) return null;
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: sectionGap - 4),
+                                      _AccentStripSectionTitle(
+                                        title: 'EDUCATION',
+                                        style: headingStyle,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      for (final item in education)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 12,
+                                          ),
+                                          child: _AccentStripEducationBlock(
+                                            item: item,
+                                            titleStyle: subsectionStyle,
+                                            bodyStyle: bodyStyle,
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                case ResumeBuilderSectionIds.skills:
+                                  if (!(resume.showCategorisedSkills ||
+                                      skills.isNotEmpty)) {
+                                    return null;
+                                  }
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: sectionGap - 6),
+                                      _AccentStripSectionTitle(
+                                        title: 'SKILLS',
+                                        style: headingStyle,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      if (resume.showCategorisedSkills)
+                                        _categorisedSkillsPreview(
+                                          groups: resume.skillGroupsForResume,
+                                          bodyStyle: bodyStyle,
+                                          categoryStyle: subsectionStyle,
+                                        )
+                                      else
+                                        Wrap(
+                                          spacing: 18,
+                                          runSpacing: 6,
+                                          children: skills
+                                              .map(
+                                                (skill) => Text(
+                                                  '• $skill',
+                                                  style: bodyStyle,
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                    ],
+                                  );
+                                case ResumeBuilderSectionIds.projects:
+                                  if (projects.isEmpty) return null;
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: sectionGap - 6),
+                                      _AccentStripSectionTitle(
+                                        title: 'PROJECTS',
+                                        style: headingStyle,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      for (final item in projects)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 12,
+                                          ),
+                                          child: _AccentStripProjectBlock(
+                                            item: item,
+                                            titleStyle: subsectionStyle,
+                                            bodyStyle: bodyStyle,
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                default:
+                                  return null;
+                              }
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -3074,9 +3477,13 @@ class _AccentStripCustomSectionBlock extends StatelessWidget {
 }
 
 class _AtsSerifRulesPreview extends StatelessWidget {
-  const _AtsSerifRulesPreview({required this.resume});
+  const _AtsSerifRulesPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
 
   final ResumeData resume;
+  final bool followBuilderSectionOrder;
 
   static const Color _ink = ResumeTypography.atsStructuredBodyTextColor;
 
@@ -3217,88 +3624,119 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ]),
-              if (resume.includeWorkInResume && works.isNotEmpty)
-                ruledSection('Experience', [
-                  for (final item in works) ...[
-                    Text(
-                      item.role.trim().ifBlank('Role'),
-                      style: subtitleStyle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.company.trim().ifBlank('Company'),
-                            style: bodyStyle.copyWith(
-                              fontStyle: FontStyle.italic,
-                            ),
+              ..._mapPreviewBodySections(
+                previewBodySectionOrder(
+                  resume,
+                  followOrder: followBuilderSectionOrder,
+                ),
+                (id) {
+                  final customIndex = ResumeBuilderSectionIds.customIndex(id);
+                  if (customIndex != null) {
+                    // Serif Rules preview historically omits custom sections.
+                    return null;
+                  }
+                  switch (id) {
+                    case ResumeBuilderSectionIds.work:
+                      if (!resume.includeWorkInResume || works.isEmpty) {
+                        return null;
+                      }
+                      return ruledSection('Experience', [
+                        for (final item in works) ...[
+                          Text(
+                            item.role.trim().ifBlank('Role'),
+                            style: subtitleStyle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        if (educationDateRangeLabel(
-                          item.startDate,
-                          item.endDate,
-                        ).isNotEmpty)
-                          Text(
-                            educationDateRangeLabel(
-                              item.startDate,
-                              item.endDate,
-                            ),
-                            style: bodyStyle.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: _ink.withValues(alpha: 0.72),
-                            ),
+                          const SizedBox(height: 2),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  item.company.trim().ifBlank('Company'),
+                                  style: bodyStyle.copyWith(
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (educationDateRangeLabel(
+                                item.startDate,
+                                item.endDate,
+                              ).isNotEmpty)
+                                Text(
+                                  educationDateRangeLabel(
+                                    item.startDate,
+                                    item.endDate,
+                                  ),
+                                  style: bodyStyle.copyWith(
+                                    fontStyle: FontStyle.italic,
+                                    color: _ink.withValues(alpha: 0.72),
+                                  ),
+                                ),
+                            ],
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-                ]),
-              if (resume.includeEducationInResume && edu.isNotEmpty)
-                ruledSection('Education', [
-                  for (final item in edu) ...[
-                    Text(
-                      '${item.degree.trim().ifBlank('Degree')} · ${educationDateRangeLabel(item.startDate, item.endDate)}',
-                      style: subtitleStyle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.institution.trim().ifBlank('Institution'),
-                      style: bodyStyle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-                ]),
-              if (resume.includeSkillsInResume &&
-                  (resume.showCategorisedSkills || skills.isNotEmpty))
-                ruledSection('Skills', [
-                  _atsStructuredSkillsGrid(
-                    skills: skills,
-                    bodyStyle: bodyStyle,
-                    showAllContent: false,
-                    resume: resume,
-                    categoryStyle: subtitleStyle,
-                  ),
-                ]),
-              if (resume.includeProjectsInResume && projects.isNotEmpty)
-                ruledSection('Projects', [
-                  for (final project in projects)
-                    ..._atsStructuredProjectBlocks(
-                      project: project,
-                      bodyStyle: bodyStyle,
-                      subtitleStyle: subtitleStyle,
-                      showAllContent: false,
-                    ),
-                ]),
+                          const SizedBox(height: 4),
+                        ],
+                      ]);
+                    case ResumeBuilderSectionIds.education:
+                      if (!resume.includeEducationInResume || edu.isEmpty) {
+                        return null;
+                      }
+                      return ruledSection('Education', [
+                        for (final item in edu) ...[
+                          Text(
+                            '${item.degree.trim().ifBlank('Degree')} · ${educationDateRangeLabel(item.startDate, item.endDate)}',
+                            style: subtitleStyle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.institution.trim().ifBlank('Institution'),
+                            style: bodyStyle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                      ]);
+                    case ResumeBuilderSectionIds.skills:
+                      if (!resume.includeSkillsInResume ||
+                          !(resume.showCategorisedSkills ||
+                              skills.isNotEmpty)) {
+                        return null;
+                      }
+                      return ruledSection('Skills', [
+                        _atsStructuredSkillsGrid(
+                          skills: skills,
+                          bodyStyle: bodyStyle,
+                          showAllContent: false,
+                          resume: resume,
+                          categoryStyle: subtitleStyle,
+                        ),
+                      ]);
+                    case ResumeBuilderSectionIds.projects:
+                      if (!resume.includeProjectsInResume ||
+                          projects.isEmpty) {
+                        return null;
+                      }
+                      return ruledSection('Projects', [
+                        for (final project in projects)
+                          ..._atsStructuredProjectBlocks(
+                            project: project,
+                            bodyStyle: bodyStyle,
+                            subtitleStyle: subtitleStyle,
+                            showAllContent: false,
+                          ),
+                      ]);
+                    default:
+                      return null;
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -3308,9 +3746,13 @@ class _AtsSerifRulesPreview extends StatelessWidget {
 }
 
 class _AtsModernFlowPreview extends StatelessWidget {
-  const _AtsModernFlowPreview({required this.resume});
+  const _AtsModernFlowPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
 
   final ResumeData resume;
+  final bool followBuilderSectionOrder;
 
   static const double _sectionLead = 12;
 
@@ -3426,133 +3868,165 @@ class _AtsModernFlowPreview extends StatelessWidget {
                 maxLines: 8,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (resume.includeWorkInResume)
-                flowSection(
-                  'Experience',
-                  works.isEmpty
-                      ? [
-                          Text(
-                            'Add roles with outcomes.',
-                            style: bodyStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ]
-                      : [
-                          for (final item in works) ...[
-                            Text(
-                              '${item.role.trim().ifBlank('Role')} — ${item.company.trim().ifBlank('Company')}',
-                              style: subtitleStyle,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (educationDateRangeLabel(
-                              item.startDate,
-                              item.endDate,
-                            ).isNotEmpty)
-                              Text(
-                                educationDateRangeLabel(
-                                  item.startDate,
-                                  item.endDate,
-                                ),
-                                style: bodyStyle,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            for (final bullet
-                                in item.bullets
-                                    .where((b) => b.trim().isNotEmpty)
-                                    .take(3))
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  '• ${bullet.trim()}',
+              ..._mapPreviewBodySections(
+                previewBodySectionOrder(
+                  resume,
+                  followOrder: followBuilderSectionOrder,
+                ),
+                (id) {
+                  final customIndex = ResumeBuilderSectionIds.customIndex(id);
+                  if (customIndex != null) {
+                    if (customIndex >= resume.customSections.length) {
+                      return null;
+                    }
+                    final section = resume.customSections[customIndex];
+                    if (section.isBlank ||
+                        !customSections.contains(section)) {
+                      return null;
+                    }
+                    return flowSection(
+                      section.title.trim().ifBlank('Additional'),
+                      [..._customSectionFlowPreviewWidgets(section, bodyStyle)],
+                    );
+                  }
+                  switch (id) {
+                    case ResumeBuilderSectionIds.work:
+                      if (!resume.includeWorkInResume) return null;
+                      return flowSection(
+                        'Experience',
+                        works.isEmpty
+                            ? [
+                                Text(
+                                  'Add roles with outcomes.',
                                   style: bodyStyle,
-                                  maxLines: 4,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            const SizedBox(height: 8),
-                          ],
-                        ],
-                ),
-              if (resume.includeEducationInResume)
-                flowSection(
-                  'Education',
-                  education.isEmpty
-                      ? [
-                          Text(
-                            'Add schools and programs.',
-                            style: bodyStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ]
-                      : [
-                          for (final item in education) ...[
-                            Text(
-                              item.degree.trim().ifBlank('Program'),
-                              style: subtitleStyle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${item.institution.trim().ifBlank('School')}'
-                              '${educationDateRangeLabel(item.startDate, item.endDate).isNotEmpty ? '  |  Graduated: ${educationDateRangeLabel(item.startDate, item.endDate)}' : ''}',
-                              style: bodyStyle,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (educationScoreDisplayLabel(item).isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                educationScoreDisplayLabel(item),
-                                style: bodyStyle,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                            const SizedBox(height: 6),
-                          ],
-                        ],
-                ),
-              if (resume.includeSkillsInResume)
-                flowSection(
-                  'Skills',
-                  skills.isEmpty
-                      ? [
-                          Text(
-                            'Add skills that mirror job postings.',
-                            style: bodyStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ]
-                      : [
-                          _atsStructuredSkillsGrid(
-                            skills: skills,
+                              ]
+                            : [
+                                for (final item in works) ...[
+                                  Text(
+                                    '${item.role.trim().ifBlank('Role')} — ${item.company.trim().ifBlank('Company')}',
+                                    style: subtitleStyle,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (educationDateRangeLabel(
+                                    item.startDate,
+                                    item.endDate,
+                                  ).isNotEmpty)
+                                    Text(
+                                      educationDateRangeLabel(
+                                        item.startDate,
+                                        item.endDate,
+                                      ),
+                                      style: bodyStyle,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  for (final bullet
+                                      in item.bullets
+                                          .where((b) => b.trim().isNotEmpty)
+                                          .take(3))
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        '• ${bullet.trim()}',
+                                        style: bodyStyle,
+                                        maxLines: 4,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  const SizedBox(height: 8),
+                                ],
+                              ],
+                      );
+                    case ResumeBuilderSectionIds.education:
+                      if (!resume.includeEducationInResume) return null;
+                      return flowSection(
+                        'Education',
+                        education.isEmpty
+                            ? [
+                                Text(
+                                  'Add schools and programs.',
+                                  style: bodyStyle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ]
+                            : [
+                                for (final item in education) ...[
+                                  Text(
+                                    item.degree.trim().ifBlank('Program'),
+                                    style: subtitleStyle,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${item.institution.trim().ifBlank('School')}'
+                                    '${educationDateRangeLabel(item.startDate, item.endDate).isNotEmpty ? '  |  Graduated: ${educationDateRangeLabel(item.startDate, item.endDate)}' : ''}',
+                                    style: bodyStyle,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (educationScoreDisplayLabel(
+                                    item,
+                                  ).isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      educationScoreDisplayLabel(item),
+                                      style: bodyStyle,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                  const SizedBox(height: 6),
+                                ],
+                              ],
+                      );
+                    case ResumeBuilderSectionIds.skills:
+                      if (!resume.includeSkillsInResume) return null;
+                      return flowSection(
+                        'Skills',
+                        skills.isEmpty
+                            ? [
+                                Text(
+                                  'Add skills that mirror job postings.',
+                                  style: bodyStyle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ]
+                            : [
+                                _atsStructuredSkillsGrid(
+                                  skills: skills,
+                                  bodyStyle: bodyStyle,
+                                  showAllContent: false,
+                                  resume: resume,
+                                  categoryStyle: subtitleStyle,
+                                ),
+                              ],
+                      );
+                    case ResumeBuilderSectionIds.projects:
+                      if (!resume.includeProjectsInResume ||
+                          projects.isEmpty) {
+                        return null;
+                      }
+                      return flowSection('Projects', [
+                        for (final project in projects)
+                          ..._atsStructuredProjectBlocks(
+                            project: project,
                             bodyStyle: bodyStyle,
+                            subtitleStyle: subtitleStyle,
                             showAllContent: false,
-                            resume: resume,
-                            categoryStyle: subtitleStyle,
                           ),
-                        ],
-                ),
-              if (resume.includeProjectsInResume && projects.isNotEmpty)
-                flowSection('Projects', [
-                  for (final project in projects)
-                    ..._atsStructuredProjectBlocks(
-                      project: project,
-                      bodyStyle: bodyStyle,
-                      subtitleStyle: subtitleStyle,
-                      showAllContent: false,
-                    ),
-                ]),
-              for (final section in customSections)
-                flowSection(section.title.trim().ifBlank('Additional'), [
-                  ..._customSectionFlowPreviewWidgets(section, bodyStyle),
-                ]),
+                      ]);
+                    default:
+                      return null;
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -3562,9 +4036,13 @@ class _AtsModernFlowPreview extends StatelessWidget {
 }
 
 class _AtsCenterClassicPreview extends StatelessWidget {
-  const _AtsCenterClassicPreview({required this.resume});
+  const _AtsCenterClassicPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
 
   final ResumeData resume;
+  final bool followBuilderSectionOrder;
 
   static const Color _ink = ResumeTypography.atsStructuredBodyTextColor;
 
@@ -3685,165 +4163,225 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                 maxLines: 6,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (works.isNotEmpty) ...[
-                sectionRule(),
-                Text('EXPERIENCE', style: sectionTitleStyle),
-                const SizedBox(height: 6),
-                for (final item in works)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Column(
+              ..._mapPreviewBodySections(
+                previewBodySectionOrder(
+                  resume,
+                  followOrder: followBuilderSectionOrder,
+                ),
+                (id) {
+                  final customIndex = ResumeBuilderSectionIds.customIndex(id);
+                  if (customIndex != null) {
+                    if (customIndex >= resume.customSections.length) {
+                      return null;
+                    }
+                    final section = resume.customSections[customIndex];
+                    if (section.isBlank ||
+                        !customSections.contains(section)) {
+                      return null;
+                    }
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                item.company.trim().ifBlank('Company'),
+                        sectionRule(),
+                        Text(
+                          section.title
+                              .trim()
+                              .ifBlank('ADDITIONAL')
+                              .toUpperCase(),
+                          style: sectionTitleStyle,
+                        ),
+                        const SizedBox(height: 6),
+                        ..._customSectionFlowPreviewWidgets(
+                          section,
+                          bodyStyle,
+                        ),
+                      ],
+                    );
+                  }
+                  switch (id) {
+                    case ResumeBuilderSectionIds.work:
+                      if (works.isEmpty) return null;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          sectionRule(),
+                          Text('EXPERIENCE', style: sectionTitleStyle),
+                          const SizedBox(height: 6),
+                          for (final item in works)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item.company.trim().ifBlank(
+                                            'Company',
+                                          ),
+                                          style: highlightStyle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (educationDateRangeLabel(
+                                        item.startDate,
+                                        item.endDate,
+                                      ).isNotEmpty)
+                                        Text(
+                                          educationDateRangeLabel(
+                                            item.startDate,
+                                            item.endDate,
+                                          ),
+                                          style: sectionSubtitleStyle,
+                                        ),
+                                    ],
+                                  ),
+                                  Text(
+                                    item.role.trim().ifBlank('Role'),
+                                    style: bodyStyle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  for (final bullet
+                                      in _workBulletLines(item).take(3))
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: ResumeTypography
+                                            .atsCenterClassicBulletIndentPt,
+                                        top: 2,
+                                      ),
+                                      child: Text(
+                                        '• ${bullet.trim()}',
+                                        style: bodyStyle,
+                                        maxLines: 4,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      );
+                    case ResumeBuilderSectionIds.education:
+                      if (!resume.includeEducationInResume) return null;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          sectionRule(),
+                          Text('EDUCATION', style: sectionTitleStyle),
+                          const SizedBox(height: 6),
+                          if (education.isEmpty)
+                            Text(
+                              'Add degree and institution.',
+                              style: bodyStyle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          else
+                            for (final item in education) ...[
+                              Text(
+                                item.degree.trim().ifBlank('Degree'),
                                 style: highlightStyle,
-                                maxLines: 1,
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            if (educationDateRangeLabel(
-                              item.startDate,
-                              item.endDate,
-                            ).isNotEmpty)
+                              const SizedBox(height: 2),
                               Text(
-                                educationDateRangeLabel(
-                                  item.startDate,
-                                  item.endDate,
-                                ),
-                                style: sectionSubtitleStyle,
+                                '${item.institution.trim().ifBlank('School')}'
+                                '${educationDateRangeLabel(item.startDate, item.endDate).isNotEmpty ? ' (${educationDateRangeLabel(item.startDate, item.endDate)})' : ''}',
+                                style: highlightStyle,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                          ],
-                        ),
-                        Text(
-                          item.role.trim().ifBlank('Role'),
-                          style: bodyStyle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        for (final bullet in _workBulletLines(item).take(3))
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              left: ResumeTypography
-                                  .atsCenterClassicBulletIndentPt,
-                              top: 2,
-                            ),
-                            child: Text(
-                              '• ${bullet.trim()}',
+                              const SizedBox(height: 8),
+                            ],
+                        ],
+                      );
+                    case ResumeBuilderSectionIds.skills:
+                      if (!resume.includeSkillsInResume) return null;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          sectionRule(),
+                          Text('SKILLS', style: sectionTitleStyle),
+                          const SizedBox(height: 6),
+                          if (resume.showCategorisedSkills)
+                            _categorisedSkillsPreview(
+                              groups: resume.skillGroupsForResume,
+                              bodyStyle: bodyStyle,
+                              categoryStyle: sectionSubtitleStyle,
+                            )
+                          else
+                            Text(
+                              skills.isEmpty
+                                  ? 'List tools and competencies.'
+                                  : skills.join(', '),
                               style: bodyStyle,
                               maxLines: 4,
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                      ],
-                    ),
-                  ),
-              ],
-              if (resume.includeEducationInResume) ...[
-                sectionRule(),
-                Text('EDUCATION', style: sectionTitleStyle),
-                const SizedBox(height: 6),
-                if (education.isEmpty)
-                  Text(
-                    'Add degree and institution.',
-                    style: bodyStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                else
-                  for (final item in education) ...[
-                    Text(
-                      item.degree.trim().ifBlank('Degree'),
-                      style: highlightStyle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${item.institution.trim().ifBlank('School')}'
-                      '${educationDateRangeLabel(item.startDate, item.endDate).isNotEmpty ? ' (${educationDateRangeLabel(item.startDate, item.endDate)})' : ''}',
-                      style: highlightStyle,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-              ],
-              if (resume.includeSkillsInResume) ...[
-                sectionRule(),
-                Text('SKILLS', style: sectionTitleStyle),
-                const SizedBox(height: 6),
-                if (resume.showCategorisedSkills)
-                  _categorisedSkillsPreview(
-                    groups: resume.skillGroupsForResume,
-                    bodyStyle: bodyStyle,
-                    categoryStyle: sectionSubtitleStyle,
-                  )
-                else
-                  Text(
-                    skills.isEmpty
-                        ? 'List tools and competencies.'
-                        : skills.join(', '),
-                    style: bodyStyle,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-              if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
-                sectionRule(),
-                Text('PROJECTS', style: sectionTitleStyle),
-                const SizedBox(height: 6),
-                for (final project in projects) ...[
-                  Text(
-                    project.title.trim().ifBlank('Course'),
-                    style: highlightStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (project.subtitle.trim().isNotEmpty ||
-                      project.overview.trim().isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      project.subtitle.trim().isNotEmpty
-                          ? project.subtitle.trim()
-                          : project.overview.trim(),
-                      style: highlightStyle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  for (final bullet
-                      in project.bullets
-                          .where((b) => b.trim().isNotEmpty)
-                          .take(3))
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: ResumeTypography.atsCenterClassicBulletIndentPt,
-                        top: 2,
-                      ),
-                      child: Text(
-                        '• ${bullet.trim()}',
-                        style: bodyStyle,
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                ],
-              ],
-              for (final section in customSections) ...[
-                sectionRule(),
-                Text(
-                  section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
-                  style: sectionTitleStyle,
-                ),
-                const SizedBox(height: 6),
-                ..._customSectionFlowPreviewWidgets(section, bodyStyle),
-              ],
+                        ],
+                      );
+                    case ResumeBuilderSectionIds.projects:
+                      if (!resume.includeProjectsInResume ||
+                          projects.isEmpty) {
+                        return null;
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          sectionRule(),
+                          Text('PROJECTS', style: sectionTitleStyle),
+                          const SizedBox(height: 6),
+                          for (final project in projects) ...[
+                            Text(
+                              project.title.trim().ifBlank('Course'),
+                              style: highlightStyle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (project.subtitle.trim().isNotEmpty ||
+                                project.overview.trim().isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                project.subtitle.trim().isNotEmpty
+                                    ? project.subtitle.trim()
+                                    : project.overview.trim(),
+                                style: highlightStyle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                            for (final bullet
+                                in project.bullets
+                                    .where((b) => b.trim().isNotEmpty)
+                                    .take(3))
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: ResumeTypography
+                                      .atsCenterClassicBulletIndentPt,
+                                  top: 2,
+                                ),
+                                child: Text(
+                                  '• ${bullet.trim()}',
+                                  style: bodyStyle,
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            const SizedBox(height: 8),
+                          ],
+                        ],
+                      );
+                    default:
+                      return null;
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -3853,9 +4391,13 @@ class _AtsCenterClassicPreview extends StatelessWidget {
 }
 
 class _AtsProfessionalBluePreview extends StatelessWidget {
-  const _AtsProfessionalBluePreview({required this.resume});
+  const _AtsProfessionalBluePreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
 
   final ResumeData resume;
+  final bool followBuilderSectionOrder;
 
   static const Color _ink = ResumeTypography.atsStructuredBodyTextColor;
 
@@ -4001,111 +4543,153 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                 maxLines: 5,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (works.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                sectionTitleWithRule('Professional Experience'),
-                for (final item in works)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                item.company.trim().ifBlank('Company'),
-                                style: subtitleStyle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+              ..._mapPreviewBodySections(
+                previewBodySectionOrder(
+                  resume,
+                  followOrder: followBuilderSectionOrder,
+                ),
+                (id) {
+                  final customIndex = ResumeBuilderSectionIds.customIndex(id);
+                  if (customIndex != null) {
+                    // Professional Blue preview historically omits customs.
+                    return null;
+                  }
+                  switch (id) {
+                    case ResumeBuilderSectionIds.work:
+                      if (works.isEmpty) return null;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 12),
+                          sectionTitleWithRule('Professional Experience'),
+                          for (final item in works)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item.company.trim().ifBlank(
+                                            'Company',
+                                          ),
+                                          style: subtitleStyle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (educationDateRangeLabel(
+                                        item.startDate,
+                                        item.endDate,
+                                      ).isNotEmpty)
+                                        Text(
+                                          educationDateRangeLabel(
+                                            item.startDate,
+                                            item.endDate,
+                                          ),
+                                          style: subtitleStyle,
+                                        ),
+                                    ],
+                                  ),
+                                  Text(
+                                    item.role.trim().ifBlank('Role'),
+                                    style: bodyStyle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
                             ),
-                            if (educationDateRangeLabel(
-                              item.startDate,
-                              item.endDate,
-                            ).isNotEmpty)
+                        ],
+                      );
+                    case ResumeBuilderSectionIds.education:
+                      if (!resume.includeEducationInResume) return null;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 12),
+                          sectionTitleWithRule('Education'),
+                          if (education.isEmpty)
+                            Text(
+                              'Add schools and programs.',
+                              style: bodyStyle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          else
+                            for (final item in education) ...[
                               Text(
-                                educationDateRangeLabel(
-                                  item.startDate,
-                                  item.endDate,
-                                ),
+                                item.degree.trim().ifBlank('Program'),
                                 style: subtitleStyle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                          ],
-                        ),
-                        Text(
-                          item.role.trim().ifBlank('Role'),
-                          style: bodyStyle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-              if (resume.includeEducationInResume) ...[
-                const SizedBox(height: 12),
-                sectionTitleWithRule('Education'),
-                if (education.isEmpty)
-                  Text(
-                    'Add schools and programs.',
-                    style: bodyStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                else
-                  for (final item in education) ...[
-                    Text(
-                      item.degree.trim().ifBlank('Program'),
-                      style: subtitleStyle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.institution.trim().ifBlank('School'),
-                      style: bodyStyle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-              ],
-              if (resume.includeSkillsInResume) ...[
-                const SizedBox(height: 12),
-                sectionTitleWithRule('Areas of Expertise'),
-                if (resume.showCategorisedSkills)
-                  _categorisedSkillsPreview(
-                    groups: resume.skillGroupsForResume,
-                    bodyStyle: bodyStyle,
-                    categoryStyle: subtitleStyle,
-                  )
-                else if (skills.isEmpty)
-                  Text(
-                    'Add skills aligned to your target roles.',
-                    style: bodyStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                else
-                  Text(
-                    skills.take(8).join(', '),
-                    style: bodyStyle,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-              if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                sectionTitleWithRule('Projects'),
-                for (final project in projects)
-                  ..._atsStructuredProjectBlocks(
-                    project: project,
-                    bodyStyle: bodyStyle,
-                    subtitleStyle: subtitleStyle,
-                    showAllContent: false,
-                  ),
-              ],
+                              const SizedBox(height: 2),
+                              Text(
+                                item.institution.trim().ifBlank('School'),
+                                style: bodyStyle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                            ],
+                        ],
+                      );
+                    case ResumeBuilderSectionIds.skills:
+                      if (!resume.includeSkillsInResume) return null;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 12),
+                          sectionTitleWithRule('Areas of Expertise'),
+                          if (resume.showCategorisedSkills)
+                            _categorisedSkillsPreview(
+                              groups: resume.skillGroupsForResume,
+                              bodyStyle: bodyStyle,
+                              categoryStyle: subtitleStyle,
+                            )
+                          else if (skills.isEmpty)
+                            Text(
+                              'Add skills aligned to your target roles.',
+                              style: bodyStyle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          else
+                            Text(
+                              skills.take(8).join(', '),
+                              style: bodyStyle,
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      );
+                    case ResumeBuilderSectionIds.projects:
+                      if (!resume.includeProjectsInResume ||
+                          projects.isEmpty) {
+                        return null;
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 12),
+                          sectionTitleWithRule('Projects'),
+                          for (final project in projects)
+                            ..._atsStructuredProjectBlocks(
+                              project: project,
+                              bodyStyle: bodyStyle,
+                              subtitleStyle: subtitleStyle,
+                              showAllContent: false,
+                            ),
+                        ],
+                      );
+                    default:
+                      return null;
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -4115,9 +4699,13 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
 }
 
 class _AtsExecutivePreview extends StatelessWidget {
-  const _AtsExecutivePreview({required this.resume});
+  const _AtsExecutivePreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
 
   final ResumeData resume;
+  final bool followBuilderSectionOrder;
 
   static const double _sectionGap = 12;
 
@@ -4236,149 +4824,180 @@ class _AtsExecutivePreview extends StatelessWidget {
                 maxLines: 7,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (resume.includeWorkInResume)
-                executiveSection(
-                  'EXPERIENCE',
-                  works.isEmpty
-                      ? [
-                          Text(
-                            'Add leadership and core responsibilities.',
-                            style: bodyStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ]
-                      : [
-                          for (final item in works) ...[
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item.role
-                                        .trim()
-                                        .ifBlank('Role')
-                                        .toUpperCase(),
-                                    style: subtitleStyle,
+              ..._mapPreviewBodySections(
+                previewBodySectionOrder(
+                  resume,
+                  followOrder: followBuilderSectionOrder,
+                ),
+                (id) {
+                  final customIndex = ResumeBuilderSectionIds.customIndex(id);
+                  if (customIndex != null) {
+                    if (customIndex >= resume.customSections.length) {
+                      return null;
+                    }
+                    final section = resume.customSections[customIndex];
+                    if (section.isBlank ||
+                        !customSections.contains(section)) {
+                      return null;
+                    }
+                    return executiveSection(
+                      section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
+                      [..._customSectionFlowPreviewWidgets(section, bodyStyle)],
+                    );
+                  }
+                  switch (id) {
+                    case ResumeBuilderSectionIds.work:
+                      if (!resume.includeWorkInResume) return null;
+                      return executiveSection(
+                        'EXPERIENCE',
+                        works.isEmpty
+                            ? [
+                                Text(
+                                  'Add leadership and core responsibilities.',
+                                  style: bodyStyle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ]
+                            : [
+                                for (final item in works) ...[
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item.role
+                                              .trim()
+                                              .ifBlank('Role')
+                                              .toUpperCase(),
+                                          style: subtitleStyle,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (educationDateRangeLabel(
+                                        item.startDate,
+                                        item.endDate,
+                                      ).isNotEmpty)
+                                        Flexible(
+                                          child: Text(
+                                            educationDateRangeLabel(
+                                              item.startDate,
+                                              item.endDate,
+                                            ),
+                                            textAlign: TextAlign.right,
+                                            style: subtitleStyle,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    item.company.trim().ifBlank('Company'),
+                                    style: bodyStyle,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
+                                  for (final bullet
+                                      in _workBulletLines(item).take(3))
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        '• $bullet',
+                                        style: bodyStyle,
+                                        maxLines: 4,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  const SizedBox(height: 8),
+                                ],
+                              ],
+                      );
+                    case ResumeBuilderSectionIds.education:
+                      if (!resume.includeEducationInResume) return null;
+                      return executiveSection(
+                        'EDUCATION',
+                        education.isEmpty
+                            ? [
+                                Text(
+                                  'Add degree and institution.',
+                                  style: bodyStyle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                if (educationDateRangeLabel(
-                                  item.startDate,
-                                  item.endDate,
-                                ).isNotEmpty)
-                                  Flexible(
-                                    child: Text(
+                              ]
+                            : [
+                                for (final item in education) ...[
+                                  Text(
+                                    '${item.institution.trim().ifBlank('University')} | ${item.degree.trim().ifBlank('Degree')}',
+                                    style: subtitleStyle,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (educationDateRangeLabel(
+                                    item.startDate,
+                                    item.endDate,
+                                  ).isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
                                       educationDateRangeLabel(
                                         item.startDate,
                                         item.endDate,
                                       ),
-                                      textAlign: TextAlign.right,
-                                      style: subtitleStyle,
+                                      style: bodyStyle,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
+                                  ],
+                                  const SizedBox(height: 8),
+                                ],
                               ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              item.company.trim().ifBlank('Company'),
-                              style: bodyStyle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            for (final bullet in _workBulletLines(item).take(3))
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  '• $bullet',
+                      );
+                    case ResumeBuilderSectionIds.skills:
+                      if (!resume.includeSkillsInResume) return null;
+                      return executiveSection(
+                        'SKILLS',
+                        skills.isEmpty
+                            ? [
+                                Text(
+                                  'Add keywords from target job descriptions.',
                                   style: bodyStyle,
-                                  maxLines: 4,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            const SizedBox(height: 8),
-                          ],
-                        ],
-                ),
-              if (resume.includeEducationInResume)
-                executiveSection(
-                  'EDUCATION',
-                  education.isEmpty
-                      ? [
-                          Text(
-                            'Add degree and institution.',
-                            style: bodyStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ]
-                      : [
-                          for (final item in education) ...[
-                            Text(
-                              '${item.institution.trim().ifBlank('University')} | ${item.degree.trim().ifBlank('Degree')}',
-                              style: subtitleStyle,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (educationDateRangeLabel(
-                              item.startDate,
-                              item.endDate,
-                            ).isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                educationDateRangeLabel(
-                                  item.startDate,
-                                  item.endDate,
+                              ]
+                            : [
+                                _atsStructuredSkillsGrid(
+                                  skills: skills,
+                                  bodyStyle: bodyStyle,
+                                  showAllContent: false,
+                                  resume: resume,
+                                  categoryStyle: subtitleStyle,
                                 ),
-                                style: bodyStyle,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                            const SizedBox(height: 8),
-                          ],
-                        ],
-                ),
-              if (resume.includeSkillsInResume)
-                executiveSection(
-                  'SKILLS',
-                  skills.isEmpty
-                      ? [
-                          Text(
-                            'Add keywords from target job descriptions.',
-                            style: bodyStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ]
-                      : [
-                          _atsStructuredSkillsGrid(
-                            skills: skills,
+                              ],
+                      );
+                    case ResumeBuilderSectionIds.projects:
+                      if (!resume.includeProjectsInResume ||
+                          projects.isEmpty) {
+                        return null;
+                      }
+                      return executiveSection('PROJECTS', [
+                        for (final project in projects)
+                          ..._atsStructuredProjectBlocks(
+                            project: project,
                             bodyStyle: bodyStyle,
+                            subtitleStyle: subtitleStyle,
                             showAllContent: false,
-                            resume: resume,
-                            categoryStyle: subtitleStyle,
                           ),
-                        ],
-                ),
-              if (resume.includeProjectsInResume && projects.isNotEmpty)
-                executiveSection('PROJECTS', [
-                  for (final project in projects)
-                    ..._atsStructuredProjectBlocks(
-                      project: project,
-                      bodyStyle: bodyStyle,
-                      subtitleStyle: subtitleStyle,
-                      showAllContent: false,
-                    ),
-                ]),
-              for (final section in customSections)
-                executiveSection(
-                  section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
-                  [..._customSectionFlowPreviewWidgets(section, bodyStyle)],
-                ),
+                      ]);
+                    default:
+                      return null;
+                  }
+                },
+              ),
             ],
           ),
         ),

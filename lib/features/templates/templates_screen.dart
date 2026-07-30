@@ -1893,6 +1893,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
               showDebugLabel: false,
               scrollable: false,
               showAllContent: true,
+              followBuilderSectionOrder: false,
             ),
           ),
         );

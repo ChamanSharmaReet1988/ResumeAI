@@ -113,50 +113,71 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
             bodyPt,
             highlightSummary: highlightSummary,
           ),
-          if (resume.includeWorkInResume)
-            ..._highlightedCorporateExperienceSectionWidgets(
-              resume.visibleWorkExperiences,
-              highlightedBulletsByExperience,
-              lineColor,
-              sectionTitleColor,
-              highlightColor,
-              garamond,
-              bodyPt,
-            ),
-          if (resume.includeEducationInResume)
-            ..._highlightedCorporateEducationSectionWidgets(
-              resume.visibleEducation,
-              lineColor,
-              sectionTitleColor,
-              garamond,
-              bodyPt,
-            ),
-          if (resume.includeSkillsInResume)
-            ..._highlightedCorporateSkillsSectionWidgets(
-              resume,
-              highlightedSkills,
-              lineColor,
-              sectionTitleColor,
-              highlightColor,
-              garamond,
-              bodyPt,
-            ),
-          if (resume.includeProjectsInResume)
-            ..._highlightedCorporateProjectsSectionWidgets(
-              resume.visibleProjects,
-              lineColor,
-              sectionTitleColor,
-              garamond,
-              bodyPt,
-            ),
-          for (final item in resume.visibleCustomSections)
-            ..._highlightedCorporateCustomSectionWidgets(
-              item,
-              lineColor,
-              sectionTitleColor,
-              garamond,
-              bodyPt,
-            ),
+          ..._pdfBodySectionsInBuilderOrder(
+            resume,
+            buildSection: (id) {
+              final customIndex = ResumeBuilderSectionIds.customIndex(id);
+              if (customIndex != null) {
+                if (customIndex < 0 ||
+                    customIndex >= resume.customSections.length) {
+                  return null;
+                }
+                final item = resume.customSections[customIndex];
+                if (item.isBlank) return null;
+                return _highlightedCorporateCustomSectionWidgets(
+                  item,
+                  lineColor,
+                  sectionTitleColor,
+                  garamond,
+                  bodyPt,
+                );
+              }
+              switch (id) {
+                case ResumeBuilderSectionIds.work:
+                  if (!resume.includeWorkInResume) return null;
+                  return _highlightedCorporateExperienceSectionWidgets(
+                    resume.visibleWorkExperiences,
+                    highlightedBulletsByExperience,
+                    lineColor,
+                    sectionTitleColor,
+                    highlightColor,
+                    garamond,
+                    bodyPt,
+                  );
+                case ResumeBuilderSectionIds.education:
+                  if (!resume.includeEducationInResume) return null;
+                  return _highlightedCorporateEducationSectionWidgets(
+                    resume.visibleEducation,
+                    lineColor,
+                    sectionTitleColor,
+                    garamond,
+                    bodyPt,
+                  );
+                case ResumeBuilderSectionIds.skills:
+                  if (!resume.includeSkillsInResume) return null;
+                  return _highlightedCorporateSkillsSectionWidgets(
+                    resume,
+                    highlightedSkills,
+                    lineColor,
+                    sectionTitleColor,
+                    highlightColor,
+                    garamond,
+                    bodyPt,
+                  );
+                case ResumeBuilderSectionIds.projects:
+                  if (!resume.includeProjectsInResume) return null;
+                  return _highlightedCorporateProjectsSectionWidgets(
+                    resume.visibleProjects,
+                    lineColor,
+                    sectionTitleColor,
+                    garamond,
+                    bodyPt,
+                  );
+                default:
+                  return null;
+              }
+            },
+          ),
         ],
       ),
     );
@@ -553,122 +574,152 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               ),
             ),
           ),
-          if (resume.includeWorkInResume) ...[
-            pw.SizedBox(height: _creativeSectionGapPt),
-            _creativeMainColumnChild(
-              _creativeSectionHeadingRow(
-                title: 'Experience',
-                titleColor: textColor,
-                lineColor: lineColor,
-                garamond: garamond,
-                sectionTitlePt: sectionTitlePt,
-              ),
-            ),
-            pw.SizedBox(height: _creativeHeadingBodyGapPt),
-            for (
-              var index = 0;
-              index < resume.visibleWorkExperiences.length;
-              index++
-            )
-              _creativeMainColumnChild(
-                _buildHighlightedCreativeExperience(
-                  resume.visibleWorkExperiences[index],
-                  highlightedBulletsByExperience[index] ?? const <String>{},
-                  highlightColor,
-                  garamond: garamond,
-                  bodyPt: bodyPt,
-                  subtitlePt: subtitlePt,
-                ),
-              ),
-          ],
-          if (educationItems.isNotEmpty) ...[
-            pw.SizedBox(height: _creativeSectionGapPt),
-            _creativeMainColumnChild(
-              _creativeSectionHeadingRow(
-                title: 'Education',
-                titleColor: textColor,
-                lineColor: lineColor,
-                garamond: garamond,
-                sectionTitlePt: sectionTitlePt,
-              ),
-            ),
-            pw.SizedBox(height: _creativeHeadingBodyGapPt),
-            for (final item in educationItems)
-              _creativeMainColumnChild(
-                _creativeSidebarEducationEntry(
-                  item,
-                  titleColor: textColor,
-                  mutedColor: bodyColor,
-                  garamond: garamond,
-                  bodyPt: bodyPt,
-                  subtitlePt: subtitlePt,
-                ),
-              ),
-          ],
-          if (resume.includeSkillsInResume && template2Skills.isNotEmpty) ...[
-            pw.SizedBox(height: _creativeSectionGapPt),
-            _creativeMainColumnChild(
-              _creativeSectionHeadingRow(
-                title: 'Skills',
-                titleColor: textColor,
-                lineColor: lineColor,
-                garamond: garamond,
-                sectionTitlePt: sectionTitlePt,
-              ),
-            ),
-            pw.SizedBox(height: _creativeHeadingBodyGapPt),
-            _creativeMainColumnChild(
-              _twoColumnBulletListWithHighlights(
-                template2Skills,
-                highlightedSkills,
-                highlightColor,
-                fontSize: bodyPt,
-                bulletStyle: bodyTextStyle,
-              ),
-            ),
-          ],
-          if (resume.includeProjectsInResume) ...[
-            pw.SizedBox(height: _creativeSectionGapPt),
-            _creativeMainColumnChild(
-              _creativeSectionHeadingRow(
-                title: 'Projects',
-                titleColor: textColor,
-                lineColor: lineColor,
-                garamond: garamond,
-                sectionTitlePt: sectionTitlePt,
-              ),
-            ),
-            pw.SizedBox(height: _creativeHeadingBodyGapPt),
-            for (final item in resume.visibleProjects)
-              _creativeMainColumnChild(
-                _buildCreativeProject(
-                  item,
-                  garamond: garamond,
-                  mutedColor: bodyColor,
-                  bodyPt: bodyPt,
-                  subtitlePt: subtitlePt,
-                ),
-              ),
-          ],
-          for (final item in resume.visibleCustomSections) ...[
-            pw.SizedBox(height: _creativeSectionGapPt),
-            _creativeMainColumnChild(
-              _creativeSectionHeadingRow(
-                title: item.title.ifEmpty('Custom Section'),
-                titleColor: textColor,
-                lineColor: lineColor,
-                garamond: garamond,
-                sectionTitlePt: sectionTitlePt,
-              ),
-            ),
-            pw.SizedBox(height: _creativeHeadingBodyGapPt),
-            for (final widget in _pwCustomSectionBodyWidgets(
-              item,
-              garamond: garamond,
-              bodyFontPt: bodyPt,
-            ))
-              _creativeMainColumnChild(widget),
-          ],
+          ..._pdfBodySectionsInBuilderOrder(
+            resume,
+            buildSection: (id) {
+              final customIndex = ResumeBuilderSectionIds.customIndex(id);
+              if (customIndex != null) {
+                if (customIndex < 0 ||
+                    customIndex >= resume.customSections.length) {
+                  return null;
+                }
+                final item = resume.customSections[customIndex];
+                if (item.isBlank) return null;
+                return [
+                  pw.SizedBox(height: _creativeSectionGapPt),
+                  _creativeMainColumnChild(
+                    _creativeSectionHeadingRow(
+                      title: item.title.ifEmpty('Custom Section'),
+                      titleColor: textColor,
+                      lineColor: lineColor,
+                      garamond: garamond,
+                      sectionTitlePt: sectionTitlePt,
+                    ),
+                  ),
+                  pw.SizedBox(height: _creativeHeadingBodyGapPt),
+                  for (final widget in _pwCustomSectionBodyWidgets(
+                    item,
+                    garamond: garamond,
+                    bodyFontPt: bodyPt,
+                  ))
+                    _creativeMainColumnChild(widget),
+                ];
+              }
+              switch (id) {
+                case ResumeBuilderSectionIds.work:
+                  if (!resume.includeWorkInResume) return null;
+                  return [
+                    pw.SizedBox(height: _creativeSectionGapPt),
+                    _creativeMainColumnChild(
+                      _creativeSectionHeadingRow(
+                        title: 'Experience',
+                        titleColor: textColor,
+                        lineColor: lineColor,
+                        garamond: garamond,
+                        sectionTitlePt: sectionTitlePt,
+                      ),
+                    ),
+                    pw.SizedBox(height: _creativeHeadingBodyGapPt),
+                    for (
+                      var index = 0;
+                      index < resume.visibleWorkExperiences.length;
+                      index++
+                    )
+                      _creativeMainColumnChild(
+                        _buildHighlightedCreativeExperience(
+                          resume.visibleWorkExperiences[index],
+                          highlightedBulletsByExperience[index] ??
+                              const <String>{},
+                          highlightColor,
+                          garamond: garamond,
+                          bodyPt: bodyPt,
+                          subtitlePt: subtitlePt,
+                        ),
+                      ),
+                  ];
+                case ResumeBuilderSectionIds.education:
+                  if (educationItems.isEmpty) return null;
+                  return [
+                    pw.SizedBox(height: _creativeSectionGapPt),
+                    _creativeMainColumnChild(
+                      _creativeSectionHeadingRow(
+                        title: 'Education',
+                        titleColor: textColor,
+                        lineColor: lineColor,
+                        garamond: garamond,
+                        sectionTitlePt: sectionTitlePt,
+                      ),
+                    ),
+                    pw.SizedBox(height: _creativeHeadingBodyGapPt),
+                    for (final item in educationItems)
+                      _creativeMainColumnChild(
+                        _creativeSidebarEducationEntry(
+                          item,
+                          titleColor: textColor,
+                          mutedColor: bodyColor,
+                          garamond: garamond,
+                          bodyPt: bodyPt,
+                          subtitlePt: subtitlePt,
+                        ),
+                      ),
+                  ];
+                case ResumeBuilderSectionIds.skills:
+                  if (!resume.includeSkillsInResume ||
+                      template2Skills.isEmpty) {
+                    return null;
+                  }
+                  return [
+                    pw.SizedBox(height: _creativeSectionGapPt),
+                    _creativeMainColumnChild(
+                      _creativeSectionHeadingRow(
+                        title: 'Skills',
+                        titleColor: textColor,
+                        lineColor: lineColor,
+                        garamond: garamond,
+                        sectionTitlePt: sectionTitlePt,
+                      ),
+                    ),
+                    pw.SizedBox(height: _creativeHeadingBodyGapPt),
+                    _creativeMainColumnChild(
+                      _twoColumnBulletListWithHighlights(
+                        template2Skills,
+                        highlightedSkills,
+                        highlightColor,
+                        fontSize: bodyPt,
+                        bulletStyle: bodyTextStyle,
+                      ),
+                    ),
+                  ];
+                case ResumeBuilderSectionIds.projects:
+                  if (!resume.includeProjectsInResume) return null;
+                  return [
+                    pw.SizedBox(height: _creativeSectionGapPt),
+                    _creativeMainColumnChild(
+                      _creativeSectionHeadingRow(
+                        title: 'Projects',
+                        titleColor: textColor,
+                        lineColor: lineColor,
+                        garamond: garamond,
+                        sectionTitlePt: sectionTitlePt,
+                      ),
+                    ),
+                    pw.SizedBox(height: _creativeHeadingBodyGapPt),
+                    for (final item in resume.visibleProjects)
+                      _creativeMainColumnChild(
+                        _buildCreativeProject(
+                          item,
+                          garamond: garamond,
+                          mutedColor: bodyColor,
+                          bodyPt: bodyPt,
+                          subtitlePt: subtitlePt,
+                        ),
+                      ),
+                  ];
+                default:
+                  return null;
+              }
+            },
+          ),
         ],
       ),
     );
@@ -776,165 +827,187 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               ),
             ),
           ),
-          if (resume.includeWorkInResume &&
-              resume.visibleWorkExperiences.isEmpty)
-            sidebarWrap(
-              _buildClassicSidebarSection(
-                title: 'Experience',
-                titleColor: titleColor,
-                topDividerColor: borderColor,
-                sectionTitlePt: sectionTitlePt,
-                garamond: garamond,
-                child: pw.Text(
-                  'Add your work experience details.',
-                  style: _classicSidebarPdfTextStyle(
-                    garamond,
-                    ResumeTypography.classicSidebarBodyWeight,
-                    bodyPt,
-                    color: mutedColor,
-                  ),
-                ),
-              ),
-            ),
-          if (resume.includeWorkInResume &&
-              resume.visibleWorkExperiences.isNotEmpty) ...[
-            sidebarWrap(
-              _buildClassicSidebarSectionHeading(
-                title: 'Experience',
-                titleColor: titleColor,
-                topDividerColor: borderColor,
-                sectionTitlePt: sectionTitlePt,
-                garamond: garamond,
-              ),
-            ),
-            ..._classicSidebarPaginatedExperienceSidebarBlocks(
-              experiences: resume.visibleWorkExperiences,
-              wrap: sidebarWrap,
-              titleColor: titleColor,
-              accentColor: accentColor,
-              bodyPt: bodyPt,
-              subtitlePt: subtitlePt,
-              garamond: garamond,
-              highlightedBulletsByExperience: highlightedBulletsByExperience,
-              bulletHighlightColor: highlightColor,
-            ),
-          ],
-          if (resume.includeEducationInResume &&
-              resume.visibleEducation.isEmpty)
-            sidebarWrap(
-              _buildClassicSidebarSection(
-                title: 'Education',
-                titleColor: titleColor,
-                topDividerColor: borderColor,
-                sectionTitlePt: sectionTitlePt,
-                garamond: garamond,
-                child: pw.Text(
-                  'Add your education details.',
-                  style: _classicSidebarPdfTextStyle(
-                    garamond,
-                    ResumeTypography.classicSidebarBodyWeight,
-                    bodyPt,
-                    color: mutedColor,
-                  ),
-                ),
-              ),
-            ),
-          if (resume.includeEducationInResume &&
-              resume.visibleEducation.isNotEmpty) ...[
-            sidebarWrap(
-              _buildClassicSidebarSectionHeading(
-                title: 'Education',
-                titleColor: titleColor,
-                topDividerColor: borderColor,
-                sectionTitlePt: sectionTitlePt,
-                garamond: garamond,
-              ),
-            ),
-            ..._classicSidebarPaginatedEducationSidebarBlocks(
-              education: resume.visibleEducation,
-              wrap: sidebarWrap,
-              titleColor: titleColor,
-              mutedColor: mutedColor,
-              bodyPt: bodyPt,
-              subtitlePt: subtitlePt,
-              garamond: garamond,
-            ),
-          ],
-          if (resume.includeProjectsInResume &&
-              resume.visibleProjects.isNotEmpty) ...[
-            sidebarWrap(
-              _buildClassicSidebarSectionHeading(
-                title: 'Projects',
-                titleColor: titleColor,
-                topDividerColor: borderColor,
-                sectionTitlePt: sectionTitlePt,
-                garamond: garamond,
-              ),
-            ),
-            ..._classicSidebarPaginatedProjectSidebarBlocks(
-              projects: resume.visibleProjects,
-              wrap: sidebarWrap,
-              titleColor: titleColor,
-              mutedColor: mutedColor,
-              accentColor: accentColor,
-              bodyPt: bodyPt,
-              subtitlePt: subtitlePt,
-              garamond: garamond,
-            ),
-          ],
-          for (var index = 0; index < customSections.length; index++) ...[
-            sidebarWrap(
-              _buildClassicSidebarSectionHeading(
-                title: customSections[index].title.ifEmpty('Custom Section'),
-                titleColor: titleColor,
-                topDividerColor: borderColor,
-                sectionTitlePt: sectionTitlePt,
-                garamond: garamond,
-              ),
-            ),
-            if (customSections[index].layoutMode ==
-                CustomSectionLayoutMode.bullets)
-              for (
-                var bulletIndex = 0;
-                bulletIndex <
-                    customSections[index].bullets
-                        .where((bullet) => bullet.trim().isNotEmpty)
-                        .length;
-                bulletIndex++
-              )
-                sidebarWrap(
-                  _classicSidebarSectionBodyBlock(
-                    showBottomBorder:
-                        bulletIndex ==
-                        customSections[index].bullets
-                                .where((bullet) => bullet.trim().isNotEmpty)
-                                .length -
-                            1,
-                    child: _classicBulletRow(
-                      text: customSections[index].bullets
-                          .where((bullet) => bullet.trim().isNotEmpty)
-                          .elementAt(bulletIndex),
-                      bulletColor: accentColor,
-                      textColor: mutedColor,
-                      fontSize: bodyPt,
+          ..._pdfBodySectionsInBuilderOrder(
+            resume,
+            exclude: {ResumeBuilderSectionIds.skills},
+            buildSection: (id) {
+              final customIndex = ResumeBuilderSectionIds.customIndex(id);
+              if (customIndex != null) {
+                if (customIndex < 0 ||
+                    customIndex >= resume.customSections.length) {
+                  return null;
+                }
+                final section = resume.customSections[customIndex];
+                if (section.isBlank || !customSections.contains(section)) {
+                  return null;
+                }
+                final bullets = section.bullets
+                    .where((bullet) => bullet.trim().isNotEmpty)
+                    .toList();
+                return [
+                  sidebarWrap(
+                    _buildClassicSidebarSectionHeading(
+                      title: section.title.ifEmpty('Custom Section'),
+                      titleColor: titleColor,
+                      topDividerColor: borderColor,
+                      sectionTitlePt: sectionTitlePt,
                       garamond: garamond,
                     ),
                   ),
-                )
-            else
-              sidebarWrap(
-                _classicSidebarSectionBodyBlock(
-                  showBottomBorder: true,
-                  child: _buildClassicSidebarCustomSection(
-                    customSections[index],
-                    mutedColor: mutedColor,
-                    accentColor: accentColor,
-                    bodyPt: bodyPt,
-                    garamond: garamond,
-                  ),
-                ),
-              ),
-          ],
+                  if (section.layoutMode == CustomSectionLayoutMode.bullets)
+                    for (var bulletIndex = 0;
+                        bulletIndex < bullets.length;
+                        bulletIndex++)
+                      sidebarWrap(
+                        _classicSidebarSectionBodyBlock(
+                          showBottomBorder: bulletIndex == bullets.length - 1,
+                          child: _classicBulletRow(
+                            text: bullets[bulletIndex],
+                            bulletColor: accentColor,
+                            textColor: mutedColor,
+                            fontSize: bodyPt,
+                            garamond: garamond,
+                          ),
+                        ),
+                      )
+                  else
+                    sidebarWrap(
+                      _classicSidebarSectionBodyBlock(
+                        showBottomBorder: true,
+                        child: _buildClassicSidebarCustomSection(
+                          section,
+                          mutedColor: mutedColor,
+                          accentColor: accentColor,
+                          bodyPt: bodyPt,
+                          garamond: garamond,
+                        ),
+                      ),
+                    ),
+                ];
+              }
+              switch (id) {
+                case ResumeBuilderSectionIds.work:
+                  if (!resume.includeWorkInResume) return null;
+                  if (resume.visibleWorkExperiences.isEmpty) {
+                    return [
+                      sidebarWrap(
+                        _buildClassicSidebarSection(
+                          title: 'Experience',
+                          titleColor: titleColor,
+                          topDividerColor: borderColor,
+                          sectionTitlePt: sectionTitlePt,
+                          garamond: garamond,
+                          child: pw.Text(
+                            'Add your work experience details.',
+                            style: _classicSidebarPdfTextStyle(
+                              garamond,
+                              ResumeTypography.classicSidebarBodyWeight,
+                              bodyPt,
+                              color: mutedColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ];
+                  }
+                  return [
+                    sidebarWrap(
+                      _buildClassicSidebarSectionHeading(
+                        title: 'Experience',
+                        titleColor: titleColor,
+                        topDividerColor: borderColor,
+                        sectionTitlePt: sectionTitlePt,
+                        garamond: garamond,
+                      ),
+                    ),
+                    ..._classicSidebarPaginatedExperienceSidebarBlocks(
+                      experiences: resume.visibleWorkExperiences,
+                      wrap: sidebarWrap,
+                      titleColor: titleColor,
+                      accentColor: accentColor,
+                      bodyPt: bodyPt,
+                      subtitlePt: subtitlePt,
+                      garamond: garamond,
+                      highlightedBulletsByExperience:
+                          highlightedBulletsByExperience,
+                      bulletHighlightColor: highlightColor,
+                    ),
+                  ];
+                case ResumeBuilderSectionIds.education:
+                  if (!resume.includeEducationInResume) return null;
+                  if (resume.visibleEducation.isEmpty) {
+                    return [
+                      sidebarWrap(
+                        _buildClassicSidebarSection(
+                          title: 'Education',
+                          titleColor: titleColor,
+                          topDividerColor: borderColor,
+                          sectionTitlePt: sectionTitlePt,
+                          garamond: garamond,
+                          child: pw.Text(
+                            'Add your education details.',
+                            style: _classicSidebarPdfTextStyle(
+                              garamond,
+                              ResumeTypography.classicSidebarBodyWeight,
+                              bodyPt,
+                              color: mutedColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ];
+                  }
+                  return [
+                    sidebarWrap(
+                      _buildClassicSidebarSectionHeading(
+                        title: 'Education',
+                        titleColor: titleColor,
+                        topDividerColor: borderColor,
+                        sectionTitlePt: sectionTitlePt,
+                        garamond: garamond,
+                      ),
+                    ),
+                    ..._classicSidebarPaginatedEducationSidebarBlocks(
+                      education: resume.visibleEducation,
+                      wrap: sidebarWrap,
+                      titleColor: titleColor,
+                      mutedColor: mutedColor,
+                      bodyPt: bodyPt,
+                      subtitlePt: subtitlePt,
+                      garamond: garamond,
+                    ),
+                  ];
+                case ResumeBuilderSectionIds.projects:
+                  if (!resume.includeProjectsInResume ||
+                      resume.visibleProjects.isEmpty) {
+                    return null;
+                  }
+                  return [
+                    sidebarWrap(
+                      _buildClassicSidebarSectionHeading(
+                        title: 'Projects',
+                        titleColor: titleColor,
+                        topDividerColor: borderColor,
+                        sectionTitlePt: sectionTitlePt,
+                        garamond: garamond,
+                      ),
+                    ),
+                    ..._classicSidebarPaginatedProjectSidebarBlocks(
+                      projects: resume.visibleProjects,
+                      wrap: sidebarWrap,
+                      titleColor: titleColor,
+                      mutedColor: mutedColor,
+                      accentColor: accentColor,
+                      bodyPt: bodyPt,
+                      subtitlePt: subtitlePt,
+                      garamond: garamond,
+                    ),
+                  ];
+                default:
+                  return null;
+              }
+            },
+          ),
         ],
       ),
     );
@@ -1003,121 +1076,156 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
               ),
             ),
           ),
-          pw.SizedBox(height: _detailsSidebarSectionGapPt),
-          _detailsSidebarMainColumnChild(
-            _detailsSidebarHeadingRow(
-              title: 'EXPERIENCE',
-              titleColor: titleColor,
-              dividerColor: dividerColor,
-            ),
-          ),
-          pw.SizedBox(height: _detailsSidebarHeadingGapPt),
-          if (resume.includeWorkInResume &&
-              resume.visibleWorkExperiences.isNotEmpty)
-            for (
-              var index = 0;
-              index < resume.visibleWorkExperiences.length;
-              index++
-            )
-              _detailsSidebarMainColumnChild(
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(bottom: 14),
-                  child: _buildHighlightedDetailsSidebarExperience(
-                    resume.visibleWorkExperiences[index],
-                    highlightedBulletsByExperience[index] ?? const <String>{},
-                    highlightColor,
-                    titleColor: titleColor,
-                    mutedColor: mutedColor,
-                    accentColor: accentColor,
-                    bodyPt: bodyPt,
-                  ),
-                ),
-              )
-          else
-            _detailsSidebarMainColumnChild(
-              pw.Text(
-                'Add your work experience details.',
-                style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
-              ),
-            ),
-          if (resume.includeEducationInResume) ...[
-            pw.SizedBox(height: _detailsSidebarSectionGapPt),
-            _detailsSidebarMainColumnChild(
-              _detailsSidebarHeadingRow(
-                title: 'EDUCATION',
-                titleColor: titleColor,
-                dividerColor: dividerColor,
-              ),
-            ),
-            pw.SizedBox(height: _detailsSidebarHeadingGapPt),
-            if (resume.visibleEducation.isNotEmpty)
-              for (final item in resume.visibleEducation)
-                _detailsSidebarMainColumnChild(
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.only(bottom: 12),
-                    child: _buildDetailsSidebarEducation(
-                      item,
+          ..._pdfBodySectionsInBuilderOrder(
+            resume,
+            exclude: {ResumeBuilderSectionIds.skills},
+            buildSection: (id) {
+              final customIndex = ResumeBuilderSectionIds.customIndex(id);
+              if (customIndex != null) {
+                if (customIndex < 0 ||
+                    customIndex >= resume.customSections.length) {
+                  return null;
+                }
+                final item = resume.customSections[customIndex];
+                if (item.isBlank) return null;
+                return [
+                  pw.SizedBox(height: _detailsSidebarSectionGapPt),
+                  _detailsSidebarMainColumnChild(
+                    _detailsSidebarHeadingRow(
+                      title: item.title.ifEmpty('CUSTOM SECTION').toUpperCase(),
                       titleColor: titleColor,
-                      mutedColor: mutedColor,
-                      bodyPt: bodyPt,
+                      dividerColor: dividerColor,
                     ),
                   ),
-                )
-            else
-              _detailsSidebarMainColumnChild(
-                pw.Text(
-                  'Add your education details.',
-                  style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
-                ),
-              ),
-          ],
-          if (resume.includeProjectsInResume &&
-              resume.visibleProjects.isNotEmpty) ...[
-            pw.SizedBox(height: _detailsSidebarSectionGapPt),
-            _detailsSidebarMainColumnChild(
-              _detailsSidebarHeadingRow(
-                title: 'PROJECTS',
-                titleColor: titleColor,
-                dividerColor: dividerColor,
-              ),
-            ),
-            pw.SizedBox(height: _detailsSidebarHeadingGapPt),
-            for (final item in resume.visibleProjects)
-              _detailsSidebarMainColumnChild(
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(bottom: 12),
-                  child: _buildDetailsSidebarProject(
-                    item,
-                    titleColor: titleColor,
-                    mutedColor: mutedColor,
-                    accentColor: accentColor,
-                    bodyPt: bodyPt,
+                  pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+                  _detailsSidebarMainColumnChild(
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.only(bottom: 12),
+                      child: _buildDetailsSidebarCustomSection(
+                        item,
+                        mutedColor: mutedColor,
+                        accentColor: accentColor,
+                        bodyPt: bodyPt,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-          ],
-          for (final item in resume.visibleCustomSections) ...[
-            pw.SizedBox(height: _detailsSidebarSectionGapPt),
-            _detailsSidebarMainColumnChild(
-              _detailsSidebarHeadingRow(
-                title: item.title.ifEmpty('CUSTOM SECTION').toUpperCase(),
-                titleColor: titleColor,
-                dividerColor: dividerColor,
-              ),
-            ),
-            pw.SizedBox(height: _detailsSidebarHeadingGapPt),
-            _detailsSidebarMainColumnChild(
-              pw.Padding(
-                padding: const pw.EdgeInsets.only(bottom: 12),
-                child: _buildDetailsSidebarCustomSection(
-                  item,
-                  mutedColor: mutedColor,
-                  accentColor: accentColor,
-                  bodyPt: bodyPt,
-                ),
-              ),
-            ),
-          ],
+                ];
+              }
+              switch (id) {
+                case ResumeBuilderSectionIds.work:
+                  return [
+                    pw.SizedBox(height: _detailsSidebarSectionGapPt),
+                    _detailsSidebarMainColumnChild(
+                      _detailsSidebarHeadingRow(
+                        title: 'EXPERIENCE',
+                        titleColor: titleColor,
+                        dividerColor: dividerColor,
+                      ),
+                    ),
+                    pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+                    if (resume.includeWorkInResume &&
+                        resume.visibleWorkExperiences.isNotEmpty)
+                      for (
+                        var index = 0;
+                        index < resume.visibleWorkExperiences.length;
+                        index++
+                      )
+                        _detailsSidebarMainColumnChild(
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.only(bottom: 14),
+                            child: _buildHighlightedDetailsSidebarExperience(
+                              resume.visibleWorkExperiences[index],
+                              highlightedBulletsByExperience[index] ??
+                                  const <String>{},
+                              highlightColor,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                              accentColor: accentColor,
+                              bodyPt: bodyPt,
+                            ),
+                          ),
+                        )
+                    else
+                      _detailsSidebarMainColumnChild(
+                        pw.Text(
+                          'Add your work experience details.',
+                          style: pw.TextStyle(
+                            color: mutedColor,
+                            fontSize: bodyPt,
+                          ),
+                        ),
+                      ),
+                  ];
+                case ResumeBuilderSectionIds.education:
+                  if (!resume.includeEducationInResume) return null;
+                  return [
+                    pw.SizedBox(height: _detailsSidebarSectionGapPt),
+                    _detailsSidebarMainColumnChild(
+                      _detailsSidebarHeadingRow(
+                        title: 'EDUCATION',
+                        titleColor: titleColor,
+                        dividerColor: dividerColor,
+                      ),
+                    ),
+                    pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+                    if (resume.visibleEducation.isNotEmpty)
+                      for (final item in resume.visibleEducation)
+                        _detailsSidebarMainColumnChild(
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.only(bottom: 12),
+                            child: _buildDetailsSidebarEducation(
+                              item,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                              bodyPt: bodyPt,
+                            ),
+                          ),
+                        )
+                    else
+                      _detailsSidebarMainColumnChild(
+                        pw.Text(
+                          'Add your education details.',
+                          style: pw.TextStyle(
+                            color: mutedColor,
+                            fontSize: bodyPt,
+                          ),
+                        ),
+                      ),
+                  ];
+                case ResumeBuilderSectionIds.projects:
+                  if (!resume.includeProjectsInResume ||
+                      resume.visibleProjects.isEmpty) {
+                    return null;
+                  }
+                  return [
+                    pw.SizedBox(height: _detailsSidebarSectionGapPt),
+                    _detailsSidebarMainColumnChild(
+                      _detailsSidebarHeadingRow(
+                        title: 'PROJECTS',
+                        titleColor: titleColor,
+                        dividerColor: dividerColor,
+                      ),
+                    ),
+                    pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+                    for (final item in resume.visibleProjects)
+                      _detailsSidebarMainColumnChild(
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(bottom: 12),
+                          child: _buildDetailsSidebarProject(
+                            item,
+                            titleColor: titleColor,
+                            mutedColor: mutedColor,
+                            accentColor: accentColor,
+                            bodyPt: bodyPt,
+                          ),
+                        ),
+                      ),
+                  ];
+                default:
+                  return null;
+              }
+            },
+          ),
           for (var i = 1; i < sidebarSlices.length; i++) pw.NewPage(),
         ],
       ),

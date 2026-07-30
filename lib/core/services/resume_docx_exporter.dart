@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../models/resume_builder_section_order.dart';
 import '../models/resume_models.dart';
 
 /// Builds a plain, ATS-friendly DOCX (single column, headings, bullets).
@@ -74,172 +75,201 @@ class ResumeDocxExporter {
       buffer.write(_emptyParagraph());
     }
 
-    if (resume.includeWorkInResume) {
-      final work = resume.visibleWorkExperiences;
-      if (work.isNotEmpty) {
-        buffer.write(_sectionHeading('Work Experience'));
-        for (final item in work) {
-          final roleCompany = [
-            if (item.role.trim().isNotEmpty) item.role.trim(),
-            if (item.company.trim().isNotEmpty) item.company.trim(),
-          ].join(' — ');
-          if (roleCompany.isNotEmpty) {
-            buffer.write(_paragraph(roleCompany, bold: true, sizeHalfPoints: 20));
-          }
-          final dates = _dateRange(item.startDate, item.endDate);
-          if (dates.isNotEmpty) {
-            buffer.write(_paragraph(dates, italics: true, sizeHalfPoints: 18));
-          }
-          final description = item.description.trim();
-          if (description.isNotEmpty) {
-            buffer.write(_paragraph(description, sizeHalfPoints: 20));
-          }
-          for (final bullet in item.bullets) {
-            final text = bullet.trim();
-            if (text.isEmpty) {
-              continue;
-            }
-            buffer.write(_bullet(text));
-          }
-          buffer.write(_emptyParagraph());
+    for (final id in previewBodySectionOrder(resume, followOrder: true)) {
+      final customIndex = ResumeBuilderSectionIds.customIndex(id);
+      if (customIndex != null) {
+        if (customIndex < 0 || customIndex >= resume.customSections.length) {
+          continue;
         }
-      }
-    }
-
-    if (resume.includeEducationInResume) {
-      final education = resume.education
-          .where((item) => !item.isBlank)
-          .toList();
-      if (education.isNotEmpty) {
-        buffer.write(_sectionHeading('Education'));
-        for (final item in education) {
-          final heading = [
-            if (item.degree.trim().isNotEmpty) item.degree.trim(),
-            if (item.institution.trim().isNotEmpty) item.institution.trim(),
-          ].join(' — ');
-          if (heading.isNotEmpty) {
-            buffer.write(_paragraph(heading, bold: true, sizeHalfPoints: 20));
-          }
-          final meta = [
-            if (_dateRange(item.startDate, item.endDate).isNotEmpty)
-              _dateRange(item.startDate, item.endDate),
-            if (item.score.trim().isNotEmpty)
-              item.showScoreAsPercent
-                  ? 'Score: ${item.score.trim()}%'
-                  : 'Score: ${item.score.trim()}',
-          ].where((part) => part.isNotEmpty).join(' · ');
-          if (meta.isNotEmpty) {
-            buffer.write(_paragraph(meta, italics: true, sizeHalfPoints: 18));
-          }
-          buffer.write(_emptyParagraph());
+        final section = resume.customSections[customIndex];
+        if (section.isBlank) {
+          continue;
         }
-      }
-    }
-
-    if (resume.includeSkillsInResume) {
-      if (resume.showCategorisedSkills) {
-        final groups = resume.skillGroupsForResume;
-        if (groups.isNotEmpty) {
-          buffer.write(_sectionHeading('Skills'));
-          for (final group in groups) {
-            final heading = group.heading.trim();
-            final skills = group.skillsCommaSeparated.trim();
-            if (heading.isNotEmpty && skills.isNotEmpty) {
-              buffer.write(
-                _paragraph('$heading: $skills', sizeHalfPoints: 20),
-              );
-            } else if (skills.isNotEmpty) {
-              buffer.write(_paragraph(skills, sizeHalfPoints: 20));
+        final title = section.title.trim().isEmpty
+            ? 'Additional'
+            : section.title.trim();
+        buffer.write(_sectionHeading(title));
+        switch (section.layoutMode) {
+          case CustomSectionLayoutMode.summary:
+            final content = section.content.trim();
+            if (content.isNotEmpty) {
+              buffer.write(_paragraph(content, sizeHalfPoints: 20));
             }
-          }
-          buffer.write(_emptyParagraph());
-        }
-      } else {
-        final skills = resume.skillsLinesForDisplay
-            .map((item) => item.trim())
-            .where((item) => item.isNotEmpty)
-            .join(', ');
-        if (skills.isNotEmpty) {
-          buffer.write(_sectionHeading('Skills'));
-          buffer.write(_paragraph(skills, sizeHalfPoints: 20));
-          buffer.write(_emptyParagraph());
-        }
-      }
-    }
-
-    if (resume.includeProjectsInResume) {
-      final projects = resume.projects.where((item) => !item.isBlank).toList();
-      if (projects.isNotEmpty) {
-        buffer.write(_sectionHeading('Projects'));
-        for (final item in projects) {
-          final title = item.title.trim();
-          if (title.isNotEmpty) {
-            buffer.write(_paragraph(title, bold: true, sizeHalfPoints: 20));
-          }
-          final subtitle = item.subtitle.trim();
-          if (subtitle.isNotEmpty) {
-            buffer.write(
-              _paragraph(subtitle, italics: true, sizeHalfPoints: 18),
-            );
-          }
-          for (final part in [item.overview, item.impact]) {
-            final text = part.trim();
-            if (text.isNotEmpty) {
-              buffer.write(_paragraph(text, sizeHalfPoints: 20));
-            }
-          }
-          for (final bullet in item.bullets) {
-            final text = bullet.trim();
-            if (text.isEmpty) {
-              continue;
-            }
-            buffer.write(_bullet(text));
-          }
-          buffer.write(_emptyParagraph());
-        }
-      }
-    }
-
-    for (final section in resume.customSections) {
-      if (section.isBlank) {
-        continue;
-      }
-      final title = section.title.trim().isEmpty
-          ? 'Additional'
-          : section.title.trim();
-      buffer.write(_sectionHeading(title));
-      switch (section.layoutMode) {
-        case CustomSectionLayoutMode.summary:
-          final content = section.content.trim();
-          if (content.isNotEmpty) {
-            buffer.write(_paragraph(content, sizeHalfPoints: 20));
-          }
-        case CustomSectionLayoutMode.bullets:
-          for (final bullet in section.bullets) {
-            final text = bullet.trim();
-            if (text.isEmpty) {
-              continue;
-            }
-            buffer.write(_bullet(text));
-          }
-        case CustomSectionLayoutMode.projects:
-          for (final entry in section.visibleProjectEntries) {
-            final entryTitle = entry.title.trim();
-            if (entryTitle.isNotEmpty) {
-              buffer.write(
-                _paragraph(entryTitle, bold: true, sizeHalfPoints: 20),
-              );
-            }
-            for (final bullet in entry.bullets) {
+          case CustomSectionLayoutMode.bullets:
+            for (final bullet in section.bullets) {
               final text = bullet.trim();
               if (text.isEmpty) {
                 continue;
               }
               buffer.write(_bullet(text));
             }
+          case CustomSectionLayoutMode.projects:
+            for (final entry in section.visibleProjectEntries) {
+              final entryTitle = entry.title.trim();
+              if (entryTitle.isNotEmpty) {
+                buffer.write(
+                  _paragraph(entryTitle, bold: true, sizeHalfPoints: 20),
+                );
+              }
+              for (final bullet in entry.bullets) {
+                final text = bullet.trim();
+                if (text.isEmpty) {
+                  continue;
+                }
+                buffer.write(_bullet(text));
+              }
+            }
+        }
+        buffer.write(_emptyParagraph());
+        continue;
+      }
+
+      switch (id) {
+        case ResumeBuilderSectionIds.work:
+          if (!resume.includeWorkInResume) {
+            break;
+          }
+          final work = resume.visibleWorkExperiences;
+          if (work.isEmpty) {
+            break;
+          }
+          buffer.write(_sectionHeading('Work Experience'));
+          for (final item in work) {
+            final roleCompany = [
+              if (item.role.trim().isNotEmpty) item.role.trim(),
+              if (item.company.trim().isNotEmpty) item.company.trim(),
+            ].join(' — ');
+            if (roleCompany.isNotEmpty) {
+              buffer.write(
+                _paragraph(roleCompany, bold: true, sizeHalfPoints: 20),
+              );
+            }
+            final dates = _dateRange(item.startDate, item.endDate);
+            if (dates.isNotEmpty) {
+              buffer.write(
+                _paragraph(dates, italics: true, sizeHalfPoints: 18),
+              );
+            }
+            final description = item.description.trim();
+            if (description.isNotEmpty) {
+              buffer.write(_paragraph(description, sizeHalfPoints: 20));
+            }
+            for (final bullet in item.bullets) {
+              final text = bullet.trim();
+              if (text.isEmpty) {
+                continue;
+              }
+              buffer.write(_bullet(text));
+            }
+            buffer.write(_emptyParagraph());
+          }
+        case ResumeBuilderSectionIds.education:
+          if (!resume.includeEducationInResume) {
+            break;
+          }
+          final education = resume.education
+              .where((item) => !item.isBlank)
+              .toList();
+          if (education.isEmpty) {
+            break;
+          }
+          buffer.write(_sectionHeading('Education'));
+          for (final item in education) {
+            final heading = [
+              if (item.degree.trim().isNotEmpty) item.degree.trim(),
+              if (item.institution.trim().isNotEmpty) item.institution.trim(),
+            ].join(' — ');
+            if (heading.isNotEmpty) {
+              buffer.write(
+                _paragraph(heading, bold: true, sizeHalfPoints: 20),
+              );
+            }
+            final meta = [
+              if (_dateRange(item.startDate, item.endDate).isNotEmpty)
+                _dateRange(item.startDate, item.endDate),
+              if (item.score.trim().isNotEmpty)
+                item.showScoreAsPercent
+                    ? 'Score: ${item.score.trim()}%'
+                    : 'Score: ${item.score.trim()}',
+            ].where((part) => part.isNotEmpty).join(' · ');
+            if (meta.isNotEmpty) {
+              buffer.write(
+                _paragraph(meta, italics: true, sizeHalfPoints: 18),
+              );
+            }
+            buffer.write(_emptyParagraph());
+          }
+        case ResumeBuilderSectionIds.skills:
+          if (!resume.includeSkillsInResume) {
+            break;
+          }
+          if (resume.showCategorisedSkills) {
+            final groups = resume.skillGroupsForResume;
+            if (groups.isEmpty) {
+              break;
+            }
+            buffer.write(_sectionHeading('Skills'));
+            for (final group in groups) {
+              final heading = group.heading.trim();
+              final skills = group.skillsCommaSeparated.trim();
+              if (heading.isNotEmpty && skills.isNotEmpty) {
+                buffer.write(
+                  _paragraph('$heading: $skills', sizeHalfPoints: 20),
+                );
+              } else if (skills.isNotEmpty) {
+                buffer.write(_paragraph(skills, sizeHalfPoints: 20));
+              }
+            }
+            buffer.write(_emptyParagraph());
+          } else {
+            final skills = resume.skillsLinesForDisplay
+                .map((item) => item.trim())
+                .where((item) => item.isNotEmpty)
+                .join(', ');
+            if (skills.isEmpty) {
+              break;
+            }
+            buffer.write(_sectionHeading('Skills'));
+            buffer.write(_paragraph(skills, sizeHalfPoints: 20));
+            buffer.write(_emptyParagraph());
+          }
+        case ResumeBuilderSectionIds.projects:
+          if (!resume.includeProjectsInResume) {
+            break;
+          }
+          final projects =
+              resume.projects.where((item) => !item.isBlank).toList();
+          if (projects.isEmpty) {
+            break;
+          }
+          buffer.write(_sectionHeading('Projects'));
+          for (final item in projects) {
+            final title = item.title.trim();
+            if (title.isNotEmpty) {
+              buffer.write(_paragraph(title, bold: true, sizeHalfPoints: 20));
+            }
+            final subtitle = item.subtitle.trim();
+            if (subtitle.isNotEmpty) {
+              buffer.write(
+                _paragraph(subtitle, italics: true, sizeHalfPoints: 18),
+              );
+            }
+            for (final part in [item.overview, item.impact]) {
+              final text = part.trim();
+              if (text.isNotEmpty) {
+                buffer.write(_paragraph(text, sizeHalfPoints: 20));
+              }
+            }
+            for (final bullet in item.bullets) {
+              final text = bullet.trim();
+              if (text.isEmpty) {
+                continue;
+              }
+              buffer.write(_bullet(text));
+            }
+            buffer.write(_emptyParagraph());
           }
       }
-      buffer.write(_emptyParagraph());
     }
 
     buffer

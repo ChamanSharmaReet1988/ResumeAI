@@ -132,3 +132,26 @@ canonicalizeBuilderSectionOrder(
 
   return (order: result, customSections: newCustoms);
 }
+
+/// Body section ids for resume preview (after Summary / header).
+///
+/// When [followOrder] is true, uses the user's builder chip order.
+/// When false (template gallery), uses the default Work→Education→Skills→
+/// Projects→customs sequence.
+List<String> previewBodySectionOrder(
+  ResumeData resume, {
+  required bool followOrder,
+  Set<String> exclude = const {},
+}) {
+  final base = followOrder
+      ? resume.effectiveBuilderSectionOrder
+      : [
+          ...ResumeBuilderSectionIds.bodyDefaults,
+          for (var i = 0; i < resume.customSections.length; i++)
+            ResumeBuilderSectionIds.custom(i),
+        ];
+  if (exclude.isEmpty) {
+    return List<String>.from(base);
+  }
+  return base.where((id) => !exclude.contains(id)).toList();
+}

@@ -436,10 +436,10 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                     )
                                   : NativePdfPreview(
                                       key: ValueKey(
-                                        '${viewModel.resume.template.name}-${viewModel.resume.bodyFontPt}-${viewModel.resume.corporateColorPresetIndex}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
+                                        '${viewModel.resume.template.name}-${viewModel.resume.bodyFontPt}-${viewModel.resume.corporateColorPresetIndex}-${viewModel.resume.effectiveBuilderSectionOrder.join(',')}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                                       ),
                                       documentKey:
-                                          '${viewModel.resume.id}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
+                                          '${viewModel.resume.id}-${viewModel.resume.effectiveBuilderSectionOrder.join(',')}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                                       viewerBackground: scaffoldBg,
                                       bytesFuture: viewModel.pdfService
                                           .buildPdf(viewModel.resume),

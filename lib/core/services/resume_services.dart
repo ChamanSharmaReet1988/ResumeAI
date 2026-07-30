@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'app_preferences.dart';
 import '../corporate_resume_style.dart';
+import '../models/resume_builder_section_order.dart';
 import '../models/resume_models.dart';
 import '../resume_font_weight.dart';
 import '../resume_text_font.dart';
@@ -29,6 +30,26 @@ import 'resume_pdf/resume_pdf_theme.dart';
 part 'resume_pdf/resume_pdf_template_pages.dart';
 part 'resume_pdf/resume_pdf_highlighted_pages.dart';
 part 'resume_pdf/resume_pdf_ats_pages.dart';
+
+/// Emits PDF body sections (after Summary/header) in the user's saved builder
+/// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
+List<pw.Widget> _pdfBodySectionsInBuilderOrder(
+  ResumeData resume, {
+  Set<String> exclude = const {},
+  required List<pw.Widget>? Function(String sectionId) buildSection,
+}) {
+  final order = previewBodySectionOrder(
+    resume,
+    followOrder: true,
+    exclude: exclude,
+  );
+  final out = <pw.Widget>[];
+  for (final id in order) {
+    final widgets = buildSection(id);
+    if (widgets != null && widgets.isNotEmpty) out.addAll(widgets);
+  }
+  return out;
+}
 
 PdfColor _pdfRgb(Color c) => PdfColor(c.r, c.g, c.b);
 
