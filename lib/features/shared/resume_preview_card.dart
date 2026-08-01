@@ -4090,9 +4090,9 @@ class _AtsCenterClassicPreview extends StatelessWidget {
       if (resume.email.trim().isNotEmpty) resume.email.trim(),
       if (resume.location.trim().isNotEmpty) resume.location.trim(),
     ].join(' | ');
-    final works = resume.visibleWorkExperiences.take(2).toList();
+    final works = resume.visibleWorkExperiences.take(3).toList();
     final skills = _pdfAlignedSkills(resume);
-    final projects = resume.visibleProjects.take(2).toList();
+    final projects = resume.visibleProjects.take(3).toList();
     final education = resume.visibleEducation.take(2).toList();
     final customSections = resume.visibleCustomSections;
 
@@ -4106,9 +4106,9 @@ class _AtsCenterClassicPreview extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           ResumeTypography.atsStructuredPageInsetPt,
-          0,
+          36,
           ResumeTypography.atsStructuredPageInsetPt,
-          ResumeTypography.darkHeaderSectionGapPreviewPx,
+          36,
         ),
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
@@ -4160,7 +4160,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                   'Concise overview of experience and impact.',
                 ),
                 style: bodyStyle,
-                maxLines: 6,
+                maxLines: 8,
                 overflow: TextOverflow.ellipsis,
               ),
               ..._mapPreviewBodySections(

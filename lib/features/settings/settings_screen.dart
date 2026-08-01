@@ -656,10 +656,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           const Spacer(),
                           // TEMPORARY: show version in all builds for internal testing.
-                          const SizedBox(height: 20),
-                          _SettingsVersionFooter(
-                            onTap: () => _openDeveloperTools(context),
-                          ),
+                          // const SizedBox(height: 20),
+                          // _SettingsVersionFooter(
+                          //   onTap: () => _openDeveloperTools(context),
+                          // ),
                         ],
                       ),
                     ),

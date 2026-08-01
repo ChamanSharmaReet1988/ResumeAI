@@ -726,6 +726,7 @@ class _TemplatePreviewArt extends StatelessWidget {
             _atsSampleFor(ResumeTemplate.atsCenterClassic),
             paletteSeed,
           ),
+          detailed: true,
         ),
       _TemplatePreviewKind.atsProfessionalBlueResume =>
         _AtsProfessionalBlueTemplateArt(
@@ -1007,6 +1008,8 @@ class _LargeTemplateArtPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showLock = showPremiumBadge && !hasPremiumAccess(context);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final scaleX = constraints.maxWidth / 240;
@@ -1028,7 +1031,7 @@ class _LargeTemplateArtPreview extends StatelessWidget {
                   Positioned.fill(
                     child: ColoredBox(color: Colors.white, child: child),
                   ),
-                  if (showPremiumBadge)
+                  if (showLock)
                     Positioned(
                       right: badgeInset,
                       bottom: badgeInset,
@@ -3812,9 +3815,9 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
     final pageContent = Padding(
       padding: EdgeInsets.fromLTRB(
         horizontalInset,
-        detailed ? 11 : 9,
+        detailed ? 26 : 22,
         horizontalInset,
-        detailed ? 10 : 8,
+        detailed ? 22 : 18,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -3857,7 +3860,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
           Text(
             resume.summary.trim(),
             style: body,
-            maxLines: detailed ? 10 : 5,
+            maxLines: detailed ? 12 : 6,
             overflow: TextOverflow.ellipsis,
           ),
           sectionRule(),
@@ -3866,7 +3869,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
           if (works.isEmpty)
             Text('Add experience.', style: body)
           else
-            for (final w in works.take(detailed ? 2 : 1)) ...[
+            for (final w in works.take(2)) ...[
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -3894,6 +3897,22 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              for (final bullet
+                  in w.bullets
+                      .where((b) => b.trim().isNotEmpty)
+                      .take(detailed ? 2 : 1))
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: ResumeTypography.atsCenterClassicBulletIndentPt,
+                    top: 2,
+                  ),
+                  child: Text(
+                    '• ${bullet.trim()}',
+                    style: body,
+                    maxLines: detailed ? 3 : 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               const SizedBox(height: 4),
             ],
           sectionRule(),
@@ -3902,7 +3921,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
           if (edu.isEmpty)
             Text('Add education.', style: body)
           else
-            for (final e in edu.take(detailed ? 2 : 1)) ...[
+            for (final e in edu.take(2)) ...[
               Text(
                 e.degree.trim(),
                 style: highlightStyle,
@@ -3921,25 +3940,24 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
           Text('SKILLS', style: sectionTitleStyle),
           const SizedBox(height: 4),
           Text(
-            skills.take(detailed ? 8 : 5).join(', '),
+            skills.take(detailed ? 10 : 6).join(', '),
             style: body,
-            maxLines: detailed ? 4 : 2,
+            maxLines: detailed ? 4 : 3,
             overflow: TextOverflow.ellipsis,
           ),
-          if (detailed &&
-              resume.includeProjectsInResume &&
-              projects.isNotEmpty) ...[
+          if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
             sectionRule(),
             Text('PROJECTS', style: sectionTitleStyle),
             const SizedBox(height: 4),
-            for (final p in projects.take(detailed ? 3 : 1)) ...[
+            for (final p in projects.take(detailed ? 3 : 2)) ...[
               Text(
                 p.title.trim(),
                 style: highlightStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (p.subtitle.trim().isNotEmpty || p.overview.trim().isNotEmpty) ...[
+              if (p.subtitle.trim().isNotEmpty ||
+                  p.overview.trim().isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
                   p.subtitle.trim().isNotEmpty
@@ -3959,7 +3977,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
                   child: Text(
                     '• ${_templateArtProjectBullets(p).first}',
                     style: body,
-                    maxLines: 4,
+                    maxLines: detailed ? 4 : 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -3967,7 +3985,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
             ],
           ],
           for (final section in resume.visibleCustomSections.take(
-            detailed ? 3 : 1,
+            detailed ? 3 : 2,
           )) ...[
             sectionRule(),
             Text(
@@ -3999,18 +4017,15 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
       ),
     );
 
+    // Scale full page into the tile/detail frame (NeverScrollableScrollView
+    // was clipping Center Classic ATS at the bottom).
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: detailed
-          ? FittedBox(
-              fit: BoxFit.contain,
-              alignment: Alignment.topCenter,
-              child: SizedBox(width: 240, child: pageContent),
-            )
-          : SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: pageContent,
-            ),
+      child: FittedBox(
+        fit: BoxFit.contain,
+        alignment: Alignment.topCenter,
+        child: SizedBox(width: 240, child: pageContent),
+      ),
     );
   }
 }

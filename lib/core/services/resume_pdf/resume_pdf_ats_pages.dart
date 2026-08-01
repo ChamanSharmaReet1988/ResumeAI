@@ -2099,9 +2099,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.fromLTRB(
           ResumeTypography.atsStructuredPageInsetPt,
-          40,
+          56,
           ResumeTypography.atsStructuredPageInsetPt,
-          40,
+          56,
         ),
         header: _atsMultiPageHeaderGap,
         build: (context) {
