@@ -4205,19 +4205,19 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
           if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
             const SizedBox(height: 4),
             sectionTitleWithRule('Projects'),
-            // Grid: two projects; detail screens use the PDF viewer.
-            for (final p in projects.take(2)) ...[
+            // Grid: three projects × two bullets; detail screens use the PDF viewer.
+            for (final p in projects.take(3)) ...[
               Text(
                 p.title.trim(),
                 style: subtitleStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (_templateArtProjectBullets(p).isNotEmpty)
+              for (final bullet in _templateArtProjectBullets(p).take(2))
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    '• ${_templateArtProjectBullets(p).first}',
+                    '• $bullet',
                     style: body,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
