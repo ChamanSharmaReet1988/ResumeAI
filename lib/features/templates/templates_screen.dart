@@ -3592,11 +3592,13 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                   ],
                 ),
               ),
-          if (detailed && resume.visibleProjects.isNotEmpty) ...[
+          if (resume.includeProjectsInResume &&
+              resume.visibleProjects.isNotEmpty) ...[
             const SizedBox(height: 7),
             Text('PROJECTS', style: sectionTitleStyle),
             const SizedBox(height: 5),
-            for (final p in resume.visibleProjects.take(detailed ? 3 : 1)) ...[
+            // Grid: two projects; detail screens use the PDF viewer.
+            for (final p in resume.visibleProjects.take(2)) ...[
               Text(
                 p.title.trim(),
                 style: subtitleStyle,
@@ -3607,7 +3609,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
                 Text(
                   _templateArtProjectBullets(p).first,
                   style: body,
-                  maxLines: 4,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
               const SizedBox(height: 5),
@@ -4200,39 +4202,59 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                   ],
                 ),
               ),
-          if (detailed &&
-              resume.includeProjectsInResume &&
-              projects.isNotEmpty) ...[
+          if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
             const SizedBox(height: 4),
             sectionTitleWithRule('Projects'),
-            for (final p in projects.take(detailed ? 3 : 1)) ...[
+            // Grid: two projects; detail screens use the PDF viewer.
+            for (final p in projects.take(2)) ...[
               Text(
                 p.title.trim(),
                 style: subtitleStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (p.overview.trim().isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  p.overview.trim(),
-                  style: body,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
               if (_templateArtProjectBullets(p).isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
                     '• ${_templateArtProjectBullets(p).first}',
                     style: body,
-                    maxLines: 4,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               const SizedBox(height: 4),
             ],
+          ],
+          // Grid: show Certifications (and other custom sections) after projects.
+          for (final section in resume.visibleCustomSections.take(1)) ...[
+            const SizedBox(height: 4),
+            sectionTitleWithRule(
+              section.title.trim().isEmpty
+                  ? 'Certifications'
+                  : section.title.trim(),
+            ),
+            if (section.layoutMode == CustomSectionLayoutMode.bullets)
+              for (final bullet
+                  in section.bullets
+                      .where((b) => b.trim().isNotEmpty)
+                      .take(2))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '• ${bullet.trim()}',
+                    style: body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+            else if (section.content.trim().isNotEmpty)
+              Text(
+                section.content.trim(),
+                style: body,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
           ],
         ],
       ),
