@@ -149,7 +149,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final bottomSafeInset = MediaQuery.paddingOf(context).bottom;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, 160 + bottomSafeInset),
+      padding: EdgeInsets.fromLTRB(8, 20, 8, 160 + bottomSafeInset),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -249,7 +249,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             itemCount: visibleItems.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 16,
+              crossAxisSpacing: 10,
               mainAxisSpacing: 16,
               childAspectRatio: 0.66,
             ),
@@ -287,7 +287,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
               itemCount: _atsResumeCards.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                crossAxisSpacing: 16,
+                crossAxisSpacing: 10,
                 mainAxisSpacing: 16,
                 childAspectRatio: 0.66,
               ),
@@ -333,12 +333,13 @@ class _TemplateDetailScreen extends StatelessWidget {
         title: Text(item.headline),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Padding(
+                // Tight side inset so PDF pages match a wide template preview.
+                padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
                 child: Material(
                   color: Colors.transparent,
                   child: KeyedSubtree(
@@ -349,6 +350,7 @@ class _TemplateDetailScreen extends StatelessWidget {
                             paletteSeed: paletteSeed,
                           )
                         : SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: _TemplatePreviewArt(
                               item: item,
                               paletteSeed: paletteSeed,
@@ -361,16 +363,17 @@ class _TemplateDetailScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              if (onUseTemplate != null) ...[
-                const SizedBox(height: 16),
-                FilledButton(
+            ),
+            if (onUseTemplate != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: FilledButton(
                   key: const Key('use-template-button'),
                   onPressed: onUseTemplate,
                   child: const Text('Use template'),
                 ),
-              ],
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -726,7 +729,6 @@ class _TemplatePreviewArt extends StatelessWidget {
             _atsSampleFor(ResumeTemplate.atsCenterClassic),
             paletteSeed,
           ),
-          detailed: true,
         ),
       _TemplatePreviewKind.atsProfessionalBlueResume =>
         _AtsProfessionalBlueTemplateArt(
@@ -766,36 +768,39 @@ class _TemplatePreviewArt extends StatelessWidget {
             ? premiumBadgeSize / safeScale
             : premiumBadgeSize;
 
-        return FittedBox(
-          fit: BoxFit.contain,
-          child: SizedBox(
-            width: 168,
-            height: 252,
-            child: _TemplateArtDisplayScale(
-              scale: safeScale,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: DefaultTextStyle.merge(
-                      style: const TextStyle(fontFamily: 'Calibri'),
-                      child: ColoredBox(
-                        color: Colors.white,
-                        child: Align(
-                          alignment: Alignment.topCenter,
+        // fitWidth (not contain): the tile image area is wider than 2:3 because
+        // the label sits below, so contain was letterboxing left/right gutters.
+        return ClipRect(
+          child: FittedBox(
+            fit: BoxFit.fitWidth,
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: 168,
+              height: 252,
+              child: _TemplateArtDisplayScale(
+                scale: safeScale,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Positioned.fill(
+                      child: DefaultTextStyle.merge(
+                        style: const TextStyle(fontFamily: 'Calibri'),
+                        child: ColoredBox(
+                          color: Colors.white,
                           child: preview,
                         ),
                       ),
                     ),
-                  ),
-                  if ((showPremiumBadgeOnTile || showPremiumBadgeOnPage) &&
-                      item.isPremium &&
-                      !hasPremiumAccess)
-                    Positioned(
-                      right: badgeRightPadding,
-                      bottom: badgeBottomPadding,
-                      child: _PremiumLockBadge(size: badgeSize),
-                    ),
-                ],
+                    if ((showPremiumBadgeOnTile || showPremiumBadgeOnPage) &&
+                        item.isPremium &&
+                        !hasPremiumAccess)
+                      Positioned(
+                        right: badgeRightPadding,
+                        bottom: badgeBottomPadding,
+                        child: _PremiumLockBadge(size: badgeSize),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -819,6 +824,8 @@ class _TemplateDetailPdfPreview extends StatelessWidget {
       documentKey: 'template-detail-${resume.id}-${resume.template.name}',
       viewerBackground: viewerBackground,
       bytesFuture: pdfService.buildPdf(resume),
+      pageMargin: 4,
+      horizontalPadding: 0,
     );
   }
 }
@@ -829,135 +836,31 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
   final _TemplateTileData item;
   final ResumeData? paletteSeed;
 
+  /// Sample resume used for the detail PDF (same viewer as LaTeX Classic ATS).
+  ResumeData _sampleFor(ResumeTemplate template) {
+    final sample = switch (template) {
+      ResumeTemplate.corporate => _darkHeaderTemplateResume,
+      ResumeTemplate.creative => _profileSidebarTemplateResume,
+      ResumeTemplate.classicSidebar => _classicSidebarTemplateResume,
+      ResumeTemplate.detailsSidebar => _detailsSidebarTemplateResume,
+      ResumeTemplate.accentStrip => _accentStripTemplateResume,
+      ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
+      ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
+      ResumeTemplate.atsStructured ||
+      ResumeTemplate.atsModernFlow ||
+      ResumeTemplate.atsExecutive ||
+      ResumeTemplate.atsCenterClassic ||
+      ResumeTemplate.atsLatexClassic =>
+        _atsSampleFor(template),
+    };
+    return _applyTemplatePreviewPalette(sample, paletteSeed);
+  }
+
   @override
   Widget build(BuildContext context) {
     final template = item.resumeTemplate!;
-    if (template == ResumeTemplate.corporate) {
-      return _TemplateDetailPdfPreview(
-        resume: _applyTemplatePreviewPalette(
-          _darkHeaderTemplateResume,
-          paletteSeed,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.creative) {
-      return _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _ProfileSidebarTemplateArtCompact(
-          resume: _applyTemplatePreviewPalette(
-            _profileSidebarTemplateResume,
-            paletteSeed,
-          ),
-          detailed: true,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.classicSidebar) {
-      return _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _ClassicSidebarTemplateArtCompact(
-          resume: _applyTemplatePreviewPalette(
-            _classicSidebarTemplateResume,
-            paletteSeed,
-          ),
-          detailed: true,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.detailsSidebar) {
-      return _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _DetailsSidebarTemplateArtCompact(
-          resume: _applyTemplatePreviewPalette(
-            _detailsSidebarTemplateResume,
-            paletteSeed,
-          ),
-          detailed: true,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.accentStrip) {
-      return _TemplateDetailPdfPreview(
-        resume: _applyTemplatePreviewPalette(
-          _accentStripTemplateResume,
-          paletteSeed,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.atsStructured) {
-      return _ResumeTemplatePreviewArt(
-        resume: _applyTemplatePreviewPalette(
-          _atsSampleFor(ResumeTemplate.atsStructured),
-          paletteSeed,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.atsSerifRules) {
-      return _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _AtsSerifRulesTemplateArt(
-          resume: _applyTemplatePreviewPalette(
-            _atsSerifRulesTemplateResume,
-            paletteSeed,
-          ),
-          detailed: true,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.atsModernFlow) {
-      return _TemplateDetailPdfPreview(
-        resume: _applyTemplatePreviewPalette(
-          _atsSampleFor(ResumeTemplate.atsModernFlow),
-          paletteSeed,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.atsExecutive) {
-      return _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _AtsExecutiveTemplateArt(
-          resume: _applyTemplatePreviewPalette(
-            _atsSampleFor(ResumeTemplate.atsExecutive),
-            paletteSeed,
-          ),
-          detailed: true,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.atsCenterClassic) {
-      return _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _AtsCenterClassicTemplateArt(
-          resume: _applyTemplatePreviewPalette(
-            _atsSampleFor(ResumeTemplate.atsCenterClassic),
-            paletteSeed,
-          ),
-          detailed: true,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.atsProfessionalBlue) {
-      return _LargeTemplateArtPreview(
-        showPremiumBadge: true,
-        child: _AtsProfessionalBlueTemplateArt(
-          resume: _applyTemplatePreviewPalette(
-            _atsSampleFor(ResumeTemplate.atsProfessionalBlue),
-            paletteSeed,
-          ),
-          detailed: true,
-        ),
-      );
-    }
-    if (template == ResumeTemplate.atsLatexClassic) {
-      return _TemplateDetailPdfPreview(
-        resume: _applyTemplatePreviewPalette(
-          _atsSampleFor(ResumeTemplate.atsLatexClassic),
-          paletteSeed,
-        ),
-      );
-    }
-
-    throw StateError('Unhandled resume template in detail preview: $template');
+    // All resume template details use the paginated PDF viewer (LaTeX Classic).
+    return _TemplateDetailPdfPreview(resume: _sampleFor(template));
   }
 }
 
@@ -1214,6 +1117,14 @@ ResumeData _atsSampleFor(ResumeTemplate template) => switch (template) {
   ResumeTemplate.atsLatexClassic => _atsFullSampleResume.copyWith(
     template: ResumeTemplate.atsLatexClassic,
     title: 'LaTeX Classic ATS Sample',
+  ),
+  ResumeTemplate.atsCenterClassic => _atsFullSampleResume.copyWith(
+    id: 'template-ats-center-classic',
+    title: 'Center Classic ATS Sample',
+    template: ResumeTemplate.atsCenterClassic,
+    // One project only; no sections after Projects for the template preview.
+    projects: _atsFullSampleResume.projects.take(1).toList(),
+    customSections: const [],
   ),
   _ => _atsFullSampleResume.copyWith(template: template),
 };
@@ -2435,7 +2346,9 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
     final projects = resume.visibleProjects;
     final contactLines = resume.atsStructuredHeaderContactLines();
 
-    final pageInset = _scaledPt(ResumeTypography.atsStructuredPageInsetPt);
+    final pageInset = _scaledPt(
+      (ResumeTypography.atsStructuredPageInsetPt - 15).clamp(8.0, 40.0),
+    );
     final bottomInset = detailed
         ? pageInset
         : ResumeTypography.atsStructuredGridBottomInsetPx;
@@ -2535,10 +2448,12 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
     // Grid + detail: scale full page art to fit (same as Profile Sidebar tile).
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: FittedBox(
-        fit: BoxFit.contain,
-        alignment: Alignment.topCenter,
-        child: SizedBox(width: 240, child: pageContent),
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          child: SizedBox(width: 240, child: pageContent),
+        ),
       ),
     );
   }
@@ -2841,7 +2756,8 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
     final rightContacts = resume.atsSerifRulesRightContactLines();
     final linkStyle = body.copyWith(fontStyle: FontStyle.italic);
     final hInset = _scaledPt(
-      ResumeTypography.atsSerifRulesPageHorizontalInsetPt,
+      (ResumeTypography.atsSerifRulesPageHorizontalInsetPt - 15)
+          .clamp(8.0, 45.0),
     );
 
     final pageContent = Padding(
@@ -3055,16 +2971,13 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
 
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: detailed
-          ? FittedBox(
-              fit: BoxFit.contain,
-              alignment: Alignment.topCenter,
-              child: SizedBox(width: 240, child: pageContent),
-            )
-          : SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: pageContent,
-            ),
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          child: SizedBox(width: 240, child: pageContent),
+        ),
+      ),
     );
   }
 
@@ -3387,10 +3300,12 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
     // layouts are taller in grid mode, so width-only lets FittedBox shrink height).
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: FittedBox(
-        fit: BoxFit.contain,
-        alignment: Alignment.topCenter,
-        child: SizedBox(width: 240, child: pageContent),
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          child: SizedBox(width: 240, child: pageContent),
+        ),
       ),
     );
   }
@@ -3469,11 +3384,12 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
     final left = skills.take(mid == 0 ? skills.length : mid).toList();
     final right = mid == 0 ? const <String>[] : skills.skip(mid).toList();
 
+    final horizontalInset = _scaledPt(30);
     final pageContent = Padding(
       padding: EdgeInsets.fromLTRB(
-        10,
+        horizontalInset,
         detailed ? 11 : 9,
-        10,
+        horizontalInset,
         detailed ? 10 : 8,
       ),
       child: Column(
@@ -3720,10 +3636,12 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
 
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: FittedBox(
-        fit: BoxFit.contain,
-        alignment: Alignment.topCenter,
-        child: SizedBox(width: 240, child: pageContent),
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          child: SizedBox(width: 240, child: pageContent),
+        ),
       ),
     );
   }
@@ -3803,9 +3721,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
       if (resume.location.trim().isNotEmpty) resume.location.trim(),
     ].join(' | ');
     final ink = ResumeTypography.atsStructuredBodyTextColor;
-    final horizontalInset = _scaledPt(
-      ResumeTypography.atsStructuredPageInsetPt,
-    );
+    final horizontalInset = _scaledPt(30);
 
     Widget sectionRule() => Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
@@ -3945,73 +3861,53 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
             maxLines: detailed ? 4 : 3,
             overflow: TextOverflow.ellipsis,
           ),
+          // End the tile at one project — no custom sections after.
           if (resume.includeProjectsInResume && projects.isNotEmpty) ...[
             sectionRule(),
             Text('PROJECTS', style: sectionTitleStyle),
             const SizedBox(height: 4),
-            for (final p in projects.take(detailed ? 3 : 2)) ...[
-              Text(
-                p.title.trim(),
-                style: highlightStyle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (p.subtitle.trim().isNotEmpty ||
-                  p.overview.trim().isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  p.subtitle.trim().isNotEmpty
-                      ? p.subtitle.trim()
-                      : p.overview.trim(),
-                  style: highlightStyle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              if (_templateArtProjectBullets(p).isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: ResumeTypography.atsCenterClassicBulletIndentPt,
-                    top: 2,
-                  ),
-                  child: Text(
-                    '• ${_templateArtProjectBullets(p).first}',
-                    style: body,
-                    maxLines: detailed ? 4 : 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              const SizedBox(height: 4),
-            ],
-          ],
-          for (final section in resume.visibleCustomSections.take(
-            detailed ? 3 : 2,
-          )) ...[
-            sectionRule(),
-            Text(
-              section.title.trim().isEmpty
-                  ? 'ADDITIONAL'
-                  : section.title.trim().toUpperCase(),
-              style: sectionTitleStyle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            Builder(
+              builder: (context) {
+                final p = projects.first;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      p.title.trim(),
+                      style: highlightStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (p.subtitle.trim().isNotEmpty ||
+                        p.overview.trim().isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        p.subtitle.trim().isNotEmpty
+                            ? p.subtitle.trim()
+                            : p.overview.trim(),
+                        style: highlightStyle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    if (_templateArtProjectBullets(p).isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left:
+                              ResumeTypography.atsCenterClassicBulletIndentPt,
+                          top: 2,
+                        ),
+                        child: Text(
+                          '• ${_templateArtProjectBullets(p).first}',
+                          style: body,
+                          maxLines: detailed ? 4 : 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 4),
-            if (section.layoutMode == CustomSectionLayoutMode.bullets)
-              _MiniBulletColumn(
-                items: section.bullets
-                    .where((b) => b.trim().isNotEmpty)
-                    .take(detailed ? 4 : 2)
-                    .toList(),
-                textStyle: body,
-              )
-            else if (section.content.trim().isNotEmpty)
-              Text(
-                section.content.trim(),
-                style: body,
-                maxLines: detailed ? 6 : 3,
-                overflow: TextOverflow.ellipsis,
-              ),
           ],
         ],
       ),
@@ -4021,10 +3917,12 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
     // was clipping Center Classic ATS at the bottom).
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: FittedBox(
-        fit: BoxFit.contain,
-        alignment: Alignment.topCenter,
-        child: SizedBox(width: 240, child: pageContent),
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          child: SizedBox(width: 240, child: pageContent),
+        ),
       ),
     );
   }
@@ -4090,7 +3988,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
         .map((c) => c.length)
         .fold<int>(0, (a, b) => a > b ? a : b);
     final horizontalInset = _scaledPt(
-      ResumeTypography.atsStructuredPageInsetPt,
+      (ResumeTypography.atsStructuredPageInsetPt - 15).clamp(8.0, 40.0),
     );
 
     final extraTop = _scaledPt(
@@ -4330,16 +4228,13 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
 
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.white),
-      child: detailed
-          ? FittedBox(
-              fit: BoxFit.contain,
-              alignment: Alignment.topCenter,
-              child: SizedBox(width: 240, child: pageContent),
-            )
-          : SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: pageContent,
-            ),
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          child: SizedBox(width: 240, child: pageContent),
+        ),
+      ),
     );
   }
 }

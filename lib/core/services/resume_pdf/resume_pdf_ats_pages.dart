@@ -1710,7 +1710,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(40, 40, 40, 40),
+        margin: const pw.EdgeInsets.fromLTRB(30, 40, 30, 40),
         header: _atsMultiPageHeaderGap,
         build: (context) {
           final w = <pw.Widget>[
@@ -2097,12 +2097,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(
-          ResumeTypography.atsStructuredPageInsetPt,
-          56,
-          ResumeTypography.atsStructuredPageInsetPt,
-          56,
-        ),
+        margin: const pw.EdgeInsets.fromLTRB(30, 56, 30, 56),
         header: _atsMultiPageHeaderGap,
         build: (context) {
           final w = <pw.Widget>[

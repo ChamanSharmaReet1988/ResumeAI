@@ -3632,7 +3632,7 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                 (id) {
                   final customIndex = ResumeBuilderSectionIds.customIndex(id);
                   if (customIndex != null) {
-                    // Serif Rules preview historically omits custom sections.
+                    // Ends after Projects — omit custom sections.
                     return null;
                   }
                   switch (id) {
@@ -4092,7 +4092,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
     ].join(' | ');
     final works = resume.visibleWorkExperiences.take(3).toList();
     final skills = _pdfAlignedSkills(resume);
-    final projects = resume.visibleProjects.take(3).toList();
+    final projects = resume.visibleProjects.take(2).toList();
     final education = resume.visibleEducation.take(2).toList();
     final customSections = resume.visibleCustomSections;
 
@@ -4104,12 +4104,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
     return ColoredBox(
       color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          ResumeTypography.atsStructuredPageInsetPt,
-          36,
-          ResumeTypography.atsStructuredPageInsetPt,
-          36,
-        ),
+        padding: const EdgeInsets.fromLTRB(30, 36, 30, 36),
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
           child: Column(
@@ -4759,7 +4754,12 @@ class _AtsExecutivePreview extends StatelessWidget {
     return ColoredBox(
       color: Colors.white,
       child: Padding(
-        padding: _CorporatePdfMetrics.sectionOuter(),
+        padding: const EdgeInsets.fromLTRB(
+          30,
+          0,
+          30,
+          ResumeTypography.darkHeaderSectionGapPreviewPx,
+        ),
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
           child: Column(

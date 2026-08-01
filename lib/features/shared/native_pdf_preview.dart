@@ -9,6 +9,8 @@ class NativePdfPreview extends StatefulWidget {
     required this.bytesFuture,
     required this.documentKey,
     required this.viewerBackground,
+    this.pageMargin = 10,
+    this.horizontalPadding = 5,
   });
 
   final Future<Uint8List> bytesFuture;
@@ -16,6 +18,12 @@ class NativePdfPreview extends StatefulWidget {
   /// Stable id for [PdfViewer.data] `sourceName` (must change when the PDF bytes change).
   final String documentKey;
   final Color viewerBackground;
+
+  /// Space around each PDF page inside the viewer.
+  final double pageMargin;
+
+  /// Extra horizontal inset around the viewer.
+  final double horizontalPadding;
 
   @override
   State<NativePdfPreview> createState() => _NativePdfPreviewState();
@@ -46,7 +54,7 @@ class _NativePdfPreviewState extends State<NativePdfPreview> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _viewerParams = PdfViewerParams(
-      margin: 10,
+      margin: widget.pageMargin,
       backgroundColor: widget.viewerBackground,
       pageDropShadow: BoxShadow(
         color: Colors.black.withValues(alpha: 0.07),
@@ -94,7 +102,7 @@ class _NativePdfPreviewState extends State<NativePdfPreview> {
         final theme = Theme.of(context);
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
+          padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -107,7 +115,7 @@ class _NativePdfPreviewState extends State<NativePdfPreview> {
               ),
               Positioned(
                 top: 14,
-                right: 16,
+                right: 8,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
