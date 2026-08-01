@@ -651,9 +651,12 @@ class _TemplatePreviewArt extends StatelessWidget {
     final hasPremiumAccess = readPremiumAccess(context);
     final preview = switch (item.previewKind) {
       _TemplatePreviewKind.darkHeaderResume => _ResumeTemplatePreviewArt(
-        resume: _applyTemplatePreviewPalette(
-          _darkHeaderTemplateResume,
-          paletteSeed,
+        // Grid only: stop after one project. Detail keeps the full sample.
+        resume: _gridSampleThroughOneProject(
+          _applyTemplatePreviewPalette(
+            _darkHeaderTemplateResume,
+            paletteSeed,
+          ),
         ),
         fit: _ResumeTemplatePreviewFit.tile,
       ),
@@ -738,9 +741,12 @@ class _TemplatePreviewArt extends StatelessWidget {
           ),
         ),
       _TemplatePreviewKind.atsLatexClassicResume => _ResumeTemplatePreviewArt(
-        resume: _applyTemplatePreviewPalette(
-          _atsSampleFor(ResumeTemplate.atsLatexClassic),
-          paletteSeed,
+        // Grid only: stop after one project. Detail keeps the full sample.
+        resume: _gridSampleThroughOneProject(
+          _applyTemplatePreviewPalette(
+            _atsSampleFor(ResumeTemplate.atsLatexClassic),
+            paletteSeed,
+          ),
         ),
         fit: _ResumeTemplatePreviewFit.tile,
       ),
@@ -1359,6 +1365,12 @@ final ResumeData _darkHeaderTemplateResume = _atsFullSampleResume.copyWith(
   corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
     ResumeTemplate.corporate,
   ),
+);
+
+/// Grid tiles only — one project, nothing after (detail screens stay full).
+ResumeData _gridSampleThroughOneProject(ResumeData sample) => sample.copyWith(
+  projects: sample.projects.take(1).toList(),
+  customSections: const [],
 );
 
 /// Profile Sidebar template tile + detail preview (same typography/layout as builder/PDF).
