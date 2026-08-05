@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +16,7 @@ import '../premium/go_premium_screen.dart';
 import '../premium/premium_gate.dart';
 import '../shell/app_shell_scope.dart';
 import '../shared/view_models.dart';
+import '../../core/app_locale_option.dart';
 import '../../core/services/firebase_app_services.dart';
 import '../../core/services/premium_purchase_service.dart';
 
@@ -35,28 +38,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static final Uri _appStoreUri = Uri.parse(
     'https://apps.apple.com/us/app/resume-builder/id6768385894',
   );
-  static const String _shareSubject = 'ResumeApp';
-  static String get _shareMessage =>
-      'Check out ResumeApp to create, optimize, and share professional resumes on iPhone. '
-      'Get it on the App Store: ${_appStoreUri.toString()}';
   bool _isCheckingPremiumStatus = false;
 
-  Uri _buildFeedbackMailtoUri() {
-    final subject = Uri.encodeComponent('ResumeApp Feedback');
+  Uri _buildFeedbackMailtoUri(BuildContext context) {
+    final subject = Uri.encodeComponent(context.l10n.feedbackEmailSubject);
     return Uri.parse('mailto:hello@reetinfotech.com?subject=$subject');
   }
 
   Future<void> _openFeedbackComposer(BuildContext context) async {
-    final mailUri = _buildFeedbackMailtoUri();
+    final l10n = context.l10n;
+    final mailUri = _buildFeedbackMailtoUri(context);
     final canLaunch = await canLaunchUrl(mailUri);
     if (!context.mounted) {
       return;
     }
     if (!canLaunch) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No mail app found. Please configure a mail app.'),
-        ),
+        SnackBar(content: Text(l10n.noMailAppFound)),
       );
       return;
     }
@@ -67,9 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     if (!launched) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not open mail app. Please try again.'),
-        ),
+        SnackBar(content: Text(l10n.couldNotOpenMailApp)),
       );
     }
   }
@@ -87,13 +83,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _openExternalUrl(BuildContext context, Uri uri) async {
+    final l10n = context.l10n;
     final canLaunch = await canLaunchUrl(uri);
     if (!context.mounted) {
       return;
     }
     if (!canLaunch) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open link right now.')),
+        SnackBar(content: Text(l10n.couldNotOpenLink)),
       );
       return;
     }
@@ -103,12 +100,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     if (!launched) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open link right now.')),
+        SnackBar(content: Text(l10n.couldNotOpenLink)),
       );
     }
   }
 
   Future<void> _shareApp(BuildContext context) async {
+    final l10n = context.l10n;
     final padding = MediaQuery.paddingOf(context);
     final size = MediaQuery.sizeOf(context);
     // iPad / macOS require a non-zero anchor for the share sheet popover.
@@ -121,8 +119,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       height: 2,
     );
     await Share.share(
-      _shareMessage,
-      subject: _shareSubject,
+      l10n.shareAppMessage(_appStoreUri.toString()),
+      subject: l10n.shareAppSubject,
       sharePositionOrigin: origin,
     );
   }
@@ -181,13 +179,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   ) async {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final planLabel = premium.activeSubscriptionPlanLabel;
+    final l10n = AppLocalizations.of(context);
+    final planLabel = premium.activeSubscriptionPlanLabel(l10n);
     final sheetTitle = premium.debugPremiumOverrideEnabled
         ? 'Pro access enabled'
-        : 'Already subscribed';
+        : l10n.alreadySubscribedTitle;
     final sheetHeadline = premium.debugPremiumOverrideEnabled
         ? 'Developer Pro override'
-        : 'You\'re on the $planLabel';
+        : l10n.youreOnPlan(planLabel);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -220,7 +219,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  premium.alreadySubscribedMessage(),
+                  premium.alreadySubscribedMessage(
+                    AppLocalizations.of(sheetContext),
+                  ),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w400,
@@ -230,7 +231,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 20),
                 FilledButton(
                   onPressed: () => Navigator.of(sheetContext).pop(),
-                  child: const Text('OK'),
+                  child: Text(AppLocalizations.of(sheetContext).ok),
                 ),
               ],
             ),
@@ -286,10 +287,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Consumer2<SettingsViewModel, PremiumPurchaseService>(
       builder: (context, settings, premium, _) {
+        final l10n = AppLocalizations.of(context);
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
         final isIos = defaultTargetPlatform == TargetPlatform.iOS;
-        final backupLabel = isIos ? 'iCloud Backup' : 'Google Drive Backup';
+        final backupLabel =
+            isIos ? l10n.iCloudBackup : l10n.googleDriveBackup;
         final backupIcon = isIos
             ? Icons.cloud_done_outlined
             : Icons.cloud_queue_outlined;
@@ -297,6 +300,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final rowLabelStyle = theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w400,
         );
+
+        String languageLabel(String code) => switch (code) {
+          AppLocaleOption.english => l10n.languageEnglish,
+          AppLocaleOption.spanish => l10n.languageSpanish,
+          AppLocaleOption.portugueseBrazil => l10n.languagePortugueseBrazil,
+          AppLocaleOption.indonesian => l10n.languageIndonesian,
+          _ => l10n.languageSystemDefault,
+        };
 
         return Stack(
           children: [
@@ -338,7 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
-                                      'Appearance',
+                                      l10n.appearance,
                                       style: rowLabelStyle,
                                     ),
                                   ),
@@ -350,6 +361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       ),
                                       child: DropdownButton<ThemeMode>(
                                         value: settings.themeMode,
+                                        alignment: AlignmentDirectional.centerEnd,
                                         borderRadius: BorderRadius.circular(12),
                                         elevation: 16,
                                         dropdownColor: theme.cardColor,
@@ -364,19 +376,103 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             settings.updateThemeMode(value);
                                           }
                                         },
-                                        items: const [
+                                        items: [
                                           DropdownMenuItem(
                                             value: ThemeMode.system,
-                                            child: Text('System'),
+                                            alignment:
+                                                AlignmentDirectional.centerEnd,
+                                            child: Text(l10n.themeSystem),
                                           ),
                                           DropdownMenuItem(
                                             value: ThemeMode.light,
-                                            child: Text('Light'),
+                                            alignment:
+                                                AlignmentDirectional.centerEnd,
+                                            child: Text(l10n.themeLight),
                                           ),
                                           DropdownMenuItem(
                                             value: ThemeMode.dark,
-                                            child: Text('Dark'),
+                                            alignment:
+                                                AlignmentDirectional.centerEnd,
+                                            child: Text(l10n.themeDark),
                                           ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.language_outlined,
+                                    size: 22,
+                                    color: colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.appLanguage,
+                                      style: rowLabelStyle,
+                                    ),
+                                  ),
+                                  DropdownButtonHideUnderline(
+                                    child: Theme(
+                                      data: theme.copyWith(
+                                        shadowColor: colorScheme.shadow
+                                            .withValues(alpha: 0.24),
+                                      ),
+                                      child: DropdownButton<String>(
+                                        value: settings.appLocaleCode,
+                                        alignment: AlignmentDirectional.centerEnd,
+                                        borderRadius: BorderRadius.circular(12),
+                                        elevation: 16,
+                                        dropdownColor: theme.cardColor,
+                                        iconEnabledColor: colorScheme.primary,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: colorScheme.onSurface,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                        onChanged: (value) {
+                                          if (value != null) {
+                                            settings.updateAppLocaleCode(value);
+                                          }
+                                        },
+                                        selectedItemBuilder: (context) {
+                                          return [
+                                            for (final code
+                                                in AppLocaleOption
+                                                    .supportedPreferenceCodes)
+                                              Align(
+                                                alignment: AlignmentDirectional
+                                                    .centerEnd,
+                                                child: Text(
+                                                  languageLabel(code),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                          ];
+                                        },
+                                        items: [
+                                          for (final code
+                                              in AppLocaleOption
+                                                  .supportedPreferenceCodes)
+                                            DropdownMenuItem(
+                                              value: code,
+                                              alignment:
+                                                  AlignmentDirectional.centerEnd,
+                                              child: Text(languageLabel(code)),
+                                            ),
                                         ],
                                       ),
                                     ),
@@ -450,8 +546,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     Expanded(
                                       child: Text(
                                         premium.hasConfirmedPremiumStatus
-                                            ? 'You are a Pro user'
-                                            : 'Go Premium',
+                                            ? l10n.youAreProUser
+                                            : l10n.goPremium,
                                         style: rowLabelStyle,
                                       ),
                                     ),
@@ -496,7 +592,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'Feedback',
+                                        l10n.feedback,
                                         style: rowLabelStyle,
                                       ),
                                     ),
@@ -530,7 +626,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'Rate app',
+                                        l10n.rateApp,
                                         style: rowLabelStyle,
                                       ),
                                     ),
@@ -550,7 +646,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               borderRadius: BorderRadius.circular(12),
                               onTap: () => _openLegalPage(
                                 context,
-                                title: 'Privacy Policy',
+                                title: l10n.privacyPolicy,
                                 uri: _privacyPolicyUri,
                               ),
                               child: Padding(
@@ -568,7 +664,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'Privacy Policy',
+                                        l10n.privacyPolicy,
                                         style: rowLabelStyle,
                                       ),
                                     ),
@@ -588,7 +684,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               borderRadius: BorderRadius.circular(12),
                               onTap: () => _openLegalPage(
                                 context,
-                                title: 'Terms of Use',
+                                title: l10n.termsOfUse,
                                 uri: _termsOfUseUri,
                               ),
                               child: Padding(
@@ -606,7 +702,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'Terms of Use',
+                                        l10n.termsOfUse,
                                         style: rowLabelStyle,
                                       ),
                                     ),
@@ -640,7 +736,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'Share',
+                                        l10n.shareApp,
                                         style: rowLabelStyle,
                                       ),
                                     ),
@@ -718,8 +814,11 @@ class _SettingsVersionFooterState extends State<_SettingsVersionFooter> {
       builder: (context, snapshot) {
         final packageInfo = snapshot.data;
         final versionLabel = packageInfo == null
-            ? 'Version'
-            : 'Version ${packageInfo.version} (${packageInfo.buildNumber})';
+            ? AppLocalizations.of(context).versionLabel
+            : AppLocalizations.of(context).versionWithBuild(
+                packageInfo.version,
+                packageInfo.buildNumber,
+              );
         final text = Text(
           versionLabel,
           textAlign: TextAlign.center,

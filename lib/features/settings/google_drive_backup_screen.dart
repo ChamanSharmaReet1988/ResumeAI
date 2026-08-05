@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
@@ -111,18 +113,16 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       });
     } on UnsupportedError {
       if (mounted) {
-        _showMessage('Google sign-in is not available on this device.');
+        _showMessage(context.l10n.googleSignInUnavailable);
       }
     } on GoogleSignInException catch (error) {
       if (!mounted || error.code == GoogleSignInExceptionCode.canceled) {
         return;
       }
-      _showMessage(_googleSignInErrorMessage(error));
+      _showMessage(_googleSignInErrorMessage(context.l10n, error));
     } on Exception {
       if (mounted) {
-        _showMessage(
-          'Could not sign in to Google Drive right now. Try again.',
-        );
+        _showMessage(context.l10n.couldNotSignInGoogleDrive);
       }
     } finally {
       if (mounted) {
@@ -155,9 +155,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       setState(() => _driveItems = items);
     } on Exception {
       if (mounted) {
-        _showMessage(
-          'Could not load your Google Drive items right now. Try again.',
-        );
+        _showMessage(context.l10n.couldNotLoadGoogleDriveItems);
       }
     } finally {
       if (mounted) {
@@ -167,6 +165,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   }
 
   Future<void> _syncToDrive() async {
+    final l10n = context.l10n;
     final resumeLibrary = context.read<ResumeLibraryViewModel>();
     final coverLibrary = context.read<CoverLetterLibraryViewModel>();
     final repository = context.read<ResumeRepository>();
@@ -175,7 +174,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     final localCoverLetters = coverLibrary.coverLetters;
 
     if (localResumes.isEmpty && localCoverLetters.isEmpty) {
-      _showMessage('No local resumes or cover letters available to sync.');
+      _showMessage(l10n.noLocalItemsToSync);
       return;
     }
 
@@ -204,7 +203,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
           localCoverLetters.length - lettersToUpload.length;
 
       if (resumesToUpload.isEmpty && lettersToUpload.isEmpty) {
-        _showMessage('Everything is already up to date on Google Drive.');
+        _showMessage(l10n.everythingUpToDateGoogleDrive);
         return;
       }
 
@@ -245,27 +244,25 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
 
       final resumeCount = uploadedResumeIds.length;
       final letterCount = uploadedLetterIds.length;
-      final parts = <String>[];
-      if (resumeCount > 0) {
-        parts.add('$resumeCount resume${resumeCount == 1 ? '' : 's'}');
-      }
-      if (letterCount > 0) {
-        parts.add('$letterCount cover letter${letterCount == 1 ? '' : 's'}');
-      }
-      final uploadedSummary = parts.join(' and ');
+      final uploadedSummary = _syncUploadSummary(
+        l10n,
+        resumeCount: resumeCount,
+        letterCount: letterCount,
+      );
       final skipped = resumeSkipped + letterSkipped;
       if (skipped > 0) {
         _showMessage(
-          'Synced $uploadedSummary. $skipped newer Drive item${skipped == 1 ? '' : 's'} left untouched.',
+          l10n.syncedSummaryWithSkippedDrive(
+            uploadedSummary,
+            l10n.newerDriveItemsUntouched(skipped),
+          ),
         );
       } else {
-        _showMessage('Synced $uploadedSummary to Google Drive.');
+        _showMessage(l10n.syncedSummaryToGoogleDrive(uploadedSummary));
       }
     } on Exception {
       if (mounted) {
-        _showMessage(
-          'Could not sync to Google Drive right now. Try again.',
-        );
+        _showMessage(context.l10n.couldNotSyncGoogleDrive);
       }
     } finally {
       if (mounted) {
@@ -304,13 +301,11 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       }
       await _loadDriveItems();
       if (mounted) {
-        _showMessage('Downloaded ${item.title}.');
+        _showMessage(context.l10n.downloadedTitle(item.title));
       }
     } on Exception {
       if (mounted) {
-        _showMessage(
-          'Could not download this item from Google Drive. Try again.',
-        );
+        _showMessage(context.l10n.couldNotDownloadFromGoogleDrive);
       }
     } finally {
       if (mounted) {
@@ -320,23 +315,25 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   }
 
   Future<void> _confirmDeleteFromDrive(GoogleDriveResumeSummary item) async {
-    final label = item.isCoverLetter ? 'cover letter' : 'resume';
+    final l10n = context.l10n;
+    final label = item.isCoverLetter
+        ? l10n.documentTypeCoverLetter
+        : l10n.documentTypeResume;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        final dialogL10n = dialogContext.l10n;
         return AlertDialog(
-          title: const Text('Remove from Google Drive?'),
-          content: Text(
-            'Remove "${item.title}" from Google Drive? This will not delete the copy on this device.',
-          ),
+          title: Text(dialogL10n.removeFromGoogleDriveTitle),
+          content: Text(dialogL10n.removeFromGoogleDriveMessage(item.title)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(dialogL10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text('Remove $label'),
+              child: Text(dialogL10n.removeDocumentType(label)),
             ),
           ],
         );
@@ -358,13 +355,11 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       }
       await _loadDriveItems();
       if (mounted) {
-        _showMessage('Removed ${item.title} from Google Drive.');
+        _showMessage(context.l10n.removedFromGoogleDrive(item.title));
       }
     } on Exception {
       if (mounted) {
-        _showMessage(
-          'Could not remove this item from Google Drive. Try again.',
-        );
+        _showMessage(context.l10n.couldNotRemoveFromGoogleDrive);
       }
     } finally {
       if (mounted) {
@@ -379,22 +374,22 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  String _googleSignInErrorMessage(GoogleSignInException error) {
+  String _googleSignInErrorMessage(
+    AppLocalizations l10n,
+    GoogleSignInException error,
+  ) {
     switch (error.code) {
       case GoogleSignInExceptionCode.clientConfigurationError:
       case GoogleSignInExceptionCode.providerConfigurationError:
-        return 'Google Sign-In is not configured for this build. Add your '
-            'debug and release SHA-1 fingerprints in Firebase (see '
-            'android/GOOGLE_SIGN_IN_SETUP.md), re-download '
-            'google-services.json, and rebuild.';
+        return l10n.googleSignInNotConfigured;
       case GoogleSignInExceptionCode.uiUnavailable:
-        return 'Could not open the Google sign-in screen. Try again.';
+        return l10n.couldNotOpenGoogleSignIn;
       case GoogleSignInExceptionCode.interrupted:
-        return 'Google sign-in was interrupted. Try again.';
+        return l10n.googleSignInInterrupted;
       case GoogleSignInExceptionCode.canceled:
       case GoogleSignInExceptionCode.userMismatch:
       case GoogleSignInExceptionCode.unknownError:
-        return 'Could not sign in to Google Drive right now. Try again.';
+        return l10n.couldNotSignInGoogleDrive;
     }
   }
 
@@ -414,6 +409,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       backgroundColor: Theme.of(context).cardColor,
       useSafeArea: true,
       builder: (sheetContext) {
+        final sheetL10n = sheetContext.l10n;
         final sheetTheme = Theme.of(sheetContext);
         final primaryColor = sheetTheme.colorScheme.primary;
         final actionTextColor = sheetTheme.colorScheme.onSurface;
@@ -439,7 +435,9 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                   color: canDownload ? primaryColor : disabledIconColor,
                 ),
                 title: Text(
-                  canDownload ? 'Download' : 'Already downloaded',
+                  canDownload
+                      ? sheetL10n.download
+                      : sheetL10n.alreadyDownloaded,
                   style: sheetTheme.textTheme.bodyLarge?.copyWith(
                     color: canDownload ? actionTextColor : disabledTextColor,
                   ),
@@ -459,7 +457,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                   ),
                 ),
                 title: Text(
-                  'Remove from Google Drive',
+                  sheetL10n.removeFromGoogleDrive,
                   style: sheetTheme.textTheme.bodyLarge?.copyWith(
                     color: actionTextColor,
                   ),
@@ -515,8 +513,27 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
     );
   }
 
+  String _syncUploadSummary(
+    AppLocalizations l10n, {
+    required int resumeCount,
+    required int letterCount,
+  }) {
+    final parts = <String>[];
+    if (resumeCount > 0) {
+      parts.add(l10n.resumeCountLabel(resumeCount));
+    }
+    if (letterCount > 0) {
+      parts.add(l10n.coverLetterCountLabel(letterCount));
+    }
+    if (parts.length == 2) {
+      return l10n.listJoinAnd(parts[0], parts[1]);
+    }
+    return parts.isEmpty ? '' : parts.first;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final dateFormat = DateFormat('MMM d, y');
     final resumeLibrary = context.watch<ResumeLibraryViewModel>();
@@ -533,12 +550,12 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Google Drive backup'),
+        title: Text(l10n.googleDriveBackup),
         actions: [
           if (_isSignedIn)
             TextButton(
               onPressed: _isSigningIn || _isSyncing ? null : _signOut,
-              child: const Text('Sign out'),
+              child: Text(l10n.signOut),
             ),
         ],
       ),
@@ -565,8 +582,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
-                              'Back up resumes and cover letters to a ResumeApp folder on your Google Drive. '
-                              'Only files created by this app are accessible.',
+                              l10n.googleDriveBackupIntro,
                               style: theme.textTheme.bodyMedium,
                             ),
                             const SizedBox(height: 14),
@@ -589,11 +605,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
-                                        'On the Google page that opens next, under '
-                                        '"Select what ResumeApp can access", check the '
-                                        'box next to Google Drive (files used with this '
-                                        'app), then tap Continue. Without that box, '
-                                        'Drive backup cannot work.',
+                                        l10n.googleDrivePermissionHint,
                                         style: theme.textTheme.bodySmall?.copyWith(
                                           height: 1.35,
                                         ),
@@ -605,13 +617,12 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'It looks like this:',
+                              l10n.googleDriveLooksLikeThis,
                               style: theme.textTheme.titleSmall,
                             ),
                             const SizedBox(height: 8),
                             Semantics(
-                              label: 'Example Google screen: Select what ResumeApp can '
-                                  'access, with the Google Drive row and checkbox.',
+                              label: l10n.googleDrivePermissionExampleSemantics,
                               child: Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(10),
@@ -638,7 +649,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Text('Sign in with Google'),
+                                  : Text(l10n.signInWithGoogle),
                             ),
                           ],
                         ),
@@ -655,7 +666,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Auto sync',
+                                l10n.autoSync,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w400,
                                 ),
@@ -718,7 +729,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  'Sync to Google Drive',
+                                  l10n.syncToGoogleDrive,
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -748,7 +759,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                                           strokeWidth: 2,
                                         ),
                                       )
-                                    : const Text('Sync'),
+                                    : Text(l10n.sync),
                               ),
                             ],
                           ),
@@ -761,7 +772,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
-                            'No resumes or cover letters are stored on Drive yet.',
+                            l10n.noItemsOnDrive,
                             style: theme.textTheme.bodyMedium,
                           ),
                         ),
@@ -769,7 +780,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                     else ...[
                       if (driveResumes.isNotEmpty) ...[
                         Text(
-                          'Resumes in Google Drive',
+                          l10n.resumesInGoogleDrive,
                           style: theme.textTheme.titleMedium,
                         ),
                         const SizedBox(height: 12),
@@ -787,7 +798,7 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
                       ],
                       if (driveCoverLetters.isNotEmpty) ...[
                         Text(
-                          'Cover letters in Google Drive',
+                          l10n.coverLettersInGoogleDrive,
                           style: theme.textTheme.titleMedium,
                         ),
                         const SizedBox(height: 12),
@@ -859,11 +870,12 @@ class _DriveItemContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final title = summary.title.trim().isEmpty
         ? (summary.isCoverLetter
-            ? 'Untitled Cover Letter'
-            : ResumeData.defaultTitle)
+            ? l10n.untitledCoverLetter
+            : l10n.untitledResume)
         : summary.title.trim();
     final metadataStyle = theme.textTheme.bodySmall?.copyWith(
       fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 3,
@@ -884,7 +896,7 @@ class _DriveItemContent extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Updated: ${dateFormat.format(summary.updatedAt)}',
+                l10n.updatedDate(dateFormat.format(summary.updatedAt)),
                 style: metadataStyle,
               ),
             ],

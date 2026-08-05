@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
@@ -20,6 +21,7 @@ class _FakeAppShellRepository implements ResumeRepository {
   void configureGoogleDriveAutoSync({
     required AppPreferences appPreferences,
     required GoogleDriveResumeService service,
+    bool Function()? hasPremium,
   }) {}
 
   @override
@@ -116,7 +118,11 @@ void main() {
               create: (_) => SettingsViewModel(),
             ),
           ],
-          child: const MaterialApp(home: AppShell()),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AppShell(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -175,7 +181,11 @@ void main() {
               create: (_) => SettingsViewModel(),
             ),
           ],
-          child: const MaterialApp(home: AppShell()),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AppShell(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -243,7 +253,11 @@ void main() {
               create: (_) => SettingsViewModel(),
             ),
           ],
-          child: const MaterialApp(home: AppShell()),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AppShell(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -319,7 +333,11 @@ void main() {
               create: (_) => SettingsViewModel(),
             ),
           ],
-          child: const MaterialApp(home: AppShell()),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AppShell(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -403,7 +421,11 @@ void main() {
               create: (_) => SettingsViewModel(),
             ),
           ],
-          child: const MaterialApp(home: AppShell()),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AppShell(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -536,7 +558,11 @@ void main() {
               create: (_) => SettingsViewModel(),
             ),
           ],
-          child: const MaterialApp(home: AppShell()),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AppShell(),
+          ),
         ),
       );
       await tester.pumpAndSettle();

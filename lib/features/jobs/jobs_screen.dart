@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/resume_models.dart';
@@ -55,12 +57,13 @@ class _JobsScreenState extends State<JobsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Consumer<ResumeLibraryViewModel>(
       builder: (context, library, _) {
         final resumes = library.resumes;
         if (resumes.isEmpty) {
-          return const Center(
-            child: Text('Create a resume first to see job matches.'),
+          return Center(
+            child: Text(l10n.jobsCreateResumeFirst),
           );
         }
 
@@ -90,9 +93,9 @@ class _JobsScreenState extends State<JobsScreen> {
                   Icons.arrow_drop_down_rounded,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                decoration: const InputDecoration(
-                  labelText: 'Select resume',
-                  contentPadding: EdgeInsets.symmetric(
+                decoration: InputDecoration(
+                  labelText: l10n.selectResume,
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: _fieldHorizontalPadding,
                     vertical: 14,
                   ),
@@ -100,7 +103,7 @@ class _JobsScreenState extends State<JobsScreen> {
                 selectedItemBuilder: (context) {
                   return resumes.map((resume) {
                     final title = resume.title.trim().isEmpty
-                        ? ResumeData.defaultTitle
+                        ? l10n.untitledResume
                         : resume.title;
                     return Align(
                       alignment: Alignment.centerLeft,
@@ -126,7 +129,7 @@ class _JobsScreenState extends State<JobsScreen> {
                           ),
                           child: Text(
                             resume.title.trim().isEmpty
-                                ? ResumeData.defaultTitle
+                                ? l10n.untitledResume
                                 : resume.title,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -149,7 +152,7 @@ class _JobsScreenState extends State<JobsScreen> {
                   horizontal: _fieldHorizontalPadding,
                 ),
                 child: Text(
-                  'Showing latest jobs from last 7 days based on the selected resume role and location.',
+                  l10n.jobsShowingLatestHint,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 11,
@@ -176,7 +179,7 @@ class _JobsScreenState extends State<JobsScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    'No jobs found for this resume in last 7 days.',
+                    l10n.jobsNoneFound,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -188,8 +191,8 @@ class _JobsScreenState extends State<JobsScreen> {
                 Center(
                   child: Text(
                     _isLoadingMore
-                        ? 'Loading more jobs...'
-                        : 'Scroll down to load more',
+                        ? l10n.jobsLoadingMore
+                        : l10n.jobsScrollForMore,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -204,6 +207,7 @@ class _JobsScreenState extends State<JobsScreen> {
   }
 
   Widget _buildJobCard(_JobSuggestion job) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Card(
@@ -250,7 +254,7 @@ class _JobsScreenState extends State<JobsScreen> {
                             ),
                           ),
                           Text(
-                            job.postedAgo,
+                            _formatPostedAgo(job.postedAt, l10n),
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: Theme.of(
@@ -277,6 +281,17 @@ class _JobsScreenState extends State<JobsScreen> {
         ),
       ),
     );
+  }
+
+  String _formatPostedAgo(DateTime postedAt, AppLocalizations l10n) {
+    final age = DateTime.now().toUtc().difference(postedAt.toUtc());
+    if (age.inHours <= 0) {
+      return l10n.jobsPostedJustNow;
+    }
+    if (age.inHours < 24) {
+      return l10n.jobsPostedHoursAgo(age.inHours);
+    }
+    return l10n.jobsPostedDaysAgo(age.inDays.clamp(1, 7));
   }
 
   void _ensureJobsLoaded(ResumeData resume) {
@@ -321,7 +336,7 @@ class _JobsScreenState extends State<JobsScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _errorText = 'Live jobs unavailable, showing backup results.';
+        _errorText = context.l10n.jobsLiveUnavailableBackup;
         _jobs = fallback;
       });
     } finally {
@@ -415,7 +430,7 @@ class _JobsScreenState extends State<JobsScreen> {
     final launched = await launchUrl(uri, mode: mode);
     if (!mounted || launched) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Could not open job link right now.')),
+      SnackBar(content: Text(context.l10n.couldNotOpenJobLink)),
     );
   }
 
@@ -813,9 +828,7 @@ class _JobSuggestion {
   }
 
   int get ageInHours {
-    final number = int.tryParse(postedAgo.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-    if (postedAgo.contains('h')) return number;
-    if (postedAgo.contains('d')) return number * 24;
-    return 9999;
+    final age = DateTime.now().toUtc().difference(postedAt.toUtc());
+    return age.inHours;
   }
 }

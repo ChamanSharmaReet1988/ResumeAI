@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_builder_section_order.dart';
@@ -319,7 +320,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text('PDF saved to $path')));
+    ).showSnackBar(SnackBar(content: Text(context.l10n.pdfSavedTo(path))));
   }
 
   Future<void> _shareResume() async {
@@ -368,10 +369,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       SnackBar(
         content: Text(
           summary.isEmpty
-              ? 'Unable to generate a professional summary right now.'
+              ? context.l10n.unableToGenerateSummary
               : hadSummary
-              ? 'Summary updated'
-              : 'Summary added',
+              ? context.l10n.summaryUpdated
+              : context.l10n.summaryAdded,
         ),
       ),
     );
@@ -452,7 +453,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('This skill is already in your list.')),
+      SnackBar(content: Text(context.l10n.skillAlreadyInList)),
     );
   }
 
@@ -470,11 +471,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Delete'),
+              child: Text(context.l10n.actionDelete),
             ),
           ],
         );
@@ -522,30 +523,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       onPressed: onPressed,
       style: _secondaryActionButtonStyle(context),
       icon: Icon(Icons.add_rounded, size: 24, color: primary),
-      label: const Text('Add bullet point'),
+      label: Text(context.l10n.addBulletPoint),
     );
   }
 
   String _resumeOrderLabel(int index) {
+    final l10n = context.l10n;
     if (index == 0) {
-      return 'Appears first on your resume';
+      return l10n.appearsFirstOnYourResume;
     }
-
-    return 'Appears ${_ordinal(index + 1)} on your resume';
-  }
-
-  String _ordinal(int value) {
-    final mod100 = value % 100;
-    if (mod100 >= 11 && mod100 <= 13) {
-      return '${value}th';
-    }
-
-    return switch (value % 10) {
-      1 => '${value}st',
-      2 => '${value}nd',
-      3 => '${value}rd',
-      _ => '${value}th',
-    };
+    return l10n.appearsOnYourResumeAt(index + 1);
   }
 
   Future<void> _toggleResumeSectionVisibility({
@@ -563,19 +550,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         return AlertDialog(
           backgroundColor: Theme.of(context).cardColor,
           surfaceTintColor: Colors.transparent,
-          title: const Text('Hide from resume?'),
+          title: Text(context.l10n.hideFromResumeTitle),
           content: Text(
-            '$sectionName will not be shown on your resume or in exported PDFs. '
-            'You can show it again anytime using the button next to the section title.',
+            context.l10n.hideFromResumeMessage(sectionName),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Hide'),
+              child: Text(context.l10n.hide),
             ),
           ],
         );
@@ -597,7 +583,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     return Transform.translate(
       offset: const Offset(0, 2),
       child: IconButton(
-        tooltip: included ? 'Hide from resume' : 'Show on resume',
+        tooltip: included ? context.l10n.hideFromResume : context.l10n.showOnResume,
         style: IconButton.styleFrom(
           foregroundColor: primary,
           padding: const EdgeInsetsDirectional.only(start: 6, end: 2),
@@ -662,7 +648,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             _ResumeBuilderScreenState._calendarIconStroke,
                       ),
                     ),
-                    title: const Text('Choose month and year'),
+                    title: Text(context.l10n.chooseMonthAndYear),
                     onTap: () =>
                         Navigator.of(context).pop(_EndDateSelection.chooseDate),
                   ),
@@ -671,14 +657,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       Icons.work_history_outlined,
                       color: primaryColor,
                     ),
-                    title: const Text('Present'),
+                    title: Text(context.l10n.present),
                     onTap: () =>
                         Navigator.of(context).pop(_EndDateSelection.present),
                   ),
                   if (currentValue.trim().isNotEmpty)
                     ListTile(
                       leading: Icon(Icons.clear_rounded, color: primaryColor),
-                      title: const Text('Clear date'),
+                      title: Text(context.l10n.clearDate),
                       onTap: () =>
                           Navigator.of(context).pop(_EndDateSelection.clear),
                     ),
@@ -707,8 +693,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
     final selectedDate = await _showMonthYearPicker(
       title: isEndDate
-          ? 'Select end month and year'
-          : 'Select start month and year',
+          ? context.l10n.selectEndMonthAndYear
+          : context.l10n.selectStartMonthAndYear,
       initialDate: _initialWorkPickerDate(currentValue),
     );
 
@@ -730,7 +716,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }) async {
     FocusScope.of(context).unfocus();
     final selectedYear = await _showYearPickerDialog(
-      title: isEndDate ? 'Select end year' : 'Select start year',
+      title: isEndDate ? context.l10n.selectEndYear : context.l10n.selectStartYear,
       initialValue: currentValue,
     );
 
@@ -839,7 +825,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                       decoration: InputDecoration(
-                        labelText: 'Year',
+                        labelText: context.l10n.year,
                         labelStyle: TextStyle(
                           fontWeight: FontWeight.w400,
                           color: Theme.of(context).colorScheme.onSurface,
@@ -897,13 +883,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(context.l10n.cancel),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.of(
                     context,
                   ).pop(DateTime(selectedYear, selectedMonth)),
-                  child: const Text('Done'),
+                  child: Text(context.l10n.done),
                 ),
               ],
             );
@@ -1082,16 +1068,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             return AlertDialog(
               backgroundColor: Theme.of(context).cardColor,
               surfaceTintColor: Colors.transparent,
-              title: const Text('New section'),
+              title: Text(context.l10n.newSection),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextField(
                     controller: controller,
-                    decoration: const InputDecoration(
-                      labelText: 'Title',
-                      hintText: 'Certifications, Languages, Awards…',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.title,
+                      hintText: context.l10n.newSectionTitleHint,
                     ),
                     autofocus: true,
                     textCapitalization: TextCapitalization.sentences,
@@ -1110,7 +1096,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Type',
+                    context.l10n.type,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 4),
@@ -1130,11 +1116,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           dense: true,
                           visualDensity: VisualDensity.compact,
                           title: Text(
-                            'Normal',
+                            context.l10n.sectionTypeNormal,
                             style: typeOptionTitleStyle,
                           ),
-                          subtitle: const Text(
-                            'Summary or bullet points',
+                          subtitle: Text(
+                            context.l10n.sectionTypeNormalSubtitle,
                           ),
                         ),
                         RadioListTile<_CustomSectionCreationType>(
@@ -1143,11 +1129,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           dense: true,
                           visualDensity: VisualDensity.compact,
                           title: Text(
-                            'Advance',
+                            context.l10n.sectionTypeAdvance,
                             style: typeOptionTitleStyle,
                           ),
-                          subtitle: const Text(
-                            'Project-style entries with title and bullets',
+                          subtitle: Text(
+                            context.l10n.sectionTypeAdvanceSubtitle,
                           ),
                         ),
                       ],
@@ -1158,7 +1144,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
+                  child: Text(context.l10n.cancel),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -1174,7 +1160,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       ),
                     );
                   },
-                  child: const Text('OK'),
+                  child: Text(context.l10n.ok),
                 ),
               ],
             );
@@ -1218,19 +1204,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         return AlertDialog(
           backgroundColor: Theme.of(context).cardColor,
           surfaceTintColor: Colors.transparent,
-          title: const Text('Remove section?'),
-          content: const Text(
-            'This section will be removed from your resume. You can add a new '
-            'custom section with Add anytime.',
-          ),
+          title: Text(context.l10n.removeSectionTitle),
+          content: Text(context.l10n.removeSectionMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Remove'),
+              child: Text(context.l10n.remove),
             ),
           ],
         );
@@ -1308,7 +1291,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to pick image right now.')),
+        SnackBar(content: Text(context.l10n.unableToPickImage)),
       );
     }
   }
@@ -1339,12 +1322,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 const SizedBox(height: BottomSheetInsets.topSpacing),
                 ListTile(
                   leading: Icon(Icons.photo_camera_outlined, color: iconColor),
-                  title: const Text('Camera'),
+                  title: Text(context.l10n.camera),
                   onTap: () => Navigator.of(sheetContext).pop('camera'),
                 ),
                 ListTile(
                   leading: Icon(Icons.photo_library_outlined, color: iconColor),
-                  title: const Text('Library'),
+                  title: Text(context.l10n.library),
                   onTap: () => Navigator.of(sheetContext).pop('library'),
                 ),
                 if (hasImage)
@@ -1353,7 +1336,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       const AssetImage('assets/fonts/delete.png'),
                       color: iconColor,
                     ),
-                    title: const Text('Remove'),
+                    title: Text(context.l10n.remove),
                     onTap: () => Navigator.of(sheetContext).pop('remove'),
                   ),
               ],
@@ -1397,7 +1380,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            'Profile photo',
+            context.l10n.profilePhoto,
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
@@ -1423,7 +1406,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap to change photo',
+            context.l10n.tapToChangePhoto,
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -1627,14 +1610,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              tooltip: 'Previous field',
+                              tooltip: context.l10n.previousField,
                               onPressed: () => _focusPreviousKeyboardField(
                                 viewModel.currentStep,
                               ),
                               icon: const Icon(Icons.keyboard_arrow_up_rounded),
                             ),
                             IconButton(
-                              tooltip: 'Next field',
+                              tooltip: context.l10n.nextField,
                               onPressed: () => _focusNextKeyboardField(
                                 viewModel.currentStep,
                               ),
@@ -1658,7 +1641,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     child: IconButton.filledTonal(
                       onPressed: () => FocusScope.of(context).unfocus(),
                       icon: const Icon(Icons.keyboard_hide_rounded),
-                      tooltip: 'Hide keyboard',
+                      tooltip: context.l10n.hideKeyboard,
                     ),
                   ),
               ],
@@ -1694,7 +1677,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final personalFields = _ResponsiveFieldGroup(
       children: [
         _SyncTextField(
-          label: 'Full name',
+          label: context.l10n.fullName,
           value: viewModel.resume.fullName,
           focusNode: _personalFieldFocusNodes[0],
           textCapitalization: TextCapitalization.sentences,
@@ -1705,7 +1688,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ),
         _SyncTextField(
-          label: 'Target job title',
+          label: context.l10n.targetJobTitle,
           value: viewModel.resume.jobTitle,
           focusNode: _personalFieldFocusNodes[1],
           textCapitalization: TextCapitalization.sentences,
@@ -1716,7 +1699,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ),
         _ProfileLinkField(
-          label: 'GitHub link',
+          label: context.l10n.githubLink,
           value: viewModel.resume.githubLink,
           basePrefix: 'https://github.com/',
           hintText: 'github.com/username',
@@ -1728,7 +1711,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ),
         _ProfileLinkField(
-          label: 'LinkedIn link',
+          label: context.l10n.linkedinLink,
           value: viewModel.resume.linkedinLink,
           basePrefix: 'https://www.linkedin.com/in/',
           hintText: 'linkedin.com/in/your-name',
@@ -1740,7 +1723,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ),
         _SyncTextField(
-          label: 'Email',
+          label: context.l10n.email,
           value: viewModel.resume.email,
           focusNode: _personalFieldFocusNodes[4],
           keyboardType: TextInputType.emailAddress,
@@ -1750,7 +1733,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               viewModel.updateResume((resume) => resume.copyWith(email: value)),
         ),
         _PhoneWithCountryCodeField(
-          label: 'Phoen number',
+          label: context.l10n.phoneNumber,
           value: viewModel.resume.phone,
           focusNode: _personalFieldFocusNodes[5],
           textInputAction: TextInputAction.next,
@@ -1759,7 +1742,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               viewModel.updateResume((resume) => resume.copyWith(phone: value)),
         ),
         _SyncTextField(
-          label: 'Location',
+          label: context.l10n.location,
           value: viewModel.resume.location,
           focusNode: _personalFieldFocusNodes[6],
           textCapitalization: TextCapitalization.sentences,
@@ -1770,7 +1753,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ),
         _SyncTextField(
-          label: 'Website or portfolio',
+          label: context.l10n.websiteOrPortfolio,
           value: viewModel.resume.website,
           focusNode: _personalFieldFocusNodes[7],
           textInputAction: TextInputAction.next,
@@ -1780,7 +1763,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ),
         _SyncTextField(
-          label: 'Professional summary',
+          label: context.l10n.professionalSummary,
           value: viewModel.resume.summary,
           minLines: 5,
           maxLines: null,
@@ -1796,9 +1779,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       ],
     );
     return _StepSurface(
-      title: 'Personal information',
+      title: context.l10n.personalInformationTitle,
       subtitle:
-          'Start with identity, contact details, target role, and a short positioning summary.',
+          context.l10n.personalInformationSubtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1822,7 +1805,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         size: 24,
                         color: primary,
                       ),
-                      label: const Text('Suggest summary'),
+                      label: Text(context.l10n.suggestSummary),
                     ),
                   ],
                 );
@@ -1838,12 +1821,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Widget _buildWorkStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
-      title: 'Work experience',
+      title: context.l10n.workExperienceTitle,
       subtitle: '',
       titleTrailing: _resumeSectionVisibilityLead(
         viewModel: viewModel,
         included: viewModel.resume.includeWorkInResume,
-        sectionName: 'Work experience',
+        sectionName: context.l10n.workExperienceTitle,
         setIncluded: viewModel.setIncludeWorkInResume,
       ),
       child: Column(
@@ -1853,9 +1836,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           if (!_resumeOrderNudgeDismissed &&
               viewModel.resume.workExperiences.length > 1) ...[
             _HintBanner(
-              title: 'Resume order',
+              title: context.l10n.resumeOrder,
               body:
-                  'Entries stay in this order. Use arrows to move your strongest role to top.',
+                  context.l10n.resumeOrderBody,
               compact: true,
               onDismiss: _onDismissResumeOrderNudge,
             ),
@@ -1880,7 +1863,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Experience ${index + 1}',
+                                context.l10n.experienceNumber(index + 1),
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
@@ -1894,7 +1877,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                         if (viewModel.resume.workExperiences.length > 1) ...[
                           IconButton.filledTonal(
-                            tooltip: 'Move up',
+                            tooltip: context.l10n.moveUp,
                             onPressed: index == 0
                                 ? null
                                 : () => _moveWorkExperience(
@@ -1904,7 +1887,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             icon: const Icon(Icons.keyboard_arrow_up_rounded),
                           ),
                           IconButton.filledTonal(
-                            tooltip: 'Move down',
+                            tooltip: context.l10n.moveDown,
                             onPressed:
                                 index ==
                                     viewModel.resume.workExperiences.length - 1
@@ -1916,14 +1899,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             icon: const Icon(Icons.keyboard_arrow_down_rounded),
                           ),
                           IconButton(
-                            tooltip: 'Delete experience',
+                            tooltip: context.l10n.deleteExperience,
                             onPressed: viewModel.isBusy
                                 ? null
                                 : () {
                                     _confirmRemoval(
-                                      title: 'Delete work experience?',
+                                      title: context.l10n.deleteWorkExperienceTitle,
                                       message:
-                                          'This will remove this job and all of its bullet points. This cannot be undone.',
+                                          context.l10n.deleteWorkExperienceMessage,
                                       onConfirm: () =>
                                           viewModel.removeWorkExperience(index),
                                     );
@@ -1940,7 +1923,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       children: [
                         _SyncTextField(
                           key: Key('work-role-$index'),
-                          label: 'Role',
+                          label: context.l10n.role,
                           value: item.role,
                           textCapitalization: TextCapitalization.sentences,
                           focusNode: _focusNodeForExtendedKeyboardField(
@@ -1953,7 +1936,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                         _SyncTextField(
                           key: Key('work-company-$index'),
-                          label: 'Company',
+                          label: context.l10n.company,
                           value: item.company,
                           textCapitalization: TextCapitalization.sentences,
                           focusNode: _focusNodeForExtendedKeyboardField(
@@ -1966,9 +1949,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                         _PickerField(
                           key: Key('work-start-date-$index'),
-                          label: 'Start date',
+                          label: context.l10n.startDate,
                           value: item.startDate,
-                          hintText: 'Month/year',
+                          hintText: context.l10n.monthYearHint,
                           onTap: () => _pickWorkDate(
                             index: index,
                             isEndDate: false,
@@ -1977,9 +1960,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                         _PickerField(
                           key: Key('work-end-date-$index'),
-                          label: 'End date',
+                          label: context.l10n.endDate,
                           value: item.endDate,
-                          hintText: 'Month/year or Present',
+                          hintText: context.l10n.monthYearOrPresentHint,
                           onTap: () => _pickWorkDate(
                             index: index,
                             isEndDate: true,
@@ -1999,7 +1982,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             padding: const EdgeInsets.only(bottom: 16),
                             child: _BulletField(
                               fieldKey: Key('work-bullet-$index-$bulletIndex'),
-                              label: 'Bullet ${bulletIndex + 1}',
+                              label: context.l10n.bulletNumber(bulletIndex + 1),
                               value: bullet,
                               deleteEnabled: !viewModel.isBusy,
                               focusNode: _focusNodeForExtendedKeyboardField(
@@ -2021,9 +2004,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                   }),
                               onDelete: () {
                                 _confirmRemoval(
-                                  title: 'Remove bullet?',
+                                  title: context.l10n.removeBulletTitle,
                                   message:
-                                      'This bullet will be removed from this job.',
+                                      context.l10n.removeBulletFromJob,
                                   onConfirm: () {
                                     viewModel.updateWorkExperience(
                                       index,
@@ -2099,7 +2082,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             child: FilledButton.icon(
               onPressed: viewModel.isBusy ? null : viewModel.addWorkExperience,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Add experience'),
+              label: Text(context.l10n.addExperience),
             ),
           ),
         ],
@@ -2214,12 +2197,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Widget _buildEducationStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
-      title: 'Education',
-      subtitle: 'Include your degree, institution, and study timeline.',
+      title: context.l10n.sectionEducation,
+      subtitle: context.l10n.educationSubtitle,
       titleTrailing: _resumeSectionVisibilityLead(
         viewModel: viewModel,
         included: viewModel.resume.includeEducationInResume,
-        sectionName: 'Education',
+        sectionName: context.l10n.sectionEducation,
         setIncluded: viewModel.setIncludeEducationInResume,
       ),
       child: Column(
@@ -2229,9 +2212,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           if (!_resumeOrderNudgeDismissed &&
               viewModel.resume.education.length > 1) ...[
             _HintBanner(
-              title: 'Resume order',
+              title: context.l10n.resumeOrder,
               body:
-                  'Entries stay in this order. Use arrows to move your strongest role to top.',
+                  context.l10n.resumeOrderBody,
               compact: true,
               onDismiss: _onDismissResumeOrderNudge,
             ),
@@ -2255,7 +2238,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Education ${index + 1}',
+                                context.l10n.educationNumber(index + 1),
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
@@ -2269,7 +2252,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                         if (viewModel.resume.education.length > 1) ...[
                           IconButton.filledTonal(
-                            tooltip: 'Move education up',
+                            tooltip: context.l10n.moveEducationUp,
                             onPressed: index == 0
                                 ? null
                                 : () => _moveEducation(
@@ -2279,7 +2262,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             icon: const Icon(Icons.keyboard_arrow_up_rounded),
                           ),
                           IconButton.filledTonal(
-                            tooltip: 'Move education down',
+                            tooltip: context.l10n.moveEducationDown,
                             onPressed:
                                 index == viewModel.resume.education.length - 1
                                 ? null
@@ -2290,14 +2273,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             icon: const Icon(Icons.keyboard_arrow_down_rounded),
                           ),
                           IconButton(
-                            tooltip: 'Delete education entry',
+                            tooltip: context.l10n.deleteEducationEntry,
                             onPressed: viewModel.isBusy
                                 ? null
                                 : () {
                                     _confirmRemoval(
-                                      title: 'Delete education entry?',
+                                      title: context.l10n.deleteEducationEntryTitle,
                                       message:
-                                          'This will remove this school and degree from your resume. This cannot be undone.',
+                                          context.l10n.deleteEducationEntryMessage,
                                       onConfirm: () =>
                                           viewModel.removeEducation(index),
                                     );
@@ -2313,7 +2296,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     _ResponsiveFieldGroup(
                       children: [
                         _SyncTextField(
-                          label: 'Institution',
+                          label: context.l10n.institution,
                           value: item.institution,
                           textCapitalization: TextCapitalization.sentences,
                           onChanged: (value) => viewModel.updateEducation(
@@ -2322,7 +2305,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ),
                         ),
                         _SyncTextField(
-                          label: 'Degree',
+                          label: context.l10n.degree,
                           value: item.degree,
                           textCapitalization: TextCapitalization.sentences,
                           onChanged: (value) => viewModel.updateEducation(
@@ -2332,9 +2315,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                         _PickerField(
                           key: Key('education-start-date-$index'),
-                          label: 'Start year',
+                          label: context.l10n.startYear,
                           value: item.startDate,
-                          hintText: 'Select year',
+                          hintText: context.l10n.selectYear,
                           onTap: () => _pickEducationDate(
                             index: index,
                             isEndDate: false,
@@ -2343,9 +2326,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                         _PickerField(
                           key: Key('education-end-date-$index'),
-                          label: 'End year',
+                          label: context.l10n.endYear,
                           value: item.endDate,
-                          hintText: 'Select year',
+                          hintText: context.l10n.selectYear,
                           onTap: () => _pickEducationDate(
                             index: index,
                             isEndDate: true,
@@ -2353,9 +2336,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           ),
                         ),
                         _SyncTextField(
-                          label: 'Marks / score',
+                          label: context.l10n.marksScore,
                           value: item.score,
-                          hintText: '8.6 CGPA, 92, or 780/800',
+                          hintText: context.l10n.marksScoreHint,
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
@@ -2409,7 +2392,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             child: FilledButton.icon(
               onPressed: viewModel.isBusy ? null : viewModel.addEducation,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Add education'),
+              label: Text(context.l10n.addEducation),
             ),
           ),
         ],
@@ -2425,13 +2408,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
 
     return _StepSurface(
-      title: 'Skills',
-      subtitle:
-          'Add job-specific tools and keywords. Choose a simple list, or categorise skills under headings (for example Languages, Tools).',
+      title: context.l10n.sectionSkills,
+      subtitle: context.l10n.skillsSubtitle,
       titleTrailing: _resumeSectionVisibilityLead(
         viewModel: viewModel,
         included: viewModel.resume.includeSkillsInResume,
-        sectionName: 'Skills',
+        sectionName: context.l10n.sectionSkills,
         setIncluded: viewModel.setIncludeSkillsInResume,
       ),
       child: Column(
@@ -2439,7 +2421,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         children: [
           const SizedBox(height: 10),
           Text(
-            '${viewModel.resume.skills.length} skills',
+            context.l10n.skillsCount(viewModel.resume.skills.length),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -2459,14 +2441,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 Expanded(
                   child: _SkillsModeRadioOption(
                     value: false,
-                    label: 'Simple list',
+                    label: context.l10n.simpleList,
                     enabled: !viewModel.isBusy,
                   ),
                 ),
                 Expanded(
                   child: _SkillsModeRadioOption(
                     value: true,
-                    label: 'Categorised',
+                    label: context.l10n.categorised,
                     enabled: !viewModel.isBusy,
                   ),
                 ),
@@ -2516,9 +2498,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           bottom: inset + _skillSuggestionMaxHeight + 48,
                         ),
                         decoration: InputDecoration(
-                          labelText: 'Add a skill',
-                          helperText:
-                              'Type to see suggestions or add your own skill',
+                          labelText: context.l10n.addASkill,
+                          helperText: context.l10n.addSkillHelper,
                           helperStyle: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -2605,10 +2586,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             Expanded(
                               child: _SyncTextField(
                                 key: Key('skill-group-heading-$index'),
-                                label: 'Category',
+                                label: context.l10n.category,
                                 value: group.heading,
                                 hintText:
-                                    'Programming Languages, Tools, Frameworks, etc.',
+                                    context.l10n.categoryHint,
                                 textCapitalization:
                                     TextCapitalization.words,
                                 onChanged: (value) => viewModel
@@ -2617,7 +2598,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             ),
                             if (viewModel.resume.skillGroups.length > 1) ...[
                               IconButton(
-                                tooltip: 'Move category up',
+                                tooltip: context.l10n.moveCategoryUp,
                                 style: IconButton.styleFrom(
                                   padding: const EdgeInsetsDirectional.only(
                                     start: 4,
@@ -2639,7 +2620,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                 ),
                               ),
                               IconButton(
-                                tooltip: 'Move category down',
+                                tooltip: context.l10n.moveCategoryDown,
                                 style: IconButton.styleFrom(
                                   padding: const EdgeInsetsDirectional.only(
                                     start: 0,
@@ -2669,7 +2650,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               ),
                             ],
                             IconButton(
-                              tooltip: 'Remove category',
+                              tooltip: context.l10n.removeCategory,
                               style: IconButton.styleFrom(
                                 padding: const EdgeInsetsDirectional.only(
                                   start: 6,
@@ -2683,9 +2664,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                   ? null
                                   : () {
                                       _confirmRemoval(
-                                        title: 'Delete category?',
+                                        title: context.l10n.deleteCategoryTitle,
                                         message:
-                                            'This will remove this category and all of its skills. This cannot be undone.',
+                                            context.l10n.deleteCategoryMessage,
                                         onConfirm: () {
                                           viewModel.removeSkillGroup(index);
                                           _reindexGroupSkillControllersAfterRemove(
@@ -2737,7 +2718,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                       inset + _skillSuggestionMaxHeight + 48,
                                 ),
                                 decoration: InputDecoration(
-                                  labelText: 'Add a skill',
+                                  labelText: context.l10n.addASkill,
                                   isDense: true,
                                   suffixIcon: IconButton(
                                     onPressed: () =>
@@ -2797,7 +2778,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     },
               style: _mediumTonalButtonStyle(context),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Add category'),
+              label: Text(context.l10n.addCategory),
             ),
           ],
         ],
@@ -2860,13 +2841,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Widget _buildProjectsStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
-      title: 'Projects',
-      subtitle:
-          'Showcase standout side projects, product launches, or portfolio work with clear outcomes.',
+      title: context.l10n.sectionProjects,
+      subtitle: context.l10n.projectsSubtitle,
       titleTrailing: _resumeSectionVisibilityLead(
         viewModel: viewModel,
         included: viewModel.resume.includeProjectsInResume,
-        sectionName: 'Projects',
+        sectionName: context.l10n.sectionProjects,
         setIncluded: viewModel.setIncludeProjectsInResume,
       ),
       child: Column(
@@ -2876,9 +2856,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           if (!_resumeOrderNudgeDismissed &&
               viewModel.resume.projects.length > 1) ...[
             _HintBanner(
-              title: 'Resume order',
+              title: context.l10n.resumeOrder,
               body:
-                  'Entries stay in this order. Use arrows to move your strongest role to top.',
+                  context.l10n.resumeOrderBody,
               compact: true,
               onDismiss: _onDismissResumeOrderNudge,
             ),
@@ -2902,7 +2882,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Project ${index + 1}',
+                                context.l10n.projectNumber(index + 1),
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
@@ -2916,7 +2896,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                         if (viewModel.resume.projects.length > 1) ...[
                           IconButton.filledTonal(
-                            tooltip: 'Move project up',
+                            tooltip: context.l10n.moveProjectUp,
                             onPressed: index == 0
                                 ? null
                                 : () =>
@@ -2924,7 +2904,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             icon: const Icon(Icons.keyboard_arrow_up_rounded),
                           ),
                           IconButton.filledTonal(
-                            tooltip: 'Move project down',
+                            tooltip: context.l10n.moveProjectDown,
                             onPressed:
                                 index == viewModel.resume.projects.length - 1
                                 ? null
@@ -2933,14 +2913,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             icon: const Icon(Icons.keyboard_arrow_down_rounded),
                           ),
                           IconButton(
-                            tooltip: 'Delete project',
+                            tooltip: context.l10n.deleteProject,
                             onPressed: viewModel.isBusy
                                 ? null
                                 : () {
                                     _confirmRemoval(
-                                      title: 'Delete project?',
+                                      title: context.l10n.deleteProjectTitle,
                                       message:
-                                          'This will remove this project and all of its bullet points. This cannot be undone.',
+                                          context.l10n.deleteProjectMessage,
                                       onConfirm: () =>
                                           viewModel.removeProject(index),
                                     );
@@ -2957,7 +2937,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       children: [
                         _SyncTextField(
                           key: Key('project-title-$index'),
-                          label: 'Project title',
+                          label: context.l10n.projectTitle,
                           value: item.title,
                           textCapitalization: TextCapitalization.sentences,
                           focusNode: _focusNodeForExtendedKeyboardField(
@@ -2978,9 +2958,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         padding: const EdgeInsets.only(bottom: 16),
                         child: _BulletField(
                           fieldKey: Key('project-bullet-$index-$bi'),
-                          label: 'Bullet ${bi + 1}',
+                          label: context.l10n.bulletNumber(bi + 1),
                           value: text,
-                          hintText: 'Enter a bullet point',
+                          hintText: context.l10n.enterBulletPoint,
                           deleteEnabled: !viewModel.isBusy,
                           focusNode: _focusNodeForExtendedKeyboardField(
                             'project-bullet-$index-$bi',
@@ -2997,9 +2977,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               }),
                           onDelete: () {
                             _confirmRemoval(
-                              title: 'Remove bullet?',
+                              title: context.l10n.removeBulletTitle,
                               message:
-                                  'This bullet will be removed from this project.',
+                                  context.l10n.removeBulletFromProject,
                               onConfirm: () {
                                 viewModel.updateProject(index, (current) {
                                   final next = List<String>.from(
@@ -3063,7 +3043,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             child: FilledButton.icon(
               onPressed: viewModel.isBusy ? null : viewModel.addProject,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Add project'),
+              label: Text(context.l10n.addProject),
             ),
           ),
         ],
@@ -3078,12 +3058,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final item = viewModel.resume.customSections[index];
 
     return _StepSurface(
-      title: _customSectionStepTitle(item, index),
+      title: _customSectionStepTitle(context, item, index),
       subtitle: item.layoutMode == CustomSectionLayoutMode.projects
-          ? 'Add entries with a title and bullet points, like the Projects section.'
+          ? context.l10n.customSectionProjectsSubtitle
           : '',
       titleTrailing: IconButton(
-        tooltip: 'Remove section',
+        tooltip: context.l10n.removeSection,
         style: IconButton.styleFrom(
           padding: const EdgeInsetsDirectional.only(start: 6, end: 2),
           minimumSize: Size.zero,
@@ -3129,7 +3109,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     horizontalTitleGap: 4,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     title: Text(
-                      'Summary',
+                      context.l10n.summary,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -3147,7 +3127,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     horizontalTitleGap: 4,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     title: Text(
-                      'Bullet points',
+                      context.l10n.bulletPoints,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -3165,11 +3145,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               children: [
                 _SyncTextField(
                   key: Key('custom-section-content-$index'),
-                  label: 'Summary',
+                  label: context.l10n.summary,
                   value: item.content,
                   textCapitalization: TextCapitalization.sentences,
                   hintText:
-                      'Write the section as a short paragraph for your resume.',
+                      context.l10n.customSectionSummaryHint,
                   minLines: 5,
                   maxLines: null,
                   fullWidth: true,
@@ -3191,9 +3171,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _BulletField(
                   fieldKey: Key('custom-section-bullet-$index-$bi'),
-                  label: 'Bullet ${bi + 1}',
+                  label: context.l10n.bulletNumber(bi + 1),
                   value: text,
-                  hintText: 'Enter a bullet point',
+                  hintText: context.l10n.enterBulletPoint,
                   deleteEnabled: !viewModel.isBusy,
                   focusNode: _focusNodeForExtendedKeyboardField(
                     'custom-section-bullet-$index-$bi',
@@ -3245,9 +3225,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         const SizedBox(height: 12),
         if (!_resumeOrderNudgeDismissed && item.projectEntries.length > 1) ...[
           _HintBanner(
-            title: 'Resume order',
+            title: context.l10n.resumeOrder,
             body:
-                'Entries stay in this order. Use arrows to move your strongest role to top.',
+                context.l10n.resumeOrderBody,
             compact: true,
             onDismiss: _onDismissResumeOrderNudge,
           ),
@@ -3271,7 +3251,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Entry ${index + 1}',
+                              context.l10n.entryNumber(index + 1),
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
@@ -3285,7 +3265,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       ),
                       if (item.projectEntries.length > 1) ...[
                         IconButton.filledTonal(
-                          tooltip: 'Move entry up',
+                          tooltip: context.l10n.moveEntryUp,
                           onPressed: index == 0
                               ? null
                               : () => viewModel.moveCustomSectionProjectUp(
@@ -3295,7 +3275,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           icon: const Icon(Icons.keyboard_arrow_up_rounded),
                         ),
                         IconButton.filledTonal(
-                          tooltip: 'Move entry down',
+                          tooltip: context.l10n.moveEntryDown,
                           onPressed: index == item.projectEntries.length - 1
                               ? null
                               : () => viewModel.moveCustomSectionProjectDown(
@@ -3305,14 +3285,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           icon: const Icon(Icons.keyboard_arrow_down_rounded),
                         ),
                         IconButton(
-                          tooltip: 'Delete entry',
+                          tooltip: context.l10n.deleteEntry,
                           onPressed: viewModel.isBusy
                               ? null
                               : () {
                                   _confirmRemoval(
-                                    title: 'Delete entry?',
+                                    title: context.l10n.deleteEntryTitle,
                                     message:
-                                        'This will remove this entry and all of its bullet points. This cannot be undone.',
+                                        context.l10n.deleteEntryMessage,
                                     onConfirm: () => viewModel
                                         .removeCustomSectionProject(
                                           sectionIndex,
@@ -3334,7 +3314,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         key: Key(
                           'custom-section-project-title-$sectionIndex-$index',
                         ),
-                        label: 'Title',
+                        label: context.l10n.title,
                         value: project.title,
                         textCapitalization: TextCapitalization.sentences,
                         focusNode: _focusNodeForExtendedKeyboardField(
@@ -3359,9 +3339,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         fieldKey: Key(
                           'custom-section-project-$sectionIndex-$index-$bi',
                         ),
-                        label: 'Bullet ${bi + 1}',
+                        label: context.l10n.bulletNumber(bi + 1),
                         value: text,
-                        hintText: 'Enter a bullet point',
+                        hintText: context.l10n.enterBulletPoint,
                         deleteEnabled: !viewModel.isBusy,
                         focusNode: _focusNodeForExtendedKeyboardField(
                           'custom-section-project-$sectionIndex-$index-$bi',
@@ -3380,9 +3360,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             ),
                         onDelete: () {
                           _confirmRemoval(
-                            title: 'Remove bullet?',
+                            title: context.l10n.removeBulletTitle,
                             message:
-                                'This bullet will be removed from this entry.',
+                                context.l10n.removeBulletFromEntry,
                             onConfirm: () {
                               viewModel.updateCustomSectionProject(
                                 sectionIndex,
@@ -3453,7 +3433,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 ? null
                 : () => viewModel.addCustomSectionProject(sectionIndex),
             icon: const Icon(Icons.add_rounded),
-            label: const Text('Add entry'),
+            label: Text(context.l10n.addEntry),
           ),
         ),
       ],
@@ -3461,10 +3441,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 }
 
-String _customSectionStepTitle(CustomSectionItem item, int index) {
+String _customSectionStepTitle(
+  BuildContext context,
+  CustomSectionItem item,
+  int index,
+) {
   final t = item.title.trim();
   if (t.isEmpty) {
-    return 'Category ${index + 1}';
+    return context.l10n.categoryNumber(index + 1);
   }
   return t;
 }
@@ -3632,7 +3616,7 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                   chip = ChoiceChip(
                     key: _chipKeyFor(0),
                     label: Text(
-                      ResumeEditorViewModel.personalStepTitle,
+                      context.l10n.sectionPersonalInformation,
                       style: chipStyle,
                     ),
                     selected: widget.currentStep == 0,
@@ -3645,7 +3629,7 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                       size: 24,
                       color: addIconColor,
                     ),
-                    label: Text('Add', style: chipStyle),
+                    label: Text(context.l10n.add, style: chipStyle),
                     selected: false,
                     onSelected: (_) => widget.onAddCategory(),
                   );
@@ -3657,6 +3641,7 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                       ResumeBuilderSectionIds.titleFor(
                         sectionId,
                         widget.customSections,
+                        context.l10n,
                       ),
                       style: chipStyle,
                     ),
@@ -3723,13 +3708,13 @@ class _BottomControls extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton(onPressed: onBack, child: const Text('Back')),
+            child: OutlinedButton(onPressed: onBack, child: Text(context.l10n.back)),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: FilledButton(
               onPressed: onNext,
-              child: Text(isLastStep ? 'Preview' : 'Continue'),
+              child: Text(isLastStep ? context.l10n.preview : context.l10n.continueAction),
             ),
           ),
         ],
@@ -3915,7 +3900,11 @@ class _PickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasValue = value.trim().isNotEmpty;
+    final trimmed = value.trim();
+    final hasValue = trimmed.isNotEmpty;
+    final displayValue = trimmed.toLowerCase() == 'present'
+        ? context.l10n.present
+        : value;
     final theme = Theme.of(context);
     final inputTheme = theme.inputDecorationTheme;
     final fillColor = inputTheme.fillColor ?? theme.colorScheme.surface;
@@ -3952,7 +3941,7 @@ class _PickerField extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                hasValue ? value : label,
+                hasValue ? displayValue : label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: textStyle,
@@ -4160,7 +4149,7 @@ class _BulletField extends StatelessWidget {
                   onTap: deleteEnabled ? onDelete : null,
                   customBorder: const CircleBorder(),
                   child: Tooltip(
-                    message: 'Remove bullet',
+                    message: context.l10n.removeBullet,
                     child: SizedBox(
                       width: _deleteButtonSize,
                       height: _deleteButtonSize,
@@ -4213,8 +4202,8 @@ class _EducationScorePercentToggle extends StatelessWidget {
           highlightColor: primary.withValues(alpha: 0.08),
           child: Tooltip(
             message: active
-                ? 'Showing % on resume — tap to hide'
-                : 'Tap to show % on resume',
+                ? context.l10n.hidePercentOnResume
+                : context.l10n.showPercentOnResume,
             child: SizedBox.square(
               dimension: toggleSize,
               child: Center(
@@ -4779,7 +4768,7 @@ class _PhoneWithCountryCodeFieldState
       ),
       decoration: InputDecoration(
         labelText: widget.label,
-        hintText: _focusNode.hasFocus ? '' : 'Phone number',
+        hintText: _focusNode.hasFocus ? '' : context.l10n.phoneNumber,
         prefixIcon: Padding(
           padding: const EdgeInsets.only(left: 16, right: 14),
           child: DropdownButtonHideUnderline(
@@ -4924,7 +4913,7 @@ class _HintBanner extends StatelessWidget {
                     minHeight: 32,
                   ),
                   visualDensity: VisualDensity.compact,
-                  tooltip: 'Dismiss',
+                  tooltip: context.l10n.dismiss,
                   icon: Icon(
                     Icons.close_rounded,
                     size: compact ? 18 : 20,
@@ -4961,7 +4950,7 @@ class _LivePreviewPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Live preview',
+          context.l10n.livePreview,
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
@@ -4980,7 +4969,7 @@ class _LivePreviewPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Export actions',
+                  context.l10n.exportActions,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -4988,15 +4977,15 @@ class _LivePreviewPanel extends StatelessWidget {
                 const SizedBox(height: 12),
                 FilledButton.tonal(
                   onPressed: onDownload,
-                  child: const Text('Download PDF'),
+                  child: Text(context.l10n.downloadPdf),
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton(
                   onPressed: onShare,
-                  child: const Text('Share resume'),
+                  child: Text(context.l10n.shareResume),
                 ),
                 const SizedBox(height: 10),
-                OutlinedButton(onPressed: onPrint, child: const Text('Print')),
+                OutlinedButton(onPressed: onPrint, child: Text(context.l10n.print)),
               ],
             ),
           ),
@@ -5045,14 +5034,17 @@ class _ScoreTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Resume score',
+                    context.l10n.resumeScore,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'ATS compatibility ${(analysis.atsCompatibility * 100).round()}% with ${analysis.missingSkills.length} missing skill gap${analysis.missingSkills.length == 1 ? '' : 's'}.',
+                    context.l10n.atsCompatibilitySummary(
+                      (analysis.atsCompatibility * 100).round(),
+                      analysis.missingSkills.length,
+                    ),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),

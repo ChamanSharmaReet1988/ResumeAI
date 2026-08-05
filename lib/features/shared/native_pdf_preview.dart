@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 class NativePdfPreview extends StatefulWidget {
   const NativePdfPreview({
@@ -94,8 +95,8 @@ class _NativePdfPreviewState extends State<NativePdfPreview> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError || !snapshot.hasData) {
-          return const Center(
-            child: Text('Unable to load PDF preview right now.'),
+          return Center(
+            child: Text(context.l10n.unableToLoadPdfPreview),
           );
         }
 

@@ -1,3 +1,5 @@
+import 'package:resume_app/l10n/app_localizations.dart';
+
 import 'resume_models.dart';
 
 /// Stable ids for resume builder steps after Personal Information.
@@ -25,26 +27,30 @@ abstract final class ResumeBuilderSectionIds {
     return int.tryParse(id.substring('custom:'.length));
   }
 
-  static String titleFor(String id, List<CustomSectionItem> customSections) {
+  static String titleFor(
+    String id,
+    List<CustomSectionItem> customSections,
+    AppLocalizations l10n,
+  ) {
     switch (id) {
       case work:
-        return 'Work Experience';
+        return l10n.sectionWorkExperience;
       case education:
-        return 'Education';
+        return l10n.sectionEducation;
       case skills:
-        return 'Skills';
+        return l10n.sectionSkills;
       case projects:
-        return 'Projects';
+        return l10n.sectionProjects;
       default:
         final index = customIndex(id);
         if (index == null ||
             index < 0 ||
             index >= customSections.length) {
-          return 'Category';
+          return l10n.category;
         }
         final title = customSections[index].title.trim();
         if (title.isEmpty) {
-          return 'Category ${index + 1}';
+          return l10n.categoryNumber(index + 1);
         }
         if (title.length > 22) {
           return '${title.substring(0, 21)}…';

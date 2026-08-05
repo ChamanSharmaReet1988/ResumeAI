@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 /// Full-screen blocker while purchase or restore is in progress.
 class PremiumStoreLoadingOverlay extends StatelessWidget {
@@ -13,6 +14,7 @@ class PremiumStoreLoadingOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return AbsorbPointer(
       child: ColoredBox(
@@ -39,7 +41,7 @@ class PremiumStoreLoadingOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Please wait. Do not close the app.',
+                    l10n.pleaseWaitDoNotClose,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,

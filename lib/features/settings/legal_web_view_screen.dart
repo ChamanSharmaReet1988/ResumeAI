@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class LegalWebViewScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
               _isLoading = false;
               _errorMessage = error.description.isNotEmpty
                   ? error.description
-                  : 'Could not load this page.';
+                  : context.l10n.couldNotLoadThisPage;
             });
           },
         ),
@@ -68,6 +69,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final iosTitleStyle = theme.cupertinoOverrideTheme?.textTheme?.navTitleTextStyle;
     final baseTitleStyle = theme.platform == TargetPlatform.iOS
@@ -99,7 +101,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Unable to load page',
+                      l10n.unableToLoadPage,
                       style: theme.textTheme.titleMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -114,7 +116,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
                     const SizedBox(height: 20),
                     FilledButton(
                       onPressed: _reload,
-                      child: const Text('Try again'),
+                      child: Text(l10n.tryAgain),
                     ),
                   ],
                 ),

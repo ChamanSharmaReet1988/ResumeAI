@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import 'cover_letter_preview_screen.dart';
 import '../shared/view_models.dart';
@@ -127,7 +128,7 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Cover letter content',
+                                        context.l10n.coverLetterContentHeading,
                                         style: Theme.of(context)
                                             .textTheme
                                             .headlineSmall
@@ -137,7 +138,7 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'Your cover letter draft is ready. Review the full content below, edit anything you want, and your changes will be saved automatically.',
+                                        context.l10n.coverLetterContentIntro,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyLarge
@@ -165,7 +166,7 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
                                           icon: const Icon(
                                             Icons.refresh_rounded,
                                           ),
-                                          label: const Text('Regenerate'),
+                                          label: Text(context.l10n.regenerate),
                                         ),
                                       ),
                                       const SizedBox(height: 12),
@@ -200,7 +201,7 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
                                 viewModel.coverLetter.content.trim().isEmpty
                                 ? null
                                 : () => _openPreview(viewModel),
-                            child: const Text('Preview'),
+                            child: Text(context.l10n.preview),
                           ),
                         ),
                       ),
@@ -213,7 +214,7 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
                       child: IconButton.filledTonal(
                         onPressed: () => FocusScope.of(context).unfocus(),
                         icon: const Icon(Icons.keyboard_hide_rounded),
-                        tooltip: 'Hide keyboard',
+                        tooltip: context.l10n.hideKeyboard,
                       ),
                     ),
                 ],
@@ -278,9 +279,9 @@ class _CoverLetterContentFieldState extends State<_CoverLetterContentField> {
       keyboardType: TextInputType.multiline,
       textCapitalization: TextCapitalization.sentences,
       onChanged: widget.onChanged,
-      decoration: const InputDecoration(
-        labelText: 'Cover letter content',
-        hintText: 'Your generated cover letter will appear here.',
+      decoration: InputDecoration(
+        labelText: context.l10n.coverLetterContentHeading,
+        hintText: context.l10n.coverLetterContentHint,
         alignLabelWithHint: true,
       ),
     );

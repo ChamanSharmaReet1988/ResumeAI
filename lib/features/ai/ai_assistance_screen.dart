@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/services/resume_services.dart';
@@ -126,7 +127,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                 key: const Key('optimize-hide-keyboard-button'),
                 onPressed: () => FocusScope.of(context).unfocus(),
                 icon: const Icon(Icons.keyboard_hide_rounded),
-                tooltip: 'Hide keyboard',
+                tooltip: context.l10n.hideKeyboard,
               ),
             ),
           );
@@ -184,8 +185,8 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
 
     if (selectedResume == null || !selectedResume.hasMeaningfulContent) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Select a saved resume with content first.'),
+        SnackBar(
+          content: Text(context.l10n.selectResumeWithContentFirst),
         ),
       );
       return;
@@ -238,7 +239,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
           sourceResume: created,
           previewData: previewData,
           saveAsNewCopyOnly: true,
-          newCopyTitleSuffix: ' (ATS)',
+          newCopyTitleSuffix: context.l10n.atsTitleSuffix,
         ),
       ),
     );
@@ -257,6 +258,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     final library = context.watch<ResumeLibraryViewModel>();
     final resumes = library.resumes;
     final selectedResume = library.selectedResume;
+    final l10n = context.l10n;
 
     return ListenableBuilder(
       listenable: _jobDescriptionController,
@@ -278,7 +280,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                   horizontal: _fieldHorizontalPadding,
                 ),
                 child: Text(
-                  'Select a resume and AI will create a ChatGPT/Claude-style ATS resume. Each time you tap Create again, AI further optimizes the same ATS draft. Job description is optional.',
+                  l10n.aiAtsIntro,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 11,
@@ -298,7 +300,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'No resume available right now.',
+                            l10n.noResumeAvailable,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w700,
@@ -307,7 +309,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Create a resume first, then come back here to generate an ATS version.',
+                            l10n.createResumeThenGenerateAts,
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(
@@ -330,7 +332,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                     horizontal: _fieldHorizontalPadding,
                   ),
                   child: Text(
-                    'Select resume',
+                    l10n.selectResume,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -426,10 +428,9 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                 minLines: 5,
                 maxLines: 7,
                 onChanged: (_) => _handleInputChanged(),
-                decoration: const InputDecoration(
-                  labelText: 'Job description (optional)',
-                  hintText:
-                      'Paste a job post to tailor the ATS resume, or leave blank.',
+                decoration: InputDecoration(
+                  labelText: l10n.jobDescriptionOptional,
+                  hintText: l10n.jobDescriptionHint,
                   alignLabelWithHint: true,
                 ),
               ),
@@ -447,8 +448,8 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                         : null,
                     child: Text(
                       isFurtherPass
-                          ? 'Further optimize ATS (pass ${_atsCreateAttempt + 1})'
-                          : 'Create ATS resume',
+                          ? l10n.furtherOptimizeAtsPass(_atsCreateAttempt + 1)
+                          : l10n.createAtsResume,
                     ),
                   ),
                 ],
@@ -462,7 +463,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
               if (_appliedChanges.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text(
-                  'Applied changes',
+                  l10n.appliedChanges,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -489,7 +490,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                       FilledButton.tonal(
                         key: const Key('show-created-ats-resume-button'),
                         onPressed: _openCreatedAtsResumePreview,
-                        child: const Text('Show ATS resume'),
+                        child: Text(l10n.showAtsResume),
                       ),
                     ],
                   ),
@@ -539,26 +540,27 @@ class _OptimizedResumeTitleDialogState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AlertDialog(
       backgroundColor: Theme.of(context).cardColor,
-      title: const Text('Resume title'),
+      title: Text(l10n.resumeTitle),
       content: TextField(
         key: const Key('optimized-resume-title-dialog-field'),
         controller: _controller,
         focusNode: _focusNode,
         textCapitalization: TextCapitalization.words,
-        decoration: const InputDecoration(labelText: 'Resume title'),
+        decoration: InputDecoration(labelText: l10n.resumeTitle),
         onSubmitted: (value) => Navigator.of(context).pop(value),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           key: const Key('optimized-resume-title-dialog-save-button'),
           onPressed: () => Navigator.of(context).pop(_controller.text),
-          child: const Text('Save'),
+          child: Text(l10n.save),
         ),
       ],
     );
@@ -570,7 +572,7 @@ class _OptimizedResumePreviewScreen extends StatefulWidget {
     required this.sourceResume,
     required this.previewData,
     this.saveAsNewCopyOnly = false,
-    this.newCopyTitleSuffix = ' (Optimized)',
+    this.newCopyTitleSuffix = '',
   });
 
   final ResumeData sourceResume;
@@ -591,6 +593,7 @@ class _OptimizedResumePreviewScreenState
     final sourceTitle = widget.sourceResume.title.trim().isEmpty
         ? ResumeData.defaultTitle
         : widget.sourceResume.title.trim();
+    final l10n = context.l10n;
     return showModalBottomSheet<_OptimizedResumeSaveChoice>(
       context: context,
       backgroundColor: Theme.of(context).cardColor,
@@ -605,14 +608,14 @@ class _OptimizedResumePreviewScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Save optimized resume',
+                l10n.saveOptimizedResume,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Text(
-                'Do you want to save this as a new copy or replace "$sourceTitle"?',
+                l10n.saveOptimizedResumePrompt(sourceTitle),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -625,7 +628,7 @@ class _OptimizedResumePreviewScreenState
                   onPressed: () => Navigator.of(
                     context,
                   ).pop(_OptimizedResumeSaveChoice.newCopy),
-                  child: const Text('New copy'),
+                  child: Text(l10n.newCopy),
                 ),
               ),
               const SizedBox(height: 12),
@@ -636,7 +639,7 @@ class _OptimizedResumePreviewScreenState
                   onPressed: () => Navigator.of(
                     context,
                   ).pop(_OptimizedResumeSaveChoice.existingResume),
-                  child: const Text('Existing resume'),
+                  child: Text(l10n.existingResume),
                 ),
               ),
               const SizedBox(height: 12),
@@ -644,7 +647,7 @@ class _OptimizedResumePreviewScreenState
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                 ),
               ),
             ],
@@ -657,7 +660,9 @@ class _OptimizedResumePreviewScreenState
   String _optimizedCopyTitle(String title) {
     final trimmed = title.trim();
     final baseTitle = trimmed.isEmpty ? ResumeData.defaultTitle : trimmed;
-    final suffix = widget.newCopyTitleSuffix;
+    final suffix = widget.newCopyTitleSuffix.isEmpty
+        ? context.l10n.optimizedTitleSuffix
+        : widget.newCopyTitleSuffix;
     return baseTitle.endsWith(suffix) ? baseTitle : '$baseTitle$suffix';
   }
 
@@ -733,12 +738,13 @@ class _OptimizedResumePreviewScreenState
   @override
   Widget build(BuildContext context) {
     final pdfService = context.read<ResumePdfService>();
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
         leadingWidth: 56,
         titleSpacing: 2,
-        title: const Text('Resume preview'),
+        title: Text(l10n.resumePreview),
       ),
       body: Column(
         children: [
@@ -761,7 +767,7 @@ class _OptimizedResumePreviewScreenState
                 child: FilledButton(
                   key: const Key('save-optimized-resume-button'),
                   onPressed: _isSaving ? null : _saveResume,
-                  child: const Text('Save'),
+                  child: Text(l10n.save),
                 ),
               ),
             ),
@@ -789,6 +795,7 @@ class _HighlightedResumePdfPreview extends StatelessWidget {
     final viewerBackground = Theme.of(context).scaffoldBackgroundColor;
 
     if (isTestBinding) {
+      final l10n = context.l10n;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -799,10 +806,12 @@ class _HighlightedResumePdfPreview extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (previewData.highlightSummary)
-            const Text('Highlighted summary change'),
+            Text(l10n.highlightedSummaryChange),
           if (previewData.highlightedSkills.isNotEmpty)
             Text(
-              'Highlighted skills: ${previewData.highlightedSkills.join(', ')}',
+              l10n.highlightedSkillsLabel(
+                previewData.highlightedSkills.join(', '),
+              ),
             ),
         ],
       );

@@ -1,35 +1,61 @@
 import 'package:flutter/foundation.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
 
 /// User-facing copy for App Store / Play Billing errors (never raw StoreKit text).
 abstract final class PremiumStoreMessages {
-  static const String purchaseFailed =
-      'We could not complete your purchase. Please try again.';
-  static const String restoreFailed =
-      'We could not restore your subscription. Please try again.';
-  static String get noSubscriptionToRestore =>
+  static String purchaseFailed(AppLocalizations l10n) =>
+      l10n.premiumPurchaseFailed;
+
+  static String restoreFailed(AppLocalizations l10n) =>
+      l10n.premiumRestoreFailed;
+
+  static String noSubscriptionToRestore(AppLocalizations l10n) =>
       defaultTargetPlatform == TargetPlatform.android
-      ? 'No active subscription was found for this Google account.'
-      : 'No active subscription was found for this Apple ID.';
-  static const String storeUnavailable =
-      'Purchases are not available on this device right now.';
-  static String get connectFailed =>
+      ? l10n.noSubscriptionToRestoreGoogle
+      : l10n.noSubscriptionToRestoreApple;
+
+  static String storeUnavailable(AppLocalizations l10n) =>
+      l10n.premiumStoreUnavailable;
+
+  static String connectFailed(AppLocalizations l10n) =>
       defaultTargetPlatform == TargetPlatform.android
-      ? 'We could not connect to Google Play. Please try again later.'
-      : 'We could not connect to the App Store. Please try again later.';
-  static const String verifyFailed =
-      'We could not verify your subscription. Please try again.';
-  static const String productsUnavailable =
-      'Subscription plans are not available right now. Please try again later.';
+      ? l10n.premiumConnectFailedGoogle
+      : l10n.premiumConnectFailedApple;
+
+  static String verifyFailed(AppLocalizations l10n) => l10n.premiumVerifyFailed;
+
+  static String productsUnavailable(AppLocalizations l10n) =>
+      l10n.premiumProductsUnavailable;
+
+  static String purchaseCanceled(AppLocalizations l10n) =>
+      l10n.premiumPurchaseCanceled;
+
+  static String planNotAvailableYet(AppLocalizations l10n) =>
+      l10n.premiumPlanNotAvailableYet;
+
+  static String couldNotStartPurchase(AppLocalizations l10n) =>
+      l10n.premiumCouldNotStartPurchase;
+
+  static String subscriptionRestored(AppLocalizations l10n) =>
+      l10n.premiumSubscriptionRestored;
+
+  static String restoredSuccessfully(AppLocalizations l10n) =>
+      l10n.premiumRestoredSuccessfully;
+
+  static String welcomeToPro(AppLocalizations l10n) =>
+      l10n.welcomeToResumeAppPro;
 
   /// Maps a raw store error to safe UI text. Technical details stay in debug logs.
   static String friendly({
+    required AppLocalizations l10n,
     String? rawMessage,
     Object? error,
-    String fallback = purchaseFailed,
+    String? fallback,
   }) {
+    final resolvedFallback = fallback ?? purchaseFailed(l10n);
     final raw = (rawMessage ?? error?.toString() ?? '').trim();
     if (raw.isEmpty) {
-      return fallback;
+      return resolvedFallback;
     }
 
     if (kDebugMode) {
@@ -39,7 +65,7 @@ abstract final class PremiumStoreMessages {
     final lower = raw.toLowerCase();
 
     if (_looksCanceled(lower)) {
-      return 'Purchase canceled.';
+      return purchaseCanceled(l10n);
     }
 
     if (lower.contains('no active subscription was found') ||
@@ -48,13 +74,18 @@ abstract final class PremiumStoreMessages {
         lower.contains('product not owned') ||
         lower.contains('not owned by the user') ||
         lower.contains('user does not own')) {
-      return noSubscriptionToRestore;
+      return noSubscriptionToRestore(l10n);
     }
 
     if (lower.contains('not available') &&
         (lower.contains('purchase') || lower.contains('billing'))) {
-      return storeUnavailable;
+      return storeUnavailable(l10n);
     }
+
+    final restoreFailedMessage = restoreFailed(l10n);
+    final connectFailedMessage = connectFailed(l10n);
+    final verifyFailedMessage = verifyFailed(l10n);
+    final productsUnavailableMessage = productsUnavailable(l10n);
 
     if (lower.contains('failed to get response from platform') ||
         lower.contains('storekit') ||
@@ -65,39 +96,39 @@ abstract final class PremiumStoreMessages {
         lower.contains('pigeonerror') ||
         lower.contains('billingclient') ||
         lower.contains('play store')) {
-      if (fallback == restoreFailed) {
-        return restoreFailed;
+      if (resolvedFallback == restoreFailedMessage) {
+        return restoreFailedMessage;
       }
-      if (fallback == connectFailed) {
-        return connectFailed;
+      if (resolvedFallback == connectFailedMessage) {
+        return connectFailedMessage;
       }
-      if (fallback == verifyFailed) {
-        return verifyFailed;
+      if (resolvedFallback == verifyFailedMessage) {
+        return verifyFailedMessage;
       }
-      if (fallback == productsUnavailable) {
-        return productsUnavailable;
+      if (resolvedFallback == productsUnavailableMessage) {
+        return productsUnavailableMessage;
       }
-      return purchaseFailed;
+      return purchaseFailed(l10n);
     }
 
     if (lower.contains('network') ||
         lower.contains('internet') ||
         lower.contains('offline') ||
         lower.contains('connection')) {
-      return connectFailed;
+      return connectFailedMessage;
     }
 
     if (lower.contains('restore')) {
-      return restoreFailed;
+      return restoreFailedMessage;
     }
 
     if (lower.contains('product') &&
         (lower.contains('not found') || lower.contains('invalid'))) {
-      return productsUnavailable;
+      return productsUnavailableMessage;
     }
 
     // Do not pass through unknown technical strings.
-    return fallback;
+    return resolvedFallback;
   }
 
   static bool _looksCanceled(String lower) {

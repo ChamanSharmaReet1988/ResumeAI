@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
@@ -55,10 +57,10 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
-  String get _activeHeaderTitle {
+  String _activeHeaderTitle(AppLocalizations l10n) {
     return switch (_currentIndex) {
-      2 => 'AI Resume',
-      _ => _destinations[_currentIndex].label,
+      2 => l10n.tabAiResume,
+      _ => _destinations(l10n)[_currentIndex].label,
     };
   }
 
@@ -332,7 +334,8 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    final destinations = _destinations;
+    final l10n = AppLocalizations.of(context);
+    final destinations = _destinations(l10n);
     final pages = [
       HomeScreen(
         currentSegment: _homeSegment,
@@ -399,7 +402,7 @@ class _AppShellState extends State<AppShell> {
           body: _isCupertino
               ? CupertinoPageScaffold(
                   navigationBar: CupertinoNavigationBar(
-                    middle: Text(_activeHeaderTitle),
+                    middle: Text(_activeHeaderTitle(l10n)),
                     transitionBetweenRoutes: false,
                     backgroundColor: Theme.of(
                       context,
@@ -472,50 +475,50 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  List<_ShellDestination> get _destinations {
+  List<_ShellDestination> _destinations(AppLocalizations l10n) {
     if (_isCupertino) {
-      return const [
+      return [
         _ShellDestination(
-          label: 'Home',
+          label: l10n.tabHome,
           icon: CupertinoIcons.house,
           selectedIcon: CupertinoIcons.house_fill,
         ),
         _ShellDestination(
-          label: 'Templates',
+          label: l10n.tabTemplates,
           icon: CupertinoIcons.rectangle_stack,
           selectedIcon: CupertinoIcons.rectangle_stack_fill,
         ),
         _ShellDestination(
-          label: 'AI Resume',
+          label: l10n.tabAiResume,
           icon: CupertinoIcons.wand_stars,
           selectedIcon: CupertinoIcons.wand_stars,
         ),
         _ShellDestination(
-          label: 'Settings',
+          label: l10n.tabSettings,
           icon: CupertinoIcons.settings,
           selectedIcon: CupertinoIcons.settings_solid,
         ),
       ];
     }
 
-    return const [
+    return [
       _ShellDestination(
-        label: 'Home',
+        label: l10n.tabHome,
         icon: Icons.home_outlined,
         selectedIcon: Icons.home_rounded,
       ),
       _ShellDestination(
-        label: 'Templates',
+        label: l10n.tabTemplates,
         icon: Icons.dashboard_customize_outlined,
         selectedIcon: Icons.dashboard_customize_rounded,
       ),
       _ShellDestination(
-        label: 'AI Resume',
+        label: l10n.tabAiResume,
         icon: Icons.smart_toy_outlined,
         selectedIcon: Icons.smart_toy,
       ),
       _ShellDestination(
-        label: 'Settings',
+        label: l10n.tabSettings,
         icon: Icons.settings_outlined,
         selectedIcon: Icons.settings_rounded,
       ),
@@ -557,25 +560,26 @@ class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AlertDialog(
       backgroundColor: Theme.of(context).cardColor,
-      title: const Text('Resume title'),
+      title: Text(l10n.resumeTitle),
       content: TextField(
         key: const Key('resume-title-dialog-field'),
         controller: _controller,
         focusNode: _focusNode,
         textCapitalization: TextCapitalization.words,
-        decoration: const InputDecoration(labelText: 'Resume title'),
+        decoration: InputDecoration(labelText: l10n.resumeTitle),
         onSubmitted: (value) => Navigator.of(context).pop(value),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(null),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_controller.text),
-          child: const Text('Create'),
+          child: Text(l10n.create),
         ),
       ],
     );
@@ -607,25 +611,26 @@ class _CoverLetterTitleDialogState extends State<_CoverLetterTitleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AlertDialog(
       backgroundColor: Theme.of(context).cardColor,
-      title: const Text('Cover letter title'),
+      title: Text(l10n.coverLetterTitle),
       content: TextField(
         key: const Key('cover-letter-title-dialog-field'),
         controller: _controller,
         textCapitalization: TextCapitalization.words,
         autofocus: true,
-        decoration: const InputDecoration(labelText: 'Cover letter title'),
+        decoration: InputDecoration(labelText: l10n.coverLetterTitle),
         onSubmitted: (value) => Navigator.of(context).pop(value),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(null),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_controller.text),
-          child: const Text('Create'),
+          child: Text(l10n.create),
         ),
       ],
     );

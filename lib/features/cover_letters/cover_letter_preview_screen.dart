@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/corporate_resume_style.dart';
@@ -41,7 +42,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
       await Share.shareXFiles(
         [XFile(file.path)],
         subject: '${viewModel.coverLetter.displayTitle} cover letter',
-        text: 'Shared from ResumeAI',
+        text: context.l10n.sharedFromResumeAi,
         sharePositionOrigin: box == null
             ? null
             : box.localToGlobal(Offset.zero) & box.size,
@@ -62,7 +63,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to open share sheet right now.')),
+        SnackBar(content: Text(context.l10n.unableToOpenShareSheet)),
       );
     }
   }
@@ -77,7 +78,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                 appBar: AppBar(
                   leadingWidth: 56,
                   titleSpacing: 2,
-                  title: const Text('Choose template'),
+                  title: Text(routeContext.l10n.chooseTemplate),
                 ),
                 body: TemplatesScreen(
                   selectedCoverLetterTemplate: viewModel.coverLetter.template,
@@ -173,7 +174,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Font size',
+                              context.l10n.fontSize,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -232,7 +233,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                         child: Text(
-                          'Color',
+                          context.l10n.color,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -491,17 +492,17 @@ class _CoverLetterPreviewBottomBar extends StatelessWidget {
             children: [
               _CoverLetterPreviewBottomAction(
                 icon: Icons.view_quilt_outlined,
-                label: 'Template',
+                label: context.l10n.template,
                 onTap: onTemplate,
               ),
               _CoverLetterPreviewBottomAction(
                 icon: Icons.ios_share_rounded,
-                label: 'Share',
+                label: context.l10n.share,
                 onTap: onShare,
               ),
               _CoverLetterPreviewBottomAction(
                 icon: Icons.palette_outlined,
-                label: 'Color & Font',
+                label: context.l10n.colorAndFont,
                 onTap: onStyle,
               ),
             ],

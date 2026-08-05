@@ -3,6 +3,8 @@ import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
@@ -87,7 +89,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
         _isAvailable = false;
         _cloudItems = const [];
       });
-      _showMessage('Could not load iCloud items: $error');
+      _showMessage(context.l10n.couldNotLoadIcloudItems('$error'));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -96,6 +98,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
   }
 
   Future<void> _syncToICloud() async {
+    final l10n = context.l10n;
     final resumeLibrary = context.read<ResumeLibraryViewModel>();
     final coverLibrary = context.read<CoverLetterLibraryViewModel>();
     final repository = context.read<ResumeRepository>();
@@ -104,7 +107,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
     final localCoverLetters = coverLibrary.coverLetters;
 
     if (localResumes.isEmpty && localCoverLetters.isEmpty) {
-      _showMessage('No local resumes or cover letters available to sync.');
+      _showMessage(l10n.noLocalItemsToSync);
       return;
     }
 
@@ -133,7 +136,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
           localCoverLetters.length - lettersToUpload.length;
 
       if (resumesToUpload.isEmpty && lettersToUpload.isEmpty) {
-        _showMessage('Everything is already up to date in iCloud.');
+        _showMessage(l10n.everythingUpToDateIcloud);
         return;
       }
 
@@ -174,25 +177,21 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
 
       final resumeCount = uploadedResumeIds.length;
       final letterCount = uploadedLetterIds.length;
-      final parts = <String>[];
-      if (resumeCount > 0) {
-        parts.add(
-          '$resumeCount resume${resumeCount == 1 ? '' : 's'}',
-        );
-      }
-      if (letterCount > 0) {
-        parts.add(
-          '$letterCount cover letter${letterCount == 1 ? '' : 's'}',
-        );
-      }
-      final uploadedSummary = parts.join(' and ');
+      final uploadedSummary = _syncUploadSummary(
+        l10n,
+        resumeCount: resumeCount,
+        letterCount: letterCount,
+      );
       final skipped = resumeSkipped + letterSkipped;
       if (skipped > 0) {
         _showMessage(
-          'Synced $uploadedSummary. $skipped newer iCloud item${skipped == 1 ? '' : 's'} left untouched.',
+          l10n.syncedSummaryWithSkippedIcloud(
+            uploadedSummary,
+            l10n.newerIcloudItemsUntouched(skipped),
+          ),
         );
       } else {
-        _showMessage('Synced $uploadedSummary to iCloud.');
+        _showMessage(l10n.syncedSummaryToIcloud(uploadedSummary));
       }
       await logAnalyticsEvent(
         context,
@@ -206,7 +205,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
       );
     } on Exception catch (error) {
       if (mounted) {
-        _showMessage('Could not sync to iCloud: $error');
+        _showMessage(context.l10n.couldNotSyncToIcloud('$error'));
       }
     } finally {
       if (mounted) {
@@ -216,23 +215,25 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
   }
 
   Future<void> _confirmDeleteFromICloud(ICloudResumeSummary item) async {
-    final label = item.isCoverLetter ? 'cover letter' : 'resume';
+    final l10n = context.l10n;
+    final label = item.isCoverLetter
+        ? l10n.documentTypeCoverLetter
+        : l10n.documentTypeResume;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        final dialogL10n = dialogContext.l10n;
         return AlertDialog(
-          title: Text('Delete from iCloud?'),
-          content: Text(
-            'Remove "${item.title}" from iCloud? This will not delete the copy on this device.',
-          ),
+          title: Text(dialogL10n.deleteFromIcloudTitle),
+          content: Text(dialogL10n.deleteFromIcloudMessage(item.title)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(dialogL10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text('Delete $label'),
+              child: Text(dialogL10n.deleteDocumentType(label)),
             ),
           ],
         );
@@ -253,11 +254,11 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
       );
       await _loadCloudResumes();
       if (mounted) {
-        _showMessage('Removed ${item.title} from iCloud.');
+        _showMessage(context.l10n.removedFromIcloud(item.title));
       }
     } on Exception catch (error) {
       if (mounted) {
-        _showMessage('Could not delete from iCloud: $error');
+        _showMessage(context.l10n.couldNotDeleteFromIcloud('$error'));
       }
     } finally {
       if (mounted) {
@@ -290,11 +291,11 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
       }
       await _loadCloudResumes();
       if (mounted) {
-        _showMessage('Downloaded ${item.title}.');
+        _showMessage(context.l10n.downloadedTitle(item.title));
       }
     } on Exception catch (error) {
       if (mounted) {
-        _showMessage('Could not download: $error');
+        _showMessage(context.l10n.couldNotDownloadWithError('$error'));
       }
     } finally {
       if (mounted) {
@@ -324,6 +325,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
       context: context,
       backgroundColor: Theme.of(context).cardColor,
       builder: (sheetContext) {
+        final sheetL10n = sheetContext.l10n;
         final sheetTheme = Theme.of(sheetContext);
         final primaryColor = sheetTheme.colorScheme.primary;
         final actionTextColor = sheetTheme.colorScheme.onSurface;
@@ -346,7 +348,9 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                     color: canDownload ? primaryColor : disabledIconColor,
                   ),
                   title: Text(
-                    canDownload ? 'Download' : 'Already downloaded',
+                    canDownload
+                        ? sheetL10n.download
+                        : sheetL10n.alreadyDownloaded,
                     style: sheetTheme.textTheme.bodyLarge?.copyWith(
                       color: canDownload ? actionTextColor : disabledTextColor,
                     ),
@@ -366,7 +370,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                     ),
                   ),
                   title: Text(
-                    'Delete from iCloud',
+                    sheetL10n.deleteFromIcloud,
                     style: sheetTheme.textTheme.bodyLarge?.copyWith(
                       color: actionTextColor,
                     ),
@@ -422,8 +426,27 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
     );
   }
 
+  String _syncUploadSummary(
+    AppLocalizations l10n, {
+    required int resumeCount,
+    required int letterCount,
+  }) {
+    final parts = <String>[];
+    if (resumeCount > 0) {
+      parts.add(l10n.resumeCountLabel(resumeCount));
+    }
+    if (letterCount > 0) {
+      parts.add(l10n.coverLetterCountLabel(letterCount));
+    }
+    if (parts.length == 2) {
+      return l10n.listJoinAnd(parts[0], parts[1]);
+    }
+    return parts.isEmpty ? '' : parts.first;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final dateFormat = DateFormat('MMM d, y');
     final resumeLibrary = context.watch<ResumeLibraryViewModel>();
@@ -439,7 +462,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
         _cloudItems.where((e) => e.isCoverLetter).toList(growable: false);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('iCloud backup')),
+      appBar: AppBar(title: Text(l10n.iCloudBackup)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -461,7 +484,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Auto sync',
+                              l10n.autoSync,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w400,
                               ),
@@ -523,7 +546,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'Sync to iCloud',
+                                l10n.syncToIcloud,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w400,
                                 ),
@@ -553,7 +576,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Text('Sync'),
+                                  : Text(l10n.sync),
                             ),
                           ],
                         ),
@@ -566,7 +589,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Text(
-                          'iCloud is not available on this device right now. Make sure iCloud Drive is enabled and you are signed in with the correct Apple ID.',
+                          l10n.iCloudUnavailable,
                           style: theme.textTheme.bodyMedium,
                         ),
                       ),
@@ -576,7 +599,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Text(
-                          'No resumes or cover letters are stored in iCloud yet.',
+                          l10n.noItemsInIcloud,
                           style: theme.textTheme.bodyMedium,
                         ),
                       ),
@@ -584,7 +607,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                   else ...[
                     if (cloudResumes.isNotEmpty) ...[
                       Text(
-                        'Resumes in iCloud',
+                        l10n.resumesInIcloud,
                         style: theme.textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
@@ -601,7 +624,7 @@ class _ICloudBackupScreenState extends State<ICloudBackupScreen> {
                     ],
                     if (cloudCoverLetters.isNotEmpty) ...[
                       Text(
-                        'Cover letters in iCloud',
+                        l10n.coverLettersInIcloud,
                         style: theme.textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
@@ -672,11 +695,12 @@ class _ICloudItemContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final title = summary.title.trim().isEmpty
         ? (summary.isCoverLetter
-            ? 'Untitled Cover Letter'
-            : ResumeData.defaultTitle)
+            ? l10n.untitledCoverLetter
+            : l10n.untitledResume)
         : summary.title.trim();
     final metadataStyle = theme.textTheme.bodySmall?.copyWith(
       fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) - 3,
@@ -698,7 +722,7 @@ class _ICloudItemContent extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Updated: ${dateFormat.format(summary.updatedAt)}',
+                l10n.updatedDate(dateFormat.format(summary.updatedAt)),
                 style: metadataStyle,
               ),
             ],

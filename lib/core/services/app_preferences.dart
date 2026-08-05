@@ -1,5 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../app_locale_option.dart';
+
 /// Cross-session UI flags (Hive box `app_prefs`, or in-memory for tests).
 class AppPreferences {
   AppPreferences._(
@@ -17,6 +19,8 @@ class AppPreferences {
     this._setPremiumEntitlementMissStreak,
     this._getDebugPremiumOverrideEnabled,
     this._setDebugPremiumOverrideEnabled,
+    this._getAppLocaleCode,
+    this._setAppLocaleCode,
   );
 
   static const _resumeOrderNudgeDismissedKey = 'resume_order_nudge_dismissed';
@@ -30,6 +34,7 @@ class AppPreferences {
       'premium_entitlement_miss_streak';
   static const _debugPremiumOverrideEnabledKey =
       'debug_premium_override_enabled';
+  static const _appLocaleCodeKey = 'app_locale_code';
 
   final bool Function() _getDismissed;
   final Future<void> Function(bool) _setDismissed;
@@ -45,6 +50,8 @@ class AppPreferences {
   final Future<void> Function(int) _setPremiumEntitlementMissStreak;
   final bool Function() _getDebugPremiumOverrideEnabled;
   final Future<void> Function(bool) _setDebugPremiumOverrideEnabled;
+  final String Function() _getAppLocaleCode;
+  final Future<void> Function(String) _setAppLocaleCode;
 
   static Future<AppPreferences> open() async {
     final box = await Hive.openBox<dynamic>('app_prefs');
@@ -66,6 +73,9 @@ class AppPreferences {
     }
     if (!box.containsKey(_debugPremiumOverrideEnabledKey)) {
       await box.put(_debugPremiumOverrideEnabledKey, false);
+    }
+    if (!box.containsKey(_appLocaleCodeKey)) {
+      await box.put(_appLocaleCodeKey, AppLocaleOption.system);
     }
     return AppPreferences._(
       () => (box.get(_resumeOrderNudgeDismissedKey) as bool?) ?? false,
@@ -100,6 +110,14 @@ class AppPreferences {
         return v is bool ? v : false;
       },
       (value) async => box.put(_debugPremiumOverrideEnabledKey, value),
+      () {
+        final v = box.get(_appLocaleCodeKey);
+        return AppLocaleOption.normalizePreference(v is String ? v : null);
+      },
+      (value) async => box.put(
+        _appLocaleCodeKey,
+        AppLocaleOption.normalizePreference(value),
+      ),
     );
   }
 
@@ -112,6 +130,7 @@ class AppPreferences {
     bool premiumManualRestoreRequired = false,
     int premiumEntitlementMissStreak = 0,
     bool debugPremiumOverrideEnabled = false,
+    String appLocaleCode = AppLocaleOption.system,
   }) {
     var dismissed = resumeOrderNudgeDismissed;
     var iCloudAuto = iCloudAutoSyncEnabled;
@@ -120,6 +139,7 @@ class AppPreferences {
     var manualRestoreRequired = premiumManualRestoreRequired;
     var premiumMissStreak = premiumEntitlementMissStreak;
     var debugPremiumOverride = debugPremiumOverrideEnabled;
+    var localeCode = AppLocaleOption.normalizePreference(appLocaleCode);
     return AppPreferences._(
       () => dismissed,
       (value) async {
@@ -149,6 +169,10 @@ class AppPreferences {
       (value) async {
         debugPremiumOverride = value;
       },
+      () => localeCode,
+      (value) async {
+        localeCode = AppLocaleOption.normalizePreference(value);
+      },
     );
   }
 
@@ -159,6 +183,8 @@ class AppPreferences {
   bool get premiumManualRestoreRequired => _getPremiumManualRestoreRequired();
   int get premiumEntitlementMissStreak => _getPremiumEntitlementMissStreak();
   bool get debugPremiumOverrideEnabled => _getDebugPremiumOverrideEnabled();
+  String get appLocaleCode =>
+      AppLocaleOption.normalizePreference(_getAppLocaleCode());
 
   Future<void> setResumeOrderNudgeDismissed(bool value) => _setDismissed(value);
 
@@ -178,4 +204,7 @@ class AppPreferences {
 
   Future<void> setDebugPremiumOverrideEnabled(bool value) =>
       _setDebugPremiumOverrideEnabled(value);
+
+  Future<void> setAppLocaleCode(String value) =>
+      _setAppLocaleCode(AppLocaleOption.normalizePreference(value));
 }

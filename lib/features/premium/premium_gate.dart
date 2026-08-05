@@ -2,6 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/services/premium_access.dart';
@@ -53,6 +54,7 @@ Future<bool> ensurePremiumAccess(BuildContext context) async {
     if (premium.consumePremiumWelcomePending() && context.mounted) {
       final planLabel = premiumWelcomePlanLabel(
         premium.activeSubscriptionProductId,
+        context.l10n,
       );
       unawaited(
         showPremiumWelcomeDialog(context, planLabel: planLabel),

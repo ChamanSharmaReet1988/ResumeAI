@@ -1,0 +1,728 @@
+{
+  "@@locale": "id",
+  "appTitle": "ResumeAI",
+  "tabHome": "Beranda",
+  "tabTemplates": "Template",
+  "tabAiResume": "CV AI",
+  "tabSettings": "Pengaturan",
+  "appearance": "Tampilan",
+  "themeSystem": "Sistem",
+  "themeLight": "Terang",
+  "themeDark": "Gelap",
+  "appLanguage": "Bahasa aplikasi",
+  "languageSystemDefault": "Default sistem",
+  "languageEnglish": "English",
+  "languageSpanish": "Español",
+  "languagePortugueseBrazil": "Português (Brasil)",
+  "languageIndonesian": "Bahasa Indonesia",
+  "iCloudBackup": "Cadangan iCloud",
+  "googleDriveBackup": "Cadangan Google Drive",
+  "goPremium": "Go Premium",
+  "youAreProUser": "Anda pengguna Pro",
+  "feedback": "Masukan",
+  "rateApp": "Nilai aplikasi",
+  "shareApp": "Bagikan aplikasi",
+  "privacyPolicy": "Kebijakan privasi",
+  "termsOfUse": "Syarat penggunaan",
+  "versionLabel": "Versi",
+  "versionWithBuild": "Versi {version} ({build})",
+  "ok": "OK",
+  "languageAffectsAppOnly": "Hanya mengubah menu dan teks aplikasi. Isi resume Anda tetap seperti yang ditulis.",
+  "homeSegmentResume": "Resume",
+  "homeSegmentCoverLetter": "Surat lamaran",
+  "noResumesYet": "Belum ada resume",
+  "noResumesYetBody": "Ketuk tombol tambah untuk membuat resume pertama Anda.",
+  "noCoverLettersYet": "Belum ada surat lamaran",
+  "noCoverLettersYetBody": "Ketuk tombol tambah untuk membuat surat lamaran pertama Anda.",
+  "actionOpen": "Buka",
+  "actionEdit": "Edit",
+  "actionRename": "Ubah nama",
+  "actionDuplicate": "Duplikat",
+  "actionDelete": "Hapus",
+  "cancel": "Batal",
+  "create": "Buat",
+  "deleteResumeTitle": "Hapus resume?",
+  "deleteResumeMessage": "Hapus \"{title}\"? Tindakan ini tidak dapat dibatalkan.",
+  "@deleteResumeMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCoverLetterTitle": "Hapus surat lamaran?",
+  "deleteCoverLetterMessage": "Hapus \"{title}\"? Tindakan ini tidak dapat dibatalkan.",
+  "@deleteCoverLetterMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "renameResumeTitle": "Ubah nama resume",
+  "duplicateResumeTitle": "Duplikat resume",
+  "resumeRenamed": "Resume diganti namanya.",
+  "resumeDuplicated": "Resume diduplikasi.",
+  "resumeTitle": "Judul resume",
+  "enterResumeTitle": "Masukkan judul resume",
+  "coverLetterTitle": "Judul surat lamaran",
+  "updatedDate": "Diperbarui {date}",
+  "@updatedDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "titleWithCopySuffix": "{title} (Salinan)",
+  "@titleWithCopySuffix": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "untitledResume": "Resume tanpa judul",
+  "untitledCoverLetter": "Surat lamaran tanpa judul",
+  "save": "Simpan",
+  "continueAction": "Lanjutkan",
+  "restore": "Pulihkan",
+  "resumeAppPro": "ResumeApp Pro",
+  "chooseAPlan": "Pilih paket",
+  "premiumLegalAgreement": "Dengan melanjutkan, Anda menyetujui Syarat Penggunaan dan Kebijakan Privasi kami.",
+  "subscriptionFound": "Langganan ditemukan",
+  "processingEllipsis": "Memproses…",
+  "checkingYourSubscription": "Memeriksa langganan Anda…",
+  "completingYourPurchase": "Menyelesaikan pembelian Anda…",
+  "restoringYourSubscription": "Memulihkan langganan Anda…",
+  "pleaseWaitDoNotClose": "Harap tunggu. Jangan tutup aplikasi.",
+  "premiumWelcomeCongratulations": "Selamat!",
+  "premiumWelcomeBody": "ResumeApp Pro aktif pada {planLabel} Anda. Template Premium dan {backup} kini terbuka.",
+  "@premiumWelcomeBody": {
+    "placeholders": {
+      "planLabel": {
+        "type": "String"
+      },
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumBenefitUnlockLayouts": "Buka semua tata letak resume profesional dan ATS di luar template gratis",
+  "premiumBenefitBackupIcloud": "Cadangkan dan sinkronkan resume dengan iCloud",
+  "premiumBenefitBackupGoogleDrive": "Cadangkan dan sinkronkan resume dengan Google Drive",
+  "premiumUpcomingUpdateBadge": "Hadir di pembaruan berikutnya",
+  "premiumUpcomingUpdateMessage": "Tata letak resume baru dan template modern, termasuk dalam Pro.",
+  "planWeekly": "Mingguan",
+  "planMonthly": "Bulanan",
+  "planYearly": "Tahunan",
+  "planPro": "Pro",
+  "planSubtitleWeekly": "Akses jangka pendek",
+  "planSubtitleMonthly": "Bayar bulanan",
+  "planSubtitleYearly": "Nilai terbaik",
+  "planLabelNamed": "Paket {title}",
+  "@planLabelNamed": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savePercentWithYearlyBilling": "Hemat {percent}% dengan penagihan tahunan",
+  "@savePercentWithYearlyBilling": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "priceUnavailable": "—",
+  "storeAccountGoogle": "akun Google",
+  "storeAccountApple": "Apple ID",
+  "alreadySubscribedDebugOverride": "Override Pro pengembang aktif. Semua fitur Pro terbuka untuk pengujian di perangkat ini.",
+  "alreadySubscribedWeekly": "Anda memiliki langganan mingguan aktif. Semua template Pro, {backup}, dan fitur premium sudah termasuk.",
+  "@alreadySubscribedWeekly": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadySubscribedMonthly": "Anda memiliki langganan bulanan aktif. Semua template Pro, {backup}, dan fitur premium sudah termasuk.",
+  "@alreadySubscribedMonthly": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadySubscribedYearly": "Anda memiliki langganan tahunan aktif. Semua template Pro, {backup}, dan fitur premium sudah termasuk.",
+  "@alreadySubscribedYearly": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadySubscribedGeneric": "Anda memiliki langganan ResumeApp Pro aktif. Semua fitur premium termasuk dalam paket Anda.",
+  "restoreInsteadWeekly": "Langganan mingguan ditemukan untuk {account} ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.",
+  "@restoreInsteadWeekly": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreInsteadMonthly": "Langganan bulanan ditemukan untuk {account} ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.",
+  "@restoreInsteadMonthly": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreInsteadYearly": "Langganan tahunan ditemukan untuk {account} ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.",
+  "@restoreInsteadYearly": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreInsteadGeneric": "Langganan ResumeApp Pro aktif ditemukan untuk {account} ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.",
+  "@restoreInsteadGeneric": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumPurchaseFailed": "Kami tidak dapat menyelesaikan pembelian Anda. Silakan coba lagi.",
+  "premiumRestoreFailed": "Kami tidak dapat memulihkan langganan Anda. Silakan coba lagi.",
+  "noSubscriptionToRestoreGoogle": "Tidak ada langganan aktif yang ditemukan untuk akun Google ini.",
+  "noSubscriptionToRestoreApple": "Tidak ada langganan aktif yang ditemukan untuk Apple ID ini.",
+  "premiumStoreUnavailable": "Pembelian tidak tersedia di perangkat ini saat ini.",
+  "premiumConnectFailedGoogle": "Kami tidak dapat terhubung ke Google Play. Silakan coba lagi nanti.",
+  "premiumConnectFailedApple": "Kami tidak dapat terhubung ke App Store. Silakan coba lagi nanti.",
+  "premiumVerifyFailed": "Kami tidak dapat memverifikasi langganan Anda. Silakan coba lagi.",
+  "premiumProductsUnavailable": "Paket langganan tidak tersedia saat ini. Silakan coba lagi nanti.",
+  "premiumPurchaseCanceled": "Pembelian dibatalkan.",
+  "hideKeyboard": "Sembunyikan keyboard",
+  "selectResumeWithContentFirst": "Pilih dulu resume tersimpan yang berisi konten.",
+  "aiAtsIntro": "Pilih resume dan AI akan membuat resume ATS bergaya ChatGPT/Claude. Setiap kali Anda ketuk Buat lagi, AI mengoptimalkan lebih lanjut draf ATS yang sama. Deskripsi pekerjaan bersifat opsional.",
+  "noResumeAvailable": "Belum ada resume tersedia saat ini.",
+  "createResumeThenGenerateAts": "Buat resume terlebih dahulu, lalu kembali ke sini untuk membuat versi ATS.",
+  "selectResume": "Pilih resume",
+  "jobDescriptionOptional": "Deskripsi pekerjaan (opsional)",
+  "jobDescriptionHint": "Tempel lowongan untuk menyesuaikan resume ATS, atau biarkan kosong.",
+  "createAtsResume": "Buat resume ATS",
+  "furtherOptimizeAtsPass": "Optimalkan ATS lebih lanjut (putaran {pass})",
+  "@furtherOptimizeAtsPass": {
+    "placeholders": {
+      "pass": {
+        "type": "int"
+      }
+    }
+  },
+  "appliedChanges": "Perubahan yang diterapkan",
+  "showAtsResume": "Tampilkan resume ATS",
+  "saveOptimizedResume": "Simpan resume yang dioptimalkan",
+  "saveOptimizedResumePrompt": "Apakah Anda ingin menyimpan ini sebagai salinan baru atau mengganti \"{sourceTitle}\"?",
+  "@saveOptimizedResumePrompt": {
+    "placeholders": {
+      "sourceTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "newCopy": "Salinan baru",
+  "existingResume": "Resume yang ada",
+  "resumePreview": "Pratinjau resume",
+  "highlightedSummaryChange": "Perubahan ringkasan yang disorot",
+  "highlightedSkillsLabel": "Keterampilan yang disorot: {skills}",
+  "@highlightedSkillsLabel": {
+    "placeholders": {
+      "skills": {
+        "type": "String"
+      }
+    }
+  },
+  "atsTitleSuffix": " (ATS)",
+  "optimizedTitleSuffix": " (Dioptimalkan)",
+  "professionalResumes": "Resume profesional",
+  "atsResumes": "Resume ATS",
+  "useTemplate": "Gunakan template",
+  "templateCorporate": "Korporat",
+  "templateCorporateCaption": "Pita atas tegas dengan bagian profesional yang ringkas.",
+  "templateProfileSidebar": "Bilah sisi profil",
+  "templateProfileSidebarCaption": "Tata letak berfokus profil dengan jangkar visual yang kuat.",
+  "templateClassicSidebar": "Bilah sisi klasik",
+  "templateClassicSidebarCaption": "Rel kiri lembut dengan identitas berfoto dan bagian terstruktur.",
+  "templateAccentStrip": "Garis aksen",
+  "templateAccentStripCaption": "Garis kiri tegas dengan nama besar dan bagian yang rapi.",
+  "templateStructuredAts": "ATS terstruktur",
+  "templateStructuredAtsCaption": "Pita bagian abu-abu dan header terpusat untuk parser.",
+  "templateLatexClassicAts": "ATS klasik LaTeX",
+  "templateLatexClassicAtsCaption": "Bagian beraturan ala resume LaTeX klasik.",
+  "templateModernFlowAts": "ATS alur modern",
+  "templateModernFlowAtsCaption": "Baris kontak terpusat dengan urutan bagian yang logis.",
+  "templateExecutiveAts": "ATS eksekutif",
+  "templateExecutiveAtsCaption": "Judul huruf besar dan keterampilan dua kolom.",
+  "templateCenterClassicAts": "ATS klasik terpusat",
+  "templateCenterClassicAtsCaption": "Nama terpusat, tagline berpipa, dan bagian satu kolom.",
+  "templateProfessionalBlueAts": "ATS biru profesional",
+  "templateProfessionalBlueAtsCaption": "Judul aksen biru dengan kontak rata kanan dan kisi keterampilan.",
+  "templateExecutiveNote": "Catatan eksekutif",
+  "templateExecutiveNoteCaption": "Surat lamaran profesional dengan blok header yang kuat.",
+  "templateMinimalLetter": "Surat minimal",
+  "templateMinimalLetterCaption": "Header terpusat dengan jarak lega dan isi rata kiri.",
+  "templateMintLetter": "Surat mint",
+  "templateMintLetterCaption": "Nama besar, latar mint lembut, dan isi surat modern yang rapi.",
+  "templateClassicBusiness": "Bisnis klasik",
+  "templateClassicBusinessCaption": "Surat bisnis tradisional: tanggal, blok penerima, dan isi rata kiri.",
+  "autoSync": "Sinkronisasi otomatis",
+  "sync": "Sinkronkan",
+  "download": "Unduh",
+  "alreadyDownloaded": "Sudah diunduh",
+  "signOut": "Keluar",
+  "signInWithGoogle": "Masuk dengan Google",
+  "syncToIcloud": "Sinkronkan ke iCloud",
+  "syncToGoogleDrive": "Sinkronkan ke Google Drive",
+  "iCloudUnavailable": "iCloud tidak tersedia di perangkat ini saat ini. Pastikan iCloud Drive diaktifkan dan Anda masuk dengan Apple ID yang benar.",
+  "noItemsInIcloud": "Belum ada resume atau surat lamaran di iCloud.",
+  "noItemsOnDrive": "Belum ada resume atau surat lamaran di Drive.",
+  "resumesInIcloud": "Resume di iCloud",
+  "coverLettersInIcloud": "Surat lamaran di iCloud",
+  "resumesInGoogleDrive": "Resume di Google Drive",
+  "coverLettersInGoogleDrive": "Surat lamaran di Google Drive",
+  "googleDriveBackupIntro": "Cadangkan resume dan surat lamaran ke folder ResumeApp di Google Drive Anda. Hanya file yang dibuat oleh aplikasi ini yang dapat diakses.",
+  "googleDrivePermissionHint": "Di halaman Google yang terbuka berikutnya, di bawah \"Pilih yang dapat diakses ResumeApp\", centang kotak di samping Google Drive (file yang digunakan dengan aplikasi ini), lalu ketuk Lanjutkan. Tanpa kotak itu, cadangan Drive tidak dapat berfungsi.",
+  "googleDriveLooksLikeThis": "Tampilannya seperti ini:",
+  "googleDrivePermissionExampleSemantics": "Contoh layar Google: Pilih yang dapat diakses ResumeApp, dengan baris Google Drive dan kotak centang.",
+  "noLocalItemsToSync": "Tidak ada resume atau surat lamaran lokal untuk disinkronkan.",
+  "everythingUpToDateIcloud": "Semuanya sudah terbaru di iCloud.",
+  "everythingUpToDateGoogleDrive": "Semuanya sudah terbaru di Google Drive.",
+  "couldNotLoadIcloudItems": "Tidak dapat memuat item iCloud: {error}",
+  "@couldNotLoadIcloudItems": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotSyncToIcloud": "Tidak dapat menyinkronkan ke iCloud: {error}",
+  "@couldNotSyncToIcloud": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDeleteFromIcloud": "Tidak dapat menghapus dari iCloud: {error}",
+  "@couldNotDeleteFromIcloud": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDownloadWithError": "Tidak dapat mengunduh: {error}",
+  "@couldNotDownloadWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryToIcloud": "{summary} disinkronkan ke iCloud.",
+  "@syncedSummaryToIcloud": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryWithSkippedIcloud": "{summary} disinkronkan. {skipped} dibiarkan utuh.",
+  "@syncedSummaryWithSkippedIcloud": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryToGoogleDrive": "{summary} disinkronkan ke Google Drive.",
+  "@syncedSummaryToGoogleDrive": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryWithSkippedDrive": "{summary} disinkronkan. {skipped} dibiarkan utuh.",
+  "@syncedSummaryWithSkippedDrive": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "String"
+      }
+    }
+  },
+  "resumeCountLabel": "{count, plural, =1{1 resume} other{{count} resume}}",
+  "@resumeCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coverLetterCountLabel": "{count, plural, =1{1 surat lamaran} other{{count} surat lamaran}}",
+  "@coverLetterCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newerIcloudItemsUntouched": "{count, plural, =1{1 item iCloud yang lebih baru} other{{count} item iCloud yang lebih baru}}",
+  "@newerIcloudItemsUntouched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newerDriveItemsUntouched": "{count, plural, =1{1 item Drive yang lebih baru} other{{count} item Drive yang lebih baru}}",
+  "@newerDriveItemsUntouched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listJoinAnd": "{first} dan {second}",
+  "@listJoinAnd": {
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteFromIcloudTitle": "Hapus dari iCloud?",
+  "deleteFromIcloudMessage": "Hapus \"{title}\" dari iCloud? Ini tidak akan menghapus salinan di perangkat ini.",
+  "@deleteFromIcloudMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteFromIcloud": "Hapus dari iCloud",
+  "deleteDocumentType": "Hapus {type}",
+  "@deleteDocumentType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "documentTypeResume": "resume",
+  "documentTypeCoverLetter": "surat lamaran",
+  "removedFromIcloud": "{title} dihapus dari iCloud.",
+  "@removedFromIcloud": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedTitle": "{title} diunduh.",
+  "@downloadedTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "googleSignInUnavailable": "Masuk Google tidak tersedia di perangkat ini.",
+  "couldNotSignInGoogleDrive": "Tidak dapat masuk ke Google Drive saat ini. Coba lagi.",
+  "couldNotLoadGoogleDriveItems": "Tidak dapat memuat item Google Drive Anda saat ini. Coba lagi.",
+  "couldNotSyncGoogleDrive": "Tidak dapat menyinkronkan ke Google Drive saat ini. Coba lagi.",
+  "couldNotDownloadFromGoogleDrive": "Tidak dapat mengunduh item ini dari Google Drive. Coba lagi.",
+  "couldNotRemoveFromGoogleDrive": "Tidak dapat menghapus item ini dari Google Drive. Coba lagi.",
+  "removeFromGoogleDriveTitle": "Hapus dari Google Drive?",
+  "removeFromGoogleDriveMessage": "Hapus \"{title}\" dari Google Drive? Ini tidak akan menghapus salinan di perangkat ini.",
+  "@removeFromGoogleDriveMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFromGoogleDrive": "Hapus dari Google Drive",
+  "removeDocumentType": "Hapus {type}",
+  "@removeDocumentType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "removedFromGoogleDrive": "{title} dihapus dari Google Drive.",
+  "@removedFromGoogleDrive": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "googleSignInNotConfigured": "Google Sign-In belum dikonfigurasi untuk build ini. Tambahkan sidik jari SHA-1 debug dan rilis di Firebase (lihat android/GOOGLE_SIGN_IN_SETUP.md), unduh ulang google-services.json, lalu bangun ulang.",
+  "couldNotOpenGoogleSignIn": "Tidak dapat membuka layar masuk Google. Coba lagi.",
+  "googleSignInInterrupted": "Masuk Google terputus. Coba lagi.",
+  "unableToLoadPage": "Tidak dapat memuat halaman",
+  "couldNotLoadThisPage": "Tidak dapat memuat halaman ini.",
+  "tryAgain": "Coba lagi",
+  "shareAppSubject": "ResumeApp",
+  "shareAppMessage": "Coba ResumeApp untuk membuat, mengoptimalkan, dan membagikan resume profesional di iPhone. Unduh di App Store: {url}",
+  "@shareAppMessage": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackEmailSubject": "Masukan ResumeApp",
+  "noMailAppFound": "Aplikasi email tidak ditemukan. Silakan konfigurasi aplikasi email.",
+  "couldNotOpenMailApp": "Tidak dapat membuka aplikasi email. Coba lagi.",
+  "couldNotOpenLink": "Tidak dapat membuka tautan saat ini.",
+  "add": "Tambah",
+  "back": "Kembali",
+  "done": "Selesai",
+  "hide": "Sembunyikan",
+  "remove": "Hapus",
+  "preview": "Pratinjau",
+  "share": "Bagikan",
+  "print": "Cetak",
+  "dismiss": "Tutup",
+  "template": "Templat",
+  "color": "Warna",
+  "title": "Judul",
+  "type": "Jenis",
+  "year": "Tahun",
+  "summary": "Ringkasan",
+  "category": "Kategori",
+  "present": "Sekarang",
+  "language": "Bahasa",
+  "sectionPersonalInformation": "Informasi pribadi",
+  "sectionWorkExperience": "Pengalaman kerja",
+  "sectionEducation": "Pendidikan",
+  "sectionSkills": "Keterampilan",
+  "sectionProjects": "Proyek",
+  "personalInformationTitle": "Informasi pribadi",
+  "workExperienceTitle": "Pengalaman kerja",
+  "categoryNumber": "Kategori {number}",
+  "pdfSavedTo": "PDF disimpan ke {path}",
+  "unableToGenerateSummary": "Tidak dapat membuat ringkasan profesional saat ini.",
+  "summaryUpdated": "Ringkasan diperbarui",
+  "summaryAdded": "Ringkasan ditambahkan",
+  "skillAlreadyInList": "Keterampilan ini sudah ada di daftar Anda.",
+  "addBulletPoint": "Tambah poin",
+  "appearsFirstOnYourResume": "Muncul pertama di resume Anda",
+  "appearsOnYourResumeAt": "Muncul di posisi {position} di resume Anda",
+  "hideFromResumeTitle": "Sembunyikan dari resume?",
+  "hideFromResumeMessage": "{sectionName} tidak akan ditampilkan di resume atau PDF yang diekspor. Anda dapat menampilkannya lagi kapan saja menggunakan tombol di samping judul bagian.",
+  "hideFromResume": "Sembunyikan dari resume",
+  "showOnResume": "Tampilkan di resume",
+  "chooseMonthAndYear": "Pilih bulan dan tahun",
+  "clearDate": "Hapus tanggal",
+  "selectEndMonthAndYear": "Pilih bulan dan tahun akhir",
+  "selectStartMonthAndYear": "Pilih bulan dan tahun mulai",
+  "selectEndYear": "Pilih tahun akhir",
+  "selectStartYear": "Pilih tahun mulai",
+  "newSection": "Bagian baru",
+  "newSectionTitleHint": "Sertifikasi, Bahasa, Penghargaan…",
+  "sectionTypeNormal": "Normal",
+  "sectionTypeNormalSubtitle": "Ringkasan atau poin",
+  "sectionTypeAdvance": "Lanjutan",
+  "sectionTypeAdvanceSubtitle": "Entri gaya proyek dengan judul dan poin",
+  "removeSectionTitle": "Hapus bagian?",
+  "removeSectionMessage": "Bagian ini akan dihapus dari resume Anda. Anda dapat menambahkan bagian khusus baru dengan Tambah kapan saja.",
+  "unableToPickImage": "Tidak dapat memilih gambar saat ini.",
+  "camera": "Kamera",
+  "library": "Galeri",
+  "profilePhoto": "Foto profil",
+  "tapToChangePhoto": "Ketuk untuk mengubah foto",
+  "previousField": "Bidang sebelumnya",
+  "nextField": "Bidang berikutnya",
+  "fullName": "Nama lengkap",
+  "targetJobTitle": "Jabatan target",
+  "githubLink": "Tautan GitHub",
+  "linkedinLink": "Tautan LinkedIn",
+  "email": "Email",
+  "phoneNumber": "Nomor telepon",
+  "location": "Lokasi",
+  "websiteOrPortfolio": "Situs web atau portofolio",
+  "professionalSummary": "Ringkasan profesional",
+  "personalInformationSubtitle": "Mulai dengan identitas, detail kontak, peran target, dan ringkasan posisi singkat.",
+  "suggestSummary": "Sarankan ringkasan",
+  "resumeOrder": "Urutan resume",
+  "resumeOrderBody": "Entri tetap dalam urutan ini. Gunakan panah untuk memindahkan peran terkuat ke atas.",
+  "experienceNumber": "Pengalaman {number}",
+  "moveUp": "Pindah ke atas",
+  "moveDown": "Pindah ke bawah",
+  "deleteExperience": "Hapus pengalaman",
+  "deleteWorkExperienceTitle": "Hapus pengalaman kerja?",
+  "deleteWorkExperienceMessage": "Ini akan menghapus pekerjaan ini dan semua poinnya. Tidak dapat dibatalkan.",
+  "role": "Peran",
+  "company": "Perusahaan",
+  "startDate": "Tanggal mulai",
+  "endDate": "Tanggal akhir",
+  "monthYearHint": "Bulan/tahun",
+  "monthYearOrPresentHint": "Bulan/tahun atau Sekarang",
+  "bulletNumber": "Poin {number}",
+  "removeBulletTitle": "Hapus poin?",
+  "removeBulletFromJob": "Poin ini akan dihapus dari pekerjaan ini.",
+  "addExperience": "Tambah pengalaman",
+  "educationSubtitle": "Sertakan gelar, institusi, dan jangka waktu studi Anda.",
+  "educationNumber": "Pendidikan {number}",
+  "moveEducationUp": "Pindahkan pendidikan ke atas",
+  "moveEducationDown": "Pindahkan pendidikan ke bawah",
+  "deleteEducationEntry": "Hapus entri pendidikan",
+  "deleteEducationEntryTitle": "Hapus entri pendidikan?",
+  "deleteEducationEntryMessage": "Ini akan menghapus sekolah dan gelar ini dari resume Anda. Tidak dapat dibatalkan.",
+  "institution": "Institusi",
+  "degree": "Gelar",
+  "startYear": "Tahun mulai",
+  "endYear": "Tahun akhir",
+  "selectYear": "Pilih tahun",
+  "marksScore": "Nilai / skor",
+  "marksScoreHint": "8.6 IPK, 92, atau 780/800",
+  "addEducation": "Tambah pendidikan",
+  "showScoreAsPercent": "Tampilkan sebagai persen",
+  "skillsSubtitle": "Tambahkan alat dan kata kunci khusus pekerjaan. Pilih daftar sederhana, atau kategorikan keterampilan di bawah judul (misalnya Bahasa, Alat).",
+  "skillsCount": "{count} keterampilan",
+  "simpleList": "Daftar sederhana",
+  "categorised": "Dikategorikan",
+  "addASkill": "Tambah keterampilan",
+  "addSkillHelper": "Ketik untuk melihat saran atau tambahkan keterampilan Anda sendiri",
+  "categoryHint": "Bahasa pemrograman, Alat, Framework, dll.",
+  "moveCategoryUp": "Pindahkan kategori ke atas",
+  "moveCategoryDown": "Pindahkan kategori ke bawah",
+  "removeCategory": "Hapus kategori",
+  "deleteCategoryTitle": "Hapus kategori?",
+  "deleteCategoryMessage": "Ini akan menghapus kategori ini dan semua keterampilannya. Tidak dapat dibatalkan.",
+  "addCategory": "Tambah kategori",
+  "projectsSubtitle": "Tampilkan proyek sampingan, peluncuran produk, atau karya portofolio dengan hasil yang jelas.",
+  "projectNumber": "Proyek {number}",
+  "moveProjectUp": "Pindahkan proyek ke atas",
+  "moveProjectDown": "Pindahkan proyek ke bawah",
+  "deleteProject": "Hapus proyek",
+  "deleteProjectTitle": "Hapus proyek?",
+  "deleteProjectMessage": "Ini akan menghapus proyek ini dan semua poinnya. Tidak dapat dibatalkan.",
+  "projectTitle": "Judul proyek",
+  "enterBulletPoint": "Masukkan poin",
+  "removeBulletFromProject": "Poin ini akan dihapus dari proyek ini.",
+  "addProject": "Tambah proyek",
+  "customSectionProjectsSubtitle": "Tambahkan entri dengan judul dan poin, seperti bagian Proyek.",
+  "removeSection": "Hapus bagian",
+  "bulletPoints": "Poin",
+  "customSectionSummaryHint": "Tulis bagian ini sebagai paragraf singkat untuk resume Anda.",
+  "entryNumber": "Entri {number}",
+  "moveEntryUp": "Pindahkan entri ke atas",
+  "moveEntryDown": "Pindahkan entri ke bawah",
+  "deleteEntry": "Hapus entri",
+  "deleteEntryTitle": "Hapus entri?",
+  "deleteEntryMessage": "Ini akan menghapus entri ini dan semua poinnya. Tidak dapat dibatalkan.",
+  "removeBulletFromEntry": "Poin ini akan dihapus dari entri ini.",
+  "addEntry": "Tambah entri",
+  "livePreview": "Pratinjau langsung",
+  "exportActions": "Tindakan ekspor",
+  "downloadPdf": "Unduh PDF",
+  "shareResume": "Bagikan resume",
+  "resumeScore": "Skor resume",
+  "atsCompatibilitySummary": "{count, plural, =1{Kompatibilitas ATS {percent}% dengan 1 kesenjangan keterampilan yang hilang.} other{Kompatibilitas ATS {percent}% dengan {count} kesenjangan keterampilan yang hilang.}}",
+  "unableToOpenShareSheet": "Tidak dapat membuka lembar berbagi saat ini.",
+  "chooseTemplate": "Pilih templat",
+  "fontSize": "Ukuran font",
+  "colorAndFont": "Warna & Font",
+  "sharedFromResumeAi": "Dibagikan dari ResumeAI",
+  "unableToLoadPdfPreview": "Tidak dapat memuat pratinjau PDF saat ini.",
+  "shareFormatPdf": "PDF",
+  "shareFormatDocx": "DOCX",
+  "coverLetterHeading": "Surat lamaran",
+  "coverLetterEditorIntro": "Halaman ini membuat draf surat lamaran dari detail di bawah. Tambahkan nama perusahaan, nama posisi, satu atau lebih keterampilan yang ingin ditonjolkan, dan bahasa, lalu ketuk Buat surat lamaran untuk membuka draf lengkap di layar berikutnya.",
+  "companyName": "Nama perusahaan",
+  "jobPositionName": "Nama posisi pekerjaan",
+  "skillToHighlight": "Keterampilan yang ditonjolkan",
+  "creatingEllipsis": "Membuat...",
+  "createCoverLetter": "Buat surat lamaran",
+  "coverLetterContentHeading": "Isi surat lamaran",
+  "coverLetterContentIntro": "Draf surat lamaran Anda sudah siap. Tinjau isi lengkap di bawah, edit apa pun yang Anda inginkan, dan perubahan Anda akan disimpan secara otomatis.",
+  "regenerate": "Buat ulang",
+  "coverLetterContentHint": "Surat lamaran yang dibuat akan muncul di sini.",
+  "clLangEnglish": "Inggris (English)",
+  "clLangArabic": "Arab (العربية)",
+  "clLangBengali": "Bengali (বাংলা)",
+  "clLangChinese": "Cina, Mandarin (中文)",
+  "clLangDutch": "Belanda (Nederlands)",
+  "clLangFrench": "Prancis (Français)",
+  "clLangGerman": "Jerman (Deutsch)",
+  "clLangHindi": "Hindi (हिन्दी)",
+  "clLangItalian": "Italia (Italiano)",
+  "clLangJapanese": "Jepang (日本語)",
+  "clLangKorean": "Korea (한국어)",
+  "clLangPortuguese": "Portugis (Português)",
+  "clLangRussian": "Rusia (Русский)",
+  "clLangSpanish": "Spanyol (Español)",
+  "clLangTurkish": "Turki (Türkçe)",
+  "clLangUrdu": "Urdu (اردو)",
+  "clLangVietnamese": "Vietnam (Tiếng Việt)",
+  "showPercentOnResume": "Ketuk untuk menampilkan % di resume",
+  "hidePercentOnResume": "Menampilkan % di resume — ketuk untuk menyembunyikan",
+  "removeBullet": "Hapus poin",
+  "alreadySubscribedTitle": "Sudah berlangganan",
+  "youreOnPlan": "Anda menggunakan {planLabel}",
+  "@youreOnPlan": {
+    "placeholders": {
+      "planLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumPlanNotAvailableYet": "Paket itu belum tersedia. Tarik untuk memuat ulang.",
+  "premiumCouldNotStartPurchase": "Tidak dapat memulai pembelian. Coba lagi.",
+  "premiumSubscriptionRestored": "Langganan Premium Anda telah dipulihkan.",
+  "premiumRestoredSuccessfully": "Premium berhasil dipulihkan.",
+  "welcomeToResumeAppPro": "Selamat datang di ResumeApp Pro!",
+  "jobsCreateResumeFirst": "Buat resume terlebih dahulu untuk melihat lowongan.",
+  "jobsShowingLatestHint": "Menampilkan lowongan terbaru dari 7 hari terakhir berdasarkan peran dan lokasi resume yang dipilih.",
+  "jobsNoneFound": "Tidak ada lowongan untuk resume ini dalam 7 hari terakhir.",
+  "jobsLoadingMore": "Memuat lowongan lainnya...",
+  "jobsScrollForMore": "Gulir ke bawah untuk memuat lebih banyak",
+  "jobsLiveUnavailableBackup": "Lowongan langsung tidak tersedia; menampilkan hasil cadangan.",
+  "couldNotOpenJobLink": "Tidak dapat membuka tautan lowongan saat ini.",
+  "jobsPostedJustNow": "baru saja",
+  "jobsPostedHoursAgo": "{hours}j lalu",
+  "@jobsPostedHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "jobsPostedDaysAgo": "{days}h lalu",
+  "@jobsPostedDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
+}

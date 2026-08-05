@@ -5,6 +5,8 @@ import 'package:flutter/cupertino.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
@@ -123,6 +125,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final library = Provider.of<ResumeLibraryViewModel?>(context);
     final isResumeTemplatePicker = widget.onTemplateSelected != null;
     final isCoverLetterTemplatePicker =
@@ -175,7 +178,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                             vertical: 10,
                           ),
                           child: Text(
-                            'Resume',
+                            l10n.homeSegmentResume,
                             style: TextStyle(
                               fontSize: 17,
                               color: _selectedSegment == _TemplateSegment.resume
@@ -190,7 +193,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                             vertical: 10,
                           ),
                           child: Text(
-                            'Cover Letter',
+                            l10n.homeSegmentCoverLetter,
                             style: TextStyle(
                               fontSize: 17,
                               color:
@@ -215,14 +218,14 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                         foregroundColor: inactiveColor,
                         textStyle: const TextStyle(fontSize: 17),
                       ),
-                      segments: const [
+                      segments: [
                         ButtonSegment<_TemplateSegment>(
                           value: _TemplateSegment.resume,
-                          label: Text('Resume'),
+                          label: Text(l10n.homeSegmentResume),
                         ),
                         ButtonSegment<_TemplateSegment>(
                           value: _TemplateSegment.coverLetter,
-                          label: Text('Cover Letter'),
+                          label: Text(l10n.homeSegmentCoverLetter),
                         ),
                       ],
                       selected: {_selectedSegment},
@@ -235,7 +238,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           ],
           if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
             Text(
-              'Professional Resumes',
+              l10n.professionalResumes,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -274,7 +277,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
             const SizedBox(height: 28),
             Text(
-              'ATS Resumes',
+              l10n.atsResumes,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -326,11 +329,12 @@ class _TemplateDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
         leadingWidth: 56,
         titleSpacing: 2,
-        title: Text(item.headline),
+        title: Text(item.localizedHeadline(l10n)),
       ),
       body: SafeArea(
         child: Column(
@@ -370,7 +374,7 @@ class _TemplateDetailScreen extends StatelessWidget {
                 child: FilledButton(
                   key: const Key('use-template-button'),
                   onPressed: onUseTemplate,
-                  child: const Text('Use template'),
+                  child: Text(l10n.useTemplate),
                 ),
               ),
           ],
@@ -395,6 +399,9 @@ class _TemplateTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final headline = item.localizedHeadline(l10n);
+    final caption = item.localizedCaption(l10n);
     final colorScheme = Theme.of(context).colorScheme;
     final selectedColor = colorScheme.primary;
     final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -409,53 +416,57 @@ class _TemplateTile extends StatelessWidget {
       key: Key('template-tile-${item.id}'),
       color: Colors.transparent,
       borderRadius: BorderRadius.zero,
-      child: InkWell(
-        borderRadius: BorderRadius.zero,
-        onTap: onTap,
-        splashFactory: NoSplash.splashFactory,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        child: Ink(
-          decoration: const BoxDecoration(),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 6),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: KeyedSubtree(
-                        key: Key('template-image-${item.id}'),
-                        child: _TemplatePreviewArt(
-                          item: item,
-                          paletteSeed: paletteSeed,
-                          showPremiumBadgeOnTile: true,
+      child: Semantics(
+        label: '$headline. $caption',
+        button: true,
+        child: InkWell(
+          borderRadius: BorderRadius.zero,
+          onTap: onTap,
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          child: Ink(
+            decoration: const BoxDecoration(),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 6),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: KeyedSubtree(
+                          key: Key('template-image-${item.id}'),
+                          child: _TemplatePreviewArt(
+                            item: item,
+                            paletteSeed: paletteSeed,
+                            showPremiumBadgeOnTile: true,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item.headline,
-                      textAlign: TextAlign.center,
-                      style: labelStyle,
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
-              if (selected)
-                Positioned(
-                  top: 4,
-                  right: 14,
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    color: selectedColor,
-                    size: 30,
+                      const SizedBox(height: 8),
+                      Text(
+                        headline,
+                        textAlign: TextAlign.center,
+                        style: labelStyle,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ),
                 ),
-            ],
+                if (selected)
+                  Positioned(
+                    top: 4,
+                    right: 14,
+                    child: Icon(
+                      Icons.check_circle_rounded,
+                      color: selectedColor,
+                      size: 30,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -606,6 +617,46 @@ class _TemplateTileData {
   final String headline;
   final String caption;
   final bool isPremium;
+
+  String localizedHeadline(AppLocalizations l10n) {
+    return switch (id) {
+      'dark-header' => l10n.templateCorporate,
+      'profile-sidebar' => l10n.templateProfileSidebar,
+      'classic-sidebar' => l10n.templateClassicSidebar,
+      'accent-strip' => l10n.templateAccentStrip,
+      'ats-structured' => l10n.templateStructuredAts,
+      'ats-latex-classic' => l10n.templateLatexClassicAts,
+      'ats-modern-flow' => l10n.templateModernFlowAts,
+      'ats-executive' => l10n.templateExecutiveAts,
+      'ats-center-classic' => l10n.templateCenterClassicAts,
+      'ats-professional-blue' => l10n.templateProfessionalBlueAts,
+      'executive-note' => l10n.templateExecutiveNote,
+      'minimal-letter' => l10n.templateMinimalLetter,
+      'sidebar-letter' => l10n.templateMintLetter,
+      'classic-business-letter' => l10n.templateClassicBusiness,
+      _ => headline,
+    };
+  }
+
+  String localizedCaption(AppLocalizations l10n) {
+    return switch (id) {
+      'dark-header' => l10n.templateCorporateCaption,
+      'profile-sidebar' => l10n.templateProfileSidebarCaption,
+      'classic-sidebar' => l10n.templateClassicSidebarCaption,
+      'accent-strip' => l10n.templateAccentStripCaption,
+      'ats-structured' => l10n.templateStructuredAtsCaption,
+      'ats-latex-classic' => l10n.templateLatexClassicAtsCaption,
+      'ats-modern-flow' => l10n.templateModernFlowAtsCaption,
+      'ats-executive' => l10n.templateExecutiveAtsCaption,
+      'ats-center-classic' => l10n.templateCenterClassicAtsCaption,
+      'ats-professional-blue' => l10n.templateProfessionalBlueAtsCaption,
+      'executive-note' => l10n.templateExecutiveNoteCaption,
+      'minimal-letter' => l10n.templateMinimalLetterCaption,
+      'sidebar-letter' => l10n.templateMintLetterCaption,
+      'classic-business-letter' => l10n.templateClassicBusinessCaption,
+      _ => caption,
+    };
+  }
 }
 
 enum _TemplatePreviewKind {

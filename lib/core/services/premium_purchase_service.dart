@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
 
+import '../app_locale_option.dart';
 import 'app_preferences.dart';
 import 'premium_debug_log.dart';
 import 'premium_entitlement_resolver.dart';
@@ -119,13 +122,28 @@ class PremiumPurchaseService extends ChangeNotifier {
   bool get hasLoadedProducts => _products.isNotEmpty;
   String? get activeSubscriptionProductId => _activeSubscriptionProductId;
 
-  String get activeSubscriptionPlanLabel =>
-      PremiumProducts.planLabelFor(_activeSubscriptionProductId);
+  String activeSubscriptionPlanLabel(AppLocalizations l10n) =>
+      PremiumProducts.planLabelFor(_activeSubscriptionProductId, l10n);
 
-  String alreadySubscribedMessage() => PremiumProducts.alreadySubscribedMessage(
-    productId: _activeSubscriptionProductId,
-    debugOverride: debugPremiumOverrideEnabled,
-  );
+  String alreadySubscribedMessage(AppLocalizations l10n) =>
+      PremiumProducts.alreadySubscribedMessage(
+        productId: _activeSubscriptionProductId,
+        l10n: l10n,
+        debugOverride: debugPremiumOverrideEnabled,
+      );
+
+  AppLocalizations get _l10n {
+    final preferred = AppLocaleOption.materialLocaleFor(
+      AppLocaleOption.normalizePreference(_appPreferences.appLocaleCode),
+    );
+    final locale = preferred ?? PlatformDispatcher.instance.locale;
+    for (final supported in AppLocalizations.supportedLocales) {
+      if (supported.languageCode == locale.languageCode) {
+        return lookupAppLocalizations(supported);
+      }
+    }
+    return lookupAppLocalizations(const Locale('en'));
+  }
 
   /// Whether a Pro welcome dialog should be shown after buy / restore.
   bool get hasPremiumWelcomePending => _pendingPremiumWelcome;
@@ -184,8 +202,9 @@ class PremiumPurchaseService extends ChangeNotifier {
       _onPurchaseUpdates,
       onError: (Object error) {
         _errorMessage = PremiumStoreMessages.friendly(
+          l10n: _l10n,
           error: error,
-          fallback: PremiumStoreMessages.purchaseFailed,
+          fallback: PremiumStoreMessages.purchaseFailed(_l10n),
         );
         _isPurchasing = false;
         notifyListeners();
@@ -208,8 +227,7 @@ class PremiumPurchaseService extends ChangeNotifier {
       _storeAvailable = await _store.isAvailable();
       PremiumDebugLog.logPair('storeAvailable', _storeAvailable);
       if (!_storeAvailable) {
-        _errorMessage =
-            'In-app purchases are not available on this device right now.';
+        _errorMessage = PremiumStoreMessages.storeUnavailable(_l10n);
         _isLoadingProducts = false;
         notifyListeners();
         return;
@@ -229,8 +247,9 @@ class PremiumPurchaseService extends ChangeNotifier {
         debugPrint(stackTrace.toString());
       }
       _errorMessage = PremiumStoreMessages.friendly(
+        l10n: _l10n,
         error: error,
-        fallback: PremiumStoreMessages.connectFailed,
+        fallback: PremiumStoreMessages.connectFailed(_l10n),
       );
       _isLoadingProducts = false;
       notifyListeners();
@@ -403,8 +422,9 @@ class PremiumPurchaseService extends ChangeNotifier {
       }
       if (!silent) {
         _errorMessage = PremiumStoreMessages.friendly(
+          l10n: _l10n,
           error: error,
-          fallback: PremiumStoreMessages.verifyFailed,
+          fallback: PremiumStoreMessages.verifyFailed(_l10n),
         );
         notifyListeners();
       }
@@ -423,8 +443,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     if (!_storeAvailable) {
       _storeAvailable = await _store.isAvailable();
       if (!_storeAvailable) {
-        _errorMessage =
-            'In-app purchases are not available on this device right now.';
+        _errorMessage = PremiumStoreMessages.storeUnavailable(_l10n);
         _isLoadingProducts = false;
         notifyListeners();
         return;
@@ -462,16 +481,12 @@ class PremiumPurchaseService extends ChangeNotifier {
       );
       PremiumStoreProductSelection.logResolvedPrices(_allStoreProducts);
       if (_products.isEmpty) {
-        if (_notFoundProductIds.isNotEmpty) {
-          if (kDebugMode) {
-            debugPrint(
-              'Premium products not found in store: $_notFoundProductIds',
-            );
-          }
-          _errorMessage = PremiumStoreMessages.productsUnavailable;
-        } else {
-          _errorMessage = 'Could not load subscription prices. Try again.';
+        if (_notFoundProductIds.isNotEmpty && kDebugMode) {
+          debugPrint(
+            'Premium products not found in store: $_notFoundProductIds',
+          );
         }
+        _errorMessage = PremiumStoreMessages.productsUnavailable(_l10n);
       } else {
         _errorMessage = null;
       }
@@ -510,9 +525,11 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   String _friendlyProductLoadError(String message) {
+    final l10n = _l10n;
     return PremiumStoreMessages.friendly(
+      l10n: l10n,
       rawMessage: message,
-      fallback: PremiumStoreMessages.productsUnavailable,
+      fallback: PremiumStoreMessages.productsUnavailable(l10n),
     );
   }
 
@@ -530,7 +547,7 @@ class PremiumPurchaseService extends ChangeNotifier {
 
     final product = productFor(productId);
     if (product == null) {
-      _errorMessage = 'That plan is not available yet. Pull to refresh.';
+      _errorMessage = PremiumStoreMessages.planNotAvailableYet(_l10n);
       notifyListeners();
       return;
     }
@@ -550,7 +567,7 @@ class PremiumPurchaseService extends ChangeNotifier {
 
     if (!started) {
       _isPurchasing = false;
-      _errorMessage = 'Could not start the purchase. Please try again.';
+      _errorMessage = PremiumStoreMessages.couldNotStartPurchase(_l10n);
       notifyListeners();
     }
   }
@@ -584,16 +601,18 @@ class PremiumPurchaseService extends ChangeNotifier {
       if (!silent) {
         final hasActiveStoreSubscription = _activeSubscriptionProductId != null;
         if (hasActiveStoreSubscription) {
-          _statusMessage = 'Your Premium subscription has been restored.';
+          _statusMessage = PremiumStoreMessages.subscriptionRestored(_l10n);
         } else {
-          _statusMessage = PremiumStoreMessages.noSubscriptionToRestore;
+          _statusMessage = PremiumStoreMessages.noSubscriptionToRestore(_l10n);
         }
       }
     } catch (error) {
       if (!silent) {
+        final l10n = _l10n;
         _errorMessage = PremiumStoreMessages.friendly(
+          l10n: l10n,
           error: error,
-          fallback: PremiumStoreMessages.restoreFailed,
+          fallback: PremiumStoreMessages.restoreFailed(l10n),
         );
       }
     } finally {
@@ -625,16 +644,18 @@ class PremiumPurchaseService extends ChangeNotifier {
           break;
         case PurchaseStatus.error:
           _isPurchasing = false;
+          final l10n = _l10n;
           _errorMessage = PremiumStoreMessages.friendly(
+            l10n: l10n,
             rawMessage: purchase.error?.message,
             fallback: _isRestoring
-                ? PremiumStoreMessages.restoreFailed
-                : PremiumStoreMessages.purchaseFailed,
+                ? PremiumStoreMessages.restoreFailed(l10n)
+                : PremiumStoreMessages.purchaseFailed(l10n),
           );
           break;
         case PurchaseStatus.canceled:
           _isPurchasing = false;
-          _statusMessage = 'Purchase canceled.';
+          _statusMessage = PremiumStoreMessages.purchaseCanceled(_l10n);
           break;
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
@@ -749,10 +770,10 @@ class PremiumPurchaseService extends ChangeNotifier {
     }
     if (entitled) {
       _statusMessage = purchase.status == PurchaseStatus.restored
-          ? 'Premium restored successfully.'
-          : 'Welcome to ResumeApp Pro!';
+          ? PremiumStoreMessages.restoredSuccessfully(_l10n)
+          : PremiumStoreMessages.welcomeToPro(_l10n);
     } else if (purchase.status == PurchaseStatus.restored) {
-      _statusMessage = PremiumStoreMessages.noSubscriptionToRestore;
+      _statusMessage = PremiumStoreMessages.noSubscriptionToRestore(_l10n);
     }
     notifyListeners();
   }

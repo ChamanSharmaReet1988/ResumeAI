@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
 
 import '../core/services/app_preferences.dart';
 import '../core/services/premium_purchase_service.dart';
@@ -57,7 +58,7 @@ class ResumeApp extends StatelessWidget {
         Provider<LocalAiResumeService>(create: (_) => LocalAiResumeService()),
         Provider<ResumePdfService>(create: (_) => ResumePdfService()),
         ChangeNotifierProvider<SettingsViewModel>(
-          create: (_) => SettingsViewModel(),
+          create: (_) => SettingsViewModel(preferences: appPreferences),
         ),
         ChangeNotifierProvider<ResumeLibraryViewModel>(
           create: (_) =>
@@ -72,7 +73,7 @@ class ResumeApp extends StatelessWidget {
       child: Consumer<SettingsViewModel>(
         builder: (context, settings, _) {
           return MaterialApp(
-            title: 'ResumeAI',
+            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             debugShowCheckedModeBanner: false,
             navigatorObservers: [
               if (firebaseServices.analyticsObserver != null)
@@ -82,6 +83,27 @@ class ResumeApp extends StatelessWidget {
             themeMode: settings.themeMode,
             theme: AppTheme.lightTheme(platform),
             darkTheme: AppTheme.darkTheme(platform),
+            locale: settings.materialLocale,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localeListResolutionCallback: (locales, supported) {
+              for (final locale in locales ?? const <Locale>[]) {
+                for (final supportedLocale in supported) {
+                  if (supportedLocale.languageCode != locale.languageCode) {
+                    continue;
+                  }
+                  if (supportedLocale.countryCode == null ||
+                      supportedLocale.countryCode!.isEmpty ||
+                      supportedLocale.countryCode == locale.countryCode) {
+                    return supportedLocale;
+                  }
+                }
+                if (locale.languageCode == 'pt') {
+                  return const Locale('pt');
+                }
+              }
+              return const Locale('en');
+            },
             home: const PremiumSubscriptionWatcher(
               child: AppShell(),
             ),

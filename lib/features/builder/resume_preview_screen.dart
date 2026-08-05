@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/corporate_resume_style.dart';
@@ -64,7 +65,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
           ),
         ],
         subject: '${viewModel.resume.title} resume',
-        text: 'Shared from ResumeAI',
+        text: context.l10n.sharedFromResumeAi,
         sharePositionOrigin: box == null
             ? null
             : box.localToGlobal(Offset.zero) & box.size,
@@ -90,7 +91,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to open share sheet right now.')),
+        SnackBar(content: Text(context.l10n.unableToOpenShareSheet)),
       );
     }
   }
@@ -104,7 +105,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             appBar: AppBar(
               leadingWidth: 56,
               titleSpacing: 2,
-              title: const Text('Choose template'),
+              title: Text(routeContext.l10n.chooseTemplate),
             ),
             body: TemplatesScreen(
               selectedTemplate: viewModel.resume.template,
@@ -214,7 +215,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Font size',
+                              context.l10n.fontSize,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -272,7 +273,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                         child: Text(
-                          'Color',
+                          context.l10n.color,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -364,7 +365,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
   Widget build(BuildContext context) {
     return Consumer<ResumeEditorViewModel>(
       builder: (context, viewModel, _) {
-        final currentTitle = viewModel.resume.title.ifBlank('Resume Preview');
+        final currentTitle = viewModel.resume.title.ifBlank(context.l10n.resumePreview);
         final isTestBinding = WidgetsBinding.instance.runtimeType
             .toString()
             .contains('TestWidgetsFlutterBinding');
@@ -406,7 +407,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                   padding: const EdgeInsets.only(right: 10),
                   child: IconButton(
                     onPressed: _openEditResume,
-                    tooltip: 'Edit',
+                    tooltip: context.l10n.actionEdit,
                     icon: const Icon(Icons.edit_outlined),
                   ),
                 ),
@@ -538,17 +539,17 @@ class _ResumePreviewBottomBar extends StatelessWidget {
             children: [
               _PreviewBottomAction(
                 icon: Icons.view_quilt_outlined,
-                label: 'Template',
+                label: context.l10n.template,
                 onTap: onTemplate,
               ),
               _PreviewBottomAction(
                 icon: Icons.ios_share_rounded,
-                label: 'Share',
+                label: context.l10n.share,
                 onTap: onShare,
               ),
               _PreviewBottomAction(
                 icon: Icons.palette_outlined,
-                label: 'Color & Font',
+                label: context.l10n.colorAndFont,
                 onTap: onStyle,
               ),
             ],

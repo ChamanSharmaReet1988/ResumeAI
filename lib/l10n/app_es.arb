@@ -1,0 +1,728 @@
+{
+  "@@locale": "es",
+  "appTitle": "ResumeAI",
+  "tabHome": "Inicio",
+  "tabTemplates": "Plantillas",
+  "tabAiResume": "CV con IA",
+  "tabSettings": "Ajustes",
+  "appearance": "Apariencia",
+  "themeSystem": "Sistema",
+  "themeLight": "Claro",
+  "themeDark": "Oscuro",
+  "appLanguage": "Idioma de la app",
+  "languageSystemDefault": "Predeterminado del sistema",
+  "languageEnglish": "English",
+  "languageSpanish": "Español",
+  "languagePortugueseBrazil": "Português (Brasil)",
+  "languageIndonesian": "Bahasa Indonesia",
+  "iCloudBackup": "Copia de iCloud",
+  "googleDriveBackup": "Copia de Google Drive",
+  "goPremium": "Hazte Premium",
+  "youAreProUser": "Eres usuario Pro",
+  "feedback": "Comentarios",
+  "rateApp": "Valorar la app",
+  "shareApp": "Compartir la app",
+  "privacyPolicy": "Política de privacidad",
+  "termsOfUse": "Términos de uso",
+  "versionLabel": "Versión",
+  "versionWithBuild": "Versión {version} ({build})",
+  "ok": "OK",
+  "languageAffectsAppOnly": "Solo cambia menús y textos de la app. El contenido de tu currículum no se modifica.",
+  "homeSegmentResume": "Currículum",
+  "homeSegmentCoverLetter": "Carta de presentación",
+  "noResumesYet": "Aún no hay currículums",
+  "noResumesYetBody": "Toca el botón de añadir para crear tu primer currículum.",
+  "noCoverLettersYet": "Aún no hay cartas de presentación",
+  "noCoverLettersYetBody": "Toca el botón de añadir para crear tu primera carta de presentación.",
+  "actionOpen": "Abrir",
+  "actionEdit": "Editar",
+  "actionRename": "Renombrar",
+  "actionDuplicate": "Duplicar",
+  "actionDelete": "Eliminar",
+  "cancel": "Cancelar",
+  "create": "Crear",
+  "deleteResumeTitle": "¿Eliminar currículum?",
+  "deleteResumeMessage": "¿Eliminar \"{title}\"? Esta acción no se puede deshacer.",
+  "@deleteResumeMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCoverLetterTitle": "¿Eliminar carta de presentación?",
+  "deleteCoverLetterMessage": "¿Eliminar \"{title}\"? Esta acción no se puede deshacer.",
+  "@deleteCoverLetterMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "renameResumeTitle": "Renombrar currículum",
+  "duplicateResumeTitle": "Duplicar currículum",
+  "resumeRenamed": "Currículum renombrado.",
+  "resumeDuplicated": "Currículum duplicado.",
+  "resumeTitle": "Título del currículum",
+  "enterResumeTitle": "Introduce el título del currículum",
+  "coverLetterTitle": "Título de la carta de presentación",
+  "updatedDate": "Actualizado {date}",
+  "@updatedDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "titleWithCopySuffix": "{title} (Copia)",
+  "@titleWithCopySuffix": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "untitledResume": "Currículum sin título",
+  "untitledCoverLetter": "Carta de presentación sin título",
+  "save": "Guardar",
+  "continueAction": "Continuar",
+  "restore": "Restaurar",
+  "resumeAppPro": "ResumeApp Pro",
+  "chooseAPlan": "Elige un plan",
+  "premiumLegalAgreement": "Al continuar, aceptas nuestros Términos de uso y Política de privacidad.",
+  "subscriptionFound": "Suscripción encontrada",
+  "processingEllipsis": "Procesando…",
+  "checkingYourSubscription": "Comprobando tu suscripción…",
+  "completingYourPurchase": "Completando tu compra…",
+  "restoringYourSubscription": "Restaurando tu suscripción…",
+  "pleaseWaitDoNotClose": "Espera. No cierres la app.",
+  "premiumWelcomeCongratulations": "¡Enhorabuena!",
+  "premiumWelcomeBody": "ResumeApp Pro está activo en tu {planLabel}. Las plantillas Premium y {backup} ya están desbloqueados.",
+  "@premiumWelcomeBody": {
+    "placeholders": {
+      "planLabel": {
+        "type": "String"
+      },
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumBenefitUnlockLayouts": "Desbloquea todos los diseños de currículum profesionales y ATS además de las plantillas gratuitas",
+  "premiumBenefitBackupIcloud": "Haz copia de seguridad y sincroniza currículums con iCloud",
+  "premiumBenefitBackupGoogleDrive": "Haz copia de seguridad y sincroniza currículums con Google Drive",
+  "premiumUpcomingUpdateBadge": "Próximamente en la siguiente actualización",
+  "premiumUpcomingUpdateMessage": "Nuevos diseños de currículum y plantillas modernas, incluidas con Pro.",
+  "planWeekly": "Semanal",
+  "planMonthly": "Mensual",
+  "planYearly": "Anual",
+  "planPro": "Pro",
+  "planSubtitleWeekly": "Acceso a corto plazo",
+  "planSubtitleMonthly": "Paga mes a mes",
+  "planSubtitleYearly": "Mejor valor",
+  "planLabelNamed": "Plan {title}",
+  "@planLabelNamed": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savePercentWithYearlyBilling": "Ahorra un {percent}% con facturación anual",
+  "@savePercentWithYearlyBilling": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "priceUnavailable": "—",
+  "storeAccountGoogle": "cuenta de Google",
+  "storeAccountApple": "Apple ID",
+  "alreadySubscribedDebugOverride": "La anulación Pro de desarrollador está activada. Todas las funciones Pro están desbloqueadas para pruebas en este dispositivo.",
+  "alreadySubscribedWeekly": "Tienes una suscripción semanal activa. Todas las plantillas Pro, {backup} y las funciones premium están incluidas.",
+  "@alreadySubscribedWeekly": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadySubscribedMonthly": "Tienes una suscripción mensual activa. Todas las plantillas Pro, {backup} y las funciones premium están incluidas.",
+  "@alreadySubscribedMonthly": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadySubscribedYearly": "Tienes una suscripción anual activa. Todas las plantillas Pro, {backup} y las funciones premium están incluidas.",
+  "@alreadySubscribedYearly": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadySubscribedGeneric": "Tienes una suscripción activa de ResumeApp Pro. Todas las funciones premium están incluidas en tu plan.",
+  "restoreInsteadWeekly": "Se encontró una suscripción semanal para esta {account}. Usa Restaurar para activarla en este dispositivo en lugar de comprar de nuevo.",
+  "@restoreInsteadWeekly": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreInsteadMonthly": "Se encontró una suscripción mensual para esta {account}. Usa Restaurar para activarla en este dispositivo en lugar de comprar de nuevo.",
+  "@restoreInsteadMonthly": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreInsteadYearly": "Se encontró una suscripción anual para esta {account}. Usa Restaurar para activarla en este dispositivo en lugar de comprar de nuevo.",
+  "@restoreInsteadYearly": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreInsteadGeneric": "Se encontró una suscripción activa de ResumeApp Pro para esta {account}. Usa Restaurar para activarla en este dispositivo en lugar de comprar de nuevo.",
+  "@restoreInsteadGeneric": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumPurchaseFailed": "No pudimos completar tu compra. Inténtalo de nuevo.",
+  "premiumRestoreFailed": "No pudimos restaurar tu suscripción. Inténtalo de nuevo.",
+  "noSubscriptionToRestoreGoogle": "No se encontró ninguna suscripción activa para esta cuenta de Google.",
+  "noSubscriptionToRestoreApple": "No se encontró ninguna suscripción activa para este Apple ID.",
+  "premiumStoreUnavailable": "Las compras no están disponibles en este dispositivo ahora mismo.",
+  "premiumConnectFailedGoogle": "No pudimos conectar con Google Play. Inténtalo más tarde.",
+  "premiumConnectFailedApple": "No pudimos conectar con el App Store. Inténtalo más tarde.",
+  "premiumVerifyFailed": "No pudimos verificar tu suscripción. Inténtalo de nuevo.",
+  "premiumProductsUnavailable": "Los planes de suscripción no están disponibles ahora. Inténtalo más tarde.",
+  "premiumPurchaseCanceled": "Compra cancelada.",
+  "hideKeyboard": "Ocultar teclado",
+  "selectResumeWithContentFirst": "Selecciona primero un currículum guardado con contenido.",
+  "aiAtsIntro": "Selecciona un currículum y la IA creará uno estilo ChatGPT/Claude optimizado para ATS. Cada vez que pulses Crear de nuevo, la IA optimiza más el mismo borrador ATS. La descripción del puesto es opcional.",
+  "noResumeAvailable": "No hay ningún currículum disponible ahora.",
+  "createResumeThenGenerateAts": "Crea primero un currículum y vuelve aquí para generar una versión ATS.",
+  "selectResume": "Seleccionar currículum",
+  "jobDescriptionOptional": "Descripción del puesto (opcional)",
+  "jobDescriptionHint": "Pega una oferta de empleo para adaptar el currículum ATS, o déjalo en blanco.",
+  "createAtsResume": "Crear currículum ATS",
+  "furtherOptimizeAtsPass": "Optimizar más el ATS (pase {pass})",
+  "@furtherOptimizeAtsPass": {
+    "placeholders": {
+      "pass": {
+        "type": "int"
+      }
+    }
+  },
+  "appliedChanges": "Cambios aplicados",
+  "showAtsResume": "Mostrar currículum ATS",
+  "saveOptimizedResume": "Guardar currículum optimizado",
+  "saveOptimizedResumePrompt": "¿Quieres guardarlo como una copia nueva o reemplazar \"{sourceTitle}\"?",
+  "@saveOptimizedResumePrompt": {
+    "placeholders": {
+      "sourceTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "newCopy": "Copia nueva",
+  "existingResume": "Currículum existente",
+  "resumePreview": "Vista previa del currículum",
+  "highlightedSummaryChange": "Cambio de resumen resaltado",
+  "highlightedSkillsLabel": "Habilidades resaltadas: {skills}",
+  "@highlightedSkillsLabel": {
+    "placeholders": {
+      "skills": {
+        "type": "String"
+      }
+    }
+  },
+  "atsTitleSuffix": " (ATS)",
+  "optimizedTitleSuffix": " (Optimizado)",
+  "professionalResumes": "Currículums profesionales",
+  "atsResumes": "Currículums ATS",
+  "useTemplate": "Usar plantilla",
+  "templateCorporate": "Corporativo",
+  "templateCorporateCaption": "Banda superior llamativa con secciones profesionales compactas.",
+  "templateProfileSidebar": "Barra lateral de perfil",
+  "templateProfileSidebarCaption": "Diseño centrado en el perfil con anclas visuales claras.",
+  "templateClassicSidebar": "Barra lateral clásica",
+  "templateClassicSidebarCaption": "Carril izquierdo suave con identidad con foto y secciones estructuradas.",
+  "templateAccentStrip": "Franja de acento",
+  "templateAccentStripCaption": "Franja izquierda llamativa con nombre grande y secciones limpias.",
+  "templateStructuredAts": "ATS estructurado",
+  "templateStructuredAtsCaption": "Bandas de sección grises y encabezado centrado para parsers.",
+  "templateLatexClassicAts": "ATS clásico LaTeX",
+  "templateLatexClassicAtsCaption": "Secciones con reglas al estilo de currículums LaTeX clásicos.",
+  "templateModernFlowAts": "ATS flujo moderno",
+  "templateModernFlowAtsCaption": "Fila de contacto centrada con secuencia lógica de secciones.",
+  "templateExecutiveAts": "ATS ejecutivo",
+  "templateExecutiveAtsCaption": "Encabezados en mayúsculas y habilidades en dos columnas.",
+  "templateCenterClassicAts": "ATS clásico centrado",
+  "templateCenterClassicAtsCaption": "Nombre centrado, eslogan con barras y secciones de una columna.",
+  "templateProfessionalBlueAts": "ATS azul profesional",
+  "templateProfessionalBlueAtsCaption": "Encabezados en azul con contacto alineado a la derecha y cuadrícula de habilidades.",
+  "templateExecutiveNote": "Nota ejecutiva",
+  "templateExecutiveNoteCaption": "Carta de presentación profesional con un bloque de encabezado destacado.",
+  "templateMinimalLetter": "Carta minimalista",
+  "templateMinimalLetterCaption": "Encabezado centrado con espaciado amplio y cuerpo alineado a la izquierda.",
+  "templateMintLetter": "Carta menta",
+  "templateMintLetterCaption": "Nombre grande, fondo menta suave y cuerpo moderno y limpio.",
+  "templateClassicBusiness": "Negocios clásico",
+  "templateClassicBusinessCaption": "Carta comercial tradicional: fecha, destinatario y cuerpo alineado a la izquierda.",
+  "autoSync": "Sincronización automática",
+  "sync": "Sincronizar",
+  "download": "Descargar",
+  "alreadyDownloaded": "Ya descargado",
+  "signOut": "Cerrar sesión",
+  "signInWithGoogle": "Iniciar sesión con Google",
+  "syncToIcloud": "Sincronizar con iCloud",
+  "syncToGoogleDrive": "Sincronizar con Google Drive",
+  "iCloudUnavailable": "iCloud no está disponible en este dispositivo ahora. Asegúrate de que iCloud Drive esté activado y de haber iniciado sesión con el Apple ID correcto.",
+  "noItemsInIcloud": "Aún no hay currículums ni cartas de presentación en iCloud.",
+  "noItemsOnDrive": "Aún no hay currículums ni cartas de presentación en Drive.",
+  "resumesInIcloud": "Currículums en iCloud",
+  "coverLettersInIcloud": "Cartas de presentación en iCloud",
+  "resumesInGoogleDrive": "Currículums en Google Drive",
+  "coverLettersInGoogleDrive": "Cartas de presentación en Google Drive",
+  "googleDriveBackupIntro": "Haz una copia de seguridad de currículums y cartas de presentación en una carpeta ResumeApp de tu Google Drive. Solo se pueden acceder a los archivos creados por esta app.",
+  "googleDrivePermissionHint": "En la página de Google que se abre a continuación, en \"Seleccionar a qué puede acceder ResumeApp\", marca la casilla junto a Google Drive (archivos usados con esta app) y pulsa Continuar. Sin esa casilla, la copia de seguridad en Drive no puede funcionar.",
+  "googleDriveLooksLikeThis": "Se ve así:",
+  "googleDrivePermissionExampleSemantics": "Pantalla de ejemplo de Google: Seleccionar a qué puede acceder ResumeApp, con la fila de Google Drive y la casilla.",
+  "noLocalItemsToSync": "No hay currículums ni cartas de presentación locales para sincronizar.",
+  "everythingUpToDateIcloud": "Todo ya está actualizado en iCloud.",
+  "everythingUpToDateGoogleDrive": "Todo ya está actualizado en Google Drive.",
+  "couldNotLoadIcloudItems": "No se pudieron cargar los elementos de iCloud: {error}",
+  "@couldNotLoadIcloudItems": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotSyncToIcloud": "No se pudo sincronizar con iCloud: {error}",
+  "@couldNotSyncToIcloud": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDeleteFromIcloud": "No se pudo eliminar de iCloud: {error}",
+  "@couldNotDeleteFromIcloud": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDownloadWithError": "No se pudo descargar: {error}",
+  "@couldNotDownloadWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryToIcloud": "Se sincronizó {summary} con iCloud.",
+  "@syncedSummaryToIcloud": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryWithSkippedIcloud": "Se sincronizó {summary}. {skipped} sin modificar.",
+  "@syncedSummaryWithSkippedIcloud": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryToGoogleDrive": "Se sincronizó {summary} con Google Drive.",
+  "@syncedSummaryToGoogleDrive": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryWithSkippedDrive": "Se sincronizó {summary}. {skipped} sin modificar.",
+  "@syncedSummaryWithSkippedDrive": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "String"
+      }
+    }
+  },
+  "resumeCountLabel": "{count, plural, =1{1 currículum} other{{count} currículums}}",
+  "@resumeCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coverLetterCountLabel": "{count, plural, =1{1 carta de presentación} other{{count} cartas de presentación}}",
+  "@coverLetterCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newerIcloudItemsUntouched": "{count, plural, =1{1 elemento más reciente de iCloud} other{{count} elementos más recientes de iCloud}}",
+  "@newerIcloudItemsUntouched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newerDriveItemsUntouched": "{count, plural, =1{1 elemento más reciente de Drive} other{{count} elementos más recientes de Drive}}",
+  "@newerDriveItemsUntouched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listJoinAnd": "{first} y {second}",
+  "@listJoinAnd": {
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteFromIcloudTitle": "¿Eliminar de iCloud?",
+  "deleteFromIcloudMessage": "¿Quitar \"{title}\" de iCloud? Esto no eliminará la copia en este dispositivo.",
+  "@deleteFromIcloudMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteFromIcloud": "Eliminar de iCloud",
+  "deleteDocumentType": "Eliminar {type}",
+  "@deleteDocumentType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "documentTypeResume": "currículum",
+  "documentTypeCoverLetter": "carta de presentación",
+  "removedFromIcloud": "Se eliminó {title} de iCloud.",
+  "@removedFromIcloud": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedTitle": "Se descargó {title}.",
+  "@downloadedTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "googleSignInUnavailable": "El inicio de sesión de Google no está disponible en este dispositivo.",
+  "couldNotSignInGoogleDrive": "No se pudo iniciar sesión en Google Drive ahora. Inténtalo de nuevo.",
+  "couldNotLoadGoogleDriveItems": "No se pudieron cargar tus elementos de Google Drive ahora. Inténtalo de nuevo.",
+  "couldNotSyncGoogleDrive": "No se pudo sincronizar con Google Drive ahora. Inténtalo de nuevo.",
+  "couldNotDownloadFromGoogleDrive": "No se pudo descargar este elemento de Google Drive. Inténtalo de nuevo.",
+  "couldNotRemoveFromGoogleDrive": "No se pudo quitar este elemento de Google Drive. Inténtalo de nuevo.",
+  "removeFromGoogleDriveTitle": "¿Quitar de Google Drive?",
+  "removeFromGoogleDriveMessage": "¿Quitar \"{title}\" de Google Drive? Esto no eliminará la copia en este dispositivo.",
+  "@removeFromGoogleDriveMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFromGoogleDrive": "Quitar de Google Drive",
+  "removeDocumentType": "Quitar {type}",
+  "@removeDocumentType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "removedFromGoogleDrive": "Se quitó {title} de Google Drive.",
+  "@removedFromGoogleDrive": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "googleSignInNotConfigured": "Google Sign-In no está configurado para esta compilación. Añade tus huellas SHA-1 de depuración y publicación en Firebase (consulta android/GOOGLE_SIGN_IN_SETUP.md), vuelve a descargar google-services.json y recompila.",
+  "couldNotOpenGoogleSignIn": "No se pudo abrir la pantalla de inicio de sesión de Google. Inténtalo de nuevo.",
+  "googleSignInInterrupted": "El inicio de sesión de Google se interrumpió. Inténtalo de nuevo.",
+  "unableToLoadPage": "No se puede cargar la página",
+  "couldNotLoadThisPage": "No se pudo cargar esta página.",
+  "tryAgain": "Intentar de nuevo",
+  "shareAppSubject": "ResumeApp",
+  "shareAppMessage": "Prueba ResumeApp para crear, optimizar y compartir currículums profesionales en iPhone. Consíguela en el App Store: {url}",
+  "@shareAppMessage": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackEmailSubject": "Comentarios sobre ResumeApp",
+  "noMailAppFound": "No se encontró ninguna app de correo. Configura una app de correo.",
+  "couldNotOpenMailApp": "No se pudo abrir la app de correo. Inténtalo de nuevo.",
+  "couldNotOpenLink": "No se pudo abrir el enlace ahora.",
+  "add": "Añadir",
+  "back": "Atrás",
+  "done": "Listo",
+  "hide": "Ocultar",
+  "remove": "Eliminar",
+  "preview": "Vista previa",
+  "share": "Compartir",
+  "print": "Imprimir",
+  "dismiss": "Descartar",
+  "template": "Plantilla",
+  "color": "Color",
+  "title": "Título",
+  "type": "Tipo",
+  "year": "Año",
+  "summary": "Resumen",
+  "category": "Categoría",
+  "present": "Actualidad",
+  "language": "Idioma",
+  "sectionPersonalInformation": "Información personal",
+  "sectionWorkExperience": "Experiencia laboral",
+  "sectionEducation": "Educación",
+  "sectionSkills": "Habilidades",
+  "sectionProjects": "Proyectos",
+  "personalInformationTitle": "Información personal",
+  "workExperienceTitle": "Experiencia laboral",
+  "categoryNumber": "Categoría {number}",
+  "pdfSavedTo": "PDF guardado en {path}",
+  "unableToGenerateSummary": "No se pudo generar un resumen profesional ahora.",
+  "summaryUpdated": "Resumen actualizado",
+  "summaryAdded": "Resumen añadido",
+  "skillAlreadyInList": "Esta habilidad ya está en tu lista.",
+  "addBulletPoint": "Añadir viñeta",
+  "appearsFirstOnYourResume": "Aparece primero en tu currículum",
+  "appearsOnYourResumeAt": "Aparece en la posición {position} de tu currículum",
+  "hideFromResumeTitle": "¿Ocultar del currículum?",
+  "hideFromResumeMessage": "{sectionName} no se mostrará en tu currículum ni en los PDF exportados. Puedes volver a mostrarlo en cualquier momento con el botón junto al título de la sección.",
+  "hideFromResume": "Ocultar del currículum",
+  "showOnResume": "Mostrar en el currículum",
+  "chooseMonthAndYear": "Elegir mes y año",
+  "clearDate": "Borrar fecha",
+  "selectEndMonthAndYear": "Seleccionar mes y año de fin",
+  "selectStartMonthAndYear": "Seleccionar mes y año de inicio",
+  "selectEndYear": "Seleccionar año de fin",
+  "selectStartYear": "Seleccionar año de inicio",
+  "newSection": "Nueva sección",
+  "newSectionTitleHint": "Certificaciones, Idiomas, Premios…",
+  "sectionTypeNormal": "Normal",
+  "sectionTypeNormalSubtitle": "Resumen o viñetas",
+  "sectionTypeAdvance": "Avanzado",
+  "sectionTypeAdvanceSubtitle": "Entradas estilo proyecto con título y viñetas",
+  "removeSectionTitle": "¿Eliminar sección?",
+  "removeSectionMessage": "Esta sección se eliminará de tu currículum. Puedes añadir una nueva sección personalizada con Añadir en cualquier momento.",
+  "unableToPickImage": "No se pudo elegir una imagen ahora.",
+  "camera": "Cámara",
+  "library": "Biblioteca",
+  "profilePhoto": "Foto de perfil",
+  "tapToChangePhoto": "Toca para cambiar la foto",
+  "previousField": "Campo anterior",
+  "nextField": "Campo siguiente",
+  "fullName": "Nombre completo",
+  "targetJobTitle": "Puesto objetivo",
+  "githubLink": "Enlace de GitHub",
+  "linkedinLink": "Enlace de LinkedIn",
+  "email": "Correo electrónico",
+  "phoneNumber": "Número de teléfono",
+  "location": "Ubicación",
+  "websiteOrPortfolio": "Sitio web o portafolio",
+  "professionalSummary": "Resumen profesional",
+  "personalInformationSubtitle": "Empieza con tu identidad, datos de contacto, puesto objetivo y un breve resumen de posicionamiento.",
+  "suggestSummary": "Sugerir resumen",
+  "resumeOrder": "Orden del currículum",
+  "resumeOrderBody": "Las entradas permanecen en este orden. Usa las flechas para mover tu puesto más fuerte arriba.",
+  "experienceNumber": "Experiencia {number}",
+  "moveUp": "Subir",
+  "moveDown": "Bajar",
+  "deleteExperience": "Eliminar experiencia",
+  "deleteWorkExperienceTitle": "¿Eliminar experiencia laboral?",
+  "deleteWorkExperienceMessage": "Esto eliminará este trabajo y todas sus viñetas. No se puede deshacer.",
+  "role": "Puesto",
+  "company": "Empresa",
+  "startDate": "Fecha de inicio",
+  "endDate": "Fecha de fin",
+  "monthYearHint": "Mes/año",
+  "monthYearOrPresentHint": "Mes/año o Actualidad",
+  "bulletNumber": "Viñeta {number}",
+  "removeBulletTitle": "¿Eliminar viñeta?",
+  "removeBulletFromJob": "Esta viñeta se eliminará de este trabajo.",
+  "addExperience": "Añadir experiencia",
+  "educationSubtitle": "Incluye tu título, institución y período de estudios.",
+  "educationNumber": "Educación {number}",
+  "moveEducationUp": "Subir educación",
+  "moveEducationDown": "Bajar educación",
+  "deleteEducationEntry": "Eliminar entrada de educación",
+  "deleteEducationEntryTitle": "¿Eliminar entrada de educación?",
+  "deleteEducationEntryMessage": "Esto eliminará esta escuela y título de tu currículum. No se puede deshacer.",
+  "institution": "Institución",
+  "degree": "Título",
+  "startYear": "Año de inicio",
+  "endYear": "Año de fin",
+  "selectYear": "Seleccionar año",
+  "marksScore": "Notas / puntuación",
+  "marksScoreHint": "8.6 CGPA, 92 o 780/800",
+  "addEducation": "Añadir educación",
+  "showScoreAsPercent": "Mostrar como porcentaje",
+  "skillsSubtitle": "Añade herramientas y palabras clave del puesto. Elige una lista simple o categoriza las habilidades bajo encabezados (por ejemplo Idiomas, Herramientas).",
+  "skillsCount": "{count} habilidades",
+  "simpleList": "Lista simple",
+  "categorised": "Categorizadas",
+  "addASkill": "Añadir una habilidad",
+  "addSkillHelper": "Escribe para ver sugerencias o añade tu propia habilidad",
+  "categoryHint": "Lenguajes de programación, Herramientas, Frameworks, etc.",
+  "moveCategoryUp": "Subir categoría",
+  "moveCategoryDown": "Bajar categoría",
+  "removeCategory": "Eliminar categoría",
+  "deleteCategoryTitle": "¿Eliminar categoría?",
+  "deleteCategoryMessage": "Esto eliminará esta categoría y todas sus habilidades. No se puede deshacer.",
+  "addCategory": "Añadir categoría",
+  "projectsSubtitle": "Destaca proyectos personales, lanzamientos o trabajos de portafolio con resultados claros.",
+  "projectNumber": "Proyecto {number}",
+  "moveProjectUp": "Subir proyecto",
+  "moveProjectDown": "Bajar proyecto",
+  "deleteProject": "Eliminar proyecto",
+  "deleteProjectTitle": "¿Eliminar proyecto?",
+  "deleteProjectMessage": "Esto eliminará este proyecto y todas sus viñetas. No se puede deshacer.",
+  "projectTitle": "Título del proyecto",
+  "enterBulletPoint": "Escribe una viñeta",
+  "removeBulletFromProject": "Esta viñeta se eliminará de este proyecto.",
+  "addProject": "Añadir proyecto",
+  "customSectionProjectsSubtitle": "Añade entradas con título y viñetas, como en la sección Proyectos.",
+  "removeSection": "Eliminar sección",
+  "bulletPoints": "Viñetas",
+  "customSectionSummaryHint": "Escribe la sección como un párrafo corto para tu currículum.",
+  "entryNumber": "Entrada {number}",
+  "moveEntryUp": "Subir entrada",
+  "moveEntryDown": "Bajar entrada",
+  "deleteEntry": "Eliminar entrada",
+  "deleteEntryTitle": "¿Eliminar entrada?",
+  "deleteEntryMessage": "Esto eliminará esta entrada y todas sus viñetas. No se puede deshacer.",
+  "removeBulletFromEntry": "Esta viñeta se eliminará de esta entrada.",
+  "addEntry": "Añadir entrada",
+  "livePreview": "Vista previa en vivo",
+  "exportActions": "Acciones de exportación",
+  "downloadPdf": "Descargar PDF",
+  "shareResume": "Compartir currículum",
+  "resumeScore": "Puntuación del currículum",
+  "atsCompatibilitySummary": "{count, plural, =1{Compatibilidad ATS {percent}% con 1 brecha de habilidades faltantes.} other{Compatibilidad ATS {percent}% con {count} brechas de habilidades faltantes.}}",
+  "unableToOpenShareSheet": "No se pudo abrir la hoja para compartir ahora.",
+  "chooseTemplate": "Elegir plantilla",
+  "fontSize": "Tamaño de fuente",
+  "colorAndFont": "Color y fuente",
+  "sharedFromResumeAi": "Compartido desde ResumeAI",
+  "unableToLoadPdfPreview": "No se pudo cargar la vista previa del PDF ahora.",
+  "shareFormatPdf": "PDF",
+  "shareFormatDocx": "DOCX",
+  "coverLetterHeading": "Carta de presentación",
+  "coverLetterEditorIntro": "Esta página crea un borrador de carta de presentación con los datos siguientes. Añade el nombre de la empresa, el puesto, una o más habilidades a destacar y un idioma, y toca Crear carta de presentación para abrir el borrador completo en la siguiente pantalla.",
+  "companyName": "Nombre de la empresa",
+  "jobPositionName": "Nombre del puesto",
+  "skillToHighlight": "Habilidad a destacar",
+  "creatingEllipsis": "Creando...",
+  "createCoverLetter": "Crear carta de presentación",
+  "coverLetterContentHeading": "Contenido de la carta",
+  "coverLetterContentIntro": "Tu borrador de carta está listo. Revisa el contenido completo abajo, edita lo que quieras y tus cambios se guardarán automáticamente.",
+  "regenerate": "Regenerar",
+  "coverLetterContentHint": "Tu carta generada aparecerá aquí.",
+  "clLangEnglish": "Inglés (English)",
+  "clLangArabic": "Árabe (العربية)",
+  "clLangBengali": "Bengalí (বাংলা)",
+  "clLangChinese": "Chino, mandarín (中文)",
+  "clLangDutch": "Neerlandés (Nederlands)",
+  "clLangFrench": "Francés (Français)",
+  "clLangGerman": "Alemán (Deutsch)",
+  "clLangHindi": "Hindi (हिन्दी)",
+  "clLangItalian": "Italiano (Italiano)",
+  "clLangJapanese": "Japonés (日本語)",
+  "clLangKorean": "Coreano (한국어)",
+  "clLangPortuguese": "Portugués (Português)",
+  "clLangRussian": "Ruso (Русский)",
+  "clLangSpanish": "Español (Español)",
+  "clLangTurkish": "Turco (Türkçe)",
+  "clLangUrdu": "Urdu (اردو)",
+  "clLangVietnamese": "Vietnamita (Tiếng Việt)",
+  "showPercentOnResume": "Toca para mostrar % en el currículum",
+  "hidePercentOnResume": "Mostrando % en el currículum — toca para ocultar",
+  "removeBullet": "Eliminar viñeta",
+  "alreadySubscribedTitle": "Ya estás suscrito",
+  "youreOnPlan": "Estás en el {planLabel}",
+  "@youreOnPlan": {
+    "placeholders": {
+      "planLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumPlanNotAvailableYet": "Ese plan aún no está disponible. Desliza para actualizar.",
+  "premiumCouldNotStartPurchase": "No se pudo iniciar la compra. Inténtalo de nuevo.",
+  "premiumSubscriptionRestored": "Tu suscripción Premium se ha restaurado.",
+  "premiumRestoredSuccessfully": "Premium restaurado correctamente.",
+  "welcomeToResumeAppPro": "¡Bienvenido a ResumeApp Pro!",
+  "jobsCreateResumeFirst": "Crea un currículum primero para ver ofertas de empleo.",
+  "jobsShowingLatestHint": "Mostrando las ofertas más recientes de los últimos 7 días según el puesto y la ubicación del currículum seleccionado.",
+  "jobsNoneFound": "No se encontraron ofertas para este currículum en los últimos 7 días.",
+  "jobsLoadingMore": "Cargando más ofertas...",
+  "jobsScrollForMore": "Desplázate hacia abajo para cargar más",
+  "jobsLiveUnavailableBackup": "Ofertas en vivo no disponibles; mostrando resultados de respaldo.",
+  "couldNotOpenJobLink": "No se pudo abrir el enlace de la oferta ahora.",
+  "jobsPostedJustNow": "ahora mismo",
+  "jobsPostedHoursAgo": "hace {hours} h",
+  "@jobsPostedHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "jobsPostedDaysAgo": "hace {days} d",
+  "@jobsPostedDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
+}

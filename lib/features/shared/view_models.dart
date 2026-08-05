@@ -1,18 +1,37 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
 
+import '../../core/app_locale_option.dart';
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/skill_auto_categorizer.dart';
+import '../../core/services/app_preferences.dart';
 import '../../core/services/profile_image_storage.dart';
 import '../../core/services/resume_services.dart';
 
 class SettingsViewModel extends ChangeNotifier {
+  SettingsViewModel({AppPreferences? preferences})
+    : _preferences = preferences,
+      _appLocaleCode = AppLocaleOption.normalizePreference(
+        preferences?.appLocaleCode,
+      );
+
+  final AppPreferences? _preferences;
+
   ThemeMode _themeMode = ThemeMode.system;
+  String _appLocaleCode;
 
   ThemeMode get themeMode => _themeMode;
+
+  /// `system` | `en` | `es` | `pt` | `id`
+  String get appLocaleCode => _appLocaleCode;
+
+  /// `null` means follow the device language.
+  Locale? get materialLocale =>
+      AppLocaleOption.materialLocaleFor(_appLocaleCode);
 
   void updateThemeMode(ThemeMode value) {
     if (value == _themeMode) {
@@ -20,6 +39,16 @@ class SettingsViewModel extends ChangeNotifier {
     }
 
     _themeMode = value;
+    notifyListeners();
+  }
+
+  Future<void> updateAppLocaleCode(String value) async {
+    final normalized = AppLocaleOption.normalizePreference(value);
+    if (normalized == _appLocaleCode) {
+      return;
+    }
+    _appLocaleCode = normalized;
+    await _preferences?.setAppLocaleCode(normalized);
     notifyListeners();
   }
 }
@@ -198,18 +227,6 @@ class ResumeEditorViewModel extends ChangeNotifier {
   JobDescriptionInsights? get jobInsights => _jobInsights;
   String get coverLetter => _coverLetter;
 
-  /// Fixed first builder step label (not reorderable).
-  static const personalStepTitle = 'Personal Information';
-
-  /// Labels for the default body steps (order comes from [ResumeData.builderSectionOrder]).
-  static const coreStepTitles = [
-    personalStepTitle,
-    'Work Experience',
-    'Education',
-    'Skills',
-    'Projects',
-  ];
-
   /// Personal + body/custom sections from [orderedSectionIds].
   static const int personalStepIndex = 0;
 
@@ -252,15 +269,15 @@ class ResumeEditorViewModel extends ChangeNotifier {
     return ResumeBuilderSectionIds.customIndex(id);
   }
 
-  String titleForStep(int step) {
+  String titleForStep(int step, AppLocalizations l10n) {
     if (step == personalStepIndex) {
-      return personalStepTitle;
+      return l10n.sectionPersonalInformation;
     }
     final id = sectionIdAtStep(step);
     if (id == null) {
       return '';
     }
-    return ResumeBuilderSectionIds.titleFor(id, _resume.customSections);
+    return ResumeBuilderSectionIds.titleFor(id, _resume.customSections, l10n);
   }
 
   void setStep(int value) {

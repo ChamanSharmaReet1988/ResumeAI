@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/services/analytics_events.dart';
 import '../../core/services/premium_products.dart';
@@ -36,7 +37,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
   bool _didPop = false;
   bool _isCompletingLeave = false;
   bool _isFullScreenLoading = false;
-  String _loadingMessage = 'Processing…';
+  String _loadingMessage = '';
   bool _waitingForStoreResult = false;
   bool _showWelcomeOnSuccess = false;
   _PremiumSuccessSource? _pendingSuccessSource;
@@ -80,12 +81,13 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       return;
     }
     final premium = context.read<PremiumPurchaseService>();
+    final l10n = context.l10n;
     if (premium.isPurchasing || premium.isRestoring) {
       if (_isFullScreenLoading) {
         setState(() {
           _loadingMessage = premium.isRestoring
-              ? 'Restoring your subscription…'
-              : 'Completing your purchase…';
+              ? l10n.restoringYourSubscription
+              : l10n.completingYourPurchase;
         });
       }
       return;
@@ -119,15 +121,17 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       _waitingForStoreResult = false;
     });
 
+    final l10n = context.l10n;
     final error = premium.errorMessage;
     final status = premium.statusMessage;
     if (error != null && error.isNotEmpty) {
       _showMessage(
         PremiumStoreMessages.friendly(
+          l10n: l10n,
           rawMessage: error,
           fallback: failureSource == _PremiumSuccessSource.restore
-              ? PremiumStoreMessages.restoreFailed
-              : PremiumStoreMessages.purchaseFailed,
+              ? PremiumStoreMessages.restoreFailed(l10n)
+              : PremiumStoreMessages.purchaseFailed(l10n),
         ),
         isError: true,
       );
@@ -205,6 +209,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       premium.consumePremiumWelcomePending();
       final planLabel = premiumWelcomePlanLabel(
         premium.activeSubscriptionProductId,
+        context.l10n,
       );
       await showPremiumWelcomeDialog(context, planLabel: planLabel);
     } else {
@@ -228,13 +233,17 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
   ) async {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Subscription found'),
+          title: Text(l10n.subscriptionFound),
           content: Text(
-            PremiumProducts.restoreInsteadMessage(productId: productId),
+            PremiumProducts.restoreInsteadMessage(
+              productId: productId,
+              l10n: l10n,
+            ),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
               height: 1.4,
@@ -243,7 +252,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('OK'),
+              child: Text(l10n.ok),
             ),
           ],
         );
@@ -255,10 +264,11 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     if (_selectedProductId == null || _isFullScreenLoading) {
       return;
     }
+    final l10n = context.l10n;
     premium.clearMessages();
     setState(() {
       _isFullScreenLoading = true;
-      _loadingMessage = 'Checking your subscription…';
+      _loadingMessage = l10n.checkingYourSubscription;
       _waitingForStoreResult = false;
     });
     final existingProductId = await premium.resolveCurrentStoreSubscription(
@@ -282,7 +292,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
       AnalyticsEvents.premiumPurchaseStarted,
       parameters: premiumPlanAnalytics(_selectedProductId),
     );
-    _startFullScreenLoading('Completing your purchase…');
+    _startFullScreenLoading(l10n.completingYourPurchase);
     await premium.buy(_selectedProductId!);
     if (!mounted || !_waitingForStoreResult) {
       return;
@@ -301,7 +311,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
     premium.clearMessages();
     _showWelcomeOnSuccess = true;
     _pendingSuccessSource = _PremiumSuccessSource.restore;
-    _startFullScreenLoading('Restoring your subscription…');
+    _startFullScreenLoading(context.l10n.restoringYourSubscription);
     await premium.restorePurchases();
     if (!mounted || _didPop) {
       return;
@@ -325,6 +335,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Consumer<PremiumPurchaseService>(
       builder: (context, premium, _) {
@@ -335,7 +346,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
               Scaffold(
                 appBar: AppBar(
                   automaticallyImplyLeading: !_isFullScreenLoading,
-                  title: const Text('Go Premium'),
+                  title: Text(l10n.goPremium),
                 ),
                 body: SafeArea(
                   child: Column(
@@ -347,13 +358,13 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                'ResumeApp Pro',
+                                l10n.resumeAppPro,
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              for (final benefit in kPremiumBenefits)
+                              for (final benefit in premiumBenefits(l10n))
                                 _BenefitRow(
                                   text: benefit,
                                   color: colorScheme.primary,
@@ -362,7 +373,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                               const _PremiumUpcomingHighlight(),
                               const SizedBox(height: 28),
                               Text(
-                                'Choose a plan',
+                                l10n.chooseAPlan,
                                 style: theme.textTheme.labelLarge?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: colorScheme.onSurface,
@@ -379,7 +390,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                                   ),
                                 )
                               else ...[
-                                for (final plan in kPremiumPlanDefinitions)
+                                for (final plan in premiumPlanDefinitions(l10n))
                                   _PlanCard(
                                     definition: plan,
                                     priceLabel:
@@ -387,6 +398,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                                     savingsLabel:
                                         plan.productId == PremiumProducts.year
                                         ? premiumYearlySavingsLabel(
+                                            l10n: l10n,
                                             yearlyPrice: premium
                                                 .displayRawPriceFor(
                                                   PremiumProducts.year,
@@ -425,18 +437,18 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                                       _selectedProductId == null
                                   ? null
                                   : () => _onContinuePressed(premium),
-                              child: const Text('Continue'),
+                              child: Text(l10n.continueAction),
                             ),
                             const SizedBox(height: 6),
                             TextButton(
                               onPressed: _isFullScreenLoading
                                   ? null
                                   : () => _onRestorePressed(premium),
-                              child: const Text('Restore'),
+                              child: Text(l10n.restore),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'By continuing, you agree to our Terms of Use and Privacy Policy.',
+                              l10n.premiumLegalAgreement,
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
@@ -452,19 +464,19 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                                   onPressed: _isFullScreenLoading
                                       ? null
                                       : () => _openLegalPage(
-                                          title: 'Terms of Use',
+                                          title: l10n.termsOfUse,
                                           uri: _termsOfUseUri,
                                         ),
-                                  child: const Text('Terms of Use'),
+                                  child: Text(l10n.termsOfUse),
                                 ),
                                 TextButton(
                                   onPressed: _isFullScreenLoading
                                       ? null
                                       : () => _openLegalPage(
-                                          title: 'Privacy Policy',
+                                          title: l10n.privacyPolicy,
                                           uri: _privacyPolicyUri,
                                         ),
-                                  child: const Text('Privacy Policy'),
+                                  child: Text(l10n.privacyPolicy),
                                 ),
                               ],
                             ),
@@ -492,6 +504,7 @@ class _PremiumUpcomingHighlight extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     final isDark = colorScheme.brightness == Brightness.dark;
 
@@ -521,7 +534,7 @@ class _PremiumUpcomingHighlight extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  kPremiumUpcomingUpdateBadge,
+                  premiumUpcomingUpdateBadge(l10n),
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -531,7 +544,7 @@ class _PremiumUpcomingHighlight extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  kPremiumUpcomingUpdateMessage,
+                  premiumUpcomingUpdateMessage(l10n),
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 14,
                     height: 1.25,
@@ -596,7 +609,7 @@ class _PlanCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = colorScheme.brightness == Brightness.dark;
-    final resolvedPriceLabel = priceLabel ?? '—';
+    final resolvedPriceLabel = priceLabel ?? context.l10n.priceUnavailable;
 
     return Padding(
       padding: EdgeInsets.only(bottom: savingsLabel != null ? 6 : 10),

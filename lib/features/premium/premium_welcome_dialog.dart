@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/services/premium_products.dart';
 
@@ -26,6 +28,7 @@ class PremiumWelcomeDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     final size = MediaQuery.sizeOf(context);
     final horizontalInset = size.width < 380 ? 18.0 : 28.0;
 
@@ -48,7 +51,7 @@ class PremiumWelcomeDialog extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Congratulations!',
+                  l10n.premiumWelcomeCongratulations,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
@@ -56,8 +59,10 @@ class PremiumWelcomeDialog extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'ResumeApp Pro is active on your $planLabel. '
-                  'Premium templates and iCloud backup are now unlocked.',
+                  l10n.premiumWelcomeBody(
+                    planLabel,
+                    PremiumProducts.backupSyncBenefit(l10n),
+                  ),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
@@ -69,7 +74,7 @@ class PremiumWelcomeDialog extends StatelessWidget {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Continue'),
+                    child: Text(l10n.continueAction),
                   ),
                 ),
               ],
@@ -81,6 +86,6 @@ class PremiumWelcomeDialog extends StatelessWidget {
   }
 }
 
-String premiumWelcomePlanLabel(String? productId) {
-  return PremiumProducts.planLabelFor(productId);
+String premiumWelcomePlanLabel(String? productId, AppLocalizations l10n) {
+  return PremiumProducts.planLabelFor(productId, l10n);
 }

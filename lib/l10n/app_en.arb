@@ -1,0 +1,818 @@
+{
+  "@@locale": "en",
+  "appTitle": "ResumeAI",
+  "tabHome": "Home",
+  "tabTemplates": "Templates",
+  "tabAiResume": "AI Resume",
+  "tabSettings": "Settings",
+  "appearance": "Appearance",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "appLanguage": "App language",
+  "languageSystemDefault": "System default",
+  "languageEnglish": "English",
+  "languageSpanish": "Español",
+  "languagePortugueseBrazil": "Português (Brasil)",
+  "languageIndonesian": "Bahasa Indonesia",
+  "iCloudBackup": "iCloud Backup",
+  "googleDriveBackup": "Google Drive Backup",
+  "goPremium": "Go Premium",
+  "youAreProUser": "You are a Pro user",
+  "feedback": "Feedback",
+  "rateApp": "Rate App",
+  "shareApp": "Share App",
+  "privacyPolicy": "Privacy Policy",
+  "termsOfUse": "Terms of Use",
+  "versionLabel": "Version",
+  "versionWithBuild": "Version {version} ({build})",
+  "@versionWithBuild": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "ok": "OK",
+  "languageAffectsAppOnly": "Changes app menus and labels only. Your resume content stays as written.",
+  "homeSegmentResume": "Resume",
+  "homeSegmentCoverLetter": "Cover Letter",
+  "noResumesYet": "No resumes yet",
+  "noResumesYetBody": "Tap the add button to create your first resume.",
+  "noCoverLettersYet": "No cover letters yet",
+  "noCoverLettersYetBody": "Tap the add button to create your first cover letter.",
+  "actionOpen": "Open",
+  "actionEdit": "Edit",
+  "actionRename": "Rename",
+  "actionDuplicate": "Duplicate",
+  "actionDelete": "Delete",
+  "cancel": "Cancel",
+  "create": "Create",
+  "deleteResumeTitle": "Delete resume?",
+  "deleteResumeMessage": "Delete \"{title}\"? This action cannot be undone.",
+  "@deleteResumeMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCoverLetterTitle": "Delete cover letter?",
+  "deleteCoverLetterMessage": "Delete \"{title}\"? This action cannot be undone.",
+  "@deleteCoverLetterMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "renameResumeTitle": "Rename resume",
+  "duplicateResumeTitle": "Duplicate resume",
+  "resumeRenamed": "Resume renamed.",
+  "resumeDuplicated": "Resume duplicated.",
+  "resumeTitle": "Resume title",
+  "enterResumeTitle": "Enter resume title",
+  "coverLetterTitle": "Cover letter title",
+  "updatedDate": "Updated {date}",
+  "@updatedDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "titleWithCopySuffix": "{title} (Copy)",
+  "@titleWithCopySuffix": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "untitledResume": "Untitled Resume",
+  "untitledCoverLetter": "Untitled Cover Letter",
+  "save": "Save",
+  "continueAction": "Continue",
+  "restore": "Restore",
+  "resumeAppPro": "ResumeApp Pro",
+  "chooseAPlan": "Choose a plan",
+  "premiumLegalAgreement": "By continuing, you agree to our Terms of Use and Privacy Policy.",
+  "subscriptionFound": "Subscription found",
+  "processingEllipsis": "Processing…",
+  "checkingYourSubscription": "Checking your subscription…",
+  "completingYourPurchase": "Completing your purchase…",
+  "restoringYourSubscription": "Restoring your subscription…",
+  "pleaseWaitDoNotClose": "Please wait. Do not close the app.",
+  "premiumWelcomeCongratulations": "Congratulations!",
+  "premiumWelcomeBody": "ResumeApp Pro is active on your {planLabel}. Premium templates and {backup} are now unlocked.",
+  "@premiumWelcomeBody": {
+    "placeholders": {
+      "planLabel": {
+        "type": "String"
+      },
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumBenefitUnlockLayouts": "Unlock every professional and ATS resume layout beyond the free templates",
+  "premiumBenefitBackupIcloud": "Back up and sync resumes with iCloud",
+  "premiumBenefitBackupGoogleDrive": "Back up and sync resumes with Google Drive",
+  "premiumUpcomingUpdateBadge": "Coming in the next update",
+  "premiumUpcomingUpdateMessage": "New resume layouts and modern templates, included with Pro.",
+  "planWeekly": "Weekly",
+  "planMonthly": "Monthly",
+  "planYearly": "Yearly",
+  "planPro": "Pro",
+  "planSubtitleWeekly": "Short-term access",
+  "planSubtitleMonthly": "Pay month to month",
+  "planSubtitleYearly": "Best value",
+  "planLabelNamed": "{title} plan",
+  "@planLabelNamed": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savePercentWithYearlyBilling": "Save {percent}% with yearly billing",
+  "@savePercentWithYearlyBilling": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "priceUnavailable": "—",
+  "storeAccountGoogle": "Google account",
+  "storeAccountApple": "Apple ID",
+  "alreadySubscribedDebugOverride": "Developer Pro override is on. All Pro features are unlocked for testing on this device.",
+  "alreadySubscribedWeekly": "You have an active weekly subscription. All Pro templates, {backup}, and premium features are included.",
+  "@alreadySubscribedWeekly": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadySubscribedMonthly": "You have an active monthly subscription. All Pro templates, {backup}, and premium features are included.",
+  "@alreadySubscribedMonthly": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadySubscribedYearly": "You have an active yearly subscription. All Pro templates, {backup}, and premium features are included.",
+  "@alreadySubscribedYearly": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadySubscribedGeneric": "You have an active ResumeApp Pro subscription. All premium features are included in your plan.",
+  "restoreInsteadWeekly": "A weekly subscription was found for this {account}. Use Restore to activate it on this device instead of buying again.",
+  "@restoreInsteadWeekly": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreInsteadMonthly": "A monthly subscription was found for this {account}. Use Restore to activate it on this device instead of buying again.",
+  "@restoreInsteadMonthly": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreInsteadYearly": "A yearly subscription was found for this {account}. Use Restore to activate it on this device instead of buying again.",
+  "@restoreInsteadYearly": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreInsteadGeneric": "An active ResumeApp Pro subscription was found for this {account}. Use Restore to activate it on this device instead of buying again.",
+  "@restoreInsteadGeneric": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumPurchaseFailed": "We could not complete your purchase. Please try again.",
+  "premiumRestoreFailed": "We could not restore your subscription. Please try again.",
+  "noSubscriptionToRestoreGoogle": "No active subscription was found for this Google account.",
+  "noSubscriptionToRestoreApple": "No active subscription was found for this Apple ID.",
+  "premiumStoreUnavailable": "Purchases are not available on this device right now.",
+  "premiumConnectFailedGoogle": "We could not connect to Google Play. Please try again later.",
+  "premiumConnectFailedApple": "We could not connect to the App Store. Please try again later.",
+  "premiumVerifyFailed": "We could not verify your subscription. Please try again.",
+  "premiumProductsUnavailable": "Subscription plans are not available right now. Please try again later.",
+  "premiumPurchaseCanceled": "Purchase canceled.",
+  "hideKeyboard": "Hide keyboard",
+  "selectResumeWithContentFirst": "Select a saved resume with content first.",
+  "aiAtsIntro": "Select a resume and AI will create a ChatGPT/Claude-style ATS resume. Each time you tap Create again, AI further optimizes the same ATS draft. Job description is optional.",
+  "noResumeAvailable": "No resume available right now.",
+  "createResumeThenGenerateAts": "Create a resume first, then come back here to generate an ATS version.",
+  "selectResume": "Select resume",
+  "jobDescriptionOptional": "Job description (optional)",
+  "jobDescriptionHint": "Paste a job post to tailor the ATS resume, or leave blank.",
+  "createAtsResume": "Create ATS resume",
+  "furtherOptimizeAtsPass": "Further optimize ATS (pass {pass})",
+  "@furtherOptimizeAtsPass": {
+    "placeholders": {
+      "pass": {
+        "type": "int"
+      }
+    }
+  },
+  "appliedChanges": "Applied changes",
+  "showAtsResume": "Show ATS resume",
+  "saveOptimizedResume": "Save optimized resume",
+  "saveOptimizedResumePrompt": "Do you want to save this as a new copy or replace \"{sourceTitle}\"?",
+  "@saveOptimizedResumePrompt": {
+    "placeholders": {
+      "sourceTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "newCopy": "New copy",
+  "existingResume": "Existing resume",
+  "resumePreview": "Resume preview",
+  "highlightedSummaryChange": "Highlighted summary change",
+  "highlightedSkillsLabel": "Highlighted skills: {skills}",
+  "@highlightedSkillsLabel": {
+    "placeholders": {
+      "skills": {
+        "type": "String"
+      }
+    }
+  },
+  "atsTitleSuffix": " (ATS)",
+  "optimizedTitleSuffix": " (Optimized)",
+  "professionalResumes": "Professional Resumes",
+  "atsResumes": "ATS Resumes",
+  "useTemplate": "Use template",
+  "templateCorporate": "Corporate",
+  "templateCorporateCaption": "Bold top band with compact professional sections.",
+  "templateProfileSidebar": "Profile Sidebar",
+  "templateProfileSidebarCaption": "Profile-led layout with strong visual anchors.",
+  "templateClassicSidebar": "Classic Sidebar",
+  "templateClassicSidebarCaption": "Soft left rail with photo-led identity and structured sections.",
+  "templateAccentStrip": "Accent Strip",
+  "templateAccentStripCaption": "Bold left stripe with an oversized nameplate and clean sections.",
+  "templateStructuredAts": "Structured ATS",
+  "templateStructuredAtsCaption": "Gray section bands and a centered header for parsers.",
+  "templateLatexClassicAts": "LaTeX Classic ATS",
+  "templateLatexClassicAtsCaption": "Academic ruled sections inspired by classic LaTeX resumes.",
+  "templateModernFlowAts": "Modern Flow ATS",
+  "templateModernFlowAtsCaption": "Centered contact row with a logical section sequence.",
+  "templateExecutiveAts": "Executive ATS",
+  "templateExecutiveAtsCaption": "Uppercase headings and two-column keyword skills.",
+  "templateCenterClassicAts": "Center Classic ATS",
+  "templateCenterClassicAtsCaption": "Centered name, pipe tagline, and ruled single-column sections.",
+  "templateProfessionalBlueAts": "Professional Blue ATS",
+  "templateProfessionalBlueAtsCaption": "Blue accent headings with right-aligned contact and skills grid.",
+  "templateExecutiveNote": "Executive Note",
+  "templateExecutiveNoteCaption": "Clean professional cover letter with a strong header block.",
+  "templateMinimalLetter": "Minimal Letter",
+  "templateMinimalLetterCaption": "Centered header with airy spacing and left-aligned body.",
+  "templateMintLetter": "Mint Letter",
+  "templateMintLetterCaption": "Oversized name, soft mint background, and a clean modern letter body.",
+  "templateClassicBusiness": "Classic Business",
+  "templateClassicBusinessCaption": "Traditional business letter: date, recipient block, and left-aligned body.",
+  "autoSync": "Auto sync",
+  "sync": "Sync",
+  "download": "Download",
+  "alreadyDownloaded": "Already downloaded",
+  "signOut": "Sign out",
+  "signInWithGoogle": "Sign in with Google",
+  "syncToIcloud": "Sync to iCloud",
+  "syncToGoogleDrive": "Sync to Google Drive",
+  "iCloudUnavailable": "iCloud is not available on this device right now. Make sure iCloud Drive is enabled and you are signed in with the correct Apple ID.",
+  "noItemsInIcloud": "No resumes or cover letters are stored in iCloud yet.",
+  "noItemsOnDrive": "No resumes or cover letters are stored on Drive yet.",
+  "resumesInIcloud": "Resumes in iCloud",
+  "coverLettersInIcloud": "Cover letters in iCloud",
+  "resumesInGoogleDrive": "Resumes in Google Drive",
+  "coverLettersInGoogleDrive": "Cover letters in Google Drive",
+  "googleDriveBackupIntro": "Back up resumes and cover letters to a ResumeApp folder on your Google Drive. Only files created by this app are accessible.",
+  "googleDrivePermissionHint": "On the Google page that opens next, under \"Select what ResumeApp can access\", check the box next to Google Drive (files used with this app), then tap Continue. Without that box, Drive backup cannot work.",
+  "googleDriveLooksLikeThis": "It looks like this:",
+  "googleDrivePermissionExampleSemantics": "Example Google screen: Select what ResumeApp can access, with the Google Drive row and checkbox.",
+  "noLocalItemsToSync": "No local resumes or cover letters available to sync.",
+  "everythingUpToDateIcloud": "Everything is already up to date in iCloud.",
+  "everythingUpToDateGoogleDrive": "Everything is already up to date on Google Drive.",
+  "couldNotLoadIcloudItems": "Could not load iCloud items: {error}",
+  "@couldNotLoadIcloudItems": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotSyncToIcloud": "Could not sync to iCloud: {error}",
+  "@couldNotSyncToIcloud": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDeleteFromIcloud": "Could not delete from iCloud: {error}",
+  "@couldNotDeleteFromIcloud": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDownloadWithError": "Could not download: {error}",
+  "@couldNotDownloadWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryToIcloud": "Synced {summary} to iCloud.",
+  "@syncedSummaryToIcloud": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryWithSkippedIcloud": "Synced {summary}. {skipped} left untouched.",
+  "@syncedSummaryWithSkippedIcloud": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryToGoogleDrive": "Synced {summary} to Google Drive.",
+  "@syncedSummaryToGoogleDrive": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedSummaryWithSkippedDrive": "Synced {summary}. {skipped} left untouched.",
+  "@syncedSummaryWithSkippedDrive": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "String"
+      }
+    }
+  },
+  "resumeCountLabel": "{count, plural, =1{1 resume} other{{count} resumes}}",
+  "@resumeCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coverLetterCountLabel": "{count, plural, =1{1 cover letter} other{{count} cover letters}}",
+  "@coverLetterCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newerIcloudItemsUntouched": "{count, plural, =1{1 newer iCloud item} other{{count} newer iCloud items}}",
+  "@newerIcloudItemsUntouched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newerDriveItemsUntouched": "{count, plural, =1{1 newer Drive item} other{{count} newer Drive items}}",
+  "@newerDriveItemsUntouched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listJoinAnd": "{first} and {second}",
+  "@listJoinAnd": {
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteFromIcloudTitle": "Delete from iCloud?",
+  "deleteFromIcloudMessage": "Remove \"{title}\" from iCloud? This will not delete the copy on this device.",
+  "@deleteFromIcloudMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteFromIcloud": "Delete from iCloud",
+  "deleteDocumentType": "Delete {type}",
+  "@deleteDocumentType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "documentTypeResume": "resume",
+  "documentTypeCoverLetter": "cover letter",
+  "removedFromIcloud": "Removed {title} from iCloud.",
+  "@removedFromIcloud": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedTitle": "Downloaded {title}.",
+  "@downloadedTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "googleSignInUnavailable": "Google sign-in is not available on this device.",
+  "couldNotSignInGoogleDrive": "Could not sign in to Google Drive right now. Try again.",
+  "couldNotLoadGoogleDriveItems": "Could not load your Google Drive items right now. Try again.",
+  "couldNotSyncGoogleDrive": "Could not sync to Google Drive right now. Try again.",
+  "couldNotDownloadFromGoogleDrive": "Could not download this item from Google Drive. Try again.",
+  "couldNotRemoveFromGoogleDrive": "Could not remove this item from Google Drive. Try again.",
+  "removeFromGoogleDriveTitle": "Remove from Google Drive?",
+  "removeFromGoogleDriveMessage": "Remove \"{title}\" from Google Drive? This will not delete the copy on this device.",
+  "@removeFromGoogleDriveMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFromGoogleDrive": "Remove from Google Drive",
+  "removeDocumentType": "Remove {type}",
+  "@removeDocumentType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "removedFromGoogleDrive": "Removed {title} from Google Drive.",
+  "@removedFromGoogleDrive": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "googleSignInNotConfigured": "Google Sign-In is not configured for this build. Add your debug and release SHA-1 fingerprints in Firebase (see android/GOOGLE_SIGN_IN_SETUP.md), re-download google-services.json, and rebuild.",
+  "couldNotOpenGoogleSignIn": "Could not open the Google sign-in screen. Try again.",
+  "googleSignInInterrupted": "Google sign-in was interrupted. Try again.",
+  "unableToLoadPage": "Unable to load page",
+  "couldNotLoadThisPage": "Could not load this page.",
+  "tryAgain": "Try again",
+  "shareAppSubject": "ResumeApp",
+  "shareAppMessage": "Check out ResumeApp to create, optimize, and share professional resumes on iPhone. Get it on the App Store: {url}",
+  "@shareAppMessage": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackEmailSubject": "ResumeApp Feedback",
+  "noMailAppFound": "No mail app found. Please configure a mail app.",
+  "couldNotOpenMailApp": "Could not open mail app. Please try again.",
+  "couldNotOpenLink": "Could not open link right now.",
+  "add": "Add",
+  "back": "Back",
+  "done": "Done",
+  "hide": "Hide",
+  "remove": "Remove",
+  "preview": "Preview",
+  "share": "Share",
+  "print": "Print",
+  "dismiss": "Dismiss",
+  "template": "Template",
+  "color": "Color",
+  "title": "Title",
+  "type": "Type",
+  "year": "Year",
+  "summary": "Summary",
+  "category": "Category",
+  "present": "Present",
+  "language": "Language",
+  "sectionPersonalInformation": "Personal Information",
+  "sectionWorkExperience": "Work Experience",
+  "sectionEducation": "Education",
+  "sectionSkills": "Skills",
+  "sectionProjects": "Projects",
+  "personalInformationTitle": "Personal information",
+  "workExperienceTitle": "Work experience",
+  "categoryNumber": "Category {number}",
+  "@categoryNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfSavedTo": "PDF saved to {path}",
+  "@pdfSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToGenerateSummary": "Unable to generate a professional summary right now.",
+  "summaryUpdated": "Summary updated",
+  "summaryAdded": "Summary added",
+  "skillAlreadyInList": "This skill is already in your list.",
+  "addBulletPoint": "Add bullet point",
+  "appearsFirstOnYourResume": "Appears first on your resume",
+  "appearsOnYourResumeAt": "Appears at position {position} on your resume",
+  "@appearsOnYourResumeAt": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "hideFromResumeTitle": "Hide from resume?",
+  "hideFromResumeMessage": "{sectionName} will not be shown on your resume or in exported PDFs. You can show it again anytime using the button next to the section title.",
+  "@hideFromResumeMessage": {
+    "placeholders": {
+      "sectionName": {
+        "type": "String"
+      }
+    }
+  },
+  "hideFromResume": "Hide from resume",
+  "showOnResume": "Show on resume",
+  "chooseMonthAndYear": "Choose month and year",
+  "clearDate": "Clear date",
+  "selectEndMonthAndYear": "Select end month and year",
+  "selectStartMonthAndYear": "Select start month and year",
+  "selectEndYear": "Select end year",
+  "selectStartYear": "Select start year",
+  "newSection": "New section",
+  "newSectionTitleHint": "Certifications, Languages, Awards…",
+  "sectionTypeNormal": "Normal",
+  "sectionTypeNormalSubtitle": "Summary or bullet points",
+  "sectionTypeAdvance": "Advance",
+  "sectionTypeAdvanceSubtitle": "Project-style entries with title and bullets",
+  "removeSectionTitle": "Remove section?",
+  "removeSectionMessage": "This section will be removed from your resume. You can add a new custom section with Add anytime.",
+  "unableToPickImage": "Unable to pick image right now.",
+  "camera": "Camera",
+  "library": "Library",
+  "profilePhoto": "Profile photo",
+  "tapToChangePhoto": "Tap to change photo",
+  "previousField": "Previous field",
+  "nextField": "Next field",
+  "fullName": "Full name",
+  "targetJobTitle": "Target job title",
+  "githubLink": "GitHub link",
+  "linkedinLink": "LinkedIn link",
+  "email": "Email",
+  "phoneNumber": "Phone number",
+  "location": "Location",
+  "websiteOrPortfolio": "Website or portfolio",
+  "professionalSummary": "Professional summary",
+  "personalInformationSubtitle": "Start with identity, contact details, target role, and a short positioning summary.",
+  "suggestSummary": "Suggest summary",
+  "resumeOrder": "Resume order",
+  "resumeOrderBody": "Entries stay in this order. Use arrows to move your strongest role to top.",
+  "experienceNumber": "Experience {number}",
+  "@experienceNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "deleteExperience": "Delete experience",
+  "deleteWorkExperienceTitle": "Delete work experience?",
+  "deleteWorkExperienceMessage": "This will remove this job and all of its bullet points. This cannot be undone.",
+  "role": "Role",
+  "company": "Company",
+  "startDate": "Start date",
+  "endDate": "End date",
+  "monthYearHint": "Month/year",
+  "monthYearOrPresentHint": "Month/year or Present",
+  "bulletNumber": "Bullet {number}",
+  "@bulletNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "removeBulletTitle": "Remove bullet?",
+  "removeBulletFromJob": "This bullet will be removed from this job.",
+  "addExperience": "Add experience",
+  "educationSubtitle": "Include your degree, institution, and study timeline.",
+  "educationNumber": "Education {number}",
+  "@educationNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "moveEducationUp": "Move education up",
+  "moveEducationDown": "Move education down",
+  "deleteEducationEntry": "Delete education entry",
+  "deleteEducationEntryTitle": "Delete education entry?",
+  "deleteEducationEntryMessage": "This will remove this school and degree from your resume. This cannot be undone.",
+  "institution": "Institution",
+  "degree": "Degree",
+  "startYear": "Start year",
+  "endYear": "End year",
+  "selectYear": "Select year",
+  "marksScore": "Marks / score",
+  "marksScoreHint": "8.6 CGPA, 92, or 780/800",
+  "addEducation": "Add education",
+  "showScoreAsPercent": "Show as percent",
+  "skillsSubtitle": "Add job-specific tools and keywords. Choose a simple list, or categorise skills under headings (for example Languages, Tools).",
+  "skillsCount": "{count} skills",
+  "@skillsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "simpleList": "Simple list",
+  "categorised": "Categorised",
+  "addASkill": "Add a skill",
+  "addSkillHelper": "Type to see suggestions or add your own skill",
+  "categoryHint": "Programming Languages, Tools, Frameworks, etc.",
+  "moveCategoryUp": "Move category up",
+  "moveCategoryDown": "Move category down",
+  "removeCategory": "Remove category",
+  "deleteCategoryTitle": "Delete category?",
+  "deleteCategoryMessage": "This will remove this category and all of its skills. This cannot be undone.",
+  "addCategory": "Add category",
+  "projectsSubtitle": "Showcase standout side projects, product launches, or portfolio work with clear outcomes.",
+  "projectNumber": "Project {number}",
+  "@projectNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "moveProjectUp": "Move project up",
+  "moveProjectDown": "Move project down",
+  "deleteProject": "Delete project",
+  "deleteProjectTitle": "Delete project?",
+  "deleteProjectMessage": "This will remove this project and all of its bullet points. This cannot be undone.",
+  "projectTitle": "Project title",
+  "enterBulletPoint": "Enter a bullet point",
+  "removeBulletFromProject": "This bullet will be removed from this project.",
+  "addProject": "Add project",
+  "customSectionProjectsSubtitle": "Add entries with a title and bullet points, like the Projects section.",
+  "removeSection": "Remove section",
+  "bulletPoints": "Bullet points",
+  "customSectionSummaryHint": "Write the section as a short paragraph for your resume.",
+  "entryNumber": "Entry {number}",
+  "@entryNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "moveEntryUp": "Move entry up",
+  "moveEntryDown": "Move entry down",
+  "deleteEntry": "Delete entry",
+  "deleteEntryTitle": "Delete entry?",
+  "deleteEntryMessage": "This will remove this entry and all of its bullet points. This cannot be undone.",
+  "removeBulletFromEntry": "This bullet will be removed from this entry.",
+  "addEntry": "Add entry",
+  "livePreview": "Live preview",
+  "exportActions": "Export actions",
+  "downloadPdf": "Download PDF",
+  "shareResume": "Share resume",
+  "resumeScore": "Resume score",
+  "atsCompatibilitySummary": "{count, plural, =1{ATS compatibility {percent}% with 1 missing skill gap.} other{ATS compatibility {percent}% with {count} missing skill gaps.}}",
+  "@atsCompatibilitySummary": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unableToOpenShareSheet": "Unable to open share sheet right now.",
+  "chooseTemplate": "Choose template",
+  "fontSize": "Font size",
+  "colorAndFont": "Color & Font",
+  "sharedFromResumeAi": "Shared from ResumeAI",
+  "unableToLoadPdfPreview": "Unable to load PDF preview right now.",
+  "shareFormatPdf": "PDF",
+  "shareFormatDocx": "DOCX",
+  "coverLetterHeading": "Cover letter",
+  "coverLetterEditorIntro": "This page creates a cover letter draft from the details below. Add the company name, job position name, one or more skills to highlight, and a language you want to mention, then tap Create cover letter to open the full draft on the next screen.",
+  "companyName": "Company name",
+  "jobPositionName": "Job position name",
+  "skillToHighlight": "Skill to highlight",
+  "creatingEllipsis": "Creating...",
+  "createCoverLetter": "Create cover letter",
+  "coverLetterContentHeading": "Cover letter content",
+  "coverLetterContentIntro": "Your cover letter draft is ready. Review the full content below, edit anything you want, and your changes will be saved automatically.",
+  "regenerate": "Regenerate",
+  "coverLetterContentHint": "Your generated cover letter will appear here.",
+  "clLangEnglish": "English (English)",
+  "clLangArabic": "Arabic (العربية)",
+  "clLangBengali": "Bengali (বাংলা)",
+  "clLangChinese": "Chinese, Mandarin (中文)",
+  "clLangDutch": "Dutch (Nederlands)",
+  "clLangFrench": "French (Français)",
+  "clLangGerman": "German (Deutsch)",
+  "clLangHindi": "Hindi (हिन्दी)",
+  "clLangItalian": "Italian (Italiano)",
+  "clLangJapanese": "Japanese (日本語)",
+  "clLangKorean": "Korean (한국어)",
+  "clLangPortuguese": "Portuguese (Português)",
+  "clLangRussian": "Russian (Русский)",
+  "clLangSpanish": "Spanish (Español)",
+  "clLangTurkish": "Turkish (Türkçe)",
+  "clLangUrdu": "Urdu (اردو)",
+  "clLangVietnamese": "Vietnamese (Tiếng Việt)",
+  "showPercentOnResume": "Tap to show % on resume",
+  "hidePercentOnResume": "Showing % on resume — tap to hide",
+  "removeBullet": "Remove bullet",
+  "alreadySubscribedTitle": "Already subscribed",
+  "youreOnPlan": "You're on the {planLabel}",
+  "@youreOnPlan": {
+    "placeholders": {
+      "planLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumPlanNotAvailableYet": "That plan is not available yet. Pull to refresh.",
+  "premiumCouldNotStartPurchase": "Could not start the purchase. Please try again.",
+  "premiumSubscriptionRestored": "Your Premium subscription has been restored.",
+  "premiumRestoredSuccessfully": "Premium restored successfully.",
+  "welcomeToResumeAppPro": "Welcome to ResumeApp Pro!",
+  "jobsCreateResumeFirst": "Create a resume first to see job matches.",
+  "jobsShowingLatestHint": "Showing latest jobs from last 7 days based on the selected resume role and location.",
+  "jobsNoneFound": "No jobs found for this resume in last 7 days.",
+  "jobsLoadingMore": "Loading more jobs...",
+  "jobsScrollForMore": "Scroll down to load more",
+  "jobsLiveUnavailableBackup": "Live jobs unavailable, showing backup results.",
+  "couldNotOpenJobLink": "Could not open job link right now.",
+  "jobsPostedJustNow": "just now",
+  "jobsPostedHoursAgo": "{hours}h ago",
+  "@jobsPostedHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "jobsPostedDaysAgo": "{days}d ago",
+  "@jobsPostedDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
+}

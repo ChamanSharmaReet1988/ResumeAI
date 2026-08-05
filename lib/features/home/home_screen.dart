@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
@@ -10,9 +12,9 @@ import '../shared/view_models.dart';
 enum HomeSegment { resumes, coverLetters }
 
 extension HomeSegmentX on HomeSegment {
-  String get label => switch (this) {
-    HomeSegment.resumes => 'Resume',
-    HomeSegment.coverLetters => 'Cover Letter',
+  String label(AppLocalizations l10n) => switch (this) {
+    HomeSegment.resumes => l10n.homeSegmentResume,
+    HomeSegment.coverLetters => l10n.homeSegmentCoverLetter,
   };
 }
 
@@ -40,6 +42,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isCupertino = Theme.of(context).platform == TargetPlatform.iOS;
     final blue = Theme.of(context).colorScheme.primary;
     final inactiveColor = Theme.of(context).colorScheme.onSurfaceVariant;
@@ -75,7 +78,7 @@ class HomeScreen extends StatelessWidget {
                                         vertical: 10,
                                       ),
                                       child: Text(
-                                        'Resume',
+                                        l10n.homeSegmentResume,
                                         style: TextStyle(
                                           fontSize: 17,
                                           color:
@@ -92,7 +95,7 @@ class HomeScreen extends StatelessWidget {
                                         vertical: 10,
                                       ),
                                       child: Text(
-                                        'Cover Letter',
+                                        l10n.homeSegmentCoverLetter,
                                         style: TextStyle(
                                           fontSize: 17,
                                           color:
@@ -119,14 +122,14 @@ class HomeScreen extends StatelessWidget {
                               onSelectionChanged: (values) {
                                 onSegmentChanged(values.first);
                               },
-                              segments: const [
+                              segments: [
                                 ButtonSegment<HomeSegment>(
                                   value: HomeSegment.resumes,
-                                  label: Text('Resume'),
+                                  label: Text(l10n.homeSegmentResume),
                                 ),
                                 ButtonSegment<HomeSegment>(
                                   value: HomeSegment.coverLetters,
-                                  label: Text('Cover Letter'),
+                                  label: Text(l10n.homeSegmentCoverLetter),
                                 ),
                               ],
                             ),
@@ -177,6 +180,14 @@ class _ResumeSection extends StatelessWidget {
   final ValueChanged<ResumeData> onOpenResume;
   final ValueChanged<ResumeData> onPreviewResume;
 
+  String _displayResumeTitle(AppLocalizations l10n, ResumeData resume) {
+    final title = resume.title.trim();
+    if (title.isEmpty || title == ResumeData.defaultTitle) {
+      return l10n.untitledResume;
+    }
+    return title;
+  }
+
   Future<void> _confirmDeleteResume(
     BuildContext context,
     ResumeData resume,
@@ -184,20 +195,23 @@ class _ResumeSection extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
+        final dialogL10n = context.l10n;
         return AlertDialog(
           backgroundColor: Theme.of(context).cardColor,
-          title: const Text('Delete resume?'),
+          title: Text(dialogL10n.deleteResumeTitle),
           content: Text(
-            'Delete "${resume.title}"? This action cannot be undone.',
+            dialogL10n.deleteResumeMessage(
+              _displayResumeTitle(dialogL10n, resume),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(dialogL10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(dialogL10n.actionDelete),
             ),
           ],
         );
@@ -213,10 +227,12 @@ class _ResumeSection extends StatelessWidget {
     BuildContext context,
     ResumeData resume,
   ) async {
+    final l10n = context.l10n;
     final action = await showModalBottomSheet<_ResumeCardAction>(
       context: context,
       backgroundColor: Theme.of(context).cardColor,
       builder: (context) {
+        final sheetL10n = context.l10n;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
@@ -226,25 +242,25 @@ class _ResumeSection extends StatelessWidget {
                 const SizedBox(height: BottomSheetInsets.topSpacing),
                 _ActionSheetTile(
                   icon: Icons.visibility_outlined,
-                  label: 'Open',
+                  label: sheetL10n.actionOpen,
                   onTap: () =>
                       Navigator.of(context).pop(_ResumeCardAction.open),
                 ),
                 _ActionSheetTile(
                   icon: Icons.edit_outlined,
-                  label: 'Edit',
+                  label: sheetL10n.actionEdit,
                   onTap: () =>
                       Navigator.of(context).pop(_ResumeCardAction.edit),
                 ),
                 _ActionSheetTile(
                   icon: Icons.drive_file_rename_outline,
-                  label: 'Rename',
+                  label: sheetL10n.actionRename,
                   onTap: () =>
                       Navigator.of(context).pop(_ResumeCardAction.rename),
                 ),
                 _ActionSheetTile(
                   icon: Icons.copy_all_outlined,
-                  label: 'Duplicate',
+                  label: sheetL10n.actionDuplicate,
                   onTap: () =>
                       Navigator.of(context).pop(_ResumeCardAction.duplicate),
                 ),
@@ -252,7 +268,7 @@ class _ResumeSection extends StatelessWidget {
                   leading: const ImageIcon(
                     AssetImage('assets/fonts/delete.png'),
                   ),
-                  label: 'Delete',
+                  label: sheetL10n.actionDelete,
                   onTap: () =>
                       Navigator.of(context).pop(_ResumeCardAction.delete),
                 ),
@@ -287,7 +303,7 @@ class _ResumeSection extends StatelessWidget {
         }
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Resume renamed.')));
+        ).showSnackBar(SnackBar(content: Text(l10n.resumeRenamed)));
         return;
       case _ResumeCardAction.duplicate:
         final duplicateTitle = await _showDuplicateResumeDialog(
@@ -303,7 +319,7 @@ class _ResumeSection extends StatelessWidget {
         }
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Resume duplicated.')));
+        ).showSnackBar(SnackBar(content: Text(l10n.resumeDuplicated)));
         return;
       case _ResumeCardAction.delete:
         await _confirmDeleteResume(context, resume);
@@ -315,13 +331,14 @@ class _ResumeSection extends StatelessWidget {
     BuildContext context,
     ResumeData resume,
   ) async {
+    final l10n = context.l10n;
     final currentTitle = resume.title.trim();
     return showDialog<String>(
       context: context,
       builder: (dialogContext) {
         return _ResumeTitleDialog(
-          title: 'Rename resume',
-          actionLabel: 'Rename',
+          title: l10n.renameResumeTitle,
+          actionLabel: l10n.actionRename,
           fieldKey: const Key('rename-resume-title-field'),
           initialTitle: currentTitle == ResumeData.defaultTitle
               ? ''
@@ -335,18 +352,20 @@ class _ResumeSection extends StatelessWidget {
     BuildContext context,
     ResumeData resume,
   ) async {
+    final l10n = context.l10n;
     final currentTitle = resume.title.trim();
-    final suggestedTitle = (currentTitle.isEmpty
-        ? ResumeData.defaultTitle
-        : currentTitle);
+    final suggestedTitle =
+        (currentTitle.isEmpty || currentTitle == ResumeData.defaultTitle)
+        ? l10n.untitledResume
+        : currentTitle;
     return showDialog<String>(
       context: context,
       builder: (dialogContext) {
         return _ResumeTitleDialog(
-          title: 'Duplicate resume',
-          actionLabel: 'Duplicate',
+          title: l10n.duplicateResumeTitle,
+          actionLabel: l10n.actionDuplicate,
           fieldKey: const Key('duplicate-resume-title-field'),
-          initialTitle: '$suggestedTitle (Copy)',
+          initialTitle: l10n.titleWithCopySuffix(suggestedTitle),
         );
       },
     );
@@ -354,6 +373,8 @@ class _ResumeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     if (library.isLoading) {
       return const Center(
         child: Padding(
@@ -364,10 +385,10 @@ class _ResumeSection extends StatelessWidget {
     }
 
     if (library.resumes.isEmpty) {
-      return const _EmptySegmentState(
+      return _EmptySegmentState(
         icon: CupertinoIcons.doc_text,
-        title: 'No resumes yet',
-        body: 'Tap the add button to create your first resume.',
+        title: l10n.noResumesYet,
+        body: l10n.noResumesYetBody,
       );
     }
 
@@ -390,13 +411,13 @@ class _ResumeSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            resume.title,
+                            _displayResumeTitle(l10n, resume),
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: 9),
                           Text(
-                            'Updated ${dateFormat.format(resume.updatedAt)}',
+                            l10n.updatedDate(dateFormat.format(resume.updatedAt)),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   fontSize:
@@ -444,6 +465,17 @@ class _CoverLetterSection extends StatelessWidget {
   final ValueChanged<CoverLetterData> onPreviewCoverLetter;
   final ValueChanged<CoverLetterData> onEditCoverLetter;
 
+  String _displayCoverLetterTitle(
+    AppLocalizations l10n,
+    CoverLetterData coverLetter,
+  ) {
+    final title = coverLetter.displayTitle;
+    if (title == 'Untitled Cover Letter') {
+      return l10n.untitledCoverLetter;
+    }
+    return title;
+  }
+
   Future<void> _confirmDeleteCoverLetter(
     BuildContext context,
     CoverLetterData coverLetter,
@@ -451,20 +483,23 @@ class _CoverLetterSection extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
+        final dialogL10n = context.l10n;
         return AlertDialog(
           backgroundColor: Theme.of(context).cardColor,
-          title: const Text('Delete cover letter?'),
+          title: Text(dialogL10n.deleteCoverLetterTitle),
           content: Text(
-            'Delete "${coverLetter.displayTitle}"? This action cannot be undone.',
+            dialogL10n.deleteCoverLetterMessage(
+              _displayCoverLetterTitle(dialogL10n, coverLetter),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(dialogL10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(dialogL10n.actionDelete),
             ),
           ],
         );
@@ -484,6 +519,7 @@ class _CoverLetterSection extends StatelessWidget {
       context: context,
       backgroundColor: Theme.of(context).cardColor,
       builder: (context) {
+        final sheetL10n = context.l10n;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
@@ -493,13 +529,13 @@ class _CoverLetterSection extends StatelessWidget {
                 const SizedBox(height: BottomSheetInsets.topSpacing),
                 _ActionSheetTile(
                   icon: Icons.visibility_outlined,
-                  label: 'Open',
+                  label: sheetL10n.actionOpen,
                   onTap: () =>
                       Navigator.of(context).pop(_CoverLetterCardAction.open),
                 ),
                 _ActionSheetTile(
                   icon: Icons.edit_outlined,
-                  label: 'Edit',
+                  label: sheetL10n.actionEdit,
                   onTap: () =>
                       Navigator.of(context).pop(_CoverLetterCardAction.edit),
                 ),
@@ -507,7 +543,7 @@ class _CoverLetterSection extends StatelessWidget {
                   leading: const ImageIcon(
                     AssetImage('assets/fonts/delete.png'),
                   ),
-                  label: 'Delete',
+                  label: sheetL10n.actionDelete,
                   onTap: () =>
                       Navigator.of(context).pop(_CoverLetterCardAction.delete),
                 ),
@@ -537,6 +573,8 @@ class _CoverLetterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     if (library.isLoading) {
       return const Center(
         child: Padding(
@@ -547,10 +585,10 @@ class _CoverLetterSection extends StatelessWidget {
     }
 
     if (library.coverLetters.isEmpty) {
-      return const _EmptySegmentState(
+      return _EmptySegmentState(
         icon: CupertinoIcons.mail,
-        title: 'No cover letters yet',
-        body: 'Tap the add button to create your first cover letter.',
+        title: l10n.noCoverLettersYet,
+        body: l10n.noCoverLettersYetBody,
       );
     }
 
@@ -573,13 +611,15 @@ class _CoverLetterSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            coverLetter.displayTitle,
+                            _displayCoverLetterTitle(l10n, coverLetter),
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: 9),
                           Text(
-                            'Updated ${dateFormat.format(coverLetter.updatedAt)}',
+                            l10n.updatedDate(
+                              dateFormat.format(coverLetter.updatedAt),
+                            ),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   fontSize:
@@ -696,6 +736,7 @@ class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AlertDialog(
       backgroundColor: Theme.of(context).cardColor,
       title: Text(widget.title),
@@ -704,16 +745,16 @@ class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
         controller: _controller,
         autofocus: true,
         textInputAction: TextInputAction.done,
-        decoration: const InputDecoration(
-          labelText: 'Resume title',
-          hintText: 'Enter resume title',
+        decoration: InputDecoration(
+          labelText: l10n.resumeTitle,
+          hintText: l10n.enterResumeTitle,
         ),
         onSubmitted: (_) => _submit(),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(onPressed: _submit, child: Text(widget.actionLabel)),
       ],

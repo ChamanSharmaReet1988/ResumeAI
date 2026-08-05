@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/services/analytics_events.dart';
 import '../../core/skill_autocomplete_suggestions.dart';
 import 'cover_letter_content_screen.dart';
 import '../shared/view_models.dart';
 
-const List<String> _coverLetterLanguageOptions = [
+/// Canonical language values stored on the cover letter (English labels).
+const List<String> _coverLetterLanguageValues = [
   'English (English)',
   'Arabic (العربية)',
   'Bengali (বাংলা)',
@@ -25,6 +28,47 @@ const List<String> _coverLetterLanguageOptions = [
   'Urdu (اردو)',
   'Vietnamese (Tiếng Việt)',
 ];
+
+String _coverLetterLanguageLabel(AppLocalizations l10n, String value) {
+  switch (value) {
+    case 'English (English)':
+      return l10n.clLangEnglish;
+    case 'Arabic (العربية)':
+      return l10n.clLangArabic;
+    case 'Bengali (বাংলা)':
+      return l10n.clLangBengali;
+    case 'Chinese, Mandarin (中文)':
+      return l10n.clLangChinese;
+    case 'Dutch (Nederlands)':
+      return l10n.clLangDutch;
+    case 'French (Français)':
+      return l10n.clLangFrench;
+    case 'German (Deutsch)':
+      return l10n.clLangGerman;
+    case 'Hindi (हिन्दी)':
+      return l10n.clLangHindi;
+    case 'Italian (Italiano)':
+      return l10n.clLangItalian;
+    case 'Japanese (日本語)':
+      return l10n.clLangJapanese;
+    case 'Korean (한국어)':
+      return l10n.clLangKorean;
+    case 'Portuguese (Português)':
+      return l10n.clLangPortuguese;
+    case 'Russian (Русский)':
+      return l10n.clLangRussian;
+    case 'Spanish (Español)':
+      return l10n.clLangSpanish;
+    case 'Turkish (Türkçe)':
+      return l10n.clLangTurkish;
+    case 'Urdu (اردو)':
+      return l10n.clLangUrdu;
+    case 'Vietnamese (Tiếng Việt)':
+      return l10n.clLangVietnamese;
+    default:
+      return value;
+  }
+}
 
 List<String> _coverLetterSkillsFromValue(String value) {
   final seen = <String>{};
@@ -147,13 +191,13 @@ class CoverLetterEditorScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Cover letter',
+                            context.l10n.coverLetterHeading,
                             style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'This page creates a cover letter draft from the details below. Add the company name, job position name, one or more skills to highlight, and a language you want to mention, then tap Create cover letter to open the full draft on the next screen.',
+                            context.l10n.coverLetterEditorIntro,
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
                                   color: Theme.of(
@@ -163,7 +207,7 @@ class CoverLetterEditorScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 20),
                           _SyncTextField(
-                            label: 'Company name',
+                            label: context.l10n.companyName,
                             value: viewModel.coverLetter.company,
                             textCapitalization: TextCapitalization.words,
                             onChanged: (value) => viewModel.updateCoverLetter(
@@ -172,7 +216,7 @@ class CoverLetterEditorScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 16),
                           _SyncTextField(
-                            label: 'Job position name',
+                            label: context.l10n.jobPositionName,
                             value: viewModel.coverLetter.role,
                             textCapitalization: TextCapitalization.words,
                             onChanged: (value) => viewModel.updateCoverLetter(
@@ -185,7 +229,7 @@ class CoverLetterEditorScreen extends StatelessWidget {
                             addButtonKey: const Key(
                               'cover-letter-skill-add-button',
                             ),
-                            label: 'Skill to highlight',
+                            label: context.l10n.skillToHighlight,
                             value: viewModel.coverLetter.skillToHighlight,
                             onChanged: (value) => viewModel.updateCoverLetter(
                               (current) =>
@@ -197,9 +241,11 @@ class CoverLetterEditorScreen extends StatelessWidget {
                             fieldKey: const Key(
                               'cover-letter-language-dropdown',
                             ),
-                            label: 'Language',
+                            label: context.l10n.language,
                             value: viewModel.coverLetter.language,
-                            items: _coverLetterLanguageOptions,
+                            items: _coverLetterLanguageValues,
+                            itemLabel: (value) =>
+                                _coverLetterLanguageLabel(context.l10n, value),
                             onChanged: (value) => viewModel.updateCoverLetter(
                               (current) => current.copyWith(language: value),
                             ),
@@ -253,13 +299,13 @@ class CoverLetterEditorScreen extends StatelessWidget {
                                       }
                                     },
                               child: viewModel.isBusy
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       height: 20,
                                       child: Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          SizedBox(
+                                          const SizedBox(
                                             key: Key(
                                               'create-cover-letter-loader',
                                             ),
@@ -269,12 +315,12 @@ class CoverLetterEditorScreen extends StatelessWidget {
                                               strokeWidth: 2,
                                             ),
                                           ),
-                                          SizedBox(width: 10),
-                                          Text('Creating...'),
+                                          const SizedBox(width: 10),
+                                          Text(context.l10n.creatingEllipsis),
                                         ],
                                       ),
                                     )
-                                  : const Text('Create cover letter'),
+                                  : Text(context.l10n.createCoverLetter),
                             ),
                           ),
                         ],
@@ -360,6 +406,7 @@ class _SyncDropdownField extends StatelessWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    this.itemLabel,
     this.fieldKey,
   });
 
@@ -367,7 +414,10 @@ class _SyncDropdownField extends StatelessWidget {
   final String value;
   final List<String> items;
   final ValueChanged<String> onChanged;
+  final String Function(String value)? itemLabel;
   final Key? fieldKey;
+
+  String _labelFor(String value) => itemLabel?.call(value) ?? value;
 
   @override
   Widget build(BuildContext context) {
@@ -413,7 +463,7 @@ class _SyncDropdownField extends StatelessWidget {
               (item) => Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  item,
+                  _labelFor(item),
                   overflow: TextOverflow.ellipsis,
                   style: fieldTextStyle,
                 ),
@@ -426,7 +476,7 @@ class _SyncDropdownField extends StatelessWidget {
             (item) => DropdownMenuItem<String>(
               value: item,
               child: Text(
-                item,
+                _labelFor(item),
                 overflow: TextOverflow.ellipsis,
                 style: fieldTextStyle,
               ),
