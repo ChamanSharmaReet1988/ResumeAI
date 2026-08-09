@@ -388,6 +388,70 @@ class AppLocalizationsEs extends AppLocalizations {
       'Selecciona un currículum y la IA creará uno estilo ChatGPT/Claude optimizado para ATS. Cada vez que pulses Crear de nuevo, la IA optimiza más el mismo borrador ATS. La descripción del puesto es opcional.';
 
   @override
+  String get aiEngineUsingCloudApi => 'Usando tu clave API (IA en la nube)';
+
+  @override
+  String get aiEngineUsingAppleIntelligence =>
+      'Usando Apple Intelligence (en el dispositivo)';
+
+  @override
+  String get aiEngineUsingBuiltIn => 'Usando la IA integrada';
+
+  @override
+  String get aiApiKeySettingsTitle => 'Clave API de IA';
+
+  @override
+  String get aiApiKeySettingsIntro =>
+      'Añade tu propia clave API de OpenAI o Gemini para generar currículums ATS más potentes. La clave permanece en este dispositivo. Si no hay clave, el iPhone usa Apple Intelligence cuando está disponible; si no, la IA integrada.';
+
+  @override
+  String aiApiKeyConfiguredSubtitle(String provider) {
+    return 'Guardada: $provider';
+  }
+
+  @override
+  String get aiApiKeyMissingSubtitle =>
+      'Opcional: usa tu propia clave de OpenAI o Gemini';
+
+  @override
+  String get aiProviderLabel => 'Proveedor';
+
+  @override
+  String get aiApiKeyLabel => 'Clave API';
+
+  @override
+  String get aiApiKeyHint => 'Pega tu clave API secreta';
+
+  @override
+  String get aiModelOptionalLabel => 'Modelo (opcional)';
+
+  @override
+  String get aiApiKeyRequired => 'Introduce primero una clave API.';
+
+  @override
+  String get aiApiKeySaved => 'Clave API guardada en este dispositivo.';
+
+  @override
+  String get aiApiKeyRemoved => 'Clave API eliminada.';
+
+  @override
+  String get aiApiKeyTestSuccess => 'La clave API funciona.';
+
+  @override
+  String aiApiKeySavedMasked(String maskedKey) {
+    return 'Clave guardada: $maskedKey';
+  }
+
+  @override
+  String get saveAiApiKey => 'Guardar clave API';
+
+  @override
+  String get testAiApiKey => 'Probar clave API';
+
+  @override
+  String get removeAiApiKey => 'Eliminar clave API';
+
+  @override
   String get noResumeAvailable => 'No hay ningún currículum disponible ahora.';
 
   @override

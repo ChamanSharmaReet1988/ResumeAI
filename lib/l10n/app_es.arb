@@ -210,6 +210,39 @@
   "hideKeyboard": "Ocultar teclado",
   "selectResumeWithContentFirst": "Selecciona primero un currículum guardado con contenido.",
   "aiAtsIntro": "Selecciona un currículum y la IA creará uno estilo ChatGPT/Claude optimizado para ATS. Cada vez que pulses Crear de nuevo, la IA optimiza más el mismo borrador ATS. La descripción del puesto es opcional.",
+  "aiEngineUsingCloudApi": "Usando tu clave API (IA en la nube)",
+  "aiEngineUsingAppleIntelligence": "Usando Apple Intelligence (en el dispositivo)",
+  "aiEngineUsingBuiltIn": "Usando la IA integrada",
+  "aiApiKeySettingsTitle": "Clave API de IA",
+  "aiApiKeySettingsIntro": "Añade tu propia clave API de OpenAI o Gemini para generar currículums ATS más potentes. La clave permanece en este dispositivo. Si no hay clave, el iPhone usa Apple Intelligence cuando está disponible; si no, la IA integrada.",
+  "aiApiKeyConfiguredSubtitle": "Guardada: {provider}",
+  "@aiApiKeyConfiguredSubtitle": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "aiApiKeyMissingSubtitle": "Opcional: usa tu propia clave de OpenAI o Gemini",
+  "aiProviderLabel": "Proveedor",
+  "aiApiKeyLabel": "Clave API",
+  "aiApiKeyHint": "Pega tu clave API secreta",
+  "aiModelOptionalLabel": "Modelo (opcional)",
+  "aiApiKeyRequired": "Introduce primero una clave API.",
+  "aiApiKeySaved": "Clave API guardada en este dispositivo.",
+  "aiApiKeyRemoved": "Clave API eliminada.",
+  "aiApiKeyTestSuccess": "La clave API funciona.",
+  "aiApiKeySavedMasked": "Clave guardada: {maskedKey}",
+  "@aiApiKeySavedMasked": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAiApiKey": "Guardar clave API",
+  "testAiApiKey": "Probar clave API",
+  "removeAiApiKey": "Eliminar clave API",
   "noResumeAvailable": "No hay ningún currículum disponible ahora.",
   "createResumeThenGenerateAts": "Crea primero un currículum y vuelve aquí para generar una versión ATS.",
   "selectResume": "Seleccionar currículum",

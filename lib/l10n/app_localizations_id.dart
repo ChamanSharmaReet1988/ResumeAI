@@ -387,6 +387,70 @@ class AppLocalizationsId extends AppLocalizations {
       'Pilih resume dan AI akan membuat resume ATS bergaya ChatGPT/Claude. Setiap kali Anda ketuk Buat lagi, AI mengoptimalkan lebih lanjut draf ATS yang sama. Deskripsi pekerjaan bersifat opsional.';
 
   @override
+  String get aiEngineUsingCloudApi => 'Menggunakan kunci API Anda (AI cloud)';
+
+  @override
+  String get aiEngineUsingAppleIntelligence =>
+      'Menggunakan Apple Intelligence (di perangkat)';
+
+  @override
+  String get aiEngineUsingBuiltIn => 'Menggunakan AI bawaan';
+
+  @override
+  String get aiApiKeySettingsTitle => 'Kunci API AI';
+
+  @override
+  String get aiApiKeySettingsIntro =>
+      'Tambahkan kunci API OpenAI atau Gemini Anda sendiri untuk membuat resume ATS yang lebih kuat. Kunci tetap di perangkat ini. Jika tidak ada kunci, iPhone memakai Apple Intelligence bila tersedia; jika tidak, AI bawaan.';
+
+  @override
+  String aiApiKeyConfiguredSubtitle(String provider) {
+    return 'Tersimpan: $provider';
+  }
+
+  @override
+  String get aiApiKeyMissingSubtitle =>
+      'Opsional — gunakan kunci OpenAI atau Gemini Anda';
+
+  @override
+  String get aiProviderLabel => 'Penyedia';
+
+  @override
+  String get aiApiKeyLabel => 'Kunci API';
+
+  @override
+  String get aiApiKeyHint => 'Tempel kunci API rahasia Anda';
+
+  @override
+  String get aiModelOptionalLabel => 'Model (opsional)';
+
+  @override
+  String get aiApiKeyRequired => 'Masukkan kunci API terlebih dahulu.';
+
+  @override
+  String get aiApiKeySaved => 'Kunci API disimpan di perangkat ini.';
+
+  @override
+  String get aiApiKeyRemoved => 'Kunci API dihapus.';
+
+  @override
+  String get aiApiKeyTestSuccess => 'Kunci API berfungsi.';
+
+  @override
+  String aiApiKeySavedMasked(String maskedKey) {
+    return 'Kunci tersimpan: $maskedKey';
+  }
+
+  @override
+  String get saveAiApiKey => 'Simpan kunci API';
+
+  @override
+  String get testAiApiKey => 'Uji kunci API';
+
+  @override
+  String get removeAiApiKey => 'Hapus kunci API';
+
+  @override
   String get noResumeAvailable => 'Belum ada resume tersedia saat ini.';
 
   @override

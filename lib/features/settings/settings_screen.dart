@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'ai_api_key_settings_screen.dart';
 import 'google_drive_backup_screen.dart';
 import 'icloud_backup_screen.dart';
 import 'legal_web_view_screen.dart';
@@ -17,6 +18,7 @@ import '../premium/premium_gate.dart';
 import '../shell/app_shell_scope.dart';
 import '../shared/view_models.dart';
 import '../../core/app_locale_option.dart';
+import '../../core/services/ai_api_key_store.dart';
 import '../../core/services/firebase_app_services.dart';
 import '../../core/services/premium_purchase_service.dart';
 
@@ -283,14 +285,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _openAiApiKeySettings(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const AiApiKeySettingsScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer2<SettingsViewModel, PremiumPurchaseService>(
-      builder: (context, settings, premium, _) {
+    return Consumer3<SettingsViewModel, PremiumPurchaseService, AiApiKeyStore>(
+      builder: (context, settings, premium, aiKeys, _) {
         final l10n = AppLocalizations.of(context);
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
         final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+        final aiKeySubtitle = aiKeys.hasKey
+            ? l10n.aiApiKeyConfiguredSubtitle(
+                aiKeys.config.provider?.label ?? l10n.aiProviderLabel,
+              )
+            : l10n.aiApiKeyMissingSubtitle;
         final backupLabel =
             isIos ? l10n.iCloudBackup : l10n.googleDriveBackup;
         final backupIcon = isIos
@@ -478,6 +491,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                   ),
                                 ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () => _openAiApiKeySettings(context),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.vpn_key_outlined,
+                                      size: 22,
+                                      color: colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            l10n.aiApiKeySettingsTitle,
+                                            style: rowLabelStyle,
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            aiKeySubtitle,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: colorScheme
+                                                      .onSurfaceVariant,
+                                                  fontSize: 11,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

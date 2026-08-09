@@ -1,15 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nested/nested.dart';
 import 'package:provider/provider.dart';
 import 'package:resume_app/l10n/app_localizations.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/services/ai_api_key_store.dart';
+import 'package:resume_app/core/services/ai_resume_coordinator.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/ai/ai_assistance_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
+
+List<SingleChildWidget> _analyserProviders({
+  required ResumeRepository repository,
+  required ResumeLibraryViewModel library,
+}) {
+  final localAi = LocalAiResumeService();
+  final keyStore = AiApiKeyStore.inMemory();
+  return <SingleChildWidget>[
+    Provider<ResumeRepository>.value(value: repository),
+    Provider<LocalAiResumeService>.value(value: localAi),
+    ChangeNotifierProvider<AiApiKeyStore>.value(value: keyStore),
+    Provider<AiResumeCoordinator>(
+      create: (_) => AiResumeCoordinator(
+        apiKeyStore: keyStore,
+        localAi: localAi,
+      ),
+    ),
+    Provider<ResumePdfService>.value(value: ResumePdfService()),
+    ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
+  ];
+}
 
 class _FakeAnalyserRepository implements ResumeRepository {
   _FakeAnalyserRepository({required this.resumes});
@@ -79,14 +103,10 @@ void main() {
 
       await tester.pumpWidget(
         MultiProvider(
-          providers: [
-            Provider<ResumeRepository>.value(value: repository),
-            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
-            Provider<ResumePdfService>.value(value: ResumePdfService()),
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: library,
-            ),
-          ],
+          providers: _analyserProviders(
+            repository: repository,
+            library: library,
+          ),
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -158,14 +178,10 @@ void main() {
 
       await tester.pumpWidget(
         MultiProvider(
-          providers: [
-            Provider<ResumeRepository>.value(value: repository),
-            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
-            Provider<ResumePdfService>.value(value: ResumePdfService()),
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: library,
-            ),
-          ],
+          providers: _analyserProviders(
+            repository: repository,
+            library: library,
+          ),
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

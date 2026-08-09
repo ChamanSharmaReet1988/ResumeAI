@@ -756,6 +756,120 @@ abstract class AppLocalizations {
   /// **'Select a resume and AI will create a ChatGPT/Claude-style ATS resume. Each time you tap Create again, AI further optimizes the same ATS draft. Job description is optional.'**
   String get aiAtsIntro;
 
+  /// No description provided for @aiEngineUsingCloudApi.
+  ///
+  /// In en, this message translates to:
+  /// **'Using your API key (cloud AI)'**
+  String get aiEngineUsingCloudApi;
+
+  /// No description provided for @aiEngineUsingAppleIntelligence.
+  ///
+  /// In en, this message translates to:
+  /// **'Using Apple Intelligence (on-device)'**
+  String get aiEngineUsingAppleIntelligence;
+
+  /// No description provided for @aiEngineUsingBuiltIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Using built-in AI'**
+  String get aiEngineUsingBuiltIn;
+
+  /// No description provided for @aiApiKeySettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI API key'**
+  String get aiApiKeySettingsTitle;
+
+  /// No description provided for @aiApiKeySettingsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your own OpenAI or Gemini API key to generate stronger ATS resumes. The key stays on this device. If no key is saved, iPhone uses Apple Intelligence when available, otherwise built-in AI.'**
+  String get aiApiKeySettingsIntro;
+
+  /// No description provided for @aiApiKeyConfiguredSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved: {provider}'**
+  String aiApiKeyConfiguredSubtitle(String provider);
+
+  /// No description provided for @aiApiKeyMissingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — use your own OpenAI or Gemini key'**
+  String get aiApiKeyMissingSubtitle;
+
+  /// No description provided for @aiProviderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get aiProviderLabel;
+
+  /// No description provided for @aiApiKeyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get aiApiKeyLabel;
+
+  /// No description provided for @aiApiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste your secret API key'**
+  String get aiApiKeyHint;
+
+  /// No description provided for @aiModelOptionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model (optional)'**
+  String get aiModelOptionalLabel;
+
+  /// No description provided for @aiApiKeyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an API key first.'**
+  String get aiApiKeyRequired;
+
+  /// No description provided for @aiApiKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'API key saved on this device.'**
+  String get aiApiKeySaved;
+
+  /// No description provided for @aiApiKeyRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'API key removed.'**
+  String get aiApiKeyRemoved;
+
+  /// No description provided for @aiApiKeyTestSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'API key works.'**
+  String get aiApiKeyTestSuccess;
+
+  /// No description provided for @aiApiKeySavedMasked.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved key: {maskedKey}'**
+  String aiApiKeySavedMasked(String maskedKey);
+
+  /// No description provided for @saveAiApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Save API key'**
+  String get saveAiApiKey;
+
+  /// No description provided for @testAiApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Test API key'**
+  String get testAiApiKey;
+
+  /// No description provided for @removeAiApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove API key'**
+  String get removeAiApiKey;
+
   /// No description provided for @noResumeAvailable.
   ///
   /// In en, this message translates to:

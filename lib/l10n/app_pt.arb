@@ -210,6 +210,39 @@
   "hideKeyboard": "Ocultar teclado",
   "selectResumeWithContentFirst": "Selecione primeiro um currículo salvo com conteúdo.",
   "aiAtsIntro": "Selecione um currículo e a IA criará um currículo ATS no estilo ChatGPT/Claude. Cada vez que você tocar em Criar novamente, a IA otimiza mais o mesmo rascunho ATS. A descrição da vaga é opcional.",
+  "aiEngineUsingCloudApi": "Usando sua chave de API (IA na nuvem)",
+  "aiEngineUsingAppleIntelligence": "Usando Apple Intelligence (no dispositivo)",
+  "aiEngineUsingBuiltIn": "Usando a IA integrada",
+  "aiApiKeySettingsTitle": "Chave de API de IA",
+  "aiApiKeySettingsIntro": "Adicione sua própria chave de API OpenAI ou Gemini para gerar currículos ATS mais fortes. A chave fica neste dispositivo. Sem chave, o iPhone usa Apple Intelligence quando disponível; caso contrário, a IA integrada.",
+  "aiApiKeyConfiguredSubtitle": "Salva: {provider}",
+  "@aiApiKeyConfiguredSubtitle": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "aiApiKeyMissingSubtitle": "Opcional — use sua própria chave OpenAI ou Gemini",
+  "aiProviderLabel": "Provedor",
+  "aiApiKeyLabel": "Chave de API",
+  "aiApiKeyHint": "Cole sua chave de API secreta",
+  "aiModelOptionalLabel": "Modelo (opcional)",
+  "aiApiKeyRequired": "Digite uma chave de API primeiro.",
+  "aiApiKeySaved": "Chave de API salva neste dispositivo.",
+  "aiApiKeyRemoved": "Chave de API removida.",
+  "aiApiKeyTestSuccess": "A chave de API funciona.",
+  "aiApiKeySavedMasked": "Chave salva: {maskedKey}",
+  "@aiApiKeySavedMasked": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAiApiKey": "Salvar chave de API",
+  "testAiApiKey": "Testar chave de API",
+  "removeAiApiKey": "Remover chave de API",
   "noResumeAvailable": "Nenhum currículo disponível no momento.",
   "createResumeThenGenerateAts": "Crie um currículo primeiro e volte aqui para gerar uma versão ATS.",
   "selectResume": "Selecionar currículo",

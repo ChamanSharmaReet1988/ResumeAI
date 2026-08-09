@@ -220,6 +220,39 @@
   "hideKeyboard": "Hide keyboard",
   "selectResumeWithContentFirst": "Select a saved resume with content first.",
   "aiAtsIntro": "Select a resume and AI will create a ChatGPT/Claude-style ATS resume. Each time you tap Create again, AI further optimizes the same ATS draft. Job description is optional.",
+  "aiEngineUsingCloudApi": "Using your API key (cloud AI)",
+  "aiEngineUsingAppleIntelligence": "Using Apple Intelligence (on-device)",
+  "aiEngineUsingBuiltIn": "Using built-in AI",
+  "aiApiKeySettingsTitle": "AI API key",
+  "aiApiKeySettingsIntro": "Add your own OpenAI or Gemini API key to generate stronger ATS resumes. The key stays on this device. If no key is saved, iPhone uses Apple Intelligence when available, otherwise built-in AI.",
+  "aiApiKeyConfiguredSubtitle": "Saved: {provider}",
+  "@aiApiKeyConfiguredSubtitle": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "aiApiKeyMissingSubtitle": "Optional — use your own OpenAI or Gemini key",
+  "aiProviderLabel": "Provider",
+  "aiApiKeyLabel": "API key",
+  "aiApiKeyHint": "Paste your secret API key",
+  "aiModelOptionalLabel": "Model (optional)",
+  "aiApiKeyRequired": "Enter an API key first.",
+  "aiApiKeySaved": "API key saved on this device.",
+  "aiApiKeyRemoved": "API key removed.",
+  "aiApiKeyTestSuccess": "API key works.",
+  "aiApiKeySavedMasked": "Saved key: {maskedKey}",
+  "@aiApiKeySavedMasked": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAiApiKey": "Save API key",
+  "testAiApiKey": "Test API key",
+  "removeAiApiKey": "Remove API key",
   "noResumeAvailable": "No resume available right now.",
   "createResumeThenGenerateAts": "Create a resume first, then come back here to generate an ATS version.",
   "selectResume": "Select resume",

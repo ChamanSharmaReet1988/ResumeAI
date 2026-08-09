@@ -2,6 +2,9 @@ import Foundation
 import Flutter
 import StoreKit
 import UIKit
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -16,6 +19,7 @@ import UIKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     registerICloudPluginIfNeeded(with: engineBridge.pluginRegistry)
     registerStoreKitEntitlementPluginIfNeeded(with: engineBridge.pluginRegistry)
+    registerAppleFoundationAiPluginIfNeeded(with: engineBridge.pluginRegistry)
   }
 
   private func registerICloudPluginIfNeeded(with registry: FlutterPluginRegistry) {
@@ -38,6 +42,17 @@ import UIKit
       return
     }
     StoreKitEntitlementPlugin.register(with: registrar)
+  }
+
+  private func registerAppleFoundationAiPluginIfNeeded(with registry: FlutterPluginRegistry) {
+    let pluginKey = "AppleFoundationAiPlugin"
+    guard !registry.hasPlugin(pluginKey) else {
+      return
+    }
+    guard let registrar = registry.registrar(forPlugin: pluginKey) else {
+      return
+    }
+    AppleFoundationAiPlugin.register(with: registrar)
   }
 }
 
@@ -618,4 +633,187 @@ private enum ICloudResumePluginError: Error {
       return "The iCloud resume file could not be decoded."
     }
   }
+}
+
+private final class AppleFoundationAiPlugin: NSObject, FlutterPlugin {
+  private static let channelName = "resume_app/apple_foundation_ai"
+
+  static func register(with registrar: FlutterPluginRegistrar) {
+    let channel = FlutterMethodChannel(name: channelName, binaryMessenger: registrar.messenger())
+    let instance = AppleFoundationAiPlugin()
+    registrar.addMethodCallDelegate(instance, channel: channel)
+  }
+
+  func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "isAvailable":
+      result(Self.isModelAvailable())
+    case "generateText":
+      let arguments = call.arguments as? [String: Any]
+      let prompt = arguments?["prompt"] as? String ?? ""
+      guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        result(
+          FlutterError(
+            code: "invalid_prompt",
+            message: "A prompt is required.",
+            details: nil
+          )
+        )
+        return
+      }
+      Self.generateText(prompt: prompt, result: result)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private static func isModelAvailable() -> Bool {
+#if canImport(FoundationModels)
+    if #available(iOS 26.0, *) {
+      // Use the same model configuration we generate with.
+      let model = SystemLanguageModel(
+        guardrails: .permissiveContentTransformations
+      )
+      switch model.availability {
+      case .available:
+        return true
+      default:
+        return false
+      }
+    }
+#endif
+    return false
+  }
+
+  private static func generateText(prompt: String, result: @escaping FlutterResult) {
+#if canImport(FoundationModels)
+    if #available(iOS 26.0, *) {
+      Task {
+        do {
+          let text = try await Self.generateRewrittenText(prompt: prompt)
+          DispatchQueue.main.async {
+            result(text)
+          }
+        } catch {
+          let mapped = Self.mapGenerationError(error)
+          DispatchQueue.main.async {
+            result(
+              FlutterError(
+                code: mapped.code,
+                message: mapped.message,
+                details: nil
+              )
+            )
+          }
+        }
+      }
+      return
+    }
+#endif
+    result(
+      FlutterError(
+        code: "apple_ai_unsupported",
+        message: "Apple on-device AI requires iOS 26+ with Apple Intelligence.",
+        details: nil
+      )
+    )
+  }
+
+#if canImport(FoundationModels)
+  private enum AppleAiPluginError: Error {
+    case unavailable
+  }
+
+  @available(iOS 26.0, *)
+  private static func generateRewrittenText(prompt: String) async throws -> String {
+    let model = SystemLanguageModel(
+      guardrails: .permissiveContentTransformations
+    )
+    guard case .available = model.availability else {
+      throw AppleAiPluginError.unavailable
+    }
+
+    let instructions = """
+    You rewrite professional resumes for ATS scanners.
+    Keep facts truthful. Do not invent employers, degrees, or dates.
+    Return valid JSON only, with no markdown fences.
+    """
+
+    do {
+      let session = LanguageModelSession(model: model, instructions: instructions)
+      let response = try await session.respond(to: prompt)
+      return response.content
+    } catch {
+      // Retry once with a truncated prompt when the on-device context window is exceeded.
+      let description = String(describing: error)
+      if description.contains("exceededContextWindowSize") {
+        let compact = String(prompt.prefix(3500))
+        let retrySession = LanguageModelSession(
+          model: model,
+          instructions: instructions
+        )
+        let response = try await retrySession.respond(to: compact)
+        return response.content
+      }
+      throw error
+    }
+  }
+
+  @available(iOS 26.0, *)
+  private static func mapGenerationError(_ error: Error) -> (code: String, message: String) {
+    if let pluginError = error as? AppleAiPluginError {
+      switch pluginError {
+      case .unavailable:
+        return (
+          "apple_ai_unavailable",
+          "Apple Intelligence is not available on this device."
+        )
+      }
+    }
+
+    // Match by description so associated-value case changes across iOS 26.x stay compatible.
+    let text = String(describing: error)
+    if text.contains("guardrailViolation") {
+      return (
+        "apple_ai_guardrail",
+        "Apple Intelligence blocked this resume content."
+      )
+    }
+    if text.contains("exceededContextWindowSize") {
+      return (
+        "apple_ai_context",
+        "This resume is too long for Apple on-device AI."
+      )
+    }
+    if text.contains("rateLimited") {
+      return (
+        "apple_ai_rate_limited",
+        "Apple on-device AI is busy right now."
+      )
+    }
+    if text.contains("assetsUnavailable") {
+      return (
+        "apple_ai_assets",
+        "Apple Intelligence model assets are not ready."
+      )
+    }
+    if text.contains("refusal") {
+      return (
+        "apple_ai_refusal",
+        "Apple Intelligence declined this request."
+      )
+    }
+    if text.contains("unsupportedLanguageOrLocale") {
+      return (
+        "apple_ai_language",
+        "Apple on-device AI does not support this language yet."
+      )
+    }
+
+    return (
+      "apple_ai_failed",
+      "Apple on-device AI could not finish."
+    )
+  }
+#endif
 }

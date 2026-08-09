@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:resume_app/l10n/app_localizations.dart';
 
+import '../core/services/ai_api_key_store.dart';
+import '../core/services/ai_resume_coordinator.dart';
+import '../core/services/apple_foundation_ai_service.dart';
 import '../core/services/app_preferences.dart';
+import '../core/services/cloud_ai_resume_service.dart';
 import '../core/services/premium_purchase_service.dart';
 import '../core/services/firebase_app_services.dart';
 import '../core/services/google_drive_resume_service.dart';
@@ -25,6 +29,7 @@ class ResumeApp extends StatelessWidget {
     required this.premiumPurchaseService,
     required this.firebaseServices,
     required this.googleDriveResumeService,
+    this.aiApiKeyStore,
   });
 
   final ResumeRepository repository;
@@ -32,6 +37,7 @@ class ResumeApp extends StatelessWidget {
   final PremiumPurchaseService premiumPurchaseService;
   final FirebaseAppServices firebaseServices;
   final GoogleDriveResumeService googleDriveResumeService;
+  final AiApiKeyStore? aiApiKeyStore;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +62,21 @@ class ResumeApp extends StatelessWidget {
         ),
         Provider<JobSearchService>(create: (_) => JobSearchService()),
         Provider<LocalAiResumeService>(create: (_) => LocalAiResumeService()),
+        Provider<CloudAiResumeService>(create: (_) => CloudAiResumeService()),
+        Provider<AppleFoundationAiService>(
+          create: (_) => AppleFoundationAiService(),
+        ),
+        ChangeNotifierProvider<AiApiKeyStore>(
+          create: (_) => (aiApiKeyStore ?? AiApiKeyStore())..load(),
+        ),
+        Provider<AiResumeCoordinator>(
+          create: (context) => AiResumeCoordinator(
+            apiKeyStore: context.read<AiApiKeyStore>(),
+            localAi: context.read<LocalAiResumeService>(),
+            cloudAi: context.read<CloudAiResumeService>(),
+            appleAi: context.read<AppleFoundationAiService>(),
+          ),
+        ),
         Provider<ResumePdfService>(create: (_) => ResumePdfService()),
         ChangeNotifierProvider<SettingsViewModel>(
           create: (_) => SettingsViewModel(preferences: appPreferences),

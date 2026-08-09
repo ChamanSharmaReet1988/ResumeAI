@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/models/resume_models.dart';
+import '../../core/services/ai_api_key_store.dart';
+import '../../core/services/ai_resume_coordinator.dart';
 import '../../core/services/resume_services.dart';
 import 'resume_optimize_highlight.dart';
 import '../shared/native_pdf_preview.dart';
@@ -48,6 +50,8 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
   ResumeData? _createdResume;
   int _atsCreateAttempt = 0;
   String? _atsAttemptSourceId;
+  String? _engineStatusLabel;
+  AiApiKeyStore? _apiKeyStore;
 
   @override
   void initState() {
@@ -55,10 +59,42 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     WidgetsBinding.instance.addObserver(this);
     _jobDescriptionController.addListener(_handleInputChanged);
     _jobDescriptionFocusNode.addListener(_handleJobDescriptionFocusChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _apiKeyStore = context.read<AiApiKeyStore>();
+      _apiKeyStore!.addListener(_refreshEngineStatus);
+      _refreshEngineStatus();
+    });
+  }
+
+  Future<void> _refreshEngineStatus() async {
+    if (!mounted) {
+      return;
+    }
+    final coordinator = context.read<AiResumeCoordinator>();
+    final engine = await coordinator.resolvePreferredEngine();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _engineStatusLabel = _labelForEngine(engine);
+    });
+  }
+
+  String _labelForEngine(AiEngineKind engine) {
+    final l10n = context.l10n;
+    return switch (engine) {
+      AiEngineKind.cloudApi => l10n.aiEngineUsingCloudApi,
+      AiEngineKind.appleOnDevice => l10n.aiEngineUsingAppleIntelligence,
+      AiEngineKind.local => l10n.aiEngineUsingBuiltIn,
+    };
   }
 
   @override
   void dispose() {
+    _apiKeyStore?.removeListener(_refreshEngineStatus);
     WidgetsBinding.instance.removeObserver(this);
     _jobDescriptionController.removeListener(_handleInputChanged);
     _jobDescriptionController.dispose();
@@ -178,7 +214,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
   }
 
   Future<void> _createAtsResume({
-    required LocalAiResumeService aiService,
+    required AiResumeCoordinator coordinator,
     required ResumeData? selectedResume,
   }) async {
     _dismissKeyboard();
@@ -203,21 +239,28 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     final attemptIndex = _atsCreateAttempt;
 
     await _runTask(() async {
-      final result = await aiService.createAtsResumeWithAi(
+      final outcome = await coordinator.createAtsResumeWithAi(
         sourceResume: sourceForPass,
         jobDescription: jobDescription,
         attemptIndex: attemptIndex,
       );
-      final created = result.resume.copyWith(updatedAt: DateTime.now());
+      final created = outcome.result.resume.copyWith(updatedAt: DateTime.now());
 
       if (!mounted) {
         return;
       }
 
+      if (outcome.fallbackNotice != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(outcome.fallbackNotice!)),
+        );
+      }
+
       setState(() {
         _createdResume = created;
         _atsCreateAttempt = attemptIndex + 1;
-        _appliedChanges = result.appliedChanges;
+        _appliedChanges = outcome.result.appliedChanges;
+        _engineStatusLabel = _labelForEngine(outcome.engine);
         _previewData = buildResumeOptimizeHighlightData(
           beforeResume: sourceForPass,
           afterResume: created,
@@ -254,7 +297,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
 
   @override
   Widget build(BuildContext context) {
-    final aiService = context.read<LocalAiResumeService>();
+    final coordinator = context.read<AiResumeCoordinator>();
     final library = context.watch<ResumeLibraryViewModel>();
     final resumes = library.resumes;
     final selectedResume = library.selectedResume;
@@ -287,6 +330,23 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                   ),
                 ),
               ),
+              if (_engineStatusLabel != null) ...[
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _fieldHorizontalPadding,
+                  ),
+                  child: Text(
+                    _engineStatusLabel!,
+                    key: const Key('ai-engine-status-label'),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               if (resumes.isEmpty) ...[
                 Card(
@@ -442,7 +502,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                     key: const Key('create-ats-resume-ai-button'),
                     onPressed: enableCreate
                         ? () => _createAtsResume(
-                            aiService: aiService,
+                            coordinator: coordinator,
                             selectedResume: selectedResume,
                           )
                         : null,

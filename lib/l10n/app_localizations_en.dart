@@ -387,6 +387,70 @@ class AppLocalizationsEn extends AppLocalizations {
       'Select a resume and AI will create a ChatGPT/Claude-style ATS resume. Each time you tap Create again, AI further optimizes the same ATS draft. Job description is optional.';
 
   @override
+  String get aiEngineUsingCloudApi => 'Using your API key (cloud AI)';
+
+  @override
+  String get aiEngineUsingAppleIntelligence =>
+      'Using Apple Intelligence (on-device)';
+
+  @override
+  String get aiEngineUsingBuiltIn => 'Using built-in AI';
+
+  @override
+  String get aiApiKeySettingsTitle => 'AI API key';
+
+  @override
+  String get aiApiKeySettingsIntro =>
+      'Add your own OpenAI or Gemini API key to generate stronger ATS resumes. The key stays on this device. If no key is saved, iPhone uses Apple Intelligence when available, otherwise built-in AI.';
+
+  @override
+  String aiApiKeyConfiguredSubtitle(String provider) {
+    return 'Saved: $provider';
+  }
+
+  @override
+  String get aiApiKeyMissingSubtitle =>
+      'Optional — use your own OpenAI or Gemini key';
+
+  @override
+  String get aiProviderLabel => 'Provider';
+
+  @override
+  String get aiApiKeyLabel => 'API key';
+
+  @override
+  String get aiApiKeyHint => 'Paste your secret API key';
+
+  @override
+  String get aiModelOptionalLabel => 'Model (optional)';
+
+  @override
+  String get aiApiKeyRequired => 'Enter an API key first.';
+
+  @override
+  String get aiApiKeySaved => 'API key saved on this device.';
+
+  @override
+  String get aiApiKeyRemoved => 'API key removed.';
+
+  @override
+  String get aiApiKeyTestSuccess => 'API key works.';
+
+  @override
+  String aiApiKeySavedMasked(String maskedKey) {
+    return 'Saved key: $maskedKey';
+  }
+
+  @override
+  String get saveAiApiKey => 'Save API key';
+
+  @override
+  String get testAiApiKey => 'Test API key';
+
+  @override
+  String get removeAiApiKey => 'Remove API key';
+
+  @override
   String get noResumeAvailable => 'No resume available right now.';
 
   @override

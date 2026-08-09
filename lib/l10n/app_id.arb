@@ -210,6 +210,39 @@
   "hideKeyboard": "Sembunyikan keyboard",
   "selectResumeWithContentFirst": "Pilih dulu resume tersimpan yang berisi konten.",
   "aiAtsIntro": "Pilih resume dan AI akan membuat resume ATS bergaya ChatGPT/Claude. Setiap kali Anda ketuk Buat lagi, AI mengoptimalkan lebih lanjut draf ATS yang sama. Deskripsi pekerjaan bersifat opsional.",
+  "aiEngineUsingCloudApi": "Menggunakan kunci API Anda (AI cloud)",
+  "aiEngineUsingAppleIntelligence": "Menggunakan Apple Intelligence (di perangkat)",
+  "aiEngineUsingBuiltIn": "Menggunakan AI bawaan",
+  "aiApiKeySettingsTitle": "Kunci API AI",
+  "aiApiKeySettingsIntro": "Tambahkan kunci API OpenAI atau Gemini Anda sendiri untuk membuat resume ATS yang lebih kuat. Kunci tetap di perangkat ini. Jika tidak ada kunci, iPhone memakai Apple Intelligence bila tersedia; jika tidak, AI bawaan.",
+  "aiApiKeyConfiguredSubtitle": "Tersimpan: {provider}",
+  "@aiApiKeyConfiguredSubtitle": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "aiApiKeyMissingSubtitle": "Opsional — gunakan kunci OpenAI atau Gemini Anda",
+  "aiProviderLabel": "Penyedia",
+  "aiApiKeyLabel": "Kunci API",
+  "aiApiKeyHint": "Tempel kunci API rahasia Anda",
+  "aiModelOptionalLabel": "Model (opsional)",
+  "aiApiKeyRequired": "Masukkan kunci API terlebih dahulu.",
+  "aiApiKeySaved": "Kunci API disimpan di perangkat ini.",
+  "aiApiKeyRemoved": "Kunci API dihapus.",
+  "aiApiKeyTestSuccess": "Kunci API berfungsi.",
+  "aiApiKeySavedMasked": "Kunci tersimpan: {maskedKey}",
+  "@aiApiKeySavedMasked": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAiApiKey": "Simpan kunci API",
+  "testAiApiKey": "Uji kunci API",
+  "removeAiApiKey": "Hapus kunci API",
   "noResumeAvailable": "Belum ada resume tersedia saat ini.",
   "createResumeThenGenerateAts": "Buat resume terlebih dahulu, lalu kembali ke sini untuk membuat versi ATS.",
   "selectResume": "Pilih resume",
