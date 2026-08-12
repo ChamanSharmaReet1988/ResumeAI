@@ -6,6 +6,7 @@ import '../../core/models/resume_models.dart';
 import '../../core/services/ai_api_key_store.dart';
 import '../../core/services/ai_resume_coordinator.dart';
 import '../../core/services/resume_services.dart';
+import '../premium/premium_gate.dart';
 import 'resume_optimize_highlight.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
@@ -225,6 +226,13 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
           content: Text(context.l10n.selectResumeWithContentFirst),
         ),
       );
+      return;
+    }
+
+    if (!await ensurePremiumForAtsAiCreate(context)) {
+      return;
+    }
+    if (!mounted) {
       return;
     }
 

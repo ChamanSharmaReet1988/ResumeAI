@@ -489,7 +489,7 @@ const _professionalResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.profileSidebarResume,
     headline: 'Profile Sidebar',
     caption: 'Profile-led layout with strong visual anchors.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'classic-sidebar',
@@ -497,7 +497,7 @@ const _professionalResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.classicSidebarResume,
     headline: 'Classic Sidebar',
     caption: 'Soft left rail with photo-led identity and structured sections.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'accent-strip',
@@ -505,7 +505,7 @@ const _professionalResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.accentStripResume,
     headline: 'Accent Strip',
     caption: 'Bold left stripe with an oversized nameplate and clean sections.',
-    isPremium: true,
+    isPremium: false,
   ),
 ];
 
@@ -518,7 +518,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsStructuredResume,
     headline: 'Structured ATS',
     caption: 'Gray section bands and a centered header for parsers.',
-    isPremium: false,
+    isPremium: true,
   ),
   _TemplateTileData(
     id: 'ats-latex-classic',

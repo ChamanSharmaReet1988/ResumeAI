@@ -55,9 +55,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     if (!canLaunch) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.noMailAppFound)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.noMailAppFound)));
       return;
     }
 
@@ -66,9 +66,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     if (!launched) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.couldNotOpenMailApp)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.couldNotOpenMailApp)));
     }
   }
 
@@ -91,9 +91,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     if (!canLaunch) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.couldNotOpenLink)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.couldNotOpenLink)));
       return;
     }
     final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
@@ -101,9 +101,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     if (!launched) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.couldNotOpenLink)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.couldNotOpenLink)));
     }
   }
 
@@ -304,8 +304,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 aiKeys.config.provider?.label ?? l10n.aiProviderLabel,
               )
             : l10n.aiApiKeyMissingSubtitle;
-        final backupLabel =
-            isIos ? l10n.iCloudBackup : l10n.googleDriveBackup;
+        final backupLabel = isIos ? l10n.iCloudBackup : l10n.googleDriveBackup;
         final backupIcon = isIos
             ? Icons.cloud_done_outlined
             : Icons.cloud_queue_outlined;
@@ -374,7 +373,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       ),
                                       child: DropdownButton<ThemeMode>(
                                         value: settings.themeMode,
-                                        alignment: AlignmentDirectional.centerEnd,
+                                        alignment:
+                                            AlignmentDirectional.centerEnd,
                                         borderRadius: BorderRadius.circular(12),
                                         elevation: 16,
                                         dropdownColor: theme.cardColor,
@@ -445,7 +445,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       ),
                                       child: DropdownButton<String>(
                                         value: settings.appLocaleCode,
-                                        alignment: AlignmentDirectional.centerEnd,
+                                        alignment:
+                                            AlignmentDirectional.centerEnd,
                                         borderRadius: BorderRadius.circular(12),
                                         elevation: 16,
                                         dropdownColor: theme.cardColor,
@@ -482,8 +483,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                                   .supportedPreferenceCodes)
                                             DropdownMenuItem(
                                               value: code,
-                                              alignment:
-                                                  AlignmentDirectional.centerEnd,
+                                              alignment: AlignmentDirectional
+                                                  .centerEnd,
                                               child: Text(languageLabel(code)),
                                             ),
                                         ],
@@ -814,11 +815,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           const Spacer(),
+
                           // TEMPORARY: show version in all builds for internal testing.
-                          // const SizedBox(height: 20),
-                          // _SettingsVersionFooter(
-                          //   onTap: () => _openDeveloperTools(context),
-                          // ),
+                          _SettingsVersionFooter(
+                            onTap: () => _openDeveloperTools(context),
+                          ),
                         ],
                       ),
                     ),
@@ -878,10 +879,9 @@ class _SettingsVersionFooterState extends State<_SettingsVersionFooter> {
         final packageInfo = snapshot.data;
         final versionLabel = packageInfo == null
             ? AppLocalizations.of(context).versionLabel
-            : AppLocalizations.of(context).versionWithBuild(
-                packageInfo.version,
-                packageInfo.buildNumber,
-              );
+            : AppLocalizations.of(
+                context,
+              ).versionWithBuild(packageInfo.version, packageInfo.buildNumber);
         final text = Text(
           versionLabel,
           textAlign: TextAlign.center,

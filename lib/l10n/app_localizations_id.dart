@@ -236,7 +236,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get premiumBenefitUnlockLayouts =>
-      'Buka semua tata letak resume profesional dan ATS di luar template gratis';
+      'Buka semua tata letak resume ATS dan pembuatan ATS dengan AI';
 
   @override
   String get premiumBenefitBackupIcloud =>

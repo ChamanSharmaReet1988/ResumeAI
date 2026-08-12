@@ -94,6 +94,13 @@ Future<bool> ensurePremiumForCoverLetterTemplate(
   return ensurePremiumAccess(context);
 }
 
+Future<bool> ensurePremiumForAtsAiCreate(BuildContext context) async {
+  if (!PremiumAccess.atsAiCreateRequiresPremium) {
+    return true;
+  }
+  return ensurePremiumAccess(context);
+}
+
 Future<bool> ensurePremiumForICloudBackup(BuildContext context) async {
   if (!PremiumAccess.iCloudBackupRequiresPremium) {
     return true;

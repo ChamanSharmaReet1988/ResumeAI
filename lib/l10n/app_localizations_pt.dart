@@ -236,7 +236,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get premiumBenefitUnlockLayouts =>
-      'Desbloqueie todos os layouts profissionais e ATS além dos modelos gratuitos';
+      'Desbloqueie todos os layouts ATS e a criação ATS com IA';
 
   @override
   String get premiumBenefitBackupIcloud =>

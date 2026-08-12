@@ -10,6 +10,7 @@ import 'package:resume_app/core/services/ai_resume_coordinator.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
+import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/ai/ai_assistance_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
@@ -17,9 +18,11 @@ import 'package:resume_app/features/shared/view_models.dart';
 List<SingleChildWidget> _analyserProviders({
   required ResumeRepository repository,
   required ResumeLibraryViewModel library,
+  bool isPremium = true,
 }) {
   final localAi = LocalAiResumeService();
   final keyStore = AiApiKeyStore.inMemory();
+  final appPreferences = AppPreferences.inMemory(isPremium: isPremium);
   return <SingleChildWidget>[
     Provider<ResumeRepository>.value(value: repository),
     Provider<LocalAiResumeService>.value(value: localAi),
@@ -32,6 +35,12 @@ List<SingleChildWidget> _analyserProviders({
     ),
     Provider<ResumePdfService>.value(value: ResumePdfService()),
     ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
+    ChangeNotifierProvider<PremiumPurchaseService>(
+      create: (_) => PremiumPurchaseService.inMemory(
+        appPreferences: appPreferences,
+        isPremium: isPremium,
+      ),
+    ),
   ];
 }
 

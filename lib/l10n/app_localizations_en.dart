@@ -236,7 +236,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get premiumBenefitUnlockLayouts =>
-      'Unlock every professional and ATS resume layout beyond the free templates';
+      'Unlock every ATS resume layout and AI ATS create';
 
   @override
   String get premiumBenefitBackupIcloud =>
