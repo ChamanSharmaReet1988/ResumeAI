@@ -12,6 +12,7 @@ import '../core/services/premium_purchase_service.dart';
 import '../core/services/firebase_app_services.dart';
 import '../core/services/google_drive_resume_service.dart';
 import '../core/services/icloud_resume_service.dart';
+import '../core/services/in_app_review_prompt_service.dart';
 import '../core/services/job_search_service.dart';
 import '../core/services/resume_import_service.dart';
 import '../core/services/resume_services.dart';
@@ -65,6 +66,9 @@ class ResumeApp extends StatelessWidget {
         Provider<CloudAiResumeService>(create: (_) => CloudAiResumeService()),
         Provider<AppleFoundationAiService>(
           create: (_) => AppleFoundationAiService(),
+        ),
+        Provider<InAppReviewPromptService>(
+          create: (_) => InAppReviewPromptService(),
         ),
         ChangeNotifierProvider<AiApiKeyStore>(
           create: (_) => (aiApiKeyStore ?? AiApiKeyStore())..load(),

@@ -8,6 +8,7 @@ import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/resume_services.dart';
 import '../ai/ai_assistance_screen.dart';
 import '../builder/resume_builder_screen.dart';
@@ -41,6 +42,11 @@ class _AppShellState extends State<AppShell> {
     }
 
     setState(() => _currentIndex = index);
+
+    if (index == InAppReviewPromptService.templatesTabIndex) {
+      // Fire-and-forget; review APIs are OS-gated and must not block navigation.
+      context.read<InAppReviewPromptService>().handleTemplatesTabSelected();
+    }
   }
 
   void _goToHomeResumeTab() {

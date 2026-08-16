@@ -1,17 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nested/nested.dart';
 import 'package:provider/provider.dart';
 import 'package:resume_app/l10n/app_localizations.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/services/ai_api_key_store.dart';
+import 'package:resume_app/core/services/ai_resume_coordinator.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
+import 'package:resume_app/core/services/in_app_review_prompt_service.dart';
 import 'package:resume_app/core/services/resume_import_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/shell/app_shell.dart';
 import 'package:resume_app/features/shared/view_models.dart';
+
+List<SingleChildWidget> _appShellProviders({
+  required ResumeRepository repository,
+  required ResumeLibraryViewModel resumeLibrary,
+  required CoverLetterLibraryViewModel coverLetterLibrary,
+  required AppPreferences appPreferences,
+  required PremiumPurchaseService premiumPurchaseService,
+}) {
+  final localAi = LocalAiResumeService();
+  final keyStore = AiApiKeyStore.inMemory();
+  return [
+    Provider<ResumeImportService>.value(value: ResumeImportService()),
+    Provider<ResumeRepository>.value(value: repository),
+    Provider<AppPreferences>.value(value: appPreferences),
+    ChangeNotifierProvider<PremiumPurchaseService>.value(
+      value: premiumPurchaseService,
+    ),
+    Provider<LocalAiResumeService>.value(value: localAi),
+    ChangeNotifierProvider<AiApiKeyStore>.value(value: keyStore),
+    Provider<AiResumeCoordinator>(
+      create: (_) => AiResumeCoordinator(
+        apiKeyStore: keyStore,
+        localAi: localAi,
+      ),
+    ),
+    Provider<InAppReviewPromptService>.value(
+      value: InAppReviewPromptService(
+        openBox: () async {
+          throw StateError('review prompt disabled in tests');
+        },
+      ),
+    ),
+    Provider<ResumePdfService>.value(value: ResumePdfService()),
+    ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+      value: resumeLibrary,
+    ),
+    ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
+      value: coverLetterLibrary,
+    ),
+    ChangeNotifierProvider<SettingsViewModel>(
+      create: (_) => SettingsViewModel(),
+    ),
+  ];
+}
 
 class _FakeAppShellRepository implements ResumeRepository {
   final List<ResumeData> resumes = [];
@@ -99,25 +147,13 @@ void main() {
 
       await tester.pumpWidget(
         MultiProvider(
-          providers: [
-            Provider<ResumeImportService>.value(value: ResumeImportService()),
-            Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(value: appPreferences),
-            ChangeNotifierProvider<PremiumPurchaseService>.value(
-              value: premiumPurchaseService,
-            ),
-            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
-            Provider<ResumePdfService>.value(value: ResumePdfService()),
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: resumeLibrary,
-            ),
-            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
-              value: coverLetterLibrary,
-            ),
-            ChangeNotifierProvider<SettingsViewModel>(
-              create: (_) => SettingsViewModel(),
-            ),
-          ],
+          providers: _appShellProviders(
+            repository: repository,
+            resumeLibrary: resumeLibrary,
+            coverLetterLibrary: coverLetterLibrary,
+            appPreferences: appPreferences,
+            premiumPurchaseService: premiumPurchaseService,
+          ),
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -162,25 +198,13 @@ void main() {
 
       await tester.pumpWidget(
         MultiProvider(
-          providers: [
-            Provider<ResumeImportService>.value(value: ResumeImportService()),
-            Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(value: appPreferences),
-            ChangeNotifierProvider<PremiumPurchaseService>.value(
-              value: premiumPurchaseService,
-            ),
-            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
-            Provider<ResumePdfService>.value(value: ResumePdfService()),
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: resumeLibrary,
-            ),
-            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
-              value: coverLetterLibrary,
-            ),
-            ChangeNotifierProvider<SettingsViewModel>(
-              create: (_) => SettingsViewModel(),
-            ),
-          ],
+          providers: _appShellProviders(
+            repository: repository,
+            resumeLibrary: resumeLibrary,
+            coverLetterLibrary: coverLetterLibrary,
+            appPreferences: appPreferences,
+            premiumPurchaseService: premiumPurchaseService,
+          ),
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -234,25 +258,13 @@ void main() {
 
       await tester.pumpWidget(
         MultiProvider(
-          providers: [
-            Provider<ResumeImportService>.value(value: ResumeImportService()),
-            Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(value: appPreferences),
-            ChangeNotifierProvider<PremiumPurchaseService>.value(
-              value: premiumPurchaseService,
-            ),
-            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
-            Provider<ResumePdfService>.value(value: ResumePdfService()),
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: resumeLibrary,
-            ),
-            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
-              value: coverLetterLibrary,
-            ),
-            ChangeNotifierProvider<SettingsViewModel>(
-              create: (_) => SettingsViewModel(),
-            ),
-          ],
+          providers: _appShellProviders(
+            repository: repository,
+            resumeLibrary: resumeLibrary,
+            coverLetterLibrary: coverLetterLibrary,
+            appPreferences: appPreferences,
+            premiumPurchaseService: premiumPurchaseService,
+          ),
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -314,25 +326,13 @@ void main() {
 
       await tester.pumpWidget(
         MultiProvider(
-          providers: [
-            Provider<ResumeImportService>.value(value: ResumeImportService()),
-            Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(value: appPreferences),
-            ChangeNotifierProvider<PremiumPurchaseService>.value(
-              value: premiumPurchaseService,
-            ),
-            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
-            Provider<ResumePdfService>.value(value: ResumePdfService()),
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: resumeLibrary,
-            ),
-            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
-              value: coverLetterLibrary,
-            ),
-            ChangeNotifierProvider<SettingsViewModel>(
-              create: (_) => SettingsViewModel(),
-            ),
-          ],
+          providers: _appShellProviders(
+            repository: repository,
+            resumeLibrary: resumeLibrary,
+            coverLetterLibrary: coverLetterLibrary,
+            appPreferences: appPreferences,
+            premiumPurchaseService: premiumPurchaseService,
+          ),
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -402,25 +402,13 @@ void main() {
 
       await tester.pumpWidget(
         MultiProvider(
-          providers: [
-            Provider<ResumeImportService>.value(value: ResumeImportService()),
-            Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(value: appPreferences),
-            ChangeNotifierProvider<PremiumPurchaseService>.value(
-              value: premiumPurchaseService,
-            ),
-            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
-            Provider<ResumePdfService>.value(value: ResumePdfService()),
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: resumeLibrary,
-            ),
-            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
-              value: coverLetterLibrary,
-            ),
-            ChangeNotifierProvider<SettingsViewModel>(
-              create: (_) => SettingsViewModel(),
-            ),
-          ],
+          providers: _appShellProviders(
+            repository: repository,
+            resumeLibrary: resumeLibrary,
+            coverLetterLibrary: coverLetterLibrary,
+            appPreferences: appPreferences,
+            premiumPurchaseService: premiumPurchaseService,
+          ),
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -539,25 +527,13 @@ void main() {
 
       await tester.pumpWidget(
         MultiProvider(
-          providers: [
-            Provider<ResumeImportService>.value(value: ResumeImportService()),
-            Provider<ResumeRepository>.value(value: repository),
-            Provider<AppPreferences>.value(value: appPreferences),
-            ChangeNotifierProvider<PremiumPurchaseService>.value(
-              value: premiumPurchaseService,
-            ),
-            Provider<LocalAiResumeService>.value(value: LocalAiResumeService()),
-            Provider<ResumePdfService>.value(value: ResumePdfService()),
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: resumeLibrary,
-            ),
-            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
-              value: coverLetterLibrary,
-            ),
-            ChangeNotifierProvider<SettingsViewModel>(
-              create: (_) => SettingsViewModel(),
-            ),
-          ],
+          providers: _appShellProviders(
+            repository: repository,
+            resumeLibrary: resumeLibrary,
+            coverLetterLibrary: coverLetterLibrary,
+            appPreferences: appPreferences,
+            premiumPurchaseService: premiumPurchaseService,
+          ),
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
