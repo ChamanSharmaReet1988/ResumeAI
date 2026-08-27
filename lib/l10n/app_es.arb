@@ -108,7 +108,7 @@
       }
     }
   },
-  "premiumBenefitUnlockLayouts": "Desbloquea todos los diseños ATS y la creación ATS con IA",
+  "premiumBenefitUnlockLayouts": "Desbloquea AI Resume: crea y mejora currículums ATS con IA",
   "premiumBenefitBackupIcloud": "Haz copia de seguridad y sincroniza currículums con iCloud",
   "premiumBenefitBackupGoogleDrive": "Haz copia de seguridad y sincroniza currículums con Google Drive",
   "premiumUpcomingUpdateBadge": "Próximamente en la siguiente actualización",
@@ -209,7 +209,7 @@
   "premiumPurchaseCanceled": "Compra cancelada.",
   "hideKeyboard": "Ocultar teclado",
   "selectResumeWithContentFirst": "Selecciona primero un currículum guardado con contenido.",
-  "aiAtsIntro": "Selecciona un currículum y la IA creará uno estilo ChatGPT/Claude optimizado para ATS. Cada vez que pulses Crear de nuevo, la IA optimiza más el mismo borrador ATS. La descripción del puesto es opcional.",
+  "aiAtsIntro": "Selecciona un currículum y la IA creará una versión optimizada para ATS. Añade tu clave API en Ajustes para mejores resultados, o usa la IA integrada. La descripción del puesto es opcional. Pulsa Crear de nuevo para refinar.",
   "aiEngineUsingCloudApi": "Usando tu clave API (IA en la nube)",
   "aiEngineUsingAppleIntelligence": "Usando Apple Intelligence (en el dispositivo)",
   "aiEngineUsingBuiltIn": "Usando la IA integrada",
@@ -523,7 +523,7 @@
   "couldNotLoadThisPage": "No se pudo cargar esta página.",
   "tryAgain": "Intentar de nuevo",
   "shareAppSubject": "ResumeApp",
-  "shareAppMessage": "Prueba ResumeApp para crear, optimizar y compartir currículums profesionales en iPhone. Consíguela en el App Store: {url}",
+  "shareAppMessage": "Prueba ResumeAI para crear, optimizar y compartir currículums profesionales. Descárgala aquí: {url}",
   "@shareAppMessage": {
     "placeholders": {
       "url": {

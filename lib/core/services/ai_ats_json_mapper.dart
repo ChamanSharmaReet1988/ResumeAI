@@ -69,7 +69,7 @@ class AiAtsJsonMapper {
         : 'Target job description:\n${trimmedJob.length > jobLimit ? trimmedJob.substring(0, jobLimit) : trimmedJob}';
 
     return '''
-You are an expert resume writer. Rewrite the resume into a clean ChatGPT/Claude-style ATS resume.
+You are an expert resume writer. Rewrite the resume into a clean ATS-optimized resume.
 
 Rules:
 - Keep facts truthful. Do not invent employers, degrees, or dates.

@@ -7,7 +7,6 @@ import 'package:resume_app/l10n/l10n_ext.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/premium_access.dart';
 import '../../core/services/premium_purchase_service.dart';
-import '../shell/app_shell_scope.dart';
 import 'go_premium_screen.dart';
 import 'premium_welcome_dialog.dart';
 
@@ -50,7 +49,6 @@ Future<bool> ensurePremiumAccess(BuildContext context) async {
   final premium = context.read<PremiumPurchaseService>();
   final hasAccess = unlocked == true || readPremiumAccess(context);
   if (hasAccess) {
-    AppShellScope.goToSettings(context);
     if (premium.consumePremiumWelcomePending() && context.mounted) {
       final planLabel = premiumWelcomePlanLabel(
         premium.activeSubscriptionProductId,

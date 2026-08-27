@@ -108,7 +108,7 @@
       }
     }
   },
-  "premiumBenefitUnlockLayouts": "Buka semua tata letak resume ATS dan pembuatan ATS dengan AI",
+  "premiumBenefitUnlockLayouts": "Buka AI Resume — buat dan sempurnakan resume ATS dengan AI",
   "premiumBenefitBackupIcloud": "Cadangkan dan sinkronkan resume dengan iCloud",
   "premiumBenefitBackupGoogleDrive": "Cadangkan dan sinkronkan resume dengan Google Drive",
   "premiumUpcomingUpdateBadge": "Hadir di pembaruan berikutnya",
@@ -209,7 +209,7 @@
   "premiumPurchaseCanceled": "Pembelian dibatalkan.",
   "hideKeyboard": "Sembunyikan keyboard",
   "selectResumeWithContentFirst": "Pilih dulu resume tersimpan yang berisi konten.",
-  "aiAtsIntro": "Pilih resume dan AI akan membuat resume ATS bergaya ChatGPT/Claude. Setiap kali Anda ketuk Buat lagi, AI mengoptimalkan lebih lanjut draf ATS yang sama. Deskripsi pekerjaan bersifat opsional.",
+  "aiAtsIntro": "Pilih resume dan AI akan membuat versi ATS yang dioptimalkan. Tambahkan kunci API di Pengaturan untuk hasil lebih kuat, atau gunakan AI bawaan. Deskripsi pekerjaan bersifat opsional. Ketuk Buat lagi untuk menyempurnakan.",
   "aiEngineUsingCloudApi": "Menggunakan kunci API Anda (AI cloud)",
   "aiEngineUsingAppleIntelligence": "Menggunakan Apple Intelligence (di perangkat)",
   "aiEngineUsingBuiltIn": "Menggunakan AI bawaan",
@@ -523,7 +523,7 @@
   "couldNotLoadThisPage": "Tidak dapat memuat halaman ini.",
   "tryAgain": "Coba lagi",
   "shareAppSubject": "ResumeApp",
-  "shareAppMessage": "Coba ResumeApp untuk membuat, mengoptimalkan, dan membagikan resume profesional di iPhone. Unduh di App Store: {url}",
+  "shareAppMessage": "Coba ResumeAI untuk membuat, mengoptimalkan, dan membagikan resume profesional. Unduh di sini: {url}",
   "@shareAppMessage": {
     "placeholders": {
       "url": {

@@ -207,6 +207,20 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     setState(() => _isBusy = true);
     try {
       await task();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      final message = error.toString().trim();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            message.isEmpty
+                ? 'Something went wrong. Please try again.'
+                : message,
+          ),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isBusy = false);

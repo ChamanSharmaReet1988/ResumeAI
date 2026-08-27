@@ -108,7 +108,7 @@
       }
     }
   },
-  "premiumBenefitUnlockLayouts": "Desbloqueie todos os layouts ATS e a criação ATS com IA",
+  "premiumBenefitUnlockLayouts": "Desbloqueie o AI Resume: crie e refine currículos ATS com IA",
   "premiumBenefitBackupIcloud": "Faça backup e sincronize currículos com o iCloud",
   "premiumBenefitBackupGoogleDrive": "Faça backup e sincronize currículos com o Google Drive",
   "premiumUpcomingUpdateBadge": "Em breve na próxima atualização",
@@ -209,7 +209,7 @@
   "premiumPurchaseCanceled": "Compra cancelada.",
   "hideKeyboard": "Ocultar teclado",
   "selectResumeWithContentFirst": "Selecione primeiro um currículo salvo com conteúdo.",
-  "aiAtsIntro": "Selecione um currículo e a IA criará um currículo ATS no estilo ChatGPT/Claude. Cada vez que você tocar em Criar novamente, a IA otimiza mais o mesmo rascunho ATS. A descrição da vaga é opcional.",
+  "aiAtsIntro": "Selecione um currículo e a IA criará uma versão otimizada para ATS. Adicione sua chave de API em Configurações para resultados melhores, ou use a IA integrada. A descrição da vaga é opcional. Toque em Criar novamente para refinar.",
   "aiEngineUsingCloudApi": "Usando sua chave de API (IA na nuvem)",
   "aiEngineUsingAppleIntelligence": "Usando Apple Intelligence (no dispositivo)",
   "aiEngineUsingBuiltIn": "Usando a IA integrada",
@@ -523,7 +523,7 @@
   "couldNotLoadThisPage": "Não foi possível carregar esta página.",
   "tryAgain": "Tentar novamente",
   "shareAppSubject": "ResumeApp",
-  "shareAppMessage": "Conheça o ResumeApp para criar, otimizar e compartilhar currículos profissionais no iPhone. Baixe na App Store: {url}",
+  "shareAppMessage": "Conheça o ResumeAI para criar, otimizar e compartilhar currículos profissionais. Baixe aqui: {url}",
   "@shareAppMessage": {
     "placeholders": {
       "url": {

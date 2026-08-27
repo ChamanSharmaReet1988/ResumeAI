@@ -2716,7 +2716,7 @@ class LocalAiResumeService {
     );
   }
 
-  /// Builds a Claude/GPT-style ATS resume from [sourceResume].
+  /// Builds an ATS-optimized resume from [sourceResume].
   ///
   /// Uses LaTeX Classic ATS (clean single-column rules), rewrites summary and
   /// bullets in a professional AI-assistant voice, and flattens skills for
@@ -2741,7 +2741,7 @@ class LocalAiResumeService {
     final bulletLimit = (4 + (pass > 0 ? 1 : 0)).clamp(4, 5);
     final appliedChanges = <String>[
       if (pass == 0)
-        'Applied a clean LaTeX Classic ATS layout (single column, clear headings) like ChatGPT/Claude resumes.'
+        'Applied a clean LaTeX Classic ATS layout (single column, clear headings).'
       else
         'Pass ${pass + 1}: further optimized the ATS draft for stronger keyword match and clearer impact.',
     ];
@@ -2798,8 +2798,8 @@ class LocalAiResumeService {
     appliedChanges.add(
       pass == 0
           ? (hasJobDescription
-                ? 'Wrote a ChatGPT/Claude-style professional summary tailored to the role.'
-                : 'Wrote a ChatGPT/Claude-style professional summary optimized for ATS scanners.')
+                ? 'Wrote a professional summary tailored to the role.'
+                : 'Wrote a professional summary optimized for ATS scanners.')
           : 'Refined the summary with stronger ATS keywords and clearer positioning (pass ${pass + 1}).',
     );
 
@@ -2984,7 +2984,7 @@ class LocalAiResumeService {
     );
   }
 
-  /// Professional summary in the style ChatGPT/Claude typically write for ATS.
+  /// Professional summary written in a clear ATS-friendly style.
   String _buildAiAtsFriendlySummary({
     required ResumeData resume,
     required String targetJobTitle,
@@ -3092,7 +3092,7 @@ class LocalAiResumeService {
     return '$withoutPeriod using $keyword.';
   }
 
-  /// Normalizes a bullet to ChatGPT/Claude ATS style (action verb, no leading dash).
+  /// Normalizes a bullet to ATS style (action verb, no leading dash).
   String _formatAiAtsBullet(String raw) {
     var bullet = raw.trim();
     if (bullet.isEmpty) {

@@ -7,7 +7,7 @@
         android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove" />
     <application
-        android:label="resume_app"
+        android:label="ResumeAI"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

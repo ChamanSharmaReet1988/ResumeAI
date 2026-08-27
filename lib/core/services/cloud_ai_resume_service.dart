@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -20,11 +21,14 @@ class CloudAiResumeService {
   CloudAiResumeService({
     http.Client? httpClient,
     AiAtsJsonMapper mapper = const AiAtsJsonMapper(),
+    Duration requestTimeout = const Duration(seconds: 45),
   }) : _httpClient = httpClient ?? http.Client(),
-       _mapper = mapper;
+       _mapper = mapper,
+       _requestTimeout = requestTimeout;
 
   final http.Client _httpClient;
   final AiAtsJsonMapper _mapper;
+  final Duration _requestTimeout;
 
   Future<ResumeImprovementResult> createAtsResumeWithAi({
     required AiApiKeyConfig config,
@@ -97,27 +101,36 @@ class CloudAiResumeService {
     int maxTokens = 2500,
   }) async {
     final uri = Uri.parse('https://api.openai.com/v1/chat/completions');
-    final response = await _httpClient.post(
-      uri,
-      headers: {
-        'Authorization': 'Bearer $apiKey',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'model': model,
-        'temperature': 0.4,
-        'max_tokens': maxTokens,
-        'response_format': {'type': 'json_object'},
-        'messages': [
-          {
-            'role': 'system',
-            'content':
-                'You rewrite resumes for ATS. Always respond with valid JSON only.',
-          },
-          {'role': 'user', 'content': prompt},
-        ],
-      }),
-    );
+    late final http.Response response;
+    try {
+      response = await _httpClient
+          .post(
+            uri,
+            headers: {
+              'Authorization': 'Bearer $apiKey',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'model': model,
+              'temperature': 0.4,
+              'max_tokens': maxTokens,
+              'response_format': {'type': 'json_object'},
+              'messages': [
+                {
+                  'role': 'system',
+                  'content':
+                      'You rewrite resumes for ATS. Always respond with valid JSON only.',
+                },
+                {'role': 'user', 'content': prompt},
+              ],
+            }),
+          )
+          .timeout(_requestTimeout);
+    } on TimeoutException {
+      throw CloudAiException(
+        'OpenAI request timed out. Check your connection and try again.',
+      );
+    }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw CloudAiException(_errorMessage('OpenAI', response));
@@ -151,24 +164,33 @@ class CloudAiResumeService {
       'https://generativelanguage.googleapis.com/v1beta/models/'
       '$model:generateContent?key=$apiKey',
     );
-    final response = await _httpClient.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'contents': [
-          {
-            'parts': [
-              {'text': prompt},
-            ],
-          },
-        ],
-        'generationConfig': {
-          'temperature': 0.4,
-          'maxOutputTokens': maxTokens,
-          'responseMimeType': 'application/json',
-        },
-      }),
-    );
+    late final http.Response response;
+    try {
+      response = await _httpClient
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'contents': [
+                {
+                  'parts': [
+                    {'text': prompt},
+                  ],
+                },
+              ],
+              'generationConfig': {
+                'temperature': 0.4,
+                'maxOutputTokens': maxTokens,
+                'responseMimeType': 'application/json',
+              },
+            }),
+          )
+          .timeout(_requestTimeout);
+    } on TimeoutException {
+      throw CloudAiException(
+        'Gemini request timed out. Check your connection and try again.',
+      );
+    }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw CloudAiException(_errorMessage('Gemini', response));

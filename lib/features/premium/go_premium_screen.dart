@@ -10,7 +10,6 @@ import '../../core/services/premium_products.dart';
 import '../../core/services/premium_purchase_service.dart';
 import '../../core/services/premium_store_messages.dart';
 import '../settings/legal_web_view_screen.dart';
-import '../shell/app_shell_scope.dart';
 import 'premium_store_loading_overlay.dart';
 import 'premium_welcome_dialog.dart';
 
@@ -223,7 +222,6 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
 
     _didPop = true;
     _isCompletingLeave = false;
-    AppShellScope.goToSettings(context);
     Navigator.of(context).pop(true);
   }
 

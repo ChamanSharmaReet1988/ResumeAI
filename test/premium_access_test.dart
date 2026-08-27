@@ -3,94 +3,57 @@ import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/premium_access.dart';
 
 void main() {
-  group('PremiumAccess resume templates', () {
-    test('all professional layouts are free', () {
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(ResumeTemplate.corporate),
-        isFalse,
-      );
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(ResumeTemplate.creative),
-        isFalse,
-      );
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(
-          ResumeTemplate.classicSidebar,
-        ),
-        isFalse,
-      );
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(ResumeTemplate.accentStrip),
-        isFalse,
-      );
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(
-          ResumeTemplate.detailsSidebar,
-        ),
-        isFalse,
-      );
+  group('PremiumAccess', () {
+    test('all resume layouts are free', () {
+      for (final template in ResumeTemplate.values) {
+        expect(
+          PremiumAccess.resumeTemplateRequiresPremium(template),
+          isFalse,
+          reason: '$template should be free',
+        );
+      }
     });
 
-    test('all ATS layouts require Pro', () {
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(
-          ResumeTemplate.atsStructured,
-        ),
-        isTrue,
-      );
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(
-          ResumeTemplate.atsLatexClassic,
-        ),
-        isTrue,
-      );
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(
-          ResumeTemplate.atsModernFlow,
-        ),
-        isTrue,
-      );
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(
-          ResumeTemplate.atsExecutive,
-        ),
-        isTrue,
-      );
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(
-          ResumeTemplate.atsCenterClassic,
-        ),
-        isTrue,
-      );
-      expect(
-        PremiumAccess.resumeTemplateRequiresPremium(
-          ResumeTemplate.atsProfessionalBlue,
-        ),
-        isTrue,
-      );
+    test('all cover letter layouts are free', () {
+      for (final template in CoverLetterTemplate.values) {
+        expect(
+          PremiumAccess.coverLetterTemplateRequiresPremium(template),
+          isFalse,
+          reason: '$template should be free',
+        );
+      }
     });
 
-    test('professional tiles are free and ATS tiles require Pro', () {
+    test('all template tiles are free', () {
+      expect(
+        PremiumAccess.templateTileRequiresPremium('ats-structured'),
+        isFalse,
+      );
+      expect(
+        PremiumAccess.templateTileRequiresPremium('ats-latex-classic'),
+        isFalse,
+      );
       expect(
         PremiumAccess.templateTileRequiresPremium('profile-sidebar'),
         isFalse,
       );
       expect(
-        PremiumAccess.templateTileRequiresPremium('accent-strip'),
+        PremiumAccess.templateTileRequiresPremium('minimal-letter'),
         isFalse,
       );
       expect(
-        PremiumAccess.templateTileRequiresPremium('ats-structured'),
-        isTrue,
-      );
-      expect(
-        PremiumAccess.templateTileRequiresPremium('ats-latex-classic'),
-        isTrue,
+        PremiumAccess.templateTileRequiresPremium('sidebar-letter'),
+        isFalse,
       );
     });
 
     test('AI ATS create requires Pro', () {
       expect(PremiumAccess.atsAiCreateRequiresPremium, isTrue);
+    });
+
+    test('cloud backup still requires Pro', () {
+      expect(PremiumAccess.iCloudBackupRequiresPremium, isTrue);
+      expect(PremiumAccess.googleDriveBackupRequiresPremium, isTrue);
     });
   });
 }
