@@ -236,7 +236,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get premiumBenefitUnlockLayouts =>
-      'Buka semua tata letak resume ATS dan pembuatan ATS dengan AI';
+      'Buka AI Resume — buat dan sempurnakan resume ATS dengan AI';
 
   @override
   String get premiumBenefitBackupIcloud =>
@@ -384,7 +384,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get aiAtsIntro =>
-      'Pilih resume dan AI akan membuat resume ATS bergaya ChatGPT/Claude. Setiap kali Anda ketuk Buat lagi, AI mengoptimalkan lebih lanjut draf ATS yang sama. Deskripsi pekerjaan bersifat opsional.';
+      'Pilih resume dan AI akan membuat versi ATS yang dioptimalkan. Tambahkan kunci API di Pengaturan untuk hasil lebih kuat, atau gunakan AI bawaan. Deskripsi pekerjaan bersifat opsional. Ketuk Buat lagi untuk menyempurnakan.';
 
   @override
   String get aiEngineUsingCloudApi => 'Menggunakan kunci API Anda (AI cloud)';
@@ -883,7 +883,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String shareAppMessage(String url) {
-    return 'Coba ResumeApp untuk membuat, mengoptimalkan, dan membagikan resume profesional di iPhone. Unduh di App Store: $url';
+    return 'Coba ResumeAI untuk membuat, mengoptimalkan, dan membagikan resume profesional. Unduh di sini: $url';
   }
 
   @override

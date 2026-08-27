@@ -236,7 +236,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get premiumBenefitUnlockLayouts =>
-      'Desbloquea todos los diseños ATS y la creación ATS con IA';
+      'Desbloquea AI Resume: crea y mejora currículums ATS con IA';
 
   @override
   String get premiumBenefitBackupIcloud =>
@@ -385,7 +385,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiAtsIntro =>
-      'Selecciona un currículum y la IA creará uno estilo ChatGPT/Claude optimizado para ATS. Cada vez que pulses Crear de nuevo, la IA optimiza más el mismo borrador ATS. La descripción del puesto es opcional.';
+      'Selecciona un currículum y la IA creará una versión optimizada para ATS. Añade tu clave API en Ajustes para mejores resultados, o usa la IA integrada. La descripción del puesto es opcional. Pulsa Crear de nuevo para refinar.';
 
   @override
   String get aiEngineUsingCloudApi => 'Usando tu clave API (IA en la nube)';
@@ -887,7 +887,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String shareAppMessage(String url) {
-    return 'Prueba ResumeApp para crear, optimizar y compartir currículums profesionales en iPhone. Consíguela en el App Store: $url';
+    return 'Prueba ResumeAI para crear, optimizar y compartir currículums profesionales. Descárgala aquí: $url';
   }
 
   @override

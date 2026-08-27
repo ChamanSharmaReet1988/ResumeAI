@@ -525,7 +525,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumBenefitUnlockLayouts.
   ///
   /// In en, this message translates to:
-  /// **'Unlock every ATS resume layout and AI ATS create'**
+  /// **'Unlock AI Resume — create and refine ATS resumes with AI'**
   String get premiumBenefitUnlockLayouts;
 
   /// No description provided for @premiumBenefitBackupIcloud.
@@ -753,7 +753,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiAtsIntro.
   ///
   /// In en, this message translates to:
-  /// **'Select a resume and AI will create a ChatGPT/Claude-style ATS resume. Each time you tap Create again, AI further optimizes the same ATS draft. Job description is optional.'**
+  /// **'Select a resume and AI will create an ATS-optimized version. Add your API key in Settings for stronger results, or use built-in AI. Job description is optional. Tap Create again to further refine.'**
   String get aiAtsIntro;
 
   /// No description provided for @aiEngineUsingCloudApi.
@@ -1533,7 +1533,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareAppMessage.
   ///
   /// In en, this message translates to:
-  /// **'Check out ResumeApp to create, optimize, and share professional resumes on iPhone. Get it on the App Store: {url}'**
+  /// **'Check out ResumeAI to create, optimize, and share professional resumes. Download it here: {url}'**
   String shareAppMessage(String url);
 
   /// No description provided for @feedbackEmailSubject.

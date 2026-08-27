@@ -518,7 +518,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsStructuredResume,
     headline: 'Structured ATS',
     caption: 'Gray section bands and a centered header for parsers.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'ats-latex-classic',
@@ -526,7 +526,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsLatexClassicResume,
     headline: 'LaTeX Classic ATS',
     caption: 'Academic ruled sections inspired by classic LaTeX resumes.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'ats-modern-flow',
@@ -534,7 +534,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsModernFlowResume,
     headline: 'Modern Flow ATS',
     caption: 'Centered contact row with a logical section sequence.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'ats-executive',
@@ -542,7 +542,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsExecutiveResume,
     headline: 'Executive ATS',
     caption: 'Uppercase headings and two-column keyword skills.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'ats-center-classic',
@@ -550,7 +550,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsCenterClassicResume,
     headline: 'Center Classic ATS',
     caption: 'Centered name, pipe tagline, and ruled single-column sections.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'ats-professional-blue',
@@ -558,7 +558,7 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsProfessionalBlueResume,
     headline: 'Professional Blue ATS',
     caption: 'Blue accent headings with right-aligned contact and skills grid.',
-    isPremium: true,
+    isPremium: false,
   ),
 ];
 
@@ -577,7 +577,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.minimalCoverLetter,
     headline: 'Minimal Letter',
     caption: 'Centered header with airy spacing and left-aligned body.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'sidebar-letter',
@@ -586,7 +586,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     headline: 'Mint Letter',
     caption:
         'Oversized name, soft mint background, and a clean modern letter body.',
-    isPremium: true,
+    isPremium: false,
   ),
   _TemplateTileData(
     id: 'classic-business-letter',
@@ -595,7 +595,7 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     headline: 'Classic Business',
     caption:
         'Traditional business letter: date, recipient block, and left-aligned body.',
-    isPremium: true,
+    isPremium: false,
   ),
 ];
 
