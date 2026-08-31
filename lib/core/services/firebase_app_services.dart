@@ -48,6 +48,7 @@ class FirebaseAppServices {
 
       unawaited(_warmRemoteConfig(remoteConfig));
 
+      // Collect crashes in profile + release; keep debug quiet.
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
         !kDebugMode,
       );
@@ -83,6 +84,32 @@ class FirebaseAppServices {
       final wasHandled = previousPlatformOnError?.call(error, stack) ?? false;
       return wasHandled || true;
     };
+  }
+
+  /// Records a non-fatal error when Crashlytics is available.
+  Future<void> recordError(
+    Object error,
+    StackTrace? stack, {
+    bool fatal = false,
+    String? reason,
+  }) async {
+    if (!isEnabled) {
+      return;
+    }
+    await FirebaseCrashlytics.instance.recordError(
+      error,
+      stack,
+      fatal: fatal,
+      reason: reason,
+    );
+  }
+
+  /// Adds a Crashlytics breadcrumb log line.
+  Future<void> log(String message) async {
+    if (!isEnabled) {
+      return;
+    }
+    await FirebaseCrashlytics.instance.log(message);
   }
 
   Future<void> logEvent(String name, {Map<String, Object>? parameters}) async {

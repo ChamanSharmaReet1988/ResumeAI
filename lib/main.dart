@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -13,62 +16,73 @@ import 'core/services/icloud_resume_service.dart';
 import 'core/services/resume_services.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb) {
-    try {
-      await GoogleSignIn.instance.initialize(
-        clientId: defaultTargetPlatform == TargetPlatform.iOS
-            ? GoogleSignInConfig.iosClientId
-            : null,
-        serverClientId: GoogleSignInConfig.androidServerClientId,
-      );
-    } catch (error, stackTrace) {
-      assert(() {
-        debugPrint('GoogleSignIn.initialize failed: $error\n$stackTrace');
-        return true;
-      }());
+  await runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    if (!kIsWeb) {
+      try {
+        await GoogleSignIn.instance.initialize(
+          clientId: defaultTargetPlatform == TargetPlatform.iOS
+              ? GoogleSignInConfig.iosClientId
+              : null,
+          serverClientId: GoogleSignInConfig.androidServerClientId,
+        );
+      } catch (error, stackTrace) {
+        assert(() {
+          debugPrint('GoogleSignIn.initialize failed: $error\n$stackTrace');
+          return true;
+        }());
+      }
     }
-  }
-  final repository = await ResumeRepository.create();
-  final appPreferences = await AppPreferences.open();
-  final googleDriveResumeService = GoogleDriveResumeService();
-  if (defaultTargetPlatform == TargetPlatform.iOS) {
-    // Ignore the deprecation here intentionally; this is a targeted fallback
-    // for real-device product lookup failures coming from the StoreKit2 path.
-    // ignore: deprecated_member_use
-    await InAppPurchaseStoreKitPlatform.enableStoreKit1();
-    InAppPurchaseStoreKitPlatform.registerPlatform();
-  }
-  final premiumPurchaseService = PremiumPurchaseService(
-    appPreferences: appPreferences,
-  );
-  repository.configureGoogleDriveAutoSync(
-    appPreferences: appPreferences,
-    service: googleDriveResumeService,
-    hasPremium: () => premiumPurchaseService.isPremium,
-  );
-  repository.configureICloudAutoSync(
-    appPreferences: appPreferences,
-    service: const MethodChannelICloudResumeService(),
-    hasPremium: () => premiumPurchaseService.isPremium,
-  );
-  await premiumPurchaseService.initialize();
-
-  final firebaseServices = await FirebaseAppServices.initialize();
-  if (!firebaseServices.isEnabled && kDebugMode) {
-    debugPrint(
-      'Firebase is disabled. Add google-services.json and '
-      'GoogleService-Info.plist to enable Analytics, Crashlytics, and Remote '
-      'Config.',
-    );
-  }
-  runApp(
-    ResumeApp(
-      repository: repository,
+    final repository = await ResumeRepository.create();
+    final appPreferences = await AppPreferences.open();
+    final googleDriveResumeService = GoogleDriveResumeService();
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      // Ignore the deprecation here intentionally; this is a targeted fallback
+      // for real-device product lookup failures coming from the StoreKit2 path.
+      // ignore: deprecated_member_use
+      await InAppPurchaseStoreKitPlatform.enableStoreKit1();
+      InAppPurchaseStoreKitPlatform.registerPlatform();
+    }
+    final premiumPurchaseService = PremiumPurchaseService(
       appPreferences: appPreferences,
-      premiumPurchaseService: premiumPurchaseService,
-      firebaseServices: firebaseServices,
-      googleDriveResumeService: googleDriveResumeService,
-    ),
-  );
+    );
+    repository.configureGoogleDriveAutoSync(
+      appPreferences: appPreferences,
+      service: googleDriveResumeService,
+      hasPremium: () => premiumPurchaseService.isPremium,
+    );
+    repository.configureICloudAutoSync(
+      appPreferences: appPreferences,
+      service: const MethodChannelICloudResumeService(),
+      hasPremium: () => premiumPurchaseService.isPremium,
+    );
+    await premiumPurchaseService.initialize();
+
+    final firebaseServices = await FirebaseAppServices.initialize();
+    if (!firebaseServices.isEnabled && kDebugMode) {
+      debugPrint(
+        'Firebase is disabled. Add google-services.json and '
+        'GoogleService-Info.plist to enable Analytics, Crashlytics, and Remote '
+        'Config.',
+      );
+    }
+    runApp(
+      ResumeApp(
+        repository: repository,
+        appPreferences: appPreferences,
+        premiumPurchaseService: premiumPurchaseService,
+        firebaseServices: firebaseServices,
+        googleDriveResumeService: googleDriveResumeService,
+      ),
+    );
+  }, (error, stack) {
+    // Zone errors after Firebase init are forwarded to Crashlytics.
+    try {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    } catch (_) {
+      if (kDebugMode) {
+        debugPrint('Uncaught zone error: $error\n$stack');
+      }
+    }
+  });
 }
