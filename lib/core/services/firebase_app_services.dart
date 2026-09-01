@@ -34,7 +34,6 @@ class FirebaseAppServices {
         await Firebase.initializeApp();
       }
 
-      final analytics = FirebaseAnalytics.instance;
       final remoteConfig = FirebaseRemoteConfig.instance;
       await remoteConfig.setDefaults(_defaultRemoteConfigValues);
       await remoteConfig.setConfigSettings(
@@ -48,16 +47,21 @@ class FirebaseAppServices {
 
       unawaited(_warmRemoteConfig(remoteConfig));
 
-      // Collect crashes in profile + release; keep debug quiet.
+      // Collect crashes/analytics in profile + release; keep debug quiet.
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
         !kDebugMode,
       );
       _installCrashlyticsHandlers();
 
+      final analytics = FirebaseAnalytics.instance;
+      await analytics.setAnalyticsCollectionEnabled(!kDebugMode);
+
       return FirebaseAppServices._(
         isEnabled: true,
-        analytics: analytics,
-        analyticsObserver: FirebaseAnalyticsObserver(analytics: analytics),
+        analytics: kDebugMode ? null : analytics,
+        analyticsObserver: kDebugMode
+            ? null
+            : FirebaseAnalyticsObserver(analytics: analytics),
         remoteConfig: remoteConfig,
       );
     } catch (error, stackTrace) {
