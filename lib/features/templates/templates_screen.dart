@@ -4124,9 +4124,10 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                   ],
                 ),
               ),
-              Flexible(
+              const SizedBox(width: 6),
+              Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (resume.email.trim().isNotEmpty)
                       Text(
