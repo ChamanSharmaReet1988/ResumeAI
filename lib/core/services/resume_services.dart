@@ -422,6 +422,7 @@ const double _headerSidebarRailGapPt = 12.0;
 const double _headerSidebarPageLeftMarginPt = 28.0;
 const double _headerSidebarPageTopMarginPt = 28.0;
 const double _headerSidebarPageBottomMarginPt = 30.0;
+const double _headerSidebarContinuationVerticalInsetPt = 40.0;
 const double _headerSidebarPageRightMarginPt =
     _headerSidebarRailWidthPt + _headerSidebarRailGapPt;
 const double _headerSidebarMainRightInsetPt =
@@ -581,6 +582,25 @@ List<String> _headerSidebarInfoItems(ResumeData resume) {
     resume.githubLink.trim(),
     resume.linkedinLink.trim(),
   ].where((item) => item.isNotEmpty).toList();
+}
+
+pw.Widget _headerSidebarContinuedPageTopGap(pw.Context context) {
+  if (context.pageNumber <= 1) {
+    return pw.SizedBox();
+  }
+  final extra =
+      _headerSidebarContinuationVerticalInsetPt - _headerSidebarPageTopMarginPt;
+  return extra > 0 ? pw.SizedBox(height: extra) : pw.SizedBox();
+}
+
+pw.Widget _headerSidebarContinuedPageBottomGap(pw.Context context) {
+  if (context.pageNumber <= 1) {
+    return pw.SizedBox();
+  }
+  final extra =
+      _headerSidebarContinuationVerticalInsetPt -
+      _headerSidebarPageBottomMarginPt;
+  return extra > 0 ? pw.SizedBox(height: extra) : pw.SizedBox();
 }
 
 pw.Widget _headerSidebarMainColumnChild(
@@ -754,16 +774,19 @@ List<_HeaderSidebarPageSlice> _headerSidebarPageSlices({
 }) {
   final skills = _headerSidebarSkillLines(resume);
   final infoItems = _headerSidebarInfoItems(resume);
-  final availableHeight =
+  final firstPageAvailableHeight =
       pageFormat.height -
       _headerSidebarPageTopMarginPt -
       _headerSidebarPageBottomMarginPt;
   const skillsHeadingHeight = 12.0 + 10.0;
   final firstPageSkillsAvailable =
-      availableHeight -
+      firstPageAvailableHeight -
       _headerSidebarDetailsHeight(infoItems, bodyPt) -
       skillsHeadingHeight;
-  final continuedPageSkillsAvailable = availableHeight - skillsHeadingHeight;
+  final continuedPageSkillsAvailable =
+      pageFormat.height -
+      (_headerSidebarContinuationVerticalInsetPt * 2) -
+      skillsHeadingHeight;
 
   List<String> takeChunk(Iterable<String> source, double maxHeight) {
     final chunk = <String>[];
@@ -837,40 +860,49 @@ pw.PageTheme _headerSidebarPageTheme({
       _headerSidebarPageLeftMarginPt,
       _headerSidebarPageBottomMarginPt,
     ),
-    buildBackground: (context) => pw.FullPage(
-      ignoreMargins: true,
-      child: context.pageNumber <= sidebarSlices.length
-          ? pw.Stack(
-              children: [
-                pw.Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: pw.Container(
-                    width: _headerSidebarRailWidthPt,
-                    color: railColor,
-                  ),
-                ),
-                pw.Positioned(
-                  right: 16,
-                  top: _headerSidebarPageTopMarginPt,
-                  bottom: _headerSidebarPageBottomMarginPt,
-                  child: pw.SizedBox(
-                    width: _headerSidebarRailContentWidthPt,
-                    child: _headerSidebarRailPanel(
-                      resume: resume,
-                      garamond: garamond,
-                      onRail: onRail,
-                      bodyPt: bodyPt,
-                      pageSlice: sidebarSlices[context.pageNumber - 1],
-                      highlightedSkills: highlightedSkills,
+    buildBackground: (context) {
+      final isContinuation = context.pageNumber > 1;
+      final railTop = isContinuation
+          ? _headerSidebarContinuationVerticalInsetPt
+          : _headerSidebarPageTopMarginPt;
+      final railBottom = isContinuation
+          ? _headerSidebarContinuationVerticalInsetPt
+          : _headerSidebarPageBottomMarginPt;
+      return pw.FullPage(
+        ignoreMargins: true,
+        child: context.pageNumber <= sidebarSlices.length
+            ? pw.Stack(
+                children: [
+                  pw.Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: pw.Container(
+                      width: _headerSidebarRailWidthPt,
+                      color: railColor,
                     ),
                   ),
-                ),
-              ],
-            )
-          : pw.SizedBox(),
-    ),
+                  pw.Positioned(
+                    right: 16,
+                    top: railTop,
+                    bottom: railBottom,
+                    child: pw.SizedBox(
+                      width: _headerSidebarRailContentWidthPt,
+                      child: _headerSidebarRailPanel(
+                        resume: resume,
+                        garamond: garamond,
+                        onRail: onRail,
+                        bodyPt: bodyPt,
+                        pageSlice: sidebarSlices[context.pageNumber - 1],
+                        highlightedSkills: highlightedSkills,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : pw.SizedBox(),
+      );
+    },
   );
 }
 

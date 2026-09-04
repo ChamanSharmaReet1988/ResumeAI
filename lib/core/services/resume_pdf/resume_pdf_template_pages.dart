@@ -2167,7 +2167,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
           sidebarSlices: sidebarSlices,
           highlightedSkills: highlightedSkills,
         ),
-        header: _continuedPageTopGap,
+        header: _headerSidebarContinuedPageTopGap,
+        footer: _headerSidebarContinuedPageBottomGap,
         build: (context) => [
           railWrap(
             pw.Row(
