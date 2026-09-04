@@ -419,8 +419,14 @@ const double _detailsSidebarSectionGapPt = 18.0;
 const double _detailsSidebarHeadingGapPt = 6.0;
 const double _headerSidebarRailWidthPt = 176.0;
 const double _headerSidebarRailGapPt = 12.0;
+const double _headerSidebarPageLeftMarginPt = 28.0;
+const double _headerSidebarPageTopMarginPt = 28.0;
+const double _headerSidebarPageBottomMarginPt = 30.0;
 const double _headerSidebarPageRightMarginPt =
     _headerSidebarRailWidthPt + _headerSidebarRailGapPt;
+const double _headerSidebarMainRightInsetPt =
+    _headerSidebarPageRightMarginPt - _headerSidebarPageLeftMarginPt;
+const double _headerSidebarRailContentWidthPt = _headerSidebarRailWidthPt - 32;
 const double _headerSidebarAvatarSizePt = 72.0;
 const PdfColor _headerSidebarHighlightPdf = PdfColor.fromInt(0xFFFFE67A);
 
@@ -577,6 +583,83 @@ List<String> _headerSidebarInfoItems(ResumeData resume) {
   ].where((item) => item.isNotEmpty).toList();
 }
 
+pw.Widget _headerSidebarMainColumnChild(
+  pw.Widget child, {
+  required int sidebarPageCount,
+}) {
+  return _HeaderSidebarDynamicInset(
+    child: child,
+    sidebarPageCount: sidebarPageCount,
+  );
+}
+
+class _HeaderSidebarDynamicInset extends pw.Widget with pw.SpanningWidget {
+  _HeaderSidebarDynamicInset({
+    required this.child,
+    required this.sidebarPageCount,
+  });
+
+  final pw.Widget child;
+  final int sidebarPageCount;
+  pw.Widget? _wrapped;
+
+  double _rightInsetFor(pw.Context context) =>
+      context.pageNumber <= sidebarPageCount ? _headerSidebarMainRightInsetPt : 0;
+
+  @override
+  void layout(
+    pw.Context context,
+    pw.BoxConstraints constraints, {
+    bool parentUsesSize = false,
+  }) {
+    _wrapped = pw.Padding(
+      padding: pw.EdgeInsets.only(right: _rightInsetFor(context)),
+      child: child,
+    );
+    _wrapped!.layout(context, constraints, parentUsesSize: parentUsesSize);
+    box = _wrapped!.box;
+  }
+
+  @override
+  void paint(pw.Context context) {
+    super.paint(context);
+    if (_wrapped == null) {
+      return;
+    }
+
+    final mat = context.canvas.getTransform();
+    mat.translateByDouble(box!.x, box!.y, 0, 1);
+    context.canvas
+      ..saveContext()
+      ..setTransform(mat);
+    _wrapped!.paint(context);
+    context.canvas.restoreContext();
+  }
+
+  @override
+  bool get canSpan =>
+      child is pw.SpanningWidget && (child as pw.SpanningWidget).canSpan;
+
+  @override
+  bool get hasMoreWidgets =>
+      child is pw.SpanningWidget && (child as pw.SpanningWidget).hasMoreWidgets;
+
+  @override
+  void restoreContext(covariant pw.WidgetContext context) {
+    if (child is pw.SpanningWidget) {
+      (child as pw.SpanningWidget).restoreContext(context);
+    }
+  }
+
+  @override
+  pw.WidgetContext saveContext() {
+    if (child is pw.SpanningWidget) {
+      return (child as pw.SpanningWidget).saveContext();
+    }
+    throw UnimplementedError();
+  }
+}
+
 pw.Widget _headerSidebarMaybeHighlight({
   required bool highlight,
   required pw.Widget child,
@@ -590,40 +673,203 @@ pw.Widget _headerSidebarMaybeHighlight({
   );
 }
 
+class _HeaderSidebarPageSlice {
+  const _HeaderSidebarPageSlice({
+    required this.showDetails,
+    required this.showSkillsHeading,
+    required this.skills,
+  });
+
+  final bool showDetails;
+  final bool showSkillsHeading;
+  final List<String> skills;
+}
+
+List<String> _headerSidebarSkillLines(ResumeData resume) {
+  if (resume.showCategorisedSkills) {
+    return [
+      for (final group in resume.skillGroupsForResume)
+        ...group.skills
+            .map((skill) => skill.trim())
+            .where((skill) => skill.isNotEmpty),
+    ];
+  }
+  return resume.skillsLinesForDisplay;
+}
+
+int _headerSidebarEstimatedLineCount(String text, double fontSize) {
+  final normalized = text.trim().replaceAll(RegExp(r'\s+'), ' ');
+  if (normalized.isEmpty) {
+    return 1;
+  }
+  final maxCharsPerLine = math.max(
+    8,
+    (_headerSidebarRailContentWidthPt / (fontSize * 0.56)).floor(),
+  );
+  var currentLineLength = 0;
+  var lineCount = 1;
+  for (final word in normalized.split(' ')) {
+    final wordLength = word.length;
+    if (currentLineLength == 0) {
+      currentLineLength = wordLength;
+      continue;
+    }
+    if (currentLineLength + 1 + wordLength > maxCharsPerLine) {
+      lineCount++;
+      currentLineLength = wordLength;
+    } else {
+      currentLineLength += 1 + wordLength;
+    }
+  }
+  return lineCount;
+}
+
+double _headerSidebarTextBlockHeight(String text, double bodyPt) =>
+    _headerSidebarEstimatedLineCount(text, bodyPt) *
+    bodyPt *
+    ResumeTypography.bodyTextLineHeight;
+
+double _headerSidebarSkillItemHeight(String skill, double bodyPt) =>
+    _headerSidebarTextBlockHeight(skill, bodyPt) + 5 + 2.4 + 10;
+
+double _headerSidebarDetailsHeight(List<String> infoItems, double bodyPt) {
+  const titleBlock = 12.0 + 10.0;
+  const afterDetails = 18.0;
+  if (infoItems.isEmpty) {
+    return titleBlock +
+        (bodyPt * ResumeTypography.bodyTextLineHeight) +
+        afterDetails;
+  }
+  var height = titleBlock;
+  for (final item in infoItems) {
+    height += _headerSidebarTextBlockHeight(item, bodyPt) + 6;
+  }
+  return height + afterDetails;
+}
+
+List<_HeaderSidebarPageSlice> _headerSidebarPageSlices({
+  required ResumeData resume,
+  required double bodyPt,
+  PdfPageFormat pageFormat = PdfPageFormat.a4,
+}) {
+  final skills = _headerSidebarSkillLines(resume);
+  final infoItems = _headerSidebarInfoItems(resume);
+  final availableHeight =
+      pageFormat.height -
+      _headerSidebarPageTopMarginPt -
+      _headerSidebarPageBottomMarginPt;
+  const skillsHeadingHeight = 12.0 + 10.0;
+  final firstPageSkillsAvailable =
+      availableHeight -
+      _headerSidebarDetailsHeight(infoItems, bodyPt) -
+      skillsHeadingHeight;
+  final continuedPageSkillsAvailable = availableHeight - skillsHeadingHeight;
+
+  List<String> takeChunk(Iterable<String> source, double maxHeight) {
+    final chunk = <String>[];
+    var used = 0.0;
+    for (final item in source) {
+      final height = _headerSidebarSkillItemHeight(item, bodyPt);
+      if (chunk.isNotEmpty && used + height > maxHeight) {
+        break;
+      }
+      if (chunk.isEmpty && height > maxHeight) {
+        chunk.add(item);
+        break;
+      }
+      chunk.add(item);
+      used += height;
+    }
+    return chunk;
+  }
+
+  final slices = <_HeaderSidebarPageSlice>[];
+  var index = 0;
+  final firstChunk = takeChunk(
+    skills.skip(index),
+    firstPageSkillsAvailable > 0 ? firstPageSkillsAvailable : 0,
+  );
+  index += firstChunk.length;
+  slices.add(
+    _HeaderSidebarPageSlice(
+      showDetails: true,
+      showSkillsHeading: true,
+      skills: firstChunk,
+    ),
+  );
+
+  while (index < skills.length) {
+    final chunk = takeChunk(
+      skills.skip(index),
+      continuedPageSkillsAvailable > 0 ? continuedPageSkillsAvailable : 0,
+    );
+    if (chunk.isEmpty) {
+      break;
+    }
+    index += chunk.length;
+    slices.add(
+      _HeaderSidebarPageSlice(
+        showDetails: false,
+        showSkillsHeading: true,
+        skills: chunk,
+      ),
+    );
+  }
+
+  return slices;
+}
+
 pw.PageTheme _headerSidebarPageTheme({
+  required ResumeData resume,
+  required GaramondPdfFonts garamond,
   required PdfColor railColor,
-  required pw.Widget railChild,
+  required PdfColor onRail,
+  required double bodyPt,
+  required List<_HeaderSidebarPageSlice> sidebarSlices,
+  Set<String> highlightedSkills = const {},
   PdfPageFormat pageFormat = PdfPageFormat.a4,
 }) {
   return pw.PageTheme(
     pageFormat: pageFormat,
     margin: const pw.EdgeInsets.fromLTRB(
-      28,
-      28,
-      _headerSidebarPageRightMarginPt,
-      30,
+      _headerSidebarPageLeftMarginPt,
+      _headerSidebarPageTopMarginPt,
+      _headerSidebarPageLeftMarginPt,
+      _headerSidebarPageBottomMarginPt,
     ),
     buildBackground: (context) => pw.FullPage(
       ignoreMargins: true,
-      child: pw.Stack(
-        children: [
-          pw.Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            child: pw.Container(width: _headerSidebarRailWidthPt, color: railColor),
-          ),
-          pw.Positioned(
-            right: 16,
-            top: 28,
-            bottom: 30,
-            child: pw.SizedBox(
-              width: _headerSidebarRailWidthPt - 32,
-              child: railChild,
-            ),
-          ),
-        ],
-      ),
+      child: context.pageNumber <= sidebarSlices.length
+          ? pw.Stack(
+              children: [
+                pw.Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: pw.Container(
+                    width: _headerSidebarRailWidthPt,
+                    color: railColor,
+                  ),
+                ),
+                pw.Positioned(
+                  right: 16,
+                  top: _headerSidebarPageTopMarginPt,
+                  bottom: _headerSidebarPageBottomMarginPt,
+                  child: pw.SizedBox(
+                    width: _headerSidebarRailContentWidthPt,
+                    child: _headerSidebarRailPanel(
+                      resume: resume,
+                      garamond: garamond,
+                      onRail: onRail,
+                      bodyPt: bodyPt,
+                      pageSlice: sidebarSlices[context.pageNumber - 1],
+                      highlightedSkills: highlightedSkills,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : pw.SizedBox(),
     ),
   );
 }
@@ -633,12 +879,10 @@ List<pw.Widget> _headerSidebarSkillBarWidgets({
   required pw.TextStyle bodyStyle,
   required PdfColor barColor,
   required Set<String> highlightedSkills,
-  int maxItems = 12,
 }) {
   final visible = skills
       .map((skill) => skill.trim())
       .where((skill) => skill.isNotEmpty)
-      .take(maxItems)
       .toList();
   if (visible.isEmpty) {
     return [pw.Text('Add skills', style: bodyStyle)];
@@ -658,72 +902,57 @@ List<pw.Widget> _headerSidebarSkillBarWidgets({
 
 pw.Widget _headerSidebarRailPanel({
   required ResumeData resume,
-  required InterPdfFonts inter,
+  required GaramondPdfFonts garamond,
   required PdfColor onRail,
   required double bodyPt,
+  required _HeaderSidebarPageSlice pageSlice,
   required Set<String> highlightedSkills,
 }) {
   final infoItems = _headerSidebarInfoItems(resume);
-  final headingStyle = interPdfTextStyle(
-    inter,
+  final headingStyle = garamondPdfTextStyle(
+    garamond,
     ResumeFontWeight.w700,
     fontSize: 12,
     color: onRail,
   );
-  final bodyStyle = interPdfTextStyle(
-    inter,
+  final bodyStyle = garamondPdfTextStyle(
+    garamond,
     ResumeFontWeight.w400,
     fontSize: bodyPt,
     color: onRail,
     lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
   );
-  final categoryStyle = interPdfTextStyle(
-    inter,
-    ResumeFontWeight.w600,
-    fontSize: bodyPt,
-    color: onRail,
-  );
 
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
-      pw.Text('Details', style: headingStyle),
-      pw.SizedBox(height: 10),
-      if (infoItems.isEmpty)
-        pw.Text('Add contact details', style: bodyStyle)
-      else
-        for (final item in infoItems) ...[
-          pw.Text(
-            item,
-            style: item.contains('@')
-                ? bodyStyle.copyWith(decoration: pw.TextDecoration.underline)
-                : bodyStyle,
-          ),
-          pw.SizedBox(height: 6),
-        ],
-      pw.SizedBox(height: 18),
-      pw.Text('Skills', style: headingStyle),
-      pw.SizedBox(height: 10),
-      if (resume.showCategorisedSkills)
-        for (final group in resume.skillGroupsForResume) ...[
-          if (group.heading.trim().isNotEmpty) ...[
-            pw.Text(group.heading.trim(), style: categoryStyle),
+      if (pageSlice.showDetails) ...[
+        pw.Text('Details', style: headingStyle),
+        pw.SizedBox(height: 10),
+        if (infoItems.isEmpty)
+          pw.Text('Add contact details', style: bodyStyle)
+        else
+          for (final item in infoItems) ...[
+            pw.Text(
+              item,
+              style: item.contains('@')
+                  ? bodyStyle.copyWith(decoration: pw.TextDecoration.underline)
+                  : bodyStyle,
+            ),
             pw.SizedBox(height: 6),
           ],
-          ..._headerSidebarSkillBarWidgets(
-            skills: group.skills,
-            bodyStyle: bodyStyle,
-            barColor: onRail,
-            highlightedSkills: highlightedSkills,
-          ),
-        ]
-      else
-        ..._headerSidebarSkillBarWidgets(
-          skills: resume.skillsLinesForDisplay,
-          bodyStyle: bodyStyle,
-          barColor: onRail,
-          highlightedSkills: highlightedSkills,
-        ),
+        pw.SizedBox(height: 18),
+      ],
+      if (pageSlice.showSkillsHeading) ...[
+        pw.Text('Skills', style: headingStyle),
+        pw.SizedBox(height: 10),
+      ],
+      ..._headerSidebarSkillBarWidgets(
+        skills: pageSlice.skills,
+        bodyStyle: bodyStyle,
+        barColor: onRail,
+        highlightedSkills: highlightedSkills,
+      ),
     ],
   );
 }
@@ -7060,19 +7289,12 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.headerSidebar) {
-      final inter = await _ensureInterPdfFonts();
-      final bodyPt = resume.effectiveBodyFontPt.toDouble();
-      final document = pw.Document(
-        theme: await resumePdfThemeForInter(
-          inter,
-          bodyFontPt: bodyPt,
-          bodyLineHeight: ResumeTypography.bodyTextLineHeight,
-        ),
-      );
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
       _addHeaderSidebarTemplatePage(
         document,
         resume,
-        inter: inter,
+        garamond: garamond,
         profileImage: profileImage,
       );
       return document.save();
@@ -7305,24 +7527,17 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.headerSidebar) {
-      final inter = await _ensureInterPdfFonts();
-      final bodyPt = resume.effectiveBodyFontPt.toDouble();
+      final garamond = await _ensureGaramondPdfFonts();
       final profileImagePath = await ProfileImageStorage.resolvePath(
         resume.profileImagePath,
         resume.id,
       );
       final profileImage = await _loadProfileImage(profileImagePath);
-      final document = pw.Document(
-        theme: await resumePdfThemeForInter(
-          inter,
-          bodyFontPt: bodyPt,
-          bodyLineHeight: ResumeTypography.bodyTextLineHeight,
-        ),
-      );
+      final document = pw.Document();
       _addHeaderSidebarTemplatePage(
         document,
         resume,
-        inter: inter,
+        garamond: garamond,
         profileImage: profileImage,
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,

@@ -108,8 +108,8 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.atsProfessionalBlue ||
       ResumeTemplate.atsClassicCv ||
       ResumeTemplate.creative ||
-      ResumeTemplate.classicSidebar => 'Garamond',
-      ResumeTemplate.headerSidebar => 'Inter',
+      ResumeTemplate.classicSidebar ||
+      ResumeTemplate.headerSidebar => 'Garamond',
       _ => resume.resumeTextFont.flutterFontFamily,
     };
     final onSurface = theme.colorScheme.onSurface;
@@ -1929,45 +1929,45 @@ class _HeaderSidebarPreview extends StatelessWidget {
     final mutedColor = resume.headerSidebarMutedColor;
     final onRail = resume.headerSidebarOnRailColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final bodyStyle = ResumeTypography.interPreviewStyle(
+    final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w400,
       fontSize: bodyPt,
       color: titleColor,
       height: ResumeTypography.bodyTextLineHeight,
     );
-    final sectionTitleStyle = ResumeTypography.interPreviewStyle(
+    final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w700,
       fontSize: 13,
       color: titleColor,
       height: 1.2,
     );
-    final nameStyle = ResumeTypography.interPreviewStyle(
+    final nameStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w800,
       fontSize: 22,
       color: titleColor,
       height: 1.05,
     );
-    final jobTitleStyle = ResumeTypography.interPreviewStyle(
+    final jobTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w500,
       fontSize: 10,
       color: mutedColor,
       height: 1.2,
       letterSpacing: 1.4,
     );
-    final jobLineStyle = ResumeTypography.interPreviewStyle(
+    final jobLineStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w700,
       fontSize: bodyPt,
       color: titleColor,
       height: ResumeTypography.bodyTextLineHeight,
     );
-    final dateStyle = ResumeTypography.interPreviewStyle(
+    final dateStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w400,
       fontSize: bodyPt - 1,
       color: mutedColor,
       height: 1.2,
     );
     final railBodyStyle = bodyStyle.copyWith(color: onRail);
-    final railHeadingStyle = ResumeTypography.interPreviewStyle(
+    final railHeadingStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w700,
       fontSize: 12,
       color: onRail,
@@ -2029,7 +2029,7 @@ class _HeaderSidebarPreview extends StatelessWidget {
             : constraints.maxWidth / ResumePreviewCard._a4AspectRatio;
 
         return DefaultTextStyle.merge(
-          style: const TextStyle(fontFamily: 'Inter'),
+          style: const TextStyle(fontFamily: 'Garamond'),
           child: SizedBox(
             height: resolvedHeight,
             child: Row(

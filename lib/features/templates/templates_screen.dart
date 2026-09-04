@@ -2098,11 +2098,32 @@ final ResumeData _headerSidebarTemplateResume = ResumeData(
     'Power Tools',
     'Framing',
   ],
-  projects: const [],
+  projects: const [
+    ProjectItem(
+      title: 'Custom Kitchen Remodel',
+      overview: 'Residential finish carpentry',
+      impact: 'Framing, cabinetry, client coordination',
+      bullets: [
+        'Rebuilt cabinetry, trim, and island framing for a full kitchen remodel on a six-week schedule.',
+        'Coordinated material deliveries and finish sequence so plumbing and electrical trades stayed unblocked.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Historic Porch Restoration',
+      overview: 'Exterior structural repair',
+      impact: 'Joinery, weatherproofing, site safety',
+      bullets: [
+        'Restored load-bearing porch posts and railings while matching the original millwork profiles.',
+        'Installed weather-resistant decking and flashing that passed the final municipal inspection.',
+      ],
+    ),
+  ],
   customSections: const [
     CustomSectionItem(
-      title: 'References',
-      content: 'Available upon request.',
+      title: 'Languages',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: ['English — Native', 'Spanish — Conversational'],
     ),
   ],
   updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
@@ -2113,7 +2134,7 @@ final ResumeData _headerSidebarTemplateResume = ResumeData(
   includeWorkInResume: true,
   includeEducationInResume: true,
   includeSkillsInResume: true,
-  includeProjectsInResume: false,
+  includeProjectsInResume: true,
   bodyFontPt: kResumeBodyFontPtDefault,
   corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
     ResumeTemplate.headerSidebar,
@@ -2121,9 +2142,9 @@ final ResumeData _headerSidebarTemplateResume = ResumeData(
   builderSectionOrder: const [
     ResumeBuilderSectionIds.work,
     ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.projects,
     'custom:0',
     ResumeBuilderSectionIds.skills,
-    ResumeBuilderSectionIds.projects,
   ],
 );
 

@@ -212,7 +212,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsProfessionalBlue => 'Garamond · blue ATS',
     ResumeTemplate.atsLatexClassic => 'Garamond · LaTeX ATS',
     ResumeTemplate.atsClassicCv => 'Garamond · classic CV',
-    ResumeTemplate.headerSidebar => 'Sans · navy sidebar',
+    ResumeTemplate.headerSidebar => 'Garamond · navy sidebar',
   };
 }
 
