@@ -1140,6 +1140,15 @@ ResumeData _applyTemplatePreviewPalette(
       ),
     );
   }
+  // Header Sidebar gallery art stays navy; preview color is chosen on the
+  // preview screen.
+  if (sample.template == ResumeTemplate.headerSidebar) {
+    return sample.copyWith(
+      corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+        ResumeTemplate.headerSidebar,
+      ),
+    );
+  }
   // ATS gallery art stays black; preview color is chosen on the preview screen.
   if (sample.template.isAtsTemplate) {
     return sample.copyWith(
