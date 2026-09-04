@@ -6850,6 +6850,13 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsClassicCv) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsClassicCvTemplatePage(document, resume, garamond: garamond);
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -6897,6 +6904,8 @@ class ResumePdfService {
       case ResumeTemplate.atsProfessionalBlue:
         break;
       case ResumeTemplate.atsLatexClassic:
+        break;
+      case ResumeTemplate.atsClassicCv:
         break;
     }
 
@@ -7058,6 +7067,20 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsClassicCv) {
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsClassicCvTemplatePage(
+        document,
+        resume,
+        garamond: garamond,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -7112,6 +7135,8 @@ class ResumePdfService {
       case ResumeTemplate.atsProfessionalBlue:
         break;
       case ResumeTemplate.atsLatexClassic:
+        break;
+      case ResumeTemplate.atsClassicCv:
         break;
     }
 

@@ -105,6 +105,22 @@ abstract final class ResumeTypography {
   /// (preview px = PDF pt; template grid art scales this for the 240px tile).
   static const double atsProfessionalBlueExtraTopPaddingPt = 10;
 
+  /// Classic CV ATS (left-labeled ruled layout).
+  static const double atsClassicCvPageInsetPt = 42;
+  static const double atsClassicCvPageTopPreviewPt = 38;
+  /// First-page top margin (PDF pt). Continuation pages use [atsClassicCvContinuationVerticalInsetPt].
+  static const double atsClassicCvPageTopPdfPt = 46;
+  /// Page 2+ top and bottom margin (PDF pt).
+  static const double atsClassicCvContinuationVerticalInsetPt = 30;
+  static const double atsClassicCvLabelColumnPt = 108;
+  static const double atsClassicCvLabelGapPt = 10;
+  static const double atsClassicCvNamePt = 16;
+  static const double atsClassicCvBodyLineHeight = 1.25;
+  static const Color atsClassicCvRuleColor = Color(0xFF000000);
+
+  static double atsClassicCvBodyPdfLineSpacingFor(double fontSizePt) =>
+      fontSizePt * (atsClassicCvBodyLineHeight - 1);
+
   static double darkHeaderBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (darkHeaderBodyLineHeight - 1);
   static const double sectionGapPreviewPx = 44;

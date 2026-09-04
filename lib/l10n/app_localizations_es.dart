@@ -603,6 +603,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Encabezados en azul con contacto alineado a la derecha y cuadrícula de habilidades.';
 
   @override
+  String get templateClassicCvAts => 'ATS CV clásico';
+
+  @override
+  String get templateClassicCvAtsCaption =>
+      'Nombre centrado, datos personales y secciones con etiquetas a la izquierda.';
+
+  @override
   String get templateExecutiveNote => 'Nota ejecutiva';
 
   @override

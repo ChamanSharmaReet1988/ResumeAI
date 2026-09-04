@@ -602,6 +602,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Judul aksen biru dengan kontak rata kanan dan kisi keterampilan.';
 
   @override
+  String get templateClassicCvAts => 'ATS CV klasik';
+
+  @override
+  String get templateClassicCvAtsCaption =>
+      'Nama terpusat, data pribadi, dan bagian berlabel kiri.';
+
+  @override
   String get templateExecutiveNote => 'Catatan eksekutif';
 
   @override

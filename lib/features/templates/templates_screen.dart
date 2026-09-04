@@ -9,6 +9,7 @@ import 'package:resume_app/l10n/app_localizations.dart';
 import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/corporate_resume_style.dart';
+import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/services/resume_services.dart';
@@ -41,6 +42,10 @@ class TemplatesScreen extends StatefulWidget {
 
 class _TemplatesScreenState extends State<TemplatesScreen> {
   _TemplateSegment _selectedSegment = _TemplateSegment.resume;
+  final Map<String, GlobalKey> _tileKeys = {};
+  var _didAutoScrollToSelection = false;
+
+  GlobalKey _tileKey(String id) => _tileKeys.putIfAbsent(id, GlobalKey.new);
 
   @override
   void initState() {
@@ -49,6 +54,55 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         widget.onTemplateSelected == null) {
       _selectedSegment = _TemplateSegment.coverLetter;
     }
+    if (widget.selectedTemplate != null ||
+        widget.selectedCoverLetterTemplate != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToSelectedTemplate();
+        if (!_didAutoScrollToSelection && mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollToSelectedTemplate();
+          });
+        }
+      });
+    }
+  }
+
+  _TemplateTileData? _tileForPickerSelection() {
+    final resumeTemplate = widget.selectedTemplate?.userFacingTemplate;
+    if (resumeTemplate != null) {
+      for (final item in [..._professionalResumeCards, ..._atsResumeCards]) {
+        if (item.resumeTemplate == resumeTemplate) {
+          return item;
+        }
+      }
+    }
+    final coverLetterTemplate = widget.selectedCoverLetterTemplate;
+    if (coverLetterTemplate != null) {
+      for (final item in _coverLetterTemplateCards) {
+        if (item.coverLetterTemplate == coverLetterTemplate) {
+          return item;
+        }
+      }
+    }
+    return null;
+  }
+
+  void _scrollToSelectedTemplate() {
+    if (!mounted || _didAutoScrollToSelection) {
+      return;
+    }
+    final item = _tileForPickerSelection();
+    final tileContext = item == null ? null : _tileKey(item.id).currentContext;
+    if (tileContext == null) {
+      return;
+    }
+    _didAutoScrollToSelection = true;
+    Scrollable.ensureVisible(
+      tileContext,
+      alignment: 0.12,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   Future<void> _onTemplateTileTapped(
@@ -266,11 +320,14 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                       item.coverLetterTemplate != null &&
                       item.coverLetterTemplate == activeCoverLetterTemplate);
 
-              return _TemplateTile(
-                item: item,
-                selected: selected,
-                paletteSeed: library?.selectedResume,
-                onTap: () => _onTemplateTileTapped(context, item, library),
+              return KeyedSubtree(
+                key: _tileKey(item.id),
+                child: _TemplateTile(
+                  item: item,
+                  selected: selected,
+                  paletteSeed: library?.selectedResume,
+                  onTap: () => _onTemplateTileTapped(context, item, library),
+                ),
               );
             },
           ),
@@ -301,11 +358,14 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                     item.resumeTemplate != null &&
                     item.resumeTemplate == activeTemplate;
 
-                return _TemplateTile(
-                  item: item,
-                  selected: selected,
-                  paletteSeed: library?.selectedResume,
-                  onTap: () => _onTemplateTileTapped(context, item, library),
+                return KeyedSubtree(
+                  key: _tileKey(item.id),
+                  child: _TemplateTile(
+                    item: item,
+                    selected: selected,
+                    paletteSeed: library?.selectedResume,
+                    onTap: () => _onTemplateTileTapped(context, item, library),
+                  ),
                 );
               },
             ),
@@ -560,6 +620,14 @@ const _atsResumeCards = <_TemplateTileData>[
     caption: 'Blue accent headings with right-aligned contact and skills grid.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'ats-classic-cv',
+    resumeTemplate: ResumeTemplate.atsClassicCv,
+    previewKind: _TemplatePreviewKind.atsClassicCvResume,
+    headline: 'Classic CV ATS',
+    caption: 'Centered name, personal-details grid, and left-labeled ruled sections.',
+    isPremium: false,
+  ),
 ];
 
 const _coverLetterTemplateCards = <_TemplateTileData>[
@@ -630,6 +698,7 @@ class _TemplateTileData {
       'ats-executive' => l10n.templateExecutiveAts,
       'ats-center-classic' => l10n.templateCenterClassicAts,
       'ats-professional-blue' => l10n.templateProfessionalBlueAts,
+      'ats-classic-cv' => l10n.templateClassicCvAts,
       'executive-note' => l10n.templateExecutiveNote,
       'minimal-letter' => l10n.templateMinimalLetter,
       'sidebar-letter' => l10n.templateMintLetter,
@@ -650,6 +719,7 @@ class _TemplateTileData {
       'ats-executive' => l10n.templateExecutiveAtsCaption,
       'ats-center-classic' => l10n.templateCenterClassicAtsCaption,
       'ats-professional-blue' => l10n.templateProfessionalBlueAtsCaption,
+      'ats-classic-cv' => l10n.templateClassicCvAtsCaption,
       'executive-note' => l10n.templateExecutiveNoteCaption,
       'minimal-letter' => l10n.templateMinimalLetterCaption,
       'sidebar-letter' => l10n.templateMintLetterCaption,
@@ -671,6 +741,7 @@ enum _TemplatePreviewKind {
   atsExecutiveResume,
   atsCenterClassicResume,
   atsProfessionalBlueResume,
+  atsClassicCvResume,
   atsLatexClassicResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
@@ -791,6 +862,13 @@ class _TemplatePreviewArt extends StatelessWidget {
             paletteSeed,
           ),
         ),
+      _TemplatePreviewKind.atsClassicCvResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsClassicCv),
+          paletteSeed,
+        ),
+        fit: _ResumeTemplatePreviewFit.tile,
+      ),
       _TemplatePreviewKind.atsLatexClassicResume => _ResumeTemplatePreviewArt(
         // Grid only: stop after one project. Detail keeps the full sample.
         resume: _gridSampleThroughOneProject(
@@ -903,6 +981,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.accentStrip => _accentStripTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
+      ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,
       ResumeTemplate.atsStructured ||
       ResumeTemplate.atsModernFlow ||
       ResumeTemplate.atsExecutive ||
@@ -1179,6 +1258,7 @@ final ResumeData _atsFullSampleResume = ResumeData(
 ResumeData _atsSampleFor(ResumeTemplate template) => switch (template) {
   ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
   ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
+  ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,
   ResumeTemplate.atsLatexClassic => _atsFullSampleResume.copyWith(
     template: ResumeTemplate.atsLatexClassic,
     title: 'LaTeX Classic ATS Sample',
@@ -1193,6 +1273,137 @@ ResumeData _atsSampleFor(ResumeTemplate template) => switch (template) {
   ),
   _ => _atsFullSampleResume.copyWith(template: template),
 };
+
+final ResumeData _atsClassicCvTemplateResume = ResumeData(
+  id: 'template-ats-classic-cv',
+  title: 'Classic CV ATS Sample',
+  fullName: 'Logan Mitchell',
+  jobTitle: 'Software Engineer',
+  email: 'logan.mitchell@email.com',
+  phone: '+1-512-555-0198',
+  location: '2219 Red River St, Austin, Texas, USA',
+  website: '',
+  summary:
+      'Software engineer with 8+ years delivering reliable product platforms across mobile and backend. Known for turning ambiguous requirements into shipped systems, mentoring teammates, and keeping delivery predictable in high-growth environments.',
+  template: ResumeTemplate.atsClassicCv,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Senior Software Engineer',
+      company: 'Northwind Analytics — San Francisco, CA',
+      startDate: 'Mar 2021',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Led platform work for analytics products used by 40+ enterprise customers.',
+        'Cut release regressions by introducing staged rollouts and shared quality gates.',
+        'Mentored engineers on design reviews, testing, and production ownership.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Software Engineer',
+      company: 'Harbor Systems — Austin, TX',
+      startDate: 'Jun 2016',
+      endDate: 'Feb 2021',
+      description: '',
+      bullets: [
+        'Built APIs and internal tools that reduced support turnaround for core billing flows.',
+        'Partnered with design and QA to ship quarterly product milestones on schedule.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'University of Texas at Austin — Austin, TX',
+      degree: 'B.S. in Computer Science',
+      startDate: 'Aug 2012',
+      endDate: 'May 2016',
+      score:
+          'Relevant Coursework: Algorithms, Data Structures, Operating Systems\nTeaching Assistant, Introduction to Programming',
+    ),
+  ],
+  skills: const [
+    'Dart',
+    'TypeScript',
+    'Python',
+    'Flutter',
+    'Node.js',
+    'PostgreSQL',
+    'GCP',
+    'CI/CD',
+  ],
+  useSkillSubheadings: true,
+  skillGroups: const [
+    SkillGroup(
+      heading: 'Languages',
+      skills: ['Dart', 'TypeScript', 'Python'],
+    ),
+    SkillGroup(
+      heading: 'Backend & Infra',
+      skills: ['Node.js', 'PostgreSQL', 'GCP', 'CI/CD'],
+    ),
+    SkillGroup(
+      heading: 'Product',
+      skills: ['Flutter', 'Design reviews', 'Mentoring'],
+    ),
+  ],
+  projects: const [
+    ProjectItem(
+      title: 'Realtime Metrics Pipeline',
+      overview: 'Streaming analytics platform',
+      impact: 'Dart, Go, GCP',
+      bullets: [
+        'Built a streaming pipeline that cut dashboard freshness from hours to under two minutes.',
+        'Added backfill and schema checks so product teams could trust week-over-week metrics.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Release Health Console',
+      overview: 'Engineering quality tooling',
+      impact: 'Flutter, PostgreSQL',
+      bullets: [
+        'Shipped a console for rollout health, error budgets, and owner alerts across five squads.',
+        'Reduced incident time-to-detect by routing failed canaries to the on-call rotation.',
+      ],
+    ),
+  ],
+  customSections: const [
+    CustomSectionItem(
+      title: 'Personal Information',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: [
+        'Date / Place of birth: 04/07/1969 / Austin, Texas / USA',
+        'Nationality / Gender: American / Male',
+        'Marital status: Married',
+      ],
+    ),
+    CustomSectionItem(
+      title: 'Languages',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: ['English — Perfectly', 'German — Perfectly'],
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: 'github.com/loganmitchell',
+  linkedinLink: 'linkedin.com/in/loganmitchell',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: true,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.atsClassicCv,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+  ],
+);
 
 /// Professional Blue ATS (template 10) — sample with four experience roles.
 final ResumeData _atsProfessionalBlueTemplateResume = ResumeData(

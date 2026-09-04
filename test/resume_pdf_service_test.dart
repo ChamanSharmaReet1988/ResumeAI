@@ -637,6 +637,7 @@ void main() {
       ResumeTemplate.atsCenterClassic,
       ResumeTemplate.atsProfessionalBlue,
       ResumeTemplate.atsLatexClassic,
+      ResumeTemplate.atsClassicCv,
     ]) {
       final bytes = await service.buildPdf(base.copyWith(template: template));
       expect(bytes, isNotEmpty, reason: template.toString());

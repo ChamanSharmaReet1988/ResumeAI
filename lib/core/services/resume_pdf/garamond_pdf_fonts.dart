@@ -109,6 +109,21 @@ pw.TextStyle atsProfessionalBlueBodyPdfTextStyle(
       fontStyle: fontStyle,
     );
 
+pw.TextStyle atsClassicCvBodyPdfTextStyle(
+  GaramondPdfFonts fonts,
+  double bodyPt, {
+  PdfColor? color,
+  pw.FontStyle fontStyle = pw.FontStyle.normal,
+}) =>
+    garamondPdfTextStyle(
+      fonts,
+      ResumeTypography.atsStructuredBodyWeight,
+      fontSize: bodyPt,
+      color: color,
+      lineSpacing: ResumeTypography.atsClassicCvBodyPdfLineSpacingFor(bodyPt),
+      fontStyle: fontStyle,
+    );
+
 pw.TextStyle accentStripBodyPdfTextStyle(
   GaramondPdfFonts fonts,
   double bodyPt, {

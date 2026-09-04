@@ -10,6 +10,7 @@ import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/shared/view_models.dart';
 import 'package:resume_app/features/templates/templates_screen.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
 
 class _FakeTemplatesRepository implements ResumeRepository {
   @override
@@ -73,6 +74,8 @@ void main() {
             ),
           ],
           child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(body: TemplatesScreen(onCreateResume: _noop)),
           ),
         ),
@@ -176,6 +179,51 @@ void main() {
         find.byKey(const Key('template-detail-preview-sidebar-letter')),
         findsOneWidget,
       );
+    },
+  );
+
+  testWidgets(
+    'choose-template picker scrolls to the currently selected resume',
+    (tester) async {
+      final library = ResumeLibraryViewModel(
+        repository: _FakeTemplatesRepository(),
+      );
+      final appPreferences = AppPreferences.inMemory(isPremium: true);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
+            Provider<ResumePdfService>(create: (_) => ResumePdfService()),
+            ChangeNotifierProvider<PremiumPurchaseService>(
+              create: (_) => PremiumPurchaseService.inMemory(
+                appPreferences: appPreferences,
+                isPremium: true,
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              appBar: AppBar(title: const Text('Choose template')),
+              body: TemplatesScreen(
+                selectedTemplate: ResumeTemplate.atsClassicCv,
+                onTemplateSelected: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final tile = find.byKey(const Key('template-tile-ats-classic-cv'));
+      expect(tile, findsOneWidget);
+      final rect = tester.getRect(tile);
+      final screenHeight =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      expect(rect.top, greaterThanOrEqualTo(0));
+      expect(rect.top, lessThan(screenHeight));
+      expect(rect.bottom, greaterThan(0));
     },
   );
 }

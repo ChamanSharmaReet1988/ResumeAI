@@ -308,6 +308,8 @@
   "templateCenterClassicAtsCaption": "Nama terpusat, tagline berpipa, dan bagian satu kolom.",
   "templateProfessionalBlueAts": "ATS biru profesional",
   "templateProfessionalBlueAtsCaption": "Judul aksen biru dengan kontak rata kanan dan kisi keterampilan.",
+  "templateClassicCvAts": "ATS CV klasik",
+  "templateClassicCvAtsCaption": "Nama terpusat, data pribadi, dan bagian berlabel kiri.",
   "templateExecutiveNote": "Catatan eksekutif",
   "templateExecutiveNoteCaption": "Surat lamaran profesional dengan blok header yang kuat.",
   "templateMinimalLetter": "Surat minimal",

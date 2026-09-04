@@ -318,6 +318,8 @@
   "templateCenterClassicAtsCaption": "Centered name, pipe tagline, and ruled single-column sections.",
   "templateProfessionalBlueAts": "Professional Blue ATS",
   "templateProfessionalBlueAtsCaption": "Blue accent headings with right-aligned contact and skills grid.",
+  "templateClassicCvAts": "Classic CV ATS",
+  "templateClassicCvAtsCaption": "Centered name, personal-details grid, and left-labeled ruled sections.",
   "templateExecutiveNote": "Executive Note",
   "templateExecutiveNoteCaption": "Clean professional cover letter with a strong header block.",
   "templateMinimalLetter": "Minimal Letter",

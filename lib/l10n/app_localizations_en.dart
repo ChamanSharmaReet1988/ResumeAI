@@ -602,6 +602,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Blue accent headings with right-aligned contact and skills grid.';
 
   @override
+  String get templateClassicCvAts => 'Classic CV ATS';
+
+  @override
+  String get templateClassicCvAtsCaption =>
+      'Centered name, personal-details grid, and left-labeled ruled sections.';
+
+  @override
   String get templateExecutiveNote => 'Executive Note';
 
   @override

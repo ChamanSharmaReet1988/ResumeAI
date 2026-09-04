@@ -99,7 +99,8 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.atsExecutive ||
     ResumeTemplate.atsCenterClassic ||
     ResumeTemplate.atsProfessionalBlue ||
-    ResumeTemplate.atsLatexClassic => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.atsLatexClassic ||
+    ResumeTemplate.atsClassicCv => kTemplateDefaultColorPresetIndex,
   };
 }
 
@@ -285,6 +286,125 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get detailsSidebarMutedColor => const Color(0xFF475467);
 
   Color get detailsSidebarDividerColor => const Color(0xFF98A2B3);
+
+  CustomSectionItem? get classicCvPersonalSection =>
+      _classicCvNamedSection(this, const {'personalinformation', 'personal'});
+
+  CustomSectionItem? get classicCvLanguagesSection => _classicCvNamedSection(
+    this,
+    const {'language', 'languages', 'langueage', 'langueages'},
+  );
+
+  List<({String label, String value})> get classicCvPersonalRows {
+    final section = classicCvPersonalSection;
+    if (section == null) {
+      return const [];
+    }
+    return _classicCvSectionLines(section)
+        .map(_classicCvSplitLabelValue)
+        .where((row) => row != null)
+        .map((row) => row!)
+        .toList();
+  }
+
+  List<({String name, String level})> get classicCvLanguagePairs {
+    final section = classicCvLanguagesSection;
+    if (section == null) {
+      return const [];
+    }
+    return _classicCvSectionLines(
+      section,
+    ).map(_classicCvSplitLanguage).toList();
+  }
+
+  List<String> get classicCvContactLines {
+    final primary = [
+      location.trim(),
+      phone.trim(),
+      email.trim(),
+    ].where((item) => item.isNotEmpty).join(', ');
+    final secondary = [
+      linkedinLink.trim(),
+      githubLink.trim(),
+      website.trim(),
+    ].where((item) => item.isNotEmpty).join(', ');
+    return [
+      if (primary.isNotEmpty) primary,
+      if (secondary.isNotEmpty) secondary,
+    ];
+  }
+
+  String get classicCvContactLine => classicCvContactLines.join(', ');
+}
+
+String _classicCvNormalizeTitle(String title) =>
+    title.trim().toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+
+CustomSectionItem? _classicCvNamedSection(
+  ResumeData resume,
+  Set<String> names,
+) {
+  for (final item in resume.visibleCustomSections) {
+    if (names.contains(_classicCvNormalizeTitle(item.title))) {
+      return item;
+    }
+  }
+  return null;
+}
+
+List<String> _classicCvSectionLines(CustomSectionItem section) {
+  if (section.layoutMode == CustomSectionLayoutMode.bullets) {
+    return section.bullets
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+  return section.content
+      .split(RegExp(r'\n+'))
+      .map((item) => item.trim())
+      .where((item) => item.isNotEmpty)
+      .toList();
+}
+
+({String label, String value})? _classicCvSplitLabelValue(String line) {
+  final colon = line.indexOf(':');
+  if (colon <= 0) {
+    return null;
+  }
+  final label = line.substring(0, colon).trim();
+  final value = line.substring(colon + 1).trim();
+  if (label.isEmpty || value.isEmpty) {
+    return null;
+  }
+  return (label: label, value: value);
+}
+
+({String name, String level}) _classicCvSplitLanguage(String line) {
+  for (final sep in const [' — ', ' – ', ' - ', ': ']) {
+    final index = line.indexOf(sep);
+    if (index > 0) {
+      return (
+        name: line.substring(0, index).trim(),
+        level: line.substring(index + sep.length).trim(),
+      );
+    }
+  }
+  return (name: line.trim(), level: '');
+}
+
+({String head, String tail}) splitTrailingEmDash(String raw) {
+  final trimmed = raw.trim();
+  final separators = const [' — ', ' – ', ' - '];
+  for (final sep in separators) {
+    final index = trimmed.lastIndexOf(sep);
+    if (index > 0) {
+      return (
+        head: trimmed.substring(0, index).trim(),
+        tail: trimmed.substring(index + sep.length).trim(),
+      );
+    }
+  }
+  return (head: trimmed, tail: '');
 }
 
 extension CoverLetterCorporateStyleX on CoverLetterData {

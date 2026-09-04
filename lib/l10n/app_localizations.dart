@@ -1134,6 +1134,18 @@ abstract class AppLocalizations {
   /// **'Blue accent headings with right-aligned contact and skills grid.'**
   String get templateProfessionalBlueAtsCaption;
 
+  /// No description provided for @templateClassicCvAts.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic CV ATS'**
+  String get templateClassicCvAts;
+
+  /// No description provided for @templateClassicCvAtsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Centered name, personal-details grid, and left-labeled ruled sections.'**
+  String get templateClassicCvAtsCaption;
+
   /// No description provided for @templateExecutiveNote.
   ///
   /// In en, this message translates to:

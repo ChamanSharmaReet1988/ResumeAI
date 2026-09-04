@@ -3110,4 +3110,605 @@ extension _ResumePdfAtsPages on ResumePdfService {
       ),
     );
   }
+
+  pw.Widget _classicCvRule() =>
+      _atsSolidRule(color: _pdfRgb(ResumeTypography.atsClassicCvRuleColor));
+
+  pw.Widget _classicCvLeftRail({
+    required String left,
+    required pw.Widget content,
+    required pw.TextStyle leftStyle,
+  }) {
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.SizedBox(
+          width: ResumeTypography.atsClassicCvLabelColumnPt,
+          child: left.trim().isEmpty
+              ? pw.SizedBox()
+              : pw.Text(left, style: leftStyle),
+        ),
+        pw.SizedBox(width: ResumeTypography.atsClassicCvLabelGapPt),
+        pw.Expanded(child: content),
+      ],
+    );
+  }
+
+  pw.Widget _classicCvPersonalGrid(
+    List<({String label, String value})> rows, {
+    required pw.TextStyle labelStyle,
+    required pw.TextStyle valueStyle,
+  }) {
+    pw.Widget pair(
+      ({String label, String value}) row, {
+      pw.TextAlign valueAlign = pw.TextAlign.left,
+    }) {
+      return pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Expanded(flex: 4, child: pw.Text(row.label, style: labelStyle)),
+          pw.SizedBox(width: 6),
+          pw.Expanded(
+            flex: 6,
+            child: pw.Text(
+              row.value,
+              style: valueStyle,
+              textAlign: valueAlign,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (rows.length == 1) {
+      return pair(rows.first, valueAlign: pw.TextAlign.right);
+    }
+    final left = rows.take((rows.length + 1) ~/ 2).toList();
+    final right = rows.skip(left.length).toList();
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Expanded(
+          child: pw.Column(
+            children: [
+              for (var i = 0; i < left.length; i++) ...[
+                if (i > 0) pw.SizedBox(height: 3),
+                pair(left[i]),
+              ],
+            ],
+          ),
+        ),
+        pw.SizedBox(width: 16),
+        pw.Expanded(
+          child: pw.Column(
+            children: [
+              for (var i = 0; i < right.length; i++) ...[
+                if (i > 0) pw.SizedBox(height: 3),
+                pair(right[i], valueAlign: pw.TextAlign.right),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _classicCvRoleLocationRow({
+    required String role,
+    required String company,
+    required String location,
+    required pw.TextStyle boldStyle,
+    required pw.TextStyle bodyStyle,
+  }) {
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Expanded(
+          child: pw.RichText(
+            text: pw.TextSpan(
+              children: [
+                pw.TextSpan(text: role, style: boldStyle),
+                if (company.isNotEmpty)
+                  pw.TextSpan(text: ' — $company', style: bodyStyle),
+              ],
+            ),
+          ),
+        ),
+        if (location.isNotEmpty) pw.Text(location, style: bodyStyle),
+      ],
+    );
+  }
+
+  String _classicCvEnDashRange(String start, String end) =>
+      educationDateRangeLabel(start, end)
+          .replaceAll(' - ', ' – ')
+          .replaceAll(' — ', ' – ');
+
+  List<String> _classicCvScoreLines(EducationItem item) => item.score
+      .split(RegExp(r'\n+'))
+      .map((line) => line.trim())
+      .where((line) => line.isNotEmpty)
+      .toList();
+
+  void _addAtsClassicCvTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    required GaramondPdfFonts garamond,
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) {
+    final highlightColor = _atsHighlightColor;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final ink = PdfColors.black;
+    final bodyStyle = atsClassicCvBodyPdfTextStyle(garamond, bodyPt, color: ink);
+    final boldStyle = garamondPdfTextStyle(
+      garamond,
+      ResumeTypography.atsStructuredSubtitleWeight,
+      fontSize: bodyPt,
+      color: ink,
+      lineSpacing: ResumeTypography.atsClassicCvBodyPdfLineSpacingFor(bodyPt),
+    );
+    final labelStyle = garamondPdfTextStyle(
+      garamond,
+      ResumeTypography.atsStructuredTitleWeight,
+      fontSize: bodyPt,
+      color: ink,
+    );
+    final nameStyle = garamondPdfTextStyle(
+      garamond,
+      ResumeTypography.atsStructuredNameWeight,
+      fontSize: ResumeTypography.atsClassicCvNamePt,
+      color: ink,
+    );
+    final titleStyle = garamondPdfTextStyle(
+      garamond,
+      ResumeTypography.atsStructuredBodyWeight,
+      fontSize: ResumeTypography.atsClassicCvNamePt,
+      color: ink,
+    );
+    final name = _displayName(resume);
+    final job = resume.jobTitle.trim();
+    final contactLines = resume.classicCvContactLines;
+    final personalRows = resume.classicCvPersonalRows;
+    final languages = resume.classicCvLanguagePairs;
+    final personalSection = resume.classicCvPersonalSection;
+    final languagesSection = resume.classicCvLanguagesSection;
+
+    document.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.fromLTRB(
+          ResumeTypography.atsClassicCvPageInsetPt,
+          ResumeTypography.atsClassicCvContinuationVerticalInsetPt,
+          ResumeTypography.atsClassicCvPageInsetPt,
+          ResumeTypography.atsClassicCvContinuationVerticalInsetPt,
+        ),
+        build: (context) {
+          const firstPageExtraTop =
+              ResumeTypography.atsClassicCvPageTopPdfPt -
+              ResumeTypography.atsClassicCvContinuationVerticalInsetPt;
+          final w = <pw.Widget>[
+            if (firstPageExtraTop > 0) pw.SizedBox(height: firstPageExtraTop),
+            pw.Center(
+              child: pw.RichText(
+                textAlign: pw.TextAlign.center,
+                text: pw.TextSpan(
+                  children: [
+                    pw.TextSpan(text: name, style: nameStyle),
+                    if (job.isNotEmpty)
+                      pw.TextSpan(text: ', $job', style: titleStyle),
+                  ],
+                ),
+              ),
+            ),
+            if (contactLines.isNotEmpty) ...[
+              pw.SizedBox(height: 4),
+              for (final line in contactLines)
+                pw.Text(
+                  line,
+                  textAlign: pw.TextAlign.center,
+                  style: bodyStyle,
+                ),
+            ],
+            pw.SizedBox(height: 10),
+            _classicCvRule(),
+            if (personalRows.isNotEmpty) ...[
+              pw.SizedBox(height: 8),
+              _classicCvPersonalGrid(
+                personalRows,
+                labelStyle: bodyStyle,
+                valueStyle: boldStyle,
+              ),
+              pw.SizedBox(height: 8),
+              _classicCvRule(),
+            ],
+            pw.SizedBox(height: 10),
+            _classicCvLeftRail(
+              left: 'PROFILE',
+              leftStyle: labelStyle,
+              content: _atsHighlightedSummaryText(
+                resume.summary.trim().ifEmpty(
+                  'Concise overview of experience, domains, and impact.',
+                ),
+                bodyPt: bodyPt,
+                highlightSummary: highlightSummary,
+                highlightColor: highlightColor,
+                textStyle: bodyStyle,
+              ),
+            ),
+          ];
+
+          w.addAll(
+            _pdfBodySectionsInBuilderOrder(
+              resume,
+              exclude: {
+                if (personalSection != null)
+                  ResumeBuilderSectionIds.custom(
+                    resume.customSections.indexOf(personalSection),
+                  ),
+                if (languagesSection != null)
+                  ResumeBuilderSectionIds.custom(
+                    resume.customSections.indexOf(languagesSection),
+                  ),
+              },
+              buildSection: (id) {
+                final out = <pw.Widget>[];
+                final customIndex = ResumeBuilderSectionIds.customIndex(id);
+                if (customIndex != null) {
+                  if (customIndex < 0 ||
+                      customIndex >= resume.customSections.length) {
+                    return null;
+                  }
+                  final section = resume.customSections[customIndex];
+                  if (section.isBlank) return null;
+                  out.add(pw.SizedBox(height: 10));
+                  out.add(_classicCvRule());
+                  out.add(pw.SizedBox(height: 10));
+                  out.add(
+                    _classicCvLeftRail(
+                      left: section.title.ifEmpty('Additional').toUpperCase(),
+                      leftStyle: labelStyle,
+                      content: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: _pwCustomSectionBodyWidgets(
+                          section,
+                          garamond: garamond,
+                          bodyFontPt: bodyPt,
+                        ),
+                      ),
+                    ),
+                  );
+                  return out;
+                }
+                switch (id) {
+                  case ResumeBuilderSectionIds.work:
+                    if (!resume.includeWorkInResume) return null;
+                    final items = resume.visibleWorkExperiences;
+                    out.add(pw.SizedBox(height: 10));
+                    out.add(_classicCvRule());
+                    out.add(pw.SizedBox(height: 10));
+                    if (items.isEmpty) {
+                      out.add(
+                        _classicCvLeftRail(
+                          left: 'EXPERIENCE',
+                          leftStyle: labelStyle,
+                          content: pw.Text(
+                            'Add roles with measurable outcomes.',
+                            style: bodyStyle,
+                          ),
+                        ),
+                      );
+                      return out;
+                    }
+                    for (var i = 0; i < items.length; i++) {
+                      final item = items[i];
+                      final split = splitTrailingEmDash(item.company);
+                      final dateStr = _classicCvEnDashRange(
+                        item.startDate,
+                        item.endDate,
+                      );
+                      if (i > 0) out.add(pw.SizedBox(height: 8));
+                      out.add(
+                        _classicCvLeftRail(
+                          left: i == 0 ? 'EXPERIENCE' : dateStr,
+                          leftStyle: i == 0 ? labelStyle : bodyStyle,
+                          content: _classicCvRoleLocationRow(
+                            role: item.role.trim().ifEmpty('Role'),
+                            company: split.head,
+                            location: split.tail,
+                            boldStyle: boldStyle,
+                            bodyStyle: bodyStyle,
+                          ),
+                        ),
+                      );
+                      final bullets = _workBulletLines(item);
+                      final highlighted =
+                          highlightedBulletsByExperience[i] ?? const <String>{};
+                      if (bullets.isEmpty &&
+                          i == 0 &&
+                          dateStr.isNotEmpty) {
+                        out.add(pw.SizedBox(height: 2));
+                        out.add(
+                          _classicCvLeftRail(
+                            left: dateStr,
+                            leftStyle: bodyStyle,
+                            content: pw.SizedBox(),
+                          ),
+                        );
+                      }
+                      for (var b = 0; b < bullets.length; b++) {
+                        out.add(pw.SizedBox(height: b == 0 ? 2 : 1));
+                        out.add(
+                          _classicCvLeftRail(
+                            left: i == 0 && b == 0 ? dateStr : '',
+                            leftStyle: bodyStyle,
+                            content: _atsHighlightedBulletLine(
+                              '• ${bullets[b]}',
+                              style: bodyStyle,
+                              isHighlighted: highlighted.contains(bullets[b]),
+                              highlightColor: highlightColor,
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                    return out;
+                  case ResumeBuilderSectionIds.education:
+                    if (!resume.includeEducationInResume) return null;
+                    final items = resume.visibleEducation;
+                    out.add(pw.SizedBox(height: 10));
+                    out.add(_classicCvRule());
+                    out.add(pw.SizedBox(height: 10));
+                    if (items.isEmpty) {
+                      out.add(
+                        _classicCvLeftRail(
+                          left: 'EDUCATION',
+                          leftStyle: labelStyle,
+                          content: pw.Text('Add education.', style: bodyStyle),
+                        ),
+                      );
+                      return out;
+                    }
+                    for (var i = 0; i < items.length; i++) {
+                      final item = items[i];
+                      final split = splitTrailingEmDash(item.institution);
+                      final school = [
+                        split.head,
+                        if (split.tail.isNotEmpty) split.tail,
+                      ].join(' — ');
+                      final range = _classicCvEnDashRange(
+                        item.startDate,
+                        item.endDate,
+                      );
+                      final extras = _classicCvScoreLines(item);
+                      if (i > 0) out.add(pw.SizedBox(height: 8));
+                      out.add(
+                        _classicCvLeftRail(
+                          left: i == 0 ? 'EDUCATION' : range,
+                          leftStyle: i == 0 ? labelStyle : bodyStyle,
+                          content: pw.Row(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Expanded(
+                                child: pw.Text(
+                                  item.degree.trim().ifEmpty('Degree'),
+                                  style: boldStyle,
+                                ),
+                              ),
+                              if (school.isNotEmpty)
+                                pw.Text(school, style: bodyStyle),
+                            ],
+                          ),
+                        ),
+                      );
+                      if (extras.isNotEmpty || (i == 0 && range.isNotEmpty)) {
+                        if (extras.isEmpty) {
+                          out.add(pw.SizedBox(height: 2));
+                          out.add(
+                            _classicCvLeftRail(
+                              left: i == 0 ? range : '',
+                              leftStyle: bodyStyle,
+                              content: pw.SizedBox(),
+                            ),
+                          );
+                        } else {
+                          for (var e = 0; e < extras.length; e++) {
+                            out.add(pw.SizedBox(height: e == 0 ? 2 : 1));
+                            out.add(
+                              _classicCvLeftRail(
+                                left: i == 0 && e == 0 ? range : '',
+                                leftStyle: bodyStyle,
+                                content: pw.Text(
+                                  '• ${extras[e]}',
+                                  style: bodyStyle,
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    }
+                    return out;
+                  case ResumeBuilderSectionIds.skills:
+                    if (!resume.includeSkillsInResume) return null;
+                    out.add(pw.SizedBox(height: 10));
+                    out.add(_classicCvRule());
+                    out.add(pw.SizedBox(height: 10));
+                    pw.Widget skillLine({
+                      required String heading,
+                      required String skillsText,
+                      required bool highlighted,
+                    }) {
+                      final line = pw.RichText(
+                        text: pw.TextSpan(
+                          children: [
+                            if (heading.isNotEmpty)
+                              pw.TextSpan(
+                                text: '${heading.toUpperCase()}: ',
+                                style: boldStyle,
+                              ),
+                            pw.TextSpan(text: skillsText, style: bodyStyle),
+                          ],
+                        ),
+                      );
+                      if (!highlighted) {
+                        return line;
+                      }
+                      return pw.Container(
+                        width: double.infinity,
+                        color: highlightColor,
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        child: line,
+                      );
+                    }
+
+                    final skillLines = <pw.Widget>[];
+                    if (resume.showCategorisedSkills) {
+                      for (final group in resume.skillGroupsForResume) {
+                        skillLines.add(
+                          skillLine(
+                            heading: group.heading.trim(),
+                            skillsText: group.skillsCommaSeparated,
+                            highlighted: group.skills.any(
+                              highlightedSkills.contains,
+                            ),
+                          ),
+                        );
+                      }
+                    } else {
+                      final skills = _skillsForDisplay(resume);
+                      if (skills.isEmpty) {
+                        skillLines.add(
+                          pw.Text(
+                            'Add skills that mirror job postings.',
+                            style: bodyStyle,
+                          ),
+                        );
+                      } else {
+                        skillLines.add(
+                          skillLine(
+                            heading: '',
+                            skillsText: skills.join(', '),
+                            highlighted: skills.any(
+                              highlightedSkills.contains,
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                    if (skillLines.isEmpty) {
+                      out.add(
+                        _classicCvLeftRail(
+                          left: 'SKILLS',
+                          leftStyle: labelStyle,
+                          content: pw.Text(
+                            'Add skills that mirror job postings.',
+                            style: bodyStyle,
+                          ),
+                        ),
+                      );
+                    } else {
+                      for (var i = 0; i < skillLines.length; i++) {
+                        if (i > 0) out.add(pw.SizedBox(height: 2));
+                        out.add(
+                          _classicCvLeftRail(
+                            left: i == 0 ? 'SKILLS' : '',
+                            leftStyle: labelStyle,
+                            content: skillLines[i],
+                          ),
+                        );
+                      }
+                    }
+                    return out;
+                  case ResumeBuilderSectionIds.projects:
+                    if (!resume.includeProjectsInResume) return null;
+                    final items = resume.visibleProjects;
+                    if (items.isEmpty) return null;
+                    out.add(pw.SizedBox(height: 10));
+                    out.add(_classicCvRule());
+                    out.add(pw.SizedBox(height: 10));
+                    for (var i = 0; i < items.length; i++) {
+                      final item = items[i];
+                      if (i > 0) out.add(pw.SizedBox(height: 6));
+                      out.add(
+                        _classicCvLeftRail(
+                          left: i == 0 ? 'PROJECTS' : '',
+                          leftStyle: labelStyle,
+                          content: pw.Text(
+                            item.title.trim().ifEmpty('Project'),
+                            style: boldStyle,
+                          ),
+                        ),
+                      );
+                      final bullets = _projectBulletLinesPdf(item);
+                      for (var b = 0; b < bullets.length; b++) {
+                        out.add(pw.SizedBox(height: 2));
+                        out.add(
+                          _classicCvLeftRail(
+                            left: '',
+                            leftStyle: bodyStyle,
+                            content: pw.Text('• ${bullets[b]}', style: bodyStyle),
+                          ),
+                        );
+                      }
+                    }
+                    return out;
+                  default:
+                    return null;
+                }
+              },
+            ),
+          );
+
+          if (languages.isNotEmpty) {
+            w.add(pw.SizedBox(height: 10));
+            w.add(_classicCvRule());
+            w.add(pw.SizedBox(height: 10));
+            final mid = (languages.length + 1) ~/ 2;
+            pw.Widget langCell(({String name, String level}) item) {
+              return pw.Row(
+                children: [
+                  pw.Expanded(child: pw.Text(item.name, style: bodyStyle)),
+                  if (item.level.isNotEmpty)
+                    pw.Text(item.level, style: bodyStyle),
+                ],
+              );
+            }
+            w.add(
+              _classicCvLeftRail(
+                left: 'LANGUAGES',
+                leftStyle: labelStyle,
+                content: pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Expanded(
+                      child: pw.Column(
+                        children: [
+                          for (final item in languages.take(mid)) langCell(item),
+                        ],
+                      ),
+                    ),
+                    pw.SizedBox(width: 20),
+                    pw.Expanded(
+                      child: pw.Column(
+                        children: [
+                          for (final item in languages.skip(mid)) langCell(item),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return w;
+        },
+      ),
+    );
+  }
 }
