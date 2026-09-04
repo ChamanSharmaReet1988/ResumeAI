@@ -1,70 +1,75 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
 
 import 'package:resume_app/core/services/in_app_review_prompt_service.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
-  late Directory tempDir;
-  late Box<dynamic> box;
-  var requestReviewCalls = 0;
-
-  setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('review_prompt_test_');
-    Hive.init(tempDir.path);
-    final boxName =
-        'review_prompt_test_${DateTime.now().microsecondsSinceEpoch}';
-    box = await Hive.openBox<dynamic>(boxName);
-    requestReviewCalls = 0;
-  });
-
-  tearDown(() async {
-    await box.clear();
-    await box.close();
-    if (tempDir.existsSync()) {
-      await tempDir.delete(recursive: true);
-    }
-  });
+  late bool ratingCompleted;
+  late int openStoreListingCalls;
 
   InAppReviewPromptService buildService() {
     return InAppReviewPromptService(
-      openBox: () async => box,
-      isReviewAvailable: () async => true,
-      requestReview: () async {
-        requestReviewCalls += 1;
+      readRatingCompleted: () async => ratingCompleted,
+      writeRatingCompleted: () async {
+        ratingCompleted = true;
+      },
+      openStoreListing: () async {
+        openStoreListingCalls += 1;
       },
     );
   }
 
-  test('prompts on first Templates visit', () async {
-    final service = buildService();
-
-    await service.handleTemplatesTabSelected();
-
-    expect(requestReviewCalls, 1);
+  setUp(() {
+    ratingCompleted = false;
+    openStoreListingCalls = 0;
   });
 
-  test('does not prompt on the next two visits', () async {
+  test('claims prompt when home has exactly one resume', () async {
     final service = buildService();
 
-    await service.handleTemplatesTabSelected(); // 1st → prompt
-    await service.handleTemplatesTabSelected(); // 2nd
-    await service.handleTemplatesTabSelected(); // 3rd
-
-    expect(requestReviewCalls, 1);
+    expect(await service.claimHomePrompt(resumeCount: 1), isTrue);
   });
 
-  test('prompts again on the 4th visit (3 visits after first prompt)', () async {
+  test('does not claim when there are no resumes', () async {
     final service = buildService();
 
-    await service.handleTemplatesTabSelected(); // 1 → prompt
-    await service.handleTemplatesTabSelected(); // 2
-    await service.handleTemplatesTabSelected(); // 3
-    await service.handleTemplatesTabSelected(); // 4 → prompt again
+    expect(await service.claimHomePrompt(resumeCount: 0), isFalse);
+  });
 
-    expect(requestReviewCalls, 2);
+  test('does not claim when there are two resumes', () async {
+    final service = buildService();
+
+    expect(await service.claimHomePrompt(resumeCount: 2), isFalse);
+  });
+
+  test('does not claim twice in the same session', () async {
+    final service = buildService();
+
+    expect(await service.claimHomePrompt(resumeCount: 1), isTrue);
+    service.endPromptOffer();
+    expect(await service.claimHomePrompt(resumeCount: 1), isFalse);
+  });
+
+  test('does not claim after the user has rated', () async {
+    ratingCompleted = true;
+    final service = buildService();
+
+    expect(await service.claimHomePrompt(resumeCount: 1), isFalse);
+  });
+
+  test('rating flag survives a new service instance after reinstall', () async {
+    final firstLaunch = buildService();
+    expect(await firstLaunch.claimHomePrompt(resumeCount: 1), isTrue);
+    await firstLaunch.markRatingCompleted();
+    firstLaunch.endPromptOffer();
+
+    final afterReinstall = buildService();
+    expect(await afterReinstall.hasCompletedRating(), isTrue);
+    expect(await afterReinstall.claimHomePrompt(resumeCount: 1), isFalse);
+  });
+
+  test('openStoreListing uses the injected opener', () async {
+    final service = buildService();
+    await service.openStoreListing();
+    expect(openStoreListingCalls, 1);
   });
 }

@@ -72,6 +72,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rateApp => 'Rate App';
 
   @override
+  String get ratePromptTitle => 'Enjoying ResumeAI?';
+
+  @override
+  String get ratePromptBody =>
+      'If this app is helping you, a quick rating would mean a lot.';
+
+  @override
+  String get maybeLater => 'Maybe later';
+
+  @override
   String get shareApp => 'Share App';
 
   @override

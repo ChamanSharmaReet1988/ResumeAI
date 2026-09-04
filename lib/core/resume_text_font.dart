@@ -279,10 +279,12 @@ abstract final class ResumeTypography {
     Color? color,
     double? height,
     double? letterSpacing,
+    FontStyle fontStyle = FontStyle.normal,
   }) =>
       TextStyle(
         fontFamily: 'Garamond',
         fontWeight: ResumeFontWeight.toFlutter(weight),
+        fontStyle: fontStyle,
         fontSize: fontSize,
         color: color,
         height: height,

@@ -14,7 +14,7 @@ abstract final class PremiumAccess {
     'classic-business-letter',
   };
 
-  /// AI Resume tab — "Create ATS resume" requires Pro on iOS only.
+  /// AI Resume tab (and Create ATS) requires Pro on iOS only.
   static bool get atsAiCreateRequiresPremium =>
       PlatformMonetization.isIapEnabled;
 

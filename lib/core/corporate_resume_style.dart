@@ -93,13 +93,13 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.classicSidebar => 2,
     ResumeTemplate.detailsSidebar => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.accentStrip => kTemplateDefaultColorPresetIndex,
-    ResumeTemplate.atsStructured => 0,
-    ResumeTemplate.atsSerifRules => 0,
-    ResumeTemplate.atsModernFlow => 0,
-    ResumeTemplate.atsExecutive => 0,
-    ResumeTemplate.atsCenterClassic => 0,
-    ResumeTemplate.atsProfessionalBlue => kTemplateDefaultColorPresetIndex,
-    ResumeTemplate.atsLatexClassic => 0,
+    ResumeTemplate.atsStructured ||
+    ResumeTemplate.atsSerifRules ||
+    ResumeTemplate.atsModernFlow ||
+    ResumeTemplate.atsExecutive ||
+    ResumeTemplate.atsCenterClassic ||
+    ResumeTemplate.atsProfessionalBlue ||
+    ResumeTemplate.atsLatexClassic => kTemplateDefaultColorPresetIndex,
   };
 }
 

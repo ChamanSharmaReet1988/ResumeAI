@@ -43,9 +43,9 @@ List<SingleChildWidget> _appShellProviders({
     ),
     Provider<InAppReviewPromptService>.value(
       value: InAppReviewPromptService(
-        openBox: () async {
-          throw StateError('review prompt disabled in tests');
-        },
+        readRatingCompleted: () async => true,
+        writeRatingCompleted: () async {},
+        openStoreListing: () async {},
       ),
     ),
     Provider<ResumePdfService>.value(value: ResumePdfService()),

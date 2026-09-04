@@ -104,10 +104,10 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.atsModernFlow ||
       ResumeTemplate.atsExecutive ||
       ResumeTemplate.atsLatexClassic ||
+      ResumeTemplate.atsCenterClassic ||
+      ResumeTemplate.atsProfessionalBlue ||
       ResumeTemplate.creative ||
       ResumeTemplate.classicSidebar => 'Garamond',
-      ResumeTemplate.atsCenterClassic ||
-      ResumeTemplate.atsProfessionalBlue => 'Arimo',
       _ => resume.resumeTextFont.flutterFontFamily,
     };
     final onSurface = theme.colorScheme.onSurface;
@@ -4050,31 +4050,31 @@ class _AtsCenterClassicPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = resume.atsCenterClassicAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final bodyStyle = ResumeTypography.arialPreviewStyle(
+    final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
       fontSize: bodyPt,
       color: _ink,
       height: ResumeTypography.atsCenterClassicBodyLineHeight,
     );
-    final sectionTitleStyle = ResumeTypography.arialPreviewStyle(
+    final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredTitleWeight,
       fontSize: _atsPreviewSectionTitleFontSize,
       color: _ink,
       height: ResumeTypography.textLineHeight,
     );
-    final taglineStyle = ResumeTypography.arialPreviewStyle(
+    final taglineStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
       color: _ink,
       height: ResumeTypography.textLineHeight,
     );
-    final sectionSubtitleStyle = ResumeTypography.arialPreviewStyle(
+    final sectionSubtitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
       color: accent,
       height: ResumeTypography.textLineHeight,
     );
-    final highlightStyle = ResumeTypography.arialPreviewStyle(
+    final highlightStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
       color: accent,
@@ -4113,7 +4113,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
               Text(
                 _pdfAlignedDisplayName(resume),
                 textAlign: TextAlign.center,
-                style: ResumeTypography.arialPreviewStyle(
+                style: ResumeTypography.garamondPreviewStyle(
                   weight: ResumeTypography.atsStructuredNameWeight,
                   fontSize: _atsPreviewNameFontSize,
                   color: _ink,
@@ -4137,7 +4137,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                 Text(
                   contact,
                   textAlign: TextAlign.center,
-                  style: ResumeTypography.arialPreviewStyle(
+                  style: ResumeTypography.garamondPreviewStyle(
                     weight: ResumeTypography.atsStructuredContactWeight,
                     fontSize: bodyPt,
                     color: _ink,
@@ -4400,25 +4400,25 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = resume.atsProfessionalBlueAccentColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final bodyStyle = ResumeTypography.arialPreviewStyle(
+    final bodyStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredBodyWeight,
       fontSize: bodyPt,
       color: _ink,
       height: ResumeTypography.atsProfessionalBlueBodyLineHeight,
     );
-    final sectionTitleStyle = ResumeTypography.arialPreviewStyle(
+    final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredTitleWeight,
       fontSize: _atsPreviewSectionTitleFontSize,
       color: accent,
       height: ResumeTypography.textLineHeight,
     );
-    final subtitleStyle = ResumeTypography.arialPreviewStyle(
+    final subtitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
       color: accent,
       height: ResumeTypography.textLineHeight,
     );
-    final contactStyle = ResumeTypography.arialPreviewStyle(
+    final contactStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeTypography.atsStructuredContactWeight,
       fontSize: bodyPt,
       color: accent,
@@ -4462,7 +4462,7 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                       children: [
                         Text(
                           _pdfAlignedDisplayName(resume),
-                          style: ResumeTypography.arialPreviewStyle(
+                          style: ResumeTypography.garamondPreviewStyle(
                             weight: ResumeTypography.atsStructuredNameWeight,
                             fontSize: _atsPreviewNameFontSize,
                             color: accent,
@@ -4475,7 +4475,7 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             resume.jobTitle.trim(),
-                            style: ResumeTypography.arialPreviewStyle(
+                            style: ResumeTypography.garamondPreviewStyle(
                               weight: ResumeTypography.atsStructuredTitleWeight,
                               fontSize: _atsPreviewJobTitleFontSize,
                               color: accent,

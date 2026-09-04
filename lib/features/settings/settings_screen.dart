@@ -17,6 +17,7 @@ import '../premium/premium_gate.dart';
 import '../shared/view_models.dart';
 import '../../core/app_locale_option.dart';
 import '../../core/services/firebase_app_services.dart';
+import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/platform_monetization.dart';
 import '../../core/services/premium_purchase_service.dart';
 
@@ -78,6 +79,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _rateApp(BuildContext context) async {
+    final prompt = context.read<InAppReviewPromptService>();
+    await prompt.markRatingCompleted();
     final review = InAppReview.instance;
     try {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
@@ -768,10 +771,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           const Spacer(),
                           // TEMPORARY: show version in all builds for internal testing.
-                          // const SizedBox(height: 20),
-                          // _SettingsVersionFooter(
-                          //   onTap: () => _openDeveloperTools(context),
-                          // ),
+                          const SizedBox(height: 20),
+                          _SettingsVersionFooter(
+                            onTap: () => _openDeveloperTools(context),
+                          ),
                         ],
                       ),
                     ),

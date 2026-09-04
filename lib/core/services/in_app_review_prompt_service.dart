@@ -1,36 +1,52 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:in_app_review/in_app_review.dart';
 
-/// Shows the platform in-app review dialog from the Templates tab.
+/// Home-screen rating prompt.
 ///
-/// - First Templates visit → prompt once
-/// - Then after every 3 additional Templates visits → prompt again
-///
-/// Uses Apple's review popup on iOS and Google Play's on Android when available.
+/// Shows when the user has exactly one resume and has not rated yet.
+/// Repeats on each app launch until they rate. A completed rating is stored
+/// in the iOS Keychain (iCloud-synced) so it survives reinstall; Android also
+/// writes Hive so Google backup can restore the flag.
 class InAppReviewPromptService {
   InAppReviewPromptService({
-    Future<bool> Function()? isReviewAvailable,
-    Future<void> Function()? requestReview,
+    Future<bool> Function()? readRatingCompleted,
+    Future<void> Function()? writeRatingCompleted,
+    Future<void> Function()? openStoreListing,
     Future<Box<dynamic>> Function()? openBox,
+    FlutterSecureStorage? secureStorage,
   }) {
-    _isReviewAvailable =
-        isReviewAvailable ?? () => InAppReview.instance.isAvailable();
-    _requestReview =
-        requestReview ?? () => InAppReview.instance.requestReview();
+    _readRatingCompleted =
+        readRatingCompleted ?? (() => _defaultReadRatingCompleted());
+    _writeRatingCompleted =
+        writeRatingCompleted ?? (() => _defaultWriteRatingCompleted());
+    _openStoreListing = openStoreListing ?? _defaultOpenStoreListing;
     _openBox = openBox ?? _defaultOpenBox;
+    _secureStorage =
+        secureStorage ??
+        const FlutterSecureStorage(
+          aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          iOptions: IOSOptions(
+            accessibility: KeychainAccessibility.first_unlock,
+            synchronizable: true,
+          ),
+        );
   }
 
   static const int templatesTabIndex = 1;
-  static const int _visitsBeforeRepeatPrompt = 3;
+  static const String appStoreId = '6768385894';
   static const String _boxName = 'app_prefs';
-  static const String _hasPromptedOnceKey = 'review_prompt_has_shown_once';
-  static const String _visitsSincePromptKey =
-      'review_prompt_visits_since_last';
+  static const String _ratedKey = 'in_app_review_completed';
 
-  late final Future<bool> Function() _isReviewAvailable;
-  late final Future<void> Function() _requestReview;
+  late final Future<bool> Function() _readRatingCompleted;
+  late final Future<void> Function() _writeRatingCompleted;
+  late final Future<void> Function() _openStoreListing;
   late final Future<Box<dynamic>> Function() _openBox;
+  late final FlutterSecureStorage _secureStorage;
+
+  bool _offeredThisSession = false;
+  bool _promptInFlight = false;
 
   static Future<Box<dynamic>> _defaultOpenBox() async {
     if (Hive.isBoxOpen(_boxName)) {
@@ -39,48 +55,76 @@ class InAppReviewPromptService {
     return Hive.openBox<dynamic>(_boxName);
   }
 
-  /// Call when the user selects the Templates tab.
-  Future<void> handleTemplatesTabSelected() async {
+  Future<bool> _defaultReadRatingCompleted() async {
     try {
-      final box = await _openBox();
-      final hasPromptedOnce =
-          (box.get(_hasPromptedOnceKey) as bool?) ?? false;
-
-      if (!hasPromptedOnce) {
-        await _requestNativeReview();
-        await box.put(_hasPromptedOnceKey, true);
-        await box.put(_visitsSincePromptKey, 0);
-        return;
-      }
-
-      final visitsSincePrompt =
-          ((box.get(_visitsSincePromptKey) as int?) ?? 0) + 1;
-      await box.put(_visitsSincePromptKey, visitsSincePrompt);
-
-      if (visitsSincePrompt >= _visitsBeforeRepeatPrompt) {
-        await _requestNativeReview();
-        await box.put(_visitsSincePromptKey, 0);
+      final durable = await _secureStorage.read(key: _ratedKey);
+      if (durable == 'true') {
+        return true;
       }
     } catch (error, stackTrace) {
-      assert(() {
-        debugPrint(
-          'InAppReviewPromptService failed: $error\n$stackTrace',
-        );
-        return true;
-      }());
+      _debugLog('read secure rating flag failed: $error\n$stackTrace');
+    }
+    try {
+      final box = await _openBox();
+      return (box.get(_ratedKey) as bool?) ?? false;
+    } catch (error, stackTrace) {
+      _debugLog('read hive rating flag failed: $error\n$stackTrace');
+      return false;
     }
   }
 
-  Future<void> _requestNativeReview() async {
+  Future<void> _defaultWriteRatingCompleted() async {
     try {
-      if (await _isReviewAvailable()) {
-        await _requestReview();
-      }
+      await _secureStorage.write(key: _ratedKey, value: 'true');
     } catch (error, stackTrace) {
-      assert(() {
-        debugPrint('requestReview failed: $error\n$stackTrace');
-        return true;
-      }());
+      _debugLog('write secure rating flag failed: $error\n$stackTrace');
     }
+    try {
+      final box = await _openBox();
+      await box.put(_ratedKey, true);
+    } catch (error, stackTrace) {
+      _debugLog('write hive rating flag failed: $error\n$stackTrace');
+    }
+  }
+
+  static Future<void> _defaultOpenStoreListing() async {
+    final review = InAppReview.instance;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await review.openStoreListing(appStoreId: appStoreId);
+    } else {
+      await review.openStoreListing();
+    }
+  }
+
+  Future<bool> hasCompletedRating() => _readRatingCompleted();
+
+  Future<void> markRatingCompleted() => _writeRatingCompleted();
+
+  Future<void> openStoreListing() => _openStoreListing();
+
+  /// Returns true once, when Home should show the rating dialog.
+  Future<bool> claimHomePrompt({required int resumeCount}) async {
+    if (_offeredThisSession || _promptInFlight || resumeCount != 1) {
+      return false;
+    }
+    _promptInFlight = true;
+    if (await hasCompletedRating()) {
+      _offeredThisSession = true;
+      _promptInFlight = false;
+      return false;
+    }
+    _offeredThisSession = true;
+    return true;
+  }
+
+  void endPromptOffer() {
+    _promptInFlight = false;
+  }
+
+  void _debugLog(String message) {
+    assert(() {
+      debugPrint('InAppReviewPromptService: $message');
+      return true;
+    }());
   }
 }

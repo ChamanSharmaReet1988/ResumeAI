@@ -168,6 +168,8 @@ List<pw.Widget> _pwCompactProjectWidgets(
   bool atsGaramondBody = false,
   bool atsModernFlowGaramondBody = false,
   bool atsExecutiveGaramondBody = false,
+  bool atsCenterClassicGaramondBody = false,
+  bool atsProfessionalBlueGaramondBody = false,
 }) {
   final bullets = _projectBulletLinesPdf(item);
   final subtitleWeight = atsGaramondBody
@@ -199,6 +201,10 @@ List<pw.Widget> _pwCompactProjectWidgets(
             ? atsModernFlowBodyPdfTextStyle(garamond, bodyFontPt)
             : atsExecutiveGaramondBody
             ? atsExecutiveBodyPdfTextStyle(garamond, bodyFontPt)
+            : atsCenterClassicGaramondBody
+            ? atsCenterClassicBodyPdfTextStyle(garamond, bodyFontPt)
+            : atsProfessionalBlueGaramondBody
+            ? atsProfessionalBlueBodyPdfTextStyle(garamond, bodyFontPt)
             : atsGaramondBody
             ? atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
             : corporateBodyPdfTextStyle(garamond, bodyFontPt))
@@ -268,23 +274,20 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
   bool accentStripGaramondBody = false,
   bool atsModernFlowGaramondBody = false,
   bool atsExecutiveGaramondBody = false,
-  ArimoPdfFonts? arimo,
-  bool atsCenterClassicArimoBody = false,
-  bool atsProfessionalBlueArimoBody = false,
+  bool atsCenterClassicGaramondBody = false,
+  bool atsProfessionalBlueGaramondBody = false,
 }) {
-  final bodyStyle = arimo != null && bodyFontPt != null
-      ? atsCenterClassicArimoBody
-            ? atsCenterClassicBodyPdfTextStyle(arimo, bodyFontPt)
-            : atsProfessionalBlueArimoBody
-            ? atsProfessionalBlueBodyPdfTextStyle(arimo, bodyFontPt)
-            : atsCenterClassicBodyPdfTextStyle(arimo, bodyFontPt)
-      : garamond != null && bodyFontPt != null
+  final bodyStyle = garamond != null && bodyFontPt != null
       ? accentStripGaramondBody
             ? accentStripBodyPdfTextStyle(garamond, bodyFontPt)
             : atsModernFlowGaramondBody
             ? atsModernFlowBodyPdfTextStyle(garamond, bodyFontPt)
             : atsExecutiveGaramondBody
             ? atsExecutiveBodyPdfTextStyle(garamond, bodyFontPt)
+            : atsCenterClassicGaramondBody
+            ? atsCenterClassicBodyPdfTextStyle(garamond, bodyFontPt)
+            : atsProfessionalBlueGaramondBody
+            ? atsProfessionalBlueBodyPdfTextStyle(garamond, bodyFontPt)
             : atsStructuredBodyPdfTextStyle(garamond, bodyFontPt)
       : calibri != null && bodyFontPt != null
       ? nunitoBodyPdfTextStyle(calibri, bodyFontPt)
@@ -327,9 +330,13 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
             atsGaramondBody:
                 accentStripGaramondBody ||
                 atsModernFlowGaramondBody ||
-                atsExecutiveGaramondBody,
+                atsExecutiveGaramondBody ||
+                atsCenterClassicGaramondBody ||
+                atsProfessionalBlueGaramondBody,
             atsModernFlowGaramondBody: atsModernFlowGaramondBody,
             atsExecutiveGaramondBody: atsExecutiveGaramondBody,
+            atsCenterClassicGaramondBody: atsCenterClassicGaramondBody,
+            atsProfessionalBlueGaramondBody: atsProfessionalBlueGaramondBody,
           ),
       ];
   }
@@ -6819,30 +6826,20 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsCenterClassic) {
-      final arimo = await _ensureArimoPdfFonts();
-      final bodyPt = resume.effectiveBodyFontPt.toDouble();
-      final document = pw.Document(
-        theme: await resumePdfThemeForArimo(
-          arimo,
-          bodyFontPt: bodyPt,
-          bodyLineHeight: ResumeTypography.atsCenterClassicBodyLineHeight,
-        ),
-      );
-      _addAtsCenterClassicTemplatePage(document, resume, arimo: arimo);
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsCenterClassicTemplatePage(document, resume, garamond: garamond);
       return document.save();
     }
 
     if (resume.template == ResumeTemplate.atsProfessionalBlue) {
-      final arimo = await _ensureArimoPdfFonts();
-      final bodyPt = resume.effectiveBodyFontPt.toDouble();
-      final document = pw.Document(
-        theme: await resumePdfThemeForArimo(
-          arimo,
-          bodyFontPt: bodyPt,
-          bodyLineHeight: ResumeTypography.atsProfessionalBlueBodyLineHeight,
-        ),
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
+      _addAtsProfessionalBlueTemplatePage(
+        document,
+        resume,
+        garamond: garamond,
       );
-      _addAtsProfessionalBlueTemplatePage(document, resume, arimo: arimo);
       return document.save();
     }
 
@@ -7020,19 +7017,12 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsCenterClassic) {
-      final arimo = await _ensureArimoPdfFonts();
-      final bodyPt = resume.effectiveBodyFontPt.toDouble();
-      final document = pw.Document(
-        theme: await resumePdfThemeForArimo(
-          arimo,
-          bodyFontPt: bodyPt,
-          bodyLineHeight: ResumeTypography.atsCenterClassicBodyLineHeight,
-        ),
-      );
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
       _addAtsCenterClassicTemplatePage(
         document,
         resume,
-        arimo: arimo,
+        garamond: garamond,
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
         highlightedBulletsByExperience: highlightedBulletsByExperience,
@@ -7041,19 +7031,12 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsProfessionalBlue) {
-      final arimo = await _ensureArimoPdfFonts();
-      final bodyPt = resume.effectiveBodyFontPt.toDouble();
-      final document = pw.Document(
-        theme: await resumePdfThemeForArimo(
-          arimo,
-          bodyFontPt: bodyPt,
-          bodyLineHeight: ResumeTypography.atsProfessionalBlueBodyLineHeight,
-        ),
-      );
+      final garamond = await _ensureGaramondPdfFonts();
+      final document = pw.Document();
       _addAtsProfessionalBlueTemplatePage(
         document,
         resume,
-        arimo: arimo,
+        garamond: garamond,
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
         highlightedBulletsByExperience: highlightedBulletsByExperience,

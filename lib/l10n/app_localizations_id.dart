@@ -72,6 +72,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get rateApp => 'Nilai aplikasi';
 
   @override
+  String get ratePromptTitle => 'Suka ResumeAI?';
+
+  @override
+  String get ratePromptBody =>
+      'Jika aplikasi ini membantu, penilaian singkat sangat berarti bagi kami.';
+
+  @override
+  String get maybeLater => 'Nanti saja';
+
+  @override
   String get shareApp => 'Bagikan aplikasi';
 
   @override

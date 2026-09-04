@@ -72,6 +72,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rateApp => 'Valorar la app';
 
   @override
+  String get ratePromptTitle => '¿Te gusta ResumeAI?';
+
+  @override
+  String get ratePromptBody =>
+      'Si la app te está ayudando, una valoración rápida nos ayuda mucho.';
+
+  @override
+  String get maybeLater => 'Ahora no';
+
+  @override
   String get shareApp => 'Compartir la app';
 
   @override

@@ -228,6 +228,24 @@ abstract class AppLocalizations {
   /// **'Rate App'**
   String get rateApp;
 
+  /// No description provided for @ratePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying ResumeAI?'**
+  String get ratePromptTitle;
+
+  /// No description provided for @ratePromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If this app is helping you, a quick rating would mean a lot.'**
+  String get ratePromptBody;
+
+  /// No description provided for @maybeLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get maybeLater;
+
   /// No description provided for @shareApp.
   ///
   /// In en, this message translates to:

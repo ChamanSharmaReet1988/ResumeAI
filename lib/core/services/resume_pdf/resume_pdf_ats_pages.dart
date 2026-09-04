@@ -2042,7 +2042,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   void _addAtsCenterClassicTemplatePage(
     pw.Document document,
     ResumeData resume, {
-    required ArimoPdfFonts arimo,
+    required GaramondPdfFonts garamond,
     bool highlightSummary = false,
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
@@ -2050,41 +2050,41 @@ extension _ResumePdfAtsPages on ResumePdfService {
     final accent = _pdfRgb(resume.atsCenterClassicAccentColor);
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final bodyStyle = atsCenterClassicBodyPdfTextStyle(arimo, bodyPt);
-    final contactStyle = arimoPdfTextStyle(
-      arimo,
+    final bodyStyle = atsCenterClassicBodyPdfTextStyle(garamond, bodyPt);
+    final contactStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredContactWeight,
       fontSize: bodyPt,
       color: PdfColors.black,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
     );
-    final taglineStyle = arimoPdfTextStyle(
-      arimo,
+    final taglineStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
       color: PdfColors.black,
     );
-    final sectionTitleStyle = arimoPdfTextStyle(
-      arimo,
+    final sectionTitleStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredTitleWeight,
       fontSize: ResumeTypography.atsStructuredSectionTitlePt,
       color: PdfColors.black,
     );
-    final sectionSubtitleStyle = arimoPdfTextStyle(
-      arimo,
+    final sectionSubtitleStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
       color: accent,
     );
-    final highlightStyle = arimoPdfTextStyle(
-      arimo,
+    final highlightStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
       color: accent,
       fontStyle: pw.FontStyle.italic,
     );
-    final nameStyle = arimoPdfTextStyle(
-      arimo,
+    final nameStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredNameWeight,
       fontSize: ResumeTypography.atsStructuredNamePt,
       color: PdfColors.black,
@@ -2164,9 +2164,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   out.addAll(
                     _pwCustomSectionBodyWidgets(
                       section,
-                      arimo: arimo,
+                      garamond: garamond,
                       bodyFontPt: bodyPt,
-                      atsCenterClassicArimoBody: true,
+                      atsCenterClassicGaramondBody: true,
                     ),
                   );
                   out.add(
@@ -2357,7 +2357,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
   void _addAtsProfessionalBlueTemplatePage(
     pw.Document document,
     ResumeData resume, {
-    required ArimoPdfFonts arimo,
+    required GaramondPdfFonts garamond,
     bool highlightSummary = false,
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
@@ -2365,40 +2365,40 @@ extension _ResumePdfAtsPages on ResumePdfService {
     final accent = _pdfRgb(resume.atsProfessionalBlueAccentColor);
     final highlightColor = _atsHighlightColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final bodyStyle = atsProfessionalBlueBodyPdfTextStyle(arimo, bodyPt);
-    final contactStyle = arimoPdfTextStyle(
-      arimo,
+    final bodyStyle = atsProfessionalBlueBodyPdfTextStyle(garamond, bodyPt);
+    final contactStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredContactWeight,
       fontSize: bodyPt,
       color: accent,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
     );
-    final sectionTitleStyle = arimoPdfTextStyle(
-      arimo,
+    final sectionTitleStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredTitleWeight,
       fontSize: ResumeTypography.atsStructuredSectionTitlePt,
       color: accent,
     );
-    final subtitleStyle = arimoPdfTextStyle(
-      arimo,
+    final subtitleStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredSubtitleWeight,
       fontSize: ResumeTypography.atsStructuredSubtitlePt,
       color: accent,
     );
-    final nameStyle = arimoPdfTextStyle(
-      arimo,
+    final nameStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredNameWeight,
       fontSize: ResumeTypography.atsStructuredNamePt,
       color: accent,
     );
-    final jobStyle = arimoPdfTextStyle(
-      arimo,
+    final jobStyle = garamondPdfTextStyle(
+      garamond,
       ResumeTypography.atsStructuredTitleWeight,
       fontSize: ResumeTypography.atsStructuredJobTitlePt,
       color: accent,
     );
     final skillsBodyStyle = atsProfessionalBlueBodyPdfTextStyle(
-      arimo,
+      garamond,
       _atsPdfSkillsBodyPt(bodyPt),
     );
     final name = _displayName(resume);
@@ -2501,9 +2501,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   out.addAll(
                     _pwCustomSectionBodyWidgets(
                       section,
-                      arimo: arimo,
+                      garamond: garamond,
                       bodyFontPt: bodyPt,
-                      atsProfessionalBlueArimoBody: true,
+                      atsProfessionalBlueGaramondBody: true,
                     ),
                   );
                   return out;

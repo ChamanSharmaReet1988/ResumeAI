@@ -10,6 +10,7 @@ import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
 import '../../core/services/android_ads_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
+import '../../core/services/premium_access.dart';
 import '../../core/services/resume_services.dart';
 import '../ai/ai_assistance_screen.dart';
 import '../builder/resume_builder_screen.dart';
@@ -18,6 +19,8 @@ import '../cover_letters/cover_letter_content_screen.dart';
 import '../cover_letters/cover_letter_editor_screen.dart';
 import '../cover_letters/cover_letter_preview_screen.dart';
 import '../home/home_screen.dart';
+import '../home/rate_app_prompt_dialog.dart';
+import '../premium/premium_gate.dart';
 import '../settings/settings_screen.dart';
 import '../shared/view_models.dart';
 import '../templates/templates_screen.dart';
@@ -33,21 +36,89 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
   HomeSegment _homeSegment = HomeSegment.resumes;
+  ResumeLibraryViewModel? _resumeLibrary;
 
   bool get _isCupertino =>
       Platform.isIOS || Theme.of(context).platform == TargetPlatform.iOS;
 
-  void _selectTab(int index) {
+  static const int _aiResumeTabIndex = 2;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final library = context.read<ResumeLibraryViewModel>();
+    if (!identical(_resumeLibrary, library)) {
+      _resumeLibrary?.removeListener(_onResumeLibraryChanged);
+      _resumeLibrary = library;
+      _resumeLibrary!.addListener(_onResumeLibraryChanged);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _maybePromptHomeReview();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _resumeLibrary?.removeListener(_onResumeLibraryChanged);
+    super.dispose();
+  }
+
+  void _onResumeLibraryChanged() {
+    _maybePromptHomeReview();
+  }
+
+  Future<void> _maybePromptHomeReview() async {
+    if (!mounted || _currentIndex != 0) {
+      return;
+    }
+    final library = _resumeLibrary;
+    if (library == null || library.isLoading) {
+      return;
+    }
+
+    final review = context.read<InAppReviewPromptService>();
+    if (!await review.claimHomePrompt(resumeCount: library.resumes.length)) {
+      return;
+    }
+    if (!mounted) {
+      review.endPromptOffer();
+      return;
+    }
+
+    try {
+      final wantsToRate = await showRateAppPromptDialog(context);
+      if (wantsToRate) {
+        await review.markRatingCompleted();
+        try {
+          await review.openStoreListing();
+        } catch (_) {}
+      }
+    } finally {
+      review.endPromptOffer();
+    }
+  }
+
+  Future<void> _selectTab(int index) async {
     if (index == _currentIndex) {
       return;
     }
 
+    // iOS: AI Resume is Pro — open Go Premium instead of the tab when locked.
+    if (index == _aiResumeTabIndex &&
+        PremiumAccess.atsAiCreateRequiresPremium) {
+      final allowed = await ensurePremiumForAtsAiCreate(context);
+      if (!allowed || !mounted) {
+        return;
+      }
+    }
+
     setState(() => _currentIndex = index);
 
+    if (index == 0) {
+      _maybePromptHomeReview();
+    }
+
     if (index == InAppReviewPromptService.templatesTabIndex) {
-      // Fire-and-forget; review APIs are OS-gated and must not block navigation.
-      context.read<InAppReviewPromptService>().handleTemplatesTabSelected();
-      // Android full-screen ad when opening Templates.
       AndroidAdsService.showInterstitialIfReady();
     }
   }

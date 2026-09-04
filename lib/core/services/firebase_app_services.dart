@@ -47,21 +47,22 @@ class FirebaseAppServices {
 
       unawaited(_warmRemoteConfig(remoteConfig));
 
-      // Collect crashes/analytics in profile + release; keep debug quiet.
+      // Collect crashes in profile + release; keep debug quiet.
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
         !kDebugMode,
       );
       _installCrashlyticsHandlers();
 
+      // Analytics only in production (release) builds — not debug or profile.
       final analytics = FirebaseAnalytics.instance;
-      await analytics.setAnalyticsCollectionEnabled(!kDebugMode);
+      await analytics.setAnalyticsCollectionEnabled(kReleaseMode);
 
       return FirebaseAppServices._(
         isEnabled: true,
-        analytics: kDebugMode ? null : analytics,
-        analyticsObserver: kDebugMode
-            ? null
-            : FirebaseAnalyticsObserver(analytics: analytics),
+        analytics: kReleaseMode ? analytics : null,
+        analyticsObserver: kReleaseMode
+            ? FirebaseAnalyticsObserver(analytics: analytics)
+            : null,
         remoteConfig: remoteConfig,
       );
     } catch (error, stackTrace) {

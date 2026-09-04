@@ -90,6 +90,18 @@ const availableResumeTemplates = <ResumeTemplate>[
 extension ResumeTemplateX on ResumeTemplate {
   ResumeTemplate get userFacingTemplate => this;
 
+  /// ATS layouts keep black type on the template gallery; color is chosen in preview.
+  bool get isAtsTemplate => switch (userFacingTemplate) {
+    ResumeTemplate.atsStructured ||
+    ResumeTemplate.atsSerifRules ||
+    ResumeTemplate.atsModernFlow ||
+    ResumeTemplate.atsExecutive ||
+    ResumeTemplate.atsCenterClassic ||
+    ResumeTemplate.atsProfessionalBlue ||
+    ResumeTemplate.atsLatexClassic => true,
+    _ => false,
+  };
+
   String get label => switch (userFacingTemplate) {
     ResumeTemplate.corporate => 'Corporate',
     ResumeTemplate.creative => 'Profile Sidebar',
@@ -125,7 +137,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsExecutive =>
       'Strong uppercase headings and scannable two-column skills.',
     ResumeTemplate.atsCenterClassic =>
-      'Centered Arial header with ruled sections and inline skills.',
+      'Centered Garamond header with ruled sections and inline skills.',
     ResumeTemplate.atsProfessionalBlue =>
       'Blue accent headings, right-aligned contact, and three-column skills.',
     ResumeTemplate.atsLatexClassic =>
@@ -138,13 +150,13 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.classicSidebar => const Color(0xFF344054),
     ResumeTemplate.detailsSidebar => const Color(0xFF344054),
     ResumeTemplate.accentStrip => const Color(0xFFF4552F),
-    ResumeTemplate.atsStructured => const Color(0xFF374151),
-    ResumeTemplate.atsSerifRules => const Color(0xFF374151),
-    ResumeTemplate.atsModernFlow => const Color(0xFF2563EB),
-    ResumeTemplate.atsExecutive => const Color(0xFF1F2937),
-    ResumeTemplate.atsCenterClassic => const Color(0xFF374151),
-    ResumeTemplate.atsProfessionalBlue => const Color(0xFF4A90C4),
-    ResumeTemplate.atsLatexClassic => const Color(0xFF111827),
+    ResumeTemplate.atsStructured => const Color(0xFF000000),
+    ResumeTemplate.atsSerifRules => const Color(0xFF000000),
+    ResumeTemplate.atsModernFlow => const Color(0xFF000000),
+    ResumeTemplate.atsExecutive => const Color(0xFF000000),
+    ResumeTemplate.atsCenterClassic => const Color(0xFF000000),
+    ResumeTemplate.atsProfessionalBlue => const Color(0xFF000000),
+    ResumeTemplate.atsLatexClassic => const Color(0xFF000000),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -173,8 +185,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsSerifRules => 'Garamond · rules ATS',
     ResumeTemplate.atsModernFlow => 'Garamond · flow ATS',
     ResumeTemplate.atsExecutive => 'Garamond · executive ATS',
-    ResumeTemplate.atsCenterClassic => 'Arial · center ATS',
-    ResumeTemplate.atsProfessionalBlue => 'Arial · blue ATS',
+    ResumeTemplate.atsCenterClassic => 'Garamond · center ATS',
+    ResumeTemplate.atsProfessionalBlue => 'Garamond · blue ATS',
     ResumeTemplate.atsLatexClassic => 'Garamond · LaTeX ATS',
   };
 }

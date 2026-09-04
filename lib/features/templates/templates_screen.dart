@@ -1044,6 +1044,14 @@ ResumeData _applyTemplatePreviewPalette(
       ),
     );
   }
+  // ATS gallery art stays black; preview color is chosen on the preview screen.
+  if (sample.template.isAtsTemplate) {
+    return sample.copyWith(
+      corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+        sample.template,
+      ),
+    );
+  }
   if (paletteSeed == null) {
     return sample;
   }
@@ -2522,7 +2530,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
   }
 
   Widget _atsGrayBandLabel(String title) {
-    final accent = resume.atsAccentColor;
+    const accent = ResumeTypography.atsStructuredBodyTextColor;
     final band = resume.atsStructuredSectionBandColor;
     return Padding(
       padding: const EdgeInsets.only(top: 5),
@@ -2796,7 +2804,7 @@ class _AtsSerifRulesTemplateArt extends StatelessWidget {
     final sectionTitleStyle = _garamond(
       fontSize: _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
-    ).copyWith(color: resume.atsAccentColor);
+    );
     final subtitleStyle = _garamond(
       fontSize: _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
@@ -3135,7 +3143,7 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
       height: ResumeTypography.textLineHeight,
-    ).copyWith(color: resume.atsAccentColor);
+    );
     final skillsBody = _garamondBody(_scaledPt(math.max(9.0, bodyPt - 1.35)));
     final contactLines = resume.atsStructuredHeaderContactLines();
     final edu = resume.visibleEducation;
@@ -3438,7 +3446,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
       height: ResumeTypography.textLineHeight,
-    ).copyWith(color: resume.atsAccentColor);
+    );
     final skillsBody = _garamondBody(_scaledPt(math.max(9.0, bodyPt - 1.35)));
     final works = resume.visibleWorkExperiences;
     final edu = resume.visibleEducation;
@@ -3725,13 +3733,13 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
 
   static double _scaledPt(double pt) => pt * _layoutScale;
 
-  TextStyle _arialBody(
+  TextStyle _garamondBody(
     double fontSize, {
     int weight = ResumeTypography.atsStructuredBodyWeight,
     double? height,
     Color? color,
     FontStyle fontStyle = FontStyle.normal,
-  }) => ResumeTypography.arialPreviewStyle(
+  }) => ResumeTypography.garamondPreviewStyle(
     weight: weight,
     fontSize: fontSize,
     color: color ?? ResumeTypography.atsStructuredBodyTextColor,
@@ -3741,33 +3749,33 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = resume.atsAccentColor;
+    const accent = ResumeTypography.atsStructuredBodyTextColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final body = _arialBody(_scaledPt(bodyPt));
-    final contactStyle = _arialBody(
+    final body = _garamondBody(_scaledPt(bodyPt));
+    final contactStyle = _garamondBody(
       _scaledPt(bodyPt),
       weight: ResumeTypography.atsStructuredContactWeight,
       height: ResumeTypography.textLineHeight,
     );
-    final taglineStyle = _arialBody(
+    final taglineStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       height: ResumeTypography.textLineHeight,
     );
-    final sectionSubtitleStyle = _arialBody(
+    final sectionSubtitleStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       color: accent,
       height: ResumeTypography.textLineHeight,
     );
-    final highlightStyle = _arialBody(
+    final highlightStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       color: accent,
       height: ResumeTypography.textLineHeight,
       fontStyle: FontStyle.italic,
     );
-    final sectionTitleStyle = _arialBody(
+    final sectionTitleStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
       height: ResumeTypography.textLineHeight,
@@ -3807,7 +3815,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
           Text(
             resume.fullName.trim(),
             textAlign: TextAlign.center,
-            style: _arialBody(
+            style: _garamondBody(
               _scaledPt(ResumeTypography.atsStructuredNamePt),
               weight: ResumeTypography.atsStructuredNameWeight,
               height: ResumeTypography.textLineHeight,
@@ -4006,12 +4014,12 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
 
   static double _scaledPt(double pt) => pt * _layoutScale;
 
-  TextStyle _arialBody(
+  TextStyle _garamondBody(
     double fontSize, {
     int weight = ResumeTypography.atsStructuredBodyWeight,
     double? height,
     Color? color,
-  }) => ResumeTypography.arialPreviewStyle(
+  }) => ResumeTypography.garamondPreviewStyle(
     weight: weight,
     fontSize: fontSize,
     color: color ?? ResumeTypography.atsStructuredBodyTextColor,
@@ -4020,22 +4028,22 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = resume.atsAccentColor;
+    const accent = ResumeTypography.atsStructuredBodyTextColor;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final body = _arialBody(_scaledPt(bodyPt));
-    final contactStyle = _arialBody(
+    final body = _garamondBody(_scaledPt(bodyPt));
+    final contactStyle = _garamondBody(
       _scaledPt(bodyPt),
       weight: ResumeTypography.atsStructuredContactWeight,
       color: accent,
       height: ResumeTypography.textLineHeight,
     );
-    final subtitleStyle = _arialBody(
+    final subtitleStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSubtitlePt),
       weight: ResumeTypography.atsStructuredSubtitleWeight,
       color: accent,
       height: ResumeTypography.textLineHeight,
     );
-    final sectionTitleStyle = _arialBody(
+    final sectionTitleStyle = _garamondBody(
       _scaledPt(ResumeTypography.atsStructuredSectionTitlePt),
       weight: ResumeTypography.atsStructuredTitleWeight,
       color: accent,
@@ -4090,7 +4098,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                   children: [
                     Text(
                       resume.fullName.trim(),
-                      style: _arialBody(
+                      style: _garamondBody(
                         _scaledPt(ResumeTypography.atsStructuredNamePt),
                         weight: ResumeTypography.atsStructuredNameWeight,
                         color: accent,
@@ -4103,7 +4111,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         resume.jobTitle.trim(),
-                        style: _arialBody(
+                        style: _garamondBody(
                           _scaledPt(ResumeTypography.atsStructuredJobTitlePt),
                           weight: ResumeTypography.atsStructuredTitleWeight,
                           color: accent,
@@ -4239,7 +4247,7 @@ class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
                                   Expanded(
                                     child: Text(
                                       columns[c][r],
-                                      style: _arialBody(
+                                      style: _garamondBody(
                                         _scaledPt(math.max(9.0, bodyPt - 1.35)),
                                       ),
                                       maxLines: 2,
