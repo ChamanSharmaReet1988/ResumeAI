@@ -19,6 +19,7 @@ import '../resume_font_weight.dart';
 import '../resume_text_font.dart';
 import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
+import 'platform_monetization.dart';
 import 'profile_image_storage.dart';
 import 'resume_docx_exporter.dart';
 import 'resume_pdf/arimo_pdf_fonts.dart';
@@ -1982,12 +1983,14 @@ class ResumeRepository {
   }
 
   bool get _canUseICloudBackup =>
-      (_hasPremiumAccess?.call() ?? false) &&
-      (_appPreferences?.isPremium ?? false);
+      PlatformMonetization.isAndroidAdsModel ||
+      ((_hasPremiumAccess?.call() ?? false) &&
+          (_appPreferences?.isPremium ?? false));
 
   bool get _canUseGoogleDriveBackup =>
-      (_hasPremiumAccess?.call() ?? false) &&
-      (_appPreferences?.isPremium ?? false);
+      PlatformMonetization.isAndroidAdsModel ||
+      ((_hasPremiumAccess?.call() ?? false) &&
+          (_appPreferences?.isPremium ?? false));
 
   void configureGoogleDriveAutoSync({
     required AppPreferences appPreferences,

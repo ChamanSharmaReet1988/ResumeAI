@@ -8,11 +8,13 @@ import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 
 import 'app/app.dart';
 import 'core/config/google_sign_in_config.dart';
+import 'core/services/android_ads_service.dart';
 import 'core/services/app_preferences.dart';
 import 'core/services/premium_purchase_service.dart';
 import 'core/services/firebase_app_services.dart';
 import 'core/services/google_drive_resume_service.dart';
 import 'core/services/icloud_resume_service.dart';
+import 'core/services/platform_monetization.dart';
 import 'core/services/resume_services.dart';
 
 Future<void> main() async {
@@ -45,18 +47,25 @@ Future<void> main() async {
     }
     final premiumPurchaseService = PremiumPurchaseService(
       appPreferences: appPreferences,
+      // Android is ads + free; IAP only on iOS.
+      enableStore: PlatformMonetization.isIapEnabled,
     );
     repository.configureGoogleDriveAutoSync(
       appPreferences: appPreferences,
       service: googleDriveResumeService,
-      hasPremium: () => premiumPurchaseService.isPremium,
+      hasPremium: () =>
+          PlatformMonetization.isAndroidAdsModel ||
+          premiumPurchaseService.isPremium,
     );
     repository.configureICloudAutoSync(
       appPreferences: appPreferences,
       service: const MethodChannelICloudResumeService(),
-      hasPremium: () => premiumPurchaseService.isPremium,
+      hasPremium: () =>
+          PlatformMonetization.isAndroidAdsModel ||
+          premiumPurchaseService.isPremium,
     );
     await premiumPurchaseService.initialize();
+    await AndroidAdsService.initialize();
 
     final firebaseServices = await FirebaseAppServices.initialize();
     if (!firebaseServices.isEnabled && kDebugMode) {

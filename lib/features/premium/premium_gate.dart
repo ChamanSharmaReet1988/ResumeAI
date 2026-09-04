@@ -5,16 +5,23 @@ import 'package:provider/provider.dart';
 import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/models/resume_models.dart';
+import '../../core/services/platform_monetization.dart';
 import '../../core/services/premium_access.dart';
 import '../../core/services/premium_purchase_service.dart';
 import 'go_premium_screen.dart';
 import 'premium_welcome_dialog.dart';
 
 bool hasPremiumAccess(BuildContext context) {
+  if (!PlatformMonetization.isIapEnabled) {
+    return true;
+  }
   return context.watch<PremiumPurchaseService>().isPremium;
 }
 
 bool readPremiumAccess(BuildContext context) {
+  if (!PlatformMonetization.isIapEnabled) {
+    return true;
+  }
   return context.read<PremiumPurchaseService>().isPremium;
 }
 
@@ -32,6 +39,9 @@ bool coverLetterTemplateRequiresPremium(CoverLetterTemplate template) {
 
 /// Returns `true` when the user already has Premium or completes a purchase.
 Future<bool> ensurePremiumAccess(BuildContext context) async {
+  if (!PlatformMonetization.isIapEnabled) {
+    return true;
+  }
   if (readPremiumAccess(context)) {
     return true;
   }

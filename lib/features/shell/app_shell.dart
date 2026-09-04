@@ -8,6 +8,7 @@ import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/android_ads_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/resume_services.dart';
 import '../ai/ai_assistance_screen.dart';
@@ -46,6 +47,8 @@ class _AppShellState extends State<AppShell> {
     if (index == InAppReviewPromptService.templatesTabIndex) {
       // Fire-and-forget; review APIs are OS-gated and must not block navigation.
       context.read<InAppReviewPromptService>().handleTemplatesTabSelected();
+      // Android full-screen ad when opening Templates.
+      AndroidAdsService.showInterstitialIfReady();
     }
   }
 
@@ -176,6 +179,10 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _openPreview({required ResumeData seed}) async {
+    await AndroidAdsService.showInterstitialIfReady();
+    if (!mounted) {
+      return;
+    }
     final repository = context.read<ResumeRepository>();
     final aiService = context.read<LocalAiResumeService>();
     final pdfService = context.read<ResumePdfService>();

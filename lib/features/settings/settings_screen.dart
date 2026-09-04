@@ -17,6 +17,7 @@ import '../premium/premium_gate.dart';
 import '../shared/view_models.dart';
 import '../../core/app_locale_option.dart';
 import '../../core/services/firebase_app_services.dart';
+import '../../core/services/platform_monetization.dart';
 import '../../core/services/premium_purchase_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -305,7 +306,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final backupIcon = isIos
             ? Icons.cloud_done_outlined
             : Icons.cloud_queue_outlined;
-        final showBackupPremiumIcon = !premium.hasConfirmedPremiumStatus;
+        final showBackupPremiumIcon =
+            PlatformMonetization.isIapEnabled &&
+            !premium.hasConfirmedPremiumStatus;
         final rowLabelStyle = theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w400,
         );
@@ -535,55 +538,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Card(
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: _isCheckingPremiumStatus
-                                  ? null
-                                  : () => _openGoPremium(context),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 14,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.workspace_premium_outlined,
-                                      size: 22,
-                                      color: colorScheme.primary,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        premium.hasConfirmedPremiumStatus
-                                            ? l10n.youAreProUser
-                                            : l10n.goPremium,
-                                        style: rowLabelStyle,
-                                      ),
-                                    ),
-                                    if (!_isCheckingPremiumStatus) ...[
-                                      if (premium
-                                          .hasConfirmedPremiumStatus) ...[
-                                        const Icon(
-                                          Icons.workspace_premium_rounded,
-                                          size: 18,
-                                          color: Color(0xFFC98910),
-                                        ),
-                                        const SizedBox(width: 10),
-                                      ],
+                          if (PlatformMonetization.isIapEnabled) ...[
+                            Card(
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: _isCheckingPremiumStatus
+                                    ? null
+                                    : () => _openGoPremium(context),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 14,
+                                  ),
+                                  child: Row(
+                                    children: [
                                       Icon(
-                                        Icons.arrow_forward_ios_rounded,
-                                        size: 16,
+                                        Icons.workspace_premium_outlined,
+                                        size: 22,
                                         color: colorScheme.primary,
                                       ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          premium.hasConfirmedPremiumStatus
+                                              ? l10n.youAreProUser
+                                              : l10n.goPremium,
+                                          style: rowLabelStyle,
+                                        ),
+                                      ),
+                                      if (!_isCheckingPremiumStatus) ...[
+                                        if (premium
+                                            .hasConfirmedPremiumStatus) ...[
+                                          const Icon(
+                                            Icons.workspace_premium_rounded,
+                                            size: 18,
+                                            color: Color(0xFFC98910),
+                                          ),
+                                          const SizedBox(width: 10),
+                                        ],
+                                        Icon(
+                                          Icons.arrow_forward_ios_rounded,
+                                          size: 16,
+                                          color: colorScheme.primary,
+                                        ),
+                                      ],
                                     ],
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
+                            const SizedBox(height: 12),
+                          ],
                           Card(
                             child: InkWell(
                               borderRadius: BorderRadius.circular(12),
