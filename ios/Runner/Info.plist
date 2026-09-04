@@ -39,6 +39,9 @@
 	<string>48903946368-qbqg3as76gkf99cbbi4b59ji8474tnso.apps.googleusercontent.com</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Off by default so debug/profile do not collect. Enabled in release from Dart. -->
+	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+	<false/>
 	<!-- Required by google_mobile_ads iOS plugin; ads are Android-only in this app. -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3940256099942544~1458002511</string>

@@ -2156,6 +2156,70 @@ ResumeTypography.darkHeaderSubtitleWeight,
       );
     }
 
+    // One visual line of a bullet. [marker] draws the bullet glyph; when it is
+    // false the glyph is still laid out but painted transparent, so wrapped and
+    // hard-broken lines keep the exact same indent as the first line.
+    pw.Widget bulletLine(String text, {bool marker = true, double bottom = 3}) {
+      return pw.Padding(
+        padding: pw.EdgeInsets.only(bottom: bottom),
+        child: pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Opacity(
+              opacity: marker ? 1 : 0,
+              child: pw.Text('•  ', style: bodyStyle),
+            ),
+            pw.Expanded(child: pw.Text(text, style: bodyStyle)),
+          ],
+        ),
+      );
+    }
+
+    // Bullet text can carry hard line breaks. Rendered as a single widget that
+    // block is indivisible, so MultiPage moves the whole thing to the next page
+    // and can leave the project title stranded at the foot of this one. Emit one
+    // widget per hard line so a page break can fall inside the bullet instead.
+    List<pw.Widget> bulletLines(String text) {
+      final segments = text.split('\n');
+      return [
+        for (var i = 0; i < segments.length; i++)
+          bulletLine(
+            segments[i],
+            marker: i == 0,
+            bottom: i == segments.length - 1
+                ? 3
+                // Stacked Text widgets lose the style's lineSpacing that the
+                // single multi-line Text applied between its lines; add it
+                // back so split lines keep the original rhythm.
+                : ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+          ),
+      ];
+    }
+
+    List<pw.Widget> projectWidgets(ProjectItem item) {
+      final title = pw.Text(item.title.ifEmpty('Project'), style: jobLineStyle);
+      final lines = [
+        for (final bullet in _projectBulletLinesPdf(item)) ...bulletLines(bullet),
+      ];
+      if (lines.isEmpty) {
+        // No body: don't reserve the title-to-bullets gap, which would
+        // otherwise leave an empty band under the title.
+        return [railWrap(title), railWrap(pw.SizedBox(height: 10))];
+      }
+      return [
+        // The title travels with its first line so a project heading can never
+        // be the last thing on a page.
+        railWrap(
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [title, pw.SizedBox(height: 4), lines.first],
+          ),
+        ),
+        for (final line in lines.skip(1)) railWrap(line),
+        railWrap(pw.SizedBox(height: 10)),
+      ];
+    }
+
     document.addPage(
       pw.MultiPage(
         pageTheme: _headerSidebarPageTheme(
@@ -2357,18 +2421,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   return [
                     railWrap(pw.SizedBox(height: 8)),
                     railWrap(sectionTitle('Projects')),
-                    for (final item in projects) ...[
-                      railWrap(
-                        pw.Text(
-                          item.title.ifEmpty('Project'),
-                          style: jobLineStyle,
-                        ),
-                      ),
-                      railWrap(pw.SizedBox(height: 4)),
-                      for (final bullet in _projectBulletLinesPdf(item))
-                        railWrap(bulletRow(bullet)),
-                      railWrap(pw.SizedBox(height: 10)),
-                    ],
+                    for (final item in projects) ...projectWidgets(item),
                   ];
                 default:
                   return null;

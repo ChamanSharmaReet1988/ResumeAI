@@ -34,6 +34,11 @@ class FirebaseAppServices {
         await Firebase.initializeApp();
       }
 
+      // Native Analytics starts on Firebase init unless the manifests disable
+      // it. Keep collection off until a production release build.
+      final analytics = FirebaseAnalytics.instance;
+      await analytics.setAnalyticsCollectionEnabled(kReleaseMode);
+
       final remoteConfig = FirebaseRemoteConfig.instance;
       await remoteConfig.setDefaults(_defaultRemoteConfigValues);
       await remoteConfig.setConfigSettings(
@@ -52,10 +57,6 @@ class FirebaseAppServices {
         !kDebugMode,
       );
       _installCrashlyticsHandlers();
-
-      // Analytics only in production (release) builds — not debug or profile.
-      final analytics = FirebaseAnalytics.instance;
-      await analytics.setAnalyticsCollectionEnabled(kReleaseMode);
 
       return FirebaseAppServices._(
         isEnabled: true,
