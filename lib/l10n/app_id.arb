@@ -296,6 +296,8 @@
   "templateClassicSidebarCaption": "Rel kiri lembut dengan identitas berfoto dan bagian terstruktur.",
   "templateAccentStrip": "Garis aksen",
   "templateAccentStripCaption": "Garis kiri tegas dengan nama besar dan bagian yang rapi.",
+  "templateHeaderSidebar": "Bilah sisi header",
+  "templateHeaderSidebarCaption": "Nama berfoto dengan rel biru laut untuk detail dan keterampilan.",
   "templateStructuredAts": "ATS terstruktur",
   "templateStructuredAtsCaption": "Pita bagian abu-abu dan header terpusat untuk parser.",
   "templateLatexClassicAts": "ATS klasik LaTeX",

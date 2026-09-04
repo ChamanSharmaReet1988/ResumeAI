@@ -560,6 +560,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Garis kiri tegas dengan nama besar dan bagian yang rapi.';
 
   @override
+  String get templateHeaderSidebar => 'Bilah sisi header';
+
+  @override
+  String get templateHeaderSidebarCaption =>
+      'Nama berfoto dengan rel biru laut untuk detail dan keterampilan.';
+
+  @override
   String get templateStructuredAts => 'ATS terstruktur';
 
   @override

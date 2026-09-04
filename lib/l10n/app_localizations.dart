@@ -1062,6 +1062,18 @@ abstract class AppLocalizations {
   /// **'Bold left stripe with an oversized nameplate and clean sections.'**
   String get templateAccentStripCaption;
 
+  /// No description provided for @templateHeaderSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Header Sidebar'**
+  String get templateHeaderSidebar;
+
+  /// No description provided for @templateHeaderSidebarCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo-led nameplate with a navy details rail and skill bars.'**
+  String get templateHeaderSidebarCaption;
+
   /// No description provided for @templateStructuredAts.
   ///
   /// In en, this message translates to:

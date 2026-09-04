@@ -560,6 +560,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Bold left stripe with an oversized nameplate and clean sections.';
 
   @override
+  String get templateHeaderSidebar => 'Header Sidebar';
+
+  @override
+  String get templateHeaderSidebarCaption =>
+      'Photo-led nameplate with a navy details rail and skill bars.';
+
+  @override
   String get templateStructuredAts => 'Structured ATS';
 
   @override

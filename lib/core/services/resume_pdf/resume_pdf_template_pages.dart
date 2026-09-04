@@ -2068,4 +2068,281 @@ ResumeTypography.darkHeaderSubtitleWeight,
       ),
     );
   }
+
+  void _addHeaderSidebarTemplatePage(
+    pw.Document document,
+    ResumeData resume, {
+    required InterPdfFonts inter,
+    pw.MemoryImage? profileImage,
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) {
+    final titleColor = _headerSidebarTitleColorPdf(resume);
+    final mutedColor = _headerSidebarMutedColorPdf(resume);
+    final onRail = _headerSidebarOnRailColorPdf(resume);
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final bodyStyle = interPdfTextStyle(
+      inter,
+      ResumeFontWeight.w400,
+      fontSize: bodyPt,
+      color: titleColor,
+      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+    );
+    final sectionTitleStyle = interPdfTextStyle(
+      inter,
+      ResumeFontWeight.w700,
+      fontSize: 13,
+      color: titleColor,
+    );
+    final nameStyle = interPdfTextStyle(
+      inter,
+      ResumeFontWeight.w800,
+      fontSize: 22,
+      color: titleColor,
+    );
+    final jobTitleStyle = interPdfTextStyle(
+      inter,
+      ResumeFontWeight.w500,
+      fontSize: 10,
+      color: mutedColor,
+      lineSpacing: 1,
+    );
+    final jobLineStyle = interPdfTextStyle(
+      inter,
+      ResumeFontWeight.w700,
+      fontSize: bodyPt,
+      color: titleColor,
+    );
+    final dateStyle = interPdfTextStyle(
+      inter,
+      ResumeFontWeight.w400,
+      fontSize: bodyPt - 1,
+      color: mutedColor,
+    );
+    final experiences = resume.visibleWorkExperiences;
+    final education = resume.visibleEducation;
+    final projects = resume.visibleProjects;
+    final customSections = resume.visibleCustomSections;
+
+    pw.Widget sectionTitle(String title) => pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 8),
+      child: pw.Text(title, style: sectionTitleStyle),
+    );
+
+    pw.Widget bulletRow(String text, {bool highlight = false}) {
+      return _headerSidebarMaybeHighlight(
+        highlight: highlight,
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 3),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('•  ', style: bodyStyle),
+              pw.Expanded(child: pw.Text(text, style: bodyStyle)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    document.addPage(
+      pw.MultiPage(
+        pageTheme: _headerSidebarPageTheme(
+          railColor: _headerSidebarRailColorPdf(resume),
+          railChild: _headerSidebarRailPanel(
+            resume: resume,
+            inter: inter,
+            onRail: onRail,
+            bodyPt: bodyPt,
+            highlightedSkills: highlightedSkills,
+          ),
+        ),
+        header: _continuedPageTopGap,
+        build: (context) => [
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              profileImage != null
+                  ? pw.ClipOval(
+                      child: pw.SizedBox(
+                        width: _headerSidebarAvatarSizePt,
+                        height: _headerSidebarAvatarSizePt,
+                        child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                      ),
+                    )
+                  : pw.Container(
+                      width: _headerSidebarAvatarSizePt,
+                      height: _headerSidebarAvatarSizePt,
+                      alignment: pw.Alignment.center,
+                      decoration: pw.BoxDecoration(
+                        color: PdfColor.fromHex('#D6DEE8'),
+                        shape: pw.BoxShape.circle,
+                      ),
+                      child: pw.Text(
+                        _resumeInitials(resume),
+                        style: interPdfTextStyle(
+                          inter,
+                          ResumeFontWeight.w700,
+                          fontSize: 18,
+                          color: titleColor,
+                        ),
+                      ),
+                    ),
+              pw.SizedBox(width: 14),
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(_displayName(resume), style: nameStyle),
+                    if (resume.jobTitle.trim().isNotEmpty) ...[
+                      pw.SizedBox(height: 6),
+                      pw.Text(
+                        resume.jobTitle.trim().toUpperCase(),
+                        style: jobTitleStyle.copyWith(letterSpacing: 1.4),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 22),
+          sectionTitle('Profile'),
+          _headerSidebarMaybeHighlight(
+            highlight: highlightSummary,
+            child: pw.Text(
+              resume.summary.trim().ifEmpty(
+                'Add a short summary to position your experience and strengths.',
+              ),
+              style: bodyStyle,
+            ),
+          ),
+          ..._pdfBodySectionsInBuilderOrder(
+            resume,
+            exclude: {ResumeBuilderSectionIds.skills},
+            buildSection: (id) {
+              final customIndex = ResumeBuilderSectionIds.customIndex(id);
+              if (customIndex != null) {
+                if (customIndex < 0 ||
+                    customIndex >= resume.customSections.length) {
+                  return null;
+                }
+                final item = resume.customSections[customIndex];
+                if (item.isBlank || !customSections.contains(item)) {
+                  return null;
+                }
+                return [
+                  pw.SizedBox(height: 18),
+                  sectionTitle(item.title.ifEmpty('Custom section')),
+                  ..._pwCustomSectionBodyWidgets(
+                    item,
+                    inter: inter,
+                    bodyFontPt: bodyPt,
+                  ),
+                ];
+              }
+              switch (id) {
+                case ResumeBuilderSectionIds.work:
+                  return [
+                    pw.SizedBox(height: 18),
+                    sectionTitle('Employment History'),
+                    if (experiences.isEmpty)
+                      pw.Text(
+                        'Add your work experience details.',
+                        style: bodyStyle.copyWith(color: mutedColor),
+                      )
+                    else
+                      for (var i = 0; i < experiences.length; i++) ...[
+                        pw.Text(
+                          _headerSidebarJobLine(experiences[i]),
+                          style: jobLineStyle,
+                        ),
+                        if (_headerSidebarDateLabel(
+                          experiences[i].startDate,
+                          experiences[i].endDate,
+                        ).isNotEmpty) ...[
+                          pw.SizedBox(height: 3),
+                          pw.Text(
+                            _headerSidebarDateLabel(
+                              experiences[i].startDate,
+                              experiences[i].endDate,
+                            ),
+                            style: dateStyle,
+                          ),
+                        ],
+                        pw.SizedBox(height: 6),
+                        for (final bullet in _workBulletLines(experiences[i]))
+                          bulletRow(
+                            bullet,
+                            highlight:
+                                highlightedBulletsByExperience[i]?.contains(
+                                  bullet,
+                                ) ??
+                                false,
+                          ),
+                        pw.SizedBox(height: 12),
+                      ],
+                  ];
+                case ResumeBuilderSectionIds.education:
+                  return [
+                    pw.SizedBox(height: 8),
+                    sectionTitle('Education'),
+                    if (education.isEmpty)
+                      pw.Text(
+                        'Add your education details.',
+                        style: bodyStyle.copyWith(color: mutedColor),
+                      )
+                    else
+                      for (final item in education) ...[
+                        pw.Text(
+                          _headerSidebarEducationTitle(item),
+                          style: jobLineStyle,
+                        ),
+                        if (item.degree.trim().isNotEmpty &&
+                            item.institution.trim().isNotEmpty) ...[
+                          pw.SizedBox(height: 2),
+                          pw.Text(item.institution.trim(), style: bodyStyle),
+                        ],
+                        if (_headerSidebarDateLabel(
+                          item.startDate,
+                          item.endDate,
+                        ).isNotEmpty) ...[
+                          pw.SizedBox(height: 3),
+                          pw.Text(
+                            _headerSidebarDateLabel(
+                              item.startDate,
+                              item.endDate,
+                            ),
+                            style: dateStyle,
+                          ),
+                        ],
+                        pw.SizedBox(height: 10),
+                      ],
+                  ];
+                case ResumeBuilderSectionIds.projects:
+                  if (projects.isEmpty) return null;
+                  return [
+                    pw.SizedBox(height: 8),
+                    sectionTitle('Projects'),
+                    for (final item in projects) ...[
+                      pw.Text(
+                        item.title.ifEmpty('Project'),
+                        style: jobLineStyle,
+                      ),
+                      pw.SizedBox(height: 4),
+                      for (final bullet in _projectBulletLinesPdf(item))
+                        bulletRow(bullet),
+                      pw.SizedBox(height: 10),
+                    ],
+                  ];
+                default:
+                  return null;
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }

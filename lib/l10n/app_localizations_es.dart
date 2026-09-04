@@ -561,6 +561,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Franja izquierda llamativa con nombre grande y secciones limpias.';
 
   @override
+  String get templateHeaderSidebar => 'Barra lateral de encabezado';
+
+  @override
+  String get templateHeaderSidebarCaption =>
+      'Nombre con foto y un carril azul marino de datos y habilidades.';
+
+  @override
   String get templateStructuredAts => 'ATS estructurado';
 
   @override

@@ -296,6 +296,8 @@
   "templateClassicSidebarCaption": "Trilho esquerdo suave com identidade com foto e seções estruturadas.",
   "templateAccentStrip": "Faixa de destaque",
   "templateAccentStripCaption": "Faixa esquerda marcante com nome grande e seções limpas.",
+  "templateHeaderSidebar": "Barra lateral de cabeçalho",
+  "templateHeaderSidebarCaption": "Nome com foto e um trilho azul-marinho de dados e habilidades.",
   "templateStructuredAts": "ATS estruturado",
   "templateStructuredAtsCaption": "Faixas de seção cinzas e cabeçalho centralizado para parsers.",
   "templateLatexClassicAts": "ATS clássico LaTeX",

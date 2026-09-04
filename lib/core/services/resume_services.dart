@@ -417,6 +417,12 @@ const double _detailsSidebarPanelLeftInsetPt = 28.0;
 const double _detailsSidebarMainInsetPt = 170.0;
 const double _detailsSidebarSectionGapPt = 18.0;
 const double _detailsSidebarHeadingGapPt = 6.0;
+const double _headerSidebarRailWidthPt = 176.0;
+const double _headerSidebarRailGapPt = 12.0;
+const double _headerSidebarPageRightMarginPt =
+    _headerSidebarRailWidthPt + _headerSidebarRailGapPt;
+const double _headerSidebarAvatarSizePt = 72.0;
+const PdfColor _headerSidebarHighlightPdf = PdfColor.fromInt(0xFFFFE67A);
 
 enum _ClassicSidebarSectionType { skills, languages }
 
@@ -525,6 +531,202 @@ PdfColor _detailsSidebarMutedColorPdf(ResumeData resume) =>
 
 PdfColor _detailsSidebarDividerColorPdf(ResumeData resume) =>
     _pdfRgb(resume.detailsSidebarDividerColor);
+
+PdfColor _headerSidebarRailColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.headerSidebarRailColor);
+
+PdfColor _headerSidebarTitleColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.headerSidebarTitleColor);
+
+PdfColor _headerSidebarMutedColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.headerSidebarMutedColor);
+
+PdfColor _headerSidebarOnRailColorPdf(ResumeData resume) =>
+    _pdfRgb(resume.headerSidebarOnRailColor);
+
+String _headerSidebarDateLabel(String startDate, String endDate) {
+  return educationDateRangeLabel(
+    startDate,
+    endDate,
+  ).replaceAll(' - ', ' — ').toUpperCase();
+}
+
+String _headerSidebarJobLine(WorkExperience item) {
+  final role = item.role.trim();
+  final company = item.company.trim();
+  if (role.isEmpty && company.isEmpty) return 'Role';
+  if (role.isEmpty) return company;
+  if (company.isEmpty) return role;
+  return '$role, $company';
+}
+
+String _headerSidebarEducationTitle(EducationItem item) {
+  final degree = item.degree.trim();
+  if (degree.isNotEmpty) return degree;
+  return item.institution.trim().ifEmpty('Education');
+}
+
+List<String> _headerSidebarInfoItems(ResumeData resume) {
+  return [
+    resume.location.trim(),
+    resume.phone.trim(),
+    resume.email.trim(),
+    resume.website.trim(),
+    resume.githubLink.trim(),
+    resume.linkedinLink.trim(),
+  ].where((item) => item.isNotEmpty).toList();
+}
+
+pw.Widget _headerSidebarMaybeHighlight({
+  required bool highlight,
+  required pw.Widget child,
+}) {
+  if (!highlight) return child;
+  return pw.Container(
+    width: double.infinity,
+    color: _headerSidebarHighlightPdf,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+    child: child,
+  );
+}
+
+pw.PageTheme _headerSidebarPageTheme({
+  required PdfColor railColor,
+  required pw.Widget railChild,
+  PdfPageFormat pageFormat = PdfPageFormat.a4,
+}) {
+  return pw.PageTheme(
+    pageFormat: pageFormat,
+    margin: const pw.EdgeInsets.fromLTRB(
+      28,
+      28,
+      _headerSidebarPageRightMarginPt,
+      30,
+    ),
+    buildBackground: (context) => pw.FullPage(
+      ignoreMargins: true,
+      child: pw.Stack(
+        children: [
+          pw.Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: pw.Container(width: _headerSidebarRailWidthPt, color: railColor),
+          ),
+          pw.Positioned(
+            right: 16,
+            top: 28,
+            bottom: 30,
+            child: pw.SizedBox(
+              width: _headerSidebarRailWidthPt - 32,
+              child: railChild,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+List<pw.Widget> _headerSidebarSkillBarWidgets({
+  required List<String> skills,
+  required pw.TextStyle bodyStyle,
+  required PdfColor barColor,
+  required Set<String> highlightedSkills,
+  int maxItems = 12,
+}) {
+  final visible = skills
+      .map((skill) => skill.trim())
+      .where((skill) => skill.isNotEmpty)
+      .take(maxItems)
+      .toList();
+  if (visible.isEmpty) {
+    return [pw.Text('Add skills', style: bodyStyle)];
+  }
+  return [
+    for (final skill in visible) ...[
+      _headerSidebarMaybeHighlight(
+        highlight: highlightedSkills.contains(skill),
+        child: pw.Text(skill, style: bodyStyle),
+      ),
+      pw.SizedBox(height: 5),
+      pw.Container(width: double.infinity, height: 2.4, color: barColor),
+      pw.SizedBox(height: 10),
+    ],
+  ];
+}
+
+pw.Widget _headerSidebarRailPanel({
+  required ResumeData resume,
+  required InterPdfFonts inter,
+  required PdfColor onRail,
+  required double bodyPt,
+  required Set<String> highlightedSkills,
+}) {
+  final infoItems = _headerSidebarInfoItems(resume);
+  final headingStyle = interPdfTextStyle(
+    inter,
+    ResumeFontWeight.w700,
+    fontSize: 12,
+    color: onRail,
+  );
+  final bodyStyle = interPdfTextStyle(
+    inter,
+    ResumeFontWeight.w400,
+    fontSize: bodyPt,
+    color: onRail,
+    lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+  );
+  final categoryStyle = interPdfTextStyle(
+    inter,
+    ResumeFontWeight.w600,
+    fontSize: bodyPt,
+    color: onRail,
+  );
+
+  return pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      pw.Text('Details', style: headingStyle),
+      pw.SizedBox(height: 10),
+      if (infoItems.isEmpty)
+        pw.Text('Add contact details', style: bodyStyle)
+      else
+        for (final item in infoItems) ...[
+          pw.Text(
+            item,
+            style: item.contains('@')
+                ? bodyStyle.copyWith(decoration: pw.TextDecoration.underline)
+                : bodyStyle,
+          ),
+          pw.SizedBox(height: 6),
+        ],
+      pw.SizedBox(height: 18),
+      pw.Text('Skills', style: headingStyle),
+      pw.SizedBox(height: 10),
+      if (resume.showCategorisedSkills)
+        for (final group in resume.skillGroupsForResume) ...[
+          if (group.heading.trim().isNotEmpty) ...[
+            pw.Text(group.heading.trim(), style: categoryStyle),
+            pw.SizedBox(height: 6),
+          ],
+          ..._headerSidebarSkillBarWidgets(
+            skills: group.skills,
+            bodyStyle: bodyStyle,
+            barColor: onRail,
+            highlightedSkills: highlightedSkills,
+          ),
+        ]
+      else
+        ..._headerSidebarSkillBarWidgets(
+          skills: resume.skillsLinesForDisplay,
+          bodyStyle: bodyStyle,
+          barColor: onRail,
+          highlightedSkills: highlightedSkills,
+        ),
+    ],
+  );
+}
 
 /// Profile Sidebar page 2+ top spacing comes from [creativeBodyTopMargin] on
 /// [_creativeSidebarPageTheme]; do not add an extra header gap like corporate.
@@ -6857,6 +7059,25 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.headerSidebar) {
+      final inter = await _ensureInterPdfFonts();
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
+      final document = pw.Document(
+        theme: await resumePdfThemeForInter(
+          inter,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+        ),
+      );
+      _addHeaderSidebarTemplatePage(
+        document,
+        resume,
+        inter: inter,
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -6906,6 +7127,8 @@ class ResumePdfService {
       case ResumeTemplate.atsLatexClassic:
         break;
       case ResumeTemplate.atsClassicCv:
+        break;
+      case ResumeTemplate.headerSidebar:
         break;
     }
 
@@ -7081,6 +7304,33 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.headerSidebar) {
+      final inter = await _ensureInterPdfFonts();
+      final bodyPt = resume.effectiveBodyFontPt.toDouble();
+      final profileImagePath = await ProfileImageStorage.resolvePath(
+        resume.profileImagePath,
+        resume.id,
+      );
+      final profileImage = await _loadProfileImage(profileImagePath);
+      final document = pw.Document(
+        theme: await resumePdfThemeForInter(
+          inter,
+          bodyFontPt: bodyPt,
+          bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+        ),
+      );
+      _addHeaderSidebarTemplatePage(
+        document,
+        resume,
+        inter: inter,
+        profileImage: profileImage,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _ensureGaramondPdfFonts();
       final document = pw.Document();
@@ -7137,6 +7387,8 @@ class ResumePdfService {
       case ResumeTemplate.atsLatexClassic:
         break;
       case ResumeTemplate.atsClassicCv:
+        break;
+      case ResumeTemplate.headerSidebar:
         break;
     }
 

@@ -33,6 +33,8 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.atsLatexClassic;
     case 'atsClassicCv':
       return ResumeTemplate.atsClassicCv;
+    case 'headerSidebar':
+      return ResumeTemplate.headerSidebar;
     default:
       return ResumeTemplate.corporate;
   }
@@ -68,6 +70,9 @@ enum ResumeTemplate {
 
   /// Centered name + title, personal-details grid, left-labeled ruled CV.
   atsClassicCv,
+
+  /// Circular photo + name header with a navy details rail on the right.
+  headerSidebar,
 }
 
 enum CoverLetterTemplate {
@@ -84,6 +89,7 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.creative,
   ResumeTemplate.classicSidebar,
   ResumeTemplate.accentStrip,
+  ResumeTemplate.headerSidebar,
   ResumeTemplate.atsStructured,
   ResumeTemplate.atsLatexClassic,
   ResumeTemplate.atsModernFlow,
@@ -123,6 +129,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsProfessionalBlue => 'Professional Blue ATS',
     ResumeTemplate.atsLatexClassic => 'LaTeX Classic ATS',
     ResumeTemplate.atsClassicCv => 'Classic CV ATS',
+    ResumeTemplate.headerSidebar => 'Header Sidebar',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -152,6 +159,8 @@ extension ResumeTemplateX on ResumeTemplate {
       'LaTeX-style ruled sections with compact academic project emphasis.',
     ResumeTemplate.atsClassicCv =>
       'Centered name, personal-details grid, and left-labeled ruled sections.',
+    ResumeTemplate.headerSidebar =>
+      'Photo-led nameplate with a navy details rail and skill bars.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -168,6 +177,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsProfessionalBlue => const Color(0xFF000000),
     ResumeTemplate.atsLatexClassic => const Color(0xFF000000),
     ResumeTemplate.atsClassicCv => const Color(0xFF000000),
+    ResumeTemplate.headerSidebar => const Color(0xFF1B365D),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -184,6 +194,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsProfessionalBlue => const Color(0xFFE8F2FC),
     ResumeTemplate.atsLatexClassic => const Color(0xFFF9FAFB),
     ResumeTemplate.atsClassicCv => const Color(0xFFF9FAFB),
+    ResumeTemplate.headerSidebar => const Color(0xFFE8EEF6),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -201,6 +212,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsProfessionalBlue => 'Garamond · blue ATS',
     ResumeTemplate.atsLatexClassic => 'Garamond · LaTeX ATS',
     ResumeTemplate.atsClassicCv => 'Garamond · classic CV',
+    ResumeTemplate.headerSidebar => 'Sans · navy sidebar',
   };
 }
 

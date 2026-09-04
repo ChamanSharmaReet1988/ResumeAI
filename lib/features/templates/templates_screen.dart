@@ -566,6 +566,14 @@ const _professionalResumeCards = <_TemplateTileData>[
     caption: 'Bold left stripe with an oversized nameplate and clean sections.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'header-sidebar',
+    resumeTemplate: ResumeTemplate.headerSidebar,
+    previewKind: _TemplatePreviewKind.headerSidebarResume,
+    headline: 'Header Sidebar',
+    caption: 'Photo-led nameplate with a navy details rail and skill bars.',
+    isPremium: false,
+  ),
 ];
 
 const _resumeTemplateCards = _professionalResumeCards;
@@ -691,6 +699,7 @@ class _TemplateTileData {
       'profile-sidebar' => l10n.templateProfileSidebar,
       'classic-sidebar' => l10n.templateClassicSidebar,
       'accent-strip' => l10n.templateAccentStrip,
+      'header-sidebar' => l10n.templateHeaderSidebar,
       'ats-structured' => l10n.templateStructuredAts,
       'ats-latex-classic' => l10n.templateLatexClassicAts,
       'ats-modern-flow' => l10n.templateModernFlowAts,
@@ -712,6 +721,7 @@ class _TemplateTileData {
       'profile-sidebar' => l10n.templateProfileSidebarCaption,
       'classic-sidebar' => l10n.templateClassicSidebarCaption,
       'accent-strip' => l10n.templateAccentStripCaption,
+      'header-sidebar' => l10n.templateHeaderSidebarCaption,
       'ats-structured' => l10n.templateStructuredAtsCaption,
       'ats-latex-classic' => l10n.templateLatexClassicAtsCaption,
       'ats-modern-flow' => l10n.templateModernFlowAtsCaption,
@@ -734,6 +744,7 @@ enum _TemplatePreviewKind {
   classicSidebarResume,
   detailsSidebarResume,
   accentStripResume,
+  headerSidebarResume,
   atsStructuredResume,
   atsSerifRulesResume,
   atsModernFlowResume,
@@ -820,6 +831,12 @@ class _TemplatePreviewArt extends StatelessWidget {
       _TemplatePreviewKind.accentStripResume => _ResumeTemplatePreviewArt(
         resume: _applyTemplatePreviewPalette(
           _accentStripTemplateResume,
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.headerSidebarResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _headerSidebarTemplateResume,
           paletteSeed,
         ),
       ),
@@ -978,6 +995,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.classicSidebar => _classicSidebarTemplateResume,
       ResumeTemplate.detailsSidebar => _detailsSidebarTemplateResume,
       ResumeTemplate.accentStrip => _accentStripTemplateResume,
+      ResumeTemplate.headerSidebar => _headerSidebarTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
       ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,
@@ -2030,6 +2048,85 @@ final ResumeData _accentStripTemplateResume = ResumeData(
   ),
 );
 
+final ResumeData _headerSidebarTemplateResume = ResumeData(
+  id: 'template-header-sidebar',
+  title: 'Header Sidebar Template',
+  fullName: 'Gregory Walls',
+  jobTitle: 'Carpenter',
+  email: 'gregory.walls@email.com',
+  phone: '(203) 555-0142',
+  location: 'Bethel, CT',
+  website: '',
+  summary:
+      'Reliable carpenter with a decade of residential framing, finish work, and site coordination. Known for clean joins, accurate measurements, and keeping crews moving on tight remodel schedules.',
+  template: ResumeTemplate.headerSidebar,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Carpenter',
+      company: 'Timothy Glover Carpentry Inc., Bethel',
+      startDate: 'March 2011',
+      endDate: 'August 2019',
+      description: '',
+      bullets: [
+        'Built and finished custom interiors, including trim, cabinetry, and structural repairs for residential clients.',
+        'Read blueprints and coordinated material orders so projects stayed on schedule and within budget.',
+        'Mentored apprentices on safe tool use, layout, and quality standards on active job sites.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Connecticut Carpenters Joint Apprenticeship',
+      degree: 'Connecticut Carpenters Apprenticeship',
+      startDate: 'September 2007',
+      endDate: 'May 2011',
+      score: '',
+    ),
+    EducationItem(
+      institution: 'Naugatuck Valley Community College',
+      degree: 'Associate of Business Administration',
+      startDate: 'September 2005',
+      endDate: 'May 2007',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'Mechanical Skills',
+    'Mathematical Skills',
+    'Critical Thinking Skills',
+    'Blueprint Reading',
+    'Power Tools',
+    'Framing',
+  ],
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(
+      title: 'References',
+      content: 'Available upon request.',
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.headerSidebar,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.education,
+    'custom:0',
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+  ],
+);
+
 enum _ResumeTemplatePreviewFit { tile, detail }
 
 class _ResumeTemplatePreviewArt extends StatelessWidget {
@@ -2062,9 +2159,12 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
 
         final isAccentStrip =
             resume.template.userFacingTemplate == ResumeTemplate.accentStrip;
+        final isHeaderSidebar =
+            resume.template.userFacingTemplate == ResumeTemplate.headerSidebar;
         final fullHeightTemplate = switch (resume.template.userFacingTemplate) {
           ResumeTemplate.creative => true,
           ResumeTemplate.accentStrip => true,
+          ResumeTemplate.headerSidebar => true,
           _ => false,
         };
         final bottomInset = fullHeightTemplate
@@ -2110,6 +2210,18 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
                       child: ColoredBox(
                         color: resume.corporateColorPreset.headerColor,
                         child: SizedBox(width: targetWidth * (34 / _pageWidth)),
+                      ),
+                    ),
+                  if (isHeaderSidebar)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: ColoredBox(
+                        color: resume.headerSidebarRailColor,
+                        child: SizedBox(
+                          width: targetWidth * (176 / _pageWidth),
+                        ),
                       ),
                     ),
                   Padding(

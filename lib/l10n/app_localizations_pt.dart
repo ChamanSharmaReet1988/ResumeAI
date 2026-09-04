@@ -560,6 +560,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Faixa esquerda marcante com nome grande e seções limpas.';
 
   @override
+  String get templateHeaderSidebar => 'Barra lateral de cabeçalho';
+
+  @override
+  String get templateHeaderSidebarCaption =>
+      'Nome com foto e um trilho azul-marinho de dados e habilidades.';
+
+  @override
   String get templateStructuredAts => 'ATS estruturado';
 
   @override

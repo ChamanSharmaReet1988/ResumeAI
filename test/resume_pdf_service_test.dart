@@ -536,6 +536,92 @@ void main() {
     expect(pdfBytes, isNotEmpty);
   });
 
+  test('header sidebar template PDF renders successfully', () async {
+    final service = ResumePdfService();
+    final pdfBytes = await service.buildPdf(
+      ResumeData.empty(template: ResumeTemplate.headerSidebar).copyWith(
+        title: 'Header Sidebar Test',
+        fullName: 'Gregory Walls',
+        jobTitle: 'Carpenter',
+        email: 'gregory.walls@email.com',
+        phone: '(203) 555-0142',
+        location: 'Bethel, CT',
+        summary:
+            'Reliable carpenter with residential framing, finish work, and site coordination experience.',
+        workExperiences: const [
+          WorkExperience(
+            role: 'Carpenter',
+            company: 'Timothy Glover Carpentry Inc., Bethel',
+            startDate: 'March 2011',
+            endDate: 'August 2019',
+            description: '',
+            bullets: [
+              'Built and finished custom interiors for residential clients.',
+            ],
+          ),
+        ],
+        education: const [
+          EducationItem(
+            institution: 'Connecticut Carpenters Joint Apprenticeship',
+            degree: 'Connecticut Carpenters Apprenticeship',
+            startDate: '2007',
+            endDate: '2011',
+            score: '',
+          ),
+        ],
+        skills: const [
+          'Mechanical Skills',
+          'Mathematical Skills',
+          'Critical Thinking Skills',
+        ],
+        includeProjectsInResume: false,
+        projects: const [],
+      ),
+    );
+
+    expect(pdfBytes, isNotEmpty);
+  });
+
+  test('highlighted header sidebar template PDF renders successfully', () async {
+    final service = ResumePdfService();
+    final resume = ResumeData.empty(
+      template: ResumeTemplate.headerSidebar,
+    ).copyWith(
+      title: 'Header Sidebar Highlight Test',
+      fullName: 'Gregory Walls',
+      jobTitle: 'Carpenter',
+      email: 'gregory.walls@email.com',
+      phone: '(203) 555-0142',
+      location: 'Bethel, CT',
+      summary: 'Reliable carpenter with residential framing experience.',
+      workExperiences: const [
+        WorkExperience(
+          role: 'Carpenter',
+          company: 'Timothy Glover Carpentry Inc., Bethel',
+          startDate: 'March 2011',
+          endDate: 'August 2019',
+          description: '',
+          bullets: [
+            'Built and finished custom interiors for residential clients.',
+          ],
+        ),
+      ],
+      skills: const ['Mechanical Skills', 'Mathematical Skills'],
+      includeProjectsInResume: false,
+      projects: const [],
+    );
+    final pdfBytes = await service.buildHighlightedResumePdf(
+      resume: resume,
+      highlightSummary: true,
+      highlightedSkills: const {'Mechanical Skills'},
+      highlightedBulletsByExperience: const {
+        0: {'Built and finished custom interiors for residential clients.'},
+      },
+    );
+
+    expect(pdfBytes, isNotEmpty);
+  });
+
   test(
     'classic sidebar template paginates long resumes without dropping later-page content',
     () async {
