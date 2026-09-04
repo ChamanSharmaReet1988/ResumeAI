@@ -104,6 +104,11 @@ void main() {
   testWidgets(
     'resume analyser shows a no-resume nudge and routes to home when tapped',
     (tester) async {
+      tester.view.physicalSize = const Size(1024, 768);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final repository = _FakeAnalyserRepository(resumes: []);
       final library = ResumeLibraryViewModel(repository: repository);
       await library.loadResumes();
@@ -137,6 +142,13 @@ void main() {
       );
       expect(find.text('Create a resume'), findsNothing);
       expect(find.text('Go to Home'), findsNothing);
+
+      expect(
+        tester
+            .getSize(find.byKey(const Key('optimize-empty-go-home-button')))
+            .width,
+        tester.getSize(find.byType(TextField)).width,
+      );
 
       await tester.tap(find.byKey(const Key('optimize-empty-go-home-button')));
       await tester.pumpAndSettle();

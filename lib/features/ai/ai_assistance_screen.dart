@@ -371,37 +371,41 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
               ],
               const SizedBox(height: 16),
               if (resumes.isEmpty) ...[
-                Card(
-                  child: InkWell(
-                    key: const Key('optimize-empty-go-home-button'),
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: widget.onGoToHomeTab,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 14, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.noResumeAvailable,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13,
-                                ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.createResumeThenGenerateAts,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                  fontSize: 11,
-                                  height: 1.3,
-                                ),
-                          ),
-                        ],
+                SizedBox(
+                  width: double.infinity,
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    child: InkWell(
+                      key: const Key('optimize-empty-go-home-button'),
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: widget.onGoToHomeTab,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 14, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.noResumeAvailable,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l10n.createResumeThenGenerateAts,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                    height: 1.3,
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

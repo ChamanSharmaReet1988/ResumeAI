@@ -457,20 +457,27 @@ class _AppShellState extends State<AppShell> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
                     child: Card(
-                      child: NavigationRail(
-                        selectedIndex: _currentIndex,
-                        useIndicator: true,
-                        onDestinationSelected: _selectTab,
-                        labelType: NavigationRailLabelType.all,
-                        destinations: destinations
-                            .map(
-                              (item) => NavigationRailDestination(
-                                icon: Icon(item.icon),
-                                selectedIcon: Icon(item.selectedIcon),
-                                label: Text(item.label),
-                              ),
-                            )
-                            .toList(),
+                      clipBehavior: Clip.antiAlias,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 4,
+                        ),
+                        child: NavigationRail(
+                          selectedIndex: _currentIndex,
+                          useIndicator: true,
+                          onDestinationSelected: _selectTab,
+                          labelType: NavigationRailLabelType.all,
+                          destinations: destinations
+                              .map(
+                                (item) => NavigationRailDestination(
+                                  icon: Icon(item.icon),
+                                  selectedIcon: Icon(item.selectedIcon),
+                                  label: Text(item.label),
+                                ),
+                              )
+                              .toList(),
+                        ),
                       ),
                     ),
                   ),

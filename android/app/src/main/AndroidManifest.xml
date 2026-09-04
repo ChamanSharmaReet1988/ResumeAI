@@ -8,7 +8,9 @@
     <application
         android:label="ResumeAI"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        tools:replace="android:icon,android:roundIcon,android:label">
         <activity
             android:name=".MainActivity"
             android:exported="true"

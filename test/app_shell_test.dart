@@ -129,6 +129,59 @@ void _ignoreRenderOverflowErrors() {
 
 void main() {
   testWidgets(
+    'tablet shell shows navigation rail destination icons',
+    (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final repository = _FakeAppShellRepository();
+      final resumeLibrary = ResumeLibraryViewModel(repository: repository);
+      final coverLetterLibrary = CoverLetterLibraryViewModel(
+        repository: repository,
+      );
+      await resumeLibrary.loadResumes();
+      await coverLetterLibrary.loadCoverLetters();
+
+      final appPreferences = AppPreferences.inMemory();
+      final premiumPurchaseService = PremiumPurchaseService.inMemory(
+        appPreferences: appPreferences,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: _appShellProviders(
+            repository: repository,
+            resumeLibrary: resumeLibrary,
+            coverLetterLibrary: coverLetterLibrary,
+            appPreferences: appPreferences,
+            premiumPurchaseService: premiumPurchaseService,
+          ),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AppShell(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(NavigationRail), findsOneWidget);
+      final icons = tester.widgetList<Icon>(
+        find.descendant(
+          of: find.byType(NavigationRail),
+          matching: find.byType(Icon),
+        ),
+      );
+      expect(icons, isNotEmpty);
+      for (final icon in icons) {
+        expect(icon.size ?? 24, greaterThan(0));
+        expect(icon.icon, isNotNull);
+      }
+    },
+  );
+
+  testWidgets(
     'resume add button prompts for title before opening the builder',
     (tester) async {
       final repository = _FakeAppShellRepository();
