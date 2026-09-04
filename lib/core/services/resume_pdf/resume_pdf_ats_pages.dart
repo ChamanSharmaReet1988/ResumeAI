@@ -3086,11 +3086,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       ),
                     );
                     for (final item in items) {
-                      out.add(
-                        pw.Text(
-                          item.title.trim().ifEmpty('Project'),
-                          style: _accentStripSubsectionPdfStyle(garamond),
-                        ),
+                      final title = pw.Text(
+                        item.title.trim().ifEmpty('Project'),
+                        style: _accentStripSubsectionPdfStyle(garamond),
                       );
                       final lines = _projectBulletLines(item);
                       final content = lines.isNotEmpty
@@ -3099,15 +3097,44 @@ extension _ResumePdfAtsPages on ResumePdfService {
                               item.overview.trim(),
                               item.impact.trim(),
                             ].where((value) => value.isNotEmpty).join(' | ');
-                      if (content.isNotEmpty) {
-                        out.add(pw.SizedBox(height: 4));
-                        out.add(
-                          pw.Text(
-                            content,
-                            style: _accentStripBodyPdfStyle(garamond, bodyPt),
-                          ),
-                        );
+                      if (content.isEmpty) {
+                        out.add(title);
+                        out.add(pw.SizedBox(height: 10));
+                        continue;
                       }
+                      // One widget per hard line break: a single multi-line
+                      // paragraph is indivisible, so MultiPage moves it to the
+                      // next page whole and strands the title at the foot of
+                      // this one.
+                      final bodyStyle = _accentStripBodyPdfStyle(garamond, bodyPt);
+                      final segments = content.split('\n');
+                      final paragraphs = [
+                        for (var i = 0; i < segments.length; i++)
+                          pw.Padding(
+                            padding: pw.EdgeInsets.only(
+                              bottom: i == segments.length - 1
+                                  ? 0
+                                  // Stacked Text widgets lose the lineSpacing a
+                                  // single multi-line Text applied between its
+                                  // own lines; add it back.
+                                  : bodyStyle.lineSpacing ?? 0,
+                            ),
+                            child: pw.Text(segments[i], style: bodyStyle),
+                          ),
+                      ];
+                      // The title travels with the first line so a project
+                      // heading can never end a page on its own.
+                      out.add(
+                        pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            title,
+                            pw.SizedBox(height: 4),
+                            paragraphs.first,
+                          ],
+                        ),
+                      );
+                      out.addAll(paragraphs.skip(1));
                       out.add(pw.SizedBox(height: 10));
                     }
                     return out;

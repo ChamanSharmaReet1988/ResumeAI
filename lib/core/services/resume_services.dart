@@ -161,6 +161,54 @@ List<String> _projectBulletLinesPdf(ProjectItem item) {
   ].where((part) => part.isNotEmpty).toList();
 }
 
+/// Bullet defaults copied from [pw.Bullet] so a marker-less continuation line
+/// lands on exactly the same text column as the line above it.
+const double _pwBulletSizePt = 2.0 * PdfPageFormat.mm;
+const pw.EdgeInsets _pwBulletMargin = pw.EdgeInsets.only(
+  top: 1.5 * PdfPageFormat.mm,
+  left: 5.0 * PdfPageFormat.mm,
+  right: 2.0 * PdfPageFormat.mm,
+);
+const pw.EdgeInsets _pwBulletTrailingMargin = pw.EdgeInsets.only(
+  bottom: 2.0 * PdfPageFormat.mm,
+);
+
+/// One [pw.Bullet] per hard line break in [text].
+///
+/// A bullet whose text carries newlines renders as a single tall widget, and a
+/// widget is indivisible to [pw.MultiPage]: when it does not fit in what is
+/// left of a page it moves to the next one whole, stranding the heading above
+/// it at the foot of a page with a band of empty space. Emitting one widget per
+/// line lets the page break fall inside the bullet instead.
+///
+/// Only the first line draws the marker; the rest reserve the same width with a
+/// zero-size bullet so the text column does not shift. Stacked widgets also
+/// lose the [pw.TextStyle.lineSpacing] that a single multi-line Text applied
+/// between its own lines, so it is added back as bottom margin.
+List<pw.Widget> _pwSplitBulletWidgets(String text, {required pw.TextStyle style}) {
+  final segments = text.split('\n');
+  if (segments.length == 1) {
+    return [pw.Bullet(text: text, style: style)];
+  }
+  final lineGap = style.lineSpacing ?? 0;
+  return [
+    for (var i = 0; i < segments.length; i++)
+      pw.Bullet(
+        text: segments[i],
+        style: style,
+        bulletSize: i == 0 ? _pwBulletSizePt : 0,
+        bulletMargin: i == 0
+            ? _pwBulletMargin
+            : _pwBulletMargin.copyWith(
+                left: _pwBulletMargin.left + _pwBulletSizePt,
+              ),
+        margin: i == segments.length - 1
+            ? _pwBulletTrailingMargin
+            : pw.EdgeInsets.only(bottom: lineGap),
+      ),
+  ];
+}
+
 List<pw.Widget> _pwCompactProjectWidgets(
   ProjectItem item, {
   GaramondPdfFonts? garamond,
@@ -9085,13 +9133,28 @@ class ResumePdfService {
               bodyFontPt,
             ),
           );
-    return [
-      titleWidget,
-      for (var i = 0; i < bullets.length; i++)
+    final lines = <pw.Widget>[];
+    for (var i = 0; i < bullets.length; i++) {
+      final parts = _pwSplitBulletWidgets(bullets[i], style: bulletStyle);
+      lines.add(
         pw.Padding(
           padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
-          child: pw.Bullet(text: bullets[i], style: bulletStyle),
+          child: parts.first,
         ),
+      );
+      lines.addAll(parts.skip(1));
+    }
+    if (lines.isEmpty) {
+      return [titleWidget, pw.SizedBox(height: 8)];
+    }
+    return [
+      // The title travels with its first line so a project heading can never
+      // be the last thing on a page.
+      pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [titleWidget, lines.first],
+      ),
+      ...lines.skip(1),
       pw.SizedBox(height: 8),
     ];
   }
