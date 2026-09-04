@@ -34,6 +34,9 @@ abstract final class ResumeTypography {
   /// Page margin for Structured ATS (preview px = PDF pt).
   static const double atsStructuredPageInsetPt = 40;
 
+  /// ATS resume PDF page 2+ top and bottom margin (preview + export).
+  static const double atsContinuationVerticalInsetPt = 40;
+
   /// Serif Rules ATS (template 6) horizontal inset (preview px = PDF pt).
   static const double atsSerifRulesPageHorizontalInsetPt = 45;
 
@@ -108,10 +111,11 @@ abstract final class ResumeTypography {
   /// Classic CV ATS (left-labeled ruled layout).
   static const double atsClassicCvPageInsetPt = 42;
   static const double atsClassicCvPageTopPreviewPt = 38;
-  /// First-page top margin (PDF pt). Continuation pages use [atsClassicCvContinuationVerticalInsetPt].
+  /// First-page top margin (PDF pt). Continuation pages use [atsContinuationVerticalInsetPt].
   static const double atsClassicCvPageTopPdfPt = 46;
   /// Page 2+ top and bottom margin (PDF pt).
-  static const double atsClassicCvContinuationVerticalInsetPt = 30;
+  static const double atsClassicCvContinuationVerticalInsetPt =
+      atsContinuationVerticalInsetPt;
   static const double atsClassicCvLabelColumnPt = 108;
   static const double atsClassicCvLabelGapPt = 10;
   static const double atsClassicCvNamePt = 16;

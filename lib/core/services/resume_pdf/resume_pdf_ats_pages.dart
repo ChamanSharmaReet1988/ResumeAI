@@ -1,15 +1,5 @@
 part of 'package:resume_app/core/services/resume_services.dart';
 
-pw.Widget _atsMultiPageHeaderGap(pw.Context context) =>
-    context.pageNumber > 1 ? pw.SizedBox(height: 40) : pw.SizedBox();
-
-pw.Widget _atsSerifRulesMultiPageHeaderGap(pw.Context context) =>
-    context.pageNumber > 1
-    ? pw.SizedBox(
-        height: ResumeTypography.atsSerifRulesContinuationPageTopGapPt,
-      )
-    : pw.SizedBox();
-
 /// Slightly smaller than body text so keyword lists read lighter than paragraphs.
 double _atsPdfSkillsBodyPt(double bodyPt) => math.max(9.0, bodyPt - 1.35);
 
@@ -247,8 +237,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(40, 40, 40, 40),
-        header: _atsMultiPageHeaderGap,
+        margin: const pw.EdgeInsets.fromLTRB(
+          ResumeTypography.atsStructuredPageInsetPt,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+          ResumeTypography.atsStructuredPageInsetPt,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+        ),
         build: (context) {
           final w = <pw.Widget>[
             pw.Center(
@@ -623,11 +617,10 @@ extension _ResumePdfAtsPages on ResumePdfService {
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.fromLTRB(
           ResumeTypography.atsSerifRulesPageHorizontalInsetPt,
-          40,
+          ResumeTypography.atsContinuationVerticalInsetPt,
           ResumeTypography.atsSerifRulesPageHorizontalInsetPt,
-          40,
+          ResumeTypography.atsContinuationVerticalInsetPt,
         ),
-        header: _atsSerifRulesMultiPageHeaderGap,
         build: (context) {
           final w = <pw.Widget>[
             pw.Row(
@@ -968,8 +961,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(42, 40, 42, 40),
-        header: _atsMultiPageHeaderGap,
+        margin: const pw.EdgeInsets.fromLTRB(
+          42,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+          42,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+        ),
         build: (context) {
           final w = <pw.Widget>[
             pw.Center(
@@ -1492,8 +1489,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(38, 36, 38, 34),
-        header: _atsMultiPageHeaderGap,
+        margin: const pw.EdgeInsets.fromLTRB(
+          38,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+          38,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+        ),
         build: (context) {
           final w = <pw.Widget>[
             pw.Row(
@@ -1710,8 +1711,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(30, 40, 30, 40),
-        header: _atsMultiPageHeaderGap,
+        margin: const pw.EdgeInsets.fromLTRB(
+          30,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+          30,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+        ),
         build: (context) {
           final w = <pw.Widget>[
             pw.Center(
@@ -2097,10 +2102,16 @@ extension _ResumePdfAtsPages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(30, 56, 30, 56),
-        header: _atsMultiPageHeaderGap,
+        margin: const pw.EdgeInsets.fromLTRB(
+          30,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+          30,
+          ResumeTypography.atsContinuationVerticalInsetPt,
+        ),
         build: (context) {
+          const firstPageExtraTop = 56 - ResumeTypography.atsContinuationVerticalInsetPt;
           final w = <pw.Widget>[
+            if (firstPageExtraTop > 0) pw.SizedBox(height: firstPageExtraTop),
             pw.Center(
               child: pw.Column(
                 children: [
@@ -2420,16 +2431,18 @@ extension _ResumePdfAtsPages on ResumePdfService {
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.fromLTRB(
+        margin: const pw.EdgeInsets.fromLTRB(
           ResumeTypography.atsStructuredPageInsetPt,
-          ResumeTypography.atsStructuredPageInsetPt +
-              ResumeTypography.atsProfessionalBlueExtraTopPaddingPt,
+          ResumeTypography.atsContinuationVerticalInsetPt,
           ResumeTypography.atsStructuredPageInsetPt,
-          ResumeTypography.atsStructuredPageInsetPt,
+          ResumeTypography.atsContinuationVerticalInsetPt,
         ),
-        header: _atsMultiPageHeaderGap,
         build: (context) {
           final w = <pw.Widget>[
+            if (ResumeTypography.atsProfessionalBlueExtraTopPaddingPt > 0)
+              pw.SizedBox(
+                height: ResumeTypography.atsProfessionalBlueExtraTopPaddingPt,
+              ),
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
