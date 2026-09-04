@@ -100,8 +100,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     Scrollable.ensureVisible(
       tileContext,
       alignment: 0.12,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
+      duration: Duration.zero,
     );
   }
 
