@@ -8,6 +8,7 @@ import '../core/services/ai_resume_coordinator.dart';
 import '../core/services/apple_foundation_ai_service.dart';
 import '../core/services/app_preferences.dart';
 import '../core/services/cloud_ai_resume_service.dart';
+import '../core/services/deep_link_service.dart';
 import '../core/services/premium_purchase_service.dart';
 import '../core/services/firebase_app_services.dart';
 import '../core/services/google_drive_resume_service.dart';
@@ -30,6 +31,7 @@ class ResumeApp extends StatelessWidget {
     required this.premiumPurchaseService,
     required this.firebaseServices,
     required this.googleDriveResumeService,
+    this.deepLinkService,
     this.aiApiKeyStore,
   });
 
@@ -38,11 +40,15 @@ class ResumeApp extends StatelessWidget {
   final PremiumPurchaseService premiumPurchaseService;
   final FirebaseAppServices firebaseServices;
   final GoogleDriveResumeService googleDriveResumeService;
+  final DeepLinkService? deepLinkService;
   final AiApiKeyStore? aiApiKeyStore;
 
   @override
   Widget build(BuildContext context) {
     final platform = defaultTargetPlatform;
+    final resolvedDeepLinks =
+        deepLinkService ??
+        DeepLinkService(enablePlatformLinks: false, firebase: firebaseServices);
 
     return MultiProvider(
       providers: [
@@ -52,6 +58,7 @@ class ResumeApp extends StatelessWidget {
           value: premiumPurchaseService,
         ),
         Provider<FirebaseAppServices>.value(value: firebaseServices),
+        Provider<DeepLinkService>.value(value: resolvedDeepLinks),
         Provider<ICloudResumeService>(
           create: (_) => const MethodChannelICloudResumeService(),
         ),

@@ -10,6 +10,7 @@ import 'app/app.dart';
 import 'core/config/google_sign_in_config.dart';
 import 'core/services/android_ads_service.dart';
 import 'core/services/app_preferences.dart';
+import 'core/services/deep_link_service.dart';
 import 'core/services/premium_purchase_service.dart';
 import 'core/services/firebase_app_services.dart';
 import 'core/services/google_drive_resume_service.dart';
@@ -75,6 +76,8 @@ Future<void> main() async {
         'Config.',
       );
     }
+    final deepLinkService = DeepLinkService(firebase: firebaseServices);
+    await deepLinkService.start();
     runApp(
       ResumeApp(
         repository: repository,
@@ -82,6 +85,7 @@ Future<void> main() async {
         premiumPurchaseService: premiumPurchaseService,
         firebaseServices: firebaseServices,
         googleDriveResumeService: googleDriveResumeService,
+        deepLinkService: deepLinkService,
       ),
     );
   }, (error, stack) {

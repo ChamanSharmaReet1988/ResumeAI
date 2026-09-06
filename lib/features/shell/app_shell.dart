@@ -6,9 +6,12 @@ import 'package:provider/provider.dart';
 import 'package:resume_app/l10n/app_localizations.dart';
 import 'package:resume_app/l10n/l10n_ext.dart';
 
+import 'dart:async';
+
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
 import '../../core/services/android_ads_service.dart';
+import '../../core/services/deep_link_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/premium_access.dart';
 import '../../core/services/resume_services.dart';
@@ -37,6 +40,8 @@ class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
   HomeSegment _homeSegment = HomeSegment.resumes;
   ResumeLibraryViewModel? _resumeLibrary;
+  StreamSubscription<DeepLinkDestination>? _deepLinkSubscription;
+  bool _deepLinkListenerAttached = false;
 
   bool get _isCupertino =>
       Platform.isIOS || Theme.of(context).platform == TargetPlatform.iOS;
@@ -55,10 +60,41 @@ class _AppShellState extends State<AppShell> {
         _maybePromptHomeReview();
       });
     }
+    _attachDeepLinkListenerIfNeeded();
+  }
+
+  void _attachDeepLinkListenerIfNeeded() {
+    if (_deepLinkListenerAttached) {
+      return;
+    }
+    final deepLinks = context.read<DeepLinkService>();
+    _deepLinkListenerAttached = true;
+    final pending = deepLinks.takePendingDestination();
+    if (pending != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(_openDeepLinkDestination(pending));
+        }
+      });
+    }
+    _deepLinkSubscription = deepLinks.destinations.listen((destination) {
+      unawaited(_openDeepLinkDestination(destination));
+    });
+  }
+
+  Future<void> _openDeepLinkDestination(DeepLinkDestination destination) async {
+    if (!mounted) {
+      return;
+    }
+    switch (destination) {
+      case DeepLinkDestination.templates:
+        await _selectTab(AppShellScope.templatesTabIndex);
+    }
   }
 
   @override
   void dispose() {
+    _deepLinkSubscription?.cancel();
     _resumeLibrary?.removeListener(_onResumeLibraryChanged);
     super.dispose();
   }

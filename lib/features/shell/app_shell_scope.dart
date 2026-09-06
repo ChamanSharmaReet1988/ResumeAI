@@ -8,12 +8,17 @@ class AppShellScope extends InheritedWidget {
     required super.child,
   });
 
+  static const int templatesTabIndex = 1;
   static const int settingsTabIndex = 3;
 
   final ValueChanged<int> selectTab;
 
   static AppShellScope? maybeOf(BuildContext context) {
     return context.getInheritedWidgetOfExactType<AppShellScope>();
+  }
+
+  static void goToTemplates(BuildContext context) {
+    maybeOf(context)?.selectTab(templatesTabIndex);
   }
 
   static void goToSettings(BuildContext context) {

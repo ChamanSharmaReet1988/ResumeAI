@@ -8,6 +8,7 @@ import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/ai_api_key_store.dart';
 import 'package:resume_app/core/services/ai_resume_coordinator.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
+import 'package:resume_app/core/services/deep_link_service.dart';
 import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
@@ -30,6 +31,9 @@ List<SingleChildWidget> _appShellProviders({
     Provider<ResumeImportService>.value(value: ResumeImportService()),
     Provider<ResumeRepository>.value(value: repository),
     Provider<AppPreferences>.value(value: appPreferences),
+    Provider<DeepLinkService>.value(
+      value: DeepLinkService(enablePlatformLinks: false),
+    ),
     ChangeNotifierProvider<PremiumPurchaseService>.value(
       value: premiumPurchaseService,
     ),

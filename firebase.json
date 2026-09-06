@@ -1,0 +1,36 @@
+{
+  "hosting": {
+    "public": "firebase/hosting/public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {
+        "source": "/.well-known/apple-app-site-association",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      {
+        "source": "/.well-known/assetlinks.json",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/templates",
+        "destination": "/templates/index.html"
+      },
+      {
+        "source": "/templates/**",
+        "destination": "/templates/index.html"
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.quickresume",
+      "sha256_cert_fingerprints": [
+        "66:34:0C:31:EC:A1:B6:8B:EA:66:0A:EC:8D:48:34:EE:20:BA:06:3A:21:7B:10:28:E9:A0:EF:7E:BC:A2:96:19"
+      ]
+    }
+  }
+]

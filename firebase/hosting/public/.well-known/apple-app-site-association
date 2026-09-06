@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "HXA86RAALR.com.quickresume",
+        "paths": ["/templates", "/templates/*"]
+      }
+    ]
+  }
+}

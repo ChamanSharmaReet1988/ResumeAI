@@ -19,6 +19,7 @@ abstract final class AnalyticsEvents {
   static const String premiumPurchaseSuccess = 'premium_purchase_success';
   static const String premiumRestoreSuccess = 'premium_restore_success';
   static const String iCloudBackupSync = 'icloud_backup_sync';
+  static const String deepLinkOpen = 'deep_link_open';
 }
 
 Future<void> logAnalyticsEvent(
