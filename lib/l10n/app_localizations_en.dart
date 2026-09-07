@@ -1072,7 +1072,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newSection => 'New section';
 
   @override
-  String get newSectionTitleHint => 'Certifications, Languages, Awards…';
+  String get newSectionTitleHint => 'e.g. Certifications, Awards';
 
   @override
   String get sectionTypeNormal => 'Normal';
@@ -1284,7 +1284,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addSkillHelper => 'Type to see suggestions or add your own skill';
 
   @override
-  String get categoryHint => 'Programming Languages, Tools, Frameworks, etc.';
+  String get categoryHint => 'e.g. Languages, Tools';
 
   @override
   String get moveCategoryUp => 'Move category up';

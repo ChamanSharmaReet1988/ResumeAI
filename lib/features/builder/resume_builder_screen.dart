@@ -46,7 +46,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   final Map<int, GlobalKey> _groupSkillInputKeys = {};
   final _imagePicker = ImagePicker();
   final _personalFieldFocusNodes = List<FocusNode>.generate(
-    8,
+    7,
     (_) => FocusNode(),
   );
   final _summaryFocusNode = FocusNode();
@@ -1699,25 +1699,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ),
         _ProfileLinkField(
-          label: context.l10n.githubLink,
-          value: viewModel.resume.githubLink,
-          basePrefix: 'https://github.com/',
-          hintText: 'github.com/username',
-          focusNode: _personalFieldFocusNodes[2],
-          textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[3].requestFocus(),
-          onChanged: (value) => viewModel.updateResume(
-            (resume) => resume.copyWith(githubLink: value),
-          ),
-        ),
-        _ProfileLinkField(
           label: context.l10n.linkedinLink,
           value: viewModel.resume.linkedinLink,
           basePrefix: 'https://www.linkedin.com/in/',
           hintText: 'linkedin.com/in/your-name',
-          focusNode: _personalFieldFocusNodes[3],
+          focusNode: _personalFieldFocusNodes[2],
           textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[4].requestFocus(),
+          onSubmitted: (_) => _personalFieldFocusNodes[3].requestFocus(),
           onChanged: (value) => viewModel.updateResume(
             (resume) => resume.copyWith(linkedinLink: value),
           ),
@@ -1725,29 +1713,29 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         _SyncTextField(
           label: context.l10n.email,
           value: viewModel.resume.email,
-          focusNode: _personalFieldFocusNodes[4],
+          focusNode: _personalFieldFocusNodes[3],
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[5].requestFocus(),
+          onSubmitted: (_) => _personalFieldFocusNodes[4].requestFocus(),
           onChanged: (value) =>
               viewModel.updateResume((resume) => resume.copyWith(email: value)),
         ),
         _PhoneWithCountryCodeField(
           label: context.l10n.phoneNumber,
           value: viewModel.resume.phone,
-          focusNode: _personalFieldFocusNodes[5],
+          focusNode: _personalFieldFocusNodes[4],
           textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[6].requestFocus(),
+          onSubmitted: (_) => _personalFieldFocusNodes[5].requestFocus(),
           onChanged: (value) =>
               viewModel.updateResume((resume) => resume.copyWith(phone: value)),
         ),
         _SyncTextField(
           label: context.l10n.location,
           value: viewModel.resume.location,
-          focusNode: _personalFieldFocusNodes[6],
+          focusNode: _personalFieldFocusNodes[5],
           textCapitalization: TextCapitalization.sentences,
           textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[7].requestFocus(),
+          onSubmitted: (_) => _personalFieldFocusNodes[6].requestFocus(),
           onChanged: (value) => viewModel.updateResume(
             (resume) => resume.copyWith(location: value),
           ),
@@ -1755,7 +1743,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         _SyncTextField(
           label: context.l10n.websiteOrPortfolio,
           value: viewModel.resume.website,
-          focusNode: _personalFieldFocusNodes[7],
+          focusNode: _personalFieldFocusNodes[6],
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _summaryFocusNode.requestFocus(),
           onChanged: (value) => viewModel.updateResume(

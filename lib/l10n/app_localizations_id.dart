@@ -1069,7 +1069,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get newSection => 'Bagian baru';
 
   @override
-  String get newSectionTitleHint => 'Sertifikasi, Bahasa, Penghargaan…';
+  String get newSectionTitleHint => 'mis. Sertifikasi, Penghargaan';
 
   @override
   String get sectionTypeNormal => 'Normal';
@@ -1281,7 +1281,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Ketik untuk melihat saran atau tambahkan keterampilan Anda sendiri';
 
   @override
-  String get categoryHint => 'Bahasa pemrograman, Alat, Framework, dll.';
+  String get categoryHint => 'mis. Bahasa, Alat';
 
   @override
   String get moveCategoryUp => 'Pindahkan kategori ke atas';

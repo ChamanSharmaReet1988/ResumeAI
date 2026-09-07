@@ -1073,7 +1073,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get newSection => 'Nueva sección';
 
   @override
-  String get newSectionTitleHint => 'Certificaciones, Idiomas, Premios…';
+  String get newSectionTitleHint => 'p. ej. Certificaciones, Premios';
 
   @override
   String get sectionTypeNormal => 'Normal';
@@ -1285,8 +1285,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Escribe para ver sugerencias o añade tu propia habilidad';
 
   @override
-  String get categoryHint =>
-      'Lenguajes de programación, Herramientas, Frameworks, etc.';
+  String get categoryHint => 'p. ej. Idiomas, Herramientas';
 
   @override
   String get moveCategoryUp => 'Subir categoría';

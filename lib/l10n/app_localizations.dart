@@ -1875,7 +1875,7 @@ abstract class AppLocalizations {
   /// No description provided for @newSectionTitleHint.
   ///
   /// In en, this message translates to:
-  /// **'Certifications, Languages, Awards…'**
+  /// **'e.g. Certifications, Awards'**
   String get newSectionTitleHint;
 
   /// No description provided for @sectionTypeNormal.
@@ -2265,7 +2265,7 @@ abstract class AppLocalizations {
   /// No description provided for @categoryHint.
   ///
   /// In en, this message translates to:
-  /// **'Programming Languages, Tools, Frameworks, etc.'**
+  /// **'e.g. Languages, Tools'**
   String get categoryHint;
 
   /// No description provided for @moveCategoryUp.

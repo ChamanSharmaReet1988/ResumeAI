@@ -4450,28 +4450,28 @@ class _AtsModernFlowPreview extends StatelessWidget {
                                 ),
                               ]
                             : [
-                                for (final item in works) ...[
+                                for (var i = 0; i < works.length; i++) ...[
                                   Text(
-                                    '${item.role.trim().ifBlank('Role')} — ${item.company.trim().ifBlank('Company')}',
+                                    '${works[i].role.trim().ifBlank('Role')} — ${works[i].company.trim().ifBlank('Company')}',
                                     style: subtitleStyle,
                                     maxLines: 3,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   if (educationDateRangeLabel(
-                                    item.startDate,
-                                    item.endDate,
+                                    works[i].startDate,
+                                    works[i].endDate,
                                   ).isNotEmpty)
                                     Text(
                                       educationDateRangeLabel(
-                                        item.startDate,
-                                        item.endDate,
+                                        works[i].startDate,
+                                        works[i].endDate,
                                       ),
                                       style: bodyStyle,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   for (final bullet
-                                      in item.bullets
+                                      in works[i].bullets
                                           .where((b) => b.trim().isNotEmpty)
                                           .take(3))
                                     Padding(
@@ -4483,7 +4483,8 @@ class _AtsModernFlowPreview extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                  const SizedBox(height: 8),
+                                  if (i < works.length - 1)
+                                    const SizedBox(height: 8),
                                 ],
                               ],
                       );
@@ -5912,14 +5913,14 @@ class _AtsExecutivePreview extends StatelessWidget {
                                 ),
                               ]
                             : [
-                                for (final item in works) ...[
+                                for (var i = 0; i < works.length; i++) ...[
                                   Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          item.role
+                                          works[i].role
                                               .trim()
                                               .ifBlank('Role')
                                               .toUpperCase(),
@@ -5929,14 +5930,14 @@ class _AtsExecutivePreview extends StatelessWidget {
                                         ),
                                       ),
                                       if (educationDateRangeLabel(
-                                        item.startDate,
-                                        item.endDate,
+                                        works[i].startDate,
+                                        works[i].endDate,
                                       ).isNotEmpty)
                                         Flexible(
                                           child: Text(
                                             educationDateRangeLabel(
-                                              item.startDate,
-                                              item.endDate,
+                                              works[i].startDate,
+                                              works[i].endDate,
                                             ),
                                             textAlign: TextAlign.right,
                                             style: subtitleStyle,
@@ -5948,13 +5949,13 @@ class _AtsExecutivePreview extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    item.company.trim().ifBlank('Company'),
+                                    works[i].company.trim().ifBlank('Company'),
                                     style: bodyStyle,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   for (final bullet
-                                      in _workBulletLines(item).take(3))
+                                      in _workBulletLines(works[i]).take(3))
                                     Padding(
                                       padding: const EdgeInsets.only(top: 2),
                                       child: Text(
@@ -5964,7 +5965,8 @@ class _AtsExecutivePreview extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                  const SizedBox(height: 8),
+                                  if (i < works.length - 1)
+                                    const SizedBox(height: 8),
                                 ],
                               ],
                       );
@@ -5982,29 +5984,30 @@ class _AtsExecutivePreview extends StatelessWidget {
                                 ),
                               ]
                             : [
-                                for (final item in education) ...[
+                                for (var i = 0; i < education.length; i++) ...[
                                   Text(
-                                    '${item.institution.trim().ifBlank('University')} | ${item.degree.trim().ifBlank('Degree')}',
+                                    '${education[i].institution.trim().ifBlank('University')} | ${education[i].degree.trim().ifBlank('Degree')}',
                                     style: subtitleStyle,
                                     maxLines: 3,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   if (educationDateRangeLabel(
-                                    item.startDate,
-                                    item.endDate,
+                                    education[i].startDate,
+                                    education[i].endDate,
                                   ).isNotEmpty) ...[
                                     const SizedBox(height: 2),
                                     Text(
                                       educationDateRangeLabel(
-                                        item.startDate,
-                                        item.endDate,
+                                        education[i].startDate,
+                                        education[i].endDate,
                                       ),
                                       style: bodyStyle,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
-                                  const SizedBox(height: 8),
+                                  if (i < education.length - 1)
+                                    const SizedBox(height: 8),
                                 ],
                               ],
                       );
