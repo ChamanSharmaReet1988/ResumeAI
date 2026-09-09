@@ -395,6 +395,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             backgroundColor: scaffoldBg,
             appBar: PlatformMonetization.showsPreviewBanner
                 ? AndroidBannerHeaderBar(
+                    topPadding: MediaQuery.paddingOf(context).top,
                     backgroundColor: barBg,
                     onBack: Navigator.of(context).canPop()
                         ? _onBackPressed

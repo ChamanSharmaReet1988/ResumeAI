@@ -22,11 +22,17 @@ abstract final class AndroidAdsConfig {
   static const androidTemplatesInterstitialAdUnitId =
       'ca-app-pub-4326780099537551/3087154686';
   static const androidTemplatesBannerAdUnitId =
-      'ca-app-pub-4326780099537551/1505163054';
+      'ca-app-pub-4326780099537551/6374346359';
   static const androidPreviewBannerAdUnitId =
       'ca-app-pub-4326780099537551/6374346359';
   static const androidSettingsBannerAdUnitId =
       'ca-app-pub-4326780099537551/7581767617';
+  /// Android Home banner.
+  static const androidHomeBannerAdUnitId =
+      'ca-app-pub-4326780099537551/1505163054';
+  /// Android AI Resume banner.
+  static const androidAiResumeBannerAdUnitId =
+      'ca-app-pub-4326780099537551/8215709938';
 
   // —— iOS production units ——
   static const iosPreviewInterstitialAdUnitId =
@@ -58,16 +64,17 @@ abstract final class AndroidAdsConfig {
         AndroidBannerPlacement.home => iosHomeBannerAdUnitId,
         AndroidBannerPlacement.templates => iosTemplatesBannerAdUnitId,
         AndroidBannerPlacement.settings => iosSettingsBannerAdUnitId,
-        // No iOS preview banner unit — callers should not request it.
+        // No iOS AI Resume / preview banner units yet.
+        AndroidBannerPlacement.aiResume => iosTemplatesBannerAdUnitId,
         AndroidBannerPlacement.preview => iosTemplatesBannerAdUnitId,
       };
     }
     return switch (placement) {
+      AndroidBannerPlacement.home => androidHomeBannerAdUnitId,
       AndroidBannerPlacement.templates => androidTemplatesBannerAdUnitId,
       AndroidBannerPlacement.preview => androidPreviewBannerAdUnitId,
       AndroidBannerPlacement.settings => androidSettingsBannerAdUnitId,
-      // No Android home banner unit configured.
-      AndroidBannerPlacement.home => androidTemplatesBannerAdUnitId,
+      AndroidBannerPlacement.aiResume => androidAiResumeBannerAdUnitId,
     };
   }
 
@@ -100,6 +107,7 @@ enum AndroidBannerPlacement {
   templates,
   preview,
   settings,
+  aiResume,
 }
 
 class AndroidAdsService {

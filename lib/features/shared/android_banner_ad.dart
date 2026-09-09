@@ -128,39 +128,48 @@ class AndroidBannerHeaderBar extends StatelessWidget
     this.onBack,
     this.trailing,
     this.backgroundColor,
+    this.topPadding = 0,
   });
 
   final VoidCallback? onBack;
   final Widget? trailing;
   final Color? backgroundColor;
 
+  /// Status-bar inset so back/edit sit below the system UI (Android).
+  final double topPadding;
+
+  static const double toolbarHeight = 56;
+
   @override
-  Size get preferredSize => const Size.fromHeight(56);
+  Size get preferredSize => Size.fromHeight(toolbarHeight + topPadding);
 
   @override
   Widget build(BuildContext context) {
     final bg = backgroundColor ?? Theme.of(context).cardColor;
     return Material(
       color: bg,
-      child: SizedBox(
-        height: 56,
-        child: Row(
-          children: [
-            if (onBack != null)
-              IconButton(
-                onPressed: onBack,
-                icon: const Icon(Icons.arrow_back),
-              )
-            else
-              const SizedBox(width: 8),
-            const Expanded(
-              child: AndroidBannerAdSlot(
-                placement: AndroidBannerPlacement.preview,
-                height: 50,
+      child: Padding(
+        padding: EdgeInsets.only(top: topPadding),
+        child: SizedBox(
+          height: toolbarHeight,
+          child: Row(
+            children: [
+              if (onBack != null)
+                IconButton(
+                  onPressed: onBack,
+                  icon: const Icon(Icons.arrow_back),
+                )
+              else
+                const SizedBox(width: 8),
+              const Expanded(
+                child: AndroidBannerAdSlot(
+                  placement: AndroidBannerPlacement.preview,
+                  height: 50,
+                ),
               ),
-            ),
-            if (trailing != null) trailing! else const SizedBox(width: 8),
-          ],
+              if (trailing != null) trailing! else const SizedBox(width: 8),
+            ],
+          ),
         ),
       ),
     );

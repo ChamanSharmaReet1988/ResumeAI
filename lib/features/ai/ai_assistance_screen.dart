@@ -5,8 +5,12 @@ import 'package:resume_app/l10n/l10n_ext.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/ai_api_key_store.dart';
 import '../../core/services/ai_resume_coordinator.dart';
+import '../../core/services/android_ads_service.dart';
+import '../../core/services/platform_monetization.dart';
+import '../../core/services/premium_purchase_service.dart';
 import '../../core/services/resume_services.dart';
 import '../premium/premium_gate.dart';
+import '../shared/android_banner_ad.dart';
 import 'resume_optimize_highlight.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
@@ -324,6 +328,9 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     final resumes = library.resumes;
     final selectedResume = library.selectedResume;
     final l10n = context.l10n;
+    final showAiResumeBanner = PlatformMonetization.showsAiResumeBanner &&
+        !(PlatformMonetization.isIapEnabled &&
+            context.watch<PremiumPurchaseService>().isPremium);
 
     return ListenableBuilder(
       listenable: _jobDescriptionController,
@@ -335,8 +342,13 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
             _atsAttemptSourceId == selectedResume?.id &&
             _atsCreateAttempt > 0;
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+        final scrollBody = SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            showAiResumeBanner ? 12 : 20,
+            20,
+            120,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -582,6 +594,26 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                   ),
                 ],
               ],
+            ],
+          ),
+        );
+
+        if (!showAiResumeBanner) {
+          return scrollBody;
+        }
+
+        return SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Material(
+                elevation: 0,
+                child: AndroidBannerAdSlot(
+                  placement: AndroidBannerPlacement.aiResume,
+                ),
+              ),
+              Expanded(child: scrollBody),
             ],
           ),
         );

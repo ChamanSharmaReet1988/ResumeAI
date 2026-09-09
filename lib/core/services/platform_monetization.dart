@@ -32,9 +32,12 @@ abstract final class PlatformMonetization {
   /// Preview top banner exists on Android only (no iOS preview banner unit).
   static bool get showsPreviewBanner => isAndroidAdsModel;
 
-  /// Home top banner exists on iOS only.
-  static bool get showsHomeBanner => isIos;
+  /// Home top banner on Android and iOS.
+  static bool get showsHomeBanner => showsAds;
 
   /// Settings top banner on Android and iOS.
   static bool get showsSettingsBanner => showsAds;
+
+  /// AI Resume top banner (Android). iOS AI tab is Pro-gated / ad-free.
+  static bool get showsAiResumeBanner => isAndroidAdsModel;
 }
