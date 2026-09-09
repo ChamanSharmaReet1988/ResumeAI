@@ -14,8 +14,10 @@ import 'icloud_backup_screen.dart';
 import 'legal_web_view_screen.dart';
 import '../premium/go_premium_screen.dart';
 import '../premium/premium_gate.dart';
+import '../shared/android_banner_ad.dart';
 import '../shared/view_models.dart';
 import '../../core/app_locale_option.dart';
+import '../../core/services/android_ads_service.dart';
 import '../../core/services/firebase_app_services.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/platform_monetization.dart';
@@ -312,6 +314,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final showBackupPremiumIcon =
             PlatformMonetization.isIapEnabled &&
             !premium.hasConfirmedPremiumStatus;
+        final showSettingsBanner = PlatformMonetization.showsSettingsBanner &&
+            !(PlatformMonetization.isIapEnabled && premium.isPremium);
         final rowLabelStyle = theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w400,
         );
@@ -324,16 +328,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _ => l10n.languageSystemDefault,
         };
 
-        return Stack(
+        final body = Stack(
           children: [
             LayoutBuilder(
               builder: (context, constraints) {
                 const horizontalPadding = 20.0;
-                const topPadding = 20.0;
+                final topPadding = showSettingsBanner ? 12.0 : 20.0;
                 const bottomPadding = 24.0;
 
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
+                  padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
                     topPadding,
                     horizontalPadding,
@@ -797,6 +801,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
           ],
+        );
+
+        if (!showSettingsBanner) {
+          return body;
+        }
+
+        return SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Material(
+                elevation: 0,
+                child: AndroidBannerAdSlot(
+                  placement: AndroidBannerPlacement.settings,
+                ),
+              ),
+              Expanded(child: body),
+            ],
+          ),
         );
       },
     );

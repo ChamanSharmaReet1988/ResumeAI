@@ -25,6 +25,8 @@ abstract final class AndroidAdsConfig {
       'ca-app-pub-4326780099537551/1505163054';
   static const androidPreviewBannerAdUnitId =
       'ca-app-pub-4326780099537551/6374346359';
+  static const androidSettingsBannerAdUnitId =
+      'ca-app-pub-4326780099537551/7581767617';
 
   // —— iOS production units ——
   static const iosPreviewInterstitialAdUnitId =
@@ -35,6 +37,8 @@ abstract final class AndroidAdsConfig {
       'ca-app-pub-4326780099537551/5755243724';
   static const iosTemplatesBannerAdUnitId =
       'ca-app-pub-4326780099537551/7998263686';
+  static const iosSettingsBannerAdUnitId =
+      'ca-app-pub-4326780099537551/1695016111';
 
   /// Show an interstitial on every Nth open of a placement (templates / preview).
   static const interstitialShowEveryNthOpen = 3;
@@ -53,6 +57,7 @@ abstract final class AndroidAdsConfig {
       return switch (placement) {
         AndroidBannerPlacement.home => iosHomeBannerAdUnitId,
         AndroidBannerPlacement.templates => iosTemplatesBannerAdUnitId,
+        AndroidBannerPlacement.settings => iosSettingsBannerAdUnitId,
         // No iOS preview banner unit — callers should not request it.
         AndroidBannerPlacement.preview => iosTemplatesBannerAdUnitId,
       };
@@ -60,6 +65,7 @@ abstract final class AndroidAdsConfig {
     return switch (placement) {
       AndroidBannerPlacement.templates => androidTemplatesBannerAdUnitId,
       AndroidBannerPlacement.preview => androidPreviewBannerAdUnitId,
+      AndroidBannerPlacement.settings => androidSettingsBannerAdUnitId,
       // No Android home banner unit configured.
       AndroidBannerPlacement.home => androidTemplatesBannerAdUnitId,
     };
@@ -93,6 +99,7 @@ enum AndroidBannerPlacement {
   home,
   templates,
   preview,
+  settings,
 }
 
 class AndroidAdsService {

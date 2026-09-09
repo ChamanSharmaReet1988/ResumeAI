@@ -34,4 +34,7 @@ abstract final class PlatformMonetization {
 
   /// Home top banner exists on iOS only.
   static bool get showsHomeBanner => isIos;
+
+  /// Settings top banner on Android and iOS.
+  static bool get showsSettingsBanner => showsAds;
 }

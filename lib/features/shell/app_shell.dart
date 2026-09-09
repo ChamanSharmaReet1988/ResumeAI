@@ -540,7 +540,9 @@ class _AppShellState extends State<AppShell> {
             ((_currentIndex == 0 && PlatformMonetization.showsHomeBanner) ||
                 (_currentIndex ==
                         InAppReviewPromptService.templatesTabIndex &&
-                    PlatformMonetization.showsAds));
+                    PlatformMonetization.showsAds) ||
+                (_currentIndex == AppShellScope.settingsTabIndex &&
+                    PlatformMonetization.showsSettingsBanner));
 
         return Scaffold(
           floatingActionButton: _buildFloatingActionButton(),
