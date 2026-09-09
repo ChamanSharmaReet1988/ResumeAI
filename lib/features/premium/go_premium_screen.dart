@@ -32,7 +32,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
         : 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
   );
 
-  String? _selectedProductId = PremiumProducts.year;
+  String? _selectedProductId = PremiumProducts.lifetime;
   bool _didPop = false;
   bool _isCompletingLeave = false;
   bool _isFullScreenLoading = false;
@@ -371,7 +371,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                               const _PremiumUpcomingHighlight(),
                               const SizedBox(height: 28),
                               Text(
-                                l10n.chooseAPlan,
+                                l10n.unlockProOnce,
                                 style: theme.textTheme.labelLarge?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: colorScheme.onSurface,
@@ -393,20 +393,7 @@ class _GoPremiumScreenState extends State<GoPremiumScreen> {
                                     definition: plan,
                                     priceLabel:
                                         premium.displayPriceFor(plan.productId),
-                                    savingsLabel:
-                                        plan.productId == PremiumProducts.year
-                                        ? premiumYearlySavingsLabel(
-                                            l10n: l10n,
-                                            yearlyPrice: premium
-                                                .displayRawPriceFor(
-                                                  PremiumProducts.year,
-                                                ),
-                                            monthlyPrice: premium
-                                                .displayRawPriceFor(
-                                                  PremiumProducts.month,
-                                                ),
-                                          )
-                                        : null,
+                                    savingsLabel: null,
                                     selected:
                                         _selectedProductId == plan.productId,
                                     onTap: _isFullScreenLoading

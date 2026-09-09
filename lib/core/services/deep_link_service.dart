@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 
+import 'analytics_events.dart';
 import 'firebase_app_services.dart';
 
 /// Destinations that store / marketing deep links can open.
@@ -184,7 +185,7 @@ class DeepLinkService {
     }
     try {
       await firebase.logEvent(
-        'deep_link_open',
+        AnalyticsEvents.deepLinkOpen,
         parameters: {
           'destination': destination.name,
           'cold_start': coldStart ? 1 : 0,

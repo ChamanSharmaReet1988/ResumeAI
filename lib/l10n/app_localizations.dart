@@ -486,6 +486,12 @@ abstract class AppLocalizations {
   /// **'Choose a plan'**
   String get chooseAPlan;
 
+  /// No description provided for @unlockProOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time unlock'**
+  String get unlockProOnce;
+
   /// No description provided for @premiumLegalAgreement.
   ///
   /// In en, this message translates to:
@@ -537,8 +543,14 @@ abstract class AppLocalizations {
   /// No description provided for @premiumWelcomeBody.
   ///
   /// In en, this message translates to:
-  /// **'ResumeApp Pro is active on your {planLabel}. Premium templates and {backup} are now unlocked.'**
+  /// **'ResumeApp Pro is active on your {planLabel}. Ads are removed, and AI Resume plus {backup} are unlocked.'**
   String premiumWelcomeBody(String planLabel, String backup);
+
+  /// No description provided for @premiumBenefitRemoveAds.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all ads'**
+  String get premiumBenefitRemoveAds;
 
   /// No description provided for @premiumBenefitUnlockLayouts.
   ///
@@ -570,23 +582,17 @@ abstract class AppLocalizations {
   /// **'New resume layouts and modern templates, included with Pro.'**
   String get premiumUpcomingUpdateMessage;
 
-  /// No description provided for @planWeekly.
+  /// No description provided for @planLifetime.
   ///
   /// In en, this message translates to:
-  /// **'Weekly'**
-  String get planWeekly;
+  /// **'Lifetime'**
+  String get planLifetime;
 
-  /// No description provided for @planMonthly.
+  /// No description provided for @planSubtitleLifetime.
   ///
   /// In en, this message translates to:
-  /// **'Monthly'**
-  String get planMonthly;
-
-  /// No description provided for @planYearly.
-  ///
-  /// In en, this message translates to:
-  /// **'Yearly'**
-  String get planYearly;
+  /// **'One-time purchase · \$1.99'**
+  String get planSubtitleLifetime;
 
   /// No description provided for @planPro.
   ///
@@ -594,35 +600,11 @@ abstract class AppLocalizations {
   /// **'Pro'**
   String get planPro;
 
-  /// No description provided for @planSubtitleWeekly.
-  ///
-  /// In en, this message translates to:
-  /// **'Short-term access'**
-  String get planSubtitleWeekly;
-
-  /// No description provided for @planSubtitleMonthly.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay month to month'**
-  String get planSubtitleMonthly;
-
-  /// No description provided for @planSubtitleYearly.
-  ///
-  /// In en, this message translates to:
-  /// **'Best value'**
-  String get planSubtitleYearly;
-
   /// No description provided for @planLabelNamed.
   ///
   /// In en, this message translates to:
   /// **'{title} plan'**
   String planLabelNamed(String title);
-
-  /// No description provided for @savePercentWithYearlyBilling.
-  ///
-  /// In en, this message translates to:
-  /// **'Save {percent}% with yearly billing'**
-  String savePercentWithYearlyBilling(int percent);
 
   /// No description provided for @priceUnavailable.
   ///
@@ -648,23 +630,11 @@ abstract class AppLocalizations {
   /// **'Developer Pro override is on. All Pro features are unlocked for testing on this device.'**
   String get alreadySubscribedDebugOverride;
 
-  /// No description provided for @alreadySubscribedWeekly.
+  /// No description provided for @alreadySubscribedLifetime.
   ///
   /// In en, this message translates to:
-  /// **'You have an active weekly subscription. All Pro templates, {backup}, and premium features are included.'**
-  String alreadySubscribedWeekly(String backup);
-
-  /// No description provided for @alreadySubscribedMonthly.
-  ///
-  /// In en, this message translates to:
-  /// **'You have an active monthly subscription. All Pro templates, {backup}, and premium features are included.'**
-  String alreadySubscribedMonthly(String backup);
-
-  /// No description provided for @alreadySubscribedYearly.
-  ///
-  /// In en, this message translates to:
-  /// **'You have an active yearly subscription. All Pro templates, {backup}, and premium features are included.'**
-  String alreadySubscribedYearly(String backup);
+  /// **'You have ResumeApp Pro (Lifetime). Ads are removed, and AI Resume plus {backup} are unlocked.'**
+  String alreadySubscribedLifetime(String backup);
 
   /// No description provided for @alreadySubscribedGeneric.
   ///
@@ -672,23 +642,11 @@ abstract class AppLocalizations {
   /// **'You have an active ResumeApp Pro subscription. All premium features are included in your plan.'**
   String get alreadySubscribedGeneric;
 
-  /// No description provided for @restoreInsteadWeekly.
+  /// No description provided for @restoreInsteadLifetime.
   ///
   /// In en, this message translates to:
-  /// **'A weekly subscription was found for this {account}. Use Restore to activate it on this device instead of buying again.'**
-  String restoreInsteadWeekly(String account);
-
-  /// No description provided for @restoreInsteadMonthly.
-  ///
-  /// In en, this message translates to:
-  /// **'A monthly subscription was found for this {account}. Use Restore to activate it on this device instead of buying again.'**
-  String restoreInsteadMonthly(String account);
-
-  /// No description provided for @restoreInsteadYearly.
-  ///
-  /// In en, this message translates to:
-  /// **'A yearly subscription was found for this {account}. Use Restore to activate it on this device instead of buying again.'**
-  String restoreInsteadYearly(String account);
+  /// **'ResumeApp Pro (Lifetime) was found for this {account}. Use Restore to activate it on this device instead of buying again.'**
+  String restoreInsteadLifetime(String account);
 
   /// No description provided for @restoreInsteadGeneric.
   ///

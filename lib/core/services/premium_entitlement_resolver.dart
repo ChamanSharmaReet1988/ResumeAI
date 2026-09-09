@@ -120,15 +120,19 @@ abstract final class PremiumEntitlementResolver {
       PremiumDebugLog.logPair('preferredProductId', preferredProductId);
     }
 
-    var subscriptionRow = 0;
+      var subscriptionRow = 0;
     for (final transaction in transactions) {
-      if (!PremiumProducts.subscriptionIds.contains(transaction.productId)) {
+      if (!PremiumProducts.isKnownProductId(transaction.productId)) {
         continue;
       }
 
       subscriptionRow++;
       final expiresAt = _parseStoreKit2Timestamp(transaction.expirationDate);
-      final isActive = expiresAt != null && expiresAt.isAfter(now);
+      final isLifetime = transaction.productId == PremiumProducts.lifetime;
+      // Non-consumables have no expiration; treat owned lifetime as forever active.
+      final isActive = isLifetime
+          ? expiresAt == null || expiresAt.isAfter(now)
+          : expiresAt != null && expiresAt.isAfter(now);
       final purchasedAt = _parseStoreKit2Timestamp(transaction.purchaseDate);
 
       PremiumDebugLog.log(
@@ -137,6 +141,7 @@ abstract final class PremiumEntitlementResolver {
         'purchaseDate=${transaction.purchaseDate} '
         'expirationDate=${transaction.expirationDate ?? "none"} '
         'parsedExpiry=${expiresAt?.toUtc().toIso8601String() ?? "none"} '
+        'lifetime=$isLifetime '
         'active=$isActive '
         'transactionId=${transaction.id}',
       );
@@ -145,7 +150,19 @@ abstract final class PremiumEntitlementResolver {
         continue;
       }
 
-      if (fallbackExpiry == null || expiresAt.isAfter(fallbackExpiry)) {
+      if (isLifetime) {
+        // Prefer lifetime over any leftover subscription when both appear.
+        activeByProductId[transaction.productId] =
+            purchasedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        fallbackExpiry = DateTime.fromMillisecondsSinceEpoch(
+          8640000000000000,
+          isUtc: true,
+        );
+        fallbackProductId = transaction.productId;
+        continue;
+      }
+
+      if (fallbackExpiry == null || expiresAt!.isAfter(fallbackExpiry)) {
         fallbackExpiry = expiresAt;
         fallbackProductId = transaction.productId;
       }
@@ -160,8 +177,8 @@ abstract final class PremiumEntitlementResolver {
 
     if (subscriptionRow == 0) {
       PremiumDebugLog.log(
-        'No StoreKit2 transactions matched subscription product IDs '
-        '${PremiumProducts.subscriptionIds}',
+        'No StoreKit2 transactions matched product IDs '
+        '${PremiumProducts.productIds}',
       );
     }
 
@@ -239,7 +256,7 @@ abstract final class PremiumEntitlementResolver {
 
     var subscriptionRow = 0;
     for (final entitlement in entitlements) {
-      if (!PremiumProducts.subscriptionIds.contains(entitlement.productId)) {
+      if (!PremiumProducts.isKnownProductId(entitlement.productId)) {
         continue;
       }
       subscriptionRow++;
@@ -265,8 +282,8 @@ abstract final class PremiumEntitlementResolver {
 
     if (subscriptionRow == 0) {
       PremiumDebugLog.log(
-        'No current entitlements matched subscription product IDs '
-        '${PremiumProducts.subscriptionIds}',
+        'No current entitlements matched product IDs '
+        '${PremiumProducts.productIds}',
       );
     }
 
@@ -277,6 +294,15 @@ abstract final class PremiumEntitlementResolver {
           PremiumDebugLog.log('Selected preferred product from current entitlements');
           return preferredProductId;
         }
+      }
+    }
+
+    // Prefer lifetime unlock when present alongside legacy subscriptions.
+    for (final entitlement in activeRows) {
+      if (entitlement.productId == PremiumProducts.lifetime) {
+        PremiumDebugLog.logPair('activeProductId', PremiumProducts.lifetime);
+        PremiumDebugLog.log('Selected lifetime from current entitlements');
+        return PremiumProducts.lifetime;
       }
     }
 
@@ -293,6 +319,15 @@ abstract final class PremiumEntitlementResolver {
     _IosCurrentEntitlement entitlement,
     DateTime now,
   ) {
+    if (entitlement.productId == PremiumProducts.lifetime) {
+      final state = entitlement.statusState;
+      if (state == 'revoked' || state == 'expired') {
+        return false;
+      }
+      // Lifetime non-consumable: active unless revoked.
+      return true;
+    }
+
     final state = entitlement.statusState;
     final expiresAt = entitlement.expirationDate;
     final hasFutureExpiry = expiresAt != null && expiresAt.isAfter(now);
@@ -342,7 +377,7 @@ abstract final class PremiumEntitlementResolver {
     }
 
     for (final purchase in response.pastPurchases) {
-      if (!PremiumProducts.subscriptionIds.contains(purchase.productID)) {
+      if (!PremiumProducts.isKnownProductId(purchase.productID)) {
         continue;
       }
 
@@ -379,8 +414,8 @@ abstract final class PremiumEntitlementResolver {
 
     if (subscriptionRow == 0) {
       PremiumDebugLog.log(
-        'No Play Billing purchases matched subscription product IDs '
-        '${PremiumProducts.subscriptionIds}',
+        'No Play Billing purchases matched product IDs '
+        '${PremiumProducts.productIds}',
       );
     }
 

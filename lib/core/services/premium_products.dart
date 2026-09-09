@@ -1,16 +1,27 @@
 import 'package:flutter/foundation.dart';
 import 'package:resume_app/l10n/app_localizations.dart';
 
-/// Store product identifiers for ResumeAI Pro subscriptions.
+/// Store product identifiers for ResumeAI Pro.
 ///
-/// The same IDs are configured in App Store Connect (iOS) and Google Play
-/// Console (Android).
+/// One-time (non-consumable) lifetime unlock only.
 abstract final class PremiumProducts {
-  static const String week = 'gp_pro_week';
-  static const String month = 'gp_pro_month';
-  static const String year = 'gp_pro_year';
+  /// One-time Pro unlock (App Store price should be $1.99).
+  static const String lifetime = 'resume_builder_one_time';
 
-  static const List<String> subscriptionIds = [week, month, year];
+  /// Products shown / offered on the paywall.
+  static const List<String> purchaseProductIds = [lifetime];
+
+  /// All IDs queried from the store.
+  static const List<String> productIds = [lifetime];
+
+  /// @Deprecated — use [productIds]. Kept for call-site compatibility.
+  static const List<String> subscriptionIds = productIds;
+
+  /// @Deprecated — use [productIds].
+  static const List<String> allProductIds = productIds;
+
+  static bool isKnownProductId(String productId) =>
+      productIds.contains(productId);
 
   static String storeAccountLabel(AppLocalizations l10n) =>
       defaultTargetPlatform == TargetPlatform.android
@@ -25,9 +36,7 @@ abstract final class PremiumProducts {
   /// English plan title for analytics (stable across locales).
   static String planTitleFor(String? productId) {
     return switch (productId) {
-      week => 'Weekly',
-      month => 'Monthly',
-      year => 'Yearly',
+      lifetime => 'Lifetime',
       _ => 'Pro',
     };
   }
@@ -37,17 +46,15 @@ abstract final class PremiumProducts {
     AppLocalizations l10n,
   ) {
     return switch (productId) {
-      week => l10n.planWeekly,
-      month => l10n.planMonthly,
-      year => l10n.planYearly,
+      lifetime => l10n.planLifetime,
       _ => l10n.planPro,
     };
   }
 
-  /// Short label for settings and sheets (e.g. "Monthly plan").
+  /// Short label for settings and sheets (e.g. "Lifetime plan").
   static String planLabelFor(String? productId, AppLocalizations l10n) {
     final title = localizedPlanTitleFor(productId, l10n);
-    if (productId != week && productId != month && productId != year) {
+    if (!isKnownProductId(productId ?? '')) {
       return l10n.resumeAppPro;
     }
     return l10n.planLabelNamed(title);
@@ -64,9 +71,7 @@ abstract final class PremiumProducts {
     }
     final backup = backupSyncBenefit(l10n);
     return switch (productId) {
-      week => l10n.alreadySubscribedWeekly(backup),
-      month => l10n.alreadySubscribedMonthly(backup),
-      year => l10n.alreadySubscribedYearly(backup),
+      lifetime => l10n.alreadySubscribedLifetime(backup),
       _ => l10n.alreadySubscribedGeneric,
     };
   }
@@ -79,9 +84,7 @@ abstract final class PremiumProducts {
   }) {
     final account = storeAccountLabel(l10n);
     return switch (productId) {
-      week => l10n.restoreInsteadWeekly(account),
-      month => l10n.restoreInsteadMonthly(account),
-      year => l10n.restoreInsteadYearly(account),
+      lifetime => l10n.restoreInsteadLifetime(account),
       _ => l10n.restoreInsteadGeneric(account),
     };
   }
@@ -104,24 +107,15 @@ class PremiumPlanDefinition {
 
 List<PremiumPlanDefinition> premiumPlanDefinitions(AppLocalizations l10n) => [
   PremiumPlanDefinition(
-    productId: PremiumProducts.week,
-    title: l10n.planWeekly,
-    subtitle: l10n.planSubtitleWeekly,
-  ),
-  PremiumPlanDefinition(
-    productId: PremiumProducts.month,
-    title: l10n.planMonthly,
-    subtitle: l10n.planSubtitleMonthly,
-  ),
-  PremiumPlanDefinition(
-    productId: PremiumProducts.year,
-    title: l10n.planYearly,
-    subtitle: l10n.planSubtitleYearly,
+    productId: PremiumProducts.lifetime,
+    title: l10n.planLifetime,
+    subtitle: l10n.planSubtitleLifetime,
     recommended: true,
   ),
 ];
 
 List<String> premiumBenefits(AppLocalizations l10n) => [
+  l10n.premiumBenefitRemoveAds,
   l10n.premiumBenefitUnlockLayouts,
   defaultTargetPlatform == TargetPlatform.android
       ? l10n.premiumBenefitBackupGoogleDrive
@@ -133,26 +127,3 @@ String premiumUpcomingUpdateBadge(AppLocalizations l10n) =>
 
 String premiumUpcomingUpdateMessage(AppLocalizations l10n) =>
     l10n.premiumUpcomingUpdateMessage;
-
-/// Savings line under the yearly plan (vs 12× monthly). `null` if prices are missing.
-String? premiumYearlySavingsLabel({
-  required AppLocalizations l10n,
-  required double? yearlyPrice,
-  required double? monthlyPrice,
-}) {
-  if (yearlyPrice == null ||
-      monthlyPrice == null ||
-      yearlyPrice <= 0 ||
-      monthlyPrice <= 0) {
-    return null;
-  }
-  final monthlyBilledYearly = monthlyPrice * 12;
-  if (monthlyBilledYearly <= yearlyPrice) {
-    return null;
-  }
-  final percent = ((1 - yearlyPrice / monthlyBilledYearly) * 100).round().clamp(
-    1,
-    99,
-  );
-  return l10n.savePercentWithYearlyBilling(percent);
-}

@@ -449,10 +449,10 @@ private final class ICloudResumePlugin: NSObject, FlutterPlugin {
 private final class StoreKitEntitlementPlugin: NSObject, FlutterPlugin {
   private static let channelName = "resume_app/storekit_entitlements"
   private static let subscriptionProductIds = [
-    "gp_pro_week",
-    "gp_pro_month",
-    "gp_pro_year"
+    "resume_builder_one_time"
   ]
+
+  private static let lifetimeProductId = "resume_builder_one_time"
   private let isoFormatter = ISO8601DateFormatter()
 
   static func register(with registrar: FlutterPluginRegistrar) {
@@ -506,7 +506,10 @@ private final class StoreKitEntitlementPlugin: NSObject, FlutterPlugin {
       guard case .verified(let transaction) = verificationResult else {
         continue
       }
-      guard transaction.productType == .autoRenewable else {
+      let isLifetime = transaction.productID == Self.lifetimeProductId
+      let isAutoRenewable = transaction.productType == .autoRenewable
+      let isNonConsumable = transaction.productType == .nonConsumable
+      guard isAutoRenewable || (isLifetime && isNonConsumable) else {
         continue
       }
       if transaction.revocationDate != nil {
@@ -521,9 +524,9 @@ private final class StoreKitEntitlementPlugin: NSObject, FlutterPlugin {
         "originalTransactionId": String(transaction.originalID),
         "purchaseDate": isoFormatter.string(from: transaction.purchaseDate),
         "expirationDate": transaction.expirationDate.map { isoFormatter.string(from: $0) } as Any,
-        "statusState": status?.state as Any,
-        "willAutoRenew": status?.willAutoRenew as Any,
-        "expirationReason": status?.expirationReason as Any,
+        "statusState": isLifetime ? "subscribed" : status?.state as Any,
+        "willAutoRenew": isLifetime ? false : status?.willAutoRenew as Any,
+        "expirationReason": isLifetime ? NSNull() : status?.expirationReason as Any,
       ])
     }
 

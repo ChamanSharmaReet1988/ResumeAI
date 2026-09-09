@@ -7,6 +7,8 @@ import '../../core/bottom_sheet_insets.dart';
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/platform_monetization.dart';
+import '../shared/android_banner_ad.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/resume_share_format_sheet.dart';
@@ -391,28 +393,43 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
           },
           child: Scaffold(
             backgroundColor: scaffoldBg,
-            appBar: AppBar(
-              backgroundColor: barBg,
-              surfaceTintColor: Colors.transparent,
-              scrolledUnderElevation: 0,
-              leadingWidth: 56,
-              automaticallyImplyLeading: Navigator.of(context).canPop(),
-              leading: Navigator.of(context).canPop()
-                  ? BackButton(onPressed: _onBackPressed)
-                  : null,
-              titleSpacing: 2,
-              title: Text(currentTitle, style: titleStyle),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: IconButton(
-                    onPressed: _openEditResume,
-                    tooltip: context.l10n.actionEdit,
-                    icon: const Icon(Icons.edit_outlined),
+            appBar: PlatformMonetization.showsPreviewBanner
+                ? AndroidBannerHeaderBar(
+                    backgroundColor: barBg,
+                    onBack: Navigator.of(context).canPop()
+                        ? _onBackPressed
+                        : null,
+                    trailing: Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: IconButton(
+                        onPressed: _openEditResume,
+                        tooltip: context.l10n.actionEdit,
+                        icon: const Icon(Icons.edit_outlined),
+                      ),
+                    ),
+                  )
+                : AppBar(
+                    backgroundColor: barBg,
+                    surfaceTintColor: Colors.transparent,
+                    scrolledUnderElevation: 0,
+                    leadingWidth: 56,
+                    automaticallyImplyLeading: Navigator.of(context).canPop(),
+                    leading: Navigator.of(context).canPop()
+                        ? BackButton(onPressed: _onBackPressed)
+                        : null,
+                    titleSpacing: 2,
+                    title: Text(currentTitle, style: titleStyle),
+                    actions: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: IconButton(
+                          onPressed: _openEditResume,
+                          tooltip: context.l10n.actionEdit,
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
             body: Column(
               children: [
                 Expanded(

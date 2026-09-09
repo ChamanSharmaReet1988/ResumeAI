@@ -66,6 +66,8 @@ Future<void> main() async {
           premiumPurchaseService.isPremium,
     );
     await premiumPurchaseService.initialize();
+    AndroidAdsService.isPremiumActive = () =>
+        PlatformMonetization.isIapEnabled && premiumPurchaseService.isPremium;
     await AndroidAdsService.initialize();
 
     final firebaseServices = await FirebaseAppServices.initialize();

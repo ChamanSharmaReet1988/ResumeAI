@@ -12,18 +12,12 @@ import 'premium_products.dart';
 /// intro pricing). [ProductDetails.price] often reflects only the first phase
 /// (e.g. free trial). Display prices are resolved across every offer.
 abstract final class PremiumStoreProductSelection {
-  static const Map<String, List<String>> _expectedBillingPeriods = {
-    PremiumProducts.week: ['P1W', 'P7D'],
-    PremiumProducts.month: ['P1M'],
-    PremiumProducts.year: ['P1Y'],
-  };
-
-  /// One purchase-ready product per subscription id.
+  /// One purchase-ready product per known product id.
   static List<ProductDetails> collapseSubscriptionProducts(
     List<ProductDetails> products,
   ) {
     final collapsed = <ProductDetails>[];
-    for (final id in PremiumProducts.subscriptionIds) {
+    for (final id in PremiumProducts.productIds) {
       final purchaseProduct = purchaseProductFor(id, products);
       if (purchaseProduct != null) {
         collapsed.add(purchaseProduct);
@@ -46,7 +40,7 @@ abstract final class PremiumStoreProductSelection {
     return product?.price;
   }
 
-  /// Numeric recurring price for savings math.
+  /// Numeric price for display math.
   static double? displayRawPriceFor(
     String productId,
     List<ProductDetails> allProducts,
@@ -60,7 +54,7 @@ abstract final class PremiumStoreProductSelection {
     return product?.rawPrice;
   }
 
-  /// Product passed to Play Billing when the user taps Continue.
+  /// Product passed to the store when the user taps Continue.
   static ProductDetails? purchaseProductFor(
     String productId,
     List<ProductDetails> allProducts,
@@ -106,7 +100,7 @@ abstract final class PremiumStoreProductSelection {
     }
 
     PremiumDebugLog.section('Premium paywall price resolution');
-    for (final id in PremiumProducts.subscriptionIds) {
+    for (final id in PremiumProducts.productIds) {
       final group = _productsForId(id, allProducts);
       PremiumDebugLog.log('productId=$id offerCount=${group.length}');
       for (final product in group) {
@@ -166,9 +160,6 @@ abstract final class PremiumStoreProductSelection {
     String productId,
     List<ProductDetails> allProducts,
   ) {
-    final expectedPeriods = _expectedBillingPeriods[productId] ?? const [];
-    PricingPhaseWrapper? bestPeriodMatch;
-    var bestPeriodMatchMicros = 0;
     PricingPhaseWrapper? bestInfinite;
     var bestInfiniteMicros = 0;
     PricingPhaseWrapper? bestPaid;
@@ -186,18 +177,6 @@ abstract final class PremiumStoreProductSelection {
             continue;
           }
 
-          final periodMatches = expectedPeriods.isEmpty ||
-              expectedPeriods.any(
-                (expected) =>
-                    _normalizePeriod(phase.billingPeriod) ==
-                    _normalizePeriod(expected),
-              );
-
-          if (periodMatches && phase.priceAmountMicros > bestPeriodMatchMicros) {
-            bestPeriodMatchMicros = phase.priceAmountMicros;
-            bestPeriodMatch = phase;
-          }
-
           if (phase.recurrenceMode == RecurrenceMode.infiniteRecurring &&
               phase.priceAmountMicros > bestInfiniteMicros) {
             bestInfiniteMicros = phase.priceAmountMicros;
@@ -212,10 +191,8 @@ abstract final class PremiumStoreProductSelection {
       }
     }
 
-    return bestPeriodMatch ?? bestInfinite ?? bestPaid;
+    return bestInfinite ?? bestPaid;
   }
-
-  static String _normalizePeriod(String period) => period.toUpperCase();
 
   static bool _isBasePlanOffer(SubscriptionOfferDetailsWrapper offer) {
     final offerId = offer.offerId;

@@ -7,6 +7,10 @@ import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/services/android_ads_service.dart';
+import '../../core/services/platform_monetization.dart';
+import '../../core/services/premium_purchase_service.dart';
+import '../shared/android_banner_ad.dart';
 import '../shared/view_models.dart';
 
 enum HomeSegment { resumes, coverLetters }
@@ -50,12 +54,15 @@ class HomeScreen extends StatelessWidget {
     return Consumer2<ResumeLibraryViewModel, CoverLetterLibraryViewModel>(
       builder: (context, resumeLibrary, coverLetterLibrary, _) {
         final dateFormat = DateFormat('MMM d, y');
+    final showHomeBanner = PlatformMonetization.showsHomeBanner &&
+        !(PlatformMonetization.isIapEnabled &&
+            context.watch<PremiumPurchaseService>().isPremium);
 
-        return CustomScrollView(
+        final scrollBody = CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                padding: EdgeInsets.fromLTRB(20, showHomeBanner ? 12 : 20, 20, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -161,6 +168,26 @@ class HomeScreen extends StatelessWidget {
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
+        );
+
+        if (!showHomeBanner) {
+          return scrollBody;
+        }
+
+        return SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Material(
+                elevation: 0,
+                child: AndroidBannerAdSlot(
+                  placement: AndroidBannerPlacement.home,
+                ),
+              ),
+              Expanded(child: scrollBody),
+            ],
+          ),
         );
       },
     );

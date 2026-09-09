@@ -5,6 +5,7 @@ import 'package:resume_app/core/services/in_app_review_prompt_service.dart';
 void main() {
   late bool ratingCompleted;
   late int openStoreListingCalls;
+  late int requestNativeReviewCalls;
 
   InAppReviewPromptService buildService() {
     return InAppReviewPromptService(
@@ -15,12 +16,16 @@ void main() {
       openStoreListing: () async {
         openStoreListingCalls += 1;
       },
+      requestNativeReview: () async {
+        requestNativeReviewCalls += 1;
+      },
     );
   }
 
   setUp(() {
     ratingCompleted = false;
     openStoreListingCalls = 0;
+    requestNativeReviewCalls = 0;
   });
 
   test('claims prompt when home has exactly one resume', () async {
@@ -41,12 +46,23 @@ void main() {
     expect(await service.claimHomePrompt(resumeCount: 2), isFalse);
   });
 
-  test('does not claim twice in the same session', () async {
+  test('does not claim while a prompt is in flight', () async {
     final service = buildService();
 
     expect(await service.claimHomePrompt(resumeCount: 1), isTrue);
+    expect(await service.claimHomePrompt(resumeCount: 1), isFalse);
+  });
+
+  test('claims again after deferral is cleared by next home visit', () async {
+    final service = buildService();
+
+    expect(await service.claimHomePrompt(resumeCount: 1), isTrue);
+    service.deferUntilNextHomeVisit();
     service.endPromptOffer();
     expect(await service.claimHomePrompt(resumeCount: 1), isFalse);
+
+    service.onArrivedAtHome();
+    expect(await service.claimHomePrompt(resumeCount: 1), isTrue);
   });
 
   test('does not claim after the user has rated', () async {
@@ -56,15 +72,10 @@ void main() {
     expect(await service.claimHomePrompt(resumeCount: 1), isFalse);
   });
 
-  test('rating flag survives a new service instance after reinstall', () async {
-    final firstLaunch = buildService();
-    expect(await firstLaunch.claimHomePrompt(resumeCount: 1), isTrue);
-    await firstLaunch.markRatingCompleted();
-    firstLaunch.endPromptOffer();
-
-    final afterReinstall = buildService();
-    expect(await afterReinstall.hasCompletedRating(), isTrue);
-    expect(await afterReinstall.claimHomePrompt(resumeCount: 1), isFalse);
+  test('requestNativeReview uses the injected requester', () async {
+    final service = buildService();
+    await service.requestNativeReview();
+    expect(requestNativeReviewCalls, 1);
   });
 
   test('openStoreListing uses the injected opener', () async {

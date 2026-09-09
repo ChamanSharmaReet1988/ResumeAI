@@ -6,34 +6,29 @@ import 'package:resume_app/l10n/app_localizations.dart';
 void main() {
   final l10n = lookupAppLocalizations(const Locale('en'));
 
-  test('alreadySubscribedMessage uses plan-specific copy', () {
+  test('alreadySubscribedMessage uses lifetime copy', () {
     expect(
       PremiumProducts.alreadySubscribedMessage(
-        productId: PremiumProducts.month,
+        productId: PremiumProducts.lifetime,
         l10n: l10n,
       ),
-      contains('monthly subscription'),
-    );
-    expect(
-      PremiumProducts.alreadySubscribedMessage(
-        productId: PremiumProducts.week,
-        l10n: l10n,
-      ),
-      contains('weekly subscription'),
-    );
-    expect(
-      PremiumProducts.alreadySubscribedMessage(
-        productId: PremiumProducts.year,
-        l10n: l10n,
-      ),
-      contains('yearly subscription'),
+      contains('Lifetime'),
     );
   });
 
-  test('planLabelFor formats plan name', () {
+  test('planLabelFor formats lifetime plan name', () {
     expect(
-      PremiumProducts.planLabelFor(PremiumProducts.month, l10n),
-      'Monthly plan',
+      PremiumProducts.planLabelFor(PremiumProducts.lifetime, l10n),
+      'Lifetime plan',
+    );
+  });
+
+  test('only lifetime product is offered', () {
+    expect(PremiumProducts.productIds, [PremiumProducts.lifetime]);
+    expect(PremiumProducts.purchaseProductIds, [PremiumProducts.lifetime]);
+    expect(
+      premiumPlanDefinitions(l10n).single.productId,
+      PremiumProducts.lifetime,
     );
   });
 }

@@ -92,6 +92,7 @@
   "restore": "Pulihkan",
   "resumeAppPro": "ResumeApp Pro",
   "chooseAPlan": "Pilih paket",
+  "unlockProOnce": "Buka sekali bayar",
   "premiumLegalAgreement": "Dengan melanjutkan, Anda menyetujui Syarat Penggunaan dan Kebijakan Privasi kami.",
   "subscriptionFound": "Langganan ditemukan",
   "processingEllipsis": "Memproses…",
@@ -100,7 +101,7 @@
   "restoringYourSubscription": "Memulihkan langganan Anda…",
   "pleaseWaitDoNotClose": "Harap tunggu. Jangan tutup aplikasi.",
   "premiumWelcomeCongratulations": "Selamat!",
-  "premiumWelcomeBody": "ResumeApp Pro aktif pada {planLabel} Anda. Template Premium dan {backup} kini terbuka.",
+  "premiumWelcomeBody": "ResumeApp Pro aktif pada {planLabel} Anda. Iklan dihapus, serta AI Resume dan {backup} dibuka.",
   "@premiumWelcomeBody": {
     "placeholders": {
       "planLabel": {
@@ -111,18 +112,15 @@
       }
     }
   },
+  "premiumBenefitRemoveAds": "Hapus semua iklan",
   "premiumBenefitUnlockLayouts": "Buka AI Resume — buat dan sempurnakan resume ATS dengan AI",
   "premiumBenefitBackupIcloud": "Cadangkan dan sinkronkan resume dengan iCloud",
   "premiumBenefitBackupGoogleDrive": "Cadangkan dan sinkronkan resume dengan Google Drive",
   "premiumUpcomingUpdateBadge": "Hadir di pembaruan berikutnya",
   "premiumUpcomingUpdateMessage": "Tata letak resume baru dan template modern, termasuk dalam Pro.",
-  "planWeekly": "Mingguan",
-  "planMonthly": "Bulanan",
-  "planYearly": "Tahunan",
+  "planLifetime": "Seumur hidup",
+  "planSubtitleLifetime": "Pembelian sekali · $1.99",
   "planPro": "Pro",
-  "planSubtitleWeekly": "Akses jangka pendek",
-  "planSubtitleMonthly": "Bayar bulanan",
-  "planSubtitleYearly": "Nilai terbaik",
   "planLabelNamed": "Paket {title}",
   "@planLabelNamed": {
     "placeholders": {
@@ -131,36 +129,12 @@
       }
     }
   },
-  "savePercentWithYearlyBilling": "Hemat {percent}% dengan penagihan tahunan",
-  "@savePercentWithYearlyBilling": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
   "priceUnavailable": "—",
   "storeAccountGoogle": "akun Google",
   "storeAccountApple": "Apple ID",
   "alreadySubscribedDebugOverride": "Override Pro pengembang aktif. Semua fitur Pro terbuka untuk pengujian di perangkat ini.",
-  "alreadySubscribedWeekly": "Anda memiliki langganan mingguan aktif. Semua template Pro, {backup}, dan fitur premium sudah termasuk.",
-  "@alreadySubscribedWeekly": {
-    "placeholders": {
-      "backup": {
-        "type": "String"
-      }
-    }
-  },
-  "alreadySubscribedMonthly": "Anda memiliki langganan bulanan aktif. Semua template Pro, {backup}, dan fitur premium sudah termasuk.",
-  "@alreadySubscribedMonthly": {
-    "placeholders": {
-      "backup": {
-        "type": "String"
-      }
-    }
-  },
-  "alreadySubscribedYearly": "Anda memiliki langganan tahunan aktif. Semua template Pro, {backup}, dan fitur premium sudah termasuk.",
-  "@alreadySubscribedYearly": {
+  "alreadySubscribedLifetime": "Anda memiliki ResumeApp Pro (seumur hidup). Iklan dihapus, serta AI Resume dan {backup} dibuka.",
+  "@alreadySubscribedLifetime": {
     "placeholders": {
       "backup": {
         "type": "String"
@@ -168,24 +142,8 @@
     }
   },
   "alreadySubscribedGeneric": "Anda memiliki langganan ResumeApp Pro aktif. Semua fitur premium termasuk dalam paket Anda.",
-  "restoreInsteadWeekly": "Langganan mingguan ditemukan untuk {account} ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.",
-  "@restoreInsteadWeekly": {
-    "placeholders": {
-      "account": {
-        "type": "String"
-      }
-    }
-  },
-  "restoreInsteadMonthly": "Langganan bulanan ditemukan untuk {account} ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.",
-  "@restoreInsteadMonthly": {
-    "placeholders": {
-      "account": {
-        "type": "String"
-      }
-    }
-  },
-  "restoreInsteadYearly": "Langganan tahunan ditemukan untuk {account} ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.",
-  "@restoreInsteadYearly": {
+  "restoreInsteadLifetime": "ResumeApp Pro (seumur hidup) ditemukan untuk {account} ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.",
+  "@restoreInsteadLifetime": {
     "placeholders": {
       "account": {
         "type": "String"

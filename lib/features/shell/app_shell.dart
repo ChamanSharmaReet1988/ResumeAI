@@ -13,7 +13,9 @@ import '../../core/services/analytics_events.dart';
 import '../../core/services/android_ads_service.dart';
 import '../../core/services/deep_link_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
+import '../../core/services/platform_monetization.dart';
 import '../../core/services/premium_access.dart';
+import '../../core/services/premium_purchase_service.dart';
 import '../../core/services/resume_services.dart';
 import '../ai/ai_assistance_screen.dart';
 import '../builder/resume_builder_screen.dart';
@@ -22,7 +24,6 @@ import '../cover_letters/cover_letter_content_screen.dart';
 import '../cover_letters/cover_letter_editor_screen.dart';
 import '../cover_letters/cover_letter_preview_screen.dart';
 import '../home/home_screen.dart';
-import '../home/rate_app_prompt_dialog.dart';
 import '../premium/premium_gate.dart';
 import '../settings/settings_screen.dart';
 import '../shared/view_models.dart';
@@ -57,6 +58,7 @@ class _AppShellState extends State<AppShell> {
       _resumeLibrary = library;
       _resumeLibrary!.addListener(_onResumeLibraryChanged);
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<InAppReviewPromptService>().onArrivedAtHome();
         _maybePromptHomeReview();
       });
     }
@@ -122,13 +124,12 @@ class _AppShellState extends State<AppShell> {
     }
 
     try {
-      final wantsToRate = await showRateAppPromptDialog(context);
-      if (wantsToRate) {
-        await review.markRatingCompleted();
-        try {
-          await review.openStoreListing();
-        } catch (_) {}
-      }
+      // Apple / Play system review sheet (stars). OS may suppress if quota hit.
+      await review.requestNativeReview();
+      // Native API does not report whether the user rated; stop asking this
+      // visit and again until Settings → Rate App marks completion — or keep
+      // retrying each Home visit until that flag is set.
+      review.deferUntilNextHomeVisit();
     } finally {
       review.endPromptOffer();
     }
@@ -151,11 +152,14 @@ class _AppShellState extends State<AppShell> {
     setState(() => _currentIndex = index);
 
     if (index == 0) {
+      context.read<InAppReviewPromptService>().onArrivedAtHome();
       _maybePromptHomeReview();
     }
 
     if (index == InAppReviewPromptService.templatesTabIndex) {
-      AndroidAdsService.showInterstitialIfReady();
+      AndroidAdsService.showInterstitialIfReady(
+        placement: AndroidAdPlacement.templates,
+      );
     }
   }
 
@@ -164,6 +168,8 @@ class _AppShellState extends State<AppShell> {
       _currentIndex = 0;
       _homeSegment = HomeSegment.resumes;
     });
+    context.read<InAppReviewPromptService>().onArrivedAtHome();
+    _maybePromptHomeReview();
   }
 
   void _goToHomeCoverLetterTab() {
@@ -171,6 +177,8 @@ class _AppShellState extends State<AppShell> {
       _currentIndex = 0;
       _homeSegment = HomeSegment.coverLetters;
     });
+    context.read<InAppReviewPromptService>().onArrivedAtHome();
+    _maybePromptHomeReview();
   }
 
   String _activeHeaderTitle(AppLocalizations l10n) {
@@ -286,7 +294,9 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _openPreview({required ResumeData seed}) async {
-    await AndroidAdsService.showInterstitialIfReady();
+    await AndroidAdsService.showInterstitialIfReady(
+      placement: AndroidAdPlacement.preview,
+    );
     if (!mounted) {
       return;
     }
@@ -524,24 +534,36 @@ class _AppShellState extends State<AppShell> {
           );
         }
 
+        final premiumHidesAds = PlatformMonetization.isIapEnabled &&
+            context.watch<PremiumPurchaseService>().isPremium;
+        final hideNavForBanner = !premiumHidesAds &&
+            ((_currentIndex == 0 && PlatformMonetization.showsHomeBanner) ||
+                (_currentIndex ==
+                        InAppReviewPromptService.templatesTabIndex &&
+                    PlatformMonetization.showsAds));
+
         return Scaffold(
           floatingActionButton: _buildFloatingActionButton(),
           body: _isCupertino
               ? CupertinoPageScaffold(
-                  navigationBar: CupertinoNavigationBar(
-                    middle: Text(_activeHeaderTitle(l10n)),
-                    transitionBetweenRoutes: false,
-                    backgroundColor: Theme.of(
-                      context,
-                    ).cupertinoOverrideTheme?.barBackgroundColor,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outlineVariant.withValues(alpha: 0.18),
-                      ),
-                    ),
-                  ),
+                  navigationBar: hideNavForBanner
+                      ? null
+                      : CupertinoNavigationBar(
+                          middle: Text(_activeHeaderTitle(l10n)),
+                          transitionBetweenRoutes: false,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).cupertinoOverrideTheme?.barBackgroundColor,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant.withValues(
+                                alpha: 0.18,
+                              ),
+                            ),
+                          ),
+                        ),
                   child: content,
                 )
               : SafeArea(bottom: false, child: content),

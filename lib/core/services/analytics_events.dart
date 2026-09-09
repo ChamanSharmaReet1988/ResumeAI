@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -10,16 +11,37 @@ abstract final class AnalyticsEvents {
   static const String resumeExportedPdf = 'resume_exported_pdf';
   static const String resumeSharedPdf = 'resume_shared_pdf';
   static const String resumeSharedDocx = 'resume_shared_docx';
-  static const String resumeTemplateSelected = 'resume_template_selected';
+  // Kept ≤22 chars so `resumeapp_android_` + name stays within Firebase's 40-char limit.
+  static const String resumeTemplateSelected = 'resume_tpl_selected';
   static const String coverLetterCreated = 'cover_letter_created';
   static const String coverLetterSharedPdf = 'cover_letter_shared_pdf';
-  static const String coverLetterTemplateSelected =
-      'cover_letter_template_selected';
-  static const String premiumPurchaseStarted = 'premium_purchase_started';
-  static const String premiumPurchaseSuccess = 'premium_purchase_success';
-  static const String premiumRestoreSuccess = 'premium_restore_success';
+  static const String coverLetterTemplateSelected = 'cover_tpl_selected';
+  static const String premiumPurchaseStarted = 'premium_buy_start';
+  static const String premiumPurchaseSuccess = 'premium_buy_success';
+  static const String premiumRestoreSuccess = 'premium_restore_ok';
   static const String iCloudBackupSync = 'icloud_backup_sync';
   static const String deepLinkOpen = 'deep_link_open';
+}
+
+/// Prefixes event names for Analytics: `resumeapp_ios_*` / `resumeapp_android_*`.
+String platformAnalyticsEventName(String baseName) {
+  final trimmed = baseName.trim();
+  if (trimmed.isEmpty) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('resumeapp_ios_') ||
+      trimmed.startsWith('resumeapp_android_')) {
+    return trimmed;
+  }
+  final prefix = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+      ? 'resumeapp_ios_'
+      : 'resumeapp_android_';
+  final full = '$prefix$trimmed';
+  // Firebase Analytics event names are limited to 40 characters.
+  if (full.length <= 40) {
+    return full;
+  }
+  return full.substring(0, 40);
 }
 
 Future<void> logAnalyticsEvent(

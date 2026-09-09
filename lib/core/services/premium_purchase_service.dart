@@ -500,7 +500,7 @@ class PremiumPurchaseService extends ChangeNotifier {
     if (kDebugMode) {
       debugPrint(
         'Premium products loaded: '
-        '${PremiumProducts.subscriptionIds.map((id) {
+        '${PremiumProducts.productIds.map((id) {
           final display = PremiumStoreProductSelection.displayPriceFor(
             id,
             _allStoreProducts,
@@ -521,7 +521,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   Future<ProductDetailsResponse> _queryStoreProducts() {
-    return _store.queryProductDetails(PremiumProducts.subscriptionIds.toSet());
+    return _store.queryProductDetails(PremiumProducts.productIds.toSet());
   }
 
   String _friendlyProductLoadError(String message) {
@@ -534,7 +534,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   List<ProductDetails> _sortProducts(List<ProductDetails> products) {
-    final order = PremiumProducts.subscriptionIds;
+    final order = PremiumProducts.productIds;
     final sorted = [...products];
     sorted.sort((a, b) => order.indexOf(a.id).compareTo(order.indexOf(b.id)));
     return sorted;
@@ -626,7 +626,7 @@ class PremiumPurchaseService extends ChangeNotifier {
       'purchaseStream update: ${purchaseDetailsList.length} item(s)',
     );
     for (final purchase in purchaseDetailsList) {
-      if (!PremiumProducts.subscriptionIds.contains(purchase.productID)) {
+      if (!PremiumProducts.isKnownProductId(purchase.productID)) {
         continue;
       }
 
@@ -819,7 +819,7 @@ class PremiumPurchaseService extends ChangeNotifier {
   }
 
   bool _shouldTrustPurchaseStream(PurchaseDetails purchase) {
-    if (!PremiumProducts.subscriptionIds.contains(purchase.productID)) {
+    if (!PremiumProducts.isKnownProductId(purchase.productID)) {
       return false;
     }
     return purchase.status == PurchaseStatus.purchased ||

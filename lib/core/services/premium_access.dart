@@ -4,8 +4,8 @@ import 'platform_monetization.dart';
 /// What requires [PremiumPurchaseService.isPremium] vs what stays free.
 ///
 /// All resume and cover letter templates are free on every platform.
-/// On iOS, AI Resume (ATS create) and cloud backup require Pro.
-/// On Android, everything is free (ads monetization).
+/// On iOS, Pro (one-time) unlocks: no ads, AI Resume, and iCloud backup.
+/// On Android, everything is free (ads monetization; IAP off).
 abstract final class PremiumAccess {
   static const Set<String> coverLetterTemplateTileIds = {
     'executive-note',

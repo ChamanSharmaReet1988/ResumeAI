@@ -215,6 +215,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get chooseAPlan => 'Pilih paket';
 
   @override
+  String get unlockProOnce => 'Buka sekali bayar';
+
+  @override
   String get premiumLegalAgreement =>
       'Dengan melanjutkan, Anda menyetujui Syarat Penggunaan dan Kebijakan Privasi kami.';
 
@@ -241,8 +244,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String premiumWelcomeBody(String planLabel, String backup) {
-    return 'ResumeApp Pro aktif pada $planLabel Anda. Template Premium dan $backup kini terbuka.';
+    return 'ResumeApp Pro aktif pada $planLabel Anda. Iklan dihapus, serta AI Resume dan $backup dibuka.';
   }
+
+  @override
+  String get premiumBenefitRemoveAds => 'Hapus semua iklan';
 
   @override
   String get premiumBenefitUnlockLayouts =>
@@ -264,34 +270,17 @@ class AppLocalizationsId extends AppLocalizations {
       'Tata letak resume baru dan template modern, termasuk dalam Pro.';
 
   @override
-  String get planWeekly => 'Mingguan';
+  String get planLifetime => 'Seumur hidup';
 
   @override
-  String get planMonthly => 'Bulanan';
-
-  @override
-  String get planYearly => 'Tahunan';
+  String get planSubtitleLifetime => 'Pembelian sekali · \$1.99';
 
   @override
   String get planPro => 'Pro';
 
   @override
-  String get planSubtitleWeekly => 'Akses jangka pendek';
-
-  @override
-  String get planSubtitleMonthly => 'Bayar bulanan';
-
-  @override
-  String get planSubtitleYearly => 'Nilai terbaik';
-
-  @override
   String planLabelNamed(String title) {
     return 'Paket $title';
-  }
-
-  @override
-  String savePercentWithYearlyBilling(int percent) {
-    return 'Hemat $percent% dengan penagihan tahunan';
   }
 
   @override
@@ -308,18 +297,8 @@ class AppLocalizationsId extends AppLocalizations {
       'Override Pro pengembang aktif. Semua fitur Pro terbuka untuk pengujian di perangkat ini.';
 
   @override
-  String alreadySubscribedWeekly(String backup) {
-    return 'Anda memiliki langganan mingguan aktif. Semua template Pro, $backup, dan fitur premium sudah termasuk.';
-  }
-
-  @override
-  String alreadySubscribedMonthly(String backup) {
-    return 'Anda memiliki langganan bulanan aktif. Semua template Pro, $backup, dan fitur premium sudah termasuk.';
-  }
-
-  @override
-  String alreadySubscribedYearly(String backup) {
-    return 'Anda memiliki langganan tahunan aktif. Semua template Pro, $backup, dan fitur premium sudah termasuk.';
+  String alreadySubscribedLifetime(String backup) {
+    return 'Anda memiliki ResumeApp Pro (seumur hidup). Iklan dihapus, serta AI Resume dan $backup dibuka.';
   }
 
   @override
@@ -327,18 +306,8 @@ class AppLocalizationsId extends AppLocalizations {
       'Anda memiliki langganan ResumeApp Pro aktif. Semua fitur premium termasuk dalam paket Anda.';
 
   @override
-  String restoreInsteadWeekly(String account) {
-    return 'Langganan mingguan ditemukan untuk $account ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.';
-  }
-
-  @override
-  String restoreInsteadMonthly(String account) {
-    return 'Langganan bulanan ditemukan untuk $account ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.';
-  }
-
-  @override
-  String restoreInsteadYearly(String account) {
-    return 'Langganan tahunan ditemukan untuk $account ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.';
+  String restoreInsteadLifetime(String account) {
+    return 'ResumeApp Pro (seumur hidup) ditemukan untuk $account ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.';
   }
 
   @override

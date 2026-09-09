@@ -215,6 +215,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chooseAPlan => 'Escolha um plano';
 
   @override
+  String get unlockProOnce => 'Desbloqueio único';
+
+  @override
   String get premiumLegalAgreement =>
       'Ao continuar, você concorda com nossos Termos de uso e Política de privacidade.';
 
@@ -241,8 +244,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String premiumWelcomeBody(String planLabel, String backup) {
-    return 'O ResumeApp Pro está ativo no seu $planLabel. Modelos Premium e $backup agora estão desbloqueados.';
+    return 'O ResumeApp Pro está ativo no seu $planLabel. Os anúncios foram removidos, e o AI Resume mais $backup estão desbloqueados.';
   }
+
+  @override
+  String get premiumBenefitRemoveAds => 'Remover todos os anúncios';
 
   @override
   String get premiumBenefitUnlockLayouts =>
@@ -264,34 +270,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Novos layouts de currículo e modelos modernos, incluídos no Pro.';
 
   @override
-  String get planWeekly => 'Semanal';
+  String get planLifetime => 'Vitalício';
 
   @override
-  String get planMonthly => 'Mensal';
-
-  @override
-  String get planYearly => 'Anual';
+  String get planSubtitleLifetime => 'Compra única · \$1.99';
 
   @override
   String get planPro => 'Pro';
 
   @override
-  String get planSubtitleWeekly => 'Acesso de curto prazo';
-
-  @override
-  String get planSubtitleMonthly => 'Pague mês a mês';
-
-  @override
-  String get planSubtitleYearly => 'Melhor custo-benefício';
-
-  @override
   String planLabelNamed(String title) {
     return 'Plano $title';
-  }
-
-  @override
-  String savePercentWithYearlyBilling(int percent) {
-    return 'Economize $percent% com cobrança anual';
   }
 
   @override
@@ -308,18 +297,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'A substituição Pro de desenvolvedor está ativada. Todos os recursos Pro estão desbloqueados para testes neste dispositivo.';
 
   @override
-  String alreadySubscribedWeekly(String backup) {
-    return 'Você tem uma assinatura semanal ativa. Todos os modelos Pro, $backup e recursos premium estão incluídos.';
-  }
-
-  @override
-  String alreadySubscribedMonthly(String backup) {
-    return 'Você tem uma assinatura mensal ativa. Todos os modelos Pro, $backup e recursos premium estão incluídos.';
-  }
-
-  @override
-  String alreadySubscribedYearly(String backup) {
-    return 'Você tem uma assinatura anual ativa. Todos os modelos Pro, $backup e recursos premium estão incluídos.';
+  String alreadySubscribedLifetime(String backup) {
+    return 'Você tem o ResumeApp Pro (vitalício). Os anúncios foram removidos, e o AI Resume mais $backup estão desbloqueados.';
   }
 
   @override
@@ -327,18 +306,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'Você tem uma assinatura ativa do ResumeApp Pro. Todos os recursos premium estão incluídos no seu plano.';
 
   @override
-  String restoreInsteadWeekly(String account) {
-    return 'Foi encontrada uma assinatura semanal para esta $account. Use Restaurar para ativá-la neste dispositivo em vez de comprar novamente.';
-  }
-
-  @override
-  String restoreInsteadMonthly(String account) {
-    return 'Foi encontrada uma assinatura mensal para esta $account. Use Restaurar para ativá-la neste dispositivo em vez de comprar novamente.';
-  }
-
-  @override
-  String restoreInsteadYearly(String account) {
-    return 'Foi encontrada uma assinatura anual para esta $account. Use Restaurar para ativá-la neste dispositivo em vez de comprar novamente.';
+  String restoreInsteadLifetime(String account) {
+    return 'ResumeApp Pro (vitalício) foi encontrado para esta $account. Use Restaurar para ativá-lo neste dispositivo em vez de comprar novamente.';
   }
 
   @override

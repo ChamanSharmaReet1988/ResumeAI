@@ -92,6 +92,7 @@
   "restore": "Restaurar",
   "resumeAppPro": "ResumeApp Pro",
   "chooseAPlan": "Escolha um plano",
+  "unlockProOnce": "Desbloqueio único",
   "premiumLegalAgreement": "Ao continuar, você concorda com nossos Termos de uso e Política de privacidade.",
   "subscriptionFound": "Assinatura encontrada",
   "processingEllipsis": "Processando…",
@@ -100,7 +101,7 @@
   "restoringYourSubscription": "Restaurando sua assinatura…",
   "pleaseWaitDoNotClose": "Aguarde. Não feche o app.",
   "premiumWelcomeCongratulations": "Parabéns!",
-  "premiumWelcomeBody": "O ResumeApp Pro está ativo no seu {planLabel}. Modelos Premium e {backup} agora estão desbloqueados.",
+  "premiumWelcomeBody": "O ResumeApp Pro está ativo no seu {planLabel}. Os anúncios foram removidos, e o AI Resume mais {backup} estão desbloqueados.",
   "@premiumWelcomeBody": {
     "placeholders": {
       "planLabel": {
@@ -111,18 +112,15 @@
       }
     }
   },
+  "premiumBenefitRemoveAds": "Remover todos os anúncios",
   "premiumBenefitUnlockLayouts": "Desbloqueie o AI Resume: crie e refine currículos ATS com IA",
   "premiumBenefitBackupIcloud": "Faça backup e sincronize currículos com o iCloud",
   "premiumBenefitBackupGoogleDrive": "Faça backup e sincronize currículos com o Google Drive",
   "premiumUpcomingUpdateBadge": "Em breve na próxima atualização",
   "premiumUpcomingUpdateMessage": "Novos layouts de currículo e modelos modernos, incluídos no Pro.",
-  "planWeekly": "Semanal",
-  "planMonthly": "Mensal",
-  "planYearly": "Anual",
+  "planLifetime": "Vitalício",
+  "planSubtitleLifetime": "Compra única · $1.99",
   "planPro": "Pro",
-  "planSubtitleWeekly": "Acesso de curto prazo",
-  "planSubtitleMonthly": "Pague mês a mês",
-  "planSubtitleYearly": "Melhor custo-benefício",
   "planLabelNamed": "Plano {title}",
   "@planLabelNamed": {
     "placeholders": {
@@ -131,36 +129,12 @@
       }
     }
   },
-  "savePercentWithYearlyBilling": "Economize {percent}% com cobrança anual",
-  "@savePercentWithYearlyBilling": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
   "priceUnavailable": "—",
   "storeAccountGoogle": "conta do Google",
   "storeAccountApple": "Apple ID",
   "alreadySubscribedDebugOverride": "A substituição Pro de desenvolvedor está ativada. Todos os recursos Pro estão desbloqueados para testes neste dispositivo.",
-  "alreadySubscribedWeekly": "Você tem uma assinatura semanal ativa. Todos os modelos Pro, {backup} e recursos premium estão incluídos.",
-  "@alreadySubscribedWeekly": {
-    "placeholders": {
-      "backup": {
-        "type": "String"
-      }
-    }
-  },
-  "alreadySubscribedMonthly": "Você tem uma assinatura mensal ativa. Todos os modelos Pro, {backup} e recursos premium estão incluídos.",
-  "@alreadySubscribedMonthly": {
-    "placeholders": {
-      "backup": {
-        "type": "String"
-      }
-    }
-  },
-  "alreadySubscribedYearly": "Você tem uma assinatura anual ativa. Todos os modelos Pro, {backup} e recursos premium estão incluídos.",
-  "@alreadySubscribedYearly": {
+  "alreadySubscribedLifetime": "Você tem o ResumeApp Pro (vitalício). Os anúncios foram removidos, e o AI Resume mais {backup} estão desbloqueados.",
+  "@alreadySubscribedLifetime": {
     "placeholders": {
       "backup": {
         "type": "String"
@@ -168,24 +142,8 @@
     }
   },
   "alreadySubscribedGeneric": "Você tem uma assinatura ativa do ResumeApp Pro. Todos os recursos premium estão incluídos no seu plano.",
-  "restoreInsteadWeekly": "Foi encontrada uma assinatura semanal para esta {account}. Use Restaurar para ativá-la neste dispositivo em vez de comprar novamente.",
-  "@restoreInsteadWeekly": {
-    "placeholders": {
-      "account": {
-        "type": "String"
-      }
-    }
-  },
-  "restoreInsteadMonthly": "Foi encontrada uma assinatura mensal para esta {account}. Use Restaurar para ativá-la neste dispositivo em vez de comprar novamente.",
-  "@restoreInsteadMonthly": {
-    "placeholders": {
-      "account": {
-        "type": "String"
-      }
-    }
-  },
-  "restoreInsteadYearly": "Foi encontrada uma assinatura anual para esta {account}. Use Restaurar para ativá-la neste dispositivo em vez de comprar novamente.",
-  "@restoreInsteadYearly": {
+  "restoreInsteadLifetime": "ResumeApp Pro (vitalício) foi encontrado para esta {account}. Use Restaurar para ativá-lo neste dispositivo em vez de comprar novamente.",
+  "@restoreInsteadLifetime": {
     "placeholders": {
       "account": {
         "type": "String"

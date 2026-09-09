@@ -3,17 +3,18 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:in_app_review/in_app_review.dart';
 
-/// Home-screen rating prompt.
+/// Home-screen rating prompt using the system in-app review UI
+/// (Apple’s default stars sheet / Play In-App Review).
 ///
-/// Shows when the user has exactly one resume and has not rated yet.
-/// Repeats on each app launch until they rate. A completed rating is stored
-/// in the iOS Keychain (iCloud-synced) so it survives reinstall; Android also
-/// writes Hive so Google backup can restore the flag.
+/// Shows when the user has exactly one resume and has not marked rating done
+/// (e.g. via Settings → Rate App). Retries each Home visit; the OS may still
+/// suppress the sheet based on its own quota.
 class InAppReviewPromptService {
   InAppReviewPromptService({
     Future<bool> Function()? readRatingCompleted,
     Future<void> Function()? writeRatingCompleted,
     Future<void> Function()? openStoreListing,
+    Future<void> Function()? requestNativeReview,
     Future<Box<dynamic>> Function()? openBox,
     FlutterSecureStorage? secureStorage,
   }) {
@@ -22,6 +23,8 @@ class InAppReviewPromptService {
     _writeRatingCompleted =
         writeRatingCompleted ?? (() => _defaultWriteRatingCompleted());
     _openStoreListing = openStoreListing ?? _defaultOpenStoreListing;
+    _requestNativeReview =
+        requestNativeReview ?? _defaultRequestNativeReview;
     _openBox = openBox ?? _defaultOpenBox;
     _secureStorage =
         secureStorage ??
@@ -42,11 +45,12 @@ class InAppReviewPromptService {
   late final Future<bool> Function() _readRatingCompleted;
   late final Future<void> Function() _writeRatingCompleted;
   late final Future<void> Function() _openStoreListing;
+  late final Future<void> Function() _requestNativeReview;
   late final Future<Box<dynamic>> Function() _openBox;
   late final FlutterSecureStorage _secureStorage;
 
-  bool _offeredThisSession = false;
   bool _promptInFlight = false;
+  bool _skippedUntilNextHomeVisit = false;
 
   static Future<Box<dynamic>> _defaultOpenBox() async {
     if (Hive.isBoxOpen(_boxName)) {
@@ -96,24 +100,46 @@ class InAppReviewPromptService {
     }
   }
 
+  static Future<void> _defaultRequestNativeReview() async {
+    final review = InAppReview.instance;
+    if (await review.isAvailable()) {
+      await review.requestReview();
+      return;
+    }
+    await _defaultOpenStoreListing();
+  }
+
   Future<bool> hasCompletedRating() => _readRatingCompleted();
 
   Future<void> markRatingCompleted() => _writeRatingCompleted();
 
   Future<void> openStoreListing() => _openStoreListing();
 
-  /// Returns true once, when Home should show the rating dialog.
+  /// Shows Apple / Google’s system rating UI when available.
+  Future<void> requestNativeReview() => _requestNativeReview();
+
+  /// Call when the Home tab becomes active so a deferred prompt can show again.
+  void onArrivedAtHome() {
+    _skippedUntilNextHomeVisit = false;
+  }
+
+  /// Do not show again until the next Home visit.
+  void deferUntilNextHomeVisit() {
+    _skippedUntilNextHomeVisit = true;
+  }
+
+  /// Returns true when Home should present the system rating prompt.
   Future<bool> claimHomePrompt({required int resumeCount}) async {
-    if (_offeredThisSession || _promptInFlight || resumeCount != 1) {
+    if (_promptInFlight ||
+        _skippedUntilNextHomeVisit ||
+        resumeCount != 1) {
       return false;
     }
     _promptInFlight = true;
     if (await hasCompletedRating()) {
-      _offeredThisSession = true;
       _promptInFlight = false;
       return false;
     }
-    _offeredThisSession = true;
     return true;
   }
 
