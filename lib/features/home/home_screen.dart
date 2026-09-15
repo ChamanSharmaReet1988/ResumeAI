@@ -158,12 +158,7 @@ class HomeScreen extends StatelessWidget {
                                     alpha: 0.12,
                                   ),
                                   surfaceTintColor: Colors.transparent,
-                                  side: BorderSide(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outlineVariant
-                                        .withValues(alpha: 0.35),
-                                  ),
+                                  side: BorderSide.none,
                                   textStyle: const TextStyle(fontSize: 17),
                                 ),
                                 selected: {currentSegment},
