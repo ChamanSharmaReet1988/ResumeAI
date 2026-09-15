@@ -113,7 +113,9 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: cardColor,
-        elevation: 0,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.14),
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.2)),
@@ -123,7 +125,8 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: cardColor,
         indicatorColor: scheme.primaryContainer,
-        elevation: 0,
+        elevation: 8,
+        shadowColor: Colors.black.withValues(alpha: 0.16),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           return IconThemeData(color: iconColor);
         }),

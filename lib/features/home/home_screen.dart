@@ -75,76 +75,112 @@ class HomeScreen extends StatelessWidget {
                     isCupertino
                         ? SizedBox(
                             width: double.infinity,
-                            child:
-                                CupertinoSlidingSegmentedControl<HomeSegment>(
-                                  groupValue: currentSegment,
-                                  proportionalWidth: true,
-                                  onValueChanged: (value) {
-                                    if (value != null) {
-                                      onSegmentChanged(value);
-                                    }
-                                  },
-                                  children: {
-                                    HomeSegment.resumes: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      child: Text(
-                                        l10n.homeSegmentResume,
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          color:
-                                              currentSegment ==
-                                                  HomeSegment.resumes
-                                              ? blue
-                                              : inactiveColor,
+                            child: Material(
+                              elevation: 2,
+                              shadowColor: Colors.black.withValues(alpha: 0.14),
+                              surfaceTintColor: Colors.transparent,
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(2),
+                                child:
+                                    CupertinoSlidingSegmentedControl<
+                                      HomeSegment
+                                    >(
+                                      groupValue: currentSegment,
+                                      proportionalWidth: true,
+                                      backgroundColor: Colors.transparent,
+                                      thumbColor: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.14),
+                                      onValueChanged: (value) {
+                                        if (value != null) {
+                                          onSegmentChanged(value);
+                                        }
+                                      },
+                                      children: {
+                                        HomeSegment.resumes: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 10,
+                                          ),
+                                          child: Text(
+                                            l10n.homeSegmentResume,
+                                            style: TextStyle(
+                                              fontSize: 17,
+                                              color:
+                                                  currentSegment ==
+                                                      HomeSegment.resumes
+                                                  ? blue
+                                                  : inactiveColor,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    HomeSegment.coverLetters: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      child: Text(
-                                        l10n.homeSegmentCoverLetter,
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          color:
-                                              currentSegment ==
-                                                  HomeSegment.coverLetters
-                                              ? blue
-                                              : inactiveColor,
+                                        HomeSegment.coverLetters: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 10,
+                                          ),
+                                          child: Text(
+                                            l10n.homeSegmentCoverLetter,
+                                            style: TextStyle(
+                                              fontSize: 17,
+                                              color:
+                                                  currentSegment ==
+                                                      HomeSegment
+                                                          .coverLetters
+                                                  ? blue
+                                                  : inactiveColor,
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                      },
                                     ),
-                                  },
-                                ),
+                              ),
+                            ),
                           )
                         : SizedBox(
                             width: double.infinity,
-                            child: SegmentedButton<HomeSegment>(
-                              expandedInsets: EdgeInsets.zero,
-                              style: SegmentedButton.styleFrom(
-                                selectedForegroundColor: blue,
-                                foregroundColor: inactiveColor,
-                                textStyle: const TextStyle(fontSize: 17),
+                            child: Material(
+                              elevation: 2,
+                              shadowColor: Colors.black.withValues(alpha: 0.14),
+                              surfaceTintColor: Colors.transparent,
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(20),
+                              child: SegmentedButton<HomeSegment>(
+                                expandedInsets: EdgeInsets.zero,
+                                style: SegmentedButton.styleFrom(
+                                  selectedForegroundColor: blue,
+                                  foregroundColor: inactiveColor,
+                                  backgroundColor: Theme.of(context).cardColor,
+                                  selectedBackgroundColor: blue.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  surfaceTintColor: Colors.transparent,
+                                  side: BorderSide(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .outlineVariant
+                                        .withValues(alpha: 0.35),
+                                  ),
+                                  textStyle: const TextStyle(fontSize: 17),
+                                ),
+                                selected: {currentSegment},
+                                onSelectionChanged: (values) {
+                                  onSegmentChanged(values.first);
+                                },
+                                segments: [
+                                  ButtonSegment<HomeSegment>(
+                                    value: HomeSegment.resumes,
+                                    label: Text(l10n.homeSegmentResume),
+                                  ),
+                                  ButtonSegment<HomeSegment>(
+                                    value: HomeSegment.coverLetters,
+                                    label: Text(l10n.homeSegmentCoverLetter),
+                                  ),
+                                ],
                               ),
-                              selected: {currentSegment},
-                              onSelectionChanged: (values) {
-                                onSegmentChanged(values.first);
-                              },
-                              segments: [
-                                ButtonSegment<HomeSegment>(
-                                  value: HomeSegment.resumes,
-                                  label: Text(l10n.homeSegmentResume),
-                                ),
-                                ButtonSegment<HomeSegment>(
-                                  value: HomeSegment.coverLetters,
-                                  label: Text(l10n.homeSegmentCoverLetter),
-                                ),
-                              ],
                             ),
                           ),
                     const SizedBox(height: 20),
@@ -224,7 +260,6 @@ class _HomeCreateActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final radius = BorderRadius.circular(14);
 
     return Material(
@@ -239,8 +274,15 @@ class _HomeCreateActions extends StatelessWidget {
               height: 52,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
+                color: Colors.transparent,
                 borderRadius: radius,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

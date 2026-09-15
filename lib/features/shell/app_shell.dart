@@ -585,57 +585,72 @@ class _AppShellState extends State<AppShell> {
                   child: content,
                 )
               : SafeArea(bottom: false, child: content),
-          bottomNavigationBar: _isCupertino
-              ? CupertinoTheme(
-                  data: CupertinoTheme.of(context).copyWith(
-                    textTheme: CupertinoTheme.of(context).textTheme.copyWith(
-                      tabLabelTextStyle: CupertinoTheme.of(context)
-                          .textTheme
-                          .tabLabelTextStyle
-                          .copyWith(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                  child: CupertinoTabBar(
-                    height: 64,
-                    iconSize: 24,
-                    currentIndex: _currentIndex,
-                    onTap: _selectTab,
-                    activeColor: Theme.of(context).colorScheme.primary,
-                    inactiveColor: CupertinoColors.systemGrey,
-                    backgroundColor: Theme.of(
-                      context,
-                    ).cardColor.withValues(alpha: 0.96),
-                    border: Border(
-                      top: BorderSide(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outlineVariant.withValues(alpha: 0.18),
+          bottomNavigationBar: DecoratedBox(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 16,
+                  offset: const Offset(0, -3),
+                ),
+              ],
+            ),
+            child: _isCupertino
+                ? CupertinoTheme(
+                    data: CupertinoTheme.of(context).copyWith(
+                      textTheme: CupertinoTheme.of(context).textTheme.copyWith(
+                        tabLabelTextStyle: CupertinoTheme.of(context)
+                            .textTheme
+                            .tabLabelTextStyle
+                            .copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                     ),
-                    items: destinations
+                    child: CupertinoTabBar(
+                      height: 64,
+                      iconSize: 24,
+                      currentIndex: _currentIndex,
+                      onTap: _selectTab,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      inactiveColor: CupertinoColors.systemGrey,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).cardColor.withValues(alpha: 0.96),
+                      border: Border(
+                        top: BorderSide(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outlineVariant
+                              .withValues(alpha: 0.18),
+                        ),
+                      ),
+                      items: destinations
+                          .map(
+                            (item) => BottomNavigationBarItem(
+                              icon: Icon(item.icon),
+                              activeIcon: Icon(item.selectedIcon),
+                              label: item.label,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  )
+                : NavigationBar(
+                    selectedIndex: _currentIndex,
+                    destinations: destinations
                         .map(
-                          (item) => BottomNavigationBarItem(
+                          (item) => NavigationDestination(
                             icon: Icon(item.icon),
-                            activeIcon: Icon(item.selectedIcon),
+                            selectedIcon: Icon(item.selectedIcon),
                             label: item.label,
                           ),
                         )
                         .toList(),
+                    onDestinationSelected: _selectTab,
                   ),
-                )
-              : NavigationBar(
-                  selectedIndex: _currentIndex,
-                  destinations: destinations
-                      .map(
-                        (item) => NavigationDestination(
-                          icon: Icon(item.icon),
-                          selectedIcon: Icon(item.selectedIcon),
-                          label: item.label,
-                        ),
-                      )
-                      .toList(),
-                  onDestinationSelected: _selectTab,
-                ),
+          ),
           );
         },
       ),
