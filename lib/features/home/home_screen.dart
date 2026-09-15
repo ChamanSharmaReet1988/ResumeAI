@@ -82,7 +82,7 @@ class HomeScreen extends StatelessWidget {
                               color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(12),
                               child: Padding(
-                                padding: const EdgeInsets.all(2),
+                                padding: const EdgeInsets.all(4),
                                 child:
                                     CupertinoSlidingSegmentedControl<
                                       HomeSegment
@@ -148,33 +148,43 @@ class HomeScreen extends StatelessWidget {
                               surfaceTintColor: Colors.transparent,
                               color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(20),
-                              child: SegmentedButton<HomeSegment>(
-                                expandedInsets: EdgeInsets.zero,
-                                style: SegmentedButton.styleFrom(
-                                  selectedForegroundColor: blue,
-                                  foregroundColor: inactiveColor,
-                                  backgroundColor: Theme.of(context).cardColor,
-                                  selectedBackgroundColor: blue.withValues(
-                                    alpha: 0.12,
+                              child: Padding(
+                                padding: const EdgeInsets.all(4),
+                                child: SegmentedButton<HomeSegment>(
+                                  expandedInsets: EdgeInsets.zero,
+                                  style: SegmentedButton.styleFrom(
+                                    selectedForegroundColor: blue,
+                                    foregroundColor: inactiveColor,
+                                    backgroundColor: Colors.transparent,
+                                    selectedBackgroundColor: blue.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                    surfaceTintColor: Colors.transparent,
+                                    side: BorderSide.none,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    textStyle: const TextStyle(fontSize: 17),
                                   ),
-                                  surfaceTintColor: Colors.transparent,
-                                  side: BorderSide.none,
-                                  textStyle: const TextStyle(fontSize: 17),
+                                  selected: {currentSegment},
+                                  onSelectionChanged: (values) {
+                                    onSegmentChanged(values.first);
+                                  },
+                                  segments: [
+                                    ButtonSegment<HomeSegment>(
+                                      value: HomeSegment.resumes,
+                                      label: Text(l10n.homeSegmentResume),
+                                    ),
+                                    ButtonSegment<HomeSegment>(
+                                      value: HomeSegment.coverLetters,
+                                      label: Text(l10n.homeSegmentCoverLetter),
+                                    ),
+                                  ],
                                 ),
-                                selected: {currentSegment},
-                                onSelectionChanged: (values) {
-                                  onSegmentChanged(values.first);
-                                },
-                                segments: [
-                                  ButtonSegment<HomeSegment>(
-                                    value: HomeSegment.resumes,
-                                    label: Text(l10n.homeSegmentResume),
-                                  ),
-                                  ButtonSegment<HomeSegment>(
-                                    value: HomeSegment.coverLetters,
-                                    label: Text(l10n.homeSegmentCoverLetter),
-                                  ),
-                                ],
                               ),
                             ),
                           ),
@@ -282,15 +292,7 @@ class _HomeCreateActions extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _HomeActionSegment(
-                    key: const Key('home-create-new-button'),
-                    icon: Icons.add_rounded,
-                    label: l10n.homeCreateNew,
-                    highlighted: true,
-                    onTap: onCreateNew,
-                  ),
                   if (showUpload) ...[
-                    const SizedBox(width: 4),
                     _HomeActionSegment(
                       key: const Key('home-upload-resume-button'),
                       icon: Icons.upload_file_rounded,
@@ -298,7 +300,15 @@ class _HomeCreateActions extends StatelessWidget {
                       highlighted: false,
                       onTap: onUpload,
                     ),
+                    const SizedBox(width: 4),
                   ],
+                  _HomeActionSegment(
+                    key: const Key('home-create-new-button'),
+                    icon: Icons.add_rounded,
+                    label: l10n.homeCreateNew,
+                    highlighted: true,
+                    onTap: onCreateNew,
+                  ),
                 ],
               ),
             ),
