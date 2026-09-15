@@ -155,12 +155,6 @@ class _AppShellState extends State<AppShell> {
       context.read<InAppReviewPromptService>().onArrivedAtHome();
       _maybePromptHomeReview();
     }
-
-    if (index == InAppReviewPromptService.templatesTabIndex) {
-      AndroidAdsService.showInterstitialIfReady(
-        placement: AndroidAdPlacement.templates,
-      );
-    }
   }
 
   void _goToHomeResumeTab() {
@@ -538,9 +532,6 @@ class _AppShellState extends State<AppShell> {
             context.watch<PremiumPurchaseService>().isPremium;
         final hideNavForBanner = !premiumHidesAds &&
             ((_currentIndex == 0 && PlatformMonetization.showsHomeBanner) ||
-                (_currentIndex ==
-                        InAppReviewPromptService.templatesTabIndex &&
-                    PlatformMonetization.showsAds) ||
                 (_currentIndex == AppShellScope.settingsTabIndex &&
                     PlatformMonetization.showsSettingsBanner));
 

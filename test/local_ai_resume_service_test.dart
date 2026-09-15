@@ -288,10 +288,6 @@ Oxford Software Institute
       expect(result.resume.summary, isNot(equals(resume.summary)));
       expect(
         result.resume.summary,
-        contains('Well aligned to opportunities requiring'),
-      );
-      expect(
-        result.resume.summary,
         anyOf(
           contains('Firebase'),
           contains('analytics'),

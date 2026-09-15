@@ -295,14 +295,12 @@ void main() {
       expect(savedCopy.skills, isNotEmpty);
       expect(savedCopy.summary, isNot(equals(selectedResume.summary)));
       expect(savedCopy.workExperiences.first.bullets, isNotEmpty);
-      expect(
-        savedCopy.workExperiences.first.bullets.join(' '),
-        anyOf(
-          contains('Firebase'),
-          contains('REST APIs'),
-          contains('analytics'),
-        ),
-      );
+      // The ATS copy keeps the candidate's own experience and never invents
+      // job-ad skills the resume does not show.
+      final savedBullets = savedCopy.workExperiences.first.bullets.join(' ');
+      expect(savedBullets, contains('Maintained Flutter modules.'));
+      expect(savedBullets, isNot(contains('Firebase')));
+      expect(savedCopy.skills, isNot(contains('Firebase')));
       expect(find.text('Applied changes'), findsNothing);
       expect(
         find.byKey(const Key('show-created-ats-resume-button')),

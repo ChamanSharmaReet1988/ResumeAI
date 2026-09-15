@@ -13,11 +13,7 @@ import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/services/resume_services.dart';
-import '../../core/services/platform_monetization.dart';
-import '../../core/services/android_ads_service.dart';
-import '../../core/services/premium_purchase_service.dart';
 import '../premium/premium_gate.dart';
-import '../shared/android_banner_ad.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
@@ -207,15 +203,11 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final blue = Theme.of(context).colorScheme.primary;
     final inactiveColor = Theme.of(context).colorScheme.onSurfaceVariant;
     final bottomSafeInset = MediaQuery.paddingOf(context).bottom;
-    final showTopBanner = !isTemplatePicker &&
-        PlatformMonetization.showsAds &&
-        !(PlatformMonetization.isIapEnabled &&
-            context.watch<PremiumPurchaseService>().isPremium);
 
-    final scrollBody = SingleChildScrollView(
+    return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         8,
-        showTopBanner ? 12 : 20,
+        20,
         8,
         160 + bottomSafeInset,
       ),
@@ -382,26 +374,6 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
               },
             ),
           ],
-        ],
-      ),
-    );
-
-    if (!showTopBanner) {
-      return scrollBody;
-    }
-
-    return SafeArea(
-      bottom: false,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Material(
-            elevation: 0,
-            child: AndroidBannerAdSlot(
-              placement: AndroidBannerPlacement.templates,
-            ),
-          ),
-          Expanded(child: scrollBody),
         ],
       ),
     );
