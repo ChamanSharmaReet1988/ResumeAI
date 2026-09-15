@@ -16,6 +16,7 @@ import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/platform_monetization.dart';
 import '../../core/services/premium_access.dart';
 import '../../core/services/premium_purchase_service.dart';
+import '../../core/services/resume_import_service.dart';
 import '../../core/services/resume_services.dart';
 import '../ai/ai_assistance_screen.dart';
 import '../builder/resume_builder_screen.dart';
@@ -247,6 +248,53 @@ class _AppShellState extends State<AppShell> {
     await _openBuilder(seed: draft);
   }
 
+  /// Picks a PDF, DOCX, or TXT resume, fills in every section it can read,
+  /// saves it as a new resume, and opens the builder so the user can review.
+  Future<void> _uploadResume() async {
+    final importService = context.read<ResumeImportService>();
+    final aiService = context.read<LocalAiResumeService>();
+    final library = context.read<ResumeLibraryViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
+    final failedMessage = context.l10n.uploadResumeFailed;
+    final draft = library.newDraft();
+
+    final ResumeData uploaded;
+    try {
+      final importedFile = await importService.pickResumeFile();
+      if (!mounted || importedFile == null) {
+        return;
+      }
+      uploaded = aiService
+          .parseImportedResumeText(
+            resumeText: importedFile.resumeText,
+            candidateResumeTexts: importedFile.candidateResumeTexts,
+            template: draft.template,
+            sourceTitle: importedFile.suggestedTitle,
+          )
+          .copyWith(corporateColorPresetIndex: draft.corporateColorPresetIndex);
+    } on ResumeImportException catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(error.message)));
+      return;
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
+      return;
+    }
+
+    await context.read<ResumeRepository>().upsertResume(uploaded);
+    if (!mounted) {
+      return;
+    }
+    await logAnalyticsEvent(
+      context,
+      AnalyticsEvents.resumeCreated,
+      parameters: {
+        ...resumeTemplateAnalytics(uploaded.template.userFacingTemplate),
+        'source': 'home_upload',
+      },
+    );
+    await _openBuilder(seed: uploaded);
+  }
+
   Future<void> _createResumeFromTemplatesTab() async {
     final library = context.read<ResumeLibraryViewModel>();
     final draft = library.newDraft();
@@ -430,32 +478,6 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  Widget? _buildFloatingActionButton() {
-    if (_currentIndex != 0) {
-      return null;
-    }
-
-    final isResumeSegment = _homeSegment == HomeSegment.resumes;
-    final primaryBlue = Theme.of(context).colorScheme.primary;
-
-    return SizedBox(
-      width: 60,
-      height: 60,
-      child: FloatingActionButton(
-        backgroundColor: Theme.of(context).cardColor,
-        shape: const CircleBorder(),
-        onPressed: isResumeSegment
-            ? _createResumeFromAddButton
-            : _createCoverLetterFromAddButton,
-        child: Icon(
-          isResumeSegment ? Icons.add_card_rounded : Icons.note_add_rounded,
-          color: primaryBlue,
-          size: 28,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -472,6 +494,9 @@ class _AppShellState extends State<AppShell> {
           seed: coverLetter,
           backPopsToHome: true,
         ),
+        onCreateResume: _createResumeFromAddButton,
+        onUploadResume: _uploadResume,
+        onCreateCoverLetter: _createCoverLetterFromAddButton,
       ),
       TemplatesScreen(onCreateResume: _createResumeFromTemplatesTab),
       ResumeAnalyserScreen(
@@ -490,7 +515,6 @@ class _AppShellState extends State<AppShell> {
 
           if (isWide) {
             return Scaffold(
-            floatingActionButton: _buildFloatingActionButton(),
             body: SafeArea(
               child: Row(
                 children: [
@@ -532,11 +556,12 @@ class _AppShellState extends State<AppShell> {
             context.watch<PremiumPurchaseService>().isPremium;
         final hideNavForBanner = !premiumHidesAds &&
             ((_currentIndex == 0 && PlatformMonetization.showsHomeBanner) ||
+                (_currentIndex == AppShellScope.templatesTabIndex &&
+                    PlatformMonetization.showsAds) ||
                 (_currentIndex == AppShellScope.settingsTabIndex &&
                     PlatformMonetization.showsSettingsBanner));
 
         return Scaffold(
-          floatingActionButton: _buildFloatingActionButton(),
           body: _isCupertino
               ? CupertinoPageScaffold(
                   navigationBar: hideNavForBanner

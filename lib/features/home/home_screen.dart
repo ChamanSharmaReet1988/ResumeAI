@@ -35,6 +35,9 @@ class HomeScreen extends StatelessWidget {
     required this.onPreviewResume,
     required this.onPreviewCoverLetter,
     required this.onEditCoverLetter,
+    required this.onCreateResume,
+    required this.onUploadResume,
+    required this.onCreateCoverLetter,
   });
 
   final HomeSegment currentSegment;
@@ -43,6 +46,9 @@ class HomeScreen extends StatelessWidget {
   final ValueChanged<ResumeData> onPreviewResume;
   final ValueChanged<CoverLetterData> onPreviewCoverLetter;
   final ValueChanged<CoverLetterData> onEditCoverLetter;
+  final VoidCallback onCreateResume;
+  final VoidCallback onUploadResume;
+  final VoidCallback onCreateCoverLetter;
 
   @override
   Widget build(BuildContext context) {
@@ -166,30 +172,143 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 120)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         );
 
-        if (!showHomeBanner) {
-          return scrollBody;
-        }
-
-        return SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        // Create / Upload sit in a segmented bar pinned above the tab bar,
+        // where the floating add button used to be.
+        final body = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (showHomeBanner)
               const Material(
                 elevation: 0,
                 child: AndroidBannerAdSlot(
                   placement: AndroidBannerPlacement.home,
                 ),
               ),
-              Expanded(child: scrollBody),
-            ],
-          ),
+            Expanded(child: scrollBody),
+            _HomeCreateActions(
+              showUpload: currentSegment == HomeSegment.resumes,
+              onCreateNew: currentSegment == HomeSegment.resumes
+                  ? onCreateResume
+                  : onCreateCoverLetter,
+              onUpload: onUploadResume,
+            ),
+          ],
         );
+
+        return showHomeBanner ? SafeArea(bottom: false, child: body) : body;
       },
+    );
+  }
+}
+
+/// "Create new" and "Upload resume" as a segmented bar pinned to the bottom
+/// of Home.
+///
+/// Cover letters have no upload path, so that segment only shows Create new.
+class _HomeCreateActions extends StatelessWidget {
+  const _HomeCreateActions({
+    required this.showUpload,
+    required this.onCreateNew,
+    required this.onUpload,
+  });
+
+  final bool showUpload;
+  final VoidCallback onCreateNew;
+  final VoidCallback onUpload;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final radius = BorderRadius.circular(14);
+
+    return Material(
+      color: theme.scaffoldBackgroundColor,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+          child: Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Container(
+              height: 52,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest,
+                borderRadius: radius,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _HomeActionSegment(
+                    key: const Key('home-create-new-button'),
+                    icon: Icons.add_rounded,
+                    label: l10n.homeCreateNew,
+                    highlighted: true,
+                    onTap: onCreateNew,
+                  ),
+                  if (showUpload) ...[
+                    const SizedBox(width: 4),
+                    _HomeActionSegment(
+                      key: const Key('home-upload-resume-button'),
+                      icon: Icons.upload_file_rounded,
+                      label: l10n.homeUploadResume,
+                      highlighted: false,
+                      onTap: onUpload,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeActionSegment extends StatelessWidget {
+  const _HomeActionSegment({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.highlighted,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool highlighted;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final foreground = highlighted
+        ? colorScheme.onPrimary
+        : colorScheme.primary;
+
+    // Icon-only, so the label is kept for the tooltip and screen readers.
+    return Tooltip(
+      message: label,
+      child: Material(
+        color: highlighted ? colorScheme.primary : colorScheme.surface,
+        borderRadius: BorderRadius.circular(10),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 56,
+            height: double.infinity,
+            child: Icon(icon, size: 24, color: foreground),
+          ),
+        ),
+      ),
     );
   }
 }

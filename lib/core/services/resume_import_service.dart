@@ -161,12 +161,19 @@ class ResumeImportService {
         }
       }
 
-      addCandidate(extractor.extractText());
-
       final textLines = extractor.extractTextLines();
       if (textLines.isNotEmpty) {
         addCandidate(_buildPdfTopSortedText(textLines));
         addCandidate(_buildPdfColumnAwareText(textLines, document));
+      }
+
+      // Some PDF writers (including this app's own exports) emit every word as
+      // a separate text run, and the plain extractor then returns one word per
+      // line. The line-based resume parser reads that as dozens of fake jobs,
+      // so only fall back to it when the line-based reads produced nothing.
+      final plainText = extractor.extractText();
+      if (candidates.isEmpty || !_looksWordPerLine(plainText)) {
+        addCandidate(plainText);
       }
 
       return candidates;
@@ -175,9 +182,59 @@ class ResumeImportService {
     }
   }
 
+  bool _looksWordPerLine(String text) {
+    final lines = text
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    if (lines.length < 8) {
+      return false;
+    }
+    final words = lines.fold<int>(
+      0,
+      (total, line) => total + line.split(RegExp(r'\s+')).length,
+    );
+    return words / lines.length < 1.6;
+  }
+
   String _buildPdfTopSortedText(List<sfpdf.TextLine> textLines) {
     final sorted = [...textLines]..sort(_comparePdfTextLines);
-    return sorted.map((line) => line.text.trim()).join('\n');
+    return sorted.map(_pdfLineText).join('\n');
+  }
+
+  /// Rebuilds a PDF text line from its words, marking wide horizontal gaps
+  /// with " | ".
+  ///
+  /// The extractor merges everything at the same height into one line, so a
+  /// two-column skills grid reads "Kotlin Jetpack Compose" and a right-aligned
+  /// date sticks to the job title. A gap much wider than a normal space means
+  /// separate items, which the resume parser already splits on "|".
+  String _pdfLineText(sfpdf.TextLine line) {
+    final words = line.wordCollection
+        .where((word) => word.text.trim().isNotEmpty)
+        .toList();
+    if (words.length < 2) {
+      return line.text.trim();
+    }
+    final buffer = StringBuffer(words.first.text.trim());
+    for (var i = 1; i < words.length; i++) {
+      final previous = words[i - 1];
+      final word = words[i];
+      final size = word.fontSize > 0 ? word.fontSize : word.bounds.height;
+      final gap = word.bounds.left - previous.bounds.right;
+      // Runs that touch belong to one token (an email drawn as
+      // "name" "@" "gmail.com"), so only add a space for a visible gap.
+      final separator = gap > math.max(size * 1.6, 12)
+          ? ' | '
+          : gap > size * 0.15
+          ? ' '
+          : '';
+      buffer
+        ..write(separator)
+        ..write(word.text.trim());
+    }
+    return buffer.toString();
   }
 
   String _buildPdfColumnAwareText(

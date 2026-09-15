@@ -116,14 +116,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noResumesYetBody =>
-      'Tap the add button to create your first resume.';
+      'Tap Create new to start from scratch, or Upload resume to fill in your details from an existing file.';
 
   @override
   String get noCoverLettersYet => 'No cover letters yet';
 
   @override
   String get noCoverLettersYetBody =>
-      'Tap the add button to create your first cover letter.';
+      'Tap Create new to write your first cover letter.';
+
+  @override
+  String get homeCreateNew => 'Create new';
+
+  @override
+  String get homeUploadResume => 'Upload resume';
+
+  @override
+  String get uploadResumeFailed =>
+      'Could not upload that resume. Please try again.';
 
   @override
   String get actionOpen => 'Open';

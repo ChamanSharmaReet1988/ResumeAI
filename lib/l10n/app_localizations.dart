@@ -309,7 +309,7 @@ abstract class AppLocalizations {
   /// No description provided for @noResumesYetBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap the add button to create your first resume.'**
+  /// **'Tap Create new to start from scratch, or Upload resume to fill in your details from an existing file.'**
   String get noResumesYetBody;
 
   /// No description provided for @noCoverLettersYet.
@@ -321,8 +321,26 @@ abstract class AppLocalizations {
   /// No description provided for @noCoverLettersYetBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap the add button to create your first cover letter.'**
+  /// **'Tap Create new to write your first cover letter.'**
   String get noCoverLettersYetBody;
+
+  /// No description provided for @homeCreateNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new'**
+  String get homeCreateNew;
+
+  /// No description provided for @homeUploadResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload resume'**
+  String get homeUploadResume;
+
+  /// No description provided for @uploadResumeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload that resume. Please try again.'**
+  String get uploadResumeFailed;
 
   /// No description provided for @actionOpen.
   ///

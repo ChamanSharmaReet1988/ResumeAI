@@ -29,9 +29,6 @@ abstract final class PlatformMonetization {
         defaultTargetPlatform == TargetPlatform.iOS;
   }
 
-  /// Preview top banner exists on Android only (no iOS preview banner unit).
-  static bool get showsPreviewBanner => isAndroidAdsModel;
-
   /// Home top banner on Android and iOS.
   static bool get showsHomeBanner => showsAds;
 

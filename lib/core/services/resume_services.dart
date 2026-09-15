@@ -4679,15 +4679,9 @@ class LocalAiResumeService {
     List<String> headerLines,
     String fallbackTitle,
   ) {
-    for (final line in headerLines.take(3)) {
-      if (_isImportedContactLine(line)) {
-        continue;
-      }
-      final cleaned = line.trim();
-      final wordCount = cleaned.split(RegExp(r'\s+')).length;
-      if (cleaned.length <= 40 && wordCount <= 4) {
-        return _toTitleCase(cleaned);
-      }
+    final nameIndex = _importedNameLineIndex(headerLines);
+    if (nameIndex != null) {
+      return _toTitleCase(headerLines[nameIndex].trim());
     }
 
     final fallback = fallbackTitle
@@ -4696,13 +4690,46 @@ class LocalAiResumeService {
     return fallback.isEmpty ? '' : _toTitleCase(fallback);
   }
 
+  /// Header lines that are layout decoration rather than resume content:
+  /// avatar monograms ("RK") and sidebar labels ("Details").
+  bool _isImportedHeaderDecoration(String line) {
+    final cleaned = line.trim();
+    return RegExp(r'^[A-Z]{1,3}$').hasMatch(cleaned) ||
+        const {
+          'details',
+          'contact',
+          'contact details',
+          'personal details',
+          'personal information',
+          'about me',
+        }.contains(cleaned.toLowerCase());
+  }
+
+  /// Index of the candidate's name among the first header lines, skipping
+  /// contact lines and layout decoration.
+  int? _importedNameLineIndex(List<String> headerLines) {
+    for (var i = 0; i < headerLines.length && i < 4; i++) {
+      final line = headerLines[i];
+      if (_isImportedContactLine(line) || _isImportedHeaderDecoration(line)) {
+        continue;
+      }
+      final cleaned = line.trim();
+      final wordCount = cleaned.split(RegExp(r'\s+')).length;
+      if (cleaned.length <= 40 && wordCount <= 4) {
+        return i;
+      }
+    }
+    return null;
+  }
+
   String _inferImportedJobTitle({
     required List<String> headerLines,
     required List<String> experienceLines,
     required String fallbackTitle,
   }) {
-    for (final line in headerLines.skip(1).take(3)) {
-      if (_isImportedContactLine(line)) {
+    final nameIndex = _importedNameLineIndex(headerLines) ?? 0;
+    for (final line in headerLines.skip(nameIndex + 1).take(3)) {
+      if (_isImportedContactLine(line) || _isImportedHeaderDecoration(line)) {
         continue;
       }
       if (line.split(RegExp(r'\s+')).length <= 8) {
@@ -5161,7 +5188,7 @@ class LocalAiResumeService {
   int _scoreImportedResumeParse(ResumeData resume, String sourceText) {
     var score = 0;
 
-    if (resume.fullName.trim().isNotEmpty &&
+    if (resume.fullName.trim().split(RegExp(r'\s+')).length >= 2 &&
         !resume.fullName.contains('@') &&
         !RegExp(r'\d').hasMatch(resume.fullName)) {
       score += 10;
@@ -5194,6 +5221,14 @@ class LocalAiResumeService {
     }
 
     for (final item in resume.visibleWorkExperiences) {
+      // A one-word role with no bullets is almost always a fragment of badly
+      // extracted text ("building @ fintech"), not a real job; penalise it so a
+      // garbled read never outscores a clean one just by producing more jobs.
+      final hasBullets = item.bullets.any((b) => b.trim().isNotEmpty);
+      if (item.role.trim().split(RegExp(r'\s+')).length <= 1 && !hasBullets) {
+        score -= 8;
+        continue;
+      }
       score += 12;
       if (item.role.trim().isNotEmpty) {
         score += 4;
@@ -5267,7 +5302,18 @@ class LocalAiResumeService {
   }
 
   bool _isImportedBulletLine(String line) {
-    return RegExp(r'^\s*[\-\u2022\*]').hasMatch(line);
+    if (!RegExp(r'^\s*[\-\u2022\*]').hasMatch(line)) {
+      return false;
+    }
+    // Some templates prefix job headers with a marker too
+    // ("* Senior Developer, Acme Jan 2021 \u2014 Present"). A short marker line
+    // that carries dates and isn't a sentence is a header, not a bullet.
+    final body = _stripImportedBullet(line);
+    final isShortDatedHeader =
+        _looksLikeImportedDateLine(body) &&
+        body.split(RegExp(r'\s+')).length <= 14 &&
+        !body.endsWith('.');
+    return !isShortDatedHeader;
   }
 
   String _stripImportedBullet(String line) {
@@ -5275,11 +5321,14 @@ class LocalAiResumeService {
   }
 
   bool _looksLikeImportedExperienceHeader(String line) {
-    final cleaned = line.trim();
-    if (cleaned.isEmpty ||
-        _isImportedBulletLine(cleaned) ||
-        _looksLikeImportedDateLine(cleaned)) {
+    final cleaned = _stripImportedBullet(line);
+    if (cleaned.isEmpty || _isImportedBulletLine(line)) {
       return false;
+    }
+    if (_looksLikeImportedDateLine(cleaned)) {
+      // A header may carry its dates inline; a bare date line is not a header.
+      final text = _withoutImportedDates(cleaned);
+      return text.split(RegExp(r'\s+')).length >= 3 && !text.endsWith('.');
     }
 
     final wordCount = cleaned.split(RegExp(r'\s+')).length;
@@ -5336,12 +5385,14 @@ class LocalAiResumeService {
         .toList();
 
     var role = fallbackJobTitle;
+    var roleFound = false;
     var company = '';
     var startDate = '';
     var endDate = '';
     final descriptionLines = <String>[];
 
-    for (final line in detailLines) {
+    for (final rawLine in detailLines) {
+      var line = _stripImportedBullet(rawLine);
       if (_looksLikeImportedDateLine(line)) {
         final dates = _extractImportedDates(line);
         if (startDate.isEmpty && dates.$1.isNotEmpty) {
@@ -5350,12 +5401,23 @@ class LocalAiResumeService {
         if (endDate.isEmpty && dates.$2.isNotEmpty) {
           endDate = dates.$2;
         }
-        continue;
+        // Headers often carry the dates on the same line
+        // ("Senior Developer, Acme Jan 2021 — Present"); keep the text part.
+        line = _withoutImportedDates(line);
+        if (line.split(RegExp(r'\s+')).length < 2) {
+          continue;
+        }
       }
 
-      if (role == fallbackJobTitle || role.trim().isEmpty) {
+      // Track "role found" explicitly: comparing against the fallback title
+      // fails when the real role matches it, and the next sentence would then
+      // overwrite the role.
+      final isSentence =
+          line.endsWith('.') || line.split(RegExp(r'\s+')).length > 12;
+      if (!roleFound && !isSentence) {
         role = _extractImportedRole(line).ifEmpty(fallbackJobTitle);
         company = _extractImportedCompany(line);
+        roleFound = true;
         continue;
       }
 
@@ -5369,19 +5431,38 @@ class LocalAiResumeService {
       descriptionLines.add(line);
     }
 
-    final description = descriptionLines.take(2).join(' ').trim();
+    // Some templates write achievements as plain sentences with no bullet
+    // marks; keep them as bullets instead of folding them into a description.
+    final useSentencesAsBullets =
+        bulletLines.isEmpty &&
+        descriptionLines.isNotEmpty &&
+        descriptionLines.every((line) => line.endsWith('.'));
+    final description = useSentencesAsBullets
+        ? ''
+        : descriptionLines.take(2).join(' ').trim();
     return WorkExperience(
       role: role.ifEmpty(fallbackJobTitle),
       company: company,
       startDate: startDate,
       endDate: endDate,
       description: description,
-      bullets: bulletLines,
+      bullets: useSentencesAsBullets
+          ? descriptionLines.take(8).toList()
+          : bulletLines,
       layoutMode: WorkExperienceLayoutMode.bullets,
     );
   }
 
-  EducationItem _buildImportedEducationItem(List<String> entry) {
+  EducationItem _buildImportedEducationItem(List<String> rawEntry) {
+    // Drop list markers ("* College…") and keep dates out of the text fields;
+    // the dates are still read into startDate/endDate from the combined text.
+    final entry = rawEntry
+        .map(_stripImportedBullet)
+        .where((line) => line.isNotEmpty)
+        .toList();
+    if (entry.isEmpty) {
+      return const EducationItem.empty();
+    }
     final combined = entry.join(' | ');
     final dates = _extractImportedDates(combined);
     final score =
@@ -5410,9 +5491,13 @@ class LocalAiResumeService {
       orElse: () => '',
     );
 
+    String withoutDates(String value) => _looksLikeImportedDateLine(value)
+        ? _withoutImportedDates(value)
+        : value.trim();
+
     return EducationItem(
-      institution: institution,
-      degree: degree,
+      institution: withoutDates(institution),
+      degree: withoutDates(degree),
       startDate: dates.$1,
       endDate: dates.$2,
       score: normalizedScore,
@@ -5471,33 +5556,54 @@ class LocalAiResumeService {
     return (start, end);
   }
 
-  String _extractImportedRole(String line) {
+  /// [line] with its dates and date-range separators removed, leaving the
+  /// role/company text of a header like "Developer, Acme Jan 2021 — Present".
+  String _withoutImportedDates(String line) {
+    return line
+        .replaceAll(
+          RegExp(
+            r'((?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{4}|\d{1,2}/\d{4}|\b(?:19|20)\d{2}\b|present|current)',
+            caseSensitive: false,
+          ),
+          ' ',
+        )
+        .replaceAll(RegExp(r'\s+(?:[\-–—]|to)\s+'), ' ')
+        .replaceAll(RegExp(r'[\s\-–—|·,]+$'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
+  /// Splits a job header into its role and company parts, e.g.
+  /// "Role | Company", "Role at Company", "Role / Company", "Role, Company".
+  List<String> _splitImportedRoleAndCompany(String line) {
     final cleaned = line.trim();
     if (cleaned.contains('|')) {
-      return cleaned.split('|').first.trim();
+      return cleaned.split('|').map((part) => part.trim()).toList();
     }
-    if (RegExp(r'\bat\b', caseSensitive: false).hasMatch(cleaned)) {
-      return cleaned
-          .split(RegExp(r'\bat\b', caseSensitive: false))
-          .first
-          .trim();
+    final atPattern = RegExp(r'\bat\b', caseSensitive: false);
+    if (atPattern.hasMatch(cleaned)) {
+      return cleaned.split(atPattern).map((part) => part.trim()).toList();
     }
-    return cleaned;
+    if (cleaned.contains(' / ')) {
+      return cleaned.split(' / ').map((part) => part.trim()).toList();
+    }
+    // A single comma separates role and company; more commas usually mean the
+    // role itself contains one ("Manager, Sales and Marketing").
+    final commaParts = cleaned.split(', ');
+    if (commaParts.length == 2) {
+      return commaParts.map((part) => part.trim()).toList();
+    }
+    return [cleaned];
+  }
+
+  String _extractImportedRole(String line) {
+    return _splitImportedRoleAndCompany(line).first;
   }
 
   String _extractImportedCompany(String line) {
-    final cleaned = line.trim();
-    if (cleaned.contains('|')) {
-      final parts = cleaned.split('|').map((part) => part.trim()).toList();
-      if (parts.length >= 2) {
-        return parts[1];
-      }
-    }
-    if (RegExp(r'\bat\b', caseSensitive: false).hasMatch(cleaned)) {
-      final parts = cleaned.split(RegExp(r'\bat\b', caseSensitive: false));
-      if (parts.length >= 2) {
-        return parts[1].trim();
-      }
+    final parts = _splitImportedRoleAndCompany(line);
+    if (parts.length >= 2) {
+      return parts[1];
     }
     return '';
   }

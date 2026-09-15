@@ -116,14 +116,24 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noResumesYetBody =>
-      'Toque no botão de adicionar para criar seu primeiro currículo.';
+      'Toque em Criar novo para começar do zero ou em Enviar currículo para preencher seus dados a partir de um arquivo.';
 
   @override
   String get noCoverLettersYet => 'Nenhuma carta de apresentação ainda';
 
   @override
   String get noCoverLettersYetBody =>
-      'Toque no botão de adicionar para criar sua primeira carta de apresentação.';
+      'Toque em Criar novo para escrever sua primeira carta de apresentação.';
+
+  @override
+  String get homeCreateNew => 'Criar novo';
+
+  @override
+  String get homeUploadResume => 'Enviar currículo';
+
+  @override
+  String get uploadResumeFailed =>
+      'Não foi possível enviar esse currículo. Tente novamente.';
 
   @override
   String get actionOpen => 'Abrir';

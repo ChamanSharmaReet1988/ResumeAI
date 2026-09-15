@@ -86,6 +86,29 @@ class _NativePdfPreviewState extends State<NativePdfPreview> {
     });
   }
 
+  PdfDocumentRef? _documentRef;
+  Uint8List? _documentBytes;
+
+  /// Returns the same [PdfDocumentRef] for the same bytes across rebuilds.
+  ///
+  /// [PdfViewer] only starts loading after pdfrx finishes initializing, which
+  /// is slow on the first preview after launch. If the parent rebuilds during
+  /// that wait, a fresh ref (same key) makes the viewer's pending load bail out
+  /// on its identity check, and the page stays blank until the next open.
+  PdfDocumentRef _documentRefFor(Uint8List bytes) {
+    final current = _documentRef;
+    if (current != null &&
+        identical(_documentBytes, bytes) &&
+        current.key.sourceName == widget.documentKey) {
+      return current;
+    }
+    _documentBytes = bytes;
+    return _documentRef = PdfDocumentRefData(
+      bytes,
+      sourceName: widget.documentKey,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Uint8List>(
@@ -108,9 +131,8 @@ class _NativePdfPreviewState extends State<NativePdfPreview> {
             fit: StackFit.expand,
             children: [
               Positioned.fill(
-                child: PdfViewer.data(
-                  snapshot.data!,
-                  sourceName: widget.documentKey,
+                child: PdfViewer(
+                  _documentRefFor(snapshot.data!),
                   params: _viewerParams,
                 ),
               ),

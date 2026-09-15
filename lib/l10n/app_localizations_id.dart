@@ -116,14 +116,24 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get noResumesYetBody =>
-      'Ketuk tombol tambah untuk membuat resume pertama Anda.';
+      'Ketuk Buat baru untuk mulai dari awal, atau Unggah resume untuk mengisi data dari file yang ada.';
 
   @override
   String get noCoverLettersYet => 'Belum ada surat lamaran';
 
   @override
   String get noCoverLettersYetBody =>
-      'Ketuk tombol tambah untuk membuat surat lamaran pertama Anda.';
+      'Ketuk Buat baru untuk menulis surat lamaran pertama Anda.';
+
+  @override
+  String get homeCreateNew => 'Buat baru';
+
+  @override
+  String get homeUploadResume => 'Unggah resume';
+
+  @override
+  String get uploadResumeFailed =>
+      'Resume tidak dapat diunggah. Silakan coba lagi.';
 
   @override
   String get actionOpen => 'Buka';

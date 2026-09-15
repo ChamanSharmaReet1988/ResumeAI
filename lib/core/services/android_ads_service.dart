@@ -23,8 +23,6 @@ abstract final class AndroidAdsConfig {
       'ca-app-pub-4326780099537551/3087154686';
   static const androidTemplatesBannerAdUnitId =
       'ca-app-pub-4326780099537551/6374346359';
-  static const androidPreviewBannerAdUnitId =
-      'ca-app-pub-4326780099537551/6374346359';
   static const androidSettingsBannerAdUnitId =
       'ca-app-pub-4326780099537551/7581767617';
   /// Android Home banner.
@@ -64,15 +62,13 @@ abstract final class AndroidAdsConfig {
         AndroidBannerPlacement.home => iosHomeBannerAdUnitId,
         AndroidBannerPlacement.templates => iosTemplatesBannerAdUnitId,
         AndroidBannerPlacement.settings => iosSettingsBannerAdUnitId,
-        // No iOS AI Resume / preview banner units yet.
+        // No iOS AI Resume banner unit yet.
         AndroidBannerPlacement.aiResume => iosTemplatesBannerAdUnitId,
-        AndroidBannerPlacement.preview => iosTemplatesBannerAdUnitId,
       };
     }
     return switch (placement) {
       AndroidBannerPlacement.home => androidHomeBannerAdUnitId,
       AndroidBannerPlacement.templates => androidTemplatesBannerAdUnitId,
-      AndroidBannerPlacement.preview => androidPreviewBannerAdUnitId,
       AndroidBannerPlacement.settings => androidSettingsBannerAdUnitId,
       AndroidBannerPlacement.aiResume => androidAiResumeBannerAdUnitId,
     };
@@ -105,7 +101,6 @@ enum AndroidAdPlacement {
 enum AndroidBannerPlacement {
   home,
   templates,
-  preview,
   settings,
   aiResume,
 }

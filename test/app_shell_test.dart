@@ -220,7 +220,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(FloatingActionButton));
+      await tester.tap(find.byKey(const Key('home-create-new-button')));
       await tester.pumpAndSettle();
 
       expect(find.text('Resume title'), findsWidgets);
@@ -274,7 +274,7 @@ void main() {
       await tester.tap(find.text('Cover Letter').first);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(FloatingActionButton));
+      await tester.tap(find.byKey(const Key('home-create-new-button')));
       await tester.pumpAndSettle();
 
       expect(find.text('Cover letter title'), findsWidgets);
@@ -334,7 +334,7 @@ void main() {
       await tester.tap(find.text('Templates'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.byKey(const Key('home-create-new-button')), findsNothing);
 
       final templateTile = find.byKey(
         const Key('template-tile-profile-sidebar'),
@@ -353,7 +353,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('resume-step-pages')), findsNothing);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byKey(const Key('home-create-new-button')), findsOneWidget);
       expect(find.text('Use template'), findsNothing);
     },
   );
@@ -429,7 +429,7 @@ void main() {
 
       expect(find.byKey(const Key('resume-pdf-preview')), findsNothing);
       expect(find.byKey(const Key('resume-step-pages')), findsNothing);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byKey(const Key('home-create-new-button')), findsOneWidget);
       expect(find.text('Use template'), findsNothing);
     },
   );
@@ -478,7 +478,7 @@ void main() {
       await tester.tap(find.text('Cover Letter').first);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(FloatingActionButton));
+      await tester.tap(find.byKey(const Key('home-create-new-button')));
       await tester.pumpAndSettle();
 
       await tester.enterText(
@@ -546,7 +546,7 @@ void main() {
         findsNothing,
       );
       expect(find.text('Create cover letter'), findsNothing);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byKey(const Key('home-create-new-button')), findsOneWidget);
     },
   );
 
@@ -634,7 +634,7 @@ void main() {
         findsNothing,
       );
       expect(find.text('Cover letter content'), findsNothing);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byKey(const Key('home-create-new-button')), findsOneWidget);
     },
   );
 }
