@@ -1133,7 +1133,7 @@ class _CreativePreview extends StatelessWidget {
     final summaryMaxLines = showAllContent ? null : 5;
 
     return DefaultTextStyle.merge(
-      style: const TextStyle(fontFamily: 'Garamond'),
+      style: TextStyle(fontFamily: ResumeTextFont.outfit.flutterFontFamily),
       child: Stack(
         children: [
           Positioned.fill(
@@ -1631,7 +1631,7 @@ class _ClassicSidebarPreview extends StatelessWidget {
         avatarPath.isNotEmpty && File(avatarPath).existsSync();
 
     return DefaultTextStyle.merge(
-      style: const TextStyle(fontFamily: 'Garamond'),
+      style: TextStyle(fontFamily: ResumeTextFont.outfit.flutterFontFamily),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -2060,7 +2060,7 @@ class _HeaderSidebarPreview extends StatelessWidget {
             : constraints.maxWidth / ResumePreviewCard._a4AspectRatio;
 
         return DefaultTextStyle.merge(
-          style: const TextStyle(fontFamily: 'Garamond'),
+          style: TextStyle(fontFamily: ResumeTextFont.outfit.flutterFontFamily),
           child: SizedBox(
             height: resolvedHeight,
             child: Row(
@@ -3623,7 +3623,7 @@ class _AccentStripPreview extends StatelessWidget {
             : constraints.maxWidth / ResumePreviewCard._a4AspectRatio;
 
         return DefaultTextStyle.merge(
-          style: const TextStyle(fontFamily: 'Garamond'),
+          style: TextStyle(fontFamily: ResumeTextFont.outfit.flutterFontFamily),
           child: ColoredBox(
             color: Colors.white,
             child: SizedBox(

@@ -5118,7 +5118,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
     final mutedBodyStyle = bodyStyle.copyWith(color: muted);
 
     return DefaultTextStyle.merge(
-      style: const TextStyle(fontFamily: 'Garamond'),
+      style: TextStyle(fontFamily: ResumeTextFont.outfit.flutterFontFamily),
       child: DecoratedBox(
         decoration: const BoxDecoration(color: Colors.white),
         child: ClipRRect(

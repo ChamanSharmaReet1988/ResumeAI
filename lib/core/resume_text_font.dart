@@ -292,7 +292,8 @@ abstract final class ResumeTypography {
         letterSpacing: letterSpacing,
       );
 
-  /// Garamond (EB Garamond) for accent-strip name and section titles in preview.
+  /// Preview text style for the templates whose PDF body font is the
+  /// Color & Font default (Outfit); named for the PDF helper it mirrors.
   static TextStyle garamondPreviewStyle({
     required int weight,
     double? fontSize,
@@ -302,7 +303,7 @@ abstract final class ResumeTypography {
     FontStyle fontStyle = FontStyle.normal,
   }) =>
       TextStyle(
-        fontFamily: 'Garamond',
+        fontFamily: ResumeTextFont.outfit.flutterFontFamily,
         fontWeight: ResumeFontWeight.toFlutter(weight),
         fontStyle: fontStyle,
         fontSize: fontSize,

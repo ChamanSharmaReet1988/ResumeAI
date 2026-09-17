@@ -116,10 +116,9 @@ const availableResumeTemplates = <ResumeTemplate>[
 extension ResumeTemplateX on ResumeTemplate {
   ResumeTemplate get userFacingTemplate => this;
 
-  /// Templates whose own font is Outfit rather than Garamond.
-  bool get defaultsToOutfitFont =>
-      this == ResumeTemplate.slateSidebar ||
-      this == ResumeTemplate.atsCleanSans;
+  /// Every template renders in Outfit unless the reader picks Garamond in the
+  /// preview's Color & Font sheet.
+  bool get defaultsToOutfitFont => true;
 
   /// ATS layouts keep black type on the template gallery; color is chosen in preview.
   bool get isAtsTemplate => switch (userFacingTemplate) {
@@ -229,20 +228,20 @@ extension ResumeTemplateX on ResumeTemplate {
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
   String get fontStyleLabel => switch (userFacingTemplate) {
-    ResumeTemplate.corporate => 'Sans · corporate header',
-    ResumeTemplate.creative => 'Sans · profile sidebar',
-    ResumeTemplate.classicSidebar => 'Sans · classic sidebar',
-    ResumeTemplate.detailsSidebar => 'Sans · details sidebar',
-    ResumeTemplate.accentStrip => 'Garamond · accent strip',
-    ResumeTemplate.atsStructured => 'Garamond · banded ATS',
-    ResumeTemplate.atsSerifRules => 'Garamond · rules ATS',
-    ResumeTemplate.atsModernFlow => 'Garamond · flow ATS',
-    ResumeTemplate.atsExecutive => 'Garamond · executive ATS',
-    ResumeTemplate.atsCenterClassic => 'Garamond · center ATS',
-    ResumeTemplate.atsProfessionalBlue => 'Garamond · blue ATS',
-    ResumeTemplate.atsLatexClassic => 'Garamond · LaTeX ATS',
-    ResumeTemplate.atsClassicCv => 'Garamond · classic CV',
-    ResumeTemplate.headerSidebar => 'Garamond · navy sidebar',
+    ResumeTemplate.corporate => 'Outfit · corporate header',
+    ResumeTemplate.creative => 'Outfit · profile sidebar',
+    ResumeTemplate.classicSidebar => 'Outfit · classic sidebar',
+    ResumeTemplate.detailsSidebar => 'Outfit · details sidebar',
+    ResumeTemplate.accentStrip => 'Outfit · accent strip',
+    ResumeTemplate.atsStructured => 'Outfit · banded ATS',
+    ResumeTemplate.atsSerifRules => 'Outfit · rules ATS',
+    ResumeTemplate.atsModernFlow => 'Outfit · flow ATS',
+    ResumeTemplate.atsExecutive => 'Outfit · executive ATS',
+    ResumeTemplate.atsCenterClassic => 'Outfit · center ATS',
+    ResumeTemplate.atsProfessionalBlue => 'Outfit · blue ATS',
+    ResumeTemplate.atsLatexClassic => 'Outfit · LaTeX ATS',
+    ResumeTemplate.atsClassicCv => 'Outfit · classic CV',
+    ResumeTemplate.headerSidebar => 'Outfit · navy sidebar',
     ResumeTemplate.slateSidebar => 'Outfit · slate sidebar',
     ResumeTemplate.atsCleanSans => 'Outfit · clean ATS',
   };

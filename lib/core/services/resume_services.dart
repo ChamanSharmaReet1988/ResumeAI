@@ -1063,11 +1063,17 @@ pw.Widget _headerSidebarRailPanel({
           pw.Text('Add contact details', style: bodyStyle)
         else
           for (final item in infoItems) ...[
-            pw.Text(
-              item,
-              style: item.contains('@')
-                  ? bodyStyle.copyWith(decoration: pw.TextDecoration.underline)
-                  : bodyStyle,
+            // Links have no spaces to wrap on and would be clipped by the
+            // narrow rail, so scale the line down when it does not fit.
+            pw.FittedBox(
+              fit: pw.BoxFit.scaleDown,
+              alignment: pw.Alignment.centerLeft,
+              child: pw.Text(
+                item,
+                style: item.contains('@')
+                    ? bodyStyle.copyWith(decoration: pw.TextDecoration.underline)
+                    : bodyStyle,
+              ),
             ),
             pw.SizedBox(height: 6),
           ],
