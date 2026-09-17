@@ -666,6 +666,7 @@
   "unableToOpenShareSheet": "Tidak dapat membuka lembar berbagi saat ini.",
   "chooseTemplate": "Pilih templat",
   "fontSize": "Ukuran font",
+  "resumeFont": "Font",
   "colorAndFont": "Warna & Font",
   "sharedFromResumeAi": "Dibagikan dari ResumeAI",
   "unableToLoadPdfPreview": "Tidak dapat memuat pratinjau PDF saat ini.",

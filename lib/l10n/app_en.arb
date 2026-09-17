@@ -763,6 +763,7 @@
   "unableToOpenShareSheet": "Unable to open share sheet right now.",
   "chooseTemplate": "Choose template",
   "fontSize": "Font size",
+  "resumeFont": "Font",
   "colorAndFont": "Color & Font",
   "sharedFromResumeAi": "Shared from ResumeAI",
   "unableToLoadPdfPreview": "Unable to load PDF preview right now.",

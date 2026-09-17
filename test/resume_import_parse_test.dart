@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:resume_app/core/models/resume_models.dart';
+import 'package:resume_app/core/resume_text_font.dart';
 import 'package:resume_app/core/services/resume_import_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 
@@ -52,8 +53,12 @@ ResumeData _sampleResume(ResumeTemplate template) =>
       skills: const ['Kotlin', 'Java', 'Jetpack Compose', 'Coroutines'],
     );
 
-Future<ResumeData> _uploadExportedPdf(ResumeTemplate template) async {
-  final bytes = await ResumePdfService().buildPdf(_sampleResume(template));
+Future<ResumeData> _uploadExportedPdf(ResumeTemplate template, {
+  ResumeTextFont font = ResumeTextFont.inter,
+}) async {
+  final bytes = await ResumePdfService().buildPdf(
+    _sampleResume(template).copyWith(resumeTextFont: font),
+  );
   final imported = await const ResumeImportService().importPlatformFile(
     PlatformFile(name: 'Rohan_Kapoor_Resume.pdf', size: bytes.length, bytes: bytes),
   );
@@ -99,6 +104,16 @@ void main() {
       });
     });
   }
+
+  test('Calibri font choice exports readable text', () async {
+    final parsed = await _uploadExportedPdf(
+      ResumeTemplate.atsStructured,
+      font: ResumeTextFont.calibri,
+    );
+    expect(parsed.fullName, 'Rohan Kapoor');
+    expect(parsed.email, 'rohan.kapoor@gmail.com');
+    expect(parsed.visibleWorkExperiences.length, 2);
+  });
 
   group('Upload resume auto-fill from structured ATS PDF', () {
     late ResumeData parsed;

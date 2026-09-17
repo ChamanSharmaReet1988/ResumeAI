@@ -1448,6 +1448,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get fontSize => 'Ukuran font';
 
   @override
+  String get resumeFont => 'Font';
+
+  @override
   String get colorAndFont => 'Warna & Font';
 
   @override

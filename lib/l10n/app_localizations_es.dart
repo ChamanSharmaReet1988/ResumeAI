@@ -1454,6 +1454,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get fontSize => 'Tamaño de fuente';
 
   @override
+  String get resumeFont => 'Fuente';
+
+  @override
   String get colorAndFont => 'Color y fuente';
 
   @override

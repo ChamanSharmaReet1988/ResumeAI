@@ -666,6 +666,7 @@
   "unableToOpenShareSheet": "Não foi possível abrir a folha de compartilhamento agora.",
   "chooseTemplate": "Escolher modelo",
   "fontSize": "Tamanho da fonte",
+  "resumeFont": "Fonte",
   "colorAndFont": "Cor e fonte",
   "sharedFromResumeAi": "Compartilhado do ResumeAI",
   "unableToLoadPdfPreview": "Não foi possível carregar a prévia do PDF agora.",

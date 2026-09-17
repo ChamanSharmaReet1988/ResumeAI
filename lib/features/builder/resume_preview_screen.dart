@@ -5,6 +5,7 @@ import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/corporate_resume_style.dart';
+import '../../core/resume_text_font.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
 import '../shared/native_pdf_preview.dart';
@@ -214,6 +215,48 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              context.l10n.resumeFont,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            // Templates keep their own default font (Garamond,
+                            // or Inter for Details Sidebar); Calibri overrides it.
+                            Wrap(
+                              spacing: 10,
+                              children: [
+                                ChoiceChip(
+                                  key: const Key('resume-font-default'),
+                                  label: Text(
+                                    resume.template ==
+                                            ResumeTemplate.detailsSidebar
+                                        ? 'Inter'
+                                        : 'Garamond',
+                                  ),
+                                  selected: resume.resumeTextFont !=
+                                      ResumeTextFont.calibri,
+                                  onSelected: (_) => viewModel.updateResume(
+                                    (r) => r.copyWith(
+                                      resumeTextFont: ResumeTextFont.inter,
+                                    ),
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  key: const Key('resume-font-calibri'),
+                                  label: const Text('Calibri'),
+                                  selected: resume.resumeTextFont ==
+                                      ResumeTextFont.calibri,
+                                  onSelected: (_) => viewModel.updateResume(
+                                    (r) => r.copyWith(
+                                      resumeTextFont: ResumeTextFont.calibri,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 30),
                             Text(
                               context.l10n.fontSize,
                               style: theme.textTheme.titleSmall?.copyWith(
@@ -437,7 +480,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                     )
                                   : NativePdfPreview(
                                       key: ValueKey(
-                                        '${viewModel.resume.template.name}-${viewModel.resume.bodyFontPt}-${viewModel.resume.corporateColorPresetIndex}-${viewModel.resume.effectiveBuilderSectionOrder.join(',')}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
+                                        '${viewModel.resume.template.name}-${viewModel.resume.resumeTextFont.name}-${viewModel.resume.bodyFontPt}-${viewModel.resume.corporateColorPresetIndex}-${viewModel.resume.effectiveBuilderSectionOrder.join(',')}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                                       ),
                                       documentKey:
                                           '${viewModel.resume.id}-${viewModel.resume.effectiveBuilderSectionOrder.join(',')}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',

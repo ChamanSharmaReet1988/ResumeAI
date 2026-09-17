@@ -7483,6 +7483,17 @@ class ResumePdfService {
     return _garamondPdfFontsCache ??= await loadGaramondPdfFonts();
   }
 
+  GaramondPdfFonts? _carlitoResumePdfFontsCache;
+
+  /// Fonts for the Garamond-based templates: Carlito when the user picked
+  /// Calibri in Style, otherwise the templates' default Garamond.
+  Future<GaramondPdfFonts> _resumePdfFontsFor(ResumeData resume) async {
+    if (resume.resumeTextFont == ResumeTextFont.calibri) {
+      return _carlitoResumePdfFontsCache ??= await loadCarlitoResumePdfFonts();
+    }
+    return _ensureGaramondPdfFonts();
+  }
+
   Future<ArimoPdfFonts> _ensureArimoPdfFonts() async {
     return _arimoPdfFontsCache ??= await loadArimoPdfFonts();
   }
@@ -7495,7 +7506,7 @@ class ResumePdfService {
     final profileImage = await _loadProfileImage(profileImagePath);
 
     if (resume.template == ResumeTemplate.creative) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addCreativeTemplatePage(
         document,
@@ -7507,7 +7518,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.classicSidebar) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addClassicSidebarTemplatePage(
         document,
@@ -7520,7 +7531,7 @@ class ResumePdfService {
 
     if (resume.template == ResumeTemplate.accentStrip) {
       final calibri = await _ensureCalibriPdfFonts();
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final bodyPt = resume.effectiveBodyFontPt.toDouble();
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
@@ -7539,42 +7550,42 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsStructured) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsStructuredTemplatePage(document, resume, garamond: garamond);
       return document.save();
     }
 
     if (resume.template == ResumeTemplate.atsSerifRules) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsSerifRulesTemplatePage(document, resume, garamond: garamond);
       return document.save();
     }
 
     if (resume.template == ResumeTemplate.atsModernFlow) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsModernFlowTemplatePage(document, resume, garamond: garamond);
       return document.save();
     }
 
     if (resume.template == ResumeTemplate.atsExecutive) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsExecutiveTemplatePage(document, resume, garamond: garamond);
       return document.save();
     }
 
     if (resume.template == ResumeTemplate.atsCenterClassic) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsCenterClassicTemplatePage(document, resume, garamond: garamond);
       return document.save();
     }
 
     if (resume.template == ResumeTemplate.atsProfessionalBlue) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsProfessionalBlueTemplatePage(
         document,
@@ -7585,21 +7596,21 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsLatexClassic) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsLatexClassicTemplatePage(document, resume, garamond: garamond);
       return document.save();
     }
 
     if (resume.template == ResumeTemplate.atsClassicCv) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsClassicCvTemplatePage(document, resume, garamond: garamond);
       return document.save();
     }
 
     if (resume.template == ResumeTemplate.headerSidebar) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addHeaderSidebarTemplatePage(
         document,
@@ -7611,7 +7622,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.corporate) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addCorporateTemplatePage(
         document,
@@ -7625,11 +7636,16 @@ class ResumePdfService {
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
-      theme: await resumePdfThemeForInter(
-        inter,
-        bodyFontPt: corporateBodyPt,
-        bodyLineHeight: ResumeTypography.bodyTextLineHeight,
-      ),
+      theme: resume.resumeTextFont == ResumeTextFont.calibri
+          ? await resumePdfThemeForBodyFont(
+              ResumeTextFont.calibri,
+              bodyFontPt: corporateBodyPt,
+            )
+          : await resumePdfThemeForInter(
+              inter,
+              bodyFontPt: corporateBodyPt,
+              bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+            ),
     );
 
     switch (resume.template) {
@@ -7674,7 +7690,7 @@ class ResumePdfService {
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) async {
     if (resume.template == ResumeTemplate.creative) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addHighlightedCreativeTemplatePage(
         document,
@@ -7688,7 +7704,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.classicSidebar) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addHighlightedClassicSidebarTemplatePage(
         document,
@@ -7703,7 +7719,7 @@ class ResumePdfService {
 
     if (resume.template == ResumeTemplate.accentStrip) {
       final calibri = await _ensureCalibriPdfFonts();
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final bodyPt = resume.effectiveBodyFontPt.toDouble();
       final document = pw.Document(
         theme: await resumePdfThemeForCalibri(
@@ -7725,7 +7741,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsStructured) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsStructuredTemplatePage(
         document,
@@ -7739,7 +7755,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsSerifRules) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsSerifRulesTemplatePage(
         document,
@@ -7753,7 +7769,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsModernFlow) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsModernFlowTemplatePage(
         document,
@@ -7767,7 +7783,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsExecutive) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsExecutiveTemplatePage(
         document,
@@ -7781,7 +7797,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsCenterClassic) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsCenterClassicTemplatePage(
         document,
@@ -7795,7 +7811,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsProfessionalBlue) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsProfessionalBlueTemplatePage(
         document,
@@ -7809,7 +7825,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsLatexClassic) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsLatexClassicTemplatePage(
         document,
@@ -7823,7 +7839,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.atsClassicCv) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsClassicCvTemplatePage(
         document,
@@ -7837,7 +7853,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.headerSidebar) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final profileImagePath = await ProfileImageStorage.resolvePath(
         resume.profileImagePath,
         resume.id,
@@ -7857,7 +7873,7 @@ class ResumePdfService {
     }
 
     if (resume.template == ResumeTemplate.corporate) {
-      final garamond = await _ensureGaramondPdfFonts();
+      final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addHighlightedCorporateTemplatePage(
         document,
@@ -7873,11 +7889,16 @@ class ResumePdfService {
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
-      theme: await resumePdfThemeForInter(
-        inter,
-        bodyFontPt: corporateBodyPt,
-        bodyLineHeight: ResumeTypography.bodyTextLineHeight,
-      ),
+      theme: resume.resumeTextFont == ResumeTextFont.calibri
+          ? await resumePdfThemeForBodyFont(
+              ResumeTextFont.calibri,
+              bodyFontPt: corporateBodyPt,
+            )
+          : await resumePdfThemeForInter(
+              inter,
+              bodyFontPt: corporateBodyPt,
+              bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+            ),
     );
     switch (resume.template) {
       case ResumeTemplate.corporate:

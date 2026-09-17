@@ -224,3 +224,27 @@ Future<GaramondPdfFonts> loadGaramondPdfFonts() async {
   };
   return GaramondPdfFonts._(upright: upright, italic: italic);
 }
+
+/// Carlito (Calibri metric match) in the same weight slots as [GaramondPdfFonts],
+/// so every Garamond template can render in Calibri when the user picks it.
+///
+/// Carlito only ships regular and bold, so 400–500 use Regular and 600–800
+/// use Bold.
+Future<GaramondPdfFonts> loadCarlitoResumePdfFonts() async {
+  final regular = await loadPdfTtf('assets/fonts/carlito/Carlito-Regular.ttf');
+  final bold = await loadPdfTtf('assets/fonts/carlito/Carlito-Bold.ttf');
+  final italic = await loadPdfTtf('assets/fonts/carlito/Carlito-Italic.ttf');
+  return GaramondPdfFonts._(
+    upright: {
+      ResumeFontWeight.w400: regular,
+      ResumeFontWeight.w500: regular,
+      ResumeFontWeight.w600: bold,
+      ResumeFontWeight.w700: bold,
+      ResumeFontWeight.w800: bold,
+    },
+    italic: {
+      ResumeFontWeight.w400: italic,
+      ResumeFontWeight.w700: italic,
+    },
+  );
+}

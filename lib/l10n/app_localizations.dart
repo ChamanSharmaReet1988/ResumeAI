@@ -2556,6 +2556,12 @@ abstract class AppLocalizations {
   /// **'Font size'**
   String get fontSize;
 
+  /// No description provided for @resumeFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Font'**
+  String get resumeFont;
+
   /// No description provided for @colorAndFont.
   ///
   /// In en, this message translates to:

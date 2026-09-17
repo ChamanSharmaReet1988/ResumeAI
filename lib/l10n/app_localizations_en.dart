@@ -1449,6 +1449,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontSize => 'Font size';
 
   @override
+  String get resumeFont => 'Font';
+
+  @override
   String get colorAndFont => 'Color & Font';
 
   @override
