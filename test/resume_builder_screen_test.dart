@@ -10,6 +10,7 @@ import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/builder/resume_builder_screen.dart';
 import 'package:resume_app/features/builder/resume_preview_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
 
 class _FakeResumeRepository implements ResumeRepository {
   final List<ResumeData> savedResumes = [];
@@ -19,6 +20,7 @@ class _FakeResumeRepository implements ResumeRepository {
   void configureGoogleDriveAutoSync({
     required AppPreferences appPreferences,
     required GoogleDriveResumeService service,
+    bool Function()? hasPremium,
   }) {}
 
   @override
@@ -98,6 +100,7 @@ void main() {
   Future<void> pumpBuilder(
     WidgetTester tester, {
     Size size = const Size(1440, 1200),
+    AppPreferences? preferences,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -109,9 +112,15 @@ void main() {
           ChangeNotifierProvider<ResumeEditorViewModel>(
             create: (_) => viewModel,
           ),
-          Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
+          Provider<AppPreferences>.value(
+            value: preferences ?? AppPreferences.inMemory(),
+          ),
         ],
-        child: const MaterialApp(home: ResumeBuilderScreen()),
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ResumeBuilderScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -128,7 +137,11 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider<ResumeEditorViewModel>(
         create: (_) => viewModel,
-        child: const MaterialApp(home: ResumePreviewScreen()),
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ResumePreviewScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -176,7 +189,10 @@ void main() {
     await pumpBuilder(tester);
 
     expect(find.text('Appears first on your resume'), findsOneWidget);
-    expect(find.text('Appears 2nd on your resume'), findsOneWidget);
+    expect(
+      find.text('Appears at position 2 on your resume'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byType(TextField).first);
     await tester.pump();
@@ -185,6 +201,42 @@ void main() {
 
     expect(viewModel.resume.workExperiences.first.company, 'Beta');
     expect(find.text('Second role'), findsWidgets);
+  });
+
+  testWidgets('builder shows a hint that sections can be reordered', (
+    tester,
+  ) async {
+    await pumpBuilder(tester);
+
+    expect(find.byKey(const Key('section-reorder-hint')), findsOneWidget);
+    expect(find.text('Reorder sections'), findsOneWidget);
+    expect(
+      find.text(
+        'Hold and drag a section, like Work Experience, to change where it appears on your resume.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.drag_indicator_rounded), findsNWidgets(4));
+
+    await tester.tap(find.byTooltip('Dismiss').first);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('section-reorder-hint')), findsNothing);
+    expect(find.byIcon(Icons.drag_indicator_rounded), findsNWidgets(4));
+  });
+
+  testWidgets('section reorder hint stays dismissed after it is closed', (
+    tester,
+  ) async {
+    await pumpBuilder(
+      tester,
+      preferences: AppPreferences.inMemory(
+        sectionReorderNudgeDismissed: true,
+      ),
+    );
+
+    expect(find.byKey(const Key('section-reorder-hint')), findsNothing);
+    expect(find.byIcon(Icons.drag_indicator_rounded), findsNWidgets(4));
   });
 
   testWidgets('end date picker supports Present preset', (tester) async {
@@ -238,7 +290,10 @@ void main() {
     await pumpBuilder(tester);
 
     expect(find.text('Appears first on your resume'), findsOneWidget);
-    expect(find.text('Appears 2nd on your resume'), findsOneWidget);
+    expect(
+      find.text('Appears at position 2 on your resume'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byTooltip('Move education down').first);
     await tester.pumpAndSettle();
@@ -432,7 +487,10 @@ void main() {
     await pumpBuilder(tester);
 
     expect(find.text('Appears first on your resume'), findsOneWidget);
-    expect(find.text('Appears 2nd on your resume'), findsOneWidget);
+    expect(
+      find.text('Appears at position 2 on your resume'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byTooltip('Move project down').first);
     await tester.pumpAndSettle();
@@ -486,6 +544,8 @@ void main() {
           Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) {
               return Scaffold(
@@ -588,15 +648,10 @@ void main() {
 
     await pumpBuilder(tester, size: const Size(520, 700));
 
-    final horizontalScrollable = find.byWidgetPredicate(
-      (widget) =>
-          widget is SingleChildScrollView &&
-          widget.scrollDirection == Axis.horizontal,
+    final reorderableList = tester.widget<ReorderableListView>(
+      find.byKey(const Key('step-progress-scroll')),
     );
-    final horizontalScrollView = tester.widget<SingleChildScrollView>(
-      horizontalScrollable,
-    );
-    final horizontalScrollController = horizontalScrollView.controller!;
+    final horizontalScrollController = reorderableList.scrollController!;
 
     expect(horizontalScrollController.offset, 0);
 

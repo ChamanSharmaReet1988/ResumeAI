@@ -613,6 +613,9 @@
   "suggestSummary": "Suggest summary",
   "resumeOrder": "Resume order",
   "resumeOrderBody": "Entries stay in this order. Use arrows to move your strongest role to top.",
+  "reorderSections": "Reorder sections",
+  "reorderSectionsBody": "Hold and drag a section, like Work Experience, to change where it appears on your resume.",
+  "reorderSectionTooltip": "Hold and drag to reorder",
   "experienceNumber": "Experience {number}",
   "@experienceNumber": {
     "placeholders": {

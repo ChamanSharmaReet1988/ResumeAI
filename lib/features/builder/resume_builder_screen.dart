@@ -56,6 +56,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   bool _didInitPageController = false;
   bool _prefsHydrated = false;
   bool _resumeOrderNudgeDismissed = false;
+  bool _sectionReorderNudgeDismissed = false;
 
   List<FocusNode> get _personalKeyboardFocusOrder => [
     ..._personalFieldFocusNodes,
@@ -195,9 +196,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     super.didChangeDependencies();
     if (!_prefsHydrated) {
       _prefsHydrated = true;
-      _resumeOrderNudgeDismissed = context
-          .read<AppPreferences>()
-          .resumeOrderNudgeDismissed;
+      final prefs = context.read<AppPreferences>();
+      _resumeOrderNudgeDismissed = prefs.resumeOrderNudgeDismissed;
+      _sectionReorderNudgeDismissed = prefs.sectionReorderNudgeDismissed;
     }
     if (_didInitPageController) {
       return;
@@ -213,6 +214,15 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final prefs = context.read<AppPreferences>();
     setState(() => _resumeOrderNudgeDismissed = true);
     prefs.setResumeOrderNudgeDismissed(true);
+  }
+
+  void _onDismissSectionReorderNudge() {
+    if (_sectionReorderNudgeDismissed) {
+      return;
+    }
+    final prefs = context.read<AppPreferences>();
+    setState(() => _sectionReorderNudgeDismissed = true);
+    prefs.setSectionReorderNudgeDismissed(true);
   }
 
   void _handleSummaryFocusChange() {
@@ -1466,6 +1476,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       totalStepCount: viewModel.totalStepCount,
                       sectionIds: viewModel.orderedSectionIds,
                       customSections: viewModel.resume.customSections,
+                      showReorderHint: !_sectionReorderNudgeDismissed,
+                      onDismissReorderHint: _onDismissSectionReorderNudge,
                       onSelectStep: _goToStep,
                       onAddCategory: _showAddCustomCategoryDialog,
                       onReorderChips: (oldIndex, newIndex) {
@@ -1475,6 +1487,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           oldIndex,
                           newIndex,
                         );
+                        _onDismissSectionReorderNudge();
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           if (!mounted) {
                             return;
@@ -3459,6 +3472,8 @@ class _StepProgressHeader extends StatefulWidget {
     required this.totalStepCount,
     required this.sectionIds,
     required this.customSections,
+    required this.showReorderHint,
+    required this.onDismissReorderHint,
     required this.onSelectStep,
     required this.onAddCategory,
     required this.onReorderChips,
@@ -3468,6 +3483,8 @@ class _StepProgressHeader extends StatefulWidget {
   final int totalStepCount;
   final List<String> sectionIds;
   final List<CustomSectionItem> customSections;
+  final bool showReorderHint;
+  final VoidCallback onDismissReorderHint;
   final ValueChanged<int> onSelectStep;
   final VoidCallback onAddCategory;
   final void Function(int oldIndex, int newIndex) onReorderChips;
@@ -3623,8 +3640,20 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                   );
                 } else {
                   final sectionId = widget.sectionIds[index - 1];
+                  final selected = widget.currentStep == index;
+                  final handleColor = selected
+                      ? Theme.of(context).colorScheme.onSecondaryContainer
+                      : Theme.of(context).colorScheme.onSurfaceVariant;
                   chip = ChoiceChip(
                     key: _chipKeyFor(index),
+                    avatar: ReorderableDragStartListener(
+                      index: index,
+                      child: Icon(
+                        Icons.drag_indicator_rounded,
+                        size: 18,
+                        color: handleColor,
+                      ),
+                    ),
                     label: Text(
                       ResumeBuilderSectionIds.titleFor(
                         sectionId,
@@ -3633,7 +3662,7 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                       ),
                       style: chipStyle,
                     ),
-                    selected: widget.currentStep == index,
+                    selected: selected,
                     onSelected: (_) => widget.onSelectStep(index),
                   );
                 }
@@ -3653,11 +3682,29 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                 return ReorderableDelayedDragStartListener(
                   key: ValueKey('chip-${widget.sectionIds[index - 1]}'),
                   index: index,
-                  child: padded,
+                  child: Semantics(
+                    hint: context.l10n.reorderSectionTooltip,
+                    child: padded,
+                  ),
                 );
               },
             ),
           ),
+          if (widget.showReorderHint) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+              child: KeyedSubtree(
+                key: const Key('section-reorder-hint'),
+                child: _HintBanner(
+                  title: context.l10n.reorderSections,
+                  body: context.l10n.reorderSectionsBody,
+                  compact: true,
+                  onDismiss: widget.onDismissReorderHint,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

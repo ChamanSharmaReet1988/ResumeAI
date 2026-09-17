@@ -1133,6 +1133,16 @@ class AppLocalizationsId extends AppLocalizations {
       'Entri tetap dalam urutan ini. Gunakan panah untuk memindahkan peran terkuat ke atas.';
 
   @override
+  String get reorderSections => 'Ubah urutan bagian';
+
+  @override
+  String get reorderSectionsBody =>
+      'Tahan dan seret bagian, seperti Pengalaman Kerja, untuk mengubah posisinya di resume.';
+
+  @override
+  String get reorderSectionTooltip => 'Tahan dan seret untuk mengubah urutan';
+
+  @override
   String experienceNumber(int number) {
     return 'Pengalaman $number';
   }

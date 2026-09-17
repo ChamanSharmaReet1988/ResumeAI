@@ -1136,6 +1136,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Entries stay in this order. Use arrows to move your strongest role to top.';
 
   @override
+  String get reorderSections => 'Reorder sections';
+
+  @override
+  String get reorderSectionsBody =>
+      'Hold and drag a section, like Work Experience, to change where it appears on your resume.';
+
+  @override
+  String get reorderSectionTooltip => 'Hold and drag to reorder';
+
+  @override
   String experienceNumber(int number) {
     return 'Experience $number';
   }

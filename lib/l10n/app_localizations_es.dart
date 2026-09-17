@@ -1137,6 +1137,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Las entradas permanecen en este orden. Usa las flechas para mover tu puesto más fuerte arriba.';
 
   @override
+  String get reorderSections => 'Reordenar secciones';
+
+  @override
+  String get reorderSectionsBody =>
+      'Mantén pulsada una sección, como Experiencia laboral, y arrástrala para cambiar su lugar en el currículum.';
+
+  @override
+  String get reorderSectionTooltip =>
+      'Mantén pulsado y arrastra para reordenar';
+
+  @override
   String experienceNumber(int number) {
     return 'Experiencia $number';
   }

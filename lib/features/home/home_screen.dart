@@ -80,7 +80,7 @@ class HomeScreen extends StatelessWidget {
                               shadowColor: Colors.black.withValues(alpha: 0.14),
                               surfaceTintColor: Colors.transparent,
                               color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
                                 child:
@@ -147,7 +147,7 @@ class HomeScreen extends StatelessWidget {
                               shadowColor: Colors.black.withValues(alpha: 0.14),
                               surfaceTintColor: Colors.transparent,
                               color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(14),
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
                                 child: SegmentedButton<HomeSegment>(
@@ -166,7 +166,7 @@ class HomeScreen extends StatelessWidget {
                                       vertical: 10,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                     textStyle: const TextStyle(fontSize: 17),
                                   ),

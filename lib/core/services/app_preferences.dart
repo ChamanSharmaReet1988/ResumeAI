@@ -21,9 +21,13 @@ class AppPreferences {
     this._setDebugPremiumOverrideEnabled,
     this._getAppLocaleCode,
     this._setAppLocaleCode,
+    this._getSectionReorderNudgeDismissed,
+    this._setSectionReorderNudgeDismissed,
   );
 
   static const _resumeOrderNudgeDismissedKey = 'resume_order_nudge_dismissed';
+  static const _sectionReorderNudgeDismissedKey =
+      'section_reorder_nudge_dismissed';
   static const _iCloudAutoSyncEnabledKey = 'icloud_auto_sync_enabled';
   static const _googleDriveAutoSyncEnabledKey =
       'google_drive_auto_sync_enabled';
@@ -52,6 +56,8 @@ class AppPreferences {
   final Future<void> Function(bool) _setDebugPremiumOverrideEnabled;
   final String Function() _getAppLocaleCode;
   final Future<void> Function(String) _setAppLocaleCode;
+  final bool Function() _getSectionReorderNudgeDismissed;
+  final Future<void> Function(bool) _setSectionReorderNudgeDismissed;
 
   static Future<AppPreferences> open() async {
     final box = await Hive.openBox<dynamic>('app_prefs');
@@ -118,6 +124,8 @@ class AppPreferences {
         _appLocaleCodeKey,
         AppLocaleOption.normalizePreference(value),
       ),
+      () => (box.get(_sectionReorderNudgeDismissedKey) as bool?) ?? false,
+      (value) async => box.put(_sectionReorderNudgeDismissedKey, value),
     );
   }
 
@@ -131,6 +139,7 @@ class AppPreferences {
     int premiumEntitlementMissStreak = 0,
     bool debugPremiumOverrideEnabled = false,
     String appLocaleCode = AppLocaleOption.system,
+    bool sectionReorderNudgeDismissed = false,
   }) {
     var dismissed = resumeOrderNudgeDismissed;
     var iCloudAuto = iCloudAutoSyncEnabled;
@@ -140,6 +149,7 @@ class AppPreferences {
     var premiumMissStreak = premiumEntitlementMissStreak;
     var debugPremiumOverride = debugPremiumOverrideEnabled;
     var localeCode = AppLocaleOption.normalizePreference(appLocaleCode);
+    var sectionReorderDismissed = sectionReorderNudgeDismissed;
     return AppPreferences._(
       () => dismissed,
       (value) async {
@@ -173,10 +183,15 @@ class AppPreferences {
       (value) async {
         localeCode = AppLocaleOption.normalizePreference(value);
       },
+      () => sectionReorderDismissed,
+      (value) async {
+        sectionReorderDismissed = value;
+      },
     );
   }
 
   bool get resumeOrderNudgeDismissed => _getDismissed();
+  bool get sectionReorderNudgeDismissed => _getSectionReorderNudgeDismissed();
   bool get iCloudAutoSyncEnabled => _getICloudAutoSyncEnabled();
   bool get googleDriveAutoSyncEnabled => _getGoogleDriveAutoSyncEnabled();
   bool get isPremium => _getIsPremium();
@@ -187,6 +202,9 @@ class AppPreferences {
       AppLocaleOption.normalizePreference(_getAppLocaleCode());
 
   Future<void> setResumeOrderNudgeDismissed(bool value) => _setDismissed(value);
+
+  Future<void> setSectionReorderNudgeDismissed(bool value) =>
+      _setSectionReorderNudgeDismissed(value);
 
   Future<void> setICloudAutoSyncEnabled(bool value) =>
       _setICloudAutoSyncEnabled(value);

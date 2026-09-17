@@ -2010,6 +2010,24 @@ abstract class AppLocalizations {
   /// **'Entries stay in this order. Use arrows to move your strongest role to top.'**
   String get resumeOrderBody;
 
+  /// No description provided for @reorderSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder sections'**
+  String get reorderSections;
+
+  /// No description provided for @reorderSectionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold and drag a section, like Work Experience, to change where it appears on your resume.'**
+  String get reorderSectionsBody;
+
+  /// No description provided for @reorderSectionTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold and drag to reorder'**
+  String get reorderSectionTooltip;
+
   /// No description provided for @experienceNumber.
   ///
   /// In en, this message translates to:
