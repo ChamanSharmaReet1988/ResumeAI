@@ -105,10 +105,10 @@ void main() {
     });
   }
 
-  test('Calibri font choice exports readable text', () async {
+  test('Inter font choice exports readable text', () async {
     final parsed = await _uploadExportedPdf(
       ResumeTemplate.atsStructured,
-      font: ResumeTextFont.calibri,
+      font: ResumeTextFont.sharpInter,
     );
     expect(parsed.fullName, 'Rohan Kapoor');
     expect(parsed.email, 'rohan.kapoor@gmail.com');

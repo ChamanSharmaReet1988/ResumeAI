@@ -576,6 +576,7 @@ class _TemplateTile extends StatelessWidget {
                       Expanded(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(2),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.18),
@@ -589,12 +590,15 @@ class _TemplateTile extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: KeyedSubtree(
-                            key: Key('template-image-${item.id}'),
-                            child: _TemplatePreviewArt(
-                              item: item,
-                              paletteSeed: paletteSeed,
-                              showPremiumBadgeOnTile: true,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: KeyedSubtree(
+                              key: Key('template-image-${item.id}'),
+                              child: _TemplatePreviewArt(
+                                item: item,
+                                paletteSeed: paletteSeed,
+                                showPremiumBadgeOnTile: true,
+                              ),
                             ),
                           ),
                         ),

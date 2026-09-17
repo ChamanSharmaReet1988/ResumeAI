@@ -215,48 +215,47 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              context.l10n.resumeFont,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
+                            // Details Sidebar is already Inter, so the choice
+                            // only applies to the Garamond templates.
+                            if (resume.template !=
+                                ResumeTemplate.detailsSidebar) ...[
+                              Text(
+                                context.l10n.resumeFont,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            // Templates keep their own default font (Garamond,
-                            // or Inter for Details Sidebar); Calibri overrides it.
-                            Wrap(
-                              spacing: 10,
-                              children: [
-                                ChoiceChip(
-                                  key: const Key('resume-font-default'),
-                                  label: Text(
-                                    resume.template ==
-                                            ResumeTemplate.detailsSidebar
-                                        ? 'Inter'
-                                        : 'Garamond',
-                                  ),
-                                  selected: resume.resumeTextFont !=
-                                      ResumeTextFont.calibri,
-                                  onSelected: (_) => viewModel.updateResume(
-                                    (r) => r.copyWith(
-                                      resumeTextFont: ResumeTextFont.inter,
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 10,
+                                children: [
+                                  ChoiceChip(
+                                    key: const Key('resume-font-default'),
+                                    label: const Text('Garamond'),
+                                    selected: resume.resumeTextFont !=
+                                        ResumeTextFont.sharpInter,
+                                    onSelected: (_) => viewModel.updateResume(
+                                      (r) => r.copyWith(
+                                        resumeTextFont: ResumeTextFont.inter,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                ChoiceChip(
-                                  key: const Key('resume-font-calibri'),
-                                  label: const Text('Calibri'),
-                                  selected: resume.resumeTextFont ==
-                                      ResumeTextFont.calibri,
-                                  onSelected: (_) => viewModel.updateResume(
-                                    (r) => r.copyWith(
-                                      resumeTextFont: ResumeTextFont.calibri,
+                                  ChoiceChip(
+                                    key: const Key('resume-font-inter'),
+                                    label: const Text('Inter'),
+                                    selected: resume.resumeTextFont ==
+                                        ResumeTextFont.sharpInter,
+                                    onSelected: (_) => viewModel.updateResume(
+                                      (r) => r.copyWith(
+                                        resumeTextFont:
+                                            ResumeTextFont.sharpInter,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 30),
+                                ],
+                              ),
+                              const SizedBox(height: 30),
+                            ],
                             Text(
                               context.l10n.fontSize,
                               style: theme.textTheme.titleSmall?.copyWith(

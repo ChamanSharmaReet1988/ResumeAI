@@ -198,9 +198,37 @@ class ResumeImportService {
     return words / lines.length < 1.6;
   }
 
+  static final _pdfDateOnlyLine = RegExp(
+    r'^(?:(?:[A-Za-z]{3,9}\.?\s+)?\d{4}|present|current)'
+    r'(?:\s*[-–—]+\s*(?:(?:[A-Za-z]{3,9}\.?\s+)?\d{4}|present|current))?$',
+    caseSensitive: false,
+  );
+
   String _buildPdfTopSortedText(List<sfpdf.TextLine> textLines) {
     final sorted = [...textLines]..sort(_comparePdfTextLines);
-    return sorted.map(_pdfLineText).join('\n');
+    final rows = <String>[];
+    sfpdf.TextLine? previous;
+    for (final line in sorted) {
+      final text = _pdfLineText(line);
+      // The extractor can split one visual row (a job title and its
+      // right-aligned dates) into separate lines depending on font metrics,
+      // so rejoin a dates-only line with the line at the same height. Other
+      // same-height lines stay apart: in sidebar layouts they are different
+      // columns.
+      if (previous != null &&
+          rows.isNotEmpty &&
+          _pdfDateOnlyLine.hasMatch(text) &&
+          previous.pageIndex == line.pageIndex &&
+          line.bounds.left > previous.bounds.right &&
+          (line.bounds.top - previous.bounds.top).abs() <
+              math.max(previous.fontSize, line.fontSize) * 0.35) {
+        rows[rows.length - 1] = '${rows.last} | $text';
+      } else {
+        rows.add(text);
+      }
+      previous = line;
+    }
+    return rows.join('\n');
   }
 
   /// Rebuilds a PDF text line from its words, marking wide horizontal gaps

@@ -109,6 +109,7 @@ Future<pw.Font> loadPdfTtf(String assetPath) async {
 Future<_PdfFontSlots> _loadPdfFonts(ResumeTextFont font) async {
   switch (font) {
     case ResumeTextFont.inter:
+    case ResumeTextFont.sharpInter:
       final inter = await loadInterPdfFonts();
       return _PdfFontSlots(
         base: inter.w400,

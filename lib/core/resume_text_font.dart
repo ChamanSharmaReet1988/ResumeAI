@@ -275,7 +275,7 @@ abstract final class ResumeTypography {
         weight: weight,
       );
 
-  /// Calibri (Carlito) text style for in-app resume previews.
+  /// Calibri (Carlito metric match) text style for in-app resume previews.
   static TextStyle calibriPreviewStyle({
     required int weight,
     double? fontSize,
@@ -361,7 +361,10 @@ abstract final class ResumeTypography {
 /// style-compatible open fonts registered in [flutterFontFamily]. Exported PDFs
 /// embed the same bundled TTFs as the PDF export so typography matches
 /// the in-app template preview.
-enum ResumeTextFont { inter, aptos, calibri, arial }
+/// [inter] is the stored default and means "each template's own font" (Garamond
+/// for most PDF templates). [sharpInter] is the explicit Inter choice in the
+/// preview's Color & Font sheet.
+enum ResumeTextFont { inter, aptos, calibri, arial, sharpInter }
 
 extension ResumeTextFontX on ResumeTextFont {
   /// Label shown in the UI (matches common resume font names).
@@ -370,6 +373,7 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Aptos',
     ResumeTextFont.calibri => 'Calibri',
     ResumeTextFont.arial => 'Arial',
+    ResumeTextFont.sharpInter => 'Inter',
   };
 
   /// Must match `family:` in [pubspec.yaml] for the bundled font files.
@@ -378,6 +382,7 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Source Sans 3',
     ResumeTextFont.calibri => 'Calibri',
     ResumeTextFont.arial => 'Arimo',
+    ResumeTextFont.sharpInter => 'Inter',
   };
 
   /// Short note for pickers (optional).
@@ -386,6 +391,7 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Office-style sans (Source Sans 3)',
     ResumeTextFont.calibri => 'Metric match: Carlito',
     ResumeTextFont.arial => 'Metric match: Arimo',
+    ResumeTextFont.sharpInter => 'Sharp sans-serif for screens',
   };
 }
 

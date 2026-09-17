@@ -7483,13 +7483,13 @@ class ResumePdfService {
     return _garamondPdfFontsCache ??= await loadGaramondPdfFonts();
   }
 
-  GaramondPdfFonts? _carlitoResumePdfFontsCache;
+  GaramondPdfFonts? _sharpInterResumePdfFontsCache;
 
-  /// Fonts for the Garamond-based templates: Carlito when the user picked
-  /// Calibri in Style, otherwise the templates' default Garamond.
+  /// Fonts for the Garamond-based templates: Inter when the user picked
+  /// Inter in Color & Font, otherwise the templates' default Garamond.
   Future<GaramondPdfFonts> _resumePdfFontsFor(ResumeData resume) async {
-    if (resume.resumeTextFont == ResumeTextFont.calibri) {
-      return _carlitoResumePdfFontsCache ??= await loadCarlitoResumePdfFonts();
+    if (resume.resumeTextFont == ResumeTextFont.sharpInter) {
+      return _sharpInterResumePdfFontsCache ??= await loadInterResumePdfFonts();
     }
     return _ensureGaramondPdfFonts();
   }
@@ -7636,16 +7636,11 @@ class ResumePdfService {
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
-      theme: resume.resumeTextFont == ResumeTextFont.calibri
-          ? await resumePdfThemeForBodyFont(
-              ResumeTextFont.calibri,
-              bodyFontPt: corporateBodyPt,
-            )
-          : await resumePdfThemeForInter(
-              inter,
-              bodyFontPt: corporateBodyPt,
-              bodyLineHeight: ResumeTypography.bodyTextLineHeight,
-            ),
+      theme: await resumePdfThemeForInter(
+        inter,
+        bodyFontPt: corporateBodyPt,
+        bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+      ),
     );
 
     switch (resume.template) {
@@ -7889,16 +7884,11 @@ class ResumePdfService {
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
     final inter = await _ensureInterPdfFonts();
     final document = pw.Document(
-      theme: resume.resumeTextFont == ResumeTextFont.calibri
-          ? await resumePdfThemeForBodyFont(
-              ResumeTextFont.calibri,
-              bodyFontPt: corporateBodyPt,
-            )
-          : await resumePdfThemeForInter(
-              inter,
-              bodyFontPt: corporateBodyPt,
-              bodyLineHeight: ResumeTypography.bodyTextLineHeight,
-            ),
+      theme: await resumePdfThemeForInter(
+        inter,
+        bodyFontPt: corporateBodyPt,
+        bodyLineHeight: ResumeTypography.bodyTextLineHeight,
+      ),
     );
     switch (resume.template) {
       case ResumeTemplate.corporate:
