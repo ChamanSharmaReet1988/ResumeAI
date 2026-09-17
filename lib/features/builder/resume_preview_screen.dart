@@ -216,8 +216,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Details Sidebar keeps its own Inter body, so the
-                            // choice only applies to the templates with a
-                            // Garamond (or Slate Sidebar's Outfit) default.
+                            // Garamond / Outfit choice applies to the others.
                             if (resume.template !=
                                 ResumeTemplate.detailsSidebar) ...[
                               Text(
@@ -230,34 +229,31 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                               Wrap(
                                 spacing: 10,
                                 children: [
-                                  ChoiceChip(
-                                    key: const Key('resume-font-default'),
-                                    label: Text(
-                                      resume.template ==
+                                  // The template's own font comes first.
+                                  for (final font
+                                      in resume.template ==
                                               ResumeTemplate.slateSidebar
-                                          ? 'Outfit'
-                                          : 'Garamond',
+                                          ? const [
+                                              ResumeTextFont.outfit,
+                                              ResumeTextFont.garamond,
+                                            ]
+                                          : const [
+                                              ResumeTextFont.garamond,
+                                              ResumeTextFont.outfit,
+                                            ])
+                                    ChoiceChip(
+                                      key: Key('resume-font-${font.name}'),
+                                      label: Text(font.label),
+                                      selected:
+                                          resume.usesOutfitResumeFont ==
+                                          (font == ResumeTextFont.outfit),
+                                      onSelected: (_) =>
+                                          viewModel.updateResume(
+                                            (r) => r.copyWith(
+                                              resumeTextFont: font,
+                                            ),
+                                          ),
                                     ),
-                                    selected: resume.resumeTextFont !=
-                                        ResumeTextFont.calibri,
-                                    onSelected: (_) => viewModel.updateResume(
-                                      (r) => r.copyWith(
-                                        resumeTextFont: ResumeTextFont.inter,
-                                      ),
-                                    ),
-                                  ),
-                                  ChoiceChip(
-                                    key: const Key('resume-font-calibri'),
-                                    label: const Text('Calibri'),
-                                    selected: resume.resumeTextFont ==
-                                        ResumeTextFont.calibri,
-                                    onSelected: (_) => viewModel.updateResume(
-                                      (r) => r.copyWith(
-                                        resumeTextFont:
-                                            ResumeTextFont.calibri,
-                                      ),
-                                    ),
-                                  ),
                                 ],
                               ),
                               const SizedBox(height: 30),

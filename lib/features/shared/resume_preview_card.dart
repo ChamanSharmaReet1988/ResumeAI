@@ -7222,9 +7222,9 @@ class _SlateSidebarPreview extends StatelessWidget {
     final titleColor = resume.slateSidebarTitleColor;
     final mutedColor = resume.slateSidebarMutedColor;
     const onRail = Colors.white;
-    final family = resume.resumeTextFont == ResumeTextFont.calibri
-        ? ResumeTextFont.calibri.flutterFontFamily
-        : 'Outfit';
+    final family = resume.usesOutfitResumeFont
+        ? ResumeTextFont.outfit.flutterFontFamily
+        : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final detailPt = bodyPt - 1.5;
 
@@ -7340,7 +7340,6 @@ class _SlateSidebarPreview extends StatelessWidget {
     final rail = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 10),
         Center(
           child: ClipOval(
             child: SizedBox(
@@ -7399,13 +7398,12 @@ class _SlateSidebarPreview extends StatelessWidget {
     final main = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 26),
         Text(_pdfAlignedDisplayName(resume), style: nameStyle),
         if (resume.jobTitle.trim().isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(resume.jobTitle.trim(), style: jobTitleStyle),
         ],
-        const SizedBox(height: 26),
+        const SizedBox(height: 6),
         if (resume.summary.trim().isNotEmpty) ...[
           ruledTitle('Profile', sectionTitleStyle, titleColor),
           Text(resume.summary.trim(), style: detailStyle),

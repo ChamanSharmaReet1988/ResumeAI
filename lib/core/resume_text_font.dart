@@ -362,9 +362,9 @@ abstract final class ResumeTypography {
 /// embed the same bundled TTFs as the PDF export so typography matches
 /// the in-app template preview.
 /// [inter] is the stored default and means "each template's own font" (Garamond
-/// for most PDF templates). [calibri] is the explicit Calibri (Carlito) choice in
-/// the preview's Color & Font sheet.
-enum ResumeTextFont { inter, aptos, calibri, arial }
+/// for most PDF templates, Outfit for Slate Sidebar). [outfit] and [garamond]
+/// are the explicit choices in the preview's Color & Font sheet.
+enum ResumeTextFont { inter, aptos, calibri, arial, outfit, garamond }
 
 extension ResumeTextFontX on ResumeTextFont {
   /// Label shown in the UI (matches common resume font names).
@@ -373,6 +373,8 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Aptos',
     ResumeTextFont.calibri => 'Calibri',
     ResumeTextFont.arial => 'Arial',
+    ResumeTextFont.outfit => 'Outfit',
+    ResumeTextFont.garamond => 'Garamond',
   };
 
   /// Must match `family:` in [pubspec.yaml] for the bundled font files.
@@ -381,6 +383,8 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Source Sans 3',
     ResumeTextFont.calibri => 'Calibri',
     ResumeTextFont.arial => 'Arimo',
+    ResumeTextFont.outfit => 'Outfit',
+    ResumeTextFont.garamond => 'Garamond',
   };
 
   /// Short note for pickers (optional).
@@ -389,6 +393,8 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Office-style sans (Source Sans 3)',
     ResumeTextFont.calibri => 'Metric match: Carlito',
     ResumeTextFont.arial => 'Metric match: Arimo',
+    ResumeTextFont.outfit => 'Modern geometric sans',
+    ResumeTextFont.garamond => 'Classic serif',
   };
 }
 

@@ -7484,16 +7484,12 @@ class ResumePdfService {
     return _garamondPdfFontsCache ??= await loadGaramondPdfFonts();
   }
 
-  GaramondPdfFonts? _calibriResumePdfFontsCache;
   GaramondPdfFonts? _outfitResumePdfFontsCache;
 
-  /// Fonts for the Garamond-based templates: Carlito (Calibri) when the
-  /// user picked Calibri in Color & Font, otherwise the templates' default Garamond.
+  /// Fonts for the Garamond-based templates: Outfit or Garamond, per
+  /// [ResumeFontChoiceX.usesOutfitResumeFont].
   Future<GaramondPdfFonts> _resumePdfFontsFor(ResumeData resume) async {
-    if (resume.resumeTextFont == ResumeTextFont.calibri) {
-      return _calibriResumePdfFontsCache ??= await loadCarlitoResumePdfFonts();
-    }
-    if (resume.template == ResumeTemplate.slateSidebar) {
+    if (resume.usesOutfitResumeFont) {
       return _outfitResumePdfFontsCache ??= await loadOutfitResumePdfFonts();
     }
     return _ensureGaramondPdfFonts();

@@ -241,7 +241,6 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.SizedBox(height: 10),
           pw.Center(child: avatar()),
           pw.SizedBox(height: 6),
           heading('Contact'),
@@ -319,13 +318,12 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
           ),
         ),
         build: (context) => [
-          pw.SizedBox(height: 26),
           pw.Text(_displayName(resume), style: nameStyle),
           if (resume.jobTitle.trim().isNotEmpty) ...[
             pw.SizedBox(height: 4),
             pw.Text(resume.jobTitle.trim(), style: jobTitleStyle),
           ],
-          pw.SizedBox(height: 26),
+          pw.SizedBox(height: 6),
           if (resume.summary.trim().isNotEmpty) ...[
             sectionTitle('Profile'),
             _headerSidebarMaybeHighlight(

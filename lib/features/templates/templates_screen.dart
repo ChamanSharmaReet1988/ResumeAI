@@ -952,7 +952,11 @@ class _TemplatePreviewArt extends StatelessWidget {
       ),
       _TemplatePreviewKind.slateSidebarResume => _ResumeTemplatePreviewArt(
         resume: _applyTemplatePreviewPalette(
-          _slateSidebarTemplateResume,
+          // Grid tile keeps one project so the page stays balanced; the detail
+          // screen shows all four.
+          _slateSidebarTemplateResume.copyWith(
+            projects: _slateSidebarTemplateResume.projects.take(1).toList(),
+          ),
           paletteSeed,
         ),
       ),
@@ -2342,7 +2346,36 @@ final ResumeData _slateSidebarTemplateResume = ResumeData(
     'Critical Thinking',
     'Leadership',
   ],
-  projects: const [],
+  projects: const [
+    ProjectItem(
+      title: 'Festive Season Brand Campaign',
+      subtitle: 'Arowwai Industries',
+      bullets: [
+        'Planned a 6-week multi-channel campaign that lifted festive sales by 31% year on year.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Customer Loyalty Program Launch',
+      subtitle: 'Ingoude Company',
+      bullets: [
+        'Designed tiered rewards that grew repeat purchases by 24% within two quarters.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Marketing Analytics Dashboard',
+      subtitle: 'Arowwai Industries',
+      bullets: [
+        'Built a weekly spend and ROI dashboard that cut reporting time from two days to two hours.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Regional Influencer Partnerships',
+      subtitle: 'Timmerman Industries',
+      bullets: [
+        'Onboarded 40 regional creators, reaching 2.5M new followers at half the usual cost per lead.',
+      ],
+    ),
+  ],
   customSections: const [
     CustomSectionItem(title: 'Languages', content: 'English\nHindi\nSpanish'),
     CustomSectionItem(
@@ -2362,7 +2395,7 @@ final ResumeData _slateSidebarTemplateResume = ResumeData(
   includeWorkInResume: true,
   includeEducationInResume: true,
   includeSkillsInResume: true,
-  includeProjectsInResume: false,
+  includeProjectsInResume: true,
   bodyFontPt: kResumeBodyFontPtDefault,
   corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
     ResumeTemplate.slateSidebar,

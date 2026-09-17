@@ -229,6 +229,17 @@ extension ResumeTemplateX on ResumeTemplate {
   };
 }
 
+extension ResumeFontChoiceX on ResumeData {
+  /// Whether the Garamond-family templates render in Outfit: the Color & Font
+  /// choice when one was made, otherwise the template's own default (Outfit
+  /// for Slate Sidebar, Garamond for the rest).
+  bool get usesOutfitResumeFont => switch (resumeTextFont) {
+    ResumeTextFont.outfit => true,
+    ResumeTextFont.garamond => false,
+    _ => template == ResumeTemplate.slateSidebar,
+  };
+}
+
 extension CoverLetterTemplateX on CoverLetterTemplate {
   String get label => switch (this) {
     CoverLetterTemplate.executiveNote => 'Executive Note',

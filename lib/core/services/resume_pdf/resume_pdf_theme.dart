@@ -158,6 +158,22 @@ Future<_PdfFontSlots> _loadPdfFonts(ResumeTextFont font) async {
     case ResumeTextFont.aptos:
       final f = await loadPdfTtf('assets/fonts/sourcesans3/SourceSans3-Variable.ttf');
       return _PdfFontSlots(base: f, bold: f, italic: f, boldItalic: f);
+    case ResumeTextFont.outfit:
+      return _PdfFontSlots(
+        base: await loadPdfTtf('assets/fonts/outfit/Outfit-Regular.ttf'),
+        bold: await loadPdfTtf('assets/fonts/outfit/Outfit-Bold.ttf'),
+        italic: await loadPdfTtf('assets/fonts/outfit/Outfit-Regular.ttf'),
+        boldItalic: await loadPdfTtf('assets/fonts/outfit/Outfit-Bold.ttf'),
+      );
+    case ResumeTextFont.garamond:
+      return _PdfFontSlots(
+        base: await loadPdfTtf('assets/fonts/garamond/Garamond-Regular.ttf'),
+        bold: await loadPdfTtf('assets/fonts/garamond/Garamond-Bold.ttf'),
+        italic: await loadPdfTtf('assets/fonts/garamond/Garamond-Italic.ttf'),
+        boldItalic: await loadPdfTtf(
+          'assets/fonts/garamond/Garamond-BoldItalic.ttf',
+        ),
+      );
     case ResumeTextFont.calibri:
       final reg = await loadPdfTtf('assets/fonts/carlito/Carlito-Regular.ttf');
       final bold = await loadPdfTtf('assets/fonts/carlito/Carlito-Bold.ttf');
