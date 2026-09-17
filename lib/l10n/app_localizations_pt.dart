@@ -1113,7 +1113,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get phoneNumber => 'Número de telefone';
 
   @override
-  String get location => 'Localização';
+  String get location => 'Cidade';
 
   @override
   String get websiteOrPortfolio => 'Site ou portfólio';
@@ -1123,7 +1123,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get personalInformationSubtitle =>
-      'Comece com identidade, dados de contato, cargo desejado e um breve resumo de posicionamento.';
+      'Comece com seu nome, e-mail, telefone e cidade. Adicione LinkedIn, um site ou uma foto se quiser.';
+
+  @override
+  String get addMoreOptional => 'Adicionar mais (opcional)';
 
   @override
   String get suggestSummary => 'Sugerir resumo';

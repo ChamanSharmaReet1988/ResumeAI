@@ -1971,7 +1971,7 @@ abstract class AppLocalizations {
   /// No description provided for @location.
   ///
   /// In en, this message translates to:
-  /// **'Location'**
+  /// **'City'**
   String get location;
 
   /// No description provided for @websiteOrPortfolio.
@@ -1989,8 +1989,14 @@ abstract class AppLocalizations {
   /// No description provided for @personalInformationSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Start with identity, contact details, target role, and a short positioning summary.'**
+  /// **'Start with your name, email, phone, and city. Add LinkedIn, a website, or a photo if you want.'**
   String get personalInformationSubtitle;
+
+  /// No description provided for @addMoreOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more (optional)'**
+  String get addMoreOptional;
 
   /// No description provided for @suggestSummary.
   ///

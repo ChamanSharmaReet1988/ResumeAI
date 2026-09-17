@@ -641,6 +641,48 @@ void main() {
     },
   );
 
+  testWidgets(
+    'personal step shows core fields first and hides extras under add more',
+    (tester) async {
+      viewModel.setStep(0);
+
+      await pumpBuilder(tester, size: const Size(800, 1100));
+
+      expect(textFieldByLabel('Full name'), findsOneWidget);
+      expect(textFieldByLabel('Email'), findsOneWidget);
+      expect(textFieldByLabel('Phone number'), findsOneWidget);
+      expect(textFieldByLabel('City'), findsOneWidget);
+      expect(find.text('Add more (optional)'), findsOneWidget);
+      expect(textFieldByLabel('LinkedIn link'), findsNothing);
+      expect(textFieldByLabel('Website or portfolio'), findsNothing);
+      expect(find.text('Profile photo'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('personal-add-more')));
+      await tester.pumpAndSettle();
+
+      expect(textFieldByLabel('LinkedIn link'), findsOneWidget);
+      expect(textFieldByLabel('Website or portfolio'), findsOneWidget);
+      expect(find.text('Profile photo'), findsOneWidget);
+    },
+  );
+
+  testWidgets('personal optional fields start open when already filled', (
+    tester,
+  ) async {
+    viewModel.setStep(0);
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        linkedinLink: 'linkedin.com/in/test-user',
+      ),
+    );
+
+    await pumpBuilder(tester, size: const Size(800, 1100));
+
+    expect(textFieldByLabel('LinkedIn link'), findsOneWidget);
+    expect(textFieldByLabel('Website or portfolio'), findsOneWidget);
+    expect(find.text('Profile photo'), findsOneWidget);
+  });
+
   testWidgets('selected category chip scrolls into view on continue', (
     tester,
   ) async {

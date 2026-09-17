@@ -57,10 +57,20 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   bool _prefsHydrated = false;
   bool _resumeOrderNudgeDismissed = false;
   bool _sectionReorderNudgeDismissed = false;
+  bool _didInitPersonalOptionalExpanded = false;
+  bool _personalOptionalExpanded = false;
 
   List<FocusNode> get _personalKeyboardFocusOrder => [
-    ..._personalFieldFocusNodes,
+    _personalFieldFocusNodes[0],
+    _personalFieldFocusNodes[1],
+    _personalFieldFocusNodes[2],
+    _personalFieldFocusNodes[3],
+    _personalFieldFocusNodes[4],
     _summaryFocusNode,
+    if (_personalOptionalExpanded) ...[
+      _personalFieldFocusNodes[5],
+      _personalFieldFocusNodes[6],
+    ],
   ];
 
   bool get _isWorkKeyboardHideFieldFocused =>
@@ -199,6 +209,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       final prefs = context.read<AppPreferences>();
       _resumeOrderNudgeDismissed = prefs.resumeOrderNudgeDismissed;
       _sectionReorderNudgeDismissed = prefs.sectionReorderNudgeDismissed;
+    }
+    if (!_didInitPersonalOptionalExpanded) {
+      _didInitPersonalOptionalExpanded = true;
+      final resume = context.read<ResumeEditorViewModel>().resume;
+      _personalOptionalExpanded =
+          resume.linkedinLink.trim().isNotEmpty ||
+          resume.website.trim().isNotEmpty ||
+          resume.profileImagePath.trim().isNotEmpty;
     }
     if (_didInitPageController) {
       return;
@@ -1701,66 +1719,44 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ),
         _SyncTextField(
-          label: context.l10n.targetJobTitle,
-          value: viewModel.resume.jobTitle,
-          focusNode: _personalFieldFocusNodes[1],
-          textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[2].requestFocus(),
-          onChanged: (value) => viewModel.updateResume(
-            (resume) => resume.copyWith(jobTitle: value),
-          ),
-        ),
-        _ProfileLinkField(
-          label: context.l10n.linkedinLink,
-          value: viewModel.resume.linkedinLink,
-          basePrefix: 'https://www.linkedin.com/in/',
-          hintText: 'linkedin.com/in/your-name',
-          focusNode: _personalFieldFocusNodes[2],
-          textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[3].requestFocus(),
-          onChanged: (value) => viewModel.updateResume(
-            (resume) => resume.copyWith(linkedinLink: value),
-          ),
-        ),
-        _SyncTextField(
           label: context.l10n.email,
           value: viewModel.resume.email,
-          focusNode: _personalFieldFocusNodes[3],
+          focusNode: _personalFieldFocusNodes[1],
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[4].requestFocus(),
+          onSubmitted: (_) => _personalFieldFocusNodes[2].requestFocus(),
           onChanged: (value) =>
               viewModel.updateResume((resume) => resume.copyWith(email: value)),
         ),
         _PhoneWithCountryCodeField(
           label: context.l10n.phoneNumber,
           value: viewModel.resume.phone,
-          focusNode: _personalFieldFocusNodes[4],
+          focusNode: _personalFieldFocusNodes[2],
           textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[5].requestFocus(),
+          onSubmitted: (_) => _personalFieldFocusNodes[3].requestFocus(),
           onChanged: (value) =>
               viewModel.updateResume((resume) => resume.copyWith(phone: value)),
         ),
         _SyncTextField(
           label: context.l10n.location,
           value: viewModel.resume.location,
-          focusNode: _personalFieldFocusNodes[5],
+          focusNode: _personalFieldFocusNodes[3],
           textCapitalization: TextCapitalization.sentences,
           textInputAction: TextInputAction.next,
-          onSubmitted: (_) => _personalFieldFocusNodes[6].requestFocus(),
+          onSubmitted: (_) => _personalFieldFocusNodes[4].requestFocus(),
           onChanged: (value) => viewModel.updateResume(
             (resume) => resume.copyWith(location: value),
           ),
         ),
         _SyncTextField(
-          label: context.l10n.websiteOrPortfolio,
-          value: viewModel.resume.website,
-          focusNode: _personalFieldFocusNodes[6],
+          label: context.l10n.targetJobTitle,
+          value: viewModel.resume.jobTitle,
+          focusNode: _personalFieldFocusNodes[4],
+          textCapitalization: TextCapitalization.sentences,
           textInputAction: TextInputAction.next,
           onSubmitted: (_) => _summaryFocusNode.requestFocus(),
           onChanged: (value) => viewModel.updateResume(
-            (resume) => resume.copyWith(website: value),
+            (resume) => resume.copyWith(jobTitle: value),
           ),
         ),
         _SyncTextField(
@@ -1781,8 +1777,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
     return _StepSurface(
       title: context.l10n.personalInformationTitle,
-      subtitle:
-          context.l10n.personalInformationSubtitle,
+      subtitle: context.l10n.personalInformationSubtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1813,8 +1808,90 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               },
             ),
           ],
-          const SizedBox(height: 36),
-          _buildProfilePhotoPicker(viewModel),
+          const SizedBox(height: 20),
+          _buildPersonalOptionalFields(viewModel),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalOptionalFields(ResumeEditorViewModel viewModel) {
+    final theme = Theme.of(context);
+    final expanded = _personalOptionalExpanded;
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          InkWell(
+            key: const Key('personal-add-more'),
+            onTap: () {
+              setState(() => _personalOptionalExpanded = !expanded);
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.add_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      context.l10n.addMoreOptional,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    expanded
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (expanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  _ResponsiveFieldGroup(
+                    children: [
+                      _ProfileLinkField(
+                        label: context.l10n.linkedinLink,
+                        value: viewModel.resume.linkedinLink,
+                        basePrefix: 'https://www.linkedin.com/in/',
+                        hintText: 'linkedin.com/in/your-name',
+                        focusNode: _personalFieldFocusNodes[5],
+                        textInputAction: TextInputAction.next,
+                        onSubmitted: (_) =>
+                            _personalFieldFocusNodes[6].requestFocus(),
+                        onChanged: (value) => viewModel.updateResume(
+                          (resume) => resume.copyWith(linkedinLink: value),
+                        ),
+                      ),
+                      _SyncTextField(
+                        label: context.l10n.websiteOrPortfolio,
+                        value: viewModel.resume.website,
+                        focusNode: _personalFieldFocusNodes[6],
+                        textInputAction: TextInputAction.done,
+                        onChanged: (value) => viewModel.updateResume(
+                          (resume) => resume.copyWith(website: value),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildProfilePhotoPicker(viewModel),
+                ],
+              ),
+            ),
         ],
       ),
     );

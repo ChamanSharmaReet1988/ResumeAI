@@ -1110,7 +1110,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get phoneNumber => 'Nomor telepon';
 
   @override
-  String get location => 'Lokasi';
+  String get location => 'Kota';
 
   @override
   String get websiteOrPortfolio => 'Situs web atau portofolio';
@@ -1120,7 +1120,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get personalInformationSubtitle =>
-      'Mulai dengan identitas, detail kontak, peran target, dan ringkasan posisi singkat.';
+      'Mulai dengan nama, email, telepon, dan kota Anda. Tambahkan LinkedIn, situs web, atau foto jika ingin.';
+
+  @override
+  String get addMoreOptional => 'Tambah lainnya (opsional)';
 
   @override
   String get suggestSummary => 'Sarankan ringkasan';
