@@ -2004,6 +2004,54 @@ abstract class AppLocalizations {
   /// **'Suggest summary'**
   String get suggestSummary;
 
+  /// No description provided for @suggestSummaryAddDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a few details first'**
+  String get suggestSummaryAddDetailsTitle;
+
+  /// No description provided for @suggestSummaryMissingNameAndTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name and target job title first, then try Suggest summary again.'**
+  String get suggestSummaryMissingNameAndTitle;
+
+  /// No description provided for @suggestSummaryMissingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name first, then try Suggest summary again.'**
+  String get suggestSummaryMissingName;
+
+  /// No description provided for @suggestSummaryMissingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your target job title first, then try Suggest summary again.'**
+  String get suggestSummaryMissingTitle;
+
+  /// No description provided for @suggestSummaryExperienceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Years of experience'**
+  String get suggestSummaryExperienceTitle;
+
+  /// No description provided for @suggestSummaryExperienceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'How many years of experience do you have?'**
+  String get suggestSummaryExperienceBody;
+
+  /// No description provided for @suggestSummaryExperienceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Years'**
+  String get suggestSummaryExperienceLabel;
+
+  /// No description provided for @suggestSummaryExperienceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 5'**
+  String get suggestSummaryExperienceHint;
+
   /// No description provided for @resumeOrder.
   ///
   /// In en, this message translates to:

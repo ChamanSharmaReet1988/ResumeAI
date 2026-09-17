@@ -683,6 +683,79 @@ void main() {
     expect(find.text('Profile photo'), findsOneWidget);
   });
 
+  testWidgets('suggest summary asks for name and title before generating', (
+    tester,
+  ) async {
+    viewModel.setStep(0);
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        fullName: '',
+        jobTitle: '',
+        summary: '',
+      ),
+    );
+
+    await pumpBuilder(tester, size: const Size(800, 1100));
+
+    await tester.ensureVisible(
+      find.byKey(const Key('generate-summary-ai-button')),
+    );
+    await tester.tap(find.byKey(const Key('generate-summary-ai-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('suggest-summary-missing-dialog')), findsOneWidget);
+    expect(
+      find.text(
+        'Enter your full name and target job title first, then try Suggest summary again.',
+      ),
+      findsOneWidget,
+    );
+    expect(viewModel.resume.summary, isEmpty);
+  });
+
+  testWidgets('suggest summary fills the professional summary field', (
+    tester,
+  ) async {
+    viewModel.setStep(0);
+    viewModel.updateResume(
+      (resume) => resume.copyWith(summary: ''),
+    );
+
+    await pumpBuilder(tester, size: const Size(800, 1100));
+
+    expect(find.byKey(const Key('generate-summary-ai-button')), findsOneWidget);
+    expect(
+      find.text(
+        'Uses your name, target job title, work experience, and skills. Add those first for a stronger summary.',
+      ),
+      findsNothing,
+    );
+
+    await tester.ensureVisible(
+      find.byKey(const Key('generate-summary-ai-button')),
+    );
+    await tester.tap(find.byKey(const Key('generate-summary-ai-button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('suggest-summary-experience-dialog')),
+      findsOneWidget,
+    );
+    await tester.enterText(
+      find.byKey(const Key('suggest-summary-experience-field')),
+      '5',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('suggest-summary-experience-confirm')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpAndSettle();
+
+    expect(viewModel.resume.summary.trim(), isNotEmpty);
+    expect(viewModel.resume.summary, contains('5 years of experience'));
+    expect(find.text('Summary added'), findsOneWidget);
+  });
+
   testWidgets('selected category chip scrolls into view on continue', (
     tester,
   ) async {

@@ -1129,6 +1129,34 @@ class AppLocalizationsId extends AppLocalizations {
   String get suggestSummary => 'Sarankan ringkasan';
 
   @override
+  String get suggestSummaryAddDetailsTitle => 'Isi beberapa detail dulu';
+
+  @override
+  String get suggestSummaryMissingNameAndTitle =>
+      'Masukkan nama lengkap dan jabatan target terlebih dahulu, lalu coba Sarankan ringkasan lagi.';
+
+  @override
+  String get suggestSummaryMissingName =>
+      'Masukkan nama lengkap terlebih dahulu, lalu coba Sarankan ringkasan lagi.';
+
+  @override
+  String get suggestSummaryMissingTitle =>
+      'Masukkan jabatan target terlebih dahulu, lalu coba Sarankan ringkasan lagi.';
+
+  @override
+  String get suggestSummaryExperienceTitle => 'Tahun pengalaman';
+
+  @override
+  String get suggestSummaryExperienceBody =>
+      'Berapa tahun pengalaman yang Anda miliki?';
+
+  @override
+  String get suggestSummaryExperienceLabel => 'Tahun';
+
+  @override
+  String get suggestSummaryExperienceHint => 'mis. 5';
+
+  @override
   String get resumeOrder => 'Urutan resume';
 
   @override

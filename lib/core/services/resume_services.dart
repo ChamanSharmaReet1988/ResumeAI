@@ -2925,12 +2925,14 @@ class LocalAiResumeService {
     ResumeData resume, {
     bool regenerate = false,
     int attemptIndex = 0,
+    int? yearsOfExperience,
   }) async {
     return _simulate(
       () => _buildSummary(
         resume,
         regenerate: regenerate,
         attemptIndex: attemptIndex,
+        yearsOfExperience: yearsOfExperience,
       ),
     );
   }
@@ -5765,7 +5767,11 @@ class LocalAiResumeService {
     return variants[index % variants.length];
   }
 
-  List<String> _composeSummaryLines(ResumeData resume, {int variantIndex = 0}) {
+  List<String> _composeSummaryLines(
+    ResumeData resume, {
+    int variantIndex = 0,
+    int? yearsOfExperience,
+  }) {
     final variant = variantIndex % _summaryVariantCount;
     final experiences = resume.visibleWorkExperiences
         .where((item) => !item.isBlank)
@@ -5774,8 +5780,16 @@ class LocalAiResumeService {
         ? 0
         : variantIndex % experiences.length;
 
-    final intro = _summaryIntroLine(resume, variant);
-    final breadth = _summaryExperienceBreadthLine(resume, variant);
+    final intro = _summaryIntroLine(
+      resume,
+      variant,
+      yearsOfExperience: yearsOfExperience,
+    );
+    final breadth = _summaryExperienceBreadthLine(
+      resume,
+      variant,
+      yearsOfExperience: yearsOfExperience,
+    );
     final role = _summaryHighlightedRoleLine(
       resume,
       variant,
@@ -5802,11 +5816,37 @@ class LocalAiResumeService {
     };
   }
 
-  String _summaryIntroLine(ResumeData resume, int variant) {
+  String _summaryIntroLine(
+    ResumeData resume,
+    int variant, {
+    int? yearsOfExperience,
+  }) {
     final name = resume.fullName.trim();
     final title = resume.jobTitle.trim().isEmpty
         ? 'experienced contributor'
         : resume.jobTitle.trim();
+    final yearsPhrase = _yearsOfExperiencePhrase(yearsOfExperience);
+
+    if (yearsPhrase != null) {
+      return switch (variant) {
+        1 =>
+          name.isEmpty
+              ? 'I am a $title with $yearsPhrase who enjoys turning messy problems into clear plans and steady results.'
+              : "I'm $name, a $title with $yearsPhrase who enjoys turning messy problems into clear plans and steady results.",
+        2 =>
+          name.isEmpty
+              ? 'As a $title with $yearsPhrase, I focus on practical delivery, honest communication, and work that holds up after launch.'
+              : "I'm $name, a $title with $yearsPhrase who focuses on practical delivery, honest communication, and work that holds up after launch.",
+        3 =>
+          name.isEmpty
+              ? 'I work as a $title with $yearsPhrase and care most about useful outcomes, reliable follow-through, and strong teamwork.'
+              : "$name here — I work as a $title with $yearsPhrase and care most about useful outcomes, reliable follow-through, and strong teamwork.",
+        _ =>
+          name.isEmpty
+              ? 'I am an $title with $yearsPhrase, focused on dependable delivery, clear communication, and collaborative work.'
+              : "I'm $name, an $title with $yearsPhrase, focused on dependable delivery, clear communication, and collaborative work.",
+      };
+    }
 
     return switch (variant) {
       1 =>
@@ -5828,7 +5868,25 @@ class LocalAiResumeService {
     };
   }
 
-  String _summaryExperienceBreadthLine(ResumeData resume, int variant) {
+  String _summaryExperienceBreadthLine(
+    ResumeData resume,
+    int variant, {
+    int? yearsOfExperience,
+  }) {
+    final yearsPhrase = _yearsOfExperiencePhrase(yearsOfExperience);
+    if (yearsPhrase != null) {
+      return switch (variant) {
+        1 =>
+          'That $yearsPhrase has taught me to take ownership, communicate clearly, and keep work moving.',
+        2 =>
+          'Across $yearsPhrase, I have focused on planning, execution, and keeping stakeholders aligned.',
+        3 =>
+          "I've built my approach over $yearsPhrase — real ownership and follow-through have been the common thread.",
+        _ =>
+          'Over $yearsPhrase, I have built depth in planning, delivery, and the communication that keeps projects moving.',
+      };
+    }
+
     final experiences = resume.visibleWorkExperiences
         .where((item) => !item.isBlank)
         .toList();
@@ -6035,13 +6093,28 @@ class LocalAiResumeService {
     ResumeData resume, {
     bool regenerate = false,
     int attemptIndex = 0,
+    int? yearsOfExperience,
   }) {
     final variantIndex = regenerate ? attemptIndex % _summaryVariantCount : 0;
     final composed = _composeSummaryLines(
       resume,
       variantIndex: variantIndex,
+      yearsOfExperience: yearsOfExperience,
     ).join('\n');
     return _fixArticlesInSummary(_finalizeSummaryLines(composed, resume));
+  }
+
+  String? _yearsOfExperiencePhrase(int? years) {
+    if (years == null || years < 0) {
+      return null;
+    }
+    if (years == 0) {
+      return 'hands-on project experience';
+    }
+    if (years == 1) {
+      return '1 year of experience';
+    }
+    return '$years years of experience';
   }
 
   String _buildTailoredSummary({

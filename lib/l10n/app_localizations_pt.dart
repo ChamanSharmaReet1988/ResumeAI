@@ -1132,6 +1132,34 @@ class AppLocalizationsPt extends AppLocalizations {
   String get suggestSummary => 'Sugerir resumo';
 
   @override
+  String get suggestSummaryAddDetailsTitle => 'Adicione alguns dados primeiro';
+
+  @override
+  String get suggestSummaryMissingNameAndTitle =>
+      'Digite seu nome completo e o cargo desejado primeiro e depois tente Sugerir resumo novamente.';
+
+  @override
+  String get suggestSummaryMissingName =>
+      'Digite seu nome completo primeiro e depois tente Sugerir resumo novamente.';
+
+  @override
+  String get suggestSummaryMissingTitle =>
+      'Digite o cargo desejado primeiro e depois tente Sugerir resumo novamente.';
+
+  @override
+  String get suggestSummaryExperienceTitle => 'Anos de experiência';
+
+  @override
+  String get suggestSummaryExperienceBody =>
+      'Quantos anos de experiência você tem?';
+
+  @override
+  String get suggestSummaryExperienceLabel => 'Anos';
+
+  @override
+  String get suggestSummaryExperienceHint => 'ex.: 5';
+
+  @override
   String get resumeOrder => 'Ordem do currículo';
 
   @override

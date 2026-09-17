@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -385,8 +386,24 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Future<void> _generateSummary() async {
     final viewModel = context.read<ResumeEditorViewModel>();
+    final resume = viewModel.resume;
+    final missingName = resume.fullName.trim().isEmpty;
+    final missingTitle = resume.jobTitle.trim().isEmpty;
+    if (missingName || missingTitle) {
+      await _showSuggestSummaryMissingDetailsDialog(
+        missingName: missingName,
+        missingTitle: missingTitle,
+      );
+      return;
+    }
+
+    final experienceYears = await _showSuggestSummaryExperienceDialog();
+    if (!mounted || experienceYears == null) {
+      return;
+    }
+
     final hadSummary = viewModel.resume.summary.trim().isNotEmpty;
-    await viewModel.generateSummary();
+    await viewModel.generateSummary(yearsOfExperience: experienceYears);
     if (!mounted) {
       return;
     }
@@ -404,6 +421,100 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showSuggestSummaryMissingDetailsDialog({
+    required bool missingName,
+    required bool missingTitle,
+  }) {
+    final l10n = context.l10n;
+    final message = switch ((missingName, missingTitle)) {
+      (true, true) => l10n.suggestSummaryMissingNameAndTitle,
+      (true, false) => l10n.suggestSummaryMissingName,
+      (false, true) => l10n.suggestSummaryMissingTitle,
+      (false, false) => l10n.suggestSummaryMissingNameAndTitle,
+    };
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          key: const Key('suggest-summary-missing-dialog'),
+          backgroundColor: Theme.of(context).cardColor,
+          surfaceTintColor: Colors.transparent,
+          title: Text(l10n.suggestSummaryAddDetailsTitle),
+          content: Text(message),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.ok),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<int?> _showSuggestSummaryExperienceDialog() async {
+    final controller = TextEditingController();
+    final result = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final years = int.tryParse(controller.text.trim());
+            final canSubmit = years != null && years >= 0 && years <= 60;
+            return AlertDialog(
+              key: const Key('suggest-summary-experience-dialog'),
+              backgroundColor: Theme.of(context).cardColor,
+              surfaceTintColor: Colors.transparent,
+              title: Text(context.l10n.suggestSummaryExperienceTitle),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.l10n.suggestSummaryExperienceBody),
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('suggest-summary-experience-field'),
+                    controller: controller,
+                    autofocus: true,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    textInputAction: TextInputAction.done,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.suggestSummaryExperienceLabel,
+                      hintText: context.l10n.suggestSummaryExperienceHint,
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                    onSubmitted: (_) {
+                      if (canSubmit) {
+                        Navigator.of(dialogContext).pop(years);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(context.l10n.cancel),
+                ),
+                FilledButton(
+                  key: const Key('suggest-summary-experience-confirm'),
+                  onPressed: canSubmit
+                      ? () => Navigator.of(dialogContext).pop(years)
+                      : null,
+                  child: Text(context.l10n.suggestSummary),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    return result;
   }
 
   void _addSkillFromInput() {
@@ -1759,20 +1870,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             (resume) => resume.copyWith(jobTitle: value),
           ),
         ),
-        _SyncTextField(
-          label: context.l10n.professionalSummary,
-          value: viewModel.resume.summary,
-          minLines: 5,
-          maxLines: null,
-          focusNode: _summaryFocusNode,
-          keyboardType: TextInputType.multiline,
-          textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.newline,
-          onChanged: (value) => viewModel.updateResume(
-            (resume) => resume.copyWith(summary: value),
-          ),
-          fullWidth: true,
-        ),
       ],
     );
     return _StepSurface(
@@ -1783,31 +1880,41 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         children: [
           const SizedBox(height: 18),
           personalFields,
-          if (viewModel.resume.jobTitle.trim().isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Builder(
+          const SizedBox(height: 16),
+          _SyncTextField(
+            label: context.l10n.professionalSummary,
+            value: viewModel.resume.summary,
+            minLines: 5,
+            maxLines: null,
+            focusNode: _summaryFocusNode,
+            keyboardType: TextInputType.multiline,
+            textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.newline,
+            onChanged: (value) => viewModel.updateResume(
+              (resume) => resume.copyWith(summary: value),
+            ),
+            fullWidth: true,
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Builder(
               builder: (context) {
                 final primary = Theme.of(context).colorScheme.primary;
-                return Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    TextButton.icon(
-                      key: const Key('generate-summary-ai-button'),
-                      onPressed: viewModel.isBusy ? null : _generateSummary,
-                      style: _secondaryActionButtonStyle(context),
-                      icon: Icon(
-                        Icons.psychology_alt_outlined,
-                        size: 24,
-                        color: primary,
-                      ),
-                      label: Text(context.l10n.suggestSummary),
-                    ),
-                  ],
+                return TextButton.icon(
+                  key: const Key('generate-summary-ai-button'),
+                  onPressed: viewModel.isBusy ? null : _generateSummary,
+                  style: _secondaryActionButtonStyle(context),
+                  icon: Icon(
+                    Icons.psychology_alt_outlined,
+                    size: 24,
+                    color: primary,
+                  ),
+                  label: Text(context.l10n.suggestSummary),
                 );
               },
             ),
-          ],
+          ),
           const SizedBox(height: 20),
           _buildPersonalOptionalFields(viewModel),
         ],

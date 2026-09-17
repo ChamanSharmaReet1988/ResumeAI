@@ -5,6 +5,7 @@ import 'package:resume_app/l10n/app_localizations.dart';
 
 import '../core/services/ai_api_key_store.dart';
 import '../core/services/ai_resume_coordinator.dart';
+import '../core/services/android_genai_service.dart';
 import '../core/services/apple_foundation_ai_service.dart';
 import '../core/services/app_preferences.dart';
 import '../core/services/cloud_ai_resume_service.dart';
@@ -74,6 +75,7 @@ class ResumeApp extends StatelessWidget {
         Provider<AppleFoundationAiService>(
           create: (_) => AppleFoundationAiService(),
         ),
+        Provider<AndroidGenAiService>(create: (_) => AndroidGenAiService()),
         Provider<InAppReviewPromptService>(
           create: (_) => InAppReviewPromptService(),
         ),

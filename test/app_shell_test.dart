@@ -7,6 +7,7 @@ import 'package:resume_app/l10n/app_localizations.dart';
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/ai_api_key_store.dart';
 import 'package:resume_app/core/services/ai_resume_coordinator.dart';
+import 'package:resume_app/core/services/android_genai_service.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/deep_link_service.dart';
 import 'package:resume_app/core/services/premium_purchase_service.dart';
@@ -38,6 +39,7 @@ List<SingleChildWidget> _appShellProviders({
       value: premiumPurchaseService,
     ),
     Provider<LocalAiResumeService>.value(value: localAi),
+    Provider<AndroidGenAiService>(create: (_) => AndroidGenAiService()),
     ChangeNotifierProvider<AiApiKeyStore>.value(value: keyStore),
     Provider<AiResumeCoordinator>(
       create: (_) => AiResumeCoordinator(

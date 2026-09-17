@@ -9,6 +9,7 @@ import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/skill_auto_categorizer.dart';
 import '../../core/services/app_preferences.dart';
+import '../../core/services/android_genai_service.dart';
 import '../../core/services/profile_image_storage.dart';
 import '../../core/services/resume_services.dart';
 
@@ -202,12 +203,14 @@ class ResumeEditorViewModel extends ChangeNotifier {
     required this.repository,
     required this.aiService,
     required this.pdfService,
+    this.androidAi,
     required ResumeData seedResume,
   }) : _resume = seedResume;
 
   final ResumeRepository repository;
   final LocalAiResumeService aiService;
   final ResumePdfService pdfService;
+  final AndroidGenAiService? androidAi;
 
   ResumeData _resume;
   int _currentStep = 0;
@@ -1008,7 +1011,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
     updateResume((resume) => resume.copyWith(skills: items));
   }
 
-  Future<void> generateSummary() async {
+  Future<void> generateSummary({int? yearsOfExperience}) async {
     final regenerate = _resume.summary.trim().isNotEmpty;
     if (regenerate) {
       _summarySuggestAttempt++;
@@ -1018,11 +1021,26 @@ class ResumeEditorViewModel extends ChangeNotifier {
     final attemptIndex = regenerate ? _summarySuggestAttempt : 0;
 
     await _runBusy(() async {
-      final summary = await aiService.generateSummary(
-        _resume,
-        regenerate: regenerate,
-        attemptIndex: attemptIndex,
-      );
+      var summary = '';
+      final onDeviceAi = androidAi;
+      if (onDeviceAi != null && await onDeviceAi.isAvailable()) {
+        try {
+          summary = await onDeviceAi.generateProfessionalSummary(
+            resume: _resume,
+            yearsOfExperience: yearsOfExperience,
+          );
+        } on AndroidGenAiException {
+          summary = '';
+        }
+      }
+      if (summary.trim().isEmpty) {
+        summary = await aiService.generateSummary(
+          _resume,
+          regenerate: regenerate,
+          attemptIndex: attemptIndex,
+          yearsOfExperience: yearsOfExperience,
+        );
+      }
       updateResume((resume) => resume.copyWith(summary: summary));
     });
   }

@@ -11,6 +11,7 @@ import 'dart:async';
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
 import '../../core/services/android_ads_service.dart';
+import '../../core/services/android_genai_service.dart';
 import '../../core/services/deep_link_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/platform_monetization.dart';
@@ -195,6 +196,7 @@ class _AppShellState extends State<AppShell> {
       repository: repository,
       aiService: aiService,
       pdfService: pdfService,
+      androidAi: context.read<AndroidGenAiService>(),
       seedResume: seed ?? library.newDraft(),
     );
 
@@ -350,6 +352,7 @@ class _AppShellState extends State<AppShell> {
       repository: repository,
       aiService: aiService,
       pdfService: pdfService,
+      androidAi: context.read<AndroidGenAiService>(),
       seedResume: seed,
     );
 

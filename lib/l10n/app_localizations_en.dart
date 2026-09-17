@@ -1132,6 +1132,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestSummary => 'Suggest summary';
 
   @override
+  String get suggestSummaryAddDetailsTitle => 'Add a few details first';
+
+  @override
+  String get suggestSummaryMissingNameAndTitle =>
+      'Enter your full name and target job title first, then try Suggest summary again.';
+
+  @override
+  String get suggestSummaryMissingName =>
+      'Enter your full name first, then try Suggest summary again.';
+
+  @override
+  String get suggestSummaryMissingTitle =>
+      'Enter your target job title first, then try Suggest summary again.';
+
+  @override
+  String get suggestSummaryExperienceTitle => 'Years of experience';
+
+  @override
+  String get suggestSummaryExperienceBody =>
+      'How many years of experience do you have?';
+
+  @override
+  String get suggestSummaryExperienceLabel => 'Years';
+
+  @override
+  String get suggestSummaryExperienceHint => 'e.g. 5';
+
+  @override
   String get resumeOrder => 'Resume order';
 
   @override
