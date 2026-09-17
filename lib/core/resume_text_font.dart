@@ -71,26 +71,26 @@ abstract final class ResumeTypography {
   static const double textLineHeight = 1.4;
 
   /// Body paragraphs, bullets, and summary (Flutter preview + PDF line height).
-  static const double bodyTextLineHeight = 1.4;
+  static const double bodyTextLineHeight = 1.3;
 
   /// PDF [lineSpacing] (pt) so line height = [bodyTextLineHeight] × [fontSizePt].
   static double bodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (bodyTextLineHeight - 1);
 
   /// Modern Flow ATS (template 7) body paragraph line height (preview + PDF).
-  static const double atsModernFlowBodyLineHeight = 1.2;
+  static const double atsModernFlowBodyLineHeight = 1.3;
 
   static double atsModernFlowBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (atsModernFlowBodyLineHeight - 1);
 
   /// Executive ATS (template 8) body paragraph line height (preview + PDF).
-  static const double atsExecutiveBodyLineHeight = 1.2;
+  static const double atsExecutiveBodyLineHeight = 1.3;
 
   static double atsExecutiveBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (atsExecutiveBodyLineHeight - 1);
 
   /// Center Classic ATS (template 9) body paragraph line height (preview + PDF).
-  static const double atsCenterClassicBodyLineHeight = 1.2;
+  static const double atsCenterClassicBodyLineHeight = 1.3;
 
   /// Left inset for experience/project bullets under title + company lines.
   static const double atsCenterClassicBulletIndentPt = 12;
@@ -99,7 +99,7 @@ abstract final class ResumeTypography {
       fontSizePt * (atsCenterClassicBodyLineHeight - 1);
 
   /// Professional Blue ATS (template 10) body paragraph line height (preview + PDF).
-  static const double atsProfessionalBlueBodyLineHeight = 1.2;
+  static const double atsProfessionalBlueBodyLineHeight = 1.3;
 
   static double atsProfessionalBlueBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (atsProfessionalBlueBodyLineHeight - 1);
@@ -119,7 +119,7 @@ abstract final class ResumeTypography {
   static const double atsClassicCvLabelColumnPt = 108;
   static const double atsClassicCvLabelGapPt = 10;
   static const double atsClassicCvNamePt = 16;
-  static const double atsClassicCvBodyLineHeight = 1.25;
+  static const double atsClassicCvBodyLineHeight = 1.3;
   static const Color atsClassicCvRuleColor = Color(0xFF000000);
 
   static double atsClassicCvBodyPdfLineSpacingFor(double fontSizePt) =>
@@ -178,7 +178,7 @@ abstract final class ResumeTypography {
   static const int creativeSubtitleWeight = accentStripSubtitleWeight;
 
   /// Profile Sidebar body paragraph line height (preview + PDF).
-  static const double creativeBodyLineHeight = 1.2;
+  static const double creativeBodyLineHeight = 1.3;
 
   static double creativeBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (creativeBodyLineHeight - 1);
@@ -226,7 +226,7 @@ abstract final class ResumeTypography {
   static const double classicSidebarSubtitlePt = accentStripSubsectionPt;
   static const int classicSidebarSubtitleWeight = accentStripSubtitleWeight;
 
-  static const double classicSidebarBodyLineHeight = 1.2;
+  static const double classicSidebarBodyLineHeight = 1.3;
 
   static double classicSidebarBodyPdfLineSpacingFor(double fontSizePt) =>
       fontSizePt * (classicSidebarBodyLineHeight - 1);
@@ -362,9 +362,9 @@ abstract final class ResumeTypography {
 /// embed the same bundled TTFs as the PDF export so typography matches
 /// the in-app template preview.
 /// [inter] is the stored default and means "each template's own font" (Garamond
-/// for most PDF templates). [sharpInter] is the explicit Inter choice in the
-/// preview's Color & Font sheet.
-enum ResumeTextFont { inter, aptos, calibri, arial, sharpInter }
+/// for most PDF templates). [calibri] is the explicit Calibri (Carlito) choice in
+/// the preview's Color & Font sheet.
+enum ResumeTextFont { inter, aptos, calibri, arial }
 
 extension ResumeTextFontX on ResumeTextFont {
   /// Label shown in the UI (matches common resume font names).
@@ -373,7 +373,6 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Aptos',
     ResumeTextFont.calibri => 'Calibri',
     ResumeTextFont.arial => 'Arial',
-    ResumeTextFont.sharpInter => 'Inter',
   };
 
   /// Must match `family:` in [pubspec.yaml] for the bundled font files.
@@ -382,7 +381,6 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Source Sans 3',
     ResumeTextFont.calibri => 'Calibri',
     ResumeTextFont.arial => 'Arimo',
-    ResumeTextFont.sharpInter => 'Inter',
   };
 
   /// Short note for pickers (optional).
@@ -391,7 +389,6 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Office-style sans (Source Sans 3)',
     ResumeTextFont.calibri => 'Metric match: Carlito',
     ResumeTextFont.arial => 'Metric match: Arimo',
-    ResumeTextFont.sharpInter => 'Sharp sans-serif for screens',
   };
 }
 

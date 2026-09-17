@@ -44,7 +44,11 @@ pw.TextStyle arimoPdfTextStyle(
     fontStyle: useItalic ? pw.FontStyle.italic : pw.FontStyle.normal,
     letterSpacing: 0,
     wordSpacing: 1,
-    lineSpacing: lineSpacing ?? 0,
+    lineSpacing: pdfLineSpacingForFont(
+      font,
+      fontSize ?? ResumeTypography.bodyPt,
+      lineSpacing,
+    ),
     height: 1,
     decoration: pw.TextDecoration.none,
     decorationStyle: pw.TextDecorationStyle.solid,

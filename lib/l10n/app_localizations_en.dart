@@ -546,6 +546,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Photo-led nameplate with a navy details rail and skill bars.';
 
   @override
+  String get templateSlateSidebar => 'Slate Sidebar';
+
+  @override
+  String get templateSlateSidebarCaption =>
+      'Dark photo sidebar with contact and expertise, and dated sections.';
+
+  @override
   String get templateStructuredAts => 'Structured ATS';
 
   @override

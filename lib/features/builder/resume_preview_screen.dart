@@ -215,8 +215,9 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Details Sidebar is already Inter, so the choice
-                            // only applies to the Garamond templates.
+                            // Details Sidebar keeps its own Inter body, so the
+                            // choice only applies to the templates with a
+                            // Garamond (or Slate Sidebar's Outfit) default.
                             if (resume.template !=
                                 ResumeTemplate.detailsSidebar) ...[
                               Text(
@@ -231,9 +232,14 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 children: [
                                   ChoiceChip(
                                     key: const Key('resume-font-default'),
-                                    label: const Text('Garamond'),
+                                    label: Text(
+                                      resume.template ==
+                                              ResumeTemplate.slateSidebar
+                                          ? 'Outfit'
+                                          : 'Garamond',
+                                    ),
                                     selected: resume.resumeTextFont !=
-                                        ResumeTextFont.sharpInter,
+                                        ResumeTextFont.calibri,
                                     onSelected: (_) => viewModel.updateResume(
                                       (r) => r.copyWith(
                                         resumeTextFont: ResumeTextFont.inter,
@@ -241,14 +247,14 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                     ),
                                   ),
                                   ChoiceChip(
-                                    key: const Key('resume-font-inter'),
-                                    label: const Text('Inter'),
+                                    key: const Key('resume-font-calibri'),
+                                    label: const Text('Calibri'),
                                     selected: resume.resumeTextFont ==
-                                        ResumeTextFont.sharpInter,
+                                        ResumeTextFont.calibri,
                                     onSelected: (_) => viewModel.updateResume(
                                       (r) => r.copyWith(
                                         resumeTextFont:
-                                            ResumeTextFont.sharpInter,
+                                            ResumeTextFont.calibri,
                                       ),
                                     ),
                                   ),

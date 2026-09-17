@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -64,6 +65,12 @@ class _NativePdfPreviewState extends State<NativePdfPreview> {
         offset: const Offset(0, 2),
       ),
       scrollPhysics: PdfViewerParams.getScrollPhysics(context),
+      // By default each page is drawn from a 200 dpi image scaled down to the
+      // screen with low-quality filtering, which blurs thin text. Keeping the
+      // one-pass image below the on-screen scale makes the viewer overlay a
+      // render at the exact device resolution, so text stays crisp.
+      getPageRenderingScale: (context, page, controller, estimatedScale) =>
+          math.min(estimatedScale, 1.0),
       onPageChanged: _onPdfPageChanged,
       onViewerReady: _onPdfViewerReady,
     );

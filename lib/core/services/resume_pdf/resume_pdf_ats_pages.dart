@@ -1376,7 +1376,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
       ResumeTypography.atsStructuredBodyWeight,
       fontSize: _atsPdfSkillsBodyPt(bodyPt),
       color: PdfColors.black,
-      lineSpacing: bodyPt * 0.1,
+      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
     );
     if (resume != null && resume.showCategorisedSkills) {
       return pw.Column(
@@ -1432,7 +1432,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
       ResumeTypography.atsStructuredBodyWeight,
       fontSize: bodyPt,
       color: PdfColors.black,
-      lineSpacing: bodyPt * 0.1,
+      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
     );
     final subtitleStyle = garamondPdfTextStyle(
       garamond,
@@ -1447,7 +1447,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
       fontSize: bodyPt,
       color: PdfColors.black,
       fontStyle: pw.FontStyle.italic,
-      lineSpacing: bodyPt * 0.08,
+      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
     );
     final sectionTitleStyle = garamondPdfTextStyle(
       garamond,

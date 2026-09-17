@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/services.dart';
+import 'package:pdf/pdf.dart' show TtfParser;
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../resume_font_weight.dart';
@@ -8,6 +11,41 @@ import 'inter_pdf_fonts.dart';
 /// Cached PDF themes so repeated exports do not reload font bytes.
 /// Key: `fontName_bodyPt` (body pt affects default/bullet styles).
 final Map<String, pw.ThemeData> resumePdfThemeCache = {};
+
+final Expando<double> _pdfFontLineHeightEm = Expando();
+
+/// Height of one line of [font] in ems (ascent − descent). The pdf package
+/// advances each wrapped line by this height and only then adds
+/// [pw.TextStyle.lineSpacing].
+double pdfFontLineHeightEm(pw.Font font) {
+  if (font is! pw.TtfFont) {
+    return 1;
+  }
+  return _pdfFontLineHeightEm[font] ??= () {
+    final parser = TtfParser(font.data);
+    return (parser.ascent - parser.descent) / parser.unitsPerEm;
+  }();
+}
+
+/// Turns a spacing written as `(lineHeight − 1) × fontSize` into the gap the
+/// pdf package needs so lines really sit `lineHeight × fontSize` apart.
+///
+/// Without this, each font's own line height (about 1.2em for Inter, 1.3em
+/// for Garamond) was added on top, and body text rendered at 1.4–1.7×.
+/// Never goes below the font's natural line height.
+double pdfLineSpacingForFont(
+  pw.Font font,
+  double fontSize,
+  double? lineSpacing,
+) {
+  if (lineSpacing == null || lineSpacing <= 0) {
+    return lineSpacing ?? 0;
+  }
+  return math.max(
+    0,
+    lineSpacing - (pdfFontLineHeightEm(font) - 1) * fontSize,
+  );
+}
 
 /// Same [ResumeTextFont] choices as the in-app resume preview ([ResumePreviewCard]).
 /// Embeds bundled TTFs so exported PDFs match the template typography instead of
@@ -70,6 +108,7 @@ Future<pw.ThemeData> _buildEmbeddedFontTheme(
   required double lineSpacing,
 }) async {
   final fonts = await _loadPdfFonts(font);
+  final spacing = pdfLineSpacingForFont(fonts.base, bodyPt, lineSpacing);
   return pw.ThemeData.withFont(
     base: fonts.base,
     bold: fonts.bold,
@@ -78,11 +117,11 @@ Future<pw.ThemeData> _buildEmbeddedFontTheme(
   ).copyWith(
     defaultTextStyle: pw.TextStyle(
       fontSize: bodyPt,
-      lineSpacing: lineSpacing,
+      lineSpacing: spacing,
     ),
     bulletStyle: pw.TextStyle(
       fontSize: bodyPt,
-      lineSpacing: lineSpacing,
+      lineSpacing: spacing,
     ),
   );
 }
@@ -109,7 +148,6 @@ Future<pw.Font> loadPdfTtf(String assetPath) async {
 Future<_PdfFontSlots> _loadPdfFonts(ResumeTextFont font) async {
   switch (font) {
     case ResumeTextFont.inter:
-    case ResumeTextFont.sharpInter:
       final inter = await loadInterPdfFonts();
       return _PdfFontSlots(
         base: inter.w400,
@@ -140,4 +178,18 @@ Future<_PdfFontSlots> _loadPdfFonts(ResumeTextFont font) async {
         boldItalic: italic,
       );
   }
+}
+
+extension ResumePdfLineSpacing on pw.TextStyle {
+  /// [copyWith] for `lineSpacing` written as `(lineHeight - 1) * fontSize`,
+  /// corrected for this style's font like [pdfLineSpacingForFont].
+  pw.TextStyle withResumeLineSpacing(double lineSpacing) => copyWith(
+    lineSpacing: font == null
+        ? lineSpacing
+        : pdfLineSpacingForFont(
+            font!,
+            fontSize ?? ResumeTypography.bodyPt,
+            lineSpacing,
+          ),
+  );
 }

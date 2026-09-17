@@ -547,6 +547,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Nombre con foto y un carril azul marino de datos y habilidades.';
 
   @override
+  String get templateSlateSidebar => 'Barra lateral pizarra';
+
+  @override
+  String get templateSlateSidebarCaption =>
+      'Barra lateral oscura con foto, contacto y habilidades, y secciones con fechas.';
+
+  @override
   String get templateStructuredAts => 'ATS estructurado';
 
   @override

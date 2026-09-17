@@ -673,6 +673,14 @@ const _professionalResumeCards = <_TemplateTileData>[
     caption: 'Photo-led nameplate with a navy details rail and skill bars.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'slate-sidebar',
+    resumeTemplate: ResumeTemplate.slateSidebar,
+    previewKind: _TemplatePreviewKind.slateSidebarResume,
+    headline: 'Slate Sidebar',
+    caption: 'Dark photo sidebar with contact and expertise, and dated sections.',
+    isPremium: false,
+  ),
 ];
 
 const _resumeTemplateCards = _professionalResumeCards;
@@ -799,6 +807,7 @@ class _TemplateTileData {
       'classic-sidebar' => l10n.templateClassicSidebar,
       'accent-strip' => l10n.templateAccentStrip,
       'header-sidebar' => l10n.templateHeaderSidebar,
+      'slate-sidebar' => l10n.templateSlateSidebar,
       'ats-structured' => l10n.templateStructuredAts,
       'ats-latex-classic' => l10n.templateLatexClassicAts,
       'ats-modern-flow' => l10n.templateModernFlowAts,
@@ -821,6 +830,7 @@ class _TemplateTileData {
       'classic-sidebar' => l10n.templateClassicSidebarCaption,
       'accent-strip' => l10n.templateAccentStripCaption,
       'header-sidebar' => l10n.templateHeaderSidebarCaption,
+      'slate-sidebar' => l10n.templateSlateSidebarCaption,
       'ats-structured' => l10n.templateStructuredAtsCaption,
       'ats-latex-classic' => l10n.templateLatexClassicAtsCaption,
       'ats-modern-flow' => l10n.templateModernFlowAtsCaption,
@@ -844,6 +854,7 @@ enum _TemplatePreviewKind {
   detailsSidebarResume,
   accentStripResume,
   headerSidebarResume,
+  slateSidebarResume,
   atsStructuredResume,
   atsSerifRulesResume,
   atsModernFlowResume,
@@ -936,6 +947,12 @@ class _TemplatePreviewArt extends StatelessWidget {
       _TemplatePreviewKind.headerSidebarResume => _ResumeTemplatePreviewArt(
         resume: _applyTemplatePreviewPalette(
           _headerSidebarTemplateResume,
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.slateSidebarResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _slateSidebarTemplateResume,
           paletteSeed,
         ),
       ),
@@ -1095,6 +1112,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.detailsSidebar => _detailsSidebarTemplateResume,
       ResumeTemplate.accentStrip => _accentStripTemplateResume,
       ResumeTemplate.headerSidebar => _headerSidebarTemplateResume,
+      ResumeTemplate.slateSidebar => _slateSidebarTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
       ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,
@@ -1239,12 +1257,13 @@ ResumeData _applyTemplatePreviewPalette(
       ),
     );
   }
-  // Header Sidebar gallery art stays navy; preview color is chosen on the
-  // preview screen.
-  if (sample.template == ResumeTemplate.headerSidebar) {
+  // Header Sidebar and Slate Sidebar gallery art keep their native rail color;
+  // preview color is chosen on the preview screen.
+  if (sample.template == ResumeTemplate.headerSidebar ||
+      sample.template == ResumeTemplate.slateSidebar) {
     return sample.copyWith(
       corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
-        ResumeTemplate.headerSidebar,
+        sample.template,
       ),
     );
   }
@@ -2256,6 +2275,109 @@ final ResumeData _headerSidebarTemplateResume = ResumeData(
   ],
 );
 
+final ResumeData _slateSidebarTemplateResume = ResumeData(
+  id: 'template-slate-sidebar',
+  title: 'Slate Sidebar Template',
+  fullName: 'Maya Fernandes',
+  jobTitle: 'Marketing Manager',
+  email: 'maya.fernandes@email.com',
+  phone: '+91 98200 11223',
+  location: 'Pune, India',
+  website: '',
+  summary: '',
+  template: ResumeTemplate.slateSidebar,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Product Marketing Manager',
+      company: 'Arowwai Industries',
+      startDate: '2020',
+      endDate: '2023',
+      description: '',
+      bullets: [
+        'Led launches for six products, growing qualified leads by 42% in the first year.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Lead',
+      company: 'Ingoude Company',
+      startDate: '2019',
+      endDate: '2020',
+      description: '',
+      bullets: [
+        'Cut paid acquisition cost by 18% by moving budget to search and referrals.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Associate',
+      company: 'Timmerman Industries',
+      startDate: '2017',
+      endDate: '2019',
+      description: '',
+      bullets: [
+        'Ran email and social programs for three regional consumer brands.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Wardiere University',
+      degree: 'MBA, Marketing',
+      startDate: '2015',
+      endDate: '2017',
+      score: '',
+    ),
+    EducationItem(
+      institution: 'Wardiere University',
+      degree: 'Bachelor of Business Management',
+      startDate: '2012',
+      endDate: '2015',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'Management Skills',
+    'Creativity',
+    'Digital Marketing',
+    'Negotiation',
+    'Critical Thinking',
+    'Leadership',
+  ],
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(title: 'Languages', content: 'English\nHindi\nSpanish'),
+    CustomSectionItem(
+      title: 'Awards',
+      content: '2019  Best Employee of the Year\n2015  Rising Star Award',
+    ),
+    CustomSectionItem(
+      title: 'References',
+      content: 'Available upon request.',
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.slateSidebar,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    'custom:0',
+    'custom:1',
+    'custom:2',
+  ],
+);
+
 enum _ResumeTemplatePreviewFit { tile, detail }
 
 class _ResumeTemplatePreviewArt extends StatelessWidget {
@@ -2294,6 +2416,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.creative => true,
           ResumeTemplate.accentStrip => true,
           ResumeTemplate.headerSidebar => true,
+          ResumeTemplate.slateSidebar => true,
           _ => false,
         };
         final bottomInset = fullHeightTemplate
@@ -2339,6 +2462,19 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
                       child: ColoredBox(
                         color: resume.corporateColorPreset.headerColor,
                         child: SizedBox(width: targetWidth * (34 / _pageWidth)),
+                      ),
+                    ),
+                  if (resume.template.userFacingTemplate ==
+                      ResumeTemplate.slateSidebar)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: ColoredBox(
+                        color: resume.slateSidebarRailColor,
+                        child: SizedBox(
+                          width: targetWidth * (196 / _pageWidth),
+                        ),
                       ),
                     ),
                   if (isHeaderSidebar)

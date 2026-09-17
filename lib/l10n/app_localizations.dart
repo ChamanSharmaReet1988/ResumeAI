@@ -1050,6 +1050,18 @@ abstract class AppLocalizations {
   /// **'Photo-led nameplate with a navy details rail and skill bars.'**
   String get templateHeaderSidebarCaption;
 
+  /// No description provided for @templateSlateSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Slate Sidebar'**
+  String get templateSlateSidebar;
+
+  /// No description provided for @templateSlateSidebarCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark photo sidebar with contact and expertise, and dated sections.'**
+  String get templateSlateSidebarCaption;
+
   /// No description provided for @templateStructuredAts.
   ///
   /// In en, this message translates to:

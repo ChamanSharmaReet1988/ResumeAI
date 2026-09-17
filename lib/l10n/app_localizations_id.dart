@@ -546,6 +546,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Nama berfoto dengan rel biru laut untuk detail dan keterampilan.';
 
   @override
+  String get templateSlateSidebar => 'Sidebar Slate';
+
+  @override
+  String get templateSlateSidebarCaption =>
+      'Sidebar gelap dengan foto, kontak, dan keahlian, serta bagian bertanggal.';
+
+  @override
   String get templateStructuredAts => 'ATS terstruktur';
 
   @override

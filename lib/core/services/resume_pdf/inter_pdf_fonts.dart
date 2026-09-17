@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -56,7 +58,11 @@ pw.TextStyle interPdfTextStyle(
     fontStyle: useItalic ? pw.FontStyle.italic : pw.FontStyle.normal,
     letterSpacing: 0,
     wordSpacing: 1,
-    lineSpacing: lineSpacing ?? 0,
+    lineSpacing: pdfLineSpacingForFont(
+      font,
+      fontSize ?? ResumeTypography.bodyPt,
+      lineSpacing,
+    ),
     height: 1,
     decoration: pw.TextDecoration.none,
     decorationStyle: pw.TextDecorationStyle.solid,
@@ -155,3 +161,15 @@ Future<pw.ThemeData> resumePdfThemeForInter(
   resumePdfThemeCache[cacheKey] = theme;
   return theme;
 }
+
+/// Body `lineSpacing` for text that inherits the Inter PDF theme without
+/// naming a font (Details Sidebar), corrected for Inter's own line height
+/// like [pdfLineSpacingForFont].
+double interThemeBodyPdfLineSpacingFor(double bodyPt) => math.max(
+  0,
+  ResumeTypography.bodyPdfLineSpacingFor(bodyPt) -
+      (_interLineHeightEm - 1) * bodyPt,
+);
+
+/// Bundled Inter's ascent − descent in ems (2478 / 2048 units).
+const double _interLineHeightEm = 1.21;

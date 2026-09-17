@@ -206,6 +206,10 @@ class ResumePreviewCanvas extends StatelessWidget {
         resume: resume,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),
+      ResumeTemplate.slateSidebar => _SlateSidebarPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
       ResumeTemplate.atsStructured => _AtsStructuredPreview(
         resume: resume,
         showAllContent: showAllContent,
@@ -7186,4 +7190,398 @@ List<String> _projectBulletLines(ProjectItem item) {
 
 extension on String {
   String ifBlank(String fallback) => trim().isEmpty ? fallback : this;
+}
+
+/// Slate Sidebar live preview. Laid out on an A4 point canvas with the same
+/// metrics as the PDF page, then scaled to the available width.
+class _SlateSidebarPreview extends StatelessWidget {
+  const _SlateSidebarPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
+
+  final ResumeData resume;
+  final bool followBuilderSectionOrder;
+
+  static const double _pageWidth = 595.28;
+  static const double _pageHeight = 841.89;
+  static const double _railWidth = 196;
+  static const double _railInset = 24;
+  static const double _avatarSize = 104;
+  static const double _metaColumn = 104;
+  static const double _columnGap = 14;
+
+  static final RegExp _railSectionTitle = RegExp(
+    r'^(languages?|awards?|certifications?|certificates?|interests?|hobbies)$',
+    caseSensitive: false,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final railColor = resume.slateSidebarRailColor;
+    final titleColor = resume.slateSidebarTitleColor;
+    final mutedColor = resume.slateSidebarMutedColor;
+    const onRail = Colors.white;
+    final family = resume.resumeTextFont == ResumeTextFont.calibri
+        ? ResumeTextFont.calibri.flutterFontFamily
+        : 'Outfit';
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final detailPt = bodyPt - 1.5;
+
+    TextStyle style(FontWeight weight, double size, Color color) => TextStyle(
+      fontFamily: family,
+      fontWeight: weight,
+      fontSize: size,
+      color: color,
+      height: ResumeTypography.bodyTextLineHeight,
+    );
+
+    final nameStyle = style(FontWeight.w700, 30, titleColor).copyWith(
+      height: 1.1,
+    );
+    final jobTitleStyle = style(
+      FontWeight.w400,
+      13,
+      titleColor,
+    ).copyWith(letterSpacing: 1.2);
+    final sectionTitleStyle = style(FontWeight.w700, 16, titleColor);
+    final roleStyle = style(FontWeight.w600, bodyPt - 0.5, titleColor);
+    final detailStyle = style(FontWeight.w400, detailPt, mutedColor);
+    final railHeading = style(FontWeight.w700, 15, onRail);
+    final railLabel = style(FontWeight.w700, detailPt, onRail);
+    final railValue = style(FontWeight.w400, detailPt - 0.5, onRail);
+
+    bool isRailSection(CustomSectionItem item) =>
+        _railSectionTitle.hasMatch(item.title.trim());
+
+    Widget ruledTitle(String title, TextStyle textStyle, Color rule) =>
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 22, bottom: 12),
+          padding: const EdgeInsets.only(bottom: 6),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: rule, width: 0.8)),
+          ),
+          child: Text(title, style: textStyle),
+        );
+
+    Widget bullet(String text) => Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('•  ', style: detailStyle),
+          Expanded(child: Text(text, style: detailStyle)),
+        ],
+      ),
+    );
+
+    Widget datedEntry({
+      required String dates,
+      required String organisation,
+      required String title,
+      required List<Widget> details,
+    }) => Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: dates.isEmpty && organisation.isEmpty
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [Text(title, style: roleStyle), ...details],
+            )
+          : Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: _metaColumn,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (dates.isNotEmpty) Text(dates, style: detailStyle),
+                if (organisation.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(organisation, style: detailStyle),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: _columnGap),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [Text(title, style: roleStyle), ...details],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final avatarPath = resume.profileImagePath.trim();
+    final hasProfileImage =
+        avatarPath.isNotEmpty && File(avatarPath).existsSync();
+    final placeholder = ColoredBox(
+      color: const Color(0xFFD6DCE4),
+      child: Center(
+        child: Text(
+          _pdfAlignedInitials(resume),
+          style: style(FontWeight.w700, 30, titleColor),
+        ),
+      ),
+    );
+
+    final contacts = <(String, String)>[
+      ('Phone', resume.phone.trim()),
+      ('Email', resume.email.trim()),
+      ('Address', resume.location.trim()),
+      ('Website', resume.website.trim()),
+      ('LinkedIn', resume.linkedinLink.trim()),
+      ('GitHub', resume.githubLink.trim()),
+    ].where((entry) => entry.$2.isNotEmpty).toList();
+
+    final rail = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        Center(
+          child: ClipOval(
+            child: SizedBox(
+              width: _avatarSize,
+              height: _avatarSize,
+              child: hasProfileImage
+                  ? Image.file(
+                      File(avatarPath),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => placeholder,
+                    )
+                  : placeholder,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        ruledTitle('Contact', railHeading, onRail),
+        if (contacts.isEmpty)
+          Text('Add contact details', style: railValue)
+        else
+          for (final (label, value) in contacts) ...[
+            Text(label, style: railLabel),
+            Text(value, style: railValue),
+            const SizedBox(height: 9),
+          ],
+        if (_pdfAlignedSkills(resume).isNotEmpty) ...[
+          ruledTitle('Expertise', railHeading, onRail),
+          for (final skill in _pdfAlignedSkills(resume).take(14))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(skill, style: railValue.copyWith(fontSize: detailPt)),
+            ),
+        ],
+        for (final section in resume.visibleCustomSections.where(
+          isRailSection,
+        )) ...[
+          ruledTitle(section.title.trim(), railHeading, onRail),
+          for (final line
+              in (section.bullets.any((b) => b.trim().isNotEmpty)
+                      ? section.bullets
+                      : section.content.split('\n'))
+                  .map((line) => line.trim())
+                  .where((line) => line.isNotEmpty))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Text(line, style: railValue.copyWith(fontSize: detailPt)),
+            ),
+        ],
+      ],
+    );
+
+    final experiences = resume.visibleWorkExperiences;
+    final education = resume.visibleEducation;
+    final projects = resume.visibleProjects;
+
+    final main = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 26),
+        Text(_pdfAlignedDisplayName(resume), style: nameStyle),
+        if (resume.jobTitle.trim().isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(resume.jobTitle.trim(), style: jobTitleStyle),
+        ],
+        const SizedBox(height: 26),
+        if (resume.summary.trim().isNotEmpty) ...[
+          ruledTitle('Profile', sectionTitleStyle, titleColor),
+          Text(resume.summary.trim(), style: detailStyle),
+        ],
+        ..._mapPreviewBodySections(
+          previewBodySectionOrder(
+            resume,
+            followOrder: followBuilderSectionOrder,
+            exclude: {ResumeBuilderSectionIds.skills},
+          ),
+          (id) {
+            final customIndex = ResumeBuilderSectionIds.customIndex(id);
+            if (customIndex != null) {
+              if (customIndex < 0 ||
+                  customIndex >= resume.customSections.length) {
+                return null;
+              }
+              final item = resume.customSections[customIndex];
+              if (item.isBlank || isRailSection(item)) return null;
+              final lines = item.bullets.any((b) => b.trim().isNotEmpty)
+                  ? item.bullets.where((b) => b.trim().isNotEmpty).toList()
+                  : [item.content.trim()];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ruledTitle(
+                    item.title.trim().ifBlank('Custom section'),
+                    sectionTitleStyle,
+                    titleColor,
+                  ),
+                  for (final line in lines) Text(line, style: detailStyle),
+                ],
+              );
+            }
+            switch (id) {
+              case ResumeBuilderSectionIds.work:
+                if (experiences.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ruledTitle('Experience', sectionTitleStyle, titleColor),
+                    for (final item in experiences)
+                      datedEntry(
+                        dates: educationDateRangeLabel(
+                          item.startDate,
+                          item.endDate,
+                        ),
+                        organisation: item.company.trim(),
+                        title: item.role.trim().ifBlank('Role'),
+                        details: [
+                          for (final line
+                              in item.bullets.any((b) => b.trim().isNotEmpty)
+                                  ? item.bullets.where(
+                                      (b) => b.trim().isNotEmpty,
+                                    )
+                                  : [
+                                      if (item.description.trim().isNotEmpty)
+                                        item.description.trim(),
+                                    ])
+                            bullet(line),
+                        ],
+                      ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.education:
+                if (education.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ruledTitle('Education', sectionTitleStyle, titleColor),
+                    for (final item in education)
+                      datedEntry(
+                        dates: educationDateRangeLabel(
+                          item.startDate,
+                          item.endDate,
+                        ),
+                        organisation: item.institution.trim(),
+                        title: item.degree.trim().ifBlank(
+                          item.institution.trim().ifBlank('Education'),
+                        ),
+                        details: [
+                          if (item.score.trim().isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 3),
+                              child: Text(
+                                item.score.trim(),
+                                style: detailStyle,
+                              ),
+                            ),
+                        ],
+                      ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.projects:
+                if (projects.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ruledTitle('Projects', sectionTitleStyle, titleColor),
+                    for (final item in projects)
+                      datedEntry(
+                        dates: '',
+                        organisation: item.subtitle.trim(),
+                        title: item.title.trim().ifBlank('Project'),
+                        details: [
+                          for (final line in item.bullets.where(
+                            (b) => b.trim().isNotEmpty,
+                          ))
+                            bullet(line),
+                        ],
+                      ),
+                  ],
+                );
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : width / ResumePreviewCard._a4AspectRatio;
+        return SizedBox(
+          width: width,
+          height: height,
+          child: ClipRect(
+            child: FittedBox(
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: _pageWidth,
+                height: _pageHeight,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: _railWidth,
+                      child: ColoredBox(color: railColor),
+                    ),
+                    Positioned(
+                      left: _railInset,
+                      top: 40,
+                      width: _railWidth - _railInset,
+                      bottom: 36,
+                      child: ClipRect(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: rail,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: _railWidth + 28,
+                      right: 34,
+                      top: 40,
+                      bottom: 36,
+                      child: ClipRect(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: main,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }

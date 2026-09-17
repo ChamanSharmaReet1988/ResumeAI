@@ -817,12 +817,9 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     ResumeTypography.classicSidebarBodyWeight,
                     bodyPt,
                     color: titleColor,
-                  ).copyWith(
-                    lineSpacing:
-                        ResumeTypography.classicSidebarBodyPdfLineSpacingFor(
-                      bodyPt,
-                    ),
-                  ),
+                  ).withResumeLineSpacing(
+          ResumeTypography.classicSidebarBodyPdfLineSpacingFor(bodyPt),
+        ),
                 ),
               ),
             ),
@@ -1071,7 +1068,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 style: pw.TextStyle(
                   color: mutedColor,
                   fontSize: bodyPt,
-                  lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+                  lineSpacing: interThemeBodyPdfLineSpacingFor(bodyPt),
                 ),
               ),
             ),

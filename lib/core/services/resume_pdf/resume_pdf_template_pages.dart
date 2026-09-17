@@ -943,12 +943,9 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   ResumeTypography.classicSidebarBodyWeight,
                   bodyPt,
                   color: titleColor,
-                ).copyWith(
-                  lineSpacing:
-                      ResumeTypography.classicSidebarBodyPdfLineSpacingFor(
-                    bodyPt,
-                  ),
-                ),
+                ).withResumeLineSpacing(
+          ResumeTypography.classicSidebarBodyPdfLineSpacingFor(bodyPt),
+        ),
               ),
             ),
           ),
@@ -1656,9 +1653,9 @@ ResumeTypography.darkHeaderSubtitleWeight,
         ResumeTypography.classicSidebarBodyWeight,
         bodyPt,
         color: mutedColor,
-      ).copyWith(
-        lineSpacing: ResumeTypography.classicSidebarBodyPdfLineSpacingFor(bodyPt),
-      ),
+      ).withResumeLineSpacing(
+          ResumeTypography.classicSidebarBodyPdfLineSpacingFor(bodyPt),
+        ),
     );
   }
 
@@ -1705,7 +1702,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
               style: pw.TextStyle(
                 color: mutedColor,
                 fontSize: bodyPt,
-                lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+                lineSpacing: interThemeBodyPdfLineSpacingFor(bodyPt),
               ),
             ),
           ),
@@ -2064,7 +2061,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
       style: pw.TextStyle(
         color: mutedColor,
         fontSize: bodyPt,
-        lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+        lineSpacing: interThemeBodyPdfLineSpacingFor(bodyPt),
       ),
     );
   }

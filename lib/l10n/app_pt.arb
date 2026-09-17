@@ -259,6 +259,8 @@
   "templateAccentStripCaption": "Faixa esquerda marcante com nome grande e seções limpas.",
   "templateHeaderSidebar": "Barra lateral de cabeçalho",
   "templateHeaderSidebarCaption": "Nome com foto e um trilho azul-marinho de dados e habilidades.",
+  "templateSlateSidebar": "Barra lateral ardósia",
+  "templateSlateSidebarCaption": "Barra lateral escura com foto, contato e competências, e seções com datas.",
   "templateStructuredAts": "ATS estruturado",
   "templateStructuredAtsCaption": "Faixas de seção cinzas e cabeçalho centralizado para parsers.",
   "templateLatexClassicAts": "ATS clássico LaTeX",

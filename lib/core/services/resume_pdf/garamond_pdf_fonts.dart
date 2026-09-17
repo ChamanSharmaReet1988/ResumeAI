@@ -187,7 +187,11 @@ pw.TextStyle garamondPdfTextStyle(
     fontStyle: useItalic ? pw.FontStyle.italic : pw.FontStyle.normal,
     letterSpacing: 0,
     wordSpacing: 1,
-    lineSpacing: lineSpacing ?? 0,
+    lineSpacing: pdfLineSpacingForFont(
+      font,
+      fontSize ?? ResumeTypography.bodyPt,
+      lineSpacing,
+    ),
     height: 1,
     decoration: pw.TextDecoration.none,
     decorationStyle: pw.TextDecorationStyle.solid,
@@ -225,25 +229,49 @@ Future<GaramondPdfFonts> loadGaramondPdfFonts() async {
   return GaramondPdfFonts._(upright: upright, italic: italic);
 }
 
-/// Inter in the same weight slots as [GaramondPdfFonts], so every Garamond
-/// template can render in Inter when the user picks it.
+/// Carlito (Calibri metric match) in the same weight slots as
+/// [GaramondPdfFonts], so every Garamond template can render in Calibri when
+/// the user picks it.
 ///
-/// Inter has no italic files bundled, so italic text uses the upright face.
-Future<GaramondPdfFonts> loadInterResumePdfFonts() async {
-  final regular = await loadPdfTtf('assets/fonts/inter/Inter-Regular.ttf');
-  final bold = await loadPdfTtf('assets/fonts/inter/Inter-Bold.ttf');
+/// Carlito only ships Regular and Bold: 400-500 use Regular, 600-800 Bold.
+Future<GaramondPdfFonts> loadCarlitoResumePdfFonts() async {
+  final regular = await loadPdfTtf('assets/fonts/carlito/Carlito-Regular.ttf');
+  final bold = await loadPdfTtf('assets/fonts/carlito/Carlito-Bold.ttf');
+  final italic = await loadPdfTtf('assets/fonts/carlito/Carlito-Italic.ttf');
+  return GaramondPdfFonts._(
+    upright: {
+      ResumeFontWeight.w400: regular,
+      ResumeFontWeight.w500: regular,
+      ResumeFontWeight.w600: bold,
+      ResumeFontWeight.w700: bold,
+      ResumeFontWeight.w800: bold,
+    },
+    italic: {
+      ResumeFontWeight.w400: italic,
+      ResumeFontWeight.w700: italic,
+    },
+  );
+}
+
+/// Outfit (bundled geometric sans) in the same weight slots as
+/// [GaramondPdfFonts]; the Slate Sidebar template's default font.
+///
+/// Outfit has no italic cut, so italic text uses the upright faces.
+Future<GaramondPdfFonts> loadOutfitResumePdfFonts() async {
+  final regular = await loadPdfTtf('assets/fonts/outfit/Outfit-Regular.ttf');
+  final bold = await loadPdfTtf('assets/fonts/outfit/Outfit-Bold.ttf');
   return GaramondPdfFonts._(
     upright: {
       ResumeFontWeight.w400: regular,
       ResumeFontWeight.w500: await loadPdfTtf(
-        'assets/fonts/inter/Inter-Medium.ttf',
+        'assets/fonts/outfit/Outfit-Medium.ttf',
       ),
       ResumeFontWeight.w600: await loadPdfTtf(
-        'assets/fonts/inter/Inter-SemiBold.ttf',
+        'assets/fonts/outfit/Outfit-SemiBold.ttf',
       ),
       ResumeFontWeight.w700: bold,
       ResumeFontWeight.w800: await loadPdfTtf(
-        'assets/fonts/inter/Inter-ExtraBold.ttf',
+        'assets/fonts/outfit/Outfit-ExtraBold.ttf',
       ),
     },
     italic: {

@@ -269,6 +269,8 @@
   "templateAccentStripCaption": "Bold left stripe with an oversized nameplate and clean sections.",
   "templateHeaderSidebar": "Header Sidebar",
   "templateHeaderSidebarCaption": "Photo-led nameplate with a navy details rail and skill bars.",
+  "templateSlateSidebar": "Slate Sidebar",
+  "templateSlateSidebarCaption": "Dark photo sidebar with contact and expertise, and dated sections.",
   "templateStructuredAts": "Structured ATS",
   "templateStructuredAtsCaption": "Gray section bands and a centered header for parsers.",
   "templateLatexClassicAts": "LaTeX Classic ATS",

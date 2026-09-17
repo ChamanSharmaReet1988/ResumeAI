@@ -32,6 +32,7 @@ import 'resume_pdf/resume_pdf_theme.dart';
 part 'resume_pdf/resume_pdf_template_pages.dart';
 part 'resume_pdf/resume_pdf_highlighted_pages.dart';
 part 'resume_pdf/resume_pdf_ats_pages.dart';
+part 'resume_pdf/resume_pdf_slate_sidebar_page.dart';
 
 /// Emits PDF body sections (after Summary/header) in the user's saved builder
 /// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
@@ -7483,13 +7484,17 @@ class ResumePdfService {
     return _garamondPdfFontsCache ??= await loadGaramondPdfFonts();
   }
 
-  GaramondPdfFonts? _sharpInterResumePdfFontsCache;
+  GaramondPdfFonts? _calibriResumePdfFontsCache;
+  GaramondPdfFonts? _outfitResumePdfFontsCache;
 
-  /// Fonts for the Garamond-based templates: Inter when the user picked
-  /// Inter in Color & Font, otherwise the templates' default Garamond.
+  /// Fonts for the Garamond-based templates: Carlito (Calibri) when the
+  /// user picked Calibri in Color & Font, otherwise the templates' default Garamond.
   Future<GaramondPdfFonts> _resumePdfFontsFor(ResumeData resume) async {
-    if (resume.resumeTextFont == ResumeTextFont.sharpInter) {
-      return _sharpInterResumePdfFontsCache ??= await loadInterResumePdfFonts();
+    if (resume.resumeTextFont == ResumeTextFont.calibri) {
+      return _calibriResumePdfFontsCache ??= await loadCarlitoResumePdfFonts();
+    }
+    if (resume.template == ResumeTemplate.slateSidebar) {
+      return _outfitResumePdfFontsCache ??= await loadOutfitResumePdfFonts();
     }
     return _ensureGaramondPdfFonts();
   }
@@ -7621,6 +7626,17 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.slateSidebar) {
+      final document = pw.Document();
+      _addSlateSidebarTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
@@ -7672,6 +7688,8 @@ class ResumePdfService {
       case ResumeTemplate.atsClassicCv:
         break;
       case ResumeTemplate.headerSidebar:
+        break;
+      case ResumeTemplate.slateSidebar:
         break;
     }
 
@@ -7867,6 +7885,24 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.slateSidebar) {
+      final profileImagePath = await ProfileImageStorage.resolvePath(
+        resume.profileImagePath,
+        resume.id,
+      );
+      final document = pw.Document();
+      _addSlateSidebarTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: await _loadProfileImage(profileImagePath),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.corporate) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
@@ -7925,6 +7961,8 @@ class ResumePdfService {
       case ResumeTemplate.atsClassicCv:
         break;
       case ResumeTemplate.headerSidebar:
+        break;
+      case ResumeTemplate.slateSidebar:
         break;
     }
 
