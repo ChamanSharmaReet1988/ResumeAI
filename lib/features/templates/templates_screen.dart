@@ -742,6 +742,14 @@ const _atsResumeCards = <_TemplateTileData>[
     caption: 'Centered name, personal-details grid, and left-labeled ruled sections.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'ats-clean-sans',
+    resumeTemplate: ResumeTemplate.atsCleanSans,
+    previewKind: _TemplatePreviewKind.atsCleanSansResume,
+    headline: 'Clean Sans ATS',
+    caption: 'Bold uppercase name, right-aligned contact, and two-column skills.',
+    isPremium: false,
+  ),
 ];
 
 const _coverLetterTemplateCards = <_TemplateTileData>[
@@ -815,6 +823,7 @@ class _TemplateTileData {
       'ats-center-classic' => l10n.templateCenterClassicAts,
       'ats-professional-blue' => l10n.templateProfessionalBlueAts,
       'ats-classic-cv' => l10n.templateClassicCvAts,
+      'ats-clean-sans' => l10n.templateCleanSansAts,
       'executive-note' => l10n.templateExecutiveNote,
       'minimal-letter' => l10n.templateMinimalLetter,
       'sidebar-letter' => l10n.templateMintLetter,
@@ -838,6 +847,7 @@ class _TemplateTileData {
       'ats-center-classic' => l10n.templateCenterClassicAtsCaption,
       'ats-professional-blue' => l10n.templateProfessionalBlueAtsCaption,
       'ats-classic-cv' => l10n.templateClassicCvAtsCaption,
+      'ats-clean-sans' => l10n.templateCleanSansAtsCaption,
       'executive-note' => l10n.templateExecutiveNoteCaption,
       'minimal-letter' => l10n.templateMinimalLetterCaption,
       'sidebar-letter' => l10n.templateMintLetterCaption,
@@ -862,6 +872,7 @@ enum _TemplatePreviewKind {
   atsCenterClassicResume,
   atsProfessionalBlueResume,
   atsClassicCvResume,
+  atsCleanSansResume,
   atsLatexClassicResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
@@ -1005,6 +1016,12 @@ class _TemplatePreviewArt extends StatelessWidget {
         ),
         fit: _ResumeTemplatePreviewFit.tile,
       ),
+      _TemplatePreviewKind.atsCleanSansResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.atsCleanSans),
+          paletteSeed,
+        ),
+      ),
       _TemplatePreviewKind.atsLatexClassicResume => _ResumeTemplatePreviewArt(
         // Grid only: stop after one project. Detail keeps the full sample.
         resume: _gridSampleThroughOneProject(
@@ -1124,7 +1141,8 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.atsModernFlow ||
       ResumeTemplate.atsExecutive ||
       ResumeTemplate.atsCenterClassic ||
-      ResumeTemplate.atsLatexClassic =>
+      ResumeTemplate.atsLatexClassic ||
+      ResumeTemplate.atsCleanSans =>
         _atsSampleFor(template),
     };
     return _applyTemplatePreviewPalette(sample, paletteSeed);

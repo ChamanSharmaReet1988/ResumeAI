@@ -241,7 +241,12 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Center(child: avatar()),
+          // The rail column runs to the rail's right edge (so heading rules
+          // do too); pad the photo by the left inset to centre it in the rail.
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(right: _slateSidebarRailInsetPt),
+            child: pw.Center(child: avatar()),
+          ),
           pw.SizedBox(height: 6),
           heading('Contact'),
           if (contacts.isEmpty)

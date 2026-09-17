@@ -210,6 +210,10 @@ class ResumePreviewCanvas extends StatelessWidget {
         resume: resume,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),
+      ResumeTemplate.atsCleanSans => _AtsCleanSansPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
       ResumeTemplate.atsStructured => _AtsStructuredPreview(
         resume: resume,
         showAllContent: showAllContent,
@@ -7340,18 +7344,22 @@ class _SlateSidebarPreview extends StatelessWidget {
     final rail = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: ClipOval(
-            child: SizedBox(
-              width: _avatarSize,
-              height: _avatarSize,
-              child: hasProfileImage
-                  ? Image.file(
-                      File(avatarPath),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => placeholder,
-                    )
-                  : placeholder,
+        // Centre the photo in the rail, not in the inset content column.
+        Padding(
+          padding: const EdgeInsets.only(right: _railInset),
+          child: Center(
+            child: ClipOval(
+              child: SizedBox(
+                width: _avatarSize,
+                height: _avatarSize,
+                child: hasProfileImage
+                    ? Image.file(
+                        File(avatarPath),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => placeholder,
+                      )
+                    : placeholder,
+              ),
             ),
           ),
         ),
@@ -7574,6 +7582,308 @@ class _SlateSidebarPreview extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Clean Sans ATS live preview, laid out on an A4 point canvas with the PDF
+/// page metrics and scaled to the available width.
+class _AtsCleanSansPreview extends StatelessWidget {
+  const _AtsCleanSansPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
+
+  final ResumeData resume;
+  final bool followBuilderSectionOrder;
+
+  static const double _pageWidth = 595.28;
+  static const double _pageHeight = 841.89;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = resume.atsAccentColor;
+    final family = resume.usesOutfitResumeFont
+        ? ResumeTextFont.outfit.flutterFontFamily
+        : ResumeTextFont.garamond.flutterFontFamily;
+    final textPt = resume.effectiveBodyFontPt.toDouble() - 1;
+
+    TextStyle style(
+      FontWeight weight,
+      double size, {
+      Color color = Colors.black,
+    }) => TextStyle(
+      fontFamily: family,
+      fontWeight: weight,
+      fontSize: size,
+      color: color,
+      height: ResumeTypography.bodyTextLineHeight,
+    );
+
+    final strong = style(FontWeight.w600, textPt + 0.5);
+    final body = style(
+      FontWeight.w400,
+      textPt,
+      color: const Color(0xFF2B2B2B),
+    );
+
+    Widget sectionTitle(String title) => Padding(
+      padding: const EdgeInsets.only(top: 18, bottom: 6),
+      child: Text(
+        title.toUpperCase(),
+        style: style(FontWeight.w600, 14, color: accent),
+      ),
+    );
+
+    Widget bulletRow(String text, {bool indent = true}) => Padding(
+      padding: EdgeInsets.only(left: indent ? 10 : 0, top: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 12, child: Text('•', style: body)),
+          Expanded(
+            child: Text(text, style: body, textAlign: TextAlign.justify),
+          ),
+        ],
+      ),
+    );
+
+    Widget entry(
+      String title,
+      String dates,
+      String subtitle,
+      Iterable<String> bullets,
+    ) => Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: Text(title, style: strong)),
+              if (dates.isNotEmpty) Text(dates, style: strong),
+            ],
+          ),
+          if (subtitle.isNotEmpty) Text(subtitle, style: body),
+          for (final line in bullets) bulletRow(line),
+        ],
+      ),
+    );
+
+    Widget twoColumns(List<Widget> cells, {double rowGap = 10}) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < cells.length; i += 2)
+          Padding(
+            padding: EdgeInsets.only(bottom: rowGap),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: cells[i]),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: i + 1 < cells.length ? cells[i + 1] : const SizedBox(),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+
+    List<String> nonEmpty(Iterable<String> lines) => lines
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+
+    final contact = [
+      resume.email,
+      resume.phone,
+      resume.location,
+      resume.website,
+      resume.linkedinLink,
+      resume.githubLink,
+    ].map((item) => item.trim()).where((item) => item.isNotEmpty).join(' | ');
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _pdfAlignedDisplayName(resume).toUpperCase(),
+          style: style(FontWeight.w700, 28).copyWith(height: 1.15),
+        ),
+        if (resume.jobTitle.trim().isNotEmpty)
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              resume.jobTitle.trim(),
+              style: style(FontWeight.w600, 13),
+            ),
+          ),
+        Container(
+          height: 3,
+          margin: const EdgeInsets.only(top: 4, bottom: 6),
+          color: const Color(0xFFE3E5E8),
+        ),
+        if (contact.isNotEmpty)
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(contact, style: body, textAlign: TextAlign.right),
+          ),
+        if (resume.summary.trim().isNotEmpty) ...[
+          sectionTitle('Professional Summary'),
+          Text(resume.summary.trim(), style: body, textAlign: TextAlign.justify),
+        ],
+        ..._mapPreviewBodySections(
+          previewBodySectionOrder(
+            resume,
+            followOrder: followBuilderSectionOrder,
+          ),
+          (id) {
+            final customIndex = ResumeBuilderSectionIds.customIndex(id);
+            if (customIndex != null) {
+              if (customIndex < 0 ||
+                  customIndex >= resume.customSections.length) {
+                return null;
+              }
+              final item = resume.customSections[customIndex];
+              if (item.isBlank) return null;
+              final bullets = nonEmpty(item.bullets);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  sectionTitle(item.title.trim().ifBlank('Custom section')),
+                  if (bullets.isNotEmpty)
+                    for (final line in bullets) bulletRow(line, indent: false)
+                  else
+                    Text(item.content.trim(), style: body),
+                ],
+              );
+            }
+            switch (id) {
+              case ResumeBuilderSectionIds.work:
+                final items = resume.visibleWorkExperiences;
+                if (items.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Work Experience'),
+                    for (final item in items)
+                      entry(
+                        item.role.trim().ifBlank('Role'),
+                        educationDateRangeLabel(item.startDate, item.endDate),
+                        item.company.trim(),
+                        nonEmpty(item.bullets).isNotEmpty
+                            ? nonEmpty(item.bullets)
+                            : nonEmpty([item.description]),
+                      ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.education:
+                final items = resume.visibleEducation;
+                if (items.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Education'),
+                    twoColumns([
+                      for (final item in items)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.degree.trim().ifBlank(
+                                item.institution.trim().ifBlank('Education'),
+                              ),
+                              style: strong,
+                            ),
+                            if (item.degree.trim().isNotEmpty &&
+                                item.institution.trim().isNotEmpty)
+                              Text(item.institution.trim(), style: body),
+                            if (item.score.trim().isNotEmpty)
+                              bulletRow(item.score.trim(), indent: false),
+                            if (educationDateRangeLabel(
+                              item.startDate,
+                              item.endDate,
+                            ).isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 3),
+                                child: Text(
+                                  educationDateRangeLabel(
+                                    item.startDate,
+                                    item.endDate,
+                                  ),
+                                  style: strong,
+                                ),
+                              ),
+                          ],
+                        ),
+                    ]),
+                  ],
+                );
+              case ResumeBuilderSectionIds.skills:
+                final skills = _pdfAlignedSkills(resume);
+                if (skills.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Skills'),
+                    twoColumns([
+                      for (final skill in skills)
+                        bulletRow(skill, indent: false),
+                    ], rowGap: 0),
+                  ],
+                );
+              case ResumeBuilderSectionIds.projects:
+                final items = resume.visibleProjects;
+                if (items.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Projects'),
+                    for (final item in items)
+                      entry(
+                        item.title.trim().ifBlank('Project'),
+                        '',
+                        item.subtitle.trim(),
+                        nonEmpty(item.bullets),
+                      ),
+                  ],
+                );
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : width / ResumePreviewCard._a4AspectRatio;
+        return SizedBox(
+          width: width,
+          height: height,
+          child: ClipRect(
+            child: FittedBox(
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.topCenter,
+              child: Container(
+                width: _pageWidth,
+                height: _pageHeight,
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(44, 40, 44, 36),
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: content,
                 ),
               ),
             ),

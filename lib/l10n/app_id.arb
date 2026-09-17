@@ -275,6 +275,8 @@
   "templateProfessionalBlueAtsCaption": "Judul aksen biru dengan kontak rata kanan dan kisi keterampilan.",
   "templateClassicCvAts": "ATS CV klasik",
   "templateClassicCvAtsCaption": "Nama terpusat, data pribadi, dan bagian berlabel kiri.",
+  "templateCleanSansAts": "ATS Sans Bersih",
+  "templateCleanSansAtsCaption": "Nama huruf kapital tebal, kontak rata kanan, dan keahlian dua kolom.",
   "templateExecutiveNote": "Catatan eksekutif",
   "templateExecutiveNoteCaption": "Surat lamaran profesional dengan blok header yang kuat.",
   "templateMinimalLetter": "Surat minimal",

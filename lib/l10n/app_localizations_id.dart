@@ -602,6 +602,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Nama terpusat, data pribadi, dan bagian berlabel kiri.';
 
   @override
+  String get templateCleanSansAts => 'ATS Sans Bersih';
+
+  @override
+  String get templateCleanSansAtsCaption =>
+      'Nama huruf kapital tebal, kontak rata kanan, dan keahlian dua kolom.';
+
+  @override
   String get templateExecutiveNote => 'Catatan eksekutif';
 
   @override

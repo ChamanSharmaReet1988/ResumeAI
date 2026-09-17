@@ -602,6 +602,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Centered name, personal-details grid, and left-labeled ruled sections.';
 
   @override
+  String get templateCleanSansAts => 'Clean Sans ATS';
+
+  @override
+  String get templateCleanSansAtsCaption =>
+      'Bold uppercase name, right-aligned contact, and two-column skills.';
+
+  @override
   String get templateExecutiveNote => 'Executive Note';
 
   @override

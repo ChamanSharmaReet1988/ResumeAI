@@ -78,6 +78,7 @@ void main() {
     ResumeTemplate.corporate,
     ResumeTemplate.classicSidebar,
     ResumeTemplate.headerSidebar,
+    ResumeTemplate.atsCleanSans,
   ]) {
     group('Upload resume auto-fill from ${template.name} PDF', () {
       late ResumeData parsed;

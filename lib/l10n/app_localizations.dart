@@ -1146,6 +1146,18 @@ abstract class AppLocalizations {
   /// **'Centered name, personal-details grid, and left-labeled ruled sections.'**
   String get templateClassicCvAtsCaption;
 
+  /// No description provided for @templateCleanSansAts.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean Sans ATS'**
+  String get templateCleanSansAts;
+
+  /// No description provided for @templateCleanSansAtsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold uppercase name, right-aligned contact, and two-column skills.'**
+  String get templateCleanSansAtsCaption;
+
   /// No description provided for @templateExecutiveNote.
   ///
   /// In en, this message translates to:

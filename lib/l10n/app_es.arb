@@ -275,6 +275,8 @@
   "templateProfessionalBlueAtsCaption": "Encabezados en azul con contacto alineado a la derecha y cuadrícula de habilidades.",
   "templateClassicCvAts": "ATS CV clásico",
   "templateClassicCvAtsCaption": "Nombre centrado, datos personales y secciones con etiquetas a la izquierda.",
+  "templateCleanSansAts": "ATS Sans limpio",
+  "templateCleanSansAtsCaption": "Nombre en mayúsculas, contacto alineado a la derecha y habilidades en dos columnas.",
   "templateExecutiveNote": "Nota ejecutiva",
   "templateExecutiveNoteCaption": "Carta de presentación profesional con un bloque de encabezado destacado.",
   "templateMinimalLetter": "Carta minimalista",

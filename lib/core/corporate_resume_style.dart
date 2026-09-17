@@ -102,7 +102,8 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.atsCenterClassic ||
     ResumeTemplate.atsProfessionalBlue ||
     ResumeTemplate.atsLatexClassic ||
-    ResumeTemplate.atsClassicCv => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.atsClassicCv ||
+    ResumeTemplate.atsCleanSans => kTemplateDefaultColorPresetIndex,
   };
 }
 

@@ -33,6 +33,7 @@ part 'resume_pdf/resume_pdf_template_pages.dart';
 part 'resume_pdf/resume_pdf_highlighted_pages.dart';
 part 'resume_pdf/resume_pdf_ats_pages.dart';
 part 'resume_pdf/resume_pdf_slate_sidebar_page.dart';
+part 'resume_pdf/resume_pdf_ats_clean_sans_page.dart';
 
 /// Emits PDF body sections (after Summary/header) in the user's saved builder
 /// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
@@ -5379,7 +5380,14 @@ class LocalAiResumeService {
     if (_looksLikeImportedDateLine(cleaned)) {
       // A header may carry its dates inline; a bare date line is not a header.
       final text = _withoutImportedDates(cleaned);
-      return text.split(RegExp(r'\s+')).length >= 3 && !text.endsWith('.');
+      final words = text
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty && word != '|')
+          .length;
+      // "Android Developer | Jul 2017 - Dec 2020": a title set apart from its
+      // dates is a header even when it is only a word or two.
+      final separatedTitle = cleaned.contains('|') && words >= 1;
+      return (words >= 3 || separatedTitle) && !text.endsWith('.');
     }
 
     final wordCount = cleaned.split(RegExp(r'\s+')).length;
@@ -7622,6 +7630,16 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsCleanSans) {
+      final document = pw.Document();
+      _addAtsCleanSansTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.slateSidebar) {
       final document = pw.Document();
       _addSlateSidebarTemplatePage(
@@ -7686,6 +7704,8 @@ class ResumePdfService {
       case ResumeTemplate.headerSidebar:
         break;
       case ResumeTemplate.slateSidebar:
+        break;
+      case ResumeTemplate.atsCleanSans:
         break;
     }
 
@@ -7881,6 +7901,19 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.atsCleanSans) {
+      final document = pw.Document();
+      _addAtsCleanSansTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.slateSidebar) {
       final profileImagePath = await ProfileImageStorage.resolvePath(
         resume.profileImagePath,
@@ -7959,6 +7992,8 @@ class ResumePdfService {
       case ResumeTemplate.headerSidebar:
         break;
       case ResumeTemplate.slateSidebar:
+        break;
+      case ResumeTemplate.atsCleanSans:
         break;
     }
 

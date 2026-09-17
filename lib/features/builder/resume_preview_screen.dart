@@ -231,8 +231,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                 children: [
                                   // The template's own font comes first.
                                   for (final font
-                                      in resume.template ==
-                                              ResumeTemplate.slateSidebar
+                                      in resume.template.defaultsToOutfitFont
                                           ? const [
                                               ResumeTextFont.outfit,
                                               ResumeTextFont.garamond,

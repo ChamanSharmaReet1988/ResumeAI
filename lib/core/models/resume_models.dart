@@ -37,6 +37,8 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.headerSidebar;
     case 'slateSidebar':
       return ResumeTemplate.slateSidebar;
+    case 'atsCleanSans':
+      return ResumeTemplate.atsCleanSans;
     default:
       return ResumeTemplate.corporate;
   }
@@ -79,6 +81,10 @@ enum ResumeTemplate {
   /// Dark left sidebar (photo, contact, expertise) with dated two-column
   /// experience and education rows.
   slateSidebar,
+
+  /// Uppercase name, right-aligned title and contact under a light rule,
+  /// two-column education and skills (ATS-friendly).
+  atsCleanSans,
 }
 
 enum CoverLetterTemplate {
@@ -104,10 +110,16 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.atsCenterClassic,
   ResumeTemplate.atsProfessionalBlue,
   ResumeTemplate.atsClassicCv,
+  ResumeTemplate.atsCleanSans,
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
   ResumeTemplate get userFacingTemplate => this;
+
+  /// Templates whose own font is Outfit rather than Garamond.
+  bool get defaultsToOutfitFont =>
+      this == ResumeTemplate.slateSidebar ||
+      this == ResumeTemplate.atsCleanSans;
 
   /// ATS layouts keep black type on the template gallery; color is chosen in preview.
   bool get isAtsTemplate => switch (userFacingTemplate) {
@@ -118,7 +130,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsCenterClassic ||
     ResumeTemplate.atsProfessionalBlue ||
     ResumeTemplate.atsLatexClassic ||
-    ResumeTemplate.atsClassicCv => true,
+    ResumeTemplate.atsClassicCv ||
+    ResumeTemplate.atsCleanSans => true,
     _ => false,
   };
 
@@ -138,6 +151,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsClassicCv => 'Classic CV ATS',
     ResumeTemplate.headerSidebar => 'Header Sidebar',
     ResumeTemplate.slateSidebar => 'Slate Sidebar',
+    ResumeTemplate.atsCleanSans => 'Clean Sans ATS',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -171,6 +185,8 @@ extension ResumeTemplateX on ResumeTemplate {
       'Photo-led nameplate with a navy details rail and skill bars.',
     ResumeTemplate.slateSidebar =>
       'Dark photo sidebar with contact and expertise, and dated two-column sections.',
+    ResumeTemplate.atsCleanSans =>
+      'Bold uppercase name, right-aligned contact, and two-column education and skills.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -189,6 +205,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsClassicCv => const Color(0xFF000000),
     ResumeTemplate.headerSidebar => const Color(0xFF1B365D),
     ResumeTemplate.slateSidebar => const Color(0xFF2F3B4C),
+    ResumeTemplate.atsCleanSans => const Color(0xFF000000),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -207,6 +224,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsClassicCv => const Color(0xFFF9FAFB),
     ResumeTemplate.headerSidebar => const Color(0xFFE8EEF6),
     ResumeTemplate.slateSidebar => const Color(0xFFE9ECF1),
+    ResumeTemplate.atsCleanSans => const Color(0xFFF3F4F6),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -226,17 +244,18 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsClassicCv => 'Garamond · classic CV',
     ResumeTemplate.headerSidebar => 'Garamond · navy sidebar',
     ResumeTemplate.slateSidebar => 'Outfit · slate sidebar',
+    ResumeTemplate.atsCleanSans => 'Outfit · clean ATS',
   };
 }
 
 extension ResumeFontChoiceX on ResumeData {
   /// Whether the Garamond-family templates render in Outfit: the Color & Font
   /// choice when one was made, otherwise the template's own default (Outfit
-  /// for Slate Sidebar, Garamond for the rest).
+  /// for Slate Sidebar and Clean Sans ATS, Garamond for the rest).
   bool get usesOutfitResumeFont => switch (resumeTextFont) {
     ResumeTextFont.outfit => true,
     ResumeTextFont.garamond => false,
-    _ => template == ResumeTemplate.slateSidebar,
+    _ => template.defaultsToOutfitFont,
   };
 }
 

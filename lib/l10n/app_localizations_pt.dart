@@ -602,6 +602,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Nome centralizado, dados pessoais e seções com rótulos à esquerda.';
 
   @override
+  String get templateCleanSansAts => 'ATS Sans limpo';
+
+  @override
+  String get templateCleanSansAtsCaption =>
+      'Nome em maiúsculas, contato alinhado à direita e competências em duas colunas.';
+
+  @override
   String get templateExecutiveNote => 'Nota executiva';
 
   @override
