@@ -3740,6 +3740,15 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
     final addIconColor = Theme.of(context).brightness == Brightness.dark
         ? Colors.white
         : Colors.black;
+    final scheme = Theme.of(context).colorScheme;
+    final selectedChipColor = scheme.primaryContainer;
+    final unselectedChipColor = scheme.surfaceContainerHighest;
+    final chipFill = WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return selectedChipColor;
+      }
+      return unselectedChipColor;
+    });
 
     // Children: Personal + ordered sections + Add
     final chipCount = 1 + widget.sectionIds.length + 1;
@@ -3805,6 +3814,13 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                 if (isPersonal) {
                   chip = ChoiceChip(
                     key: _chipKeyFor(0),
+                    showCheckmark: false,
+                    color: chipFill,
+                    selectedColor: selectedChipColor,
+                    backgroundColor: unselectedChipColor,
+                    surfaceTintColor: Colors.transparent,
+                    side: BorderSide.none,
+                    pressElevation: 0,
                     label: Text(
                       context.l10n.sectionPersonalInformation,
                       style: chipStyle,
@@ -3814,6 +3830,12 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                   );
                 } else if (isAdd) {
                   chip = ChoiceChip(
+                    color: chipFill,
+                    selectedColor: selectedChipColor,
+                    backgroundColor: unselectedChipColor,
+                    surfaceTintColor: Colors.transparent,
+                    side: BorderSide.none,
+                    pressElevation: 0,
                     avatar: Icon(
                       Icons.add_rounded,
                       size: 24,
@@ -3831,6 +3853,13 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                       : Theme.of(context).colorScheme.onSurfaceVariant;
                   chip = ChoiceChip(
                     key: _chipKeyFor(index),
+                    showCheckmark: false,
+                    color: chipFill,
+                    selectedColor: selectedChipColor,
+                    backgroundColor: unselectedChipColor,
+                    surfaceTintColor: Colors.transparent,
+                    side: BorderSide.none,
+                    pressElevation: 0,
                     avatar: ReorderableDragStartListener(
                       index: index,
                       child: Icon(
@@ -3852,10 +3881,16 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
                   );
                 }
 
+                final chipSelected = isPersonal
+                    ? widget.currentStep == 0
+                    : !isAdd && widget.currentStep == index;
                 final padded = Padding(
                   padding: EdgeInsets.only(right: isAdd ? 0 : 10),
                   child: _DropShadow(
                     borderRadius: BorderRadius.circular(14),
+                    color: chipSelected
+                        ? selectedChipColor
+                        : unselectedChipColor,
                     child: chip,
                   ),
                 );
@@ -3964,15 +3999,18 @@ class _DropShadow extends StatelessWidget {
   const _DropShadow({
     required this.borderRadius,
     required this.child,
+    this.color,
   });
 
   final BorderRadius borderRadius;
   final Widget child;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: color,
         borderRadius: borderRadius,
         boxShadow: [
           BoxShadow(

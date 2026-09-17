@@ -212,8 +212,17 @@ class AppTheme {
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         side: BorderSide.none,
+        showCheckmark: false,
         selectedColor: scheme.primaryContainer,
         backgroundColor: scheme.surfaceContainerHighest,
+        disabledColor: scheme.surfaceContainerHighest,
+        surfaceTintColor: Colors.transparent,
+        color: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return scheme.primaryContainer;
+          }
+          return scheme.surfaceContainerHighest;
+        }),
         labelStyle: textTheme.labelMedium?.copyWith(
           color: scheme.onSurface,
           fontWeight: FontWeight.w600,
