@@ -265,52 +265,36 @@ class _HomeCreateActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final radius = BorderRadius.circular(14);
 
     return Material(
       color: theme.scaffoldBackgroundColor,
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
           child: Align(
             alignment: AlignmentDirectional.centerEnd,
-            child: Container(
-              height: 52,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: radius,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (showUpload) ...[
-                    _HomeActionSegment(
-                      key: const Key('home-upload-resume-button'),
-                      icon: Icons.upload_file_rounded,
-                      label: l10n.homeUploadResume,
-                      highlighted: false,
-                      onTap: onUpload,
-                    ),
-                    const SizedBox(width: 4),
-                  ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showUpload) ...[
                   _HomeActionSegment(
-                    key: const Key('home-create-new-button'),
-                    icon: Icons.add_rounded,
-                    label: l10n.homeCreateNew,
-                    highlighted: true,
-                    onTap: onCreateNew,
+                    key: const Key('home-upload-resume-button'),
+                    icon: Icons.upload_file_rounded,
+                    label: l10n.homeUploadResume,
+                    highlighted: false,
+                    onTap: onUpload,
                   ),
+                  const SizedBox(width: 12),
                 ],
-              ),
+                _HomeActionSegment(
+                  key: const Key('home-create-new-button'),
+                  icon: Icons.add_rounded,
+                  label: l10n.homeCreateNew,
+                  highlighted: true,
+                  onTap: onCreateNew,
+                ),
+              ],
             ),
           ),
         ),
@@ -341,17 +325,33 @@ class _HomeActionSegment extends StatelessWidget {
         : colorScheme.primary;
 
     // Icon-only, so the label is kept for the tooltip and screen readers.
+    final radius = BorderRadius.circular(12);
     return Tooltip(
       message: label,
-      child: Material(
-        color: highlighted ? colorScheme.primary : colorScheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            width: 56,
-            height: double.infinity,
+      child: Container(
+        width: 56,
+        height: 52,
+        decoration: BoxDecoration(
+          color: highlighted ? colorScheme.primary : colorScheme.surface,
+          borderRadius: radius,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.22),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.10),
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: radius,
             child: Icon(icon, size: 24, color: foreground),
           ),
         ),

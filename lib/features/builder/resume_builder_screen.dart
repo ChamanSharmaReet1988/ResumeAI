@@ -3771,14 +3771,15 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 48,
+            height: 56,
             width: double.infinity,
             child: ReorderableListView.builder(
               key: const Key('step-progress-scroll'),
               scrollController: _scrollController,
               scrollDirection: Axis.horizontal,
               buildDefaultDragHandles: false,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              clipBehavior: Clip.none,
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
               proxyDecorator: (child, index, animation) {
                 return AnimatedBuilder(
                   animation: animation,
@@ -3853,7 +3854,10 @@ class _StepProgressHeaderState extends State<_StepProgressHeader> {
 
                 final padded = Padding(
                   padding: EdgeInsets.only(right: isAdd ? 0 : 10),
-                  child: chip,
+                  child: _DropShadow(
+                    borderRadius: BorderRadius.circular(14),
+                    child: chip,
+                  ),
                 );
 
                 if (isPersonal || isAdd) {
@@ -3913,7 +3917,7 @@ class _BottomControls extends StatelessWidget {
     final isLastStep = currentStep == totalSteps - 1;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 22),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(
@@ -3927,17 +3931,58 @@ class _BottomControls extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton(onPressed: onBack, child: Text(context.l10n.back)),
+            child: _DropShadow(
+              borderRadius: BorderRadius.circular(18),
+              child: OutlinedButton(
+                onPressed: onBack,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                ),
+                child: Text(context.l10n.back),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: FilledButton(
-              onPressed: onNext,
-              child: Text(isLastStep ? context.l10n.preview : context.l10n.continueAction),
+            child: _DropShadow(
+              borderRadius: BorderRadius.circular(24),
+              child: FilledButton(
+                onPressed: onNext,
+                child: Text(
+                  isLastStep ? context.l10n.preview : context.l10n.continueAction,
+                ),
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DropShadow extends StatelessWidget {
+  const _DropShadow({
+    required this.borderRadius,
+    required this.child,
+  });
+
+  final BorderRadius borderRadius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }
