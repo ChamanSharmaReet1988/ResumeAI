@@ -213,6 +213,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             context.watch<PremiumPurchaseService>().isPremium);
 
     final scrollBody = SingleChildScrollView(
+      clipBehavior: Clip.none,
       padding: EdgeInsets.fromLTRB(
         8,
         showTopBanner ? 12 : 20,
@@ -223,83 +224,126 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isTemplatePicker) ...[
-            isCupertino
-                ? SizedBox(
-                    width: double.infinity,
-                    child: CupertinoSlidingSegmentedControl<_TemplateSegment>(
-                      key: const Key('template-segmented-button'),
-                      groupValue: _selectedSegment,
-                      proportionalWidth: true,
-                      onValueChanged: (value) {
-                        if (value == null) {
-                          return;
-                        }
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: isCupertino
+                  ? SizedBox(
+                      width: double.infinity,
+                      child: Material(
+                        elevation: 2,
+                        shadowColor: Colors.black.withValues(alpha: 0.14),
+                        surfaceTintColor: Colors.transparent,
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(14),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: CupertinoSlidingSegmentedControl<_TemplateSegment>(
+                            key: const Key('template-segmented-button'),
+                            groupValue: _selectedSegment,
+                            proportionalWidth: true,
+                            backgroundColor: Colors.transparent,
+                            thumbColor: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.14),
+                            onValueChanged: (value) {
+                              if (value == null) {
+                                return;
+                              }
 
-                        setState(() => _selectedSegment = value);
-                      },
-                      children: {
-                        _TemplateSegment.resume: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          child: Text(
-                            l10n.homeSegmentResume,
-                            style: TextStyle(
-                              fontSize: 17,
-                              color: _selectedSegment == _TemplateSegment.resume
-                                  ? blue
-                                  : inactiveColor,
-                            ),
+                              setState(() => _selectedSegment = value);
+                            },
+                            children: {
+                              _TemplateSegment.resume: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                child: Text(
+                                  l10n.homeSegmentResume,
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    color:
+                                        _selectedSegment ==
+                                            _TemplateSegment.resume
+                                        ? blue
+                                        : inactiveColor,
+                                  ),
+                                ),
+                              ),
+                              _TemplateSegment.coverLetter: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                child: Text(
+                                  l10n.homeSegmentCoverLetter,
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    color:
+                                        _selectedSegment ==
+                                            _TemplateSegment.coverLetter
+                                        ? blue
+                                        : inactiveColor,
+                                  ),
+                                ),
+                              ),
+                            },
                           ),
                         ),
-                        _TemplateSegment.coverLetter: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          child: Text(
-                            l10n.homeSegmentCoverLetter,
-                            style: TextStyle(
-                              fontSize: 17,
-                              color:
-                                  _selectedSegment ==
-                                      _TemplateSegment.coverLetter
-                                  ? blue
-                                  : inactiveColor,
-                            ),
-                          ),
-                        ),
-                      },
-                    ),
-                  )
-                : SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<_TemplateSegment>(
-                      key: const Key('template-segmented-button'),
-                      expandedInsets: EdgeInsets.zero,
-                      showSelectedIcon: false,
-                      style: SegmentedButton.styleFrom(
-                        selectedForegroundColor: blue,
-                        foregroundColor: inactiveColor,
-                        textStyle: const TextStyle(fontSize: 17),
                       ),
-                      segments: [
-                        ButtonSegment<_TemplateSegment>(
-                          value: _TemplateSegment.resume,
-                          label: Text(l10n.homeSegmentResume),
+                    )
+                  : SizedBox(
+                      width: double.infinity,
+                      child: Material(
+                        elevation: 2,
+                        shadowColor: Colors.black.withValues(alpha: 0.14),
+                        surfaceTintColor: Colors.transparent,
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(14),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: SegmentedButton<_TemplateSegment>(
+                            key: const Key('template-segmented-button'),
+                            expandedInsets: EdgeInsets.zero,
+                            showSelectedIcon: false,
+                            style: SegmentedButton.styleFrom(
+                              selectedForegroundColor: blue,
+                              foregroundColor: inactiveColor,
+                              backgroundColor: Colors.transparent,
+                              selectedBackgroundColor: blue.withValues(
+                                alpha: 0.12,
+                              ),
+                              surfaceTintColor: Colors.transparent,
+                              side: BorderSide.none,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              textStyle: const TextStyle(fontSize: 17),
+                            ),
+                            segments: [
+                              ButtonSegment<_TemplateSegment>(
+                                value: _TemplateSegment.resume,
+                                label: Text(l10n.homeSegmentResume),
+                              ),
+                              ButtonSegment<_TemplateSegment>(
+                                value: _TemplateSegment.coverLetter,
+                                label: Text(l10n.homeSegmentCoverLetter),
+                              ),
+                            ],
+                            selected: {_selectedSegment},
+                            onSelectionChanged: (value) {
+                              setState(() => _selectedSegment = value.first);
+                            },
+                          ),
                         ),
-                        ButtonSegment<_TemplateSegment>(
-                          value: _TemplateSegment.coverLetter,
-                          label: Text(l10n.homeSegmentCoverLetter),
-                        ),
-                      ],
-                      selected: {_selectedSegment},
-                      onSelectionChanged: (value) {
-                        setState(() => _selectedSegment = value.first);
-                      },
+                      ),
                     ),
-                  ),
+            ),
             const SizedBox(height: 20),
           ],
           if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
@@ -314,6 +358,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           GridView.builder(
             key: const Key('template-grid'),
             shrinkWrap: true,
+            clipBehavior: Clip.none,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: visibleItems.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -355,6 +400,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             GridView.builder(
               key: const Key('template-grid-ats'),
               shrinkWrap: true,
+              clipBehavior: Clip.none,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _atsResumeCards.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -524,16 +570,32 @@ class _TemplateTile extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 6),
+                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
                   child: Column(
                     children: [
                       Expanded(
-                        child: KeyedSubtree(
-                          key: Key('template-image-${item.id}'),
-                          child: _TemplatePreviewArt(
-                            item: item,
-                            paletteSeed: paletteSeed,
-                            showPremiumBadgeOnTile: true,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.18),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 3,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: KeyedSubtree(
+                            key: Key('template-image-${item.id}'),
+                            child: _TemplatePreviewArt(
+                              item: item,
+                              paletteSeed: paletteSeed,
+                              showPremiumBadgeOnTile: true,
+                            ),
                           ),
                         ),
                       ),

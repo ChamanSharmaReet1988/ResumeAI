@@ -691,6 +691,15 @@
   "categorised": "Categorised",
   "addASkill": "Add a skill",
   "addSkillHelper": "Type to see suggestions or add your own skill",
+  "skillEfficiency": "Efficiency",
+  "skillEfficiencyPercent": "{percent}%",
+  "@skillEfficiencyPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "categoryHint": "e.g. Languages, Tools",
   "moveCategoryUp": "Move category up",
   "moveCategoryDown": "Move category down",

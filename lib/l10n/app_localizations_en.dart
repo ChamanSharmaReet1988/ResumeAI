@@ -1304,6 +1304,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addSkillHelper => 'Type to see suggestions or add your own skill';
 
   @override
+  String get skillEfficiency => 'Efficiency';
+
+  @override
+  String skillEfficiencyPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
   String get categoryHint => 'e.g. Languages, Tools';
 
   @override

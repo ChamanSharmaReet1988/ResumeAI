@@ -1220,17 +1220,19 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     ),
                     autofocus: true,
                     textCapitalization: TextCapitalization.sentences,
+                    onChanged: (_) => setDialogState(() {}),
                     onSubmitted: (_) {
                       final t = controller.text.trim();
-                      if (t.isNotEmpty) {
-                        Navigator.pop(
-                          dialogContext,
-                          _NewCustomSectionDialogResult(
-                            title: t,
-                            type: sectionType,
-                          ),
-                        );
+                      if (t.isEmpty) {
+                        return;
                       }
+                      Navigator.pop(
+                        dialogContext,
+                        _NewCustomSectionDialogResult(
+                          title: t,
+                          type: sectionType,
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 20),
@@ -1286,19 +1288,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   child: Text(context.l10n.cancel),
                 ),
                 FilledButton(
-                  onPressed: () {
-                    final t = controller.text.trim();
-                    if (t.isEmpty) {
-                      return;
-                    }
-                    Navigator.pop(
-                      dialogContext,
-                      _NewCustomSectionDialogResult(
-                        title: t,
-                        type: sectionType,
-                      ),
-                    );
-                  },
+                  onPressed: controller.text.trim().isEmpty
+                      ? null
+                      : () {
+                          Navigator.pop(
+                            dialogContext,
+                            _NewCustomSectionDialogResult(
+                              title: controller.text.trim(),
+                              type: sectionType,
+                            ),
+                          );
+                        },
                   child: Text(context.l10n.ok),
                 ),
               ],
@@ -2587,8 +2587,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Widget _buildSkillsStep(ResumeEditorViewModel viewModel) {
     final useSubheadings = viewModel.resume.useSkillSubheadings;
-    final chipLabelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      fontSize: (Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14) - 2,
+    final chipLabelStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
       fontWeight: FontWeight.w400,
     );
 
@@ -2721,13 +2720,15 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             ),
             const SizedBox(height: 18),
             if (viewModel.resume.skills.isNotEmpty)
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
+              Column(
                 children: viewModel.resume.skills.map((skill) {
-                  return InputChip(
-                    label: Text(skill),
-                    labelStyle: chipLabelStyle,
+                  return _SkillEfficiencyRow(
+                    skill: skill,
+                    proficiency: viewModel.resume.proficiencyForSkill(skill),
+                    nameStyle: chipLabelStyle,
+                    enabled: !viewModel.isBusy,
+                    onProficiencyChanged: (value) =>
+                        viewModel.setSkillProficiency(skill, value),
                     onDeleted: () => viewModel.removeSkill(skill),
                   );
                 }).toList(),
@@ -2935,13 +2936,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         ),
                         if (group.skills.isNotEmpty) ...[
                           const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
+                          Column(
                             children: group.skills.map((skill) {
-                              return InputChip(
-                                label: Text(skill),
-                                labelStyle: chipLabelStyle,
+                              return _SkillEfficiencyRow(
+                                skill: skill,
+                                proficiency: viewModel.resume
+                                    .proficiencyForSkill(skill),
+                                nameStyle: chipLabelStyle,
+                                enabled: !viewModel.isBusy,
+                                onProficiencyChanged: (value) => viewModel
+                                    .setSkillProficiency(skill, value),
                                 onDeleted: () => viewModel
                                     .removeSkillFromGroup(index, skill),
                               );
@@ -4021,6 +4025,109 @@ class _DropShadow extends StatelessWidget {
         ],
       ),
       child: child,
+    );
+  }
+}
+
+class _SkillEfficiencyRow extends StatelessWidget {
+  const _SkillEfficiencyRow({
+    required this.skill,
+    required this.proficiency,
+    required this.nameStyle,
+    required this.enabled,
+    required this.onProficiencyChanged,
+    required this.onDeleted,
+  });
+
+  final String skill;
+  final int proficiency;
+  final TextStyle? nameStyle;
+  final bool enabled;
+  final ValueChanged<int> onProficiencyChanged;
+  final VoidCallback onDeleted;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final level = ResumeData.efficiencyLevelForProficiency(proficiency);
+    final inputPadding =
+        Theme.of(context).inputDecorationTheme.contentPadding;
+    final leftPadding = inputPadding is EdgeInsets
+        ? inputPadding.left
+        : 16.0;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(leftPadding, 2, 0, 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              skill,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: nameStyle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          for (var i = 1; i <= 5; i++)
+            _SkillEfficiencyDot(
+              key: Key('skill-efficiency-$skill-$i'),
+              filled: i <= level,
+              enabled: enabled,
+              tooltip: l10n.skillEfficiencyPercent(
+                ResumeData.proficiencyForEfficiencyLevel(i),
+              ),
+              onTap: () => onProficiencyChanged(
+                ResumeData.proficiencyForEfficiencyLevel(i),
+              ),
+            ),
+          IconButton(
+            tooltip: l10n.actionDelete,
+            onPressed: enabled ? onDeleted : null,
+            visualDensity: VisualDensity.standard,
+            iconSize: 26,
+            icon: const Icon(Icons.close_rounded),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkillEfficiencyDot extends StatelessWidget {
+  const _SkillEfficiencyDot({
+    super.key,
+    required this.filled,
+    required this.enabled,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final bool filled;
+  final bool enabled;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        customBorder: const CircleBorder(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: filled ? color : Colors.transparent,
+              border: Border.all(color: color, width: 1.8),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

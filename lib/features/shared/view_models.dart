@@ -1011,6 +1011,25 @@ class ResumeEditorViewModel extends ChangeNotifier {
     updateResume((resume) => resume.copyWith(skills: items));
   }
 
+  void setSkillProficiency(String skill, int value) {
+    final key = ResumeData.skillProficiencyKey(skill);
+    if (key.isEmpty) {
+      return;
+    }
+    final clamped = value.clamp(0, 100);
+    if (_resume.skillProficiency[key] == clamped) {
+      return;
+    }
+    updateResume(
+      (resume) => resume.copyWith(
+        skillProficiency: {
+          ...resume.skillProficiency,
+          key: clamped,
+        },
+      ),
+    );
+  }
+
   Future<void> generateSummary({int? yearsOfExperience}) async {
     final regenerate = _resume.summary.trim().isNotEmpty;
     if (regenerate) {

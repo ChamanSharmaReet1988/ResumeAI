@@ -625,6 +625,8 @@
   "categorised": "Dikategorikan",
   "addASkill": "Tambah keterampilan",
   "addSkillHelper": "Ketik untuk melihat saran atau tambahkan keterampilan Anda sendiri",
+  "skillEfficiency": "Efisiensi",
+  "skillEfficiencyPercent": "{percent}%",
   "categoryHint": "mis. Bahasa, Alat",
   "moveCategoryUp": "Pindahkan kategori ke atas",
   "moveCategoryDown": "Pindahkan kategori ke bawah",

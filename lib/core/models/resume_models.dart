@@ -251,6 +251,7 @@ class ResumeData {
     required this.skills,
     this.useSkillSubheadings = false,
     this.skillGroups = const [],
+    this.skillProficiency = const {},
     required this.projects,
     required this.customSections,
     required this.updatedAt,
@@ -343,6 +344,13 @@ class ResumeData {
           )
           .where((group) => !group.isBlank)
           .toList(),
+      skillProficiency: syncedSkillProficiency(
+        (json['skills'] as List<dynamic>? ?? [])
+            .map((item) => item.toString())
+            .where((item) => item.trim().isNotEmpty)
+            .toList(),
+        skillProficiencyFromJson(json['skillProficiency']),
+      ),
       projects: (json['projects'] as List<dynamic>? ?? [])
           .map(
             (item) =>
@@ -398,6 +406,9 @@ class ResumeData {
   final List<EducationItem> education;
   final List<String> skills;
 
+  /// Self-scored efficiency 0–100, keyed by lowercase skill name.
+  final Map<String, int> skillProficiency;
+
   /// When true, preview/PDF show [skillGroups] with headings; [skills] stays flat for ATS/AI.
   final bool useSkillSubheadings;
 
@@ -426,6 +437,32 @@ class ResumeData {
 
   /// Order of builder steps after Personal (work/education/skills/projects/custom:N).
   final List<String> builderSectionOrder;
+
+  static const defaultSkillProficiency = 70;
+
+  static String skillProficiencyKey(String skill) => skill.trim().toLowerCase();
+
+  int proficiencyForSkill(String skill) {
+    final key = skillProficiencyKey(skill);
+    if (key.isEmpty) {
+      return defaultSkillProficiency;
+    }
+    return (skillProficiency[key] ?? defaultSkillProficiency).clamp(0, 100);
+  }
+
+  double proficiencyFractionForSkill(String skill) =>
+      proficiencyForSkill(skill) / 100;
+
+  int efficiencyLevelForSkill(String skill) =>
+      efficiencyLevelForProficiency(proficiencyForSkill(skill));
+
+  static int efficiencyLevelForProficiency(int proficiency) {
+    return ((proficiency / 20).round()).clamp(0, 5);
+  }
+
+  static int proficiencyForEfficiencyLevel(int level) {
+    return (level.clamp(0, 5) * 20);
+  }
 
   /// Normalized section order used by the builder chips and content pages.
   List<String> get effectiveBuilderSectionOrder => normalizeBuilderSectionOrder(
@@ -524,6 +561,7 @@ class ResumeData {
     List<String>? skills,
     bool? useSkillSubheadings,
     List<SkillGroup>? skillGroups,
+    Map<String, int>? skillProficiency,
     List<ProjectItem>? projects,
     List<CustomSectionItem>? customSections,
     DateTime? createdAt,
@@ -557,6 +595,11 @@ class ResumeData {
       skills: skills ?? this.skills,
       useSkillSubheadings: useSkillSubheadings ?? this.useSkillSubheadings,
       skillGroups: skillGroups ?? this.skillGroups,
+      skillProficiency:
+          skillProficiency ??
+          (skills != null
+              ? syncedSkillProficiency(skills, this.skillProficiency)
+              : this.skillProficiency),
       projects: projects ?? this.projects,
       customSections: customSections ?? this.customSections,
       createdAt: createdAt ?? this.createdAt,
@@ -599,6 +642,7 @@ class ResumeData {
       'skills': skills,
       'useSkillSubheadings': useSkillSubheadings,
       'skillGroups': skillGroups.map((item) => item.toJson()).toList(),
+      'skillProficiency': skillProficiency,
       'projects': projects.map((item) => item.toJson()).toList(),
       'customSections': customSections.map((item) => item.toJson()).toList(),
       'createdAt': createdAt.toIso8601String(),
@@ -617,6 +661,42 @@ class ResumeData {
       'builderSectionOrder': effectiveBuilderSectionOrder,
     };
   }
+}
+
+Map<String, int> skillProficiencyFromJson(dynamic raw) {
+  if (raw is! Map) {
+    return const {};
+  }
+  final parsed = <String, int>{};
+  for (final entry in raw.entries) {
+    final key = ResumeData.skillProficiencyKey(entry.key.toString());
+    if (key.isEmpty) {
+      continue;
+    }
+    final value = entry.value;
+    final number = value is num ? value.round() : int.tryParse('$value');
+    if (number == null) {
+      continue;
+    }
+    parsed[key] = number.clamp(0, 100);
+  }
+  return parsed;
+}
+
+Map<String, int> syncedSkillProficiency(
+  List<String> skills,
+  Map<String, int> current,
+) {
+  final next = <String, int>{};
+  for (final skill in skills) {
+    final key = ResumeData.skillProficiencyKey(skill);
+    if (key.isEmpty) {
+      continue;
+    }
+    next[key] =
+        (current[key] ?? ResumeData.defaultSkillProficiency).clamp(0, 100);
+  }
+  return next;
 }
 
 /// A labeled group of skills (e.g. "Languages", "Tools").

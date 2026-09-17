@@ -352,20 +352,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: _fieldHorizontalPadding,
-                ),
-                child: Text(
-                  l10n.aiAtsIntro,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
               if (_engineStatusLabel != null) ...[
-                const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: _fieldHorizontalPadding,
@@ -380,8 +367,8 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
               ],
-              const SizedBox(height: 16),
               if (resumes.isEmpty) ...[
                 SizedBox(
                   width: double.infinity,

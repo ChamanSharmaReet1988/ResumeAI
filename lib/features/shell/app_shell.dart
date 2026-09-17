@@ -675,8 +675,8 @@ class _AppShellState extends State<AppShell> {
         ),
         _ShellDestination(
           label: l10n.tabAiResume,
-          icon: CupertinoIcons.wand_stars,
-          selectedIcon: CupertinoIcons.wand_stars,
+          icon: CupertinoIcons.sparkles,
+          selectedIcon: CupertinoIcons.sparkles,
         ),
         _ShellDestination(
           label: l10n.tabSettings,
@@ -697,11 +697,11 @@ class _AppShellState extends State<AppShell> {
         icon: Icons.dashboard_customize_outlined,
         selectedIcon: Icons.dashboard_customize_rounded,
       ),
-      _ShellDestination(
-        label: l10n.tabAiResume,
-        icon: Icons.smart_toy_outlined,
-        selectedIcon: Icons.smart_toy,
-      ),
+        _ShellDestination(
+          label: l10n.tabAiResume,
+          icon: Icons.auto_awesome_outlined,
+          selectedIcon: Icons.auto_awesome_rounded,
+        ),
       _ShellDestination(
         label: l10n.tabSettings,
         icon: Icons.settings_outlined,

@@ -625,6 +625,8 @@
   "categorised": "Categorizadas",
   "addASkill": "Adicionar uma habilidade",
   "addSkillHelper": "Digite para ver sugestões ou adicione sua própria habilidade",
+  "skillEfficiency": "Eficiência",
+  "skillEfficiencyPercent": "{percent}%",
   "categoryHint": "ex.: Idiomas, Ferramentas",
   "moveCategoryUp": "Mover categoria para cima",
   "moveCategoryDown": "Mover categoria para baixo",

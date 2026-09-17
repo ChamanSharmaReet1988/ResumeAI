@@ -1301,6 +1301,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Ketik untuk melihat saran atau tambahkan keterampilan Anda sendiri';
 
   @override
+  String get skillEfficiency => 'Efisiensi';
+
+  @override
+  String skillEfficiencyPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
   String get categoryHint => 'mis. Bahasa, Alat';
 
   @override

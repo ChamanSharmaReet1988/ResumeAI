@@ -383,7 +383,18 @@ void main() {
     expect(find.text('Type'), findsOneWidget);
     expect(find.text('Normal'), findsOneWidget);
     expect(find.text('Advance'), findsOneWidget);
-    expect(find.text('OK'), findsOneWidget);
+    final okButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'OK'),
+    );
+    expect(okButton.onPressed, isNull);
+
+    await tester.enterText(textFieldByLabel('Title'), 'Certifications');
+    await tester.pump();
+
+    expect(
+      tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'OK')).onPressed,
+      isNotNull,
+    );
   });
 
   testWidgets('Advance custom section uses project-style entries', (
@@ -854,5 +865,27 @@ void main() {
 
     expect(viewModel.resume.education.first.showScoreAsPercent, isFalse);
     expect(educationScoreDisplayLabel(viewModel.resume.education.first), '92');
+  });
+
+  testWidgets('added skills show one row with an efficiency slider', (
+    tester,
+  ) async {
+    viewModel.setStep(3);
+    await pumpBuilder(tester);
+
+    await tester.enterText(textFieldByLabel('Add a skill'), 'Flutter');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Flutter'), findsWidgets);
+    expect(find.byType(Slider), findsNothing);
+    expect(find.byKey(const Key('skill-efficiency-Flutter-4')), findsOneWidget);
+    expect(viewModel.resume.proficiencyForSkill('Flutter'), 70);
+
+    await tester.tap(find.byKey(const Key('skill-efficiency-Flutter-5')));
+    await tester.pump();
+
+    expect(viewModel.resume.proficiencyForSkill('Flutter'), 100);
   });
 }

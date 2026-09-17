@@ -477,7 +477,11 @@ const double _headerSidebarPageRightMarginPt =
 const double _headerSidebarMainRightInsetPt =
     _headerSidebarPageRightMarginPt - _headerSidebarPageLeftMarginPt;
 const double _headerSidebarRailContentWidthPt = _headerSidebarRailWidthPt - 32;
-const double _headerSidebarAvatarSizePt = 72.0;
+const double _headerSidebarAvatarSizePt = 108.0;
+const double _headerSidebarAvatarInitialsPt = 26.0;
+const double _headerSidebarSkillDotSizePt = 11.0;
+const double _headerSidebarSkillDotGapPt = 4.0;
+const double _headerSidebarSkillDotBorderPt = 1.3;
 const PdfColor _headerSidebarHighlightPdf = PdfColor.fromInt(0xFFFFE67A);
 
 enum _ClassicSidebarSectionType { skills, languages }
@@ -799,7 +803,10 @@ double _headerSidebarTextBlockHeight(String text, double bodyPt) =>
     ResumeTypography.bodyTextLineHeight;
 
 double _headerSidebarSkillItemHeight(String skill, double bodyPt) =>
-    _headerSidebarTextBlockHeight(skill, bodyPt) + 5 + 2.4 + 10;
+    _headerSidebarTextBlockHeight(skill, bodyPt) +
+    5 +
+    _headerSidebarSkillDotSizePt +
+    10;
 
 double _headerSidebarDetailsHeight(List<String> infoItems, double bodyPt) {
   const titleBlock = 12.0 + 10.0;
@@ -955,7 +962,43 @@ pw.PageTheme _headerSidebarPageTheme({
   );
 }
 
+pw.Widget _headerSidebarSkillDots({
+  required int level,
+  required PdfColor color,
+  required PdfColor emptyFill,
+}) {
+  final innerSize =
+      _headerSidebarSkillDotSizePt - (_headerSidebarSkillDotBorderPt * 2);
+  return pw.Row(
+    children: [
+      for (var i = 1; i <= 5; i++) ...[
+        if (i > 1) pw.SizedBox(width: _headerSidebarSkillDotGapPt),
+        pw.Container(
+          width: _headerSidebarSkillDotSizePt,
+          height: _headerSidebarSkillDotSizePt,
+          alignment: pw.Alignment.center,
+          decoration: pw.BoxDecoration(
+            color: color,
+            shape: pw.BoxShape.circle,
+          ),
+          child: i <= level
+              ? null
+              : pw.Container(
+                  width: innerSize,
+                  height: innerSize,
+                  decoration: pw.BoxDecoration(
+                    color: emptyFill,
+                    shape: pw.BoxShape.circle,
+                  ),
+                ),
+        ),
+      ],
+    ],
+  );
+}
+
 List<pw.Widget> _headerSidebarSkillBarWidgets({
+  required ResumeData resume,
   required List<String> skills,
   required pw.TextStyle bodyStyle,
   required PdfColor barColor,
@@ -975,7 +1018,11 @@ List<pw.Widget> _headerSidebarSkillBarWidgets({
         child: pw.Text(skill, style: bodyStyle),
       ),
       pw.SizedBox(height: 5),
-      pw.Container(width: double.infinity, height: 2.4, color: barColor),
+      _headerSidebarSkillDots(
+        level: resume.efficiencyLevelForSkill(skill),
+        color: barColor,
+        emptyFill: _headerSidebarRailColorPdf(resume),
+      ),
       pw.SizedBox(height: 10),
     ],
   ];
@@ -1029,6 +1076,7 @@ pw.Widget _headerSidebarRailPanel({
         pw.SizedBox(height: 10),
       ],
       ..._headerSidebarSkillBarWidgets(
+        resume: resume,
         skills: pageSlice.skills,
         bodyStyle: bodyStyle,
         barColor: onRail,

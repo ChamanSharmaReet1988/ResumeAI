@@ -1920,7 +1920,10 @@ class _HeaderSidebarPreview extends StatelessWidget {
   final bool followBuilderSectionOrder;
 
   static const double _sidebarWidth = 168;
-  static const double _avatarSize = 72;
+  static const double _avatarSize = 108;
+  static const double _skillDotSize = 11;
+  static const double _skillDotGap = 4;
+  static const double _skillDotBorder = 1.3;
 
   @override
   Widget build(BuildContext context) {
@@ -2014,7 +2017,27 @@ class _HeaderSidebarPreview extends StatelessWidget {
                     style: railBodyStyle,
                   ),
                   const SizedBox(height: 5),
-                  Container(height: 2.4, color: onRail),
+                  Row(
+                    children: [
+                      for (var i = 1; i <= 5; i++) ...[
+                        if (i > 1) const SizedBox(width: _skillDotGap),
+                        Container(
+                          width: _skillDotSize,
+                          height: _skillDotSize,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i <= resume.efficiencyLevelForSkill(skill)
+                                ? onRail
+                                : railColor,
+                            border: Border.all(
+                              color: onRail,
+                              width: _skillDotBorder,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -2058,14 +2081,14 @@ class _HeaderSidebarPreview extends StatelessWidget {
                                               _HeaderSidebarAvatarPlaceholder(
                                                 resume: resume,
                                                 textStyle: nameStyle.copyWith(
-                                                  fontSize: 18,
+                                                  fontSize: 26,
                                                 ),
                                               ),
                                         )
                                       : _HeaderSidebarAvatarPlaceholder(
                                           resume: resume,
                                           textStyle: nameStyle.copyWith(
-                                            fontSize: 18,
+                                            fontSize: 26,
                                           ),
                                         ),
                                 ),

@@ -2310,6 +2310,18 @@ abstract class AppLocalizations {
   /// **'Type to see suggestions or add your own skill'**
   String get addSkillHelper;
 
+  /// No description provided for @skillEfficiency.
+  ///
+  /// In en, this message translates to:
+  /// **'Efficiency'**
+  String get skillEfficiency;
+
+  /// No description provided for @skillEfficiencyPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String skillEfficiencyPercent(int percent);
+
   /// No description provided for @categoryHint.
   ///
   /// In en, this message translates to:

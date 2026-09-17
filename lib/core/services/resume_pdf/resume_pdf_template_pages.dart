@@ -2259,7 +2259,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                           style: garamondPdfTextStyle(
                             garamond,
                             ResumeFontWeight.w700,
-                            fontSize: 18,
+                            fontSize: _headerSidebarAvatarInitialsPt,
                             color: titleColor,
                           ),
                         ),

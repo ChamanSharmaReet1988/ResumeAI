@@ -1305,6 +1305,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Digite para ver sugestões ou adicione sua própria habilidade';
 
   @override
+  String get skillEfficiency => 'Eficiência';
+
+  @override
+  String skillEfficiencyPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
   String get categoryHint => 'ex.: Idiomas, Ferramentas';
 
   @override
