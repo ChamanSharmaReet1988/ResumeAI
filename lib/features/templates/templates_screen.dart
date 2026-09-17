@@ -2005,6 +2005,18 @@ final ResumeData _classicSidebarTemplateResume = ResumeData(
         'Built a finance dashboard that gave leaders clearer monthly forecast and variance visibility.',
       ],
     ),
+    ProjectItem(
+      title: 'Vendor Spend Review',
+      bullets: [
+        'Audited 40 supplier contracts and renegotiated terms, saving 9% a year.',
+      ],
+    ),
+    ProjectItem(
+      title: 'Cash Flow Forecast Model',
+      bullets: [
+        'Built a rolling 13-week cash model adopted by treasury and operations.',
+      ],
+    ),
   ],
   customSections: const [
     CustomSectionItem(
