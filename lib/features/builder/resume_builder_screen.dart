@@ -4058,12 +4058,11 @@ class _SkillEfficiencyRow extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(leftPadding, 2, 0, 2),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Text(
               skill,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
               style: nameStyle,
             ),
           ),
