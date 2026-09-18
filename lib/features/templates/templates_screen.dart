@@ -226,146 +226,139 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final isCupertino = Theme.of(context).platform == TargetPlatform.iOS;
     final blue = Theme.of(context).colorScheme.primary;
     final inactiveColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomSafeInset = MediaQuery.paddingOf(context).bottom;
     final showTopBanner = !isTemplatePicker &&
         PlatformMonetization.showsAds &&
         !(PlatformMonetization.isIapEnabled &&
             context.watch<PremiumPurchaseService>().isPremium);
 
+    final segmentControl = isCupertino
+        ? SizedBox(
+            width: double.infinity,
+            child: Material(
+              elevation: 2,
+              shadowColor: Colors.black.withValues(alpha: 0.14),
+              surfaceTintColor: Colors.transparent,
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: CupertinoSlidingSegmentedControl<_TemplateSegment>(
+                  key: const Key('template-segmented-button'),
+                  groupValue: _selectedSegment,
+                  proportionalWidth: true,
+                  backgroundColor: isDark
+                      ? const Color(0xFF3A3A3C)
+                      : const Color(0xFFE8E8ED),
+                  thumbColor: isDark
+                      ? const Color(0xFF636366)
+                      : Colors.white,
+                  onValueChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+
+                    setState(() => _selectedSegment = value);
+                  },
+                  children: {
+                    _TemplateSegment.resume: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      child: Text(
+                        l10n.homeSegmentResume,
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: _selectedSegment == _TemplateSegment.resume
+                              ? blue
+                              : inactiveColor,
+                        ),
+                      ),
+                    ),
+                    _TemplateSegment.coverLetter: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      child: Text(
+                        l10n.homeSegmentCoverLetter,
+                        style: TextStyle(
+                          fontSize: 17,
+                          color:
+                              _selectedSegment == _TemplateSegment.coverLetter
+                              ? blue
+                              : inactiveColor,
+                        ),
+                      ),
+                    ),
+                  },
+                ),
+              ),
+            ),
+          )
+        : SizedBox(
+            width: double.infinity,
+            child: Material(
+              elevation: 2,
+              shadowColor: Colors.black.withValues(alpha: 0.14),
+              surfaceTintColor: Colors.transparent,
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: SegmentedButton<_TemplateSegment>(
+                  key: const Key('template-segmented-button'),
+                  expandedInsets: EdgeInsets.zero,
+                  showSelectedIcon: false,
+                  style: SegmentedButton.styleFrom(
+                    selectedForegroundColor: blue,
+                    foregroundColor: inactiveColor,
+                    backgroundColor: Colors.transparent,
+                    selectedBackgroundColor: blue.withValues(alpha: 0.12),
+                    surfaceTintColor: Colors.transparent,
+                    side: BorderSide.none,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(fontSize: 17),
+                  ),
+                  segments: [
+                    ButtonSegment<_TemplateSegment>(
+                      value: _TemplateSegment.resume,
+                      label: Text(l10n.homeSegmentResume),
+                    ),
+                    ButtonSegment<_TemplateSegment>(
+                      value: _TemplateSegment.coverLetter,
+                      label: Text(l10n.homeSegmentCoverLetter),
+                    ),
+                  ],
+                  selected: {_selectedSegment},
+                  onSelectionChanged: (value) {
+                    setState(() => _selectedSegment = value.first);
+                  },
+                ),
+              ),
+            ),
+          );
+
     final scrollBody = SingleChildScrollView(
-      clipBehavior: Clip.none,
       padding: EdgeInsets.fromLTRB(
         8,
-        showTopBanner ? 12 : 20,
+        isTemplatePicker
+            ? (showTopBanner ? 12 : 20)
+            : 4,
         8,
         160 + bottomSafeInset,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isTemplatePicker) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: isCupertino
-                  ? SizedBox(
-                      width: double.infinity,
-                      child: Material(
-                        elevation: 2,
-                        shadowColor: Colors.black.withValues(alpha: 0.14),
-                        surfaceTintColor: Colors.transparent,
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(14),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: CupertinoSlidingSegmentedControl<_TemplateSegment>(
-                            key: const Key('template-segmented-button'),
-                            groupValue: _selectedSegment,
-                            proportionalWidth: true,
-                            backgroundColor: Colors.transparent,
-                            thumbColor: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.14),
-                            onValueChanged: (value) {
-                              if (value == null) {
-                                return;
-                              }
-
-                              setState(() => _selectedSegment = value);
-                            },
-                            children: {
-                              _TemplateSegment.resume: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                child: Text(
-                                  l10n.homeSegmentResume,
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color:
-                                        _selectedSegment ==
-                                            _TemplateSegment.resume
-                                        ? blue
-                                        : inactiveColor,
-                                  ),
-                                ),
-                              ),
-                              _TemplateSegment.coverLetter: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                child: Text(
-                                  l10n.homeSegmentCoverLetter,
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color:
-                                        _selectedSegment ==
-                                            _TemplateSegment.coverLetter
-                                        ? blue
-                                        : inactiveColor,
-                                  ),
-                                ),
-                              ),
-                            },
-                          ),
-                        ),
-                      ),
-                    )
-                  : SizedBox(
-                      width: double.infinity,
-                      child: Material(
-                        elevation: 2,
-                        shadowColor: Colors.black.withValues(alpha: 0.14),
-                        surfaceTintColor: Colors.transparent,
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(14),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: SegmentedButton<_TemplateSegment>(
-                            key: const Key('template-segmented-button'),
-                            expandedInsets: EdgeInsets.zero,
-                            showSelectedIcon: false,
-                            style: SegmentedButton.styleFrom(
-                              selectedForegroundColor: blue,
-                              foregroundColor: inactiveColor,
-                              backgroundColor: Colors.transparent,
-                              selectedBackgroundColor: blue.withValues(
-                                alpha: 0.12,
-                              ),
-                              surfaceTintColor: Colors.transparent,
-                              side: BorderSide.none,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              textStyle: const TextStyle(fontSize: 17),
-                            ),
-                            segments: [
-                              ButtonSegment<_TemplateSegment>(
-                                value: _TemplateSegment.resume,
-                                label: Text(l10n.homeSegmentResume),
-                              ),
-                              ButtonSegment<_TemplateSegment>(
-                                value: _TemplateSegment.coverLetter,
-                                label: Text(l10n.homeSegmentCoverLetter),
-                              ),
-                            ],
-                            selected: {_selectedSegment},
-                            onSelectionChanged: (value) {
-                              setState(() => _selectedSegment = value.first);
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-            ),
-            const SizedBox(height: 20),
-          ],
           // One horizontal bar picks the resume category; the grid below shows
           // just that group.
           if (showResumeTemplatesSection) ...[
@@ -431,25 +424,47 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       ),
     );
 
-    if (!showTopBanner) {
-      return scrollBody;
-    }
-
-    return SafeArea(
-      bottom: false,
+    final pinnedHeader = Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Material(
-            elevation: 0,
-            child: AndroidBannerAdSlot(
-              placement: AndroidBannerPlacement.templates,
+          if (showTopBanner)
+            const Material(
+              elevation: 0,
+              child: AndroidBannerAdSlot(
+                placement: AndroidBannerPlacement.templates,
+              ),
             ),
-          ),
-          Expanded(child: scrollBody),
+          if (!isTemplatePicker)
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                showTopBanner ? 12 : 20,
+                20,
+                16,
+              ),
+              child: segmentControl,
+            ),
         ],
       ),
     );
+
+    if (isTemplatePicker && !showTopBanner) {
+      return scrollBody;
+    }
+
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        pinnedHeader,
+        Expanded(
+          child: ClipRect(child: scrollBody),
+        ),
+      ],
+    );
+
+    return showTopBanner ? SafeArea(bottom: false, child: body) : body;
   }
 }
 

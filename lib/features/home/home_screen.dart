@@ -56,6 +56,7 @@ class HomeScreen extends StatelessWidget {
     final isCupertino = Theme.of(context).platform == TargetPlatform.iOS;
     final blue = Theme.of(context).colorScheme.primary;
     final inactiveColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Consumer2<ResumeLibraryViewModel, CoverLetterLibraryViewModel>(
       builder: (context, resumeLibrary, coverLetterLibrary, _) {
@@ -64,133 +65,122 @@ class HomeScreen extends StatelessWidget {
         !(PlatformMonetization.isIapEnabled &&
             context.watch<PremiumPurchaseService>().isPremium);
 
+        final segmentControl = isCupertino
+            ? SizedBox(
+                width: double.infinity,
+                child: Material(
+                  elevation: 2,
+                  shadowColor: Colors.black.withValues(alpha: 0.14),
+                  surfaceTintColor: Colors.transparent,
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: CupertinoSlidingSegmentedControl<HomeSegment>(
+                      groupValue: currentSegment,
+                      proportionalWidth: true,
+                      backgroundColor: isDark
+                          ? const Color(0xFF3A3A3C)
+                          : const Color(0xFFE8E8ED),
+                      thumbColor: isDark
+                          ? const Color(0xFF636366)
+                          : Colors.white,
+                      onValueChanged: (value) {
+                        if (value != null) {
+                          onSegmentChanged(value);
+                        }
+                      },
+                      children: {
+                        HomeSegment.resumes: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          child: Text(
+                            l10n.homeSegmentResume,
+                            style: TextStyle(
+                              fontSize: 17,
+                              color: currentSegment == HomeSegment.resumes
+                                  ? blue
+                                  : inactiveColor,
+                            ),
+                          ),
+                        ),
+                        HomeSegment.coverLetters: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          child: Text(
+                            l10n.homeSegmentCoverLetter,
+                            style: TextStyle(
+                              fontSize: 17,
+                              color:
+                                  currentSegment == HomeSegment.coverLetters
+                                  ? blue
+                                  : inactiveColor,
+                            ),
+                          ),
+                        ),
+                      },
+                    ),
+                  ),
+                ),
+              )
+            : SizedBox(
+                width: double.infinity,
+                child: Material(
+                  elevation: 2,
+                  shadowColor: Colors.black.withValues(alpha: 0.14),
+                  surfaceTintColor: Colors.transparent,
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: SegmentedButton<HomeSegment>(
+                      expandedInsets: EdgeInsets.zero,
+                      style: SegmentedButton.styleFrom(
+                        selectedForegroundColor: blue,
+                        foregroundColor: inactiveColor,
+                        backgroundColor: Colors.transparent,
+                        selectedBackgroundColor: blue.withValues(alpha: 0.12),
+                        surfaceTintColor: Colors.transparent,
+                        side: BorderSide.none,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        textStyle: const TextStyle(fontSize: 17),
+                      ),
+                      selected: {currentSegment},
+                      onSelectionChanged: (values) {
+                        onSegmentChanged(values.first);
+                      },
+                      segments: [
+                        ButtonSegment<HomeSegment>(
+                          value: HomeSegment.resumes,
+                          label: Text(l10n.homeSegmentResume),
+                        ),
+                        ButtonSegment<HomeSegment>(
+                          value: HomeSegment.coverLetters,
+                          label: Text(l10n.homeSegmentCoverLetter),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+
         final scrollBody = CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20, showHomeBanner ? 12 : 20, 20, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    isCupertino
-                        ? SizedBox(
-                            width: double.infinity,
-                            child: Material(
-                              elevation: 2,
-                              shadowColor: Colors.black.withValues(alpha: 0.14),
-                              surfaceTintColor: Colors.transparent,
-                              color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(14),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child:
-                                    CupertinoSlidingSegmentedControl<
-                                      HomeSegment
-                                    >(
-                                      groupValue: currentSegment,
-                                      proportionalWidth: true,
-                                      backgroundColor: Colors.transparent,
-                                      thumbColor: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withValues(alpha: 0.14),
-                                      onValueChanged: (value) {
-                                        if (value != null) {
-                                          onSegmentChanged(value);
-                                        }
-                                      },
-                                      children: {
-                                        HomeSegment.resumes: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 10,
-                                          ),
-                                          child: Text(
-                                            l10n.homeSegmentResume,
-                                            style: TextStyle(
-                                              fontSize: 17,
-                                              color:
-                                                  currentSegment ==
-                                                      HomeSegment.resumes
-                                                  ? blue
-                                                  : inactiveColor,
-                                            ),
-                                          ),
-                                        ),
-                                        HomeSegment.coverLetters: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 10,
-                                          ),
-                                          child: Text(
-                                            l10n.homeSegmentCoverLetter,
-                                            style: TextStyle(
-                                              fontSize: 17,
-                                              color:
-                                                  currentSegment ==
-                                                      HomeSegment
-                                                          .coverLetters
-                                                  ? blue
-                                                  : inactiveColor,
-                                            ),
-                                          ),
-                                        ),
-                                      },
-                                    ),
-                              ),
-                            ),
-                          )
-                        : SizedBox(
-                            width: double.infinity,
-                            child: Material(
-                              elevation: 2,
-                              shadowColor: Colors.black.withValues(alpha: 0.14),
-                              surfaceTintColor: Colors.transparent,
-                              color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(14),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: SegmentedButton<HomeSegment>(
-                                  expandedInsets: EdgeInsets.zero,
-                                  style: SegmentedButton.styleFrom(
-                                    selectedForegroundColor: blue,
-                                    foregroundColor: inactiveColor,
-                                    backgroundColor: Colors.transparent,
-                                    selectedBackgroundColor: blue.withValues(
-                                      alpha: 0.12,
-                                    ),
-                                    surfaceTintColor: Colors.transparent,
-                                    side: BorderSide.none,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    textStyle: const TextStyle(fontSize: 17),
-                                  ),
-                                  selected: {currentSegment},
-                                  onSelectionChanged: (values) {
-                                    onSegmentChanged(values.first);
-                                  },
-                                  segments: [
-                                    ButtonSegment<HomeSegment>(
-                                      value: HomeSegment.resumes,
-                                      label: Text(l10n.homeSegmentResume),
-                                    ),
-                                    ButtonSegment<HomeSegment>(
-                                      value: HomeSegment.coverLetters,
-                                      label: Text(l10n.homeSegmentCoverLetter),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                    const SizedBox(height: 20),
-                    if (currentSegment == HomeSegment.resumes)
-                      SizedBox(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: currentSegment == HomeSegment.resumes
+                    ? SizedBox(
                         width: double.infinity,
                         child: _ResumeSection(
                           library: resumeLibrary,
@@ -199,8 +189,7 @@ class HomeScreen extends StatelessWidget {
                           onPreviewResume: onPreviewResume,
                         ),
                       )
-                    else
-                      SizedBox(
+                    : SizedBox(
                         width: double.infinity,
                         child: _CoverLetterSection(
                           library: coverLetterLibrary,
@@ -209,8 +198,6 @@ class HomeScreen extends StatelessWidget {
                           onEditCoverLetter: onEditCoverLetter,
                         ),
                       ),
-                  ],
-                ),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -229,7 +216,19 @@ class HomeScreen extends StatelessWidget {
                   placement: AndroidBannerPlacement.home,
                 ),
               ),
-            Expanded(child: scrollBody),
+            Material(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  showHomeBanner ? 12 : 20,
+                  20,
+                  16,
+                ),
+                child: segmentControl,
+              ),
+            ),
+            Expanded(child: ClipRect(child: scrollBody)),
             _HomeCreateActions(
               showUpload: currentSegment == HomeSegment.resumes,
               onCreateNew: currentSegment == HomeSegment.resumes

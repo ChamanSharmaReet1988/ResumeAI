@@ -9,6 +9,7 @@ import 'package:resume_app/core/services/icloud_resume_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/home/home_screen.dart';
 import 'package:resume_app/features/shared/view_models.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
 
 class _FakeHomeRepository implements ResumeRepository {
   _FakeHomeRepository({required this.resumes, this.coverLetters = const []});
@@ -95,6 +96,8 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: HomeScreen(
               currentSegment: HomeSegment.resumes,
@@ -160,6 +163,8 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: HomeScreen(
               currentSegment: HomeSegment.resumes,
@@ -230,6 +235,8 @@ void main() {
             ),
           ],
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: HomeScreen(
                 currentSegment: HomeSegment.resumes,
@@ -309,6 +316,8 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: HomeScreen(
               currentSegment: HomeSegment.coverLetters,
@@ -387,6 +396,8 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: HomeScreen(
               currentSegment: HomeSegment.resumes,
