@@ -307,7 +307,10 @@ extension ResumeCorporateStyleX on ResumeData {
     return corporateColorPreset.headerColor;
   }
 
-  Color get timelineProfileSidebarColor => const Color(0xFFE9ECF1);
+  /// Soft tint of the header band, so the rail follows the chosen color.
+  Color get timelineProfileSidebarColor =>
+      Color.lerp(Colors.white, timelineProfileBandColor, 0.14) ??
+      const Color(0xFFE9ECF1);
 
   Color get timelineProfileTitleColor => const Color(0xFF243044);
 

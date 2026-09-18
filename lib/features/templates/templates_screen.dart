@@ -2823,6 +2823,21 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
                         ),
                       ),
                     ),
+                  // The tile can be taller than the scaled page, so continue
+                  // the sidebar band to the bottom of the tile.
+                  if (resume.template.userFacingTemplate ==
+                      ResumeTemplate.timelineProfile)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: ColoredBox(
+                        color: resume.timelineProfileSidebarColor,
+                        child: SizedBox(
+                          width: targetWidth * (200 / _pageWidth),
+                        ),
+                      ),
+                    ),
                   if (isHeaderSidebar)
                     Positioned(
                       right: 0,
