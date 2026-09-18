@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sfpdf;
 import 'package:xml/xml.dart';
 
+import '../models/resume_models.dart';
+
 class ImportedResumeFile {
   const ImportedResumeFile({
     required this.fileName,
@@ -64,6 +66,10 @@ class ResumeImportException implements Exception {
 
 class ResumeImportService {
   const ResumeImportService();
+
+  /// PDF-only cleanup of leftover list-marker glyphs. Exposed for tests.
+  @visibleForTesting
+  String sanitizePdfExtractedText(String text) => _sanitizePdfExtractedText(text);
 
   Future<ImportedResumeFile?> pickResumeFile() async {
     final result = await FilePicker.platform.pickFiles(
@@ -145,10 +151,7 @@ class ResumeImportService {
       final seen = <String>{};
 
       void addCandidate(String value) {
-        final normalized = value
-            .replaceAll('\r\n', '\n')
-            .replaceAll('\r', '\n')
-            .trim();
+        final normalized = _sanitizePdfExtractedText(value).trim();
         if (normalized.isEmpty) {
           return;
         }
@@ -246,24 +249,39 @@ class ResumeImportService {
         .where((word) => word.text.trim().isNotEmpty)
         .toList();
     if (words.length < 2) {
-      return line.text.trim();
+      return _sanitizePdfExtractedLine(line.text.trim());
     }
     // Letter-spaced headings ("S K I L L S") arrive as one run per letter, so
     // a fixed gap would split them into letters. Only on those lines, compare
     // each gap with the line's own typical gap.
-    final singleCharRuns = words
+    final kept = [...words];
+    var droppedLeadingDingbat = false;
+    while (kept.isNotEmpty && _isPdfDingbatToken(kept.first.text.trim())) {
+      kept.removeAt(0);
+      droppedLeadingDingbat = true;
+    }
+    while (kept.isNotEmpty && _isPdfDingbatToken(kept.last.text.trim())) {
+      kept.removeLast();
+    }
+    if (kept.isEmpty) {
+      return '';
+    }
+
+    final singleCharRuns = kept
         .where((word) => word.text.trim().length == 1)
         .length;
-    final letterSpaced = singleCharRuns >= words.length * 0.6;
+    final letterSpaced = singleCharRuns >= kept.length * 0.6;
     final gaps = <double>[
-      for (var i = 1; i < words.length; i++)
-        words[i].bounds.left - words[i - 1].bounds.right,
+      for (var i = 1; i < kept.length; i++)
+        kept[i].bounds.left - kept[i - 1].bounds.right,
     ]..sort();
-    final medianGap = letterSpaced ? gaps[gaps.length ~/ 2] : 0.0;
-    final buffer = StringBuffer(words.first.text.trim());
-    for (var i = 1; i < words.length; i++) {
-      final previous = words[i - 1];
-      final word = words[i];
+    final medianGap = letterSpaced && gaps.isNotEmpty
+        ? gaps[gaps.length ~/ 2]
+        : 0.0;
+    final buffer = StringBuffer(kept.first.text.trim());
+    for (var i = 1; i < kept.length; i++) {
+      final previous = kept[i - 1];
+      final word = kept[i];
       final size = word.fontSize > 0 ? word.fontSize : word.bounds.height;
       final gap = word.bounds.left - previous.bounds.right;
       final spaceGap = math.max(size * 0.15, medianGap * 1.6);
@@ -278,7 +296,11 @@ class ResumeImportService {
         ..write(separator)
         ..write(word.text.trim());
     }
-    return buffer.toString();
+    var text = buffer.toString();
+    if (droppedLeadingDingbat && !RegExp(r'^[\-\u2022\*]').hasMatch(text)) {
+      text = '- $text';
+    }
+    return _sanitizePdfExtractedLine(text);
   }
 
   /// Reads each page as separate columns when a vertical band of the page has
@@ -441,6 +463,74 @@ class ResumeImportService {
 
     return a.bounds.left.compareTo(b.bounds.left);
   }
+
+  /// PDF list markers often extract as a leftover glyph: Word PUA bullets,
+  /// ZapfDingbats as "x", or a CJK lookalike such as "龱". Strip those only
+  /// here so DOCX import is unchanged.
+  String _sanitizePdfExtractedText(String text) {
+    return text
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n')
+        .split('\n')
+        .map(_sanitizePdfExtractedLine)
+        .where((line) => line.isNotEmpty)
+        .join('\n');
+  }
+
+  String _sanitizePdfExtractedLine(String line) {
+    var value = stripPdfListMarkerLeftovers(line);
+    if (value.isEmpty || _isPdfDingbatToken(value)) {
+      return '';
+    }
+
+    final hadStandardMarker = RegExp(r'^[\-\u2022\*]\s*').hasMatch(value);
+    final hadDingbatMarker = _pdfLeadingDingbat.hasMatch(value);
+    value = value.replaceFirst(RegExp(r'^[\-\u2022\*]\s*'), '');
+    value = value.replaceFirst(_pdfLeadingDingbat, '');
+    value = value.replaceFirst(_pdfTrailingDingbat, '');
+    value = stripPdfListMarkerLeftovers(value);
+    if (value.isEmpty || _isPdfDingbatToken(value)) {
+      return '';
+    }
+    if (hadStandardMarker || hadDingbatMarker) {
+      return '- $value';
+    }
+    return value;
+  }
+
+  bool _isPdfDingbatToken(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) {
+      return false;
+    }
+    final units = trimmed.runes.toList();
+    if (units.length > 2) {
+      return false;
+    }
+    if (_pdfSymbolDingbatToken.hasMatch(trimmed)) {
+      return true;
+    }
+    // Lone CJK ideograph as a PDF list-marker leftover (screenshot: 龱).
+    return units.length == 1 && units.first >= 0x4E00 && units.first <= 0x9FFF;
+  }
+
+  static final _pdfSymbolDingbatToken = RegExp(
+    '^[${_pdfDingbatChars}xX]+\$',
+  );
+
+  static final _pdfLeadingDingbat = RegExp(
+    '^(?:[$_pdfDingbatChars]|[xX](?=\\s))+\\s*',
+  );
+
+  static final _pdfTrailingDingbat = RegExp(
+    '\\s*[$_pdfDingbatChars]+\\s*\$',
+  );
+
+  // Geometric bullets, ballot/cross marks, and Word PUA dingbats. Built as a
+  // Dart string so \\u escapes become real code points before the regex runs.
+  static const String _pdfDingbatChars =
+      '\u00B7\u2022\u2023\u2043\u2219\u2327\u2573\u25A0-\u25FF'
+      '\u2610-\u2613\u2713-\u2718\u00D7\u2A2F\uFFFD\uF000-\uF8FF';
 
   String _extractDocxText(Uint8List bytes) {
     final archive = ZipDecoder().decodeBytes(bytes);

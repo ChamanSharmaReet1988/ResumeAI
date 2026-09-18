@@ -7174,12 +7174,13 @@ String _workSummaryText(WorkExperience item) {
 
 List<String> _workBulletLines(WorkExperience item) {
   final nonEmptyBullets = item.bullets
-      .where((b) => b.trim().isNotEmpty)
+      .map(stripPdfListMarkerLeftovers)
+      .where((b) => b.isNotEmpty)
       .toList();
   if (nonEmptyBullets.isNotEmpty) {
     return nonEmptyBullets;
   }
-  final legacyDescription = item.description.trim();
+  final legacyDescription = stripPdfListMarkerLeftovers(item.description);
   if (legacyDescription.isNotEmpty) {
     return [legacyDescription];
   }

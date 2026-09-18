@@ -980,6 +980,19 @@ class CoverLetterData {
   }
 }
 
+/// PDF extractors often emit this CJK lookalike instead of a list marker.
+const String kPdfListMarkerLeftover = '\u9FB1';
+
+String stripPdfListMarkerLeftovers(String text) {
+  if (!text.contains(kPdfListMarkerLeftover)) {
+    return text.trim();
+  }
+  return text
+      .replaceAll(kPdfListMarkerLeftover, ' ')
+      .replaceAll(RegExp(r'[ \t]+'), ' ')
+      .trim();
+}
+
 class WorkExperience {
   const WorkExperience({
     required this.role,
@@ -1002,10 +1015,12 @@ class WorkExperience {
 
   factory WorkExperience.fromJson(Map<String, dynamic> json) {
     final parsedBullets = (json['bullets'] as List<dynamic>? ?? [])
-        .map((item) => item.toString())
-        .where((item) => item.trim().isNotEmpty)
+        .map((item) => stripPdfListMarkerLeftovers(item.toString()))
+        .where((item) => item.isNotEmpty)
         .toList();
-    final description = json['description'] as String? ?? '';
+    final description = stripPdfListMarkerLeftovers(
+      json['description'] as String? ?? '',
+    );
     final layoutMode = WorkExperienceLayoutMode.bullets;
     return WorkExperience(
       role: json['role'] as String? ?? '',
@@ -1215,7 +1230,12 @@ class ProjectItem {
       subtitle: json['subtitle'] as String? ?? '',
       overview: json['overview'] as String? ?? '',
       impact: json['impact'] as String? ?? '',
-      bullets: bulletsJson?.map((item) => item.toString()).toList() ?? const [],
+      bullets:
+          bulletsJson
+              ?.map((item) => stripPdfListMarkerLeftovers(item.toString()))
+              .where((item) => item.isNotEmpty)
+              .toList() ??
+          const [],
     );
   }
 
@@ -1279,7 +1299,11 @@ class CustomSectionItem {
   factory CustomSectionItem.fromJson(Map<String, dynamic> json) {
     final bulletsJson = json['bullets'] as List<dynamic>?;
     final parsedBullets =
-        bulletsJson?.map((e) => e.toString()).toList() ?? const <String>[];
+        bulletsJson
+            ?.map((e) => stripPdfListMarkerLeftovers(e.toString()))
+            .where((e) => e.isNotEmpty)
+            .toList() ??
+        const <String>[];
     final projectsJson = json['projectEntries'] as List<dynamic>?;
     final parsedProjects =
         projectsJson

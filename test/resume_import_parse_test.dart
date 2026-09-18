@@ -156,4 +156,43 @@ void main() {
       }
     });
   });
+
+  test('PDF sanitizer strips leftover 龱 list markers', () {
+    const service = ResumeImportService();
+    expect(
+      service.sanitizePdfExtractedText('• \u9FB1 Lead a team of 8 iOS developers.'),
+      '- Lead a team of 8 iOS developers.',
+    );
+    expect(
+      service.sanitizePdfExtractedText('\u9FB1\nManage day-to-day engineering operations.'),
+      'Manage day-to-day engineering operations.',
+    );
+    expect(
+      service.sanitizePdfExtractedText('• \u9FB1Led and motivated a technical team.'),
+      '- Led and motivated a technical team.',
+    );
+    expect(
+      service.sanitizePdfExtractedText('Xavier Young\nMac OS X'),
+      'Xavier Young\nMac OS X',
+    );
+  });
+
+  test('saved work bullets drop leftover 龱 on load', () {
+    final item = WorkExperience.fromJson({
+      'role': 'iOS Tech Lead',
+      'company': 'Anviam',
+      'startDate': 'Sep 2016',
+      'endDate': 'Nov 2022',
+      'description': '',
+      'bullets': [
+        '\u9FB1 Led and motivated a technical team.',
+        '\u9FB1',
+        'Applied strong interpersonal skills.',
+      ],
+    });
+    expect(item.bullets, [
+      'Led and motivated a technical team.',
+      'Applied strong interpersonal skills.',
+    ]);
+  });
 }
