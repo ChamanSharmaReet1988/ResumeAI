@@ -560,6 +560,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Navy photo header with a contact sidebar and timeline sections.';
 
   @override
+  String get templateSoftHeader => 'Soft Header';
+
+  @override
+  String get templateSoftHeaderCaption =>
+      'Tinted header band with a centred name and a split two-column body.';
+
+  @override
   String get templateStructuredAts => 'Structured ATS';
 
   @override

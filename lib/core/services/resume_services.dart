@@ -35,6 +35,7 @@ part 'resume_pdf/resume_pdf_ats_pages.dart';
 part 'resume_pdf/resume_pdf_slate_sidebar_page.dart';
 part 'resume_pdf/resume_pdf_ats_clean_sans_page.dart';
 part 'resume_pdf/resume_pdf_timeline_profile_page.dart';
+part 'resume_pdf/resume_pdf_soft_header_page.dart';
 
 /// Emits PDF body sections (after Summary/header) in the user's saved builder
 /// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
@@ -7637,6 +7638,16 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.softHeader) {
+      final document = pw.Document();
+      _addSoftHeaderTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.timelineProfile) {
       final document = pw.Document();
       _addTimelineProfileTemplatePage(
@@ -7726,6 +7737,8 @@ class ResumePdfService {
       case ResumeTemplate.atsCleanSans:
         break;
       case ResumeTemplate.timelineProfile:
+        break;
+      case ResumeTemplate.softHeader:
         break;
     }
 
@@ -7921,6 +7934,19 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.softHeader) {
+      final document = pw.Document();
+      _addSoftHeaderTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.timelineProfile) {
       final profileImagePath = await ProfileImageStorage.resolvePath(
         resume.profileImagePath,
@@ -8034,6 +8060,8 @@ class ResumePdfService {
       case ResumeTemplate.atsCleanSans:
         break;
       case ResumeTemplate.timelineProfile:
+        break;
+      case ResumeTemplate.softHeader:
         break;
     }
 

@@ -96,6 +96,7 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.headerSidebar => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.slateSidebar => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.timelineProfile => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.softHeader => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.atsStructured ||
     ResumeTemplate.atsSerifRules ||
     ResumeTemplate.atsModernFlow ||
@@ -313,6 +314,26 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get timelineProfileMutedColor => const Color(0xFF5A6474);
 
   Color get timelineProfileRuleColor => const Color(0xFFC3CBD6);
+
+  static const Color softHeaderNativeAccentColor = Color(0xFF3F6F9E);
+
+  /// Header band: a soft tint of the chosen accent, like the reference art.
+  Color get softHeaderBandColor =>
+      Color.lerp(Colors.white, softHeaderAccentColor, 0.22) ??
+      const Color(0xFFDCEBFA);
+
+  Color get softHeaderAccentColor {
+    if (corporateColorPresetIndex >= kCorporateColorPresets.length) {
+      return softHeaderNativeAccentColor;
+    }
+    return corporateColorPreset.headerColor;
+  }
+
+  Color get softHeaderTitleColor => const Color(0xFF1B3A5B);
+
+  Color get softHeaderMutedColor => const Color(0xFF4F5A68);
+
+  Color get softHeaderRuleColor => const Color(0xFFB9CEE2);
 
   Color get detailsSidebarAccentColor => corporateColorPreset.headerColor;
 

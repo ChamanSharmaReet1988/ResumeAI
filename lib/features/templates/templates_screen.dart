@@ -689,6 +689,14 @@ const _professionalResumeCards = <_TemplateTileData>[
     caption: 'Navy photo header with a contact sidebar and timeline sections.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'soft-header',
+    resumeTemplate: ResumeTemplate.softHeader,
+    previewKind: _TemplatePreviewKind.softHeaderResume,
+    headline: 'Soft Header',
+    caption: 'Tinted header band with a centred name and a split two-column body.',
+    isPremium: false,
+  ),
 ];
 
 const _resumeTemplateCards = _professionalResumeCards;
@@ -825,6 +833,7 @@ class _TemplateTileData {
       'header-sidebar' => l10n.templateHeaderSidebar,
       'slate-sidebar' => l10n.templateSlateSidebar,
       'timeline-profile' => l10n.templateTimelineProfile,
+      'soft-header' => l10n.templateSoftHeader,
       'ats-structured' => l10n.templateStructuredAts,
       'ats-latex-classic' => l10n.templateLatexClassicAts,
       'ats-modern-flow' => l10n.templateModernFlowAts,
@@ -850,6 +859,7 @@ class _TemplateTileData {
       'header-sidebar' => l10n.templateHeaderSidebarCaption,
       'slate-sidebar' => l10n.templateSlateSidebarCaption,
       'timeline-profile' => l10n.templateTimelineProfileCaption,
+      'soft-header' => l10n.templateSoftHeaderCaption,
       'ats-structured' => l10n.templateStructuredAtsCaption,
       'ats-latex-classic' => l10n.templateLatexClassicAtsCaption,
       'ats-modern-flow' => l10n.templateModernFlowAtsCaption,
@@ -876,6 +886,7 @@ enum _TemplatePreviewKind {
   headerSidebarResume,
   slateSidebarResume,
   timelineProfileResume,
+  softHeaderResume,
   atsStructuredResume,
   atsSerifRulesResume,
   atsModernFlowResume,
@@ -985,6 +996,12 @@ class _TemplatePreviewArt extends StatelessWidget {
       _TemplatePreviewKind.timelineProfileResume => _ResumeTemplatePreviewArt(
         resume: _applyTemplatePreviewPalette(
           _timelineProfileTemplateResume,
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.softHeaderResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _softHeaderTemplateResume,
           paletteSeed,
         ),
       ),
@@ -1152,6 +1169,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.headerSidebar => _headerSidebarTemplateResume,
       ResumeTemplate.slateSidebar => _slateSidebarTemplateResume,
       ResumeTemplate.timelineProfile => _timelineProfileTemplateResume,
+      ResumeTemplate.softHeader => _softHeaderTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
       ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,
@@ -1301,7 +1319,8 @@ ResumeData _applyTemplatePreviewPalette(
   // preview color is chosen on the preview screen.
   if (sample.template == ResumeTemplate.headerSidebar ||
       sample.template == ResumeTemplate.slateSidebar ||
-      sample.template == ResumeTemplate.timelineProfile) {
+      sample.template == ResumeTemplate.timelineProfile ||
+      sample.template == ResumeTemplate.softHeader) {
     return sample.copyWith(
       corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
         sample.template,
@@ -2569,6 +2588,108 @@ final ResumeData _timelineProfileTemplateResume = ResumeData(
   ],
 );
 
+final ResumeData _softHeaderTemplateResume = ResumeData(
+  id: 'template-soft-header',
+  title: 'Soft Header Template',
+  fullName: 'Richard Sanchez',
+  jobTitle: 'Marketing Manager',
+  email: 'hello@reallygreatsite.com',
+  phone: '+1 (415) 555-0142',
+  location: '123 Anywhere St., Any City',
+  website: 'www.reallygreatsite.com',
+  summary:
+      'Experienced and results-driven marketing manager with a proven record of developing and executing successful marketing strategies. Seeking a challenging role to contribute skills in strategic planning, team leadership and creative problem-solving.',
+  template: ResumeTemplate.softHeader,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Marketing Manager & Specialist',
+      company: 'Borcelle Studio',
+      startDate: '2022',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Led marketing strategies that lifted brand visibility by 20% and sales by 15% in the first year.',
+        'Launched cross-channel campaigns across digital, social and traditional advertising.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Manager & Specialist',
+      company: 'Fauget Studio',
+      startDate: '2019',
+      endDate: '2022',
+      description: '',
+      bullets: [
+        'Conducted market research to identify emerging trends and consumer preferences.',
+        'Oversaw content creation across platforms with internal teams and agencies.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Specialist',
+      company: 'Studio Shodwe',
+      startDate: '2017',
+      endDate: '2019',
+      description: '',
+      bullets: [
+        'Ran targeted campaigns that increased lead generation by 25%.',
+        'Implemented SEO work that improved website traffic by 30%.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Borcelle University',
+      degree: 'Master of Business Management',
+      startDate: '2015',
+      endDate: '2017',
+      score: '',
+    ),
+    EducationItem(
+      institution: 'Borcelle University',
+      degree: 'Bachelor of Business Management',
+      startDate: '2011',
+      endDate: '2015',
+      score: 'GPA: 3.8 / 4.0',
+    ),
+  ],
+  skills: const [
+    'Project Management',
+    'Public Relations',
+    'Teamwork',
+    'Time Management',
+    'Leadership',
+    'Effective Communication',
+    'Critical Thinking',
+  ],
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(
+      title: 'Languages',
+      content:
+          'English: Fluent\nFrench: Fluent\nGerman: Basics\nSpanish: Intermediate',
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.softHeader,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    'custom:0',
+  ],
+);
+
 enum _ResumeTemplatePreviewFit { tile, detail }
 
 class _ResumeTemplatePreviewArt extends StatelessWidget {
@@ -2609,6 +2730,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.headerSidebar => true,
           ResumeTemplate.slateSidebar => true,
           ResumeTemplate.timelineProfile => true,
+          ResumeTemplate.softHeader => true,
           _ => false,
         };
         final bottomInset = fullHeightTemplate

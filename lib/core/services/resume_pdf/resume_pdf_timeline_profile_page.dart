@@ -236,13 +236,15 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
         bool shrink = false,
       }) => pw.Padding(
         padding: const pw.EdgeInsets.only(bottom: 5),
+        // Centred: a shrunk-to-fit link is shorter than a plain line, so a
+        // fixed top margin would leave the dot sitting above its text.
         child: pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
             pw.Container(
               width: 4,
               height: 4,
-              margin: const pw.EdgeInsets.only(top: 4, right: 7),
+              margin: const pw.EdgeInsets.only(right: 7),
               decoration: pw.BoxDecoration(
                 color: bandColor,
                 shape: pw.BoxShape.circle,

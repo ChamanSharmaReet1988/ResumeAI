@@ -263,6 +263,8 @@
   "templateSlateSidebarCaption": "Sidebar gelap dengan foto, kontak, dan keahlian, serta bagian bertanggal.",
   "templateTimelineProfile": "Profil Linimasa",
   "templateTimelineProfileCaption": "Header biru dengan foto, sidebar kontak, dan bagian linimasa.",
+  "templateSoftHeader": "Header Lembut",
+  "templateSoftHeaderCaption": "Bidang header berwarna dengan nama di tengah dan isi dua kolom.",
   "templateStructuredAts": "ATS terstruktur",
   "templateStructuredAtsCaption": "Pita bagian abu-abu dan header terpusat untuk parser.",
   "templateLatexClassicAts": "ATS klasik LaTeX",

@@ -218,6 +218,10 @@ class ResumePreviewCanvas extends StatelessWidget {
         resume: resume,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),
+      ResumeTemplate.softHeader => _SoftHeaderPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
       ResumeTemplate.atsStructured => _AtsStructuredPreview(
         resume: resume,
         showAllContent: showAllContent,
@@ -8074,12 +8078,12 @@ class _TimelineProfilePreview extends StatelessWidget {
     Widget sidebarBullet(String text) => Padding(
       padding: const EdgeInsets.only(bottom: 5),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: 4,
             height: 4,
-            margin: const EdgeInsets.only(top: 4, right: 7),
+            margin: const EdgeInsets.only(right: 7),
             decoration: BoxDecoration(color: band, shape: BoxShape.circle),
           ),
           Expanded(
@@ -8352,6 +8356,403 @@ class _TimelineProfilePreview extends StatelessWidget {
                         child: SingleChildScrollView(
                           physics: const NeverScrollableScrollPhysics(),
                           child: main,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Soft Header live preview, laid out on an A4 point canvas with the same
+/// metrics as the PDF page.
+class _SoftHeaderPreview extends StatelessWidget {
+  const _SoftHeaderPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
+
+  final ResumeData resume;
+  final bool followBuilderSectionOrder;
+
+  static const double _pageWidth = 595.28;
+  static const double _pageHeight = 841.89;
+  static const double _bandHeight = 150;
+  static const double _side = 40;
+  static const double _leftWidth = 196;
+  static const double _dividerX = _side + _leftWidth + 18;
+  static const double _mainLeft = _dividerX + 24;
+
+  static final RegExp _leftSectionTitle = RegExp(
+    r'^(languages?|references?|referees?|awards?|certifications?|'
+    r'certificates?|interests?|hobbies)$',
+    caseSensitive: false,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final band = resume.softHeaderBandColor;
+    final accent = resume.softHeaderAccentColor;
+    final titleColor = resume.softHeaderTitleColor;
+    final mutedColor = resume.softHeaderMutedColor;
+    final ruleColor = resume.softHeaderRuleColor;
+    final family = resume.usesOutfitResumeFont
+        ? ResumeTextFont.outfit.flutterFontFamily
+        : ResumeTextFont.garamond.flutterFontFamily;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final detailPt = bodyPt - 1.5;
+
+    TextStyle style(
+      FontWeight weight,
+      double size,
+      Color color, {
+      double? letterSpacing,
+    }) => TextStyle(
+      fontFamily: family,
+      fontWeight: weight,
+      fontSize: size,
+      color: color,
+      letterSpacing: letterSpacing,
+      height: ResumeTypography.bodyTextLineHeight,
+    );
+
+    final entryTitle = style(FontWeight.w600, bodyPt, titleColor);
+    final meta = style(FontWeight.w400, detailPt, mutedColor);
+    final bodyText = style(FontWeight.w400, detailPt, mutedColor);
+
+    List<String> nonEmpty(Iterable<String> lines) => lines
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+
+    Widget sectionTitle(String title) => Padding(
+      padding: const EdgeInsets.only(top: 18, bottom: 10),
+      child: Stack(
+        alignment: Alignment.centerLeft,
+        children: [
+          Transform.translate(
+            offset: const Offset(-4, 0),
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(color: band, shape: BoxShape.circle),
+            ),
+          ),
+          Text(
+            title.toUpperCase(),
+            style: style(FontWeight.w700, 15, titleColor, letterSpacing: 2.2),
+          ),
+        ],
+      ),
+    );
+
+    Widget bullet(String text, {TextStyle? textStyle, bool justify = false}) =>
+        Padding(
+          padding: const EdgeInsets.only(bottom: 3),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 3,
+                height: 3,
+                margin: const EdgeInsets.only(top: 5, right: 8),
+                decoration: BoxDecoration(
+                  color: mutedColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  text,
+                  style: textStyle ?? bodyText,
+                  textAlign: justify ? TextAlign.justify : TextAlign.left,
+                ),
+              ),
+            ],
+          ),
+        );
+
+    final contacts = nonEmpty([
+      resume.phone,
+      resume.email,
+      resume.location,
+      resume.website,
+      resume.linkedinLink,
+      resume.githubLink,
+    ]);
+    final education = resume.visibleEducation;
+    final leftSections = resume.visibleCustomSections
+        .where((item) => _leftSectionTitle.hasMatch(item.title.trim()))
+        .toList();
+
+    final leftColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (contacts.isNotEmpty) ...[
+          sectionTitle('Contact'),
+          for (final value in contacts) bullet(value, textStyle: meta),
+        ],
+        if (education.isNotEmpty) ...[
+          sectionTitle('Education'),
+          for (final item in education) ...[
+            if (educationDateRangeLabel(
+              item.startDate,
+              item.endDate,
+            ).isNotEmpty)
+              Text(
+                educationDateRangeLabel(item.startDate, item.endDate),
+                style: style(FontWeight.w600, detailPt, titleColor),
+              ),
+            Text(
+              item.institution.trim().toUpperCase(),
+              style: style(FontWeight.w700, detailPt, titleColor),
+            ),
+            const SizedBox(height: 3),
+            if (item.degree.trim().isNotEmpty) bullet(item.degree.trim()),
+            if (item.score.trim().isNotEmpty) bullet(item.score.trim()),
+            const SizedBox(height: 9),
+          ],
+        ],
+        if (_pdfAlignedSkills(resume).isNotEmpty) ...[
+          sectionTitle('Skills'),
+          for (final skill in _pdfAlignedSkills(resume).take(12)) bullet(skill),
+        ],
+        for (final section in leftSections) ...[
+          sectionTitle(section.title.trim()),
+          for (final line
+              in nonEmpty(
+                section.bullets.any((b) => b.trim().isNotEmpty)
+                    ? section.bullets
+                    : section.content.split('\n'),
+              ))
+            bullet(line),
+        ],
+      ],
+    );
+
+    final mainColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (resume.summary.trim().isNotEmpty) ...[
+          sectionTitle('Profile Summary'),
+          Text(
+            resume.summary.trim(),
+            style: bodyText,
+            textAlign: TextAlign.justify,
+          ),
+        ],
+        ..._mapPreviewBodySections(
+          previewBodySectionOrder(
+            resume,
+            followOrder: followBuilderSectionOrder,
+            exclude: {
+              ResumeBuilderSectionIds.skills,
+              ResumeBuilderSectionIds.education,
+            },
+          ),
+          (id) {
+            final customIndex = ResumeBuilderSectionIds.customIndex(id);
+            if (customIndex != null) {
+              if (customIndex < 0 ||
+                  customIndex >= resume.customSections.length) {
+                return null;
+              }
+              final item = resume.customSections[customIndex];
+              if (item.isBlank ||
+                  _leftSectionTitle.hasMatch(item.title.trim())) {
+                return null;
+              }
+              final lines = nonEmpty(
+                item.bullets.any((b) => b.trim().isNotEmpty)
+                    ? item.bullets
+                    : [item.content],
+              );
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  sectionTitle(item.title.trim().ifBlank('Custom section')),
+                  for (final line in lines) Text(line, style: bodyText),
+                ],
+              );
+            }
+            switch (id) {
+              case ResumeBuilderSectionIds.work:
+                final items = resume.visibleWorkExperiences;
+                if (items.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Work Experience'),
+                    for (final item in items) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.company.trim().ifBlank('Company'),
+                              style: entryTitle,
+                            ),
+                          ),
+                          Text(
+                            educationDateRangeLabel(
+                              item.startDate,
+                              item.endDate,
+                            ).toUpperCase(),
+                            style: meta,
+                          ),
+                        ],
+                      ),
+                      if (item.role.trim().isNotEmpty)
+                        Text(item.role.trim(), style: bodyText),
+                      const SizedBox(height: 5),
+                      for (final line
+                          in nonEmpty(item.bullets).isNotEmpty
+                              ? nonEmpty(item.bullets)
+                              : nonEmpty([item.description]))
+                        bullet(line, justify: true),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                );
+              case ResumeBuilderSectionIds.projects:
+                final items = resume.visibleProjects;
+                if (items.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Projects'),
+                    for (final item in items) ...[
+                      Text(
+                        item.title.trim().ifBlank('Project'),
+                        style: entryTitle,
+                      ),
+                      if (item.subtitle.trim().isNotEmpty)
+                        Text(item.subtitle.trim(), style: bodyText),
+                      const SizedBox(height: 5),
+                      for (final line in nonEmpty(item.bullets))
+                        bullet(line, justify: true),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                );
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+
+    Widget headerRule({bool mirrored = false}) {
+      final ring = Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: accent, width: 1),
+        ),
+      );
+      final line = Expanded(child: Container(height: 0.8, color: accent));
+      return Row(children: mirrored ? [ring, line] : [line, ring]);
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : width / ResumePreviewCard._a4AspectRatio;
+        return SizedBox(
+          width: width,
+          height: height,
+          child: ClipRect(
+            child: FittedBox(
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: _pageWidth,
+                height: _pageHeight,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      height: _bandHeight,
+                      child: ColoredBox(
+                        color: band,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(width: _side),
+                            Expanded(child: headerRule()),
+                            const SizedBox(width: 18),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _pdfAlignedDisplayName(resume).toUpperCase(),
+                                  style: style(
+                                    FontWeight.w700,
+                                    26,
+                                    titleColor,
+                                    letterSpacing: 1.4,
+                                  ),
+                                ),
+                                if (resume.jobTitle.trim().isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    resume.jobTitle.trim(),
+                                    style: style(
+                                      FontWeight.w400,
+                                      14,
+                                      mutedColor,
+                                      letterSpacing: 1.6,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(width: 18),
+                            Expanded(child: headerRule(mirrored: true)),
+                            const SizedBox(width: _side),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: _dividerX,
+                      top: _bandHeight + 16,
+                      bottom: 34,
+                      width: 0.8,
+                      child: ColoredBox(color: ruleColor),
+                    ),
+                    Positioned(
+                      left: _side,
+                      width: _leftWidth,
+                      top: _bandHeight + 16,
+                      bottom: 34,
+                      child: ClipRect(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: leftColumn,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: _mainLeft,
+                      right: _side,
+                      top: _bandHeight + 16,
+                      bottom: 34,
+                      child: ClipRect(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: mainColumn,
                         ),
                       ),
                     ),

@@ -560,6 +560,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Header biru dengan foto, sidebar kontak, dan bagian linimasa.';
 
   @override
+  String get templateSoftHeader => 'Header Lembut';
+
+  @override
+  String get templateSoftHeaderCaption =>
+      'Bidang header berwarna dengan nama di tengah dan isi dua kolom.';
+
+  @override
   String get templateStructuredAts => 'ATS terstruktur';
 
   @override

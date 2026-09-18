@@ -561,6 +561,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Encabezado azul con foto, barra de contacto y secciones en línea de tiempo.';
 
   @override
+  String get templateSoftHeader => 'Encabezado suave';
+
+  @override
+  String get templateSoftHeaderCaption =>
+      'Banda de encabezado con nombre centrado y cuerpo en dos columnas.';
+
+  @override
   String get templateStructuredAts => 'ATS estructurado';
 
   @override

@@ -273,6 +273,8 @@
   "templateSlateSidebarCaption": "Dark photo sidebar with contact and expertise, and dated sections.",
   "templateTimelineProfile": "Timeline Profile",
   "templateTimelineProfileCaption": "Navy photo header with a contact sidebar and timeline sections.",
+  "templateSoftHeader": "Soft Header",
+  "templateSoftHeaderCaption": "Tinted header band with a centred name and a split two-column body.",
   "templateStructuredAts": "Structured ATS",
   "templateStructuredAtsCaption": "Gray section bands and a centered header for parsers.",
   "templateLatexClassicAts": "LaTeX Classic ATS",

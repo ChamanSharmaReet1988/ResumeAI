@@ -560,6 +560,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Cabeçalho azul com foto, barra de contato e seções em linha do tempo.';
 
   @override
+  String get templateSoftHeader => 'Cabeçalho suave';
+
+  @override
+  String get templateSoftHeaderCaption =>
+      'Faixa de cabeçalho com nome centralizado e corpo em duas colunas.';
+
+  @override
   String get templateStructuredAts => 'ATS estruturado';
 
   @override

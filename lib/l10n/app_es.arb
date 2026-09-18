@@ -263,6 +263,8 @@
   "templateSlateSidebarCaption": "Barra lateral oscura con foto, contacto y habilidades, y secciones con fechas.",
   "templateTimelineProfile": "Perfil cronológico",
   "templateTimelineProfileCaption": "Encabezado azul con foto, barra de contacto y secciones en línea de tiempo.",
+  "templateSoftHeader": "Encabezado suave",
+  "templateSoftHeaderCaption": "Banda de encabezado con nombre centrado y cuerpo en dos columnas.",
   "templateStructuredAts": "ATS estructurado",
   "templateStructuredAtsCaption": "Bandas de sección grises y encabezado centrado para parsers.",
   "templateLatexClassicAts": "ATS clásico LaTeX",

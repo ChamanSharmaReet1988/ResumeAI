@@ -1074,6 +1074,18 @@ abstract class AppLocalizations {
   /// **'Navy photo header with a contact sidebar and timeline sections.'**
   String get templateTimelineProfileCaption;
 
+  /// No description provided for @templateSoftHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft Header'**
+  String get templateSoftHeader;
+
+  /// No description provided for @templateSoftHeaderCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Tinted header band with a centred name and a split two-column body.'**
+  String get templateSoftHeaderCaption;
+
   /// No description provided for @templateStructuredAts.
   ///
   /// In en, this message translates to:
