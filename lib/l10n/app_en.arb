@@ -271,6 +271,8 @@
   "templateHeaderSidebarCaption": "Photo-led nameplate with a navy details rail and skill bars.",
   "templateSlateSidebar": "Slate Sidebar",
   "templateSlateSidebarCaption": "Dark photo sidebar with contact and expertise, and dated sections.",
+  "templateTimelineProfile": "Timeline Profile",
+  "templateTimelineProfileCaption": "Navy photo header with a contact sidebar and timeline sections.",
   "templateStructuredAts": "Structured ATS",
   "templateStructuredAtsCaption": "Gray section bands and a centered header for parsers.",
   "templateLatexClassicAts": "LaTeX Classic ATS",

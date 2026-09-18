@@ -553,6 +553,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Sidebar gelap dengan foto, kontak, dan keahlian, serta bagian bertanggal.';
 
   @override
+  String get templateTimelineProfile => 'Profil Linimasa';
+
+  @override
+  String get templateTimelineProfileCaption =>
+      'Header biru dengan foto, sidebar kontak, dan bagian linimasa.';
+
+  @override
   String get templateStructuredAts => 'ATS terstruktur';
 
   @override

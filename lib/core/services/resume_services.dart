@@ -34,6 +34,7 @@ part 'resume_pdf/resume_pdf_highlighted_pages.dart';
 part 'resume_pdf/resume_pdf_ats_pages.dart';
 part 'resume_pdf/resume_pdf_slate_sidebar_page.dart';
 part 'resume_pdf/resume_pdf_ats_clean_sans_page.dart';
+part 'resume_pdf/resume_pdf_timeline_profile_page.dart';
 
 /// Emits PDF body sections (after Summary/header) in the user's saved builder
 /// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
@@ -7636,6 +7637,17 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.timelineProfile) {
+      final document = pw.Document();
+      _addTimelineProfileTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.atsCleanSans) {
       final document = pw.Document();
       _addAtsCleanSansTemplatePage(
@@ -7712,6 +7724,8 @@ class ResumePdfService {
       case ResumeTemplate.slateSidebar:
         break;
       case ResumeTemplate.atsCleanSans:
+        break;
+      case ResumeTemplate.timelineProfile:
         break;
     }
 
@@ -7907,6 +7921,24 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.timelineProfile) {
+      final profileImagePath = await ProfileImageStorage.resolvePath(
+        resume.profileImagePath,
+        resume.id,
+      );
+      final document = pw.Document();
+      _addTimelineProfileTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: await _loadProfileImage(profileImagePath),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.atsCleanSans) {
       final document = pw.Document();
       _addAtsCleanSansTemplatePage(
@@ -8000,6 +8032,8 @@ class ResumePdfService {
       case ResumeTemplate.slateSidebar:
         break;
       case ResumeTemplate.atsCleanSans:
+        break;
+      case ResumeTemplate.timelineProfile:
         break;
     }
 

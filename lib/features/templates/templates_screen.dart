@@ -681,6 +681,14 @@ const _professionalResumeCards = <_TemplateTileData>[
     caption: 'Dark photo sidebar with contact and expertise, and dated sections.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'timeline-profile',
+    resumeTemplate: ResumeTemplate.timelineProfile,
+    previewKind: _TemplatePreviewKind.timelineProfileResume,
+    headline: 'Timeline Profile',
+    caption: 'Navy photo header with a contact sidebar and timeline sections.',
+    isPremium: false,
+  ),
 ];
 
 const _resumeTemplateCards = _professionalResumeCards;
@@ -816,6 +824,7 @@ class _TemplateTileData {
       'accent-strip' => l10n.templateAccentStrip,
       'header-sidebar' => l10n.templateHeaderSidebar,
       'slate-sidebar' => l10n.templateSlateSidebar,
+      'timeline-profile' => l10n.templateTimelineProfile,
       'ats-structured' => l10n.templateStructuredAts,
       'ats-latex-classic' => l10n.templateLatexClassicAts,
       'ats-modern-flow' => l10n.templateModernFlowAts,
@@ -840,6 +849,7 @@ class _TemplateTileData {
       'accent-strip' => l10n.templateAccentStripCaption,
       'header-sidebar' => l10n.templateHeaderSidebarCaption,
       'slate-sidebar' => l10n.templateSlateSidebarCaption,
+      'timeline-profile' => l10n.templateTimelineProfileCaption,
       'ats-structured' => l10n.templateStructuredAtsCaption,
       'ats-latex-classic' => l10n.templateLatexClassicAtsCaption,
       'ats-modern-flow' => l10n.templateModernFlowAtsCaption,
@@ -865,6 +875,7 @@ enum _TemplatePreviewKind {
   accentStripResume,
   headerSidebarResume,
   slateSidebarResume,
+  timelineProfileResume,
   atsStructuredResume,
   atsSerifRulesResume,
   atsModernFlowResume,
@@ -968,6 +979,12 @@ class _TemplatePreviewArt extends StatelessWidget {
           _slateSidebarTemplateResume.copyWith(
             projects: _slateSidebarTemplateResume.projects.take(1).toList(),
           ),
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.timelineProfileResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _timelineProfileTemplateResume,
           paletteSeed,
         ),
       ),
@@ -1134,6 +1151,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.accentStrip => _accentStripTemplateResume,
       ResumeTemplate.headerSidebar => _headerSidebarTemplateResume,
       ResumeTemplate.slateSidebar => _slateSidebarTemplateResume,
+      ResumeTemplate.timelineProfile => _timelineProfileTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
       ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,
@@ -1282,7 +1300,8 @@ ResumeData _applyTemplatePreviewPalette(
   // Header Sidebar and Slate Sidebar gallery art keep their native rail color;
   // preview color is chosen on the preview screen.
   if (sample.template == ResumeTemplate.headerSidebar ||
-      sample.template == ResumeTemplate.slateSidebar) {
+      sample.template == ResumeTemplate.slateSidebar ||
+      sample.template == ResumeTemplate.timelineProfile) {
     return sample.copyWith(
       corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
         sample.template,
@@ -2441,6 +2460,115 @@ final ResumeData _slateSidebarTemplateResume = ResumeData(
   ],
 );
 
+final ResumeData _timelineProfileTemplateResume = ResumeData(
+  id: 'template-timeline-profile',
+  title: 'Timeline Profile Template',
+  fullName: 'Richard Sanchez',
+  jobTitle: 'Marketing Manager',
+  email: 'richard.sanchez@email.com',
+  phone: '+1 (415) 555-0142',
+  location: '123 Anywhere St., San Francisco',
+  website: 'richardsanchez.dev',
+  summary:
+      'Marketing manager with nine years building brand and demand programs for consumer and B2B products. Leads cross-functional teams, owns the budget, and turns research into campaigns that move revenue.',
+  template: ResumeTemplate.timelineProfile,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Marketing Manager & Specialist',
+      company: 'Borcelle Studio',
+      startDate: '2022',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Develop and execute marketing strategies and campaigns that align with company goals.',
+        'Lead, mentor and manage a high-performing marketing team.',
+        'Monitor brand consistency across marketing channels and materials.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Manager & Specialist',
+      company: 'Fauget Studio',
+      startDate: '2019',
+      endDate: '2022',
+      description: '',
+      bullets: [
+        'Created and managed the marketing budget, optimising allocation and return on investment.',
+        'Oversaw market research to identify trends, customer needs and competitor strategies.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Specialist',
+      company: 'Studio Shodwe',
+      startDate: '2017',
+      endDate: '2019',
+      description: '',
+      bullets: [
+        'Built relationships with partners, agencies and vendors that supported launch campaigns.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'School of Business | Wardiere University',
+      degree: 'Master of Business Management',
+      startDate: '2015',
+      endDate: '2017',
+      score: 'GPA: 3.8 / 4.0',
+    ),
+    EducationItem(
+      institution: 'School of Business | Wardiere University',
+      degree: 'Bachelor of Business Management',
+      startDate: '2011',
+      endDate: '2015',
+      score: 'GPA: 3.8 / 4.0',
+    ),
+  ],
+  skills: const [
+    'Project Management',
+    'Public Relations',
+    'Teamwork',
+    'Time Management',
+    'Leadership',
+    'Effective Communication',
+    'Critical Thinking',
+    'Digital Marketing',
+  ],
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(
+      title: 'Languages',
+      content:
+          'English (Fluent)\nFrench (Fluent)\nGerman (Basic)\nSpanish (Intermediate)',
+    ),
+    CustomSectionItem(
+      title: 'Reference',
+      content:
+          'Estelle Darcy\nWardiere Inc. / CTO\nPhone: 123-456-7890\nEmail: hello@reallygreatsite.com',
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.timelineProfile,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    'custom:0',
+    'custom:1',
+  ],
+);
+
 enum _ResumeTemplatePreviewFit { tile, detail }
 
 class _ResumeTemplatePreviewArt extends StatelessWidget {
@@ -2480,6 +2608,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.accentStrip => true,
           ResumeTemplate.headerSidebar => true,
           ResumeTemplate.slateSidebar => true,
+          ResumeTemplate.timelineProfile => true,
           _ => false,
         };
         final bottomInset = fullHeightTemplate

@@ -1062,6 +1062,18 @@ abstract class AppLocalizations {
   /// **'Dark photo sidebar with contact and expertise, and dated sections.'**
   String get templateSlateSidebarCaption;
 
+  /// No description provided for @templateTimelineProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline Profile'**
+  String get templateTimelineProfile;
+
+  /// No description provided for @templateTimelineProfileCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Navy photo header with a contact sidebar and timeline sections.'**
+  String get templateTimelineProfileCaption;
+
   /// No description provided for @templateStructuredAts.
   ///
   /// In en, this message translates to:

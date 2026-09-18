@@ -553,6 +553,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Barra lateral escura com foto, contato e competências, e seções com datas.';
 
   @override
+  String get templateTimelineProfile => 'Perfil cronológico';
+
+  @override
+  String get templateTimelineProfileCaption =>
+      'Cabeçalho azul com foto, barra de contato e seções em linha do tempo.';
+
+  @override
   String get templateStructuredAts => 'ATS estruturado';
 
   @override

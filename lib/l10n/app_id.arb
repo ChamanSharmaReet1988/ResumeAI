@@ -261,6 +261,8 @@
   "templateHeaderSidebarCaption": "Nama berfoto dengan rel biru laut untuk detail dan keterampilan.",
   "templateSlateSidebar": "Sidebar Slate",
   "templateSlateSidebarCaption": "Sidebar gelap dengan foto, kontak, dan keahlian, serta bagian bertanggal.",
+  "templateTimelineProfile": "Profil Linimasa",
+  "templateTimelineProfileCaption": "Header biru dengan foto, sidebar kontak, dan bagian linimasa.",
   "templateStructuredAts": "ATS terstruktur",
   "templateStructuredAtsCaption": "Pita bagian abu-abu dan header terpusat untuk parser.",
   "templateLatexClassicAts": "ATS klasik LaTeX",

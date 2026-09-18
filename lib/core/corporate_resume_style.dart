@@ -95,6 +95,7 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.accentStrip => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.headerSidebar => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.slateSidebar => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.timelineProfile => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.atsStructured ||
     ResumeTemplate.atsSerifRules ||
     ResumeTemplate.atsModernFlow ||
@@ -295,6 +296,23 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get slateSidebarMutedColor => const Color(0xFF5B6472);
 
   Color get slateSidebarRuleColor => const Color(0xFF3D4756);
+
+  static const Color timelineProfileNativeBandColor = Color(0xFF2E3A4C);
+
+  Color get timelineProfileBandColor {
+    if (corporateColorPresetIndex >= kCorporateColorPresets.length) {
+      return timelineProfileNativeBandColor;
+    }
+    return corporateColorPreset.headerColor;
+  }
+
+  Color get timelineProfileSidebarColor => const Color(0xFFE9ECF1);
+
+  Color get timelineProfileTitleColor => const Color(0xFF243044);
+
+  Color get timelineProfileMutedColor => const Color(0xFF5A6474);
+
+  Color get timelineProfileRuleColor => const Color(0xFFC3CBD6);
 
   Color get detailsSidebarAccentColor => corporateColorPreset.headerColor;
 

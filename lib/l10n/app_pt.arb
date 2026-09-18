@@ -261,6 +261,8 @@
   "templateHeaderSidebarCaption": "Nome com foto e um trilho azul-marinho de dados e habilidades.",
   "templateSlateSidebar": "Barra lateral ardósia",
   "templateSlateSidebarCaption": "Barra lateral escura com foto, contato e competências, e seções com datas.",
+  "templateTimelineProfile": "Perfil cronológico",
+  "templateTimelineProfileCaption": "Cabeçalho azul com foto, barra de contato e seções em linha do tempo.",
   "templateStructuredAts": "ATS estruturado",
   "templateStructuredAtsCaption": "Faixas de seção cinzas e cabeçalho centralizado para parsers.",
   "templateLatexClassicAts": "ATS clássico LaTeX",

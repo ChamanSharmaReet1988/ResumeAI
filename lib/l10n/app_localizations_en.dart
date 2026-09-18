@@ -553,6 +553,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Dark photo sidebar with contact and expertise, and dated sections.';
 
   @override
+  String get templateTimelineProfile => 'Timeline Profile';
+
+  @override
+  String get templateTimelineProfileCaption =>
+      'Navy photo header with a contact sidebar and timeline sections.';
+
+  @override
   String get templateStructuredAts => 'Structured ATS';
 
   @override

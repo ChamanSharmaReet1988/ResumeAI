@@ -39,6 +39,8 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.slateSidebar;
     case 'atsCleanSans':
       return ResumeTemplate.atsCleanSans;
+    case 'timelineProfile':
+      return ResumeTemplate.timelineProfile;
     default:
       return ResumeTemplate.corporate;
   }
@@ -85,6 +87,10 @@ enum ResumeTemplate {
   /// Uppercase name, right-aligned title and contact under a light rule,
   /// two-column education and skills (ATS-friendly).
   atsCleanSans,
+
+  /// Navy header band with a circular photo, a light contact/skills sidebar
+  /// and timeline-marked sections.
+  timelineProfile,
 }
 
 enum CoverLetterTemplate {
@@ -103,6 +109,7 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.accentStrip,
   ResumeTemplate.headerSidebar,
   ResumeTemplate.slateSidebar,
+  ResumeTemplate.timelineProfile,
   ResumeTemplate.atsStructured,
   ResumeTemplate.atsLatexClassic,
   ResumeTemplate.atsModernFlow,
@@ -151,6 +158,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.headerSidebar => 'Header Sidebar',
     ResumeTemplate.slateSidebar => 'Slate Sidebar',
     ResumeTemplate.atsCleanSans => 'Clean Sans ATS',
+    ResumeTemplate.timelineProfile => 'Timeline Profile',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -186,6 +194,8 @@ extension ResumeTemplateX on ResumeTemplate {
       'Dark photo sidebar with contact and expertise, and dated two-column sections.',
     ResumeTemplate.atsCleanSans =>
       'Bold uppercase name, right-aligned contact, and two-column education and skills.',
+    ResumeTemplate.timelineProfile =>
+      'Navy photo header with a contact sidebar and timeline-marked sections.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -205,6 +215,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.headerSidebar => const Color(0xFF1B365D),
     ResumeTemplate.slateSidebar => const Color(0xFF2F3B4C),
     ResumeTemplate.atsCleanSans => const Color(0xFF000000),
+    ResumeTemplate.timelineProfile => const Color(0xFF2E3A4C),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -224,6 +235,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.headerSidebar => const Color(0xFFE8EEF6),
     ResumeTemplate.slateSidebar => const Color(0xFFE9ECF1),
     ResumeTemplate.atsCleanSans => const Color(0xFFF3F4F6),
+    ResumeTemplate.timelineProfile => const Color(0xFFE9ECF1),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -244,6 +256,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.headerSidebar => 'Outfit · navy sidebar',
     ResumeTemplate.slateSidebar => 'Outfit · slate sidebar',
     ResumeTemplate.atsCleanSans => 'Outfit · clean ATS',
+    ResumeTemplate.timelineProfile => 'Outfit · timeline profile',
   };
 }
 
