@@ -256,6 +256,7 @@
   },
   "atsTitleSuffix": " (ATS)",
   "optimizedTitleSuffix": " (Optimized)",
+  "allResumes": "All",
   "professionalResumes": "Professional Resumes",
   "atsResumes": "ATS Resumes",
   "useTemplate": "Use template",

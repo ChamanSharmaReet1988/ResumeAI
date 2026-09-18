@@ -502,6 +502,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get optimizedTitleSuffix => ' (Dioptimalkan)';
 
   @override
+  String get allResumes => 'Semua';
+
+  @override
   String get professionalResumes => 'Resume profesional';
 
   @override

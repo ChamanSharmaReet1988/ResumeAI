@@ -972,6 +972,12 @@ abstract class AppLocalizations {
   /// **' (Optimized)'**
   String get optimizedTitleSuffix;
 
+  /// No description provided for @allResumes.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allResumes;
+
   /// No description provided for @professionalResumes.
   ///
   /// In en, this message translates to:

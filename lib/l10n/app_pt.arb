@@ -246,6 +246,7 @@
   },
   "atsTitleSuffix": " (ATS)",
   "optimizedTitleSuffix": " (Otimizado)",
+  "allResumes": "Todos",
   "professionalResumes": "Currículos profissionais",
   "atsResumes": "Currículos ATS",
   "useTemplate": "Usar modelo",

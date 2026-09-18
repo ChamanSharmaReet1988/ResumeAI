@@ -503,6 +503,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get optimizedTitleSuffix => ' (Optimizado)';
 
   @override
+  String get allResumes => 'Todas';
+
+  @override
   String get professionalResumes => 'Currículums profesionales';
 
   @override

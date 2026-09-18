@@ -163,6 +163,9 @@ class ResumeImportService {
 
       final textLines = extractor.extractTextLines();
       if (textLines.isNotEmpty) {
+        // Columns first: on two-column resumes the top-sorted read interleaves
+        // the sidebar with the main column and the parser cannot recover.
+        addCandidate(_buildPdfSplitColumnText(textLines, document));
         addCandidate(_buildPdfTopSortedText(textLines));
         addCandidate(_buildPdfColumnAwareText(textLines, document));
       }
@@ -245,17 +248,30 @@ class ResumeImportService {
     if (words.length < 2) {
       return line.text.trim();
     }
+    // Letter-spaced headings ("S K I L L S") arrive as one run per letter, so
+    // a fixed gap would split them into letters. Only on those lines, compare
+    // each gap with the line's own typical gap.
+    final singleCharRuns = words
+        .where((word) => word.text.trim().length == 1)
+        .length;
+    final letterSpaced = singleCharRuns >= words.length * 0.6;
+    final gaps = <double>[
+      for (var i = 1; i < words.length; i++)
+        words[i].bounds.left - words[i - 1].bounds.right,
+    ]..sort();
+    final medianGap = letterSpaced ? gaps[gaps.length ~/ 2] : 0.0;
     final buffer = StringBuffer(words.first.text.trim());
     for (var i = 1; i < words.length; i++) {
       final previous = words[i - 1];
       final word = words[i];
       final size = word.fontSize > 0 ? word.fontSize : word.bounds.height;
       final gap = word.bounds.left - previous.bounds.right;
+      final spaceGap = math.max(size * 0.15, medianGap * 1.6);
       // Runs that touch belong to one token (an email drawn as
       // "name" "@" "gmail.com"), so only add a space for a visible gap.
       final separator = gap > math.max(size * 1.6, 12)
           ? ' | '
-          : gap > size * 0.15
+          : gap > spaceGap
           ? ' '
           : '';
       buffer
@@ -263,6 +279,111 @@ class ResumeImportService {
         ..write(word.text.trim());
     }
     return buffer.toString();
+  }
+
+  /// Reads each page as separate columns when a vertical band of the page has
+  /// no text crossing it — the shape of every sidebar or split layout.
+  ///
+  /// Returns an empty string when a page has no such band, so the caller can
+  /// drop this candidate in favour of the top-sorted read.
+  String _buildPdfSplitColumnText(
+    List<sfpdf.TextLine> textLines,
+    sfpdf.PdfDocument document,
+  ) {
+    final byPage = <int, List<sfpdf.TextLine>>{};
+    for (final line in textLines) {
+      byPage.putIfAbsent(line.pageIndex, () => <sfpdf.TextLine>[]).add(line);
+    }
+
+    final pageTexts = <String>[];
+    var splitAnyPage = false;
+    for (final pageIndex in byPage.keys.toList()..sort()) {
+      final pageLines = [...byPage[pageIndex]!];
+      final pageWidth = document.pages[pageIndex].size.width;
+      final splitX = _pdfColumnSplitX(
+        pageLines,
+        pageWidth,
+        document.pages[pageIndex].size.height,
+      );
+      if (splitX == null) {
+        pageTexts.add(
+          ([...pageLines]..sort(_comparePdfTextLines)).map(_pdfLineText).join('\n'),
+        );
+        continue;
+      }
+      splitAnyPage = true;
+      // A line crossing the gutter is a full-width header (the nameplate), so
+      // it leads, then the main column, then the sidebar.
+      final header = pageLines
+          .where((line) => line.bounds.left < splitX && line.bounds.right > splitX)
+          .toList()
+        ..sort(_comparePdfTextLines);
+      final left = pageLines.where((line) => line.bounds.right <= splitX).toList()
+        ..sort(_comparePdfTextLines);
+      final right = pageLines.where((line) => line.bounds.left >= splitX).toList()
+        ..sort(_comparePdfTextLines);
+      pageTexts.add(
+        [
+          ...header.map(_pdfLineText),
+          ...right.map(_pdfLineText),
+          ...left.map(_pdfLineText),
+        ].join('\n'),
+      );
+    }
+
+    return splitAnyPage ? pageTexts.join('\n') : '';
+  }
+
+  /// X where a gutter separates two columns, or null when the page is one
+  /// column. Looks for the widest vertical band that no line crosses.
+  double? _pdfColumnSplitX(
+    List<sfpdf.TextLine> pageLines,
+    double pageWidth,
+    double pageHeight,
+  ) {
+    final body = pageLines
+        .where((line) => line.text.trim().isNotEmpty)
+        .toList();
+    if (body.length < 10) {
+      return null;
+    }
+
+    double? bestX;
+    var bestGap = 0.0;
+    // Only a full-width header (the nameplate band at the top of the page)
+    // may cross the gutter; body text crossing means this x cuts content.
+    final headerBandBottom = pageHeight * 0.24;
+    for (var x = pageWidth * 0.22; x <= pageWidth * 0.62; x += 4) {
+      final crossesBody = body.any(
+        (line) =>
+            line.bounds.left < x &&
+            line.bounds.right > x &&
+            line.bounds.bottom > headerBandBottom,
+      );
+      if (crossesBody) {
+        continue;
+      }
+      final leftLines = body.where((line) => line.bounds.right <= x).toList();
+      final rightLines = body.where((line) => line.bounds.left >= x).toList();
+      // Both sides need real content, or this is just a page margin.
+      if (leftLines.length < 5 || rightLines.length < 8) {
+        continue;
+      }
+      final leftEdge = leftLines
+          .map((line) => line.bounds.right)
+          .reduce((a, b) => a > b ? a : b);
+      final rightEdge = rightLines
+          .map((line) => line.bounds.left)
+          .reduce((a, b) => a < b ? a : b);
+      final gap = rightEdge - leftEdge;
+      if (gap > bestGap) {
+        bestGap = gap;
+        bestX = x;
+      }
+    }
+
+    // A real gutter is wider than the spaces inside a line of text.
+    return bestGap >= 12 ? bestX : null;
   }
 
   String _buildPdfColumnAwareText(

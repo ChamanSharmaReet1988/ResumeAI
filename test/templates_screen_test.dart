@@ -91,7 +91,7 @@ void main() {
           gridView.childrenDelegate as SliverChildBuilderDelegate;
 
       expect(delegate.crossAxisCount, 2);
-      expect(childrenDelegate.childCount, 8);
+      expect(childrenDelegate.childCount, 16);
       expect(
         find.byKey(const Key('template-segmented-button')),
         findsOneWidget,

@@ -44,8 +44,11 @@ class TemplatesScreen extends StatefulWidget {
   State<TemplatesScreen> createState() => _TemplatesScreenState();
 }
 
+enum _ResumeCategory { all, professional, ats }
+
 class _TemplatesScreenState extends State<TemplatesScreen> {
   _TemplateSegment _selectedSegment = _TemplateSegment.resume;
+  _ResumeCategory _selectedCategory = _ResumeCategory.all;
   final Map<String, GlobalKey> _tileKeys = {};
   var _didAutoScrollToSelection = false;
 
@@ -192,12 +195,17 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final activeTemplate = (widget.selectedTemplate ?? library?.defaultTemplate)
         ?.userFacingTemplate;
     final activeCoverLetterTemplate = widget.selectedCoverLetterTemplate;
-    final visibleItems = isResumeTemplatePicker
-        ? _resumeTemplateCards
-        : isCoverLetterTemplatePicker
+    final resumeCards = switch (_selectedCategory) {
+      _ResumeCategory.all => const [..._resumeTemplateCards, ..._atsResumeCards],
+      _ResumeCategory.professional => _resumeTemplateCards,
+      _ResumeCategory.ats => _atsResumeCards,
+    };
+    final visibleItems = isCoverLetterTemplatePicker
         ? _coverLetterTemplateCards
+        : isResumeTemplatePicker
+        ? resumeCards
         : _selectedSegment == _TemplateSegment.resume
-        ? _resumeTemplateCards
+        ? resumeCards
         : _coverLetterTemplateCards;
     final showResumeTemplatesSection =
         isResumeTemplatePicker ||
@@ -346,12 +354,31 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             ),
             const SizedBox(height: 20),
           ],
-          if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
-            Text(
-              l10n.professionalResumes,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          // One horizontal bar picks the resume category; the grid below shows
+          // just that group.
+          if (showResumeTemplatesSection) ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  for (final category in _ResumeCategory.values) ...[
+                    ChoiceChip(
+                      key: Key('template-category-${category.name}'),
+                      label: Text(switch (category) {
+                        _ResumeCategory.all => l10n.allResumes,
+                        _ResumeCategory.professional => l10n.professionalResumes,
+                        _ResumeCategory.ats => l10n.atsResumes,
+                      }),
+                      selected: _selectedCategory == category,
+                      onSelected: (_) =>
+                          setState(() => _selectedCategory = category),
+                    ),
+                    if (category != _ResumeCategory.values.last)
+                      const SizedBox(width: 10),
+                  ],
+                ],
+              ),
             ),
             const SizedBox(height: 20),
           ],
@@ -388,46 +415,6 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
               );
             },
           ),
-          if (showResumeTemplatesSection && visibleItems.isNotEmpty) ...[
-            const SizedBox(height: 28),
-            Text(
-              l10n.atsResumes,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 20),
-            GridView.builder(
-              key: const Key('template-grid-ats'),
-              shrinkWrap: true,
-              clipBehavior: Clip.none,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _atsResumeCards.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.66,
-              ),
-              itemBuilder: (context, index) {
-                final item = _atsResumeCards[index];
-                final selected =
-                    isResumeTemplatePicker &&
-                    item.resumeTemplate != null &&
-                    item.resumeTemplate == activeTemplate;
-
-                return KeyedSubtree(
-                  key: _tileKey(item.id),
-                  child: _TemplateTile(
-                    item: item,
-                    selected: selected,
-                    paletteSeed: library?.selectedResume,
-                    onTap: () => _onTemplateTileTapped(context, item, library),
-                  ),
-                );
-              },
-            ),
-          ],
         ],
       ),
     );
