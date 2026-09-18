@@ -1328,6 +1328,42 @@ class CustomSectionItem {
     };
   }
 
+  List<String> displayLines({bool splitInlineItems = false}) {
+    List<String> source() {
+      if (layoutMode == CustomSectionLayoutMode.bullets) {
+        final items = bullets
+            .map((item) => item.trim())
+            .where((item) => item.isNotEmpty)
+            .toList();
+        if (items.isNotEmpty) {
+          return items;
+        }
+      } else if (layoutMode == CustomSectionLayoutMode.projects) {
+        return visibleProjectEntries
+            .map((item) => item.title.trim())
+            .where((item) => item.isNotEmpty)
+            .toList();
+      }
+      return content
+          .split('\n')
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+
+    final lines = source();
+    if (!splitInlineItems) {
+      return lines;
+    }
+    return [
+      for (final line in lines)
+        ...line
+            .split(RegExp(r'\s*[,|/]\s*'))
+            .map((part) => part.trim())
+            .where((part) => part.isNotEmpty),
+    ];
+  }
+
   CustomSectionItem copyWith({
     String? title,
     String? content,

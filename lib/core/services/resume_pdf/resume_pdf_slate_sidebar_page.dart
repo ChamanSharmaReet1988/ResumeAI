@@ -22,7 +22,8 @@ final RegExp _slateSidebarRailSectionTitle = RegExp(
 );
 
 bool _slateSidebarIsRailSection(CustomSectionItem item) =>
-    _slateSidebarRailSectionTitle.hasMatch(item.title.trim());
+    _slateSidebarRailSectionTitle.hasMatch(item.title.trim()) ||
+    _isClassicSidebarLanguagesTitle(item.title);
 
 List<String> _slateSidebarRailSectionLines(CustomSectionItem item) {
   return item.displayLines(splitInlineItems: true);
@@ -82,8 +83,14 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
     final experiences = resume.visibleWorkExperiences;
     final education = resume.visibleEducation;
     final projects = resume.visibleProjects;
+    final languageSection = _classicSidebarLanguagesSection(resume);
+    final languageLines = _classicSidebarLanguageLines(resume);
     final mainCustomSections = resume.visibleCustomSections
-        .where((item) => !_slateSidebarIsRailSection(item))
+        .where(
+          (item) =>
+              !_slateSidebarIsRailSection(item) &&
+              !identical(item, languageSection),
+        )
         .toList();
 
     pw.Widget sectionTitle(String title) => pw.Container(
@@ -228,6 +235,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
           .toList();
       final railSections = resume.visibleCustomSections
           .where(_slateSidebarIsRailSection)
+          .where((item) => !identical(item, languageSection))
           .toList();
 
       return pw.Column(
@@ -250,6 +258,18 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
               pw.Text(value, style: railValue),
               pw.SizedBox(height: 9),
             ],
+          if (languageLines.isNotEmpty) ...[
+            heading(
+              languageSection?.title.trim().isNotEmpty == true
+                  ? languageSection!.title.trim()
+                  : 'Languages',
+            ),
+            for (final line in languageLines)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 7),
+                child: pw.Text(line, style: railItem),
+              ),
+          ],
           if (skills.isNotEmpty) ...[
             heading('Expertise'),
             for (final skill in skills)

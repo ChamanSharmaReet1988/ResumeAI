@@ -7263,8 +7263,20 @@ class _SlateSidebarPreview extends StatelessWidget {
     final railLabel = style(FontWeight.w700, detailPt, onRail);
     final railValue = style(FontWeight.w400, detailPt - 0.5, onRail);
 
+    bool isLanguageSection(CustomSectionItem item) {
+      final normalized = item.title.trim().toLowerCase().replaceAll(
+        RegExp(r'[^a-z]'),
+        '',
+      );
+      return normalized == 'language' ||
+          normalized == 'languages' ||
+          normalized == 'langueage' ||
+          normalized == 'langueages';
+    }
+
     bool isRailSection(CustomSectionItem item) =>
-        _railSectionTitle.hasMatch(item.title.trim());
+        _railSectionTitle.hasMatch(item.title.trim()) ||
+        isLanguageSection(item);
 
     Widget ruledTitle(String title, TextStyle textStyle, Color rule) =>
         Container(
@@ -7348,6 +7360,8 @@ class _SlateSidebarPreview extends StatelessWidget {
       ('LinkedIn', resume.linkedinLink.trim()),
       ('GitHub', resume.githubLink.trim()),
     ].where((entry) => entry.$2.isNotEmpty).toList();
+    final languageSection = _classicSidebarLanguagesSection(resume);
+    final languageLines = _classicSidebarLanguages(resume);
 
     final rail = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -7381,6 +7395,20 @@ class _SlateSidebarPreview extends StatelessWidget {
             Text(value, style: railValue),
             const SizedBox(height: 9),
           ],
+        if (languageLines.isNotEmpty) ...[
+          ruledTitle(
+            languageSection?.title.trim().isNotEmpty == true
+                ? languageSection!.title.trim()
+                : 'Languages',
+            railHeading,
+            onRail,
+          ),
+          for (final line in languageLines)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Text(line, style: railValue.copyWith(fontSize: detailPt)),
+            ),
+        ],
         if (_pdfAlignedSkills(resume).isNotEmpty) ...[
           ruledTitle('Expertise', railHeading, onRail),
           for (final skill in _pdfAlignedSkills(resume).take(14))
@@ -7390,7 +7418,7 @@ class _SlateSidebarPreview extends StatelessWidget {
             ),
         ],
         for (final section in resume.visibleCustomSections.where(
-          isRailSection,
+          (item) => isRailSection(item) && !identical(item, languageSection),
         )) ...[
           ruledTitle(section.title.trim(), railHeading, onRail),
           for (final line
