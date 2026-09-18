@@ -826,4 +826,22 @@ void main() {
       }
     },
   );
+
+  test('Languages summary custom section fills list slots in templates', () {
+    final resume = ResumeData.empty(template: ResumeTemplate.atsClassicCv)
+        .copyWith(
+          customSections: const [
+            CustomSectionItem(
+              title: 'Languages',
+              content: 'English, Hindi',
+              layoutMode: CustomSectionLayoutMode.summary,
+            ),
+          ],
+        );
+
+    expect(
+      resume.classicCvLanguagePairs.map((item) => item.name),
+      ['English', 'Hindi'],
+    );
+  });
 }

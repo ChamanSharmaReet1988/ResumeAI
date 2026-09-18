@@ -387,9 +387,10 @@ extension ResumeCorporateStyleX on ResumeData {
     if (section == null) {
       return const [];
     }
-    return _classicCvSectionLines(
-      section,
-    ).map(_classicCvSplitLanguage).toList();
+    return section
+        .displayLines(splitInlineItems: true)
+        .map(_classicCvSplitLanguage)
+        .toList();
   }
 
   List<String> get classicCvContactLines {
@@ -428,17 +429,7 @@ CustomSectionItem? _classicCvNamedSection(
 }
 
 List<String> _classicCvSectionLines(CustomSectionItem section) {
-  if (section.layoutMode == CustomSectionLayoutMode.bullets) {
-    return section.bullets
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
-  }
-  return section.content
-      .split(RegExp(r'\n+'))
-      .map((item) => item.trim())
-      .where((item) => item.isNotEmpty)
-      .toList();
+  return section.displayLines();
 }
 
 ({String label, String value})? _classicCvSplitLabelValue(String line) {

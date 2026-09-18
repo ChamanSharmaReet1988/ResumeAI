@@ -25,15 +25,7 @@ bool _slateSidebarIsRailSection(CustomSectionItem item) =>
     _slateSidebarRailSectionTitle.hasMatch(item.title.trim());
 
 List<String> _slateSidebarRailSectionLines(CustomSectionItem item) {
-  final bullets = item.bullets.map((b) => b.trim()).where((b) => b.isNotEmpty);
-  if (bullets.isNotEmpty) {
-    return bullets.toList();
-  }
-  return item.content
-      .split('\n')
-      .map((line) => line.trim())
-      .where((line) => line.isNotEmpty)
-      .toList();
+  return item.displayLines(splitInlineItems: true);
 }
 
 extension _ResumePdfSlateSidebarPage on ResumePdfService {
