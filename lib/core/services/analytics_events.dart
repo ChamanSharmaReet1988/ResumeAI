@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import '../models/resume_builder_section_order.dart';
 import '../models/resume_models.dart';
 import 'firebase_app_services.dart';
 import 'premium_products.dart';
@@ -13,6 +14,7 @@ abstract final class AnalyticsEvents {
   static const String resumeSharedDocx = 'resume_shared_docx';
   // Kept ≤22 chars so `resumeapp_android_` + name stays within Firebase's 40-char limit.
   static const String resumeTemplateSelected = 'resume_tpl_selected';
+  static const String resumeSectionViewed = 'resume_section_view';
   static const String coverLetterCreated = 'cover_letter_created';
   static const String coverLetterSharedPdf = 'cover_letter_shared_pdf';
   static const String coverLetterTemplateSelected = 'cover_tpl_selected';
@@ -63,6 +65,54 @@ Map<String, Object> resumeTemplateAnalytics(ResumeTemplate template) => {
       'template_id': template.name,
       'template_name': template.label,
     };
+
+Map<String, Object> resumeBuilderSectionAnalytics({
+  required int step,
+  required String? sectionId,
+  required List<CustomSectionItem> customSections,
+}) {
+  final id = step <= 0 || sectionId == null ? 'personal' : sectionId;
+  return {
+    'section_id': id,
+    'section_name': resumeBuilderSectionAnalyticsName(
+      step: step,
+      sectionId: sectionId,
+      customSections: customSections,
+    ),
+  };
+}
+
+/// Stable English names for Analytics (not localized).
+String resumeBuilderSectionAnalyticsName({
+  required int step,
+  required String? sectionId,
+  required List<CustomSectionItem> customSections,
+}) {
+  if (step <= 0 || sectionId == null) {
+    return 'Personal Information';
+  }
+  switch (sectionId) {
+    case ResumeBuilderSectionIds.work:
+      return 'Work Experience';
+    case ResumeBuilderSectionIds.education:
+      return 'Education';
+    case ResumeBuilderSectionIds.skills:
+      return 'Skills';
+    case ResumeBuilderSectionIds.projects:
+      return 'Projects';
+    default:
+      final index = ResumeBuilderSectionIds.customIndex(sectionId);
+      if (index != null &&
+          index >= 0 &&
+          index < customSections.length) {
+        final title = customSections[index].title.trim();
+        if (title.isNotEmpty) {
+          return title.length > 80 ? title.substring(0, 80) : title;
+        }
+      }
+      return 'Custom Section';
+  }
+}
 
 Map<String, Object> coverLetterTemplateAnalytics(
   CoverLetterTemplate template,

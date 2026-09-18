@@ -1,0 +1,9 @@
+{
+  "id" : "c340adef-451d-4b38-9cf0-079b564ab2c7",
+  "targets" : [
+    {
+      "id" : "ADFA20D9-F529-402A-B839-E135180E7EC3",
+      "name" : "resume_app"
+    }
+  ]
+}

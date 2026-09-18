@@ -12,6 +12,7 @@ import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
+import '../../core/services/analytics_events.dart';
 import '../../core/services/resume_services.dart';
 import '../../core/services/platform_monetization.dart';
 import '../../core/services/android_ads_service.dart';
@@ -176,6 +177,17 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     }
 
     library?.setDefaultTemplate(item.resumeTemplate!);
+    if (!context.mounted) {
+      return;
+    }
+    await logAnalyticsEvent(
+      context,
+      AnalyticsEvents.resumeTemplateSelected,
+      parameters: {
+        ...resumeTemplateAnalytics(item.resumeTemplate!),
+        'source': 'templates_gallery',
+      },
+    );
     if (!context.mounted) {
       return;
     }

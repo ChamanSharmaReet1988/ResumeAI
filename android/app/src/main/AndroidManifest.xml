@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <!-- ML Kit GenAI declares minSdk 26. Keep the app on Flutter's minSdk (24)
+         and only load that library on API 26+. -->
+    <uses-sdk
+        tools:overrideLibrary="com.google.mlkit.genai.prompt,com.google.mlkit.genai.common" />
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Keep AD_ID even if a dependency tries to strip it. Required for AdMob + Play declaration. -->
     <uses-permission

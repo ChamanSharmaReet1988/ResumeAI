@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:resume_app/core/models/resume_builder_section_order.dart';
+import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/analytics_events.dart';
 
 void main() {
@@ -37,6 +39,7 @@ void main() {
       AnalyticsEvents.resumeSharedPdf,
       AnalyticsEvents.resumeSharedDocx,
       AnalyticsEvents.resumeTemplateSelected,
+      AnalyticsEvents.resumeSectionViewed,
       AnalyticsEvents.coverLetterCreated,
       AnalyticsEvents.coverLetterSharedPdf,
       AnalyticsEvents.coverLetterTemplateSelected,
@@ -52,5 +55,44 @@ void main() {
       expect(full.length, lessThanOrEqualTo(40), reason: full);
       expect(full.startsWith('resumeapp_android_'), isTrue);
     }
+  });
+
+  test('resume builder section events use readable names', () {
+    expect(
+      resumeBuilderSectionAnalyticsName(
+        step: 0,
+        sectionId: null,
+        customSections: const [],
+      ),
+      'Personal Information',
+    );
+    expect(
+      resumeBuilderSectionAnalyticsName(
+        step: 1,
+        sectionId: ResumeBuilderSectionIds.work,
+        customSections: const [],
+      ),
+      'Work Experience',
+    );
+    expect(
+      resumeBuilderSectionAnalyticsName(
+        step: 2,
+        sectionId: ResumeBuilderSectionIds.skills,
+        customSections: const [],
+      ),
+      'Skills',
+    );
+    expect(
+      resumeBuilderSectionAnalytics(
+        step: 1,
+        sectionId: ResumeBuilderSectionIds.work,
+        customSections: const [],
+      ),
+      {'section_id': 'work', 'section_name': 'Work Experience'},
+    );
+    expect(
+      resumeTemplateAnalytics(ResumeTemplate.headerSidebar)['template_name'],
+      'Header Sidebar',
+    );
   });
 }

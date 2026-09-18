@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -60,6 +61,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   bool _sectionReorderNudgeDismissed = false;
   bool _didInitPersonalOptionalExpanded = false;
   bool _personalOptionalExpanded = false;
+  bool _didLogInitialSection = false;
+  int? _lastLoggedAnalyticsStep;
 
   List<FocusNode> get _personalKeyboardFocusOrder => [
     _personalFieldFocusNodes[0],
@@ -227,6 +230,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       initialPage: context.read<ResumeEditorViewModel>().currentStep,
     );
     _didInitPageController = true;
+    if (!_didLogInitialSection) {
+      _didLogInitialSection = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        _logBuilderSectionViewed(
+          context.read<ResumeEditorViewModel>().currentStep,
+        );
+      });
+    }
   }
 
   void _onDismissResumeOrderNudge() {
@@ -1370,6 +1384,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final normalizedStep = step.clamp(0, maxStep < 0 ? 0 : maxStep);
     context.read<ResumeEditorViewModel>().setStep(normalizedStep);
     _scrollToStepTop(normalizedStep);
+    _logBuilderSectionViewed(normalizedStep);
     if (_pageController.hasClients) {
       _pageController.animateToPage(
         normalizedStep,
@@ -1377,6 +1392,25 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         curve: _stepAnimationCurve,
       );
     }
+  }
+
+  void _logBuilderSectionViewed(int step) {
+    if (!mounted || _lastLoggedAnalyticsStep == step) {
+      return;
+    }
+    _lastLoggedAnalyticsStep = step;
+    final viewModel = context.read<ResumeEditorViewModel>();
+    unawaited(
+      logAnalyticsEvent(
+        context,
+        AnalyticsEvents.resumeSectionViewed,
+        parameters: resumeBuilderSectionAnalytics(
+          step: step,
+          sectionId: viewModel.sectionIdAtStep(step),
+          customSections: viewModel.resume.customSections,
+        ),
+      ),
+    );
   }
 
   Future<void> _goToNextStep() async {
@@ -1652,6 +1686,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                     if (viewModel.currentStep != index) {
                                       viewModel.setStep(index);
                                     }
+                                    _logBuilderSectionViewed(index);
                                   },
                                   itemBuilder: (context, index) {
                                     final isIosPersonalStep =
