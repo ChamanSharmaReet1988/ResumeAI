@@ -14,11 +14,7 @@ import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/services/analytics_events.dart';
 import '../../core/services/resume_services.dart';
-import '../../core/services/platform_monetization.dart';
-import '../../core/services/android_ads_service.dart';
-import '../../core/services/premium_purchase_service.dart';
 import '../premium/premium_gate.dart';
-import '../shared/android_banner_ad.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
@@ -228,10 +224,6 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final inactiveColor = Theme.of(context).colorScheme.onSurfaceVariant;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomSafeInset = MediaQuery.paddingOf(context).bottom;
-    final showTopBanner = !isTemplatePicker &&
-        PlatformMonetization.showsAds &&
-        !(PlatformMonetization.isIapEnabled &&
-            context.watch<PremiumPurchaseService>().isPremium);
 
     final segmentControl = isCupertino
         ? SizedBox(
@@ -350,9 +342,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final scrollBody = SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         8,
-        isTemplatePicker
-            ? (showTopBanner ? 12 : 20)
-            : 4,
+        isTemplatePicker ? 20 : 4,
         8,
         160 + bottomSafeInset,
       ),
@@ -424,47 +414,25 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       ),
     );
 
-    final pinnedHeader = Material(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (showTopBanner)
-            const Material(
-              elevation: 0,
-              child: AndroidBannerAdSlot(
-                placement: AndroidBannerPlacement.templates,
-              ),
-            ),
-          if (!isTemplatePicker)
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                showTopBanner ? 12 : 20,
-                20,
-                16,
-              ),
-              child: segmentControl,
-            ),
-        ],
-      ),
-    );
-
-    if (isTemplatePicker && !showTopBanner) {
+    if (isTemplatePicker) {
       return scrollBody;
     }
 
-    final body = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        pinnedHeader,
+        Material(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: segmentControl,
+          ),
+        ),
         Expanded(
           child: ClipRect(child: scrollBody),
         ),
       ],
     );
-
-    return showTopBanner ? SafeArea(bottom: false, child: body) : body;
   }
 }
 

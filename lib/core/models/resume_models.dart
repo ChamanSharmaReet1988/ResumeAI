@@ -401,8 +401,8 @@ class ResumeData {
           )
           .toList(),
       skills: (json['skills'] as List<dynamic>? ?? [])
-          .map((item) => item.toString())
-          .where((item) => item.trim().isNotEmpty)
+          .map((item) => stripPdfListMarkerLeftovers(item.toString()))
+          .where((item) => item.isNotEmpty)
           .toList(),
       useSkillSubheadings: json['useSkillSubheadings'] as bool? ?? false,
       skillGroups: (json['skillGroups'] as List<dynamic>? ?? [])
@@ -414,8 +414,8 @@ class ResumeData {
           .toList(),
       skillProficiency: syncedSkillProficiency(
         (json['skills'] as List<dynamic>? ?? [])
-            .map((item) => item.toString())
-            .where((item) => item.trim().isNotEmpty)
+            .map((item) => stripPdfListMarkerLeftovers(item.toString()))
+            .where((item) => item.isNotEmpty)
             .toList(),
         skillProficiencyFromJson(json['skillProficiency']),
       ),
@@ -782,8 +782,8 @@ class SkillGroup {
     return SkillGroup(
       heading: json['heading'] as String? ?? '',
       skills: (json['skills'] as List<dynamic>? ?? [])
-          .map((item) => item.toString())
-          .where((item) => item.trim().isNotEmpty)
+          .map((item) => stripPdfListMarkerLeftovers(item.toString()))
+          .where((item) => item.isNotEmpty)
           .toList(),
     );
   }

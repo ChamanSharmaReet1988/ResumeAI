@@ -177,6 +177,39 @@ void main() {
     );
   });
 
+  test('splits glued skill lines and drops leftover glyphs', () {
+    final parsed = LocalAiResumeService().parseImportedResumeText(
+      resumeText: '''
+Rohan Kapoor
+Senior Android Developer
+Skills
+Kotlin Java Jetpack Compose
+\u9FB1 Coroutines
+Flutter
+''',
+      template: ResumeTemplate.corporate,
+    );
+    expect(
+      parsed.skills,
+      containsAll(['Kotlin', 'Java', 'Jetpack Compose', 'Coroutines', 'Flutter']),
+    );
+    for (final skill in parsed.skills) {
+      expect(skill, isNot(contains(kPdfListMarkerLeftover)));
+      expect(skill.split(RegExp(r'\s+')).length, lessThanOrEqualTo(4));
+    }
+  });
+
+  test('saved skills drop leftover 龱 on load', () {
+    final resume = ResumeData.fromJson({
+      'id': 'skill-cleanup',
+      'title': 'Resume',
+      'template': ResumeTemplate.corporate.name,
+      'fullName': 'Rohan Kapoor',
+      'skills': ['\u9FB1 Kotlin', 'Java', '\u9FB1'],
+    });
+    expect(resume.skills, ['Kotlin', 'Java']);
+  });
+
   test('saved work bullets drop leftover 龱 on load', () {
     final item = WorkExperience.fromJson({
       'role': 'iOS Tech Lead',

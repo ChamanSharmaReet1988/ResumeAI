@@ -1638,6 +1638,18 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get add;
 
+  /// No description provided for @addSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Add section'**
+  String get addSection;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
   /// No description provided for @back.
   ///
   /// In en, this message translates to:
@@ -1941,7 +1953,7 @@ abstract class AppLocalizations {
   /// No description provided for @removeSectionMessage.
   ///
   /// In en, this message translates to:
-  /// **'This section will be removed from your resume. You can add a new custom section with Add anytime.'**
+  /// **'This section will be removed from your resume. You can add a new custom section with Add section anytime.'**
   String get removeSectionMessage;
 
   /// No description provided for @unableToPickImage.

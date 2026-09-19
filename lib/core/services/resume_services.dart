@@ -4867,26 +4867,105 @@ class LocalAiResumeService {
         : _extractKeywords(resumeText).take(10).toList();
 
     for (final source in sources) {
-      final normalized = source
+      final normalized = stripPdfListMarkerLeftovers(source)
           .replaceAll('•', ',')
           .replaceAll('|', ',')
-          .replaceAll('·', ',');
+          .replaceAll('·', ',')
+          .replaceAll(';', ',')
+          .replaceAll(RegExp(r'\s{2,}'), ',');
       for (final item in normalized.split(',')) {
-        final cleaned = item.replaceAll(RegExp(r'^[\-\*\u2022]\s*'), '').trim();
-        if (cleaned.isEmpty) {
+        final cleaned = stripPdfListMarkerLeftovers(
+          item.replaceAll(RegExp(r'^[\-\*\u2022]\s*'), ''),
+        );
+        if (!_isValidImportedSkill(cleaned)) {
           continue;
         }
-        if (_matchImportedSectionHeading(cleaned) != null) {
-          continue;
+        final splitSkills = _splitKnownImportedSkills(cleaned);
+        for (final skill in splitSkills) {
+          if (_isValidImportedSkill(skill)) {
+            values.add(skill);
+          }
         }
-        if (cleaned.split(RegExp(r'\s+')).length > 4) {
-          continue;
-        }
-        values.add(cleaned);
       }
     }
 
     return values.toList();
+  }
+
+  bool _isValidImportedSkill(String skill) {
+    final cleaned = stripPdfListMarkerLeftovers(skill);
+    if (cleaned.isEmpty) {
+      return false;
+    }
+    if (cleaned.runes.length == 1) {
+      return false;
+    }
+    if (_matchImportedSectionHeading(cleaned) != null) {
+      return false;
+    }
+    if (_isImportedContactLine(cleaned) || _looksLikeImportedDateLine(cleaned)) {
+      return false;
+    }
+    if (cleaned.endsWith('.')) {
+      return false;
+    }
+    if (RegExp(
+      r'^(led|built|managed|responsible|worked|developed|helped)\b',
+      caseSensitive: false,
+    ).hasMatch(cleaned)) {
+      return false;
+    }
+    if (cleaned.split(RegExp(r'\s+')).length > 4) {
+      return false;
+    }
+    return true;
+  }
+
+  static List<String>? _importedSkillsByLength;
+
+  /// Splits a space-joined skills row ("Kotlin Java Jetpack Compose") when
+  /// known skill names cover the line. Leaves unknown phrases intact.
+  List<String> _splitKnownImportedSkills(String text) {
+    final trimmed = text.trim();
+    if (trimmed.split(RegExp(r'\s+')).length < 2) {
+      return [trimmed];
+    }
+
+    _importedSkillsByLength ??= ([...kSkillSuggestionPool]
+      ..sort((a, b) => b.length.compareTo(a.length)));
+
+    final parts = <String>[];
+    var rest = trimmed;
+    while (rest.isNotEmpty) {
+      String? match;
+      final lowerRest = rest.toLowerCase();
+      for (final skill in _importedSkillsByLength!) {
+        final lowerSkill = skill.toLowerCase();
+        if (!lowerRest.startsWith(lowerSkill)) {
+          continue;
+        }
+        final end = lowerSkill.length;
+        if (end != rest.length && rest[end] != ' ') {
+          continue;
+        }
+        match = rest.substring(0, end);
+        rest = rest.substring(end).trim();
+        break;
+      }
+      if (match != null) {
+        parts.add(match);
+        continue;
+      }
+      if (parts.isEmpty) {
+        return [trimmed];
+      }
+      if (_isValidImportedSkill(rest)) {
+        parts.add(rest);
+      }
+      break;
+    }
+
+    return parts.length >= 2 ? parts : [trimmed];
   }
 
   List<WorkExperience> _extractImportedWorkExperiences({

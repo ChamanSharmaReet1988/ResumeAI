@@ -938,6 +938,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get add => 'Tambah';
 
   @override
+  String get addSection => 'Tambah bagian';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
   String get back => 'Kembali';
 
   @override
@@ -1099,7 +1105,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get removeSectionMessage =>
-      'Bagian ini akan dihapus dari resume Anda. Anda dapat menambahkan bagian khusus baru dengan Tambah kapan saja.';
+      'Bagian ini akan dihapus dari resume Anda. Anda dapat menambahkan bagian khusus baru dengan Tambah bagian kapan saja.';
 
   @override
   String get unableToPickImage => 'Tidak dapat memilih gambar saat ini.';

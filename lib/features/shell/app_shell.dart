@@ -45,6 +45,7 @@ class _AppShellState extends State<AppShell> {
   ResumeLibraryViewModel? _resumeLibrary;
   StreamSubscription<DeepLinkDestination>? _deepLinkSubscription;
   bool _deepLinkListenerAttached = false;
+  bool _recordedLaunchHomeVisit = false;
 
   bool get _isCupertino =>
       Platform.isIOS || Theme.of(context).platform == TargetPlatform.iOS;
@@ -59,9 +60,10 @@ class _AppShellState extends State<AppShell> {
       _resumeLibrary?.removeListener(_onResumeLibraryChanged);
       _resumeLibrary = library;
       _resumeLibrary!.addListener(_onResumeLibraryChanged);
+      final countLaunchVisit = !_recordedLaunchHomeVisit;
+      _recordedLaunchHomeVisit = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<InAppReviewPromptService>().onArrivedAtHome();
-        _maybePromptHomeReview();
+        unawaited(_onHomeBecameVisible(countVisit: countLaunchVisit));
       });
     }
     _attachDeepLinkListenerIfNeeded();
@@ -105,6 +107,18 @@ class _AppShellState extends State<AppShell> {
 
   void _onResumeLibraryChanged() {
     _maybePromptHomeReview();
+  }
+
+  Future<void> _onHomeBecameVisible({required bool countVisit}) async {
+    if (!mounted) {
+      return;
+    }
+    final review = context.read<InAppReviewPromptService>();
+    review.onArrivedAtHome();
+    if (countVisit) {
+      await review.recordHomeVisit();
+    }
+    await _maybePromptHomeReview();
   }
 
   Future<void> _maybePromptHomeReview() async {
@@ -154,8 +168,7 @@ class _AppShellState extends State<AppShell> {
     setState(() => _currentIndex = index);
 
     if (index == 0) {
-      context.read<InAppReviewPromptService>().onArrivedAtHome();
-      _maybePromptHomeReview();
+      unawaited(_onHomeBecameVisible(countVisit: true));
     }
   }
 

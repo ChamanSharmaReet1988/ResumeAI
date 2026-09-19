@@ -941,6 +941,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get add => 'Adicionar';
 
   @override
+  String get addSection => 'Adicionar seção';
+
+  @override
+  String get edit => 'Editar';
+
+  @override
   String get back => 'Voltar';
 
   @override
@@ -1102,7 +1108,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get removeSectionMessage =>
-      'Esta seção será removida do seu currículo. Você pode adicionar uma nova seção personalizada com Adicionar a qualquer momento.';
+      'Esta seção será removida do seu currículo. Você pode adicionar uma nova seção personalizada com Adicionar seção a qualquer momento.';
 
   @override
   String get unableToPickImage => 'Não foi possível escolher uma imagem agora.';

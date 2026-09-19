@@ -12,6 +12,7 @@ import 'package:resume_app/l10n/l10n_ext.dart';
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_builder_section_order.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/profile_image_storage.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/skill_autocomplete_suggestions.dart';
@@ -29,13 +30,6 @@ class ResumeBuilderScreen extends StatefulWidget {
 }
 
 class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
-  static const Duration _stepScrollAnimationDuration = Duration(
-    milliseconds: 280,
-  );
-  static const Duration _stepPageAnimationDuration = Duration(
-    milliseconds: 340,
-  );
-  static const Curve _stepAnimationCurve = Curves.easeInOutCubicEmphasized;
   static const double _calendarIconStroke = 1.65;
   static const double _entryDividerHorizontalPadding = 20;
 
@@ -52,16 +46,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     (_) => FocusNode(),
   );
   final _summaryFocusNode = FocusNode();
-  late final PageController _pageController;
-  final Map<int, ScrollController> _stepScrollControllers = {};
+  final Map<int, GlobalKey> _sectionTileKeys = {};
+  final _editorChrome = ValueNotifier<int>(0);
   final Map<String, FocusNode> _extendedKeyboardHideFocusNodes = {};
-  bool _didInitPageController = false;
+  bool _didInitSectionList = false;
   bool _prefsHydrated = false;
   bool _resumeOrderNudgeDismissed = false;
   bool _sectionReorderNudgeDismissed = false;
   bool _didInitPersonalOptionalExpanded = false;
   bool _personalOptionalExpanded = false;
   bool _didLogInitialSection = false;
+  bool _isEditingSections = false;
   int? _lastLoggedAnalyticsStep;
 
   List<FocusNode> get _personalKeyboardFocusOrder => [
@@ -146,11 +141,23 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     _skillFocusNode.addListener(_handleSkillFocusChange);
   }
 
+  void _refreshEditorUi([VoidCallback? update]) {
+    if (!mounted) {
+      return;
+    }
+    setState(update ?? () {});
+    _editorChrome.value++;
+  }
+
+  void _unfocusActiveField() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   void _handleSkillFocusChange() {
     if (!mounted) {
       return;
     }
-    setState(() {});
+    _refreshEditorUi();
     if (_skillFocusNode.hasFocus) {
       final fieldContext = _skillInputKey.currentContext;
       if (fieldContext != null) {
@@ -190,7 +197,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (!mounted) {
       return;
     }
-    setState(() {});
+    _refreshEditorUi();
     final node = _groupSkillFocusNodes[index];
     if (node == null || !node.hasFocus) {
       return;
@@ -222,14 +229,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           resume.website.trim().isNotEmpty ||
           resume.profileImagePath.trim().isNotEmpty;
     }
-    if (_didInitPageController) {
+    if (_didInitSectionList) {
       return;
     }
-
-    _pageController = PageController(
-      initialPage: context.read<ResumeEditorViewModel>().currentStep,
-    );
-    _didInitPageController = true;
+    _didInitSectionList = true;
     if (!_didLogInitialSection) {
       _didLogInitialSection = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -245,7 +248,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   void _onDismissResumeOrderNudge() {
     final prefs = context.read<AppPreferences>();
-    setState(() => _resumeOrderNudgeDismissed = true);
+    _refreshEditorUi(() => _resumeOrderNudgeDismissed = true);
     prefs.setResumeOrderNudgeDismissed(true);
   }
 
@@ -262,14 +265,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (!mounted) {
       return;
     }
-    setState(() {});
+    _refreshEditorUi();
   }
 
   void _handleExtendedKeyboardHideFocusChange() {
     if (!mounted) {
       return;
     }
-    setState(() {});
+    _refreshEditorUi();
   }
 
   FocusNode _focusNodeForExtendedKeyboardField(String key) {
@@ -294,10 +297,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     }
     _groupSkillFocusNodes.clear();
     _groupSkillInputKeys.clear();
-    _pageController.dispose();
-    for (final controller in _stepScrollControllers.values) {
-      controller.dispose();
-    }
+    _editorChrome.dispose();
     for (final node in _personalFieldFocusNodes) {
       node.dispose();
     }
@@ -312,7 +312,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     super.dispose();
   }
 
-  Future<void> _openPreview() async {
+  Future<void> _openPreview({bool backPopsToHome = true}) async {
     final viewModel = context.read<ResumeEditorViewModel>();
     await viewModel.saveResume();
     if (!mounted) {
@@ -323,7 +323,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: viewModel,
-          child: const ResumePreviewScreen(backPopsToHome: true),
+          child: ResumePreviewScreen(backPopsToHome: backPopsToHome),
         ),
       ),
     );
@@ -333,13 +333,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     }
 
     if (targetStep == null) {
-      if (Navigator.of(context).canPop()) {
+      if (backPopsToHome && Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
       return;
     }
 
-    _goToStep(targetStep);
+    await _openSection(targetStep);
   }
 
   Future<void> _downloadResume() async {
@@ -364,6 +364,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(context.l10n.pdfSavedTo(path))));
+    if (!mounted) {
+      return;
+    }
+    await context.read<InAppReviewPromptService>().promptAfterValueMoment();
   }
 
   Future<void> _shareResume() async {
@@ -392,6 +396,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         'format': format.name,
       },
     );
+    if (!mounted) {
+      return;
+    }
+    await context.read<InAppReviewPromptService>().promptAfterValueMoment();
   }
 
   Future<void> _printResume() async {
@@ -549,7 +557,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final added = viewModel.addSkill(_skillController.text);
     if (added) {
       _skillController.clear();
-      setState(() {});
+      _refreshEditorUi();
     }
   }
 
@@ -573,7 +581,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final added = viewModel.addSkillToGroup(index, trimmed);
     if (added) {
       controller.clear();
-      setState(() {});
+      _refreshEditorUi();
     } else {
       _showDuplicateSkillMessage();
     }
@@ -775,7 +783,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     required bool isEndDate,
     required String currentValue,
   }) async {
-    FocusScope.of(context).unfocus();
+    _unfocusActiveField();
 
     if (isEndDate) {
       final selection = await showModalBottomSheet<_EndDateSelection>(
@@ -867,7 +875,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     required bool isEndDate,
     required String currentValue,
   }) async {
-    FocusScope.of(context).unfocus();
+    _unfocusActiveField();
     final selectedYear = await _showYearPickerDialog(
       title: isEndDate ? context.l10n.selectEndYear : context.l10n.selectStartYear,
       initialValue: currentValue,
@@ -1098,7 +1106,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   void _moveWorkExperience({required int index, required bool moveUp}) {
-    FocusScope.of(context).unfocus();
+    _unfocusActiveField();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -1114,7 +1122,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   void _moveEducation({required int index, required bool moveUp}) {
-    FocusScope.of(context).unfocus();
+    _unfocusActiveField();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -1130,7 +1138,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   void _moveProject({required int index, required bool moveUp}) {
-    FocusScope.of(context).unfocus();
+    _unfocusActiveField();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -1146,7 +1154,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   void _moveSkillGroup({required int index, required bool moveUp}) {
-    FocusScope.of(context).unfocus();
+    _unfocusActiveField();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -1160,7 +1168,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         viewModel.moveSkillGroupDown(index);
         _swapGroupSkillInputState(index, index + 1);
       }
-      setState(() {});
+      _refreshEditorUi();
     });
   }
 
@@ -1185,26 +1193,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     swapMap(_groupSkillInputKeys);
   }
 
-  ScrollController _scrollControllerForStep(int step) {
-    return _stepScrollControllers.putIfAbsent(step, ScrollController.new);
+  GlobalKey _sectionTileKey(int step) {
+    return _sectionTileKeys.putIfAbsent(step, GlobalKey.new);
   }
 
-  void _scrollToStepTop([int? step]) {
-    final targetStep =
-        step ?? context.read<ResumeEditorViewModel>().currentStep;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final controller = _stepScrollControllers[targetStep];
-      if (!mounted || controller == null || !controller.hasClients) {
-        return;
-      }
-
-      controller.animateTo(
-        0,
-        duration: _stepScrollAnimationDuration,
-        curve: _stepAnimationCurve,
-      );
-    });
-  }
 
   Future<void> _showAddCustomCategoryDialog() async {
     final controller = TextEditingController();
@@ -1340,13 +1332,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final targetStep = viewModel.stepForSectionId(
       ResumeBuilderSectionIds.custom(newIndex),
     );
-    // Wait until PageView rebuilds with the new itemCount before animateToPage;
-    // otherwise the index can be out of range and the framework asserts.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
-      _goToStep(targetStep);
+      unawaited(_openSection(targetStep));
     });
   }
 
@@ -1378,20 +1368,47 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     context.read<ResumeEditorViewModel>().removeCustomSection(index);
   }
 
-  void _goToStep(int step) {
+  Future<void> _openSection(int step) async {
     FocusScope.of(context).unfocus();
-    final maxStep = context.read<ResumeEditorViewModel>().totalStepCount - 1;
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final maxStep = viewModel.totalStepCount - 1;
     final normalizedStep = step.clamp(0, maxStep < 0 ? 0 : maxStep);
-    context.read<ResumeEditorViewModel>().setStep(normalizedStep);
-    _scrollToStepTop(normalizedStep);
+    viewModel.setStep(normalizedStep);
     _logBuilderSectionViewed(normalizedStep);
-    if (_pageController.hasClients) {
-      _pageController.animateToPage(
-        normalizedStep,
-        duration: _stepPageAnimationDuration,
-        curve: _stepAnimationCurve,
-      );
+    await viewModel.saveResume();
+    if (!mounted) {
+      return;
     }
+
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => ChangeNotifierProvider<ResumeEditorViewModel>.value(
+          value: viewModel,
+          child: _ResumeSectionEditorScreen(
+            step: normalizedStep,
+            title: viewModel.titleForStep(normalizedStep, context.l10n),
+            chrome: _editorChrome,
+            buildContent: (context, editor) =>
+                _buildStepContentForStep(normalizedStep, editor),
+            showPersonalKeyboardBar: () => normalizedStep == 0,
+            showProjectKeyboardBar: () =>
+                viewModel.isSectionStep(ResumeBuilderSectionIds.projects) &&
+                _isProjectKeyboardHideFieldFocused,
+            showCustomKeyboardBar: () =>
+                viewModel.customIndexAtStep(normalizedStep) != null &&
+                _isCustomKeyboardHideFieldFocused,
+            showWorkKeyboardHideButton: () =>
+                viewModel.isSectionStep(ResumeBuilderSectionIds.work) &&
+                _isWorkKeyboardHideFieldFocused,
+            showEducationKeyboardHideButton: () =>
+                viewModel.isSectionStep(ResumeBuilderSectionIds.education),
+            onFocusPrevious: () =>
+                _focusPreviousKeyboardField(normalizedStep),
+            onFocusNext: () => _focusNextKeyboardField(normalizedStep),
+          ),
+        ),
+      ),
+    );
   }
 
   void _logBuilderSectionViewed(int step) {
@@ -1411,21 +1428,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _goToNextStep() async {
-    final viewModel = context.read<ResumeEditorViewModel>();
-    FocusScope.of(context).unfocus();
-    await viewModel.saveResume();
-    if (!mounted) {
-      return;
-    }
-    _goToStep(viewModel.currentStep + 1);
-  }
-
-  void _goToPreviousStep() {
-    final viewModel = context.read<ResumeEditorViewModel>();
-    _goToStep(viewModel.currentStep - 1);
   }
 
   Future<void> _pickProfileImage(ImageSource source) async {
@@ -1594,24 +1596,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         final currentTitle = viewModel.resume.title.ifBlank(
           ResumeData.defaultTitle,
         );
-        final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
-        final showPersonalKeyboardBar =
-            keyboardInset > 0 && viewModel.currentStep == 0;
-        final showProjectKeyboardBar =
-            keyboardInset > 0 &&
-            viewModel.isSectionStep(ResumeBuilderSectionIds.projects) &&
-            _isProjectKeyboardHideFieldFocused;
-        final showCustomKeyboardBar =
-            keyboardInset > 0 &&
-            viewModel.customIndexAtStep(viewModel.currentStep) != null &&
-            _isCustomKeyboardHideFieldFocused;
-        final showWorkKeyboardHideButton =
-            keyboardInset > 0 &&
-            viewModel.isSectionStep(ResumeBuilderSectionIds.work) &&
-            _isWorkKeyboardHideFieldFocused;
-        final showEducationKeyboardHideButton =
-            keyboardInset > 0 &&
-            viewModel.isSectionStep(ResumeBuilderSectionIds.education);
         final iosTitleStyle = Theme.of(
           context,
         ).cupertinoOverrideTheme?.textTheme?.navTitleTextStyle;
@@ -1623,210 +1607,276 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         final titleStyle = baseTitleStyle;
 
         return Scaffold(
-          resizeToAvoidBottomInset: false,
           appBar: AppBar(
             leadingWidth: 56,
             titleSpacing: 2,
             title: Text(currentTitle, style: titleStyle),
+            actions: [
+              TextButton(
+                key: const Key('builder-edit-sections-button'),
+                onPressed: () {
+                  setState(() => _isEditingSections = !_isEditingSections);
+                },
+                child: Text(
+                  _isEditingSections ? context.l10n.done : context.l10n.edit,
+                ),
+              ),
+            ],
           ),
           body: SafeArea(
-            child: Stack(
+            child: Column(
               children: [
-                Column(
-                  children: [
-                    _StepProgressHeader(
-                      currentStep: viewModel.currentStep,
-                      totalStepCount: viewModel.totalStepCount,
-                      sectionIds: viewModel.orderedSectionIds,
-                      customSections: viewModel.resume.customSections,
-                      showReorderHint: !_sectionReorderNudgeDismissed,
-                      onDismissReorderHint: _onDismissSectionReorderNudge,
-                      onSelectStep: _goToStep,
-                      onAddCategory: _showAddCustomCategoryDialog,
-                      onReorderChips: (oldIndex, newIndex) {
-                        FocusScope.of(context).unfocus();
-                        final selectedBefore = viewModel.currentStep;
-                        viewModel.reorderBuilderSectionChips(
-                          oldIndex,
-                          newIndex,
-                        );
-                        _onDismissSectionReorderNudge();
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (!mounted) {
-                            return;
-                          }
-                          final target = context
-                              .read<ResumeEditorViewModel>()
-                              .currentStep;
-                          if (_pageController.hasClients &&
-                              _pageController.page?.round() != target) {
-                            _pageController.jumpToPage(target);
-                          } else if (selectedBefore != target) {
-                            _goToStep(target);
-                          }
-                        });
-                      },
-                    ),
-                    if (viewModel.isBusy) const LinearProgressIndicator(),
-                    Expanded(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth >= 1080;
-                          final main = Column(
-                            children: [
-                              Expanded(
-                                child: PageView.builder(
-                                  key: const Key('resume-step-pages'),
-                                  controller: _pageController,
-                                  allowImplicitScrolling: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: viewModel.totalStepCount,
-                                  onPageChanged: (index) {
-                                    FocusScope.of(context).unfocus();
-                                    if (viewModel.currentStep != index) {
-                                      viewModel.setStep(index);
-                                    }
-                                    _logBuilderSectionViewed(index);
-                                  },
-                                  itemBuilder: (context, index) {
-                                    final isIosPersonalStep =
-                                        Theme.of(context).platform ==
-                                            TargetPlatform.iOS &&
-                                        index == 0;
-                                    final keyboardToolbarPadding =
-                                        isIosPersonalStep ? 72.0 : 0.0;
-                                    return SingleChildScrollView(
-                                      key: Key('step-scroll-$index'),
-                                      controller: _scrollControllerForStep(
-                                        index,
-                                      ),
-                                      keyboardDismissBehavior:
-                                          ScrollViewKeyboardDismissBehavior
-                                              .onDrag,
-                                      padding: EdgeInsets.fromLTRB(
-                                        20,
-                                        20,
-                                        20,
-                                        24 +
-                                            keyboardInset +
-                                            keyboardToolbarPadding,
-                                      ),
-                                      child: _buildStepContentForStep(
-                                        index,
-                                        viewModel,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              _BottomControls(
-                                currentStep: viewModel.currentStep,
-                                totalSteps: viewModel.totalStepCount,
-                                onBack: viewModel.currentStep == 0
-                                    ? null
-                                    : _goToPreviousStep,
-                                onNext:
-                                    viewModel.currentStep ==
-                                        viewModel.totalStepCount - 1
-                                    ? _openPreview
-                                    : () => _goToNextStep(),
-                              ),
-                            ],
-                          );
-
-                          if (!isWide) {
-                            return main;
-                          }
-
-                          return Row(
-                            children: [
-                              Expanded(flex: 6, child: main),
-                              SizedBox(
-                                width: math.min(
-                                  420,
-                                  constraints.maxWidth * 0.34,
-                                ),
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    0,
-                                    20,
-                                    20,
-                                    24,
-                                  ),
-                                  child: _LivePreviewPanel(
-                                    resume: viewModel.resume,
-                                    analysis: viewModel.analysis,
-                                    onDownload: _downloadResume,
-                                    onShare: _shareResume,
-                                    onPrint: _printResume,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                if (!_sectionReorderNudgeDismissed)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: KeyedSubtree(
+                      key: const Key('section-reorder-hint'),
+                      child: _HintBanner(
+                        title: context.l10n.reorderSections,
+                        body: context.l10n.reorderSectionsBody,
+                        compact: true,
+                        onDismiss: _onDismissSectionReorderNudge,
                       ),
                     ),
-                  ],
+                  ),
+                if (viewModel.isBusy) const LinearProgressIndicator(),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth >= 1080;
+                      final main = Column(
+                        children: [
+                          Expanded(
+                            child: _buildSectionList(viewModel: viewModel),
+                          ),
+                          _BuilderPreviewBar(
+                            onPreview: () =>
+                                _openPreview(backPopsToHome: true),
+                          ),
+                        ],
+                      );
+
+                      if (!isWide) {
+                        return main;
+                      }
+
+                      return Row(
+                        children: [
+                          Expanded(flex: 6, child: main),
+                          SizedBox(
+                            width: math.min(
+                              420,
+                              constraints.maxWidth * 0.34,
+                            ),
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.fromLTRB(
+                                0,
+                                20,
+                                20,
+                                24,
+                              ),
+                              child: _LivePreviewPanel(
+                                resume: viewModel.resume,
+                                analysis: viewModel.analysis,
+                                onDownload: _downloadResume,
+                                onShare: _shareResume,
+                                onPrint: _printResume,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-                if (showPersonalKeyboardBar ||
-                    showProjectKeyboardBar ||
-                    showCustomKeyboardBar)
-                  Positioned(
-                    left: 12,
-                    bottom: keyboardInset + 8,
-                    child: Material(
-                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(14),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 4,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              tooltip: context.l10n.previousField,
-                              onPressed: () => _focusPreviousKeyboardField(
-                                viewModel.currentStep,
-                              ),
-                              icon: const Icon(Icons.keyboard_arrow_up_rounded),
-                            ),
-                            IconButton(
-                              tooltip: context.l10n.nextField,
-                              onPressed: () => _focusNextKeyboardField(
-                                viewModel.currentStep,
-                              ),
-                              icon: const Icon(
-                                Icons.keyboard_arrow_down_rounded,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                if (showPersonalKeyboardBar ||
-                    showProjectKeyboardBar ||
-                    showCustomKeyboardBar ||
-                    showWorkKeyboardHideButton ||
-                    showEducationKeyboardHideButton)
-                  Positioned(
-                    right: 12,
-                    bottom: keyboardInset + 8,
-                    child: IconButton.filledTonal(
-                      onPressed: () => FocusScope.of(context).unfocus(),
-                      icon: const Icon(Icons.keyboard_hide_rounded),
-                      tooltip: context.l10n.hideKeyboard,
-                    ),
-                  ),
               ],
             ),
           ),
         );
       },
     );
+  }
+
+  bool? _defaultSectionIncluded(ResumeEditorViewModel viewModel, int step) {
+    final id = viewModel.sectionIdAtStep(step);
+    return switch (id) {
+      ResumeBuilderSectionIds.work => viewModel.resume.includeWorkInResume,
+      ResumeBuilderSectionIds.education =>
+        viewModel.resume.includeEducationInResume,
+      ResumeBuilderSectionIds.skills => viewModel.resume.includeSkillsInResume,
+      ResumeBuilderSectionIds.projects =>
+        viewModel.resume.includeProjectsInResume,
+      _ => null,
+    };
+  }
+
+  void Function(bool)? _defaultSectionIncludeSetter(
+    ResumeEditorViewModel viewModel,
+    int step,
+  ) {
+    final id = viewModel.sectionIdAtStep(step);
+    return switch (id) {
+      ResumeBuilderSectionIds.work => viewModel.setIncludeWorkInResume,
+      ResumeBuilderSectionIds.education => viewModel.setIncludeEducationInResume,
+      ResumeBuilderSectionIds.skills => viewModel.setIncludeSkillsInResume,
+      ResumeBuilderSectionIds.projects => viewModel.setIncludeProjectsInResume,
+      _ => null,
+    };
+  }
+
+  Widget _buildSectionList({
+    required ResumeEditorViewModel viewModel,
+  }) {
+    final itemCount = viewModel.totalStepCount + 1;
+    return ReorderableListView.builder(
+      key: const Key('resume-step-pages'),
+      buildDefaultDragHandles: false,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      onReorder: (oldIndex, newIndex) {
+        if (!_isEditingSections) {
+          return;
+        }
+        FocusScope.of(context).unfocus();
+        viewModel.reorderBuilderSectionChips(oldIndex, newIndex);
+        _onDismissSectionReorderNudge();
+      },
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        final isAdd = index == itemCount - 1;
+        if (isAdd) {
+          return Padding(
+            key: const ValueKey('chip-add'),
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _BuilderAddSectionTile(
+              onTap: _showAddCustomCategoryDialog,
+            ),
+          );
+        }
+
+        final customIndex = viewModel.customIndexAtStep(index);
+        final included = _defaultSectionIncluded(viewModel, index);
+        final includeSetter = _defaultSectionIncludeSetter(viewModel, index);
+        final title = viewModel.titleForStep(index, context.l10n);
+        final cue = _sectionCue(viewModel, index);
+        final tile = _BuilderSectionTile(
+          sectionKey: _sectionTileKey(index),
+          title: title,
+          cue: cue,
+          canReorder: _isEditingSections && index > 0,
+          reorderIndex: index,
+          isEditing: _isEditingSections,
+          included: included,
+          onTap: _isEditingSections
+              ? null
+              : () => unawaited(_openSection(index)),
+          onToggleVisibility: includeSetter == null
+              ? null
+              : () => unawaited(
+                    _toggleResumeSectionVisibility(
+                      isIncluded: included ?? true,
+                      sectionName: title,
+                      setIncluded: includeSetter,
+                    ),
+                  ),
+          onDelete: customIndex == null
+              ? null
+              : () => unawaited(_confirmRemoveCustomSection(customIndex)),
+        );
+
+        if (index == 0 || !_isEditingSections) {
+          return Padding(
+            key: ValueKey(
+              index == 0
+                  ? 'chip-personal'
+                  : 'chip-${viewModel.sectionIdAtStep(index) ?? 'section-$index'}',
+            ),
+            padding: const EdgeInsets.only(bottom: 8),
+            child: tile,
+          );
+        }
+
+        final sectionId = viewModel.sectionIdAtStep(index) ?? 'section-$index';
+        return ReorderableDelayedDragStartListener(
+          key: ValueKey('chip-$sectionId'),
+          index: index,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Semantics(
+              hint: context.l10n.reorderSectionTooltip,
+              child: tile,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _sectionCue(ResumeEditorViewModel viewModel, int step) {
+    if (step == ResumeEditorViewModel.personalStepIndex) {
+      final name = viewModel.resume.fullName.trim();
+      if (name.isNotEmpty) {
+        return name;
+      }
+      return viewModel.resume.jobTitle.trim();
+    }
+
+    final sectionId = viewModel.sectionIdAtStep(step);
+    if (sectionId == null) {
+      return '';
+    }
+
+    final customIndex = ResumeBuilderSectionIds.customIndex(sectionId);
+    if (customIndex != null) {
+      if (customIndex < 0 ||
+          customIndex >= viewModel.resume.customSections.length) {
+        return '';
+      }
+      final section = viewModel.resume.customSections[customIndex];
+      if (section.isBlank) {
+        return '';
+      }
+      final content = section.content.trim();
+      if (content.isNotEmpty) {
+        return content.split('\n').first;
+      }
+      final bullet = section.bullets
+          .map((item) => item.trim())
+          .firstWhere((item) => item.isNotEmpty, orElse: () => '');
+      if (bullet.isNotEmpty) {
+        return bullet;
+      }
+      final project = section.projectEntries
+          .map((item) => item.title.trim())
+          .firstWhere((item) => item.isNotEmpty, orElse: () => '');
+      return project;
+    }
+
+    final resume = viewModel.resume;
+    return switch (sectionId) {
+      ResumeBuilderSectionIds.work =>
+        resume.visibleWorkExperiences
+            .map((item) => item.role.trim().ifBlank(item.company.trim()))
+            .where((item) => item.isNotEmpty)
+            .firstOrNull ??
+        '',
+      ResumeBuilderSectionIds.education =>
+        resume.visibleEducation
+            .map((item) => item.institution.trim().ifBlank(item.degree.trim()))
+            .where((item) => item.isNotEmpty)
+            .firstOrNull ??
+        '',
+      ResumeBuilderSectionIds.skills => resume.skills
+          .where((item) => item.trim().isNotEmpty)
+          .take(2)
+          .join(' · '),
+      ResumeBuilderSectionIds.projects =>
+        resume.visibleProjects
+            .map((item) => item.title.trim())
+            .where((item) => item.isNotEmpty)
+            .firstOrNull ??
+        '',
+      _ => '',
+    };
   }
 
   Widget _buildStepContentForStep(int step, ResumeEditorViewModel viewModel) {
@@ -1969,7 +2019,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           InkWell(
             key: const Key('personal-add-more'),
             onTap: () {
-              setState(() => _personalOptionalExpanded = !expanded);
+              _refreshEditorUi(() => _personalOptionalExpanded = !expanded);
             },
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
@@ -2653,7 +2703,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 return;
               }
               viewModel.setUseSkillSubheadings(value);
-              setState(() {});
+              _refreshEditorUi();
             },
             child: Row(
               children: [
@@ -2697,7 +2747,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         textCapitalization: TextCapitalization.words,
                         textInputAction: TextInputAction.done,
                         onChanged: (_) {
-                          setState(() {});
+                          _refreshEditorUi();
                           if (_skillFocusNode.hasFocus) {
                             final fieldContext = _skillInputKey.currentContext;
                             if (fieldContext != null) {
@@ -2742,7 +2792,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             final added = viewModel.addSkill(option);
                             if (added) {
                               _skillController.clear();
-                              setState(() {});
+                              _refreshEditorUi();
                             } else {
                               _showDuplicateSkillMessage();
                             }
@@ -2893,7 +2943,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                           _reindexGroupSkillControllersAfterRemove(
                                             index,
                                           );
-                                          setState(() {});
+                                          _refreshEditorUi();
                                         },
                                       );
                                     },
@@ -2915,7 +2965,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                 textCapitalization: TextCapitalization.words,
                                 textInputAction: TextInputAction.done,
                                 onChanged: (_) {
-                                  setState(() {});
+                                  _refreshEditorUi();
                                   if (groupFocus.hasFocus) {
                                     final fieldContext =
                                         groupInputKey.currentContext;
@@ -2960,7 +3010,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                     );
                                     if (added) {
                                       groupController.clear();
-                                      setState(() {});
+                                      _refreshEditorUi();
                                     } else {
                                       _showDuplicateSkillMessage();
                                     }
@@ -2998,7 +3048,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   ? null
                   : () {
                       viewModel.addSkillGroup();
-                      setState(() {});
+                      _refreshEditorUi();
                     },
               style: _mediumTonalButtonStyle(context),
               icon: const Icon(Icons.add_rounded),
@@ -3689,307 +3739,146 @@ class _NewCustomSectionDialogResult {
   final _CustomSectionCreationType type;
 }
 
-class _StepProgressHeader extends StatefulWidget {
-  const _StepProgressHeader({
-    required this.currentStep,
-    required this.totalStepCount,
-    required this.sectionIds,
-    required this.customSections,
-    required this.showReorderHint,
-    required this.onDismissReorderHint,
-    required this.onSelectStep,
-    required this.onAddCategory,
-    required this.onReorderChips,
+class _ResumeSectionEditorScreen extends StatelessWidget {
+  const _ResumeSectionEditorScreen({
+    required this.step,
+    required this.title,
+    required this.chrome,
+    required this.buildContent,
+    required this.showPersonalKeyboardBar,
+    required this.showProjectKeyboardBar,
+    required this.showCustomKeyboardBar,
+    required this.showWorkKeyboardHideButton,
+    required this.showEducationKeyboardHideButton,
+    required this.onFocusPrevious,
+    required this.onFocusNext,
   });
 
-  final int currentStep;
-  final int totalStepCount;
-  final List<String> sectionIds;
-  final List<CustomSectionItem> customSections;
-  final bool showReorderHint;
-  final VoidCallback onDismissReorderHint;
-  final ValueChanged<int> onSelectStep;
-  final VoidCallback onAddCategory;
-  final void Function(int oldIndex, int newIndex) onReorderChips;
-
-  @override
-  State<_StepProgressHeader> createState() => _StepProgressHeaderState();
-}
-
-class _StepProgressHeaderState extends State<_StepProgressHeader> {
-  final _scrollController = ScrollController();
-  final Map<int, GlobalKey> _chipKeys = {};
-
-  GlobalKey _chipKeyFor(int index) {
-    return _chipKeys.putIfAbsent(index, () => GlobalKey());
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollSelectedChip();
-  }
-
-  @override
-  void didUpdateWidget(covariant _StepProgressHeader oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentStep != widget.currentStep ||
-        oldWidget.sectionIds.length != widget.sectionIds.length ||
-        oldWidget.customSections.length != widget.customSections.length) {
-      _scrollSelectedChip();
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _scrollSelectedChip() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-
-      final chipContext = _chipKeyFor(widget.currentStep).currentContext;
-      if (chipContext == null) {
-        return;
-      }
-
-      Scrollable.ensureVisible(
-        chipContext,
-        alignment: 0.5,
-        duration: _ResumeBuilderScreenState._stepScrollAnimationDuration,
-        curve: _ResumeBuilderScreenState._stepAnimationCurve,
-      );
-    });
-  }
+  final int step;
+  final String title;
+  final ValueNotifier<int> chrome;
+  final Widget Function(BuildContext context, ResumeEditorViewModel viewModel)
+      buildContent;
+  final bool Function() showPersonalKeyboardBar;
+  final bool Function() showProjectKeyboardBar;
+  final bool Function() showCustomKeyboardBar;
+  final bool Function() showWorkKeyboardHideButton;
+  final bool Function() showEducationKeyboardHideButton;
+  final VoidCallback onFocusPrevious;
+  final VoidCallback onFocusNext;
 
   @override
   Widget build(BuildContext context) {
-    final total = widget.totalStepCount;
-    final denom = total <= 0 ? 1 : total;
-    final progress = (widget.currentStep + 1) / denom;
+    return Consumer<ResumeEditorViewModel>(
+      builder: (context, viewModel, _) {
+        return ValueListenableBuilder<int>(
+          valueListenable: chrome,
+          builder: (context, _, __) {
+            final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+            final showPersonalBar =
+                keyboardInset > 0 && showPersonalKeyboardBar();
+            final showProjectBar =
+                keyboardInset > 0 && showProjectKeyboardBar();
+            final showCustomBar =
+                keyboardInset > 0 && showCustomKeyboardBar();
+            final showWorkHide =
+                keyboardInset > 0 && showWorkKeyboardHideButton();
+            final showEducationHide =
+                keyboardInset > 0 && showEducationKeyboardHideButton();
+            final isIosPersonal =
+                Theme.of(context).platform == TargetPlatform.iOS && step == 0;
+            final keyboardToolbarPadding = isIosPersonal ? 72.0 : 0.0;
 
-    final chipStyle = Theme.of(
-      context,
-    ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400);
-
-    final addIconColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
-    final scheme = Theme.of(context).colorScheme;
-    final selectedChipColor = scheme.primaryContainer;
-    final unselectedChipColor = scheme.surfaceContainerHighest;
-    final chipFill = WidgetStateProperty.resolveWith<Color?>((states) {
-      if (states.contains(WidgetState.selected)) {
-        return selectedChipColor;
-      }
-      return unselectedChipColor;
-    });
-
-    // Children: Personal + ordered sections + Add
-    final chipCount = 1 + widget.sectionIds.length + 1;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: LinearProgressIndicator(
-                    value: progress.clamp(0.0, 1.0),
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  '${widget.currentStep + 1}/$total',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 56,
-            width: double.infinity,
-            child: ReorderableListView.builder(
-              key: const Key('step-progress-scroll'),
-              scrollController: _scrollController,
-              scrollDirection: Axis.horizontal,
-              buildDefaultDragHandles: false,
-              clipBehavior: Clip.none,
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-              proxyDecorator: (child, index, animation) {
-                return AnimatedBuilder(
-                  animation: animation,
-                  builder: (context, child) {
-                    final t = Curves.easeInOut.transform(animation.value);
-                    return Material(
-                      elevation: 2 + 4 * t,
-                      color: Colors.transparent,
-                      shadowColor: Colors.black26,
-                      borderRadius: BorderRadius.circular(20),
-                      child: child,
-                    );
-                  },
-                  child: child,
-                );
-              },
-              onReorder: widget.onReorderChips,
-              itemCount: chipCount,
-              itemBuilder: (context, index) {
-                final isPersonal = index == 0;
-                final isAdd = index == chipCount - 1;
-                final Widget chip;
-                if (isPersonal) {
-                  chip = ChoiceChip(
-                    key: _chipKeyFor(0),
-                    showCheckmark: false,
-                    color: chipFill,
-                    selectedColor: selectedChipColor,
-                    backgroundColor: unselectedChipColor,
-                    surfaceTintColor: Colors.transparent,
-                    side: BorderSide.none,
-                    pressElevation: 0,
-                    label: Text(
-                      context.l10n.sectionPersonalInformation,
-                      style: chipStyle,
-                    ),
-                    selected: widget.currentStep == 0,
-                    onSelected: (_) => widget.onSelectStep(0),
-                  );
-                } else if (isAdd) {
-                  chip = ChoiceChip(
-                    color: chipFill,
-                    selectedColor: selectedChipColor,
-                    backgroundColor: unselectedChipColor,
-                    surfaceTintColor: Colors.transparent,
-                    side: BorderSide.none,
-                    pressElevation: 0,
-                    avatar: Icon(
-                      Icons.add_rounded,
-                      size: 24,
-                      color: addIconColor,
-                    ),
-                    label: Text(context.l10n.add, style: chipStyle),
-                    selected: false,
-                    onSelected: (_) => widget.onAddCategory(),
-                  );
-                } else {
-                  final sectionId = widget.sectionIds[index - 1];
-                  final selected = widget.currentStep == index;
-                  final handleColor = selected
-                      ? Theme.of(context).colorScheme.onSecondaryContainer
-                      : Theme.of(context).colorScheme.onSurfaceVariant;
-                  chip = ChoiceChip(
-                    key: _chipKeyFor(index),
-                    showCheckmark: false,
-                    color: chipFill,
-                    selectedColor: selectedChipColor,
-                    backgroundColor: unselectedChipColor,
-                    surfaceTintColor: Colors.transparent,
-                    side: BorderSide.none,
-                    pressElevation: 0,
-                    avatar: ReorderableDragStartListener(
-                      index: index,
-                      child: Icon(
-                        Icons.drag_indicator_rounded,
-                        size: 18,
-                        color: handleColor,
+            return Scaffold(
+              resizeToAvoidBottomInset: false,
+              appBar: AppBar(
+                leadingWidth: 56,
+                titleSpacing: 2,
+                title: Text(title),
+              ),
+              body: SafeArea(
+                child: Stack(
+                  children: [
+                    SingleChildScrollView(
+                      key: Key('step-scroll-$step'),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        16,
+                        20,
+                        24 + keyboardInset + keyboardToolbarPadding,
                       ),
+                      child: buildContent(context, viewModel),
                     ),
-                    label: Text(
-                      ResumeBuilderSectionIds.titleFor(
-                        sectionId,
-                        widget.customSections,
-                        context.l10n,
+                    if (showPersonalBar || showProjectBar || showCustomBar)
+                      Positioned(
+                        left: 12,
+                        bottom: keyboardInset + 8,
+                        child: Material(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(14),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: context.l10n.previousField,
+                                  onPressed: onFocusPrevious,
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_up_rounded,
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: context.l10n.nextField,
+                                  onPressed: onFocusNext,
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      style: chipStyle,
-                    ),
-                    selected: selected,
-                    onSelected: (_) => widget.onSelectStep(index),
-                  );
-                }
-
-                final chipSelected = isPersonal
-                    ? widget.currentStep == 0
-                    : !isAdd && widget.currentStep == index;
-                final padded = Padding(
-                  padding: EdgeInsets.only(right: isAdd ? 0 : 10),
-                  child: _DropShadow(
-                    borderRadius: BorderRadius.circular(14),
-                    color: chipSelected
-                        ? selectedChipColor
-                        : unselectedChipColor,
-                    child: chip,
-                  ),
-                );
-
-                if (isPersonal || isAdd) {
-                  return KeyedSubtree(
-                    key: ValueKey(isPersonal ? 'chip-personal' : 'chip-add'),
-                    child: padded,
-                  );
-                }
-
-                return ReorderableDelayedDragStartListener(
-                  key: ValueKey('chip-${widget.sectionIds[index - 1]}'),
-                  index: index,
-                  child: Semantics(
-                    hint: context.l10n.reorderSectionTooltip,
-                    child: padded,
-                  ),
-                );
-              },
-            ),
-          ),
-          if (widget.showReorderHint) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-              child: KeyedSubtree(
-                key: const Key('section-reorder-hint'),
-                child: _HintBanner(
-                  title: context.l10n.reorderSections,
-                  body: context.l10n.reorderSectionsBody,
-                  compact: true,
-                  onDismiss: widget.onDismissReorderHint,
+                    if (showPersonalBar ||
+                        showProjectBar ||
+                        showCustomBar ||
+                        showWorkHide ||
+                        showEducationHide)
+                      Positioned(
+                        right: 12,
+                        bottom: keyboardInset + 8,
+                        child: IconButton.filledTonal(
+                          onPressed: () => FocusScope.of(context).unfocus(),
+                          icon: const Icon(Icons.keyboard_hide_rounded),
+                          tooltip: context.l10n.hideKeyboard,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            ),
-          ],
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }
 
-class _BottomControls extends StatelessWidget {
-  const _BottomControls({
-    required this.currentStep,
-    required this.totalSteps,
-    required this.onBack,
-    required this.onNext,
-  });
+class _BuilderPreviewBar extends StatelessWidget {
+  const _BuilderPreviewBar({required this.onPreview});
 
-  final int currentStep;
-  final int totalSteps;
-  final VoidCallback? onBack;
-  final VoidCallback? onNext;
+  final VoidCallback onPreview;
 
   @override
   Widget build(BuildContext context) {
-    final isLastStep = currentStep == totalSteps - 1;
-
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 22),
       decoration: BoxDecoration(
@@ -4002,33 +3891,180 @@ class _BottomControls extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _DropShadow(
-              borderRadius: BorderRadius.circular(18),
-              child: OutlinedButton(
-                onPressed: onBack,
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                ),
-                child: Text(context.l10n.back),
+      child: _DropShadow(
+        borderRadius: BorderRadius.circular(24),
+        child: SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            key: const Key('builder-preview-button'),
+            onPressed: onPreview,
+            child: Text(context.l10n.preview),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BuilderSectionTile extends StatelessWidget {
+  const _BuilderSectionTile({
+    required this.sectionKey,
+    required this.title,
+    required this.cue,
+    required this.canReorder,
+    required this.reorderIndex,
+    required this.isEditing,
+    required this.onTap,
+    this.included,
+    this.onToggleVisibility,
+    this.onDelete,
+  });
+
+  final GlobalKey sectionKey;
+  final String title;
+  final String cue;
+  final bool canReorder;
+  final int reorderIndex;
+  final bool isEditing;
+  final VoidCallback? onTap;
+  final bool? included;
+  final VoidCallback? onToggleVisibility;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final filled = cue.trim().isNotEmpty;
+    final hidden = included == false;
+    return KeyedSubtree(
+      key: sectionKey,
+      child: Opacity(
+        opacity: hidden ? 0.55 : 1,
+        child: Material(
+          color: Theme.of(context).cardColor,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            key: Key('builder-section-$reorderIndex'),
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: Row(
+                children: [
+                  if (canReorder)
+                    ReorderableDragStartListener(
+                      index: reorderIndex,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 2),
+                        child: Icon(
+                          Icons.drag_indicator_rounded,
+                          size: 20,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  Icon(
+                    filled
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    size: 18,
+                    color: filled ? scheme.primary : scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        if (filled) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            cue,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (isEditing && onDelete != null)
+                    IconButton(
+                      key: Key('builder-section-delete-$reorderIndex'),
+                      tooltip: context.l10n.removeSection,
+                      onPressed: onDelete,
+                      visualDensity: VisualDensity.compact,
+                      icon: const ImageIcon(
+                        AssetImage('assets/fonts/delete.png'),
+                      ),
+                    )
+                  else if (isEditing && onToggleVisibility != null)
+                    IconButton(
+                      key: Key('builder-section-hide-$reorderIndex'),
+                      tooltip: included == true
+                          ? context.l10n.hideFromResume
+                          : context.l10n.showOnResume,
+                      onPressed: onToggleVisibility,
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(
+                        included == true
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    )
+                  else if (!isEditing)
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                ],
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _DropShadow(
-              borderRadius: BorderRadius.circular(24),
-              child: FilledButton(
-                onPressed: onNext,
-                child: Text(
-                  isLastStep ? context.l10n.preview : context.l10n.continueAction,
+        ),
+      ),
+    );
+  }
+}
+
+class _BuilderAddSectionTile extends StatelessWidget {
+  const _BuilderAddSectionTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: Theme.of(context).cardColor,
+      surfaceTintColor: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Icon(Icons.add_rounded, color: scheme.primary),
+              const SizedBox(width: 10),
+              Text(
+                context.l10n.addSection,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: scheme.primary,
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -4181,39 +4217,46 @@ class _StepSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 18, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (titleTrailing == null)
-              Text(
-                title,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              )
-            else
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                    titleTrailing!,
-                  ],
-                ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (titleTrailing == null)
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
-            const SizedBox(height: 8),
-            child,
+            )
+          else
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  titleTrailing!,
+                ],
+              ),
+            ),
+          if (subtitle.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
-        ),
+          const SizedBox(height: 8),
+          child,
+        ],
       ),
     );
   }

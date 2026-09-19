@@ -7,6 +7,7 @@ import '../../core/bottom_sheet_insets.dart';
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/resume_services.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/view_models.dart';
@@ -58,6 +59,10 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
           'source': 'cover_letter_preview',
         },
       );
+      if (!mounted) {
+        return;
+      }
+      await context.read<InAppReviewPromptService>().promptAfterValueMoment();
     } catch (_) {
       if (!mounted) {
         return;

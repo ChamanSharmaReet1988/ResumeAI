@@ -52,6 +52,8 @@ List<SingleChildWidget> _appShellProviders({
         readRatingCompleted: () async => true,
         writeRatingCompleted: () async {},
         openStoreListing: () async {},
+        readHomeVisitCount: () async => 0,
+        writeHomeVisitCount: (_) async {},
       ),
     ),
     Provider<ResumePdfService>.value(value: ResumePdfService()),
@@ -414,11 +416,6 @@ void main() {
 
       await tester.tap(find.byKey(const Key('use-template-button')));
       await tester.pumpAndSettle();
-
-      for (var step = 0; step < 4; step++) {
-        await tester.tap(find.text('Continue'));
-        await tester.pumpAndSettle();
-      }
 
       await tester.tap(find.text('Preview'));
       await tester.pump();

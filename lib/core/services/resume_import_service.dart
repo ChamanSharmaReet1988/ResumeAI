@@ -444,7 +444,7 @@ class ResumeImportService {
             ]
           : pageLines;
 
-      pageTexts.add(ordered.map((line) => line.text.trim()).join('\n'));
+      pageTexts.add(ordered.map(_pdfLineText).join('\n'));
     }
 
     return pageTexts.join('\n');

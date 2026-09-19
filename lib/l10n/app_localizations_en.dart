@@ -941,6 +941,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add => 'Add';
 
   @override
+  String get addSection => 'Add section';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
   String get back => 'Back';
 
   @override
@@ -1102,7 +1108,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeSectionMessage =>
-      'This section will be removed from your resume. You can add a new custom section with Add anytime.';
+      'This section will be removed from your resume. You can add a new custom section with Add section anytime.';
 
   @override
   String get unableToPickImage => 'Unable to pick image right now.';
