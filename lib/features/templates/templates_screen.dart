@@ -418,7 +418,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       return scrollBody;
     }
 
-    return Column(
+    final page = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Material(
@@ -433,6 +433,10 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         ),
       ],
     );
+    if (isCupertino) {
+      return SafeArea(bottom: false, child: page);
+    }
+    return page;
   }
 }
 
