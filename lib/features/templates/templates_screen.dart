@@ -2862,11 +2862,16 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
             ? (targetHeight - bottomInset).clamp(0.0, targetHeight)
             : null;
 
+        final isBlueDiagonal = resume.template.userFacingTemplate ==
+            ResumeTemplate.blueDiagonal;
         final pagePreview = FittedBox(
           fit: BoxFit.fitWidth,
           alignment: Alignment.topCenter,
           child: SizedBox(
             width: _pageWidth,
+            height: isBlueDiagonal && contentHeight != null && targetWidth > 0
+                ? _pageWidth * (contentHeight / targetWidth)
+                : null,
             child: ResumePreviewCanvas(
               resume: resume,
               showDebugLabel: false,

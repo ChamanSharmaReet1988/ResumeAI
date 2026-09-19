@@ -9117,6 +9117,9 @@ class _BlueDiagonalPreview extends StatelessWidget {
         final height = constraints.maxHeight.isFinite
             ? constraints.maxHeight
             : width / ResumePreviewCard._a4AspectRatio;
+        final pageHeight = width > 0
+            ? _pageWidth * (height / width)
+            : _pageHeight;
         return SizedBox(
           width: width,
           height: height,
@@ -9126,7 +9129,7 @@ class _BlueDiagonalPreview extends StatelessWidget {
               alignment: Alignment.topCenter,
               child: SizedBox(
                 width: _pageWidth,
-                height: _pageHeight,
+                height: pageHeight,
                 child: Stack(
                   children: [
                     Positioned(
