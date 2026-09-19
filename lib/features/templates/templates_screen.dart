@@ -679,6 +679,14 @@ const _professionalResumeCards = <_TemplateTileData>[
     caption: 'Tinted header band with a centred name and a split two-column body.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'blue-diagonal',
+    resumeTemplate: ResumeTemplate.blueDiagonal,
+    previewKind: _TemplatePreviewKind.blueDiagonalResume,
+    headline: 'Blue Diagonal',
+    caption: 'Colour corners with a photo column and timeline sections.',
+    isPremium: false,
+  ),
 ];
 
 const _resumeTemplateCards = _professionalResumeCards;
@@ -816,6 +824,7 @@ class _TemplateTileData {
       'slate-sidebar' => l10n.templateSlateSidebar,
       'timeline-profile' => l10n.templateTimelineProfile,
       'soft-header' => l10n.templateSoftHeader,
+      'blue-diagonal' => l10n.templateBlueDiagonal,
       'ats-structured' => l10n.templateStructuredAts,
       'ats-latex-classic' => l10n.templateLatexClassicAts,
       'ats-modern-flow' => l10n.templateModernFlowAts,
@@ -842,6 +851,7 @@ class _TemplateTileData {
       'slate-sidebar' => l10n.templateSlateSidebarCaption,
       'timeline-profile' => l10n.templateTimelineProfileCaption,
       'soft-header' => l10n.templateSoftHeaderCaption,
+      'blue-diagonal' => l10n.templateBlueDiagonalCaption,
       'ats-structured' => l10n.templateStructuredAtsCaption,
       'ats-latex-classic' => l10n.templateLatexClassicAtsCaption,
       'ats-modern-flow' => l10n.templateModernFlowAtsCaption,
@@ -869,6 +879,7 @@ enum _TemplatePreviewKind {
   slateSidebarResume,
   timelineProfileResume,
   softHeaderResume,
+  blueDiagonalResume,
   atsStructuredResume,
   atsSerifRulesResume,
   atsModernFlowResume,
@@ -989,6 +1000,12 @@ class _TemplatePreviewArt extends StatelessWidget {
           _softHeaderTemplateResume.copyWith(
             projects: _softHeaderTemplateResume.projects.take(1).toList(),
           ),
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.blueDiagonalResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _blueDiagonalTemplateResume,
           paletteSeed,
         ),
       ),
@@ -1157,6 +1174,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.slateSidebar => _slateSidebarTemplateResume,
       ResumeTemplate.timelineProfile => _timelineProfileTemplateResume,
       ResumeTemplate.softHeader => _softHeaderTemplateResume,
+      ResumeTemplate.blueDiagonal => _blueDiagonalTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
       ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,
@@ -1307,7 +1325,8 @@ ResumeData _applyTemplatePreviewPalette(
   if (sample.template == ResumeTemplate.headerSidebar ||
       sample.template == ResumeTemplate.slateSidebar ||
       sample.template == ResumeTemplate.timelineProfile ||
-      sample.template == ResumeTemplate.softHeader) {
+      sample.template == ResumeTemplate.softHeader ||
+      sample.template == ResumeTemplate.blueDiagonal) {
     return sample.copyWith(
       corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
         sample.template,
@@ -2704,6 +2723,90 @@ final ResumeData _softHeaderTemplateResume = ResumeData(
   ],
 );
 
+final ResumeData _blueDiagonalTemplateResume = ResumeData(
+  id: 'template-blue-diagonal',
+  title: 'Blue Diagonal Template',
+  fullName: 'Nadia Iqbal',
+  jobTitle: 'Graphic Designer',
+  email: 'nadia.iqbal@email.com',
+  phone: '+1 (206) 555-0134',
+  location: 'Seattle, WA',
+  website: 'nadiaiqbal.design',
+  summary:
+      'Graphic designer with eight years shaping brand systems, campaign art and product marketing for retail and technology clients.',
+  template: ResumeTemplate.blueDiagonal,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Senior Graphic Designer',
+      company: 'Fauget Studio',
+      startDate: '2020',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Led brand refreshes for six retail clients, lifting campaign engagement 24%.',
+        'Built the design system used across print, web and social templates.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Graphic Designer',
+      company: 'Larana Inc.',
+      startDate: '2017',
+      endDate: '2020',
+      description: '',
+      bullets: [
+        'Produced campaign art for weekly product launches across print and social.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Wardiere University',
+      degree: 'Master of Design',
+      startDate: '2015',
+      endDate: '2017',
+      score: 'GPA: 3.99',
+    ),
+    EducationItem(
+      institution: 'Wardiere University',
+      degree: 'Bachelor of Design',
+      startDate: '2011',
+      endDate: '2015',
+      score: 'GPA: 3.65',
+    ),
+  ],
+  skills: const [
+    'Web Design',
+    'Branding',
+    'Graphic Design',
+    'Typography',
+    'Marketing',
+  ],
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(title: 'Language', content: 'English\nFrench\nUrdu'),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.blueDiagonal,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    'custom:0',
+  ],
+);
+
 enum _ResumeTemplatePreviewFit { tile, detail }
 
 class _ResumeTemplatePreviewArt extends StatelessWidget {
@@ -2745,6 +2848,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.slateSidebar => true,
           ResumeTemplate.timelineProfile => true,
           ResumeTemplate.softHeader => true,
+          ResumeTemplate.blueDiagonal => true,
           _ => false,
         };
         final bottomInset = fullHeightTemplate

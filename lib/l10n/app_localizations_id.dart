@@ -570,6 +570,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Bidang header berwarna dengan nama di tengah dan isi dua kolom.';
 
   @override
+  String get templateBlueDiagonal => 'Diagonal Biru';
+
+  @override
+  String get templateBlueDiagonalCaption =>
+      'Sudut warna dengan kolom foto dan bagian linimasa.';
+
+  @override
   String get templateStructuredAts => 'ATS terstruktur';
 
   @override

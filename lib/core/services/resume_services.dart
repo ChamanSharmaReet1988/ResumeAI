@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -36,6 +37,7 @@ part 'resume_pdf/resume_pdf_slate_sidebar_page.dart';
 part 'resume_pdf/resume_pdf_ats_clean_sans_page.dart';
 part 'resume_pdf/resume_pdf_timeline_profile_page.dart';
 part 'resume_pdf/resume_pdf_soft_header_page.dart';
+part 'resume_pdf/resume_pdf_blue_diagonal_page.dart';
 
 /// Emits PDF body sections (after Summary/header) in the user's saved builder
 /// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
@@ -7599,7 +7601,8 @@ class ResumePdfService {
       resume.profileImagePath,
       resume.id,
     );
-    final profileImage = await _loadProfileImage(profileImagePath);
+    final profileImage = await _loadProfileImage(profileImagePath) ??
+        (resume.isGallerySample ? await _sampleAvatarImage() : null);
 
     if (resume.template == ResumeTemplate.creative) {
       final garamond = await _resumePdfFontsFor(resume);
@@ -7717,6 +7720,17 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.blueDiagonal) {
+      final document = pw.Document();
+      _addBlueDiagonalTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.softHeader) {
       final document = pw.Document();
       _addSoftHeaderTemplatePage(
@@ -7818,6 +7832,8 @@ class ResumePdfService {
       case ResumeTemplate.timelineProfile:
         break;
       case ResumeTemplate.softHeader:
+        break;
+      case ResumeTemplate.blueDiagonal:
         break;
     }
 
@@ -7999,13 +8015,33 @@ class ResumePdfService {
         resume.profileImagePath,
         resume.id,
       );
-      final profileImage = await _loadProfileImage(profileImagePath);
+      final profileImage = await _loadProfileImage(profileImagePath) ??
+        (resume.isGallerySample ? await _sampleAvatarImage() : null);
       final document = pw.Document();
       _addHeaderSidebarTemplatePage(
         document,
         resume,
         garamond: garamond,
         profileImage: profileImage,
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
+    if (resume.template == ResumeTemplate.blueDiagonal) {
+      final profileImagePath = await ProfileImageStorage.resolvePath(
+        resume.profileImagePath,
+        resume.id,
+      );
+      final document = pw.Document();
+      _addBlueDiagonalTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: await _loadProfileImage(profileImagePath) ??
+            (resume.isGallerySample ? await _sampleAvatarImage() : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
         highlightedBulletsByExperience: highlightedBulletsByExperience,
@@ -8036,7 +8072,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath),
+        profileImage: await _loadProfileImage(profileImagePath) ??
+            (resume.isGallerySample ? await _sampleAvatarImage() : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
         highlightedBulletsByExperience: highlightedBulletsByExperience,
@@ -8067,7 +8104,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath),
+        profileImage: await _loadProfileImage(profileImagePath) ??
+            (resume.isGallerySample ? await _sampleAvatarImage() : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
         highlightedBulletsByExperience: highlightedBulletsByExperience,
@@ -8141,6 +8179,8 @@ class ResumePdfService {
       case ResumeTemplate.timelineProfile:
         break;
       case ResumeTemplate.softHeader:
+        break;
+      case ResumeTemplate.blueDiagonal:
         break;
     }
 
@@ -8352,6 +8392,37 @@ class ResumePdfService {
         // load Noto Sans as a safety net for older font subsets.
         return PdfGoogleFonts.notoSansRegular();
     }
+  }
+
+  pw.Font? _materialIconFontCache;
+  var _materialIconFontMissing = false;
+
+  /// Flutter ships MaterialIcons in the asset bundle, so templates can draw
+  /// the same glyphs the app uses. Returns null when it is unavailable.
+  Future<pw.Font?> _materialIconFont() async {
+    if (_materialIconFontCache != null || _materialIconFontMissing) {
+      return _materialIconFontCache;
+    }
+    try {
+      final data = await rootBundle.load(
+        'fonts/MaterialIcons-Regular.otf',
+      );
+      return _materialIconFontCache = pw.Font.ttf(data);
+    } catch (_) {
+      _materialIconFontMissing = true;
+      return null;
+    }
+  }
+
+  pw.MemoryImage? _sampleAvatarCache;
+
+  /// Neutral placeholder photo for the gallery samples, so photo templates do
+  /// not advertise themselves with initials.
+  Future<pw.MemoryImage> _sampleAvatarImage() async {
+    final data = await rootBundle.load('assets/images/sample_avatar.png');
+    return _sampleAvatarCache ??= pw.MemoryImage(
+      data.buffer.asUint8List(),
+    );
   }
 
   Future<pw.MemoryImage?> _loadProfileImage(String path) async {

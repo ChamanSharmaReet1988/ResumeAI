@@ -97,6 +97,7 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.slateSidebar => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.timelineProfile => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.softHeader => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.blueDiagonal => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.atsStructured ||
     ResumeTemplate.atsSerifRules ||
     ResumeTemplate.atsModernFlow ||
@@ -405,6 +406,26 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get softHeaderMutedColor => const Color(0xFF4F5A68);
 
   Color get softHeaderRuleColor => const Color(0xFFB9CEE2);
+
+  static const Color blueDiagonalNativeAccentColor = Color(0xFF2E7BC4);
+
+  Color get blueDiagonalAccentColor {
+    if (corporateColorPresetIndex >= kCorporateColorPresets.length) {
+      return blueDiagonalNativeAccentColor;
+    }
+    return corporateColorPreset.headerColor;
+  }
+
+  /// Darker band that crosses the accent diagonals.
+  Color get blueDiagonalDeepColor =>
+      Color.lerp(blueDiagonalAccentColor, Colors.black, 0.55) ??
+      const Color(0xFF16344F);
+
+  Color get blueDiagonalColumnColor => const Color(0xFFEDEDED);
+
+  Color get blueDiagonalTitleColor => const Color(0xFF2B2B2B);
+
+  Color get blueDiagonalMutedColor => const Color(0xFF555B62);
 
   Color get detailsSidebarAccentColor => corporateColorPreset.headerColor;
 

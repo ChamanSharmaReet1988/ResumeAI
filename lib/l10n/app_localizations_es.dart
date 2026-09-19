@@ -571,6 +571,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Banda de encabezado con nombre centrado y cuerpo en dos columnas.';
 
   @override
+  String get templateBlueDiagonal => 'Diagonal azul';
+
+  @override
+  String get templateBlueDiagonalCaption =>
+      'Esquinas de color con columna de foto y secciones cronológicas.';
+
+  @override
   String get templateStructuredAts => 'ATS estructurado';
 
   @override

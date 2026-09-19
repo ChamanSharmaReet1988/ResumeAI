@@ -570,6 +570,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tinted header band with a centred name and a split two-column body.';
 
   @override
+  String get templateBlueDiagonal => 'Blue Diagonal';
+
+  @override
+  String get templateBlueDiagonalCaption =>
+      'Colour corners with a photo column and timeline sections.';
+
+  @override
   String get templateStructuredAts => 'Structured ATS';
 
   @override

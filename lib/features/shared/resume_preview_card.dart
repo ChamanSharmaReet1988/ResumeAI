@@ -222,6 +222,10 @@ class ResumePreviewCanvas extends StatelessWidget {
         resume: resume,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),
+      ResumeTemplate.blueDiagonal => _BlueDiagonalPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
       ResumeTemplate.atsStructured => _AtsStructuredPreview(
         resume: resume,
         showAllContent: showAllContent,
@@ -2372,9 +2376,7 @@ class _HeaderSidebarAvatarPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return ColoredBox(
       color: const Color(0xFFD6DEE8),
-      child: Center(
-        child: Text(_pdfAlignedInitials(resume), style: textStyle),
-      ),
+      child: _avatarFallback(resume, textStyle),
     );
   }
 }
@@ -6118,18 +6120,15 @@ class _ClassicSidebarAvatarPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(color: resume.classicSidebarAvatarFillColor),
-      child: Center(
-        child: Text(
-          _pdfAlignedInitials(resume),
-          style:
-              textStyle ??
-              ResumeTypography.garamondPreviewStyle(
-                weight: ResumeTypography.classicSidebarNameWeight,
-                fontSize: fontSize,
-                color: resume.classicSidebarTitleColor,
-                height: 1,
-              ),
-        ),
+      child: _avatarFallback(
+        resume,
+        textStyle ??
+            ResumeTypography.garamondPreviewStyle(
+              weight: ResumeTypography.classicSidebarNameWeight,
+              fontSize: fontSize,
+              color: resume.classicSidebarTitleColor,
+              height: 1,
+            ),
       ),
     );
   }
@@ -6997,10 +6996,9 @@ class _CreativeProfileAvatar extends StatelessWidget {
                 width: width,
                 height: height,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) =>
-                    Text(_pdfAlignedInitials(resume), style: initialsStyle),
+                errorBuilder: (_, _, _) => _avatarFallback(resume, initialsStyle),
               )
-            : Text(_pdfAlignedInitials(resume), style: initialsStyle),
+            : _avatarFallback(resume, initialsStyle),
       ),
     );
   }
@@ -7345,12 +7343,7 @@ class _SlateSidebarPreview extends StatelessWidget {
         avatarPath.isNotEmpty && File(avatarPath).existsSync();
     final placeholder = ColoredBox(
       color: const Color(0xFFD6DCE4),
-      child: Center(
-        child: Text(
-          _pdfAlignedInitials(resume),
-          style: style(FontWeight.w700, 30, titleColor),
-        ),
-      ),
+      child: _avatarFallback(resume, style(FontWeight.w700, 30, titleColor)),
     );
 
     final contacts = <(String, String)>[
@@ -8084,12 +8077,7 @@ class _TimelineProfilePreview extends StatelessWidget {
         avatarPath.isNotEmpty && File(avatarPath).existsSync();
     final placeholder = ColoredBox(
       color: const Color(0xFFD6DCE4),
-      child: Center(
-        child: Text(
-          _pdfAlignedInitials(resume),
-          style: style(FontWeight.w700, 32, titleColor),
-        ),
-      ),
+      child: _avatarFallback(resume, style(FontWeight.w700, 32, titleColor)),
     );
 
     final sidebarSections = resume.visibleCustomSections
@@ -8794,4 +8782,485 @@ class _SoftHeaderPreview extends StatelessWidget {
       },
     );
   }
+}
+
+/// Bundled placeholder photo, used by the gallery samples of the photo
+/// templates so they show a picture rather than initials.
+const String kSampleAvatarAsset = 'assets/images/sample_avatar.png';
+
+/// Sample photo for gallery samples, initials for everyone else.
+Widget _avatarFallback(ResumeData resume, TextStyle initialsStyle) {
+  if (resume.isGallerySample) {
+    return Image.asset(kSampleAvatarAsset, fit: BoxFit.cover);
+  }
+  return Center(child: Text(_pdfAlignedInitials(resume), style: initialsStyle));
+}
+
+/// Blue Diagonal live preview: colour corners, grey photo column, timeline
+/// education and experience.
+class _BlueDiagonalPreview extends StatelessWidget {
+  const _BlueDiagonalPreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
+
+  final ResumeData resume;
+  final bool followBuilderSectionOrder;
+
+  static const double _pageWidth = 595.28;
+  static const double _pageHeight = 841.89;
+  static const double _columnWidth = 250;
+  static const double _columnInset = 30;
+  static const double _mainLeft = 282;
+  static const double _avatarSize = 176;
+
+  static final RegExp _leftSectionTitle = RegExp(
+    r'^(languages?|references?|referees?|awards?|certifications?|'
+    r'certificates?|interests?|hobbies)$',
+    caseSensitive: false,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = resume.blueDiagonalAccentColor;
+    final accentDark = resume.blueDiagonalDeepColor;
+    final columnColor = resume.blueDiagonalColumnColor;
+    final titleColor = resume.blueDiagonalTitleColor;
+    final mutedColor = resume.blueDiagonalMutedColor;
+    final family = resume.usesOutfitResumeFont
+        ? ResumeTextFont.outfit.flutterFontFamily
+        : ResumeTextFont.garamond.flutterFontFamily;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final detailPt = bodyPt - 1.5;
+
+    TextStyle style(FontWeight weight, double size, Color color) => TextStyle(
+      fontFamily: family,
+      fontWeight: weight,
+      fontSize: size,
+      color: color,
+      height: ResumeTypography.bodyTextLineHeight,
+    );
+
+    final bodyText = style(FontWeight.w400, detailPt, mutedColor);
+    final entryDate = style(FontWeight.w700, bodyPt, titleColor);
+    final entryTitle = style(FontWeight.w700, detailPt, titleColor);
+
+    List<String> nonEmpty(Iterable<String> lines) => lines
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+
+    Widget sectionTitle(String title, IconData icon) => Padding(
+      padding: const EdgeInsets.only(top: 20, bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 19, color: titleColor),
+          const SizedBox(width: 10),
+          Text(title, style: style(FontWeight.w700, 17, titleColor)),
+        ],
+      ),
+    );
+
+    Widget bullet(String text) => Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 3,
+            height: 3,
+            margin: const EdgeInsets.only(top: 5, right: 8),
+            decoration: BoxDecoration(
+              color: mutedColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          Expanded(child: Text(text, style: bodyText)),
+        ],
+      ),
+    );
+
+    Widget timelineEntry(
+      String dates,
+      String title,
+      String subtitle,
+      List<Widget> details,
+    ) {
+      Widget dot() => Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(color: titleColor, shape: BoxShape.circle),
+      );
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 7,
+              margin: const EdgeInsets.only(top: 3, right: 14),
+              child: Column(
+                children: [
+                  dot(),
+                  Container(
+                    width: 1,
+                    height: 30 + details.length * 12,
+                    color: titleColor,
+                  ),
+                  dot(),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (dates.isNotEmpty) Text('($dates)', style: entryDate),
+                  Text(title.toUpperCase(), style: entryTitle),
+                  if (subtitle.isNotEmpty) Text(subtitle, style: bodyText),
+                  ...details,
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final contacts = <(IconData, String)>[
+      (Icons.phone, resume.phone.trim()),
+      (Icons.mail_outline, resume.email.trim()),
+      (Icons.place_outlined, resume.location.trim()),
+      (Icons.link, resume.website.trim()),
+      (Icons.link, resume.linkedinLink.trim()),
+      (Icons.link, resume.githubLink.trim()),
+    ].where((entry) => entry.$2.isNotEmpty).toList();
+    final leftSections = resume.visibleCustomSections
+        .where((item) => _leftSectionTitle.hasMatch(item.title.trim()))
+        .toList();
+
+    final leftColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (resume.summary.trim().isNotEmpty) ...[
+          sectionTitle('About Me', Icons.person),
+          Text(
+            resume.summary.trim(),
+            style: bodyText,
+            textAlign: TextAlign.justify,
+          ),
+        ],
+        if (contacts.isNotEmpty) ...[
+          sectionTitle('Contact', Icons.contact_page_outlined),
+          for (final (icon, value) in contacts)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Row(
+                children: [
+                  Icon(icon, size: 12, color: titleColor),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Text(value, style: bodyText, maxLines: 1),
+                  ),
+                ],
+              ),
+            ),
+        ],
+        if (_pdfAlignedSkills(resume).isNotEmpty) ...[
+          sectionTitle('Skills', Icons.settings_outlined),
+          for (final skill in _pdfAlignedSkills(resume).take(10)) bullet(skill),
+        ],
+        for (final section in leftSections) ...[
+          sectionTitle(section.title.trim(), Icons.language),
+          for (final line
+              in nonEmpty(
+                section.bullets.any((b) => b.trim().isNotEmpty)
+                    ? section.bullets
+                    : section.content.split('\n'),
+              ))
+            bullet(line),
+        ],
+      ],
+    );
+
+    final mainColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ..._mapPreviewBodySections(
+          previewBodySectionOrder(
+            resume,
+            followOrder: followBuilderSectionOrder,
+            exclude: {ResumeBuilderSectionIds.skills},
+          ),
+          (id) {
+            final customIndex = ResumeBuilderSectionIds.customIndex(id);
+            if (customIndex != null) {
+              if (customIndex < 0 ||
+                  customIndex >= resume.customSections.length) {
+                return null;
+              }
+              final item = resume.customSections[customIndex];
+              if (item.isBlank ||
+                  _leftSectionTitle.hasMatch(item.title.trim())) {
+                return null;
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  sectionTitle(
+                    item.title.trim().ifBlank('Custom section'),
+                    Icons.article_outlined,
+                  ),
+                  for (final line
+                      in nonEmpty(
+                        item.bullets.any((b) => b.trim().isNotEmpty)
+                            ? item.bullets
+                            : [item.content],
+                      ))
+                    bullet(line),
+                ],
+              );
+            }
+            switch (id) {
+              case ResumeBuilderSectionIds.education:
+                final items = resume.visibleEducation;
+                if (items.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Education', Icons.school_outlined),
+                    for (final item in items)
+                      timelineEntry(
+                        educationDateRangeLabel(item.startDate, item.endDate),
+                        item.institution.trim().ifBlank('Institution'),
+                        item.degree.trim(),
+                        [
+                          if (item.score.trim().isNotEmpty)
+                            Text(item.score.trim(), style: bodyText),
+                        ],
+                      ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.work:
+                final items = resume.visibleWorkExperiences;
+                if (items.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Experience', Icons.work_outline),
+                    for (final item in items)
+                      timelineEntry(
+                        educationDateRangeLabel(item.startDate, item.endDate),
+                        item.role.trim().ifBlank('Role'),
+                        item.company.trim(),
+                        [
+                          for (final line
+                              in nonEmpty(item.bullets).isNotEmpty
+                                  ? nonEmpty(item.bullets)
+                                  : nonEmpty([item.description]))
+                            bullet(line),
+                        ],
+                      ),
+                  ],
+                );
+              case ResumeBuilderSectionIds.projects:
+                final items = resume.visibleProjects;
+                if (items.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Projects', Icons.article_outlined),
+                    for (final item in items)
+                      timelineEntry(
+                        '',
+                        item.title.trim().ifBlank('Project'),
+                        item.subtitle.trim(),
+                        [
+                          for (final line in nonEmpty(item.bullets))
+                            bullet(line),
+                        ],
+                      ),
+                  ],
+                );
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+
+    final avatarPath = resume.profileImagePath.trim();
+    final hasProfileImage =
+        avatarPath.isNotEmpty && File(avatarPath).existsSync();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : width / ResumePreviewCard._a4AspectRatio;
+        return SizedBox(
+          width: width,
+          height: height,
+          child: ClipRect(
+            child: FittedBox(
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: _pageWidth,
+                height: _pageHeight,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: _columnWidth,
+                      child: ColoredBox(color: columnColor),
+                    ),
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _BlueDiagonalCornersPainter(
+                          accent: accent,
+                          accentDark: accentDark,
+                          columnWidth: _columnWidth,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: _columnWidth / 2 - _avatarSize / 2,
+                      top: 56,
+                      child: Container(
+                        width: _avatarSize,
+                        height: _avatarSize,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(7),
+                        child: ClipOval(
+                          child: hasProfileImage
+                              ? Image.file(File(avatarPath), fit: BoxFit.cover)
+                              : ColoredBox(
+                                  color: const Color(0xFFD6DCE4),
+                                  child: _avatarFallback(
+                                    resume,
+                                    style(FontWeight.w700, 42, titleColor),
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: _columnInset,
+                      width: _columnWidth - _columnInset * 2,
+                      top: 56 + _avatarSize + 14,
+                      bottom: 46,
+                      child: ClipRect(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: leftColumn,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: _mainLeft,
+                      right: 150,
+                      top: 120,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _pdfAlignedDisplayName(resume),
+                            style: style(FontWeight.w700, 34, titleColor),
+                          ),
+                          if (resume.jobTitle.trim().isNotEmpty)
+                            Text(
+                              resume.jobTitle.trim(),
+                              style: style(FontWeight.w400, 16, mutedColor),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      left: _mainLeft,
+                      right: 40,
+                      top: 255,
+                      bottom: 46,
+                      child: ClipRect(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: mainColumn,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _BlueDiagonalCornersPainter extends CustomPainter {
+  const _BlueDiagonalCornersPainter({
+    required this.accent,
+    required this.accentDark,
+    required this.columnWidth,
+  });
+
+  final Color accent;
+  final Color accentDark;
+  final double columnWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    void polygon(List<Offset> points, Color color) {
+      final path = Path()..moveTo(points.first.dx, points.first.dy);
+      for (final point in points.skip(1)) {
+        path.lineTo(point.dx, point.dy);
+      }
+      canvas.drawPath(path..close(), Paint()..color = color);
+    }
+
+    final w = size.width;
+    final h = size.height;
+    polygon([
+      const Offset(0, 0),
+      Offset(columnWidth, 0),
+      const Offset(0, 150),
+    ], accent);
+    polygon([
+      Offset(w - 185, 0),
+      Offset(w, 0),
+      Offset(w, 185),
+    ], accent);
+    polygon([
+      Offset(w - 185, 0),
+      Offset(w - 125, 0),
+      Offset(w, 125),
+      Offset(w, 185),
+    ], accentDark);
+    polygon([
+      Offset(0, h),
+      Offset(w, h),
+      Offset(w, h - 62),
+      Offset(0, h - 26),
+    ], accent);
+    polygon([
+      Offset(0, h),
+      Offset(w, h),
+      Offset(w, h - 26),
+      Offset(0, h - 8),
+    ], accentDark);
+  }
+
+  @override
+  bool shouldRepaint(_BlueDiagonalCornersPainter oldDelegate) =>
+      oldDelegate.accent != accent ||
+      oldDelegate.accentDark != accentDark ||
+      oldDelegate.columnWidth != columnWidth;
 }

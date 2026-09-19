@@ -266,6 +266,8 @@
   "templateTimelineProfileCaption": "Header biru dengan foto, sidebar kontak, dan bagian linimasa.",
   "templateSoftHeader": "Header Lembut",
   "templateSoftHeaderCaption": "Bidang header berwarna dengan nama di tengah dan isi dua kolom.",
+  "templateBlueDiagonal": "Diagonal Biru",
+  "templateBlueDiagonalCaption": "Sudut warna dengan kolom foto dan bagian linimasa.",
   "templateStructuredAts": "ATS terstruktur",
   "templateStructuredAtsCaption": "Pita bagian abu-abu dan header terpusat untuk parser.",
   "templateLatexClassicAts": "ATS klasik LaTeX",

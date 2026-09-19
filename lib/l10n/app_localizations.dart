@@ -1092,6 +1092,18 @@ abstract class AppLocalizations {
   /// **'Tinted header band with a centred name and a split two-column body.'**
   String get templateSoftHeaderCaption;
 
+  /// No description provided for @templateBlueDiagonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue Diagonal'**
+  String get templateBlueDiagonal;
+
+  /// No description provided for @templateBlueDiagonalCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour corners with a photo column and timeline sections.'**
+  String get templateBlueDiagonalCaption;
+
   /// No description provided for @templateStructuredAts.
   ///
   /// In en, this message translates to:

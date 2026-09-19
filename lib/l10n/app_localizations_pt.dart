@@ -570,6 +570,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Faixa de cabeçalho com nome centralizado e corpo em duas colunas.';
 
   @override
+  String get templateBlueDiagonal => 'Diagonal azul';
+
+  @override
+  String get templateBlueDiagonalCaption =>
+      'Cantos coloridos com coluna de foto e seções cronológicas.';
+
+  @override
   String get templateStructuredAts => 'ATS estruturado';
 
   @override

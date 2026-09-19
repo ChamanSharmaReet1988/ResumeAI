@@ -266,6 +266,8 @@
   "templateTimelineProfileCaption": "Cabeçalho azul com foto, barra de contato e seções em linha do tempo.",
   "templateSoftHeader": "Cabeçalho suave",
   "templateSoftHeaderCaption": "Faixa de cabeçalho com nome centralizado e corpo em duas colunas.",
+  "templateBlueDiagonal": "Diagonal azul",
+  "templateBlueDiagonalCaption": "Cantos coloridos com coluna de foto e seções cronológicas.",
   "templateStructuredAts": "ATS estruturado",
   "templateStructuredAtsCaption": "Faixas de seção cinzas e cabeçalho centralizado para parsers.",
   "templateLatexClassicAts": "ATS clássico LaTeX",
