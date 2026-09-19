@@ -194,15 +194,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             final theme = Theme.of(sheetContext);
             final muted = theme.colorScheme.onSurfaceVariant;
             final resume = viewModel.resume;
-            final selectedTemplateDefault =
-                resume.corporateColorPresetIndex ==
-                kTemplateDefaultColorPresetIndex;
-            final presetIndex = selectedTemplateDefault
-                ? 0
-                : resume.corporateColorPresetIndex.clamp(
-                    0,
-                    kCorporateColorPresets.length - 1,
-                  );
+            final colorSwatches = resumeColorPickerSwatches(resume.template);
 
             return Padding(
               padding: EdgeInsets.only(bottom: bottomInset),
@@ -334,37 +326,21 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                           const outerRightMargin = 20.0;
                           const itemGap = 12.0;
                           final items = <Widget>[
-                            for (
-                              var i = 0;
-                              i < kCorporateColorPresets.length;
-                              i++
-                            )
+                            for (final swatch in colorSwatches)
                               _CorporateColorPresetCircle(
-                                preset: kCorporateColorPresets[i],
-                                selected: presetIndex == i,
+                                key: Key('resume-color-${swatch.index}'),
+                                preset: swatch.preset,
+                                selected:
+                                    resume.corporateColorPresetIndex ==
+                                    swatch.index,
                                 onTap: () {
                                   viewModel.updateResume(
                                     (r) => r.copyWith(
-                                      corporateColorPresetIndex: i,
+                                      corporateColorPresetIndex: swatch.index,
                                     ),
                                   );
                                 },
                               ),
-                            _CorporateColorPresetCircle(
-                              preset: CorporateColorPreset(
-                                titleColor: const Color(0xFF2E3135),
-                                headerColor: resume.template.accentColor,
-                              ),
-                              selected: selectedTemplateDefault,
-                              onTap: () {
-                                viewModel.updateResume(
-                                  (r) => r.copyWith(
-                                    corporateColorPresetIndex:
-                                        kTemplateDefaultColorPresetIndex,
-                                  ),
-                                );
-                              },
-                            ),
                           ];
                           final lastIndex = items.length - 1;
 
@@ -517,6 +493,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
 
 class _CorporateColorPresetCircle extends StatelessWidget {
   const _CorporateColorPresetCircle({
+    super.key,
     required this.preset,
     required this.selected,
     required this.onTap,

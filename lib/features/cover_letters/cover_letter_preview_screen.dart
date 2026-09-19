@@ -152,15 +152,9 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
             final theme = Theme.of(sheetContext);
             final muted = theme.colorScheme.onSurfaceVariant;
             final letter = viewModel.coverLetter;
-            final selectedTemplateDefault =
-                letter.corporateColorPresetIndex ==
-                kTemplateDefaultColorPresetIndex;
-            final presetIndex = selectedTemplateDefault
-                ? 0
-                : letter.corporateColorPresetIndex.clamp(
-                    0,
-                    kCorporateColorPresets.length - 1,
-                  );
+            final colorSwatches = coverLetterColorPickerSwatches(
+              letter.template,
+            );
 
             return Padding(
               padding: EdgeInsets.only(bottom: bottomInset),
@@ -251,37 +245,21 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                           const outerRightMargin = 20.0;
                           const itemGap = 12.0;
                           final items = <Widget>[
-                            for (
-                              var i = 0;
-                              i < kCorporateColorPresets.length;
-                              i++
-                            )
+                            for (final swatch in colorSwatches)
                               _CoverLetterColorPresetCircle(
-                                preset: kCorporateColorPresets[i],
-                                selected: presetIndex == i,
+                                key: Key('cover-letter-color-${swatch.index}'),
+                                preset: swatch.preset,
+                                selected:
+                                    letter.corporateColorPresetIndex ==
+                                    swatch.index,
                                 onTap: () {
                                   viewModel.updateCoverLetter(
                                     (current) => current.copyWith(
-                                      corporateColorPresetIndex: i,
+                                      corporateColorPresetIndex: swatch.index,
                                     ),
                                   );
                                 },
                               ),
-                            _CoverLetterColorPresetCircle(
-                              preset: CorporateColorPreset(
-                                titleColor: const Color(0xFF2E3135),
-                                headerColor: letter.template.accentColor,
-                              ),
-                              selected: selectedTemplateDefault,
-                              onTap: () {
-                                viewModel.updateCoverLetter(
-                                  (current) => current.copyWith(
-                                    corporateColorPresetIndex:
-                                        kTemplateDefaultColorPresetIndex,
-                                  ),
-                                );
-                              },
-                            ),
                           ];
                           final lastIndex = items.length - 1;
 
@@ -427,6 +405,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
 
 class _CoverLetterColorPresetCircle extends StatelessWidget {
   const _CoverLetterColorPresetCircle({
+    super.key,
     required this.preset,
     required this.selected,
     required this.onTap,

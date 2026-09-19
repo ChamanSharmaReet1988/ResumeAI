@@ -121,6 +121,74 @@ int defaultColorPresetIndexForCoverLetterTemplate(
   };
 }
 
+CorporateColorPreset templateDefaultColorPreset(ResumeTemplate template) {
+  final index = defaultColorPresetIndexForTemplate(template);
+  if (index == kTemplateDefaultColorPresetIndex) {
+    return CorporateColorPreset(
+      titleColor: const Color(0xFF2E3135),
+      headerColor: template.accentColor,
+    );
+  }
+  return kCorporateColorPresets[index];
+}
+
+CorporateColorPreset coverLetterTemplateDefaultColorPreset(
+  CoverLetterTemplate template,
+) {
+  if (template == CoverLetterTemplate.sidebarLetter) {
+    return CorporateColorPreset(
+      titleColor: const Color(0xFF1B6759),
+      headerColor: template.accentColor,
+    );
+  }
+  final index = defaultColorPresetIndexForCoverLetterTemplate(template);
+  if (index == kTemplateDefaultColorPresetIndex) {
+    return CorporateColorPreset(
+      titleColor: const Color(0xFF2E3135),
+      headerColor: template.accentColor,
+    );
+  }
+  return kCorporateColorPresets[index];
+}
+
+/// Preview color dots: the template's original color first, then the rest.
+List<({int index, CorporateColorPreset preset})> colorPickerSwatches({
+  required int defaultIndex,
+  required CorporateColorPreset defaultPreset,
+}) {
+  final swatches = <({int index, CorporateColorPreset preset})>[
+    (index: defaultIndex, preset: defaultPreset),
+  ];
+  for (var i = 0; i < kCorporateColorPresets.length; i++) {
+    if (i == defaultIndex) {
+      continue;
+    }
+    final preset = kCorporateColorPresets[i];
+    if (preset.headerColor == defaultPreset.headerColor &&
+        preset.titleColor == defaultPreset.titleColor) {
+      continue;
+    }
+    swatches.add((index: i, preset: preset));
+  }
+  return swatches;
+}
+
+List<({int index, CorporateColorPreset preset})>
+resumeColorPickerSwatches(ResumeTemplate template) {
+  return colorPickerSwatches(
+    defaultIndex: defaultColorPresetIndexForTemplate(template),
+    defaultPreset: templateDefaultColorPreset(template),
+  );
+}
+
+List<({int index, CorporateColorPreset preset})>
+coverLetterColorPickerSwatches(CoverLetterTemplate template) {
+  return colorPickerSwatches(
+    defaultIndex: defaultColorPresetIndexForCoverLetterTemplate(template),
+    defaultPreset: coverLetterTemplateDefaultColorPreset(template),
+  );
+}
+
 /// Body font size slider range for resume preview + PDF export (pt).
 const int kResumeBodyFontPtMin = 11;
 const int kResumeBodyFontPtMax = 13;
