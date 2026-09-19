@@ -1731,7 +1731,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     return ReorderableListView.builder(
       key: const Key('resume-step-pages'),
       buildDefaultDragHandles: false,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      clipBehavior: Clip.none,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
       onReorder: (oldIndex, newIndex) {
         if (!_isEditingSections) {
           return;
@@ -1746,7 +1747,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         if (isAdd) {
           return Padding(
             key: const ValueKey('chip-add'),
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 12),
             child: _BuilderAddSectionTile(
               onTap: _showAddCustomCategoryDialog,
             ),
@@ -1757,11 +1758,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         final included = _defaultSectionIncluded(viewModel, index);
         final includeSetter = _defaultSectionIncludeSetter(viewModel, index);
         final title = viewModel.titleForStep(index, context.l10n);
-        final cue = _sectionCue(viewModel, index);
         final tile = _BuilderSectionTile(
           sectionKey: _sectionTileKey(index),
           title: title,
-          cue: cue,
+          filled: _sectionCue(viewModel, index).trim().isNotEmpty,
           canReorder: _isEditingSections && index > 0,
           reorderIndex: index,
           isEditing: _isEditingSections,
@@ -1790,7 +1790,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                   ? 'chip-personal'
                   : 'chip-${viewModel.sectionIdAtStep(index) ?? 'section-$index'}',
             ),
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 12),
             child: tile,
           );
         }
@@ -1800,7 +1800,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           key: ValueKey('chip-$sectionId'),
           index: index,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 12),
             child: Semantics(
               hint: context.l10n.reorderSectionTooltip,
               child: tile,
@@ -3910,7 +3910,7 @@ class _BuilderSectionTile extends StatelessWidget {
   const _BuilderSectionTile({
     required this.sectionKey,
     required this.title,
-    required this.cue,
+    required this.filled,
     required this.canReorder,
     required this.reorderIndex,
     required this.isEditing,
@@ -3922,7 +3922,7 @@ class _BuilderSectionTile extends StatelessWidget {
 
   final GlobalKey sectionKey;
   final String title;
-  final String cue;
+  final bool filled;
   final bool canReorder;
   final int reorderIndex;
   final bool isEditing;
@@ -3934,18 +3934,20 @@ class _BuilderSectionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final filled = cue.trim().isNotEmpty;
     final hidden = included == false;
     return KeyedSubtree(
       key: sectionKey,
       child: Opacity(
         opacity: hidden ? 0.55 : 1,
-        child: Material(
-          color: Theme.of(context).cardColor,
-          elevation: 0,
-          surfaceTintColor: Colors.transparent,
+        child: _DropShadow(
           borderRadius: BorderRadius.circular(14),
-          child: InkWell(
+          child: Material(
+            color: Theme.of(context).cardColor,
+            elevation: 0,
+            surfaceTintColor: Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
             key: Key('builder-section-$reorderIndex'),
             onTap: onTap,
             borderRadius: BorderRadius.circular(14),
@@ -3974,25 +3976,10 @@ class _BuilderSectionTile extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        if (filled) ...[
-                          const SizedBox(height: 1),
-                          Text(
-                            cue,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ],
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
                   if (isEditing && onDelete != null)
@@ -4028,6 +4015,7 @@ class _BuilderSectionTile extends StatelessWidget {
               ),
             ),
           ),
+          ),
         ),
       ),
     );
@@ -4042,27 +4030,31 @@ class _BuilderAddSectionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: Theme.of(context).cardColor,
-      surfaceTintColor: Colors.transparent,
+    return _DropShadow(
       borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
+      child: Material(
+        color: Theme.of(context).cardColor,
+        surfaceTintColor: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Row(
-            children: [
-              Icon(Icons.add_rounded, color: scheme.primary),
-              const SizedBox(width: 10),
-              Text(
-                context.l10n.addSection,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: scheme.primary,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Icon(Icons.add_rounded, color: scheme.primary),
+                const SizedBox(width: 10),
+                Text(
+                  context.l10n.addSection,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.primary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
