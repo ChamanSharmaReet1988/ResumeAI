@@ -8,6 +8,9 @@ import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_font_weight.dart';
 import '../../core/resume_text_font.dart';
+import '../../core/sample_avatar.dart';
+
+export '../../core/sample_avatar.dart';
 
 List<Widget> _mapPreviewBodySections(
   List<String> order,
@@ -444,15 +447,10 @@ class _DarkHeaderPreview extends StatelessWidget {
                           width: 1.9,
                         ),
                       ),
-                      child: Center(
-                        child: Text(
-                          _pdfAlignedInitials(resume),
-                          style: ResumeTypography.garamondPreviewStyle(
-                            weight: ResumeTypography.darkHeaderInitialsWeight,
-                            fontSize: ResumeTypography.darkHeaderInitialsPt,
-                            color: headerOnColor,
-                            height: ResumeTypography.textLineHeight,
-                          ),
+                      child: ClipRect(
+                        child: _corporateHeaderAvatar(
+                          resume,
+                          headerOnColor: headerOnColor,
                         ),
                       ),
                     ),
@@ -7085,6 +7083,28 @@ String _pdfAlignedDisplayName(ResumeData resume) {
   return name.isEmpty ? 'Your Name' : name;
 }
 
+Widget _corporateHeaderAvatar(
+  ResumeData resume, {
+  required Color headerOnColor,
+}) {
+  final initialsStyle = ResumeTypography.garamondPreviewStyle(
+    weight: ResumeTypography.darkHeaderInitialsWeight,
+    fontSize: ResumeTypography.darkHeaderInitialsPt,
+    color: headerOnColor,
+    height: ResumeTypography.textLineHeight,
+  );
+  final path = resume.profileImagePath.trim();
+  final hasImage = path.isNotEmpty && File(path).existsSync();
+  if (hasImage) {
+    return Image.file(
+      File(path),
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => _avatarFallback(resume, initialsStyle),
+    );
+  }
+  return _avatarFallback(resume, initialsStyle);
+}
+
 /// Same initials rules as [ResumePdfService._resumeInitials].
 String _pdfAlignedInitials(ResumeData resume) {
   final words = _pdfAlignedDisplayName(
@@ -8784,14 +8804,13 @@ class _SoftHeaderPreview extends StatelessWidget {
   }
 }
 
-/// Bundled placeholder photo, used by the gallery samples of the photo
-/// templates so they show a picture rather than initials.
-const String kSampleAvatarAsset = 'assets/images/sample_avatar.png';
-
 /// Sample photo for gallery samples, initials for everyone else.
 Widget _avatarFallback(ResumeData resume, TextStyle initialsStyle) {
   if (resume.isGallerySample) {
-    return Image.asset(kSampleAvatarAsset, fit: BoxFit.cover);
+    return Image.asset(
+      gallerySampleAvatarAsset(resume.template),
+      fit: BoxFit.cover,
+    );
   }
   return Center(child: Text(_pdfAlignedInitials(resume), style: initialsStyle));
 }

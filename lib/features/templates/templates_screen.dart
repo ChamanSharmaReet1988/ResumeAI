@@ -3068,6 +3068,13 @@ class _ProfileSidebarTemplateArtCompact extends StatelessWidget {
                   style: initialsStyle,
                 ),
               )
+            : resume.isGallerySample
+            ? Image.asset(
+                gallerySampleAvatarAsset(resume.template),
+                width: _avatarWidth,
+                height: _avatarHeight,
+                fit: BoxFit.cover,
+              )
             : Text(_miniClassicInitials(resume.fullName), style: initialsStyle),
       ),
     );

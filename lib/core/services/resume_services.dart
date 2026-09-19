@@ -18,6 +18,7 @@ import '../models/resume_builder_section_order.dart';
 import '../models/resume_models.dart';
 import '../resume_font_weight.dart';
 import '../resume_text_font.dart';
+import '../sample_avatar.dart';
 import '../skill_autocomplete_suggestions.dart';
 import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
@@ -7602,7 +7603,7 @@ class ResumePdfService {
       resume.id,
     );
     final profileImage = await _loadProfileImage(profileImagePath) ??
-        (resume.isGallerySample ? await _sampleAvatarImage() : null);
+        (resume.isGallerySample ? await _sampleAvatarImage(resume) : null);
 
     if (resume.template == ResumeTemplate.creative) {
       final garamond = await _resumePdfFontsFor(resume);
@@ -8016,7 +8017,7 @@ class ResumePdfService {
         resume.id,
       );
       final profileImage = await _loadProfileImage(profileImagePath) ??
-        (resume.isGallerySample ? await _sampleAvatarImage() : null);
+        (resume.isGallerySample ? await _sampleAvatarImage(resume) : null);
       final document = pw.Document();
       _addHeaderSidebarTemplatePage(
         document,
@@ -8041,7 +8042,7 @@ class ResumePdfService {
         resume,
         fonts: await _resumePdfFontsFor(resume),
         profileImage: await _loadProfileImage(profileImagePath) ??
-            (resume.isGallerySample ? await _sampleAvatarImage() : null),
+            (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
         highlightedBulletsByExperience: highlightedBulletsByExperience,
@@ -8073,7 +8074,7 @@ class ResumePdfService {
         resume,
         fonts: await _resumePdfFontsFor(resume),
         profileImage: await _loadProfileImage(profileImagePath) ??
-            (resume.isGallerySample ? await _sampleAvatarImage() : null),
+            (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
         highlightedBulletsByExperience: highlightedBulletsByExperience,
@@ -8105,7 +8106,7 @@ class ResumePdfService {
         resume,
         fonts: await _resumePdfFontsFor(resume),
         profileImage: await _loadProfileImage(profileImagePath) ??
-            (resume.isGallerySample ? await _sampleAvatarImage() : null),
+            (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
         highlightedBulletsByExperience: highlightedBulletsByExperience,
@@ -8414,13 +8415,18 @@ class ResumePdfService {
     }
   }
 
-  pw.MemoryImage? _sampleAvatarCache;
+  final Map<String, pw.MemoryImage> _sampleAvatarCache = {};
 
-  /// Neutral placeholder photo for the gallery samples, so photo templates do
-  /// not advertise themselves with initials.
-  Future<pw.MemoryImage> _sampleAvatarImage() async {
-    final data = await rootBundle.load('assets/images/sample_avatar.png');
-    return _sampleAvatarCache ??= pw.MemoryImage(
+  /// Placeholder photo for gallery samples, so photo templates do not
+  /// advertise themselves with initials.
+  Future<pw.MemoryImage> _sampleAvatarImage(ResumeData resume) async {
+    final asset = gallerySampleAvatarAsset(resume.template);
+    final cached = _sampleAvatarCache[asset];
+    if (cached != null) {
+      return cached;
+    }
+    final data = await rootBundle.load(asset);
+    return _sampleAvatarCache[asset] = pw.MemoryImage(
       data.buffer.asUint8List(),
     );
   }

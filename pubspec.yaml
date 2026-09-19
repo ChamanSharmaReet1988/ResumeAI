@@ -96,6 +96,7 @@ flutter:
     - assets/premium_badge.png
     - assets/images/google_drive_permission_example.png
     - assets/images/sample_avatar.png
+    - assets/images/sample_avatar_male.png
     - assets/templates/
     # Bundled for PDF export ([resumePdfThemeForBodyFont]); also declared under fonts.
     - assets/fonts/inter/Inter-Variable.ttf
