@@ -52,7 +52,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   bool _didInitSectionList = false;
   bool _prefsHydrated = false;
   bool _resumeOrderNudgeDismissed = false;
-  bool _sectionReorderNudgeDismissed = false;
   bool _didInitPersonalOptionalExpanded = false;
   bool _personalOptionalExpanded = false;
   bool _didLogInitialSection = false;
@@ -219,7 +218,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       _prefsHydrated = true;
       final prefs = context.read<AppPreferences>();
       _resumeOrderNudgeDismissed = prefs.resumeOrderNudgeDismissed;
-      _sectionReorderNudgeDismissed = prefs.sectionReorderNudgeDismissed;
     }
     if (!_didInitPersonalOptionalExpanded) {
       _didInitPersonalOptionalExpanded = true;
@@ -250,15 +248,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final prefs = context.read<AppPreferences>();
     _refreshEditorUi(() => _resumeOrderNudgeDismissed = true);
     prefs.setResumeOrderNudgeDismissed(true);
-  }
-
-  void _onDismissSectionReorderNudge() {
-    if (_sectionReorderNudgeDismissed) {
-      return;
-    }
-    final prefs = context.read<AppPreferences>();
-    setState(() => _sectionReorderNudgeDismissed = true);
-    prefs.setSectionReorderNudgeDismissed(true);
   }
 
   void _handleSummaryFocusChange() {
@@ -1626,19 +1615,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           body: SafeArea(
             child: Column(
               children: [
-                if (!_sectionReorderNudgeDismissed)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    child: KeyedSubtree(
-                      key: const Key('section-reorder-hint'),
-                      child: _HintBanner(
-                        title: context.l10n.reorderSections,
-                        body: context.l10n.reorderSectionsBody,
-                        compact: true,
-                        onDismiss: _onDismissSectionReorderNudge,
-                      ),
-                    ),
-                  ),
                 if (viewModel.isBusy) const LinearProgressIndicator(),
                 Expanded(
                   child: LayoutBuilder(
@@ -1739,7 +1715,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         }
         FocusScope.of(context).unfocus();
         viewModel.reorderBuilderSectionChips(oldIndex, newIndex);
-        _onDismissSectionReorderNudge();
       },
       itemCount: itemCount,
       itemBuilder: (context, index) {

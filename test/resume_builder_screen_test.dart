@@ -230,42 +230,6 @@ void main() {
     expect(find.text('Second role'), findsWidgets);
   });
 
-  testWidgets('builder shows a hint that sections can be reordered', (
-    tester,
-  ) async {
-    await pumpBuilder(tester);
-
-    expect(find.byKey(const Key('section-reorder-hint')), findsOneWidget);
-    expect(find.text('Reorder sections'), findsOneWidget);
-    expect(
-      find.text(
-        'Hold and drag a section, like Work Experience, to change where it appears on your resume.',
-      ),
-      findsOneWidget,
-    );
-    expect(find.byIcon(Icons.drag_indicator_rounded), findsNothing);
-
-    await tester.tap(find.byTooltip('Dismiss').first);
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const Key('section-reorder-hint')), findsNothing);
-    expect(find.byIcon(Icons.drag_indicator_rounded), findsNothing);
-  });
-
-  testWidgets('section reorder hint stays dismissed after it is closed', (
-    tester,
-  ) async {
-    await pumpBuilder(
-      tester,
-      preferences: AppPreferences.inMemory(
-        sectionReorderNudgeDismissed: true,
-      ),
-    );
-
-    expect(find.byKey(const Key('section-reorder-hint')), findsNothing);
-    expect(find.byIcon(Icons.drag_indicator_rounded), findsNothing);
-  });
-
   testWidgets('edit mode can reorder, hide default sections, and delete custom sections', (
     tester,
   ) async {
