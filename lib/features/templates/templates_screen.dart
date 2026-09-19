@@ -5561,7 +5561,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                                   )
                                 : resume.isGallerySample
                                 ? Image.asset(
-                                    kSampleAvatarAsset,
+                                    gallerySampleAvatarAsset(resume.template),
                                     fit: BoxFit.cover,
                                   )
                                 : DecoratedBox(
