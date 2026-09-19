@@ -200,12 +200,12 @@ class HomeScreen extends StatelessWidget {
                       ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            const SliverToBoxAdapter(child: SizedBox(height: 88)),
           ],
         );
 
-        // Create / Upload sit in a segmented bar pinned above the tab bar,
-        // where the floating add button used to be.
+        // Create / Upload float over the list so the scroll view reaches the
+        // tab bar. Extra sliver space keeps the last card above the buttons.
         final body = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -228,13 +228,23 @@ class HomeScreen extends StatelessWidget {
                 child: segmentControl,
               ),
             ),
-            Expanded(child: ClipRect(child: scrollBody)),
-            _HomeCreateActions(
-              showUpload: currentSegment == HomeSegment.resumes,
-              onCreateNew: currentSegment == HomeSegment.resumes
-                  ? onCreateResume
-                  : onCreateCoverLetter,
-              onUpload: onUploadResume,
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(child: ClipRect(child: scrollBody)),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: _HomeCreateActions(
+                      showUpload: currentSegment == HomeSegment.resumes,
+                      onCreateNew: currentSegment == HomeSegment.resumes
+                          ? onCreateResume
+                          : onCreateCoverLetter,
+                      onUpload: onUploadResume,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         );
@@ -263,40 +273,30 @@ class _HomeCreateActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
 
-    return Material(
-      color: theme.scaffoldBackgroundColor,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-          child: Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showUpload) ...[
-                  _HomeActionSegment(
-                    key: const Key('home-upload-resume-button'),
-                    icon: Icons.upload_file_rounded,
-                    label: l10n.homeUploadResume,
-                    highlighted: false,
-                    onTap: onUpload,
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                _HomeActionSegment(
-                  key: const Key('home-create-new-button'),
-                  icon: Icons.add_rounded,
-                  label: l10n.homeCreateNew,
-                  highlighted: true,
-                  onTap: onCreateNew,
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showUpload) ...[
+            _HomeActionSegment(
+              key: const Key('home-upload-resume-button'),
+              icon: Icons.upload_file_rounded,
+              label: l10n.homeUploadResume,
+              highlighted: false,
+              onTap: onUpload,
             ),
+            const SizedBox(width: 12),
+          ],
+          _HomeActionSegment(
+            key: const Key('home-create-new-button'),
+            icon: Icons.add_rounded,
+            label: l10n.homeCreateNew,
+            highlighted: true,
+            onTap: onCreateNew,
           ),
-        ),
+        ],
       ),
     );
   }
