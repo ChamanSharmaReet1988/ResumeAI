@@ -314,12 +314,8 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get creativeLineColor => const Color(0xFFCDBAAC);
 
   Color get classicSidebarRailColor =>
-      Color.lerp(
-        const Color(0xFFF2F4F7),
-        corporateColorPreset.headerColor,
-        0.08,
-      ) ??
-      const Color(0xFFF2F4F7);
+      Color.lerp(Colors.white, corporateColorPreset.headerColor, 0.14) ??
+      Colors.white;
 
   Color get classicSidebarAccentColor =>
       Color.lerp(corporateColorPreset.headerColor, Colors.black, 0.12) ??

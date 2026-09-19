@@ -1326,7 +1326,8 @@ ResumeData _applyTemplatePreviewPalette(
       sample.template == ResumeTemplate.slateSidebar ||
       sample.template == ResumeTemplate.timelineProfile ||
       sample.template == ResumeTemplate.softHeader ||
-      sample.template == ResumeTemplate.blueDiagonal) {
+      sample.template == ResumeTemplate.blueDiagonal ||
+      sample.template == ResumeTemplate.classicSidebar) {
     return sample.copyWith(
       corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
         sample.template,
@@ -2080,7 +2081,9 @@ final ResumeData _classicSidebarTemplateResume = ResumeData(
   includeSkillsInResume: true,
   includeProjectsInResume: true,
   bodyFontPt: kResumeBodyFontPtDefault,
-  corporateColorPresetIndex: 2,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.classicSidebar,
+  ),
 );
 
 final ResumeData _detailsSidebarTemplateResume = ResumeData(
@@ -5477,9 +5480,9 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF2E7CB3);
-    final rail = Color.lerp(Colors.white, accent, 0.14)!;
-    final avatar = Color.lerp(accent, Colors.white, 0.45)!;
+    final accent = resume.classicSidebarAccentColor;
+    final rail = resume.classicSidebarRailColor;
+    final avatar = resume.classicSidebarAvatarFillColor;
     const title = Color(0xFF1F2937);
     const muted = Color(0xFF667085);
     final line = Color.lerp(accent, Colors.white, 0.7)!;
@@ -5514,6 +5517,9 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
     final sidebarStyle = _sidebarStyle();
     final nameStyle = _nameStyle();
     final avatarInitialsStyle = _avatarInitialsStyle(resume);
+    final avatarPath = resume.profileImagePath.trim();
+    final hasProfileImage =
+        avatarPath.isNotEmpty && File(avatarPath).existsSync();
     final sectionHeadingStyle = _sectionHeadingStyle();
     final subtitleStyle = _subtitleStyle();
     final mutedBodyStyle = bodyStyle.copyWith(color: muted);
@@ -5537,27 +5543,39 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Center(
-                        child: SizedBox(
-                          width: 52,
-                          height: 52,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: avatar,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                _miniClassicInitials(resume.fullName),
-                                textAlign: TextAlign.center,
-                                style: avatarInitialsStyle.copyWith(
-                                  color: title,
-                                ),
-                                textHeightBehavior: const TextHeightBehavior(
-                                  applyHeightToFirstAscent: false,
-                                  applyHeightToLastDescent: false,
-                                ),
-                              ),
-                            ),
+                        child: ClipOval(
+                          child: SizedBox(
+                            width: 52,
+                            height: 52,
+                            child: hasProfileImage
+                                ? Image.file(
+                                    File(avatarPath),
+                                    fit: BoxFit.cover,
+                                  )
+                                : resume.isGallerySample
+                                ? Image.asset(
+                                    kSampleAvatarAsset,
+                                    fit: BoxFit.cover,
+                                  )
+                                : DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: avatar,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _miniClassicInitials(resume.fullName),
+                                        textAlign: TextAlign.center,
+                                        style: avatarInitialsStyle.copyWith(
+                                          color: title,
+                                        ),
+                                        textHeightBehavior:
+                                            const TextHeightBehavior(
+                                          applyHeightToFirstAscent: false,
+                                          applyHeightToLastDescent: false,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
