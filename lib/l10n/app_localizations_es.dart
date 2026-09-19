@@ -578,6 +578,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esquinas de color con columna de foto y secciones cronológicas.';
 
   @override
+  String get templateMinimalProfile => 'Perfil minimalista';
+
+  @override
+  String get templateMinimalProfileCaption =>
+      'Foto circular, sobre mí, secciones con fechas y cuadrícula de habilidades.';
+
+  @override
   String get templateStructuredAts => 'ATS estructurado';
 
   @override

@@ -827,6 +827,19 @@ void main() {
     },
   );
 
+  test('minimal profile pdf builds', () async {
+    final service = ResumePdfService();
+    final bytes = await service.buildPdf(
+      ResumeData.empty(template: ResumeTemplate.minimalProfile).copyWith(
+        fullName: 'Arjun Shah',
+        jobTitle: 'Web Designer',
+        email: 'hello@arjunshah.design',
+        summary: 'Web designer focused on clean product sites.',
+      ),
+    );
+    expect(bytes, isNotEmpty);
+  });
+
   test('Languages summary custom section fills list slots in templates', () {
     final resume = ResumeData.empty(template: ResumeTemplate.atsClassicCv)
         .copyWith(

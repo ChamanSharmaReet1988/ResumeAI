@@ -1104,6 +1104,18 @@ abstract class AppLocalizations {
   /// **'Colour corners with a photo column and timeline sections.'**
   String get templateBlueDiagonalCaption;
 
+  /// No description provided for @templateMinimalProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal Profile'**
+  String get templateMinimalProfile;
+
+  /// No description provided for @templateMinimalProfileCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Circular photo header with about, dated sections, and a skills grid.'**
+  String get templateMinimalProfileCaption;
+
   /// No description provided for @templateStructuredAts.
   ///
   /// In en, this message translates to:

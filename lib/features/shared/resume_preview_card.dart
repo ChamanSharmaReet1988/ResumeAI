@@ -229,6 +229,10 @@ class ResumePreviewCanvas extends StatelessWidget {
         resume: resume,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),
+      ResumeTemplate.minimalProfile => _MinimalProfilePreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
       ResumeTemplate.atsStructured => _AtsStructuredPreview(
         resume: resume,
         showAllContent: showAllContent,
@@ -9284,4 +9288,458 @@ class _BlueDiagonalCornersPainter extends CustomPainter {
       oldDelegate.accent != accent ||
       oldDelegate.accentDark != accentDark ||
       oldDelegate.columnWidth != columnWidth;
+}
+
+/// Circular photo header, about me, dated education/experience, skills grid.
+class _MinimalProfilePreview extends StatelessWidget {
+  const _MinimalProfilePreview({
+    required this.resume,
+    this.followBuilderSectionOrder = true,
+  });
+
+  final ResumeData resume;
+  final bool followBuilderSectionOrder;
+
+  static const double _pageInset = 40;
+  static const double _avatarSize = 72;
+  static const double _metaColumn = 128;
+  static const double _columnGap = 22;
+
+  @override
+  Widget build(BuildContext context) {
+    final titleColor = resume.minimalProfileTitleColor;
+    final mutedColor = resume.minimalProfileMutedColor;
+    final accent = resume.minimalProfileAccentColor;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
+    final name = _pdfAlignedDisplayName(resume);
+    final title = resume.jobTitle.trim();
+    final summary = resume.summary.trim();
+    final avatarPath = resume.profileImagePath.trim();
+    final hasProfileImage =
+        avatarPath.isNotEmpty && File(avatarPath).existsSync();
+
+    TextStyle style(FontWeight weight, double size, Color color, {double height = 1.35}) {
+      return TextStyle(
+        fontWeight: weight,
+        fontSize: size,
+        color: color,
+        height: height,
+      );
+    }
+
+    final nameStyle = style(FontWeight.w800, 26, titleColor, height: 1.05);
+    final jobStyle = style(FontWeight.w400, 13, mutedColor, height: 1.2);
+    final contactStyle = style(FontWeight.w400, bodyPt - 1, mutedColor);
+    final sectionStyle = style(FontWeight.w800, 13.5, titleColor, height: 1.1);
+    final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
+    final bodyStyle = style(FontWeight.w400, bodyPt - 0.5, mutedColor);
+    final initialsStyle = style(FontWeight.w700, 22, accent);
+
+    Widget sectionHeading(String label, {bool showRule = true}) {
+      final heading = Text(label.toUpperCase(), style: sectionStyle);
+      if (!showRule) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 22, bottom: 10),
+          child: heading,
+        );
+      }
+      return Padding(
+        padding: const EdgeInsets.only(top: 20, bottom: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            heading,
+            const SizedBox(width: 12),
+            Expanded(child: Container(height: 1, color: titleColor)),
+          ],
+        ),
+      );
+    }
+
+    Widget contactChip(IconData icon, String value) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 16),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: mutedColor),
+            const SizedBox(width: 6),
+            Flexible(child: Text(value, style: contactStyle)),
+          ],
+        ),
+      );
+    }
+
+    Widget datedEntry({
+      required String dates,
+      required String organisation,
+      required String title,
+      String detail = '',
+    }) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: _metaColumn,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (dates.isNotEmpty) Text(dates, style: bodyStyle),
+                  if (organisation.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(organisation, style: bodyStyle),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: _columnGap),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: entryTitleStyle),
+                  if (detail.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(detail, style: bodyStyle),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget skillsGrid(List<String> skills) {
+      return Column(
+        children: [
+          for (var row = 0; row < (skills.length / 4).ceil(); row++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var col = 0; col < 4; col++)
+                    Expanded(
+                      child: col + row * 4 < skills.length
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('•  ', style: bodyStyle),
+                                Expanded(
+                                  child: Text(
+                                    skills[row * 4 + col],
+                                    style: bodyStyle,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      );
+    }
+
+    Widget referencesGrid(List<_MinimalProfileReference> refs) {
+      final rows = <Widget>[];
+      for (var i = 0; i < refs.length; i += 2) {
+        final left = refs[i];
+        final right = i + 1 < refs.length ? refs[i + 1] : null;
+        rows.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _minimalProfileReferenceColumn(left, entryTitleStyle, bodyStyle)),
+                const SizedBox(width: 24),
+                Expanded(
+                  child: right == null
+                      ? const SizedBox.shrink()
+                      : _minimalProfileReferenceColumn(
+                          right,
+                          entryTitleStyle,
+                          bodyStyle,
+                        ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      return Column(children: rows);
+    }
+
+    Widget? bodySection(String id) {
+      if (id == ResumeBuilderSectionIds.education) {
+        final items = resume.visibleEducation;
+        if (items.isEmpty) return null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            sectionHeading('Education'),
+            for (final item in items)
+              datedEntry(
+                dates: educationDateRangeLabel(item.startDate, item.endDate),
+                organisation: item.institution.trim(),
+                title: item.degree.trim().isEmpty ? 'Degree' : item.degree.trim(),
+                detail: educationScoreDisplayLabel(item),
+              ),
+          ],
+        );
+      }
+      if (id == ResumeBuilderSectionIds.work) {
+        final items = resume.visibleWorkExperiences;
+        if (items.isEmpty) return null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            sectionHeading('Experience'),
+            for (final item in items)
+              datedEntry(
+                dates: educationDateRangeLabel(item.startDate, item.endDate),
+                organisation: item.company.trim(),
+                title: item.role.trim().isEmpty ? 'Role' : item.role.trim(),
+                detail: _minimalProfileEntryDetail(item.description, item.bullets),
+              ),
+          ],
+        );
+      }
+      if (id == ResumeBuilderSectionIds.skills) {
+        final skills = _pdfAlignedSkills(resume);
+        if (skills.isEmpty) return null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            sectionHeading('Skills'),
+            skillsGrid(skills),
+          ],
+        );
+      }
+      if (id == ResumeBuilderSectionIds.projects) {
+        final items = resume.visibleProjects;
+        if (items.isEmpty) return null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            sectionHeading('Projects'),
+            for (final item in items)
+              datedEntry(
+                dates: item.subtitle.trim(),
+                organisation: '',
+                title: item.title.trim().isEmpty ? 'Project' : item.title.trim(),
+                detail: _minimalProfileEntryDetail(
+                  [item.overview, item.impact].where((s) => s.trim().isNotEmpty).join(' '),
+                  item.bullets,
+                ),
+              ),
+          ],
+        );
+      }
+      final customIndex = ResumeBuilderSectionIds.customIndex(id);
+      if (customIndex == null ||
+          customIndex < 0 ||
+          customIndex >= resume.customSections.length) {
+        return null;
+      }
+      final section = resume.customSections[customIndex];
+      if (section.isBlank) return null;
+      final title = section.title.trim().isEmpty ? 'Section' : section.title.trim();
+      if (_isMinimalProfileReferencesSection(section)) {
+        final refs = _minimalProfileReferences(section);
+        if (refs.isEmpty) return null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            sectionHeading(title),
+            referencesGrid(refs),
+          ],
+        );
+      }
+      final lines = section.layoutMode == CustomSectionLayoutMode.bullets
+          ? section.bullets.map((item) => item.trim()).where((item) => item.isNotEmpty)
+          : section.content.split('\n').map((item) => item.trim()).where((item) => item.isNotEmpty);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          sectionHeading(title),
+          for (final line in lines)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(line, style: bodyStyle),
+            ),
+        ],
+      );
+    }
+
+    final contacts = <(IconData, String)>[
+      if (resume.phone.trim().isNotEmpty) (Icons.phone_outlined, resume.phone.trim()),
+      if (resume.email.trim().isNotEmpty) (Icons.email_outlined, resume.email.trim()),
+      if (resume.website.trim().isNotEmpty) (Icons.language, resume.website.trim()),
+      if (resume.location.trim().isNotEmpty) (Icons.place_outlined, resume.location.trim()),
+    ];
+
+    final content = ColoredBox(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(_pageInset, 36, _pageInset, 36),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClipOval(
+                  child: SizedBox(
+                    width: _avatarSize,
+                    height: _avatarSize,
+                    child: hasProfileImage
+                        ? Image.file(
+                            File(avatarPath),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) =>
+                                _avatarFallback(resume, initialsStyle),
+                          )
+                        : _avatarFallback(resume, initialsStyle),
+                  ),
+                ),
+                const SizedBox(width: 22),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name.toUpperCase(), style: nameStyle),
+                      if (title.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(title, style: jobStyle),
+                      ],
+                      if (contacts.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            for (final contact in contacts)
+                              contactChip(contact.$1, contact.$2),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (summary.isNotEmpty) ...[
+              sectionHeading('About me', showRule: false),
+              Text(summary, style: bodyStyle),
+            ],
+            ..._mapPreviewBodySections(
+              _minimalProfileBodyOrder(
+                resume,
+                followOrder: followBuilderSectionOrder,
+              ),
+              bodySection,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return content;
+  }
+}
+
+List<String> _minimalProfileBodyOrder(
+  ResumeData resume, {
+  required bool followOrder,
+}) {
+  if (followOrder && !resume.isGallerySample) {
+    return resume.effectiveBuilderSectionOrder;
+  }
+  return [
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    for (var i = 0; i < resume.customSections.length; i++)
+      ResumeBuilderSectionIds.custom(i),
+  ];
+}
+
+String _minimalProfileEntryDetail(String description, List<String> bullets) {
+  final text = description.trim();
+  if (text.isNotEmpty) return text;
+  return bullets.map((item) => item.trim()).where((item) => item.isNotEmpty).join(' ');
+}
+
+bool _isMinimalProfileReferencesSection(CustomSectionItem section) {
+  final title = section.title.trim().toLowerCase();
+  return title == 'references' || title == 'referees' || title == 'reference';
+}
+
+class _MinimalProfileReference {
+  const _MinimalProfileReference({
+    required this.name,
+    this.role = '',
+    this.phone = '',
+    this.social = '',
+  });
+
+  final String name;
+  final String role;
+  final String phone;
+  final String social;
+}
+
+List<_MinimalProfileReference> _minimalProfileReferences(
+  CustomSectionItem section,
+) {
+  final raw = section.layoutMode == CustomSectionLayoutMode.bullets
+      ? section.bullets
+      : section.content.split(RegExp(r'\n\s*\n'));
+  return raw
+      .map((line) => line.trim())
+      .where((line) => line.isNotEmpty)
+      .map((line) {
+        final parts = line
+            .split('|')
+            .map((part) => part.trim())
+            .where((part) => part.isNotEmpty)
+            .toList();
+        if (parts.isEmpty) {
+          return null;
+        }
+        return _MinimalProfileReference(
+          name: parts[0],
+          role: parts.length > 1 ? parts[1] : '',
+          phone: parts.length > 2 ? parts[2] : '',
+          social: parts.length > 3 ? parts[3] : '',
+        );
+      })
+      .whereType<_MinimalProfileReference>()
+      .toList();
+}
+
+Widget _minimalProfileReferenceColumn(
+  _MinimalProfileReference ref,
+  TextStyle titleStyle,
+  TextStyle bodyStyle,
+) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(ref.name, style: titleStyle),
+      if (ref.role.isNotEmpty) Text(ref.role, style: bodyStyle),
+      if (ref.phone.isNotEmpty)
+        Text('Phone  ${ref.phone}', style: bodyStyle),
+      if (ref.social.isNotEmpty)
+        Text('Social  ${ref.social}', style: bodyStyle),
+    ],
+  );
 }

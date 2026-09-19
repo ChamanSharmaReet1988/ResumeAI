@@ -98,6 +98,7 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.timelineProfile => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.softHeader => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.blueDiagonal => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.minimalProfile => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.atsStructured ||
     ResumeTemplate.atsSerifRules ||
     ResumeTemplate.atsModernFlow ||
@@ -422,6 +423,19 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get blueDiagonalTitleColor => const Color(0xFF2B2B2B);
 
   Color get blueDiagonalMutedColor => const Color(0xFF555B62);
+
+  static const Color minimalProfileNativeAccentColor = Color(0xFF111111);
+
+  Color get minimalProfileAccentColor {
+    if (corporateColorPresetIndex >= kCorporateColorPresets.length) {
+      return minimalProfileNativeAccentColor;
+    }
+    return corporateColorPreset.headerColor;
+  }
+
+  Color get minimalProfileTitleColor => const Color(0xFF111111);
+
+  Color get minimalProfileMutedColor => const Color(0xFF4B4B4B);
 
   Color get detailsSidebarAccentColor => corporateColorPreset.headerColor;
 

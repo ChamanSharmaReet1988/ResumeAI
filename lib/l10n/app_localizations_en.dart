@@ -577,6 +577,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Colour corners with a photo column and timeline sections.';
 
   @override
+  String get templateMinimalProfile => 'Minimal Profile';
+
+  @override
+  String get templateMinimalProfileCaption =>
+      'Circular photo header with about, dated sections, and a skills grid.';
+
+  @override
   String get templateStructuredAts => 'Structured ATS';
 
   @override

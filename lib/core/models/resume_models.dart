@@ -45,6 +45,8 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.softHeader;
     case 'blueDiagonal':
       return ResumeTemplate.blueDiagonal;
+    case 'minimalProfile':
+      return ResumeTemplate.minimalProfile;
     default:
       return ResumeTemplate.corporate;
   }
@@ -103,6 +105,9 @@ enum ResumeTemplate {
   /// Diagonal colour corners, a grey photo column and timeline-marked
   /// education and experience.
   blueDiagonal,
+
+  /// Circular photo header, about me, dated education/experience, skills grid.
+  minimalProfile,
 }
 
 enum CoverLetterTemplate {
@@ -124,6 +129,7 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.timelineProfile,
   ResumeTemplate.softHeader,
   ResumeTemplate.blueDiagonal,
+  ResumeTemplate.minimalProfile,
   ResumeTemplate.atsStructured,
   ResumeTemplate.atsLatexClassic,
   ResumeTemplate.atsModernFlow,
@@ -175,6 +181,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.timelineProfile => 'Timeline Profile',
     ResumeTemplate.softHeader => 'Soft Header',
     ResumeTemplate.blueDiagonal => 'Blue Diagonal',
+    ResumeTemplate.minimalProfile => 'Minimal Profile',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -216,6 +223,8 @@ extension ResumeTemplateX on ResumeTemplate {
       'Tinted header band with a centred nameplate and a split two-column body.',
     ResumeTemplate.blueDiagonal =>
       'Diagonal colour corners with a photo column and timeline sections.',
+    ResumeTemplate.minimalProfile =>
+      'Circular photo header with about, dated sections, and a skills grid.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -238,6 +247,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.timelineProfile => const Color(0xFF2E3A4C),
     ResumeTemplate.softHeader => const Color(0xFF1B3A5B),
     ResumeTemplate.blueDiagonal => const Color(0xFF2E7BC4),
+    ResumeTemplate.minimalProfile => const Color(0xFF111111),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -260,6 +270,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.timelineProfile => const Color(0xFFE9ECF1),
     ResumeTemplate.softHeader => const Color(0xFFDCEBFA),
     ResumeTemplate.blueDiagonal => const Color(0xFFDDEBF8),
+    ResumeTemplate.minimalProfile => const Color(0xFFF4F4F5),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -283,6 +294,7 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.timelineProfile => 'Outfit · timeline profile',
     ResumeTemplate.softHeader => 'Outfit · soft header',
     ResumeTemplate.blueDiagonal => 'Outfit · blue diagonal',
+    ResumeTemplate.minimalProfile => 'Outfit · minimal profile',
   };
 }
 

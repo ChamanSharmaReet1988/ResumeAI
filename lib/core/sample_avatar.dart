@@ -12,7 +12,8 @@ String gallerySampleAvatarAsset(ResumeTemplate template) {
   return switch (template) {
     ResumeTemplate.corporate ||
     ResumeTemplate.creative ||
-    ResumeTemplate.classicSidebar =>
+    ResumeTemplate.classicSidebar ||
+    ResumeTemplate.minimalProfile =>
       kSampleAvatarMaleAsset,
     _ => kSampleAvatarAsset,
   };

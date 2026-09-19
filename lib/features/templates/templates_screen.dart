@@ -687,6 +687,14 @@ const _professionalResumeCards = <_TemplateTileData>[
     caption: 'Colour corners with a photo column and timeline sections.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'minimal-profile',
+    resumeTemplate: ResumeTemplate.minimalProfile,
+    previewKind: _TemplatePreviewKind.minimalProfileResume,
+    headline: 'Minimal Profile',
+    caption: 'Circular photo header with about, dated sections, and a skills grid.',
+    isPremium: false,
+  ),
 ];
 
 const _resumeTemplateCards = _professionalResumeCards;
@@ -825,6 +833,7 @@ class _TemplateTileData {
       'timeline-profile' => l10n.templateTimelineProfile,
       'soft-header' => l10n.templateSoftHeader,
       'blue-diagonal' => l10n.templateBlueDiagonal,
+      'minimal-profile' => l10n.templateMinimalProfile,
       'ats-structured' => l10n.templateStructuredAts,
       'ats-latex-classic' => l10n.templateLatexClassicAts,
       'ats-modern-flow' => l10n.templateModernFlowAts,
@@ -852,6 +861,7 @@ class _TemplateTileData {
       'timeline-profile' => l10n.templateTimelineProfileCaption,
       'soft-header' => l10n.templateSoftHeaderCaption,
       'blue-diagonal' => l10n.templateBlueDiagonalCaption,
+      'minimal-profile' => l10n.templateMinimalProfileCaption,
       'ats-structured' => l10n.templateStructuredAtsCaption,
       'ats-latex-classic' => l10n.templateLatexClassicAtsCaption,
       'ats-modern-flow' => l10n.templateModernFlowAtsCaption,
@@ -880,6 +890,7 @@ enum _TemplatePreviewKind {
   timelineProfileResume,
   softHeaderResume,
   blueDiagonalResume,
+  minimalProfileResume,
   atsStructuredResume,
   atsSerifRulesResume,
   atsModernFlowResume,
@@ -1006,6 +1017,12 @@ class _TemplatePreviewArt extends StatelessWidget {
       _TemplatePreviewKind.blueDiagonalResume => _ResumeTemplatePreviewArt(
         resume: _applyTemplatePreviewPalette(
           _blueDiagonalTemplateResume,
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.minimalProfileResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _minimalProfileTemplateResume,
           paletteSeed,
         ),
       ),
@@ -1175,6 +1192,7 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.timelineProfile => _timelineProfileTemplateResume,
       ResumeTemplate.softHeader => _softHeaderTemplateResume,
       ResumeTemplate.blueDiagonal => _blueDiagonalTemplateResume,
+      ResumeTemplate.minimalProfile => _minimalProfileTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
       ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,
@@ -1327,6 +1345,7 @@ ResumeData _applyTemplatePreviewPalette(
       sample.template == ResumeTemplate.timelineProfile ||
       sample.template == ResumeTemplate.softHeader ||
       sample.template == ResumeTemplate.blueDiagonal ||
+      sample.template == ResumeTemplate.minimalProfile ||
       sample.template == ResumeTemplate.classicSidebar) {
     return sample.copyWith(
       corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
@@ -2810,6 +2829,105 @@ final ResumeData _blueDiagonalTemplateResume = ResumeData(
   ],
 );
 
+final ResumeData _minimalProfileTemplateResume = ResumeData(
+  id: 'template-minimal-profile',
+  title: 'Minimal Profile Template',
+  fullName: 'Arjun Shah',
+  jobTitle: 'Web Designer',
+  email: 'hello@arjunshah.design',
+  phone: '+1 (415) 555-0148',
+  location: '',
+  website: 'www.arjunshah.design',
+  summary:
+      'Web designer with eight years crafting clean product sites, design systems, and campaign landing pages. Known for turning brand strategy into accessible layouts, measurable conversion lifts, and consistent visual language across web and social.',
+  template: ResumeTemplate.minimalProfile,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Web Designer',
+      company: 'Harbor Digital',
+      startDate: '2020',
+      endDate: '2023',
+      description:
+          'Led marketing site redesigns and component libraries for SaaS and retail clients, pairing typography-led layouts with faster landing-page experiments.',
+      bullets: [],
+    ),
+    WorkExperience(
+      role: 'Web Designer',
+      company: 'Northwind Studio',
+      startDate: '2016',
+      endDate: '2020',
+      description:
+          'Designed campaign sites, email systems, and brand toolkits that kept product, content, and paid acquisition on one visual system.',
+      bullets: [],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Wardwell University',
+      degree: 'Master of IT Management',
+      startDate: '2020',
+      endDate: '2023',
+      score: 'Focused on product strategy, research methods, and digital service design.',
+    ),
+    EducationItem(
+      institution: 'Borcelle University',
+      degree: 'Bachelor of Art and Design',
+      startDate: '2016',
+      endDate: '2020',
+      score: 'Studied visual systems, typography, and interactive design for the web.',
+    ),
+    EducationItem(
+      institution: 'Wardwell High School',
+      degree: 'Major of Art and Design',
+      startDate: '2012',
+      endDate: '2016',
+      score: 'Built a foundation in drawing, composition, and digital media.',
+    ),
+  ],
+  skills: const [
+    'Web Design',
+    'Web Accessibility',
+    'Color Theory',
+    'UI/UX Design',
+    'Front End',
+    'Version Control',
+    'SEO Fundamentals',
+    'Typography',
+  ],
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(
+      title: 'References',
+      content: '',
+      layoutMode: CustomSectionLayoutMode.bullets,
+      bullets: [
+        'Priya Menon|Creative Director, Harbor Digital|+1 (415) 555-0172|@priyamenon',
+        'Daniel Cho|HR Lead, Northwind Studio|+1 (415) 555-0190|@danielcho',
+      ],
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.minimalProfile,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    'custom:0',
+  ],
+);
+
 enum _ResumeTemplatePreviewFit { tile, detail }
 
 class _ResumeTemplatePreviewArt extends StatelessWidget {
@@ -2852,6 +2970,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.timelineProfile => true,
           ResumeTemplate.softHeader => true,
           ResumeTemplate.blueDiagonal => true,
+          ResumeTemplate.minimalProfile => true,
           _ => false,
         };
         final bottomInset = fullHeightTemplate
@@ -6782,6 +6901,7 @@ ResumeData galleryDetailSampleForTest(ResumeTemplate template) =>
       ResumeTemplate.timelineProfile => _timelineProfileTemplateResume,
       ResumeTemplate.softHeader => _softHeaderTemplateResume,
       ResumeTemplate.blueDiagonal => _blueDiagonalTemplateResume,
+      ResumeTemplate.minimalProfile => _minimalProfileTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
       ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,

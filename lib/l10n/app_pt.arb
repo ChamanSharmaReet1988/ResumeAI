@@ -268,6 +268,8 @@
   "templateSoftHeaderCaption": "Faixa de cabeçalho com nome centralizado e corpo em duas colunas.",
   "templateBlueDiagonal": "Diagonal azul",
   "templateBlueDiagonalCaption": "Cantos coloridos com coluna de foto e seções cronológicas.",
+  "templateMinimalProfile": "Perfil minimalista",
+  "templateMinimalProfileCaption": "Foto circular, sobre mim, seções com datas e grade de competências.",
   "templateStructuredAts": "ATS estruturado",
   "templateStructuredAtsCaption": "Faixas de seção cinzas e cabeçalho centralizado para parsers.",
   "templateLatexClassicAts": "ATS clássico LaTeX",

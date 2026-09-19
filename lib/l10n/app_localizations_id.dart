@@ -577,6 +577,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Sudut warna dengan kolom foto dan bagian linimasa.';
 
   @override
+  String get templateMinimalProfile => 'Profil Minimal';
+
+  @override
+  String get templateMinimalProfileCaption =>
+      'Foto bundar, tentang saya, bagian bertanggal, dan kisi keterampilan.';
+
+  @override
   String get templateStructuredAts => 'ATS terstruktur';
 
   @override
