@@ -8986,6 +8986,24 @@ class _BlueDiagonalPreview extends StatelessWidget {
     final mainColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Nameplate flows with the content so a long name pushes the first
+        // section down instead of overlapping it.
+        Text(
+          _pdfAlignedDisplayName(resume),
+          style: style(
+            FontWeight.w700,
+            _pdfAlignedDisplayName(resume).length > 18 ? 26 : 34,
+            titleColor,
+          ),
+        ),
+        if (resume.jobTitle.trim().isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              resume.jobTitle.trim(),
+              style: style(FontWeight.w400, 16, mutedColor),
+            ),
+          ),
         ..._mapPreviewBodySections(
           previewBodySectionOrder(
             resume,
@@ -9165,27 +9183,8 @@ class _BlueDiagonalPreview extends StatelessWidget {
                     ),
                     Positioned(
                       left: _mainLeft,
-                      right: 150,
-                      top: 120,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _pdfAlignedDisplayName(resume),
-                            style: style(FontWeight.w700, 34, titleColor),
-                          ),
-                          if (resume.jobTitle.trim().isNotEmpty)
-                            Text(
-                              resume.jobTitle.trim(),
-                              style: style(FontWeight.w400, 16, mutedColor),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      left: _mainLeft,
                       right: 40,
-                      top: 255,
+                      top: 120,
                       bottom: 46,
                       child: ClipRect(
                         child: SingleChildScrollView(

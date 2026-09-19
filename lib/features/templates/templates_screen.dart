@@ -6736,3 +6736,30 @@ class _MiniBulletColumn extends StatelessWidget {
     );
   }
 }
+
+/// Sample a template's detail screen renders; used by tests that check the
+/// gallery PDFs.
+@visibleForTesting
+ResumeData galleryDetailSampleForTest(ResumeTemplate template) =>
+    switch (template) {
+      ResumeTemplate.corporate => _darkHeaderTemplateResume,
+      ResumeTemplate.creative => _profileSidebarTemplateResume,
+      ResumeTemplate.classicSidebar => _classicSidebarTemplateResume,
+      ResumeTemplate.detailsSidebar => _detailsSidebarTemplateResume,
+      ResumeTemplate.accentStrip => _accentStripTemplateResume,
+      ResumeTemplate.headerSidebar => _headerSidebarTemplateResume,
+      ResumeTemplate.slateSidebar => _slateSidebarTemplateResume,
+      ResumeTemplate.timelineProfile => _timelineProfileTemplateResume,
+      ResumeTemplate.softHeader => _softHeaderTemplateResume,
+      ResumeTemplate.blueDiagonal => _blueDiagonalTemplateResume,
+      ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
+      ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
+      ResumeTemplate.atsClassicCv => _atsClassicCvTemplateResume,
+      ResumeTemplate.atsStructured ||
+      ResumeTemplate.atsModernFlow ||
+      ResumeTemplate.atsExecutive ||
+      ResumeTemplate.atsCenterClassic ||
+      ResumeTemplate.atsLatexClassic ||
+      ResumeTemplate.atsCleanSans =>
+        _atsSampleFor(template),
+    };

@@ -10,7 +10,8 @@ const double _blueDiagonalMainRightPt = 40.0;
 const double _blueDiagonalTopPt = 34.0;
 const double _blueDiagonalBottomPt = 46.0;
 const double _blueDiagonalAvatarSizePt = 176.0;
-const double _blueDiagonalHeaderHeightPt = 255.0;
+/// Space above the nameplate, clearing the top-right corner diagonals.
+const double _blueDiagonalHeaderHeightPt = 120.0;
 
 /// Custom sections that belong in the left column.
 final RegExp _blueDiagonalLeftSectionTitle = RegExp(
@@ -324,32 +325,6 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                         child: pw.ClipRect(child: left),
                       ),
                     ),
-                    pw.Positioned(
-                      left: _blueDiagonalMainLeftPt,
-                      // Keeps the name clear of the corner diagonals.
-                      right: 150,
-                      top: 120,
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(
-                            _displayName(resume),
-                            style: style(ResumeFontWeight.w700, 34, titleColor),
-                          ),
-                          if (resume.jobTitle.trim().isNotEmpty) ...[
-                            pw.SizedBox(height: 4),
-                            pw.Text(
-                              resume.jobTitle.trim(),
-                              style: style(
-                                ResumeFontWeight.w400,
-                                16,
-                                mutedColor,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
                   ],
                 ],
               ),
@@ -357,7 +332,25 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
           },
         ),
         build: (context) => [
+          // Nameplate flows with the content so a long name pushes the first
+          // section down instead of overlapping it.
           pw.SizedBox(height: _blueDiagonalHeaderHeightPt - _blueDiagonalTopPt),
+          pw.Text(
+            _displayName(resume),
+            style: style(
+              ResumeFontWeight.w700,
+              _displayName(resume).length > 18 ? 26 : 34,
+              titleColor,
+            ),
+          ),
+          if (resume.jobTitle.trim().isNotEmpty)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 4),
+              child: pw.Text(
+                resume.jobTitle.trim(),
+                style: style(ResumeFontWeight.w400, 16, mutedColor),
+              ),
+            ),
           ..._pdfBodySectionsInBuilderOrder(
             resume,
             exclude: {ResumeBuilderSectionIds.skills},
