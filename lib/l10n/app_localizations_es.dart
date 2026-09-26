@@ -82,6 +82,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get maybeLater => 'Ahora no';
 
   @override
+  String get keepResumeSafeTitle => 'Mantén tu currículum a salvo';
+
+  @override
+  String get keepResumeSafeBodyDrive =>
+      'Sincroniza con Google Drive para no perderlo si cambias de teléfono o reinstalas la app.';
+
+  @override
+  String get keepResumeSafeBodyIcloud =>
+      'Haz una copia en iCloud para no perder tus currículums si cambias de teléfono o reinstalas la app.';
+
+  @override
   String get shareApp => 'Compartir la app';
 
   @override
@@ -370,7 +381,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get selectResumeWithContentFirst =>
-      'Selecciona primero un currículum guardado con contenido.';
+      'Sube o selecciona primero un currículum con contenido.';
 
   @override
   String get aiAtsIntro =>
@@ -445,7 +456,53 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get createResumeThenGenerateAts =>
-      'Crea primero un currículum y vuelve aquí para generar una versión ATS.';
+      'Sube un currículum desde tu dispositivo y genera una versión ATS.';
+
+  @override
+  String get aiResumeCheckAts => 'Comprobar ATS';
+
+  @override
+  String get aiResumeEnhanceResume => 'Mejorar currículum';
+
+  @override
+  String get aiResumeUploadCta => 'Subir currículum';
+
+  @override
+  String get aiResumeUploadHintCheckAts =>
+      'Sube un currículum PDF, DOCX o TXT desde tu dispositivo para comprobar el ATS.';
+
+  @override
+  String get aiResumeUploadHintEnhance =>
+      'Sube un currículum PDF, DOCX o TXT desde tu dispositivo, añade una descripción del puesto y pulsa Optimizar.';
+
+  @override
+  String aiResumeUsingFile(String fileName) {
+    return 'Usando $fileName';
+  }
+
+  @override
+  String get orChooseSavedResume => 'O elige un currículum guardado';
+
+  @override
+  String get aiResumeOr => 'O';
+
+  @override
+  String get selectFromAppResumeList => 'Seleccionar de la lista de la app';
+
+  @override
+  String get optimizeResume => 'Optimizar';
+
+  @override
+  String get atsCheckResults => 'Resultados ATS';
+
+  @override
+  String get atsStrengths => 'Fortalezas';
+
+  @override
+  String get atsImprovements => 'Mejoras';
+
+  @override
+  String get atsMissingKeywords => 'Palabras clave que faltan';
 
   @override
   String get selectResume => 'Seleccionar currículum';
@@ -470,6 +527,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get showAtsResume => 'Mostrar currículum ATS';
+
+  @override
+  String get showResume => 'Mostrar currículum';
 
   @override
   String get saveOptimizedResume => 'Guardar currículum optimizado';

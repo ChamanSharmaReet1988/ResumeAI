@@ -44,8 +44,18 @@ abstract final class AndroidAdsConfig {
   static const iosSettingsBannerAdUnitId =
       'ca-app-pub-4326780099537551/1695016111';
 
-  /// Show an interstitial on every Nth open of a placement (templates / preview).
-  static const interstitialShowEveryNthOpen = 3;
+  /// Preview resume: full-screen ad on every 4th open.
+  static const previewInterstitialEveryNthOpen = 4;
+
+  /// Use template: full-screen ad on every 3rd use.
+  static const templatesInterstitialEveryNthOpen = 3;
+
+  static int interstitialEveryNthOpenFor(AndroidAdPlacement placement) {
+    return switch (placement) {
+      AndroidAdPlacement.preview => previewInterstitialEveryNthOpen,
+      AndroidAdPlacement.templates => templatesInterstitialEveryNthOpen,
+    };
+  }
 
   static bool get _useDebugTestUnits =>
       kDebugMode && !useProductionAdUnitsInDebug;
@@ -203,8 +213,8 @@ class AndroidAdsService {
     );
   }
 
-  /// Records an open for [placement] and shows an interstitial on every
-  /// [AndroidAdsConfig.interstitialShowEveryNthOpen]th open (3rd, 6th, …).
+  /// Records an open for [placement] and shows an interstitial on every Nth
+  /// open (preview: 4th, templates: 3rd).
   static Future<void> showInterstitialIfReady({
     required AndroidAdPlacement placement,
   }) async {
@@ -216,8 +226,8 @@ class AndroidAdsService {
 
     final nextCount = (_openCounts[placement] ?? 0) + 1;
     _openCounts[placement] = nextCount;
-    final shouldShow =
-        nextCount % AndroidAdsConfig.interstitialShowEveryNthOpen == 0;
+    final everyNth = AndroidAdsConfig.interstitialEveryNthOpenFor(placement);
+    final shouldShow = nextCount % everyNth == 0;
     if (!shouldShow) {
       unawaitedLoadInterstitial(placement);
       return;

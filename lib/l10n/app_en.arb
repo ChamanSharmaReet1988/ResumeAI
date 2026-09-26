@@ -24,6 +24,9 @@
   "ratePromptTitle": "Enjoying ResumeAI?",
   "ratePromptBody": "If this app is helping you, a quick rating would mean a lot.",
   "maybeLater": "Maybe later",
+  "keepResumeSafeTitle": "Keep your resume safe",
+  "keepResumeSafeBodyDrive": "Sync to Google Drive so you don’t lose it if you change phones or reinstall the app.",
+  "keepResumeSafeBodyIcloud": "Back up to iCloud so you don’t lose your resumes if you change phones or reinstall the app.",
   "shareApp": "Share App",
   "privacyPolicy": "Privacy Policy",
   "termsOfUse": "Terms of Use",
@@ -182,7 +185,7 @@
   "premiumProductsUnavailable": "Subscription plans are not available right now. Please try again later.",
   "premiumPurchaseCanceled": "Purchase canceled.",
   "hideKeyboard": "Hide keyboard",
-  "selectResumeWithContentFirst": "Select a saved resume with content first.",
+  "selectResumeWithContentFirst": "Upload or select a resume with content first.",
   "aiAtsIntro": "Select a resume and AI will create an ATS-optimized version. Add your API key in Settings for stronger results, or use built-in AI. Job description is optional. Tap Create again to further refine.",
   "aiEngineUsingCloudApi": "Using your API key (cloud AI)",
   "aiEngineUsingAppleIntelligence": "Using Apple Intelligence (on-device)",
@@ -218,7 +221,28 @@
   "testAiApiKey": "Test API key",
   "removeAiApiKey": "Remove API key",
   "noResumeAvailable": "No resume available right now.",
-  "createResumeThenGenerateAts": "Create a resume first, then come back here to generate an ATS version.",
+  "createResumeThenGenerateAts": "Upload a resume from your device, then generate an ATS version.",
+  "aiResumeCheckAts": "Check ATS",
+  "aiResumeEnhanceResume": "Enhance Resume",
+  "aiResumeUploadCta": "Upload resume",
+  "aiResumeUploadHintCheckAts": "Upload a PDF, DOCX, or TXT resume from your device to check ATS compatibility.",
+  "aiResumeUploadHintEnhance": "Upload a PDF, DOCX, or TXT resume from your device, add a job description, then tap Optimize.",
+  "aiResumeUsingFile": "Using {fileName}",
+  "@aiResumeUsingFile": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "orChooseSavedResume": "Or choose a saved resume",
+  "aiResumeOr": "OR",
+  "selectFromAppResumeList": "Select from app resume list",
+  "optimizeResume": "Optimize",
+  "atsCheckResults": "ATS results",
+  "atsStrengths": "Strengths",
+  "atsImprovements": "Improvements",
+  "atsMissingKeywords": "Missing keywords",
   "selectResume": "Select resume",
   "jobDescriptionOptional": "Job description (optional)",
   "jobDescriptionHint": "Paste a job post to tailor the ATS resume, or leave blank.",
@@ -233,6 +257,7 @@
   },
   "appliedChanges": "Applied changes",
   "showAtsResume": "Show ATS resume",
+  "showResume": "Show Resume",
   "saveOptimizedResume": "Save optimized resume",
   "saveOptimizedResumePrompt": "Do you want to save this as a new copy or replace \"{sourceTitle}\"?",
   "@saveOptimizedResumePrompt": {

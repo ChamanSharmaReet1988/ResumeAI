@@ -18,6 +18,7 @@ import '../../core/models/resume_models.dart';
 import '../../core/skill_autocomplete_suggestions.dart';
 import '../../core/services/app_preferences.dart';
 import 'resume_preview_screen.dart';
+import '../shared/post_share_backup_prompt.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/resume_share_format_sheet.dart';
 import '../shared/view_models.dart';
@@ -388,7 +389,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (!mounted) {
       return;
     }
-    await context.read<InAppReviewPromptService>().promptAfterValueMoment();
+    await context.read<InAppReviewPromptService>().promptAfterShare();
+    if (!mounted) {
+      return;
+    }
+    await showPostShareBackupPromptIfNeeded(context);
   }
 
   Future<void> _printResume() async {

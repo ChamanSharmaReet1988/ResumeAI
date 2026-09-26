@@ -5,13 +5,15 @@ import 'package:in_app_review/in_app_review.dart';
 
 /// System in-app review (Apple stars sheet / Play In-App Review).
 ///
-/// Asks after a value moment (export or share) or a later Home visit — not
-/// immediately after the first draft is created. The OS may still suppress
-/// the sheet based on its own quota.
+/// Flow: after the user shares once, show the rate popup the next time they
+/// land on Home for the 2nd visit (not immediately after create or share).
+/// The OS may still suppress the sheet based on its own quota.
 class InAppReviewPromptService {
   InAppReviewPromptService({
     Future<bool> Function()? readRatingCompleted,
     Future<void> Function()? writeRatingCompleted,
+    Future<bool> Function()? readHasShared,
+    Future<void> Function()? writeHasShared,
     Future<void> Function()? openStoreListing,
     Future<void> Function()? requestNativeReview,
     Future<Box<dynamic>> Function()? openBox,
@@ -23,6 +25,8 @@ class InAppReviewPromptService {
         readRatingCompleted ?? (() => _defaultReadRatingCompleted());
     _writeRatingCompleted =
         writeRatingCompleted ?? (() => _defaultWriteRatingCompleted());
+    _readHasShared = readHasShared ?? (() => _defaultReadHasShared());
+    _writeHasShared = writeHasShared ?? (() => _defaultWriteHasShared());
     _openStoreListing = openStoreListing ?? _defaultOpenStoreListing;
     _requestNativeReview =
         requestNativeReview ?? _defaultRequestNativeReview;
@@ -46,11 +50,14 @@ class InAppReviewPromptService {
   static const String appStoreId = '6768385894';
   static const String _boxName = 'app_prefs';
   static const String _ratedKey = 'in_app_review_completed';
+  static const String _hasSharedKey = 'in_app_review_has_shared';
   static const String _homeVisitCountKey = 'in_app_review_home_visit_count';
   static const int _minHomeVisitsBeforePrompt = 2;
 
   late final Future<bool> Function() _readRatingCompleted;
   late final Future<void> Function() _writeRatingCompleted;
+  late final Future<bool> Function() _readHasShared;
+  late final Future<void> Function() _writeHasShared;
   late final Future<void> Function() _openStoreListing;
   late final Future<void> Function() _requestNativeReview;
   late final Future<Box<dynamic>> Function() _openBox;
@@ -62,6 +69,7 @@ class InAppReviewPromptService {
   bool _skippedUntilNextHomeVisit = false;
   int _homeVisitCount = 0;
   bool _homeVisitCountHydrated = false;
+  bool? _hasSharedCached;
 
   static Future<Box<dynamic>> _defaultOpenBox() async {
     if (Hive.isBoxOpen(_boxName)) {
@@ -99,6 +107,25 @@ class InAppReviewPromptService {
       await box.put(_ratedKey, true);
     } catch (error, stackTrace) {
       _debugLog('write hive rating flag failed: $error\n$stackTrace');
+    }
+  }
+
+  Future<bool> _defaultReadHasShared() async {
+    try {
+      final box = await _openBox();
+      return (box.get(_hasSharedKey) as bool?) ?? false;
+    } catch (error) {
+      _debugLog('read has-shared flag failed: $error');
+      return false;
+    }
+  }
+
+  Future<void> _defaultWriteHasShared() async {
+    try {
+      final box = await _openBox();
+      await box.put(_hasSharedKey, true);
+    } catch (error) {
+      _debugLog('write has-shared flag failed: $error');
     }
   }
 
@@ -148,6 +175,25 @@ class InAppReviewPromptService {
   /// Shows Apple / Google’s system rating UI when available.
   Future<void> requestNativeReview() => _requestNativeReview();
 
+  Future<bool> hasSharedOnce() async {
+    final cached = _hasSharedCached;
+    if (cached != null) {
+      return cached;
+    }
+    final value = await _readHasShared();
+    _hasSharedCached = value;
+    return value;
+  }
+
+  /// Records that the user shared at least once (does not show the rate UI).
+  Future<void> markSharedOnce() async {
+    if (await hasSharedOnce()) {
+      return;
+    }
+    await _writeHasShared();
+    _hasSharedCached = true;
+  }
+
   /// Call when the Home tab becomes active so a deferred prompt can show again.
   void onArrivedAtHome() {
     _skippedUntilNextHomeVisit = false;
@@ -158,8 +204,8 @@ class InAppReviewPromptService {
     _skippedUntilNextHomeVisit = true;
   }
 
-  /// Counts this Home appearance. First launch is visit 1; a later return is
-  /// when the Home rating prompt is allowed.
+  /// Counts this Home appearance. First launch is visit 1; visit 2+ can show
+  /// the rate prompt after a share.
   Future<int> recordHomeVisit() async {
     if (!_homeVisitCountHydrated) {
       _homeVisitCount = await _readHomeVisitCount();
@@ -180,10 +226,15 @@ class InAppReviewPromptService {
   }
 
   /// Returns true when Home should present the system rating prompt.
+  ///
+  /// Requires: at least one resume, one prior share, and 2nd+ Home visit.
   Future<bool> claimHomePrompt({required int resumeCount}) async {
     if (_promptInFlight ||
         _skippedUntilNextHomeVisit ||
         resumeCount < 1) {
+      return false;
+    }
+    if (!await hasSharedOnce()) {
       return false;
     }
     if (await _resolvedHomeVisitCount() < _minHomeVisitsBeforePrompt) {
@@ -197,30 +248,16 @@ class InAppReviewPromptService {
     return true;
   }
 
-  /// Returns true after export or share, even on the first Home visit.
-  Future<bool> claimValueMomentPrompt() async {
-    if (_promptInFlight || _skippedUntilNextHomeVisit) {
-      return false;
-    }
-    _promptInFlight = true;
-    if (await hasCompletedRating()) {
-      _promptInFlight = false;
-      return false;
-    }
-    return true;
+  /// Call after a successful share — unlocks Home rate on the 2nd visit.
+  /// Does not show the rating UI immediately.
+  Future<void> promptAfterShare() async {
+    await markSharedOnce();
   }
 
-  /// Asks for a rating after the user exported or shared a document.
+  /// PDF download no longer shows the rate UI; share + 2nd Home does.
+  /// Kept so existing call sites stay safe / no-op for prompting.
   Future<void> promptAfterValueMoment() async {
-    if (!await claimValueMomentPrompt()) {
-      return;
-    }
-    try {
-      await requestNativeReview();
-      deferUntilNextHomeVisit();
-    } finally {
-      endPromptOffer();
-    }
+    // Intentionally no immediate prompt. Rate shows on 2nd Home after share.
   }
 
   void endPromptOffer() {

@@ -82,6 +82,17 @@ class AppLocalizationsId extends AppLocalizations {
   String get maybeLater => 'Nanti saja';
 
   @override
+  String get keepResumeSafeTitle => 'Amankan resume Anda';
+
+  @override
+  String get keepResumeSafeBodyDrive =>
+      'Sinkronkan ke Google Drive agar tidak hilang jika Anda ganti ponsel atau menginstal ulang aplikasi.';
+
+  @override
+  String get keepResumeSafeBodyIcloud =>
+      'Cadangkan ke iCloud agar resume tidak hilang jika Anda ganti ponsel atau menginstal ulang aplikasi.';
+
+  @override
   String get shareApp => 'Bagikan aplikasi';
 
   @override
@@ -369,7 +380,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get selectResumeWithContentFirst =>
-      'Pilih dulu resume tersimpan yang berisi konten.';
+      'Unggah atau pilih dulu resume yang berisi konten.';
 
   @override
   String get aiAtsIntro =>
@@ -444,7 +455,53 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get createResumeThenGenerateAts =>
-      'Buat resume terlebih dahulu, lalu kembali ke sini untuk membuat versi ATS.';
+      'Unggah resume dari perangkat Anda, lalu buat versi ATS.';
+
+  @override
+  String get aiResumeCheckAts => 'Cek ATS';
+
+  @override
+  String get aiResumeEnhanceResume => 'Tingkatkan Resume';
+
+  @override
+  String get aiResumeUploadCta => 'Unggah resume';
+
+  @override
+  String get aiResumeUploadHintCheckAts =>
+      'Unggah resume PDF, DOCX, atau TXT dari perangkat untuk memeriksa kompatibilitas ATS.';
+
+  @override
+  String get aiResumeUploadHintEnhance =>
+      'Unggah resume PDF, DOCX, atau TXT dari perangkat, tambahkan deskripsi pekerjaan, lalu ketuk Optimalkan.';
+
+  @override
+  String aiResumeUsingFile(String fileName) {
+    return 'Menggunakan $fileName';
+  }
+
+  @override
+  String get orChooseSavedResume => 'Atau pilih resume tersimpan';
+
+  @override
+  String get aiResumeOr => 'ATAU';
+
+  @override
+  String get selectFromAppResumeList => 'Pilih dari daftar resume aplikasi';
+
+  @override
+  String get optimizeResume => 'Optimalkan';
+
+  @override
+  String get atsCheckResults => 'Hasil ATS';
+
+  @override
+  String get atsStrengths => 'Kelebihan';
+
+  @override
+  String get atsImprovements => 'Perbaikan';
+
+  @override
+  String get atsMissingKeywords => 'Kata kunci yang hilang';
 
   @override
   String get selectResume => 'Pilih resume';
@@ -469,6 +526,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get showAtsResume => 'Tampilkan resume ATS';
+
+  @override
+  String get showResume => 'Tampilkan Resume';
 
   @override
   String get saveOptimizedResume => 'Simpan resume yang dioptimalkan';

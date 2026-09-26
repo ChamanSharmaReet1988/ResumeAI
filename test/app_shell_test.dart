@@ -51,6 +51,8 @@ List<SingleChildWidget> _appShellProviders({
       value: InAppReviewPromptService(
         readRatingCompleted: () async => true,
         writeRatingCompleted: () async {},
+        readHasShared: () async => false,
+        writeHasShared: () async {},
         openStoreListing: () async {},
         readHomeVisitCount: () async => 0,
         writeHomeVisitCount: (_) async {},

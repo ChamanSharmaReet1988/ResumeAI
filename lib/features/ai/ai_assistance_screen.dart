@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:resume_app/l10n/l10n_ext.dart';
@@ -8,6 +9,7 @@ import '../../core/services/ai_resume_coordinator.dart';
 import '../../core/services/android_ads_service.dart';
 import '../../core/services/platform_monetization.dart';
 import '../../core/services/premium_purchase_service.dart';
+import '../../core/services/resume_import_service.dart';
 import '../../core/services/resume_services.dart';
 import '../premium/premium_gate.dart';
 import '../shared/android_banner_ad.dart';
@@ -39,12 +41,10 @@ class AiAssistanceScreen extends ResumeAnalyserScreen {
   });
 }
 
-enum _OptimizedResumeSaveChoice { newCopy, existingResume }
-
+enum _AiResumeSegment { checkAts, enhanceResume }
 
 class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     with WidgetsBindingObserver {
-  static const double _fieldHorizontalPadding = 12;
   final _jobDescriptionController = TextEditingController();
   final _jobDescriptionFocusNode = FocusNode();
   OverlayEntry? _keyboardHideOverlay;
@@ -57,6 +57,12 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
   String? _atsAttemptSourceId;
   String? _engineStatusLabel;
   AiApiKeyStore? _apiKeyStore;
+  _AiResumeSegment _selectedSegment = _AiResumeSegment.checkAts;
+  ResumeData? _importedResume;
+  String? _importedFileName;
+  String? _importedRawText;
+  ResumeAnalysis? _atsAnalysis;
+  String? _libraryResumeId;
 
   @override
   void initState() {
@@ -200,7 +206,38 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
   void _resetAtsCreateProgress() {
     _atsCreateAttempt = 0;
     _atsAttemptSourceId = null;
+    _atsAnalysis = null;
     _resetOptimizationPreview();
+  }
+
+  void _clearImportedResume() {
+    _importedResume = null;
+    _importedFileName = null;
+    _importedRawText = null;
+  }
+
+  ResumeData? _sourceResumeFor(List<ResumeData> resumes) {
+    if (_importedResume != null) {
+      return _importedResume;
+    }
+    final libraryId = _libraryResumeId;
+    if (libraryId == null) {
+      return null;
+    }
+    for (final resume in resumes) {
+      if (resume.id == libraryId) {
+        return resume;
+      }
+    }
+    return null;
+  }
+
+  void _selectLibraryResume(String id) {
+    setState(() {
+      _libraryResumeId = id;
+      _clearImportedResume();
+      _resetAtsCreateProgress();
+    });
   }
 
   Future<void> _runTask(Future<void> Function() task) async {
@@ -232,13 +269,89 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     }
   }
 
+  Future<void> _importResumeFromDevice({required bool analyzeAfter}) async {
+    _dismissKeyboard();
+    final importService = context.read<ResumeImportService>();
+    final aiService = context.read<LocalAiResumeService>();
+    final library = context.read<ResumeLibraryViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
+    final failedMessage = context.l10n.uploadResumeFailed;
+    final draft = library.newDraft();
+
+    try {
+      final importedFile = await importService.pickResumeFile();
+      if (!mounted || importedFile == null) {
+        return;
+      }
+
+      final uploaded = aiService
+          .parseImportedResumeText(
+            resumeText: importedFile.resumeText,
+            candidateResumeTexts: importedFile.candidateResumeTexts,
+            template: draft.template,
+            sourceTitle: importedFile.suggestedTitle,
+          )
+          .copyWith(corporateColorPresetIndex: draft.corporateColorPresetIndex);
+
+      setState(() {
+        _importedResume = uploaded;
+        _importedFileName = importedFile.fileName;
+        _importedRawText = importedFile.resumeText;
+        _libraryResumeId = null;
+        _resetAtsCreateProgress();
+      });
+
+      if (analyzeAfter) {
+        await _checkAts(
+          resume: uploaded,
+          fallbackText: importedFile.resumeText,
+        );
+      }
+    } on ResumeImportException catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
+    }
+  }
+
+  Future<void> _checkAts({
+    required ResumeData? resume,
+    String fallbackText = '',
+  }) async {
+    _dismissKeyboard();
+    final source = resume;
+    final rawText = fallbackText.trim().isNotEmpty
+        ? fallbackText
+        : _importedRawText ?? '';
+    if ((source == null || !source.hasMeaningfulContent) &&
+        rawText.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.selectResumeWithContentFirst)),
+      );
+      return;
+    }
+
+    await _runTask(() async {
+      final aiService = context.read<LocalAiResumeService>();
+      final analysis = source != null && source.hasMeaningfulContent
+          ? await aiService.analyzeResume(resume: source)
+          : await aiService.analyzeResumeText(resumeText: rawText);
+      if (!mounted) {
+        return;
+      }
+      setState(() => _atsAnalysis = analysis);
+    });
+  }
+
   Future<void> _createAtsResume({
     required AiResumeCoordinator coordinator,
-    required ResumeData? selectedResume,
   }) async {
     _dismissKeyboard();
 
-    if (selectedResume == null || !selectedResume.hasMeaningfulContent) {
+    final selectedSource = _sourceResumeFor(
+      context.read<ResumeLibraryViewModel>().resumes,
+    );
+    if (selectedSource == null || !selectedSource.hasMeaningfulContent) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(context.l10n.selectResumeWithContentFirst),
@@ -255,13 +368,13 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     }
 
     final jobDescription = _jobDescriptionController.text.trim();
-    if (_atsAttemptSourceId != selectedResume.id) {
-      _atsAttemptSourceId = selectedResume.id;
+    if (_atsAttemptSourceId != selectedSource.id) {
+      _atsAttemptSourceId = selectedSource.id;
       _atsCreateAttempt = 0;
       _createdResume = null;
     }
 
-    final sourceForPass = _createdResume ?? selectedResume;
+    final sourceForPass = _createdResume ?? selectedSource;
     final attemptIndex = _atsCreateAttempt;
 
     await _runTask(() async {
@@ -302,23 +415,28 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
       return;
     }
 
-    await Navigator.of(context).push<bool>(
+    final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => _OptimizedResumePreviewScreen(
-          sourceResume: created,
+          sourceResume: _sourceResumeFor(
+                context.read<ResumeLibraryViewModel>().resumes,
+              ) ??
+              created,
           previewData: previewData,
-          saveAsNewCopyOnly: true,
-          newCopyTitleSuffix: context.l10n.atsTitleSuffix,
         ),
       ),
     );
 
-    if (!mounted) {
+    if (!mounted || saved != true) {
       return;
     }
 
     _jobDescriptionController.clear();
-    setState(_resetAtsCreateProgress);
+    setState(() {
+      _clearImportedResume();
+      _libraryResumeId = null;
+      _resetAtsCreateProgress();
+    });
   }
 
   @override
@@ -326,8 +444,9 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     final coordinator = context.read<AiResumeCoordinator>();
     final library = context.watch<ResumeLibraryViewModel>();
     final resumes = library.resumes;
-    final selectedResume = library.selectedResume;
     final l10n = context.l10n;
+    final isCheckAts = _selectedSegment == _AiResumeSegment.checkAts;
+    final sourceResume = _sourceResumeFor(resumes);
     final showAiResumeBanner = PlatformMonetization.showsAiResumeBanner &&
         !(PlatformMonetization.isIapEnabled &&
             context.watch<PremiumPurchaseService>().isPremium);
@@ -335,107 +454,94 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     return ListenableBuilder(
       listenable: _jobDescriptionController,
       builder: (context, _) {
-        final enableCreate = resumes.isNotEmpty &&
-            selectedResume != null &&
-            selectedResume.hasMeaningfulContent;
+        final hasSource =
+            (sourceResume?.hasMeaningfulContent ?? false) ||
+            (_importedRawText?.trim().isNotEmpty ?? false);
         final isFurtherPass = _createdResume != null &&
-            _atsAttemptSourceId == selectedResume?.id &&
+            _atsAttemptSourceId == sourceResume?.id &&
             _atsCreateAttempt > 0;
 
         final scrollBody = SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            showAiResumeBanner ? 12 : 20,
-            20,
-            120,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (_engineStatusLabel != null) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: _fieldHorizontalPadding,
-                  ),
-                  child: Text(
-                    _engineStatusLabel!,
-                    key: const Key('ai-engine-status-label'),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                    ),
+                Text(
+                  _engineStatusLabel!,
+                  key: const Key('ai-engine-status-label'),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
                   ),
                 ),
                 const SizedBox(height: 16),
               ],
-              if (resumes.isEmpty) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: Card(
-                    margin: EdgeInsets.zero,
-                    child: InkWell(
-                      key: const Key('optimize-empty-go-home-button'),
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: widget.onGoToHomeTab,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 14, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.noResumeAvailable,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l10n.createResumeThenGenerateAts,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                    height: 1.3,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+              Text(
+                isCheckAts
+                    ? l10n.aiResumeUploadHintCheckAts
+                    : l10n.aiResumeUploadHintEnhance,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  key: const Key('ai-resume-upload-button'),
+                  onPressed: _isBusy
+                      ? null
+                      : () => _importResumeFromDevice(analyzeAfter: isCheckAts),
+                  icon: const Icon(Icons.upload_file_rounded),
+                  label: Text(l10n.aiResumeUploadCta),
+                ),
+              ),
+              if (_importedFileName != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  l10n.aiResumeUsingFile(_importedFileName!),
+                  key: const Key('ai-resume-using-file-label'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
               if (resumes.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: _fieldHorizontalPadding,
-                  ),
-                  child: Text(
-                    l10n.selectResume,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                const SizedBox(height: 16),
+                const _AiResumeOrDivider(),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.selectFromAppResumeList,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 8),
                 KeyedSubtree(
-                  key: const Key('tailor-resume-selector'),
+                  key: const Key('ai-library-resume-selector'),
                   child: DropdownButtonFormField<String>(
                     key: ValueKey(
-                      'tailor-resume-selector-${selectedResume?.id ?? resumes.first.id}',
+                      'ai-library-resume-${_libraryResumeId ?? 'none'}',
                     ),
-                    initialValue: selectedResume?.id ?? resumes.first.id,
+                    initialValue: _libraryResumeId,
                     isExpanded: true,
                     borderRadius: BorderRadius.circular(12),
                     alignment: AlignmentDirectional.centerStart,
                     dropdownColor: Theme.of(context).cardColor,
                     elevation: 6,
+                    hint: Text(
+                      l10n.selectFromAppResumeList,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface,
@@ -447,7 +553,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                     ),
                     decoration: const InputDecoration(
                       contentPadding: EdgeInsets.symmetric(
-                        horizontal: _fieldHorizontalPadding,
+                        horizontal: 12,
                         vertical: 14,
                       ),
                     ),
@@ -461,11 +567,6 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                           child: Text(
                             title,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: FontWeight.w600,
-                                ),
                           ),
                         );
                       }).toList();
@@ -476,7 +577,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                             value: resume.id,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: _fieldHorizontalPadding,
+                                horizontal: 12,
                                 vertical: 12,
                               ),
                               child: Text(
@@ -484,13 +585,6 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                                     ? ResumeData.defaultTitle
                                     : resume.title,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodyLarge
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
                               ),
                             ),
                           ),
@@ -500,53 +594,78 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                       if (value == null) {
                         return;
                       }
-                      library.selectResume(value);
-                      setState(_resetAtsCreateProgress);
+                      _selectLibraryResume(value);
                     },
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
-              TextField(
-                controller: _jobDescriptionController,
-                focusNode: _jobDescriptionFocusNode,
-                minLines: 5,
-                maxLines: 7,
-                onChanged: (_) => _handleInputChanged(),
-                decoration: InputDecoration(
-                  labelText: l10n.jobDescriptionOptional,
-                  hintText: l10n.jobDescriptionHint,
-                  alignLabelWithHint: true,
+              if (!isCheckAts) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _jobDescriptionController,
+                  focusNode: _jobDescriptionFocusNode,
+                  minLines: 5,
+                  maxLines: 7,
+                  onChanged: (_) => _handleInputChanged(),
+                  decoration: InputDecoration(
+                    labelText: l10n.jobDescriptionOptional,
+                    hintText: l10n.jobDescriptionHint,
+                    alignLabelWithHint: true,
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  FilledButton(
-                    key: const Key('create-ats-resume-ai-button'),
-                    onPressed: enableCreate
-                        ? () => _createAtsResume(
-                            coordinator: coordinator,
-                            selectedResume: selectedResume,
-                          )
-                        : null,
-                    child: Text(
-                      isFurtherPass
-                          ? l10n.furtherOptimizeAtsPass(_atsCreateAttempt + 1)
-                          : l10n.createAtsResume,
+                  if (isCheckAts)
+                    FilledButton(
+                      key: const Key('check-ats-button'),
+                      onPressed: hasSource && !_isBusy
+                          ? () => _checkAts(resume: sourceResume)
+                          : null,
+                      child: Text(l10n.aiResumeCheckAts),
+                    )
+                  else
+                    FilledButton(
+                      key: const Key('create-ats-resume-ai-button'),
+                      onPressed: hasSource && !_isBusy
+                          ? () => _createAtsResume(coordinator: coordinator)
+                          : null,
+                      child: Text(
+                        isFurtherPass
+                            ? l10n.furtherOptimizeAtsPass(_atsCreateAttempt + 1)
+                            : l10n.optimizeResume,
+                      ),
                     ),
-                  ),
                 ],
               ),
+              if (!isCheckAts &&
+                  _previewData != null &&
+                  _createdResume != null) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FilledButton.tonal(
+                      key: const Key('show-created-ats-resume-button'),
+                      onPressed: _openCreatedAtsResumePreview,
+                      child: Text(l10n.showResume),
+                    ),
+                  ],
+                ),
+              ],
               if (_isBusy)
                 const Padding(
                   padding: EdgeInsets.only(top: 12),
                   child: LinearProgressIndicator(),
                 ),
-              const SizedBox(height: 20),
-              if (_appliedChanges.isNotEmpty) ...[
-                const SizedBox(height: 16),
+              if (isCheckAts && _atsAnalysis != null) ...[
+                const SizedBox(height: 20),
+                _AtsCheckResultsCard(analysis: _atsAnalysis!),
+              ],
+              if (!isCheckAts && _appliedChanges.isNotEmpty) ...[
+                const SizedBox(height: 20),
                 Text(
                   l10n.appliedChanges,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -567,44 +686,321 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                     ),
                   ),
                 ),
-                if (_previewData != null && _createdResume != null) ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      FilledButton.tonal(
-                        key: const Key('show-created-ats-resume-button'),
-                        onPressed: _openCreatedAtsResumePreview,
-                        child: Text(l10n.showAtsResume),
-                      ),
-                    ],
-                  ),
-                ],
               ],
             ],
           ),
         );
 
-        if (!showAiResumeBanner) {
-          return scrollBody;
-        }
-
-        return SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        final body = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (showAiResumeBanner)
               const Material(
                 elevation: 0,
                 child: AndroidBannerAdSlot(
                   placement: AndroidBannerPlacement.aiResume,
                 ),
               ),
-              Expanded(child: scrollBody),
-            ],
-          ),
+            Material(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  showAiResumeBanner ? 12 : 20,
+                  20,
+                  12,
+                ),
+                child: _AiResumeSegmentControl(
+                  selected: _selectedSegment,
+                  onChanged: (value) {
+                    setState(() => _selectedSegment = value);
+                  },
+                ),
+              ),
+            ),
+            Expanded(child: scrollBody),
+          ],
         );
+
+        return showAiResumeBanner ? SafeArea(bottom: false, child: body) : body;
       },
+    );
+  }
+}
+
+class _AiResumeOrDivider extends StatelessWidget {
+  const _AiResumeOrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Row(
+      key: const Key('ai-resume-or-divider'),
+      children: [
+        Expanded(child: Divider(color: color.withValues(alpha: 0.35))),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            context.l10n.aiResumeOr,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: color.withValues(alpha: 0.35))),
+      ],
+    );
+  }
+}
+
+class _AiResumeSegmentControl extends StatelessWidget {
+  const _AiResumeSegmentControl({
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final _AiResumeSegment selected;
+  final ValueChanged<_AiResumeSegment> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final isCupertino = Theme.of(context).platform == TargetPlatform.iOS;
+    final blue = Theme.of(context).colorScheme.primary;
+    final inactiveColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (isCupertino) {
+      return SizedBox(
+        width: double.infinity,
+        child: Material(
+          elevation: 2,
+          shadowColor: Colors.black.withValues(alpha: 0.14),
+          surfaceTintColor: Colors.transparent,
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: CupertinoSlidingSegmentedControl<_AiResumeSegment>(
+              key: const Key('ai-resume-segmented-button'),
+              groupValue: selected,
+              proportionalWidth: true,
+              backgroundColor: isDark
+                  ? const Color(0xFF3A3A3C)
+                  : const Color(0xFFE8E8ED),
+              thumbColor: isDark ? const Color(0xFF636366) : Colors.white,
+              onValueChanged: (value) {
+                if (value != null) {
+                  onChanged(value);
+                }
+              },
+              children: {
+                _AiResumeSegment.checkAts: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  child: Text(
+                    l10n.aiResumeCheckAts,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: selected == _AiResumeSegment.checkAts
+                          ? blue
+                          : inactiveColor,
+                    ),
+                  ),
+                ),
+                _AiResumeSegment.enhanceResume: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  child: Text(
+                    l10n.aiResumeEnhanceResume,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: selected == _AiResumeSegment.enhanceResume
+                          ? blue
+                          : inactiveColor,
+                    ),
+                  ),
+                ),
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.14),
+        surfaceTintColor: Colors.transparent,
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: SegmentedButton<_AiResumeSegment>(
+            key: const Key('ai-resume-segmented-button'),
+            expandedInsets: EdgeInsets.zero,
+            showSelectedIcon: false,
+            style: SegmentedButton.styleFrom(
+              selectedForegroundColor: blue,
+              foregroundColor: inactiveColor,
+              backgroundColor: Colors.transparent,
+              selectedBackgroundColor: blue.withValues(alpha: 0.12),
+              surfaceTintColor: Colors.transparent,
+              side: BorderSide.none,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              textStyle: const TextStyle(fontSize: 16),
+            ),
+            segments: [
+              ButtonSegment<_AiResumeSegment>(
+                value: _AiResumeSegment.checkAts,
+                label: Text(l10n.aiResumeCheckAts),
+              ),
+              ButtonSegment<_AiResumeSegment>(
+                value: _AiResumeSegment.enhanceResume,
+                label: Text(l10n.aiResumeEnhanceResume),
+              ),
+            ],
+            selected: {selected},
+            onSelectionChanged: (value) => onChanged(value.first),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AtsCheckResultsCard extends StatelessWidget {
+  const _AtsCheckResultsCard({required this.analysis});
+
+  final ResumeAnalysis analysis;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    Widget section(String title, List<String> items, IconData icon) {
+      if (items.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Padding(
+        padding: const EdgeInsets.only(top: 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(icon, size: 18, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(item)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Card(
+      key: const Key('ats-check-results-card'),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.atsCheckResults,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                SizedBox(
+                  width: 68,
+                  height: 68,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CircularProgressIndicator(
+                        value: analysis.score / 100,
+                        strokeWidth: 8,
+                      ),
+                      Center(
+                        child: Text(
+                          '${analysis.score}',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.resumeScore,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.atsCompatibilitySummary(
+                          (analysis.atsCompatibility * 100).round(),
+                          analysis.missingSkills.length,
+                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            section(l10n.atsStrengths, analysis.strengths, Icons.check_circle_outline),
+            section(
+              l10n.atsMissingKeywords,
+              analysis.missingSkills,
+              Icons.warning_amber_rounded,
+            ),
+            section(
+              l10n.atsImprovements,
+              analysis.improvements,
+              Icons.lightbulb_outline,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -676,14 +1072,10 @@ class _OptimizedResumePreviewScreen extends StatefulWidget {
   const _OptimizedResumePreviewScreen({
     required this.sourceResume,
     required this.previewData,
-    this.saveAsNewCopyOnly = false,
-    this.newCopyTitleSuffix = '',
   });
 
   final ResumeData sourceResume;
   final ResumeOptimizeHighlightData previewData;
-  final bool saveAsNewCopyOnly;
-  final String newCopyTitleSuffix;
 
   @override
   State<_OptimizedResumePreviewScreen> createState() =>
@@ -694,90 +1086,11 @@ class _OptimizedResumePreviewScreenState
     extends State<_OptimizedResumePreviewScreen> {
   bool _isSaving = false;
 
-  Future<_OptimizedResumeSaveChoice?> _promptSaveChoice() {
-    final sourceTitle = widget.sourceResume.title.trim().isEmpty
-        ? ResumeData.defaultTitle
-        : widget.sourceResume.title.trim();
-    final l10n = context.l10n;
-    return showModalBottomSheet<_OptimizedResumeSaveChoice>(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.saveOptimizedResume,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.saveOptimizedResumePrompt(sourceTitle),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.tonal(
-                  key: const Key('save-optimized-new-copy-button'),
-                  onPressed: () => Navigator.of(
-                    context,
-                  ).pop(_OptimizedResumeSaveChoice.newCopy),
-                  child: Text(l10n.newCopy),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  key: const Key('save-optimized-existing-button'),
-                  onPressed: () => Navigator.of(
-                    context,
-                  ).pop(_OptimizedResumeSaveChoice.existingResume),
-                  child: Text(l10n.existingResume),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n.cancel),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   String _optimizedCopyTitle(String title) {
     final trimmed = title.trim();
     final baseTitle = trimmed.isEmpty ? ResumeData.defaultTitle : trimmed;
-    final suffix = widget.newCopyTitleSuffix.isEmpty
-        ? context.l10n.optimizedTitleSuffix
-        : widget.newCopyTitleSuffix;
+    final suffix = context.l10n.atsTitleSuffix;
     return baseTitle.endsWith(suffix) ? baseTitle : '$baseTitle$suffix';
-  }
-
-  Future<String?> _promptNewCopyTitle() {
-    final suggestedTitle = _optimizedCopyTitle(widget.sourceResume.title);
-    return showDialog<String>(
-      context: context,
-      builder: (context) =>
-          _OptimizedResumeTitleDialog(initialTitle: suggestedTitle),
-    );
   }
 
   Future<void> _saveResume() async {
@@ -785,45 +1098,29 @@ class _OptimizedResumePreviewScreenState
       return;
     }
 
-    final _OptimizedResumeSaveChoice? choice;
-    if (widget.saveAsNewCopyOnly) {
-      choice = _OptimizedResumeSaveChoice.newCopy;
-    } else {
-      choice = await _promptSaveChoice();
-    }
-    if (!mounted || choice == null) {
-      return;
-    }
-
     setState(() => _isSaving = true);
     try {
+      final copyTitle = await showDialog<String>(
+        context: context,
+        builder: (context) => _OptimizedResumeTitleDialog(
+          initialTitle: _optimizedCopyTitle(widget.sourceResume.title),
+        ),
+      );
+      if (!mounted || copyTitle == null) {
+        return;
+      }
+
       final repository = context.read<ResumeRepository>();
       final library = context.read<ResumeLibraryViewModel>();
-      final pendingOptimizedResume = widget.previewData.afterResume;
-      String? copyTitle;
-      if (choice == _OptimizedResumeSaveChoice.newCopy) {
-        copyTitle = await _promptNewCopyTitle();
-        if (!mounted || copyTitle == null) {
-          return;
-        }
-      }
-      final savedResume = switch (choice) {
-        _OptimizedResumeSaveChoice.newCopy => pendingOptimizedResume.copyWith(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
-          title: copyTitle!.trim().isEmpty
-              ? ResumeData.defaultTitle
-              : copyTitle.trim(),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          lastSyncedAt: null,
-        ),
-        _OptimizedResumeSaveChoice.existingResume =>
-          pendingOptimizedResume.copyWith(
-            id: widget.sourceResume.id,
-            title: widget.sourceResume.title,
-            updatedAt: DateTime.now(),
-          ),
-      };
+      final savedResume = widget.previewData.afterResume.copyWith(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        title: copyTitle.trim().isEmpty
+            ? ResumeData.defaultTitle
+            : copyTitle.trim(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        lastSyncedAt: null,
+      );
 
       await repository.upsertResume(savedResume);
       await library.loadResumes();
@@ -857,9 +1154,12 @@ class _OptimizedResumePreviewScreenState
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: _HighlightedResumePdfPreview(
-                pdfService: pdfService,
-                previewData: widget.previewData,
+              child: KeyedSubtree(
+                key: const Key('created-ats-resume-preview'),
+                child: _HighlightedResumePdfPreview(
+                  pdfService: pdfService,
+                  previewData: widget.previewData,
+                ),
               ),
             ),
           ),

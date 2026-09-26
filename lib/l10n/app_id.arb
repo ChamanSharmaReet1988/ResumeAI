@@ -24,6 +24,9 @@
   "ratePromptTitle": "Suka ResumeAI?",
   "ratePromptBody": "Jika aplikasi ini membantu, penilaian singkat sangat berarti bagi kami.",
   "maybeLater": "Nanti saja",
+  "keepResumeSafeTitle": "Amankan resume Anda",
+  "keepResumeSafeBodyDrive": "Sinkronkan ke Google Drive agar tidak hilang jika Anda ganti ponsel atau menginstal ulang aplikasi.",
+  "keepResumeSafeBodyIcloud": "Cadangkan ke iCloud agar resume tidak hilang jika Anda ganti ponsel atau menginstal ulang aplikasi.",
   "shareApp": "Bagikan aplikasi",
   "privacyPolicy": "Kebijakan privasi",
   "termsOfUse": "Syarat penggunaan",
@@ -172,7 +175,7 @@
   "premiumProductsUnavailable": "Paket langganan tidak tersedia saat ini. Silakan coba lagi nanti.",
   "premiumPurchaseCanceled": "Pembelian dibatalkan.",
   "hideKeyboard": "Sembunyikan keyboard",
-  "selectResumeWithContentFirst": "Pilih dulu resume tersimpan yang berisi konten.",
+  "selectResumeWithContentFirst": "Unggah atau pilih dulu resume yang berisi konten.",
   "aiAtsIntro": "Pilih resume dan AI akan membuat versi ATS yang dioptimalkan. Tambahkan kunci API di Pengaturan untuk hasil lebih kuat, atau gunakan AI bawaan. Deskripsi pekerjaan bersifat opsional. Ketuk Buat lagi untuk menyempurnakan.",
   "aiEngineUsingCloudApi": "Menggunakan kunci API Anda (AI cloud)",
   "aiEngineUsingAppleIntelligence": "Menggunakan Apple Intelligence (di perangkat)",
@@ -208,7 +211,28 @@
   "testAiApiKey": "Uji kunci API",
   "removeAiApiKey": "Hapus kunci API",
   "noResumeAvailable": "Belum ada resume tersedia saat ini.",
-  "createResumeThenGenerateAts": "Buat resume terlebih dahulu, lalu kembali ke sini untuk membuat versi ATS.",
+  "createResumeThenGenerateAts": "Unggah resume dari perangkat Anda, lalu buat versi ATS.",
+  "aiResumeCheckAts": "Cek ATS",
+  "aiResumeEnhanceResume": "Tingkatkan Resume",
+  "aiResumeUploadCta": "Unggah resume",
+  "aiResumeUploadHintCheckAts": "Unggah resume PDF, DOCX, atau TXT dari perangkat untuk memeriksa kompatibilitas ATS.",
+  "aiResumeUploadHintEnhance": "Unggah resume PDF, DOCX, atau TXT dari perangkat, tambahkan deskripsi pekerjaan, lalu ketuk Optimalkan.",
+  "aiResumeUsingFile": "Menggunakan {fileName}",
+  "@aiResumeUsingFile": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "orChooseSavedResume": "Atau pilih resume tersimpan",
+  "aiResumeOr": "ATAU",
+  "selectFromAppResumeList": "Pilih dari daftar resume aplikasi",
+  "optimizeResume": "Optimalkan",
+  "atsCheckResults": "Hasil ATS",
+  "atsStrengths": "Kelebihan",
+  "atsImprovements": "Perbaikan",
+  "atsMissingKeywords": "Kata kunci yang hilang",
   "selectResume": "Pilih resume",
   "jobDescriptionOptional": "Deskripsi pekerjaan (opsional)",
   "jobDescriptionHint": "Tempel lowongan untuk menyesuaikan resume ATS, atau biarkan kosong.",
@@ -223,6 +247,7 @@
   },
   "appliedChanges": "Perubahan yang diterapkan",
   "showAtsResume": "Tampilkan resume ATS",
+  "showResume": "Tampilkan Resume",
   "saveOptimizedResume": "Simpan resume yang dioptimalkan",
   "saveOptimizedResumePrompt": "Apakah Anda ingin menyimpan ini sebagai salinan baru atau mengganti \"{sourceTitle}\"?",
   "@saveOptimizedResumePrompt": {

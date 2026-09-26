@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
@@ -21,6 +22,17 @@ import 'core/services/resume_services.dart';
 Future<void> main() async {
   await runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Color(0x00000000),
+          systemNavigationBarColor: Color(0x00000000),
+          systemNavigationBarDividerColor: Color(0x00000000),
+          systemNavigationBarContrastEnforced: false,
+        ),
+      );
+    }
     if (!kIsWeb) {
       try {
         await GoogleSignIn.instance.initialize(

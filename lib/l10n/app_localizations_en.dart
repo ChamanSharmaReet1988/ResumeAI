@@ -82,6 +82,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get maybeLater => 'Maybe later';
 
   @override
+  String get keepResumeSafeTitle => 'Keep your resume safe';
+
+  @override
+  String get keepResumeSafeBodyDrive =>
+      'Sync to Google Drive so you don’t lose it if you change phones or reinstall the app.';
+
+  @override
+  String get keepResumeSafeBodyIcloud =>
+      'Back up to iCloud so you don’t lose your resumes if you change phones or reinstall the app.';
+
+  @override
   String get shareApp => 'Share App';
 
   @override
@@ -369,7 +380,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectResumeWithContentFirst =>
-      'Select a saved resume with content first.';
+      'Upload or select a resume with content first.';
 
   @override
   String get aiAtsIntro =>
@@ -444,7 +455,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createResumeThenGenerateAts =>
-      'Create a resume first, then come back here to generate an ATS version.';
+      'Upload a resume from your device, then generate an ATS version.';
+
+  @override
+  String get aiResumeCheckAts => 'Check ATS';
+
+  @override
+  String get aiResumeEnhanceResume => 'Enhance Resume';
+
+  @override
+  String get aiResumeUploadCta => 'Upload resume';
+
+  @override
+  String get aiResumeUploadHintCheckAts =>
+      'Upload a PDF, DOCX, or TXT resume from your device to check ATS compatibility.';
+
+  @override
+  String get aiResumeUploadHintEnhance =>
+      'Upload a PDF, DOCX, or TXT resume from your device, add a job description, then tap Optimize.';
+
+  @override
+  String aiResumeUsingFile(String fileName) {
+    return 'Using $fileName';
+  }
+
+  @override
+  String get orChooseSavedResume => 'Or choose a saved resume';
+
+  @override
+  String get aiResumeOr => 'OR';
+
+  @override
+  String get selectFromAppResumeList => 'Select from app resume list';
+
+  @override
+  String get optimizeResume => 'Optimize';
+
+  @override
+  String get atsCheckResults => 'ATS results';
+
+  @override
+  String get atsStrengths => 'Strengths';
+
+  @override
+  String get atsImprovements => 'Improvements';
+
+  @override
+  String get atsMissingKeywords => 'Missing keywords';
 
   @override
   String get selectResume => 'Select resume';
@@ -469,6 +526,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showAtsResume => 'Show ATS resume';
+
+  @override
+  String get showResume => 'Show Resume';
 
   @override
   String get saveOptimizedResume => 'Save optimized resume';

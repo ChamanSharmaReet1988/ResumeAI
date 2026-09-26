@@ -13,6 +13,7 @@ import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/android_ads_service.dart';
 import '../../core/services/resume_services.dart';
 import '../premium/premium_gate.dart';
 import '../shared/native_pdf_preview.dart';
@@ -168,6 +169,13 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     if (!await _ensureCanUseTemplate(context, item)) {
       return;
     }
+    if (!context.mounted) {
+      return;
+    }
+
+    await AndroidAdsService.showInterstitialIfReady(
+      placement: AndroidAdPlacement.templates,
+    );
     if (!context.mounted) {
       return;
     }

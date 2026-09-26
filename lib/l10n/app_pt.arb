@@ -24,6 +24,9 @@
   "ratePromptTitle": "Está gostando do ResumeAI?",
   "ratePromptBody": "Se o app está te ajudando, uma avaliação rápida faz muita diferença.",
   "maybeLater": "Agora não",
+  "keepResumeSafeTitle": "Mantenha seu currículo seguro",
+  "keepResumeSafeBodyDrive": "Sincronize com o Google Drive para não perder se trocar de celular ou reinstalar o app.",
+  "keepResumeSafeBodyIcloud": "Faça backup no iCloud para não perder seus currículos se trocar de celular ou reinstalar o app.",
   "shareApp": "Compartilhar o app",
   "privacyPolicy": "Política de privacidade",
   "termsOfUse": "Termos de uso",
@@ -172,7 +175,7 @@
   "premiumProductsUnavailable": "Os planos de assinatura não estão disponíveis agora. Tente novamente mais tarde.",
   "premiumPurchaseCanceled": "Compra cancelada.",
   "hideKeyboard": "Ocultar teclado",
-  "selectResumeWithContentFirst": "Selecione primeiro um currículo salvo com conteúdo.",
+  "selectResumeWithContentFirst": "Envie ou selecione primeiro um currículo com conteúdo.",
   "aiAtsIntro": "Selecione um currículo e a IA criará uma versão otimizada para ATS. Adicione sua chave de API em Configurações para resultados melhores, ou use a IA integrada. A descrição da vaga é opcional. Toque em Criar novamente para refinar.",
   "aiEngineUsingCloudApi": "Usando sua chave de API (IA na nuvem)",
   "aiEngineUsingAppleIntelligence": "Usando Apple Intelligence (no dispositivo)",
@@ -208,7 +211,28 @@
   "testAiApiKey": "Testar chave de API",
   "removeAiApiKey": "Remover chave de API",
   "noResumeAvailable": "Nenhum currículo disponível no momento.",
-  "createResumeThenGenerateAts": "Crie um currículo primeiro e volte aqui para gerar uma versão ATS.",
+  "createResumeThenGenerateAts": "Envie um currículo do seu dispositivo e gere uma versão ATS.",
+  "aiResumeCheckAts": "Verificar ATS",
+  "aiResumeEnhanceResume": "Melhorar currículo",
+  "aiResumeUploadCta": "Enviar currículo",
+  "aiResumeUploadHintCheckAts": "Envie um currículo PDF, DOCX ou TXT do seu dispositivo para verificar o ATS.",
+  "aiResumeUploadHintEnhance": "Envie um currículo PDF, DOCX ou TXT do seu dispositivo, adicione uma descrição da vaga e toque em Otimizar.",
+  "aiResumeUsingFile": "Usando {fileName}",
+  "@aiResumeUsingFile": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "orChooseSavedResume": "Ou escolha um currículo salvo",
+  "aiResumeOr": "OU",
+  "selectFromAppResumeList": "Selecionar da lista do app",
+  "optimizeResume": "Otimizar",
+  "atsCheckResults": "Resultados ATS",
+  "atsStrengths": "Pontos fortes",
+  "atsImprovements": "Melhorias",
+  "atsMissingKeywords": "Palavras-chave ausentes",
   "selectResume": "Selecionar currículo",
   "jobDescriptionOptional": "Descrição da vaga (opcional)",
   "jobDescriptionHint": "Cole um anúncio de vaga para adaptar o currículo ATS, ou deixe em branco.",
@@ -223,6 +247,7 @@
   },
   "appliedChanges": "Alterações aplicadas",
   "showAtsResume": "Mostrar currículo ATS",
+  "showResume": "Mostrar currículo",
   "saveOptimizedResume": "Salvar currículo otimizado",
   "saveOptimizedResumePrompt": "Deseja salvar isto como uma nova cópia ou substituir \"{sourceTitle}\"?",
   "@saveOptimizedResumePrompt": {

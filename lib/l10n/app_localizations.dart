@@ -246,6 +246,24 @@ abstract class AppLocalizations {
   /// **'Maybe later'**
   String get maybeLater;
 
+  /// No description provided for @keepResumeSafeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your resume safe'**
+  String get keepResumeSafeTitle;
+
+  /// No description provided for @keepResumeSafeBodyDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync to Google Drive so you don’t lose it if you change phones or reinstall the app.'**
+  String get keepResumeSafeBodyDrive;
+
+  /// No description provided for @keepResumeSafeBodyIcloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up to iCloud so you don’t lose your resumes if you change phones or reinstall the app.'**
+  String get keepResumeSafeBodyIcloud;
+
   /// No description provided for @shareApp.
   ///
   /// In en, this message translates to:
@@ -741,7 +759,7 @@ abstract class AppLocalizations {
   /// No description provided for @selectResumeWithContentFirst.
   ///
   /// In en, this message translates to:
-  /// **'Select a saved resume with content first.'**
+  /// **'Upload or select a resume with content first.'**
   String get selectResumeWithContentFirst;
 
   /// No description provided for @aiAtsIntro.
@@ -873,8 +891,92 @@ abstract class AppLocalizations {
   /// No description provided for @createResumeThenGenerateAts.
   ///
   /// In en, this message translates to:
-  /// **'Create a resume first, then come back here to generate an ATS version.'**
+  /// **'Upload a resume from your device, then generate an ATS version.'**
   String get createResumeThenGenerateAts;
+
+  /// No description provided for @aiResumeCheckAts.
+  ///
+  /// In en, this message translates to:
+  /// **'Check ATS'**
+  String get aiResumeCheckAts;
+
+  /// No description provided for @aiResumeEnhanceResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhance Resume'**
+  String get aiResumeEnhanceResume;
+
+  /// No description provided for @aiResumeUploadCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload resume'**
+  String get aiResumeUploadCta;
+
+  /// No description provided for @aiResumeUploadHintCheckAts.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a PDF, DOCX, or TXT resume from your device to check ATS compatibility.'**
+  String get aiResumeUploadHintCheckAts;
+
+  /// No description provided for @aiResumeUploadHintEnhance.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a PDF, DOCX, or TXT resume from your device, add a job description, then tap Optimize.'**
+  String get aiResumeUploadHintEnhance;
+
+  /// No description provided for @aiResumeUsingFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Using {fileName}'**
+  String aiResumeUsingFile(String fileName);
+
+  /// No description provided for @orChooseSavedResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Or choose a saved resume'**
+  String get orChooseSavedResume;
+
+  /// No description provided for @aiResumeOr.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get aiResumeOr;
+
+  /// No description provided for @selectFromAppResumeList.
+  ///
+  /// In en, this message translates to:
+  /// **'Select from app resume list'**
+  String get selectFromAppResumeList;
+
+  /// No description provided for @optimizeResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Optimize'**
+  String get optimizeResume;
+
+  /// No description provided for @atsCheckResults.
+  ///
+  /// In en, this message translates to:
+  /// **'ATS results'**
+  String get atsCheckResults;
+
+  /// No description provided for @atsStrengths.
+  ///
+  /// In en, this message translates to:
+  /// **'Strengths'**
+  String get atsStrengths;
+
+  /// No description provided for @atsImprovements.
+  ///
+  /// In en, this message translates to:
+  /// **'Improvements'**
+  String get atsImprovements;
+
+  /// No description provided for @atsMissingKeywords.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing keywords'**
+  String get atsMissingKeywords;
 
   /// No description provided for @selectResume.
   ///
@@ -917,6 +1019,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show ATS resume'**
   String get showAtsResume;
+
+  /// No description provided for @showResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Resume'**
+  String get showResume;
 
   /// No description provided for @saveOptimizedResume.
   ///
