@@ -7946,12 +7946,6 @@ class _TimelineProfilePreview extends StatelessWidget {
   static const double _mainRight = 36;
   static const double _ruleX = _mainLeft + 9;
 
-  static final RegExp _sidebarSectionTitle = RegExp(
-    r'^(languages?|references?|referees?|awards?|certifications?|'
-    r'certificates?|interests?|hobbies)$',
-    caseSensitive: false,
-  );
-
   @override
   Widget build(BuildContext context) {
     final band = resume.timelineProfileBandColor;
@@ -8081,9 +8075,6 @@ class _TimelineProfilePreview extends StatelessWidget {
       child: _avatarFallback(resume, style(FontWeight.w700, 32, titleColor)),
     );
 
-    final sidebarSections = resume.visibleCustomSections
-        .where((item) => _sidebarSectionTitle.hasMatch(item.title.trim()))
-        .toList();
     final contacts = nonEmpty([
       resume.phone,
       resume.email,
@@ -8092,6 +8083,7 @@ class _TimelineProfilePreview extends StatelessWidget {
       resume.linkedinLink,
       resume.githubLink,
     ]);
+    final skills = _pdfAlignedSkills(resume);
 
     Widget sidebarBullet(String text) => Padding(
       padding: const EdgeInsets.only(bottom: 5),
@@ -8121,18 +8113,12 @@ class _TimelineProfilePreview extends StatelessWidget {
           ),
           for (final value in contacts) sidebarBullet(value),
         ],
-        for (final section in sidebarSections) ...[
+        if (skills.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.only(top: 14, bottom: 7),
-            child: ruledHeading(section.title.trim(), 13),
+            child: ruledHeading('Skills', 13),
           ),
-          for (final line
-              in nonEmpty(
-                section.bullets.any((b) => b.trim().isNotEmpty)
-                    ? section.bullets
-                    : section.content.split('\n'),
-              ))
-            sidebarBullet(line),
+          for (final skill in skills) sidebarBullet(skill),
         ],
       ],
     );
@@ -8156,6 +8142,7 @@ class _TimelineProfilePreview extends StatelessWidget {
           previewBodySectionOrder(
             resume,
             followOrder: followBuilderSectionOrder,
+            exclude: {ResumeBuilderSectionIds.skills},
           ),
           (id) {
             final customIndex = ResumeBuilderSectionIds.customIndex(id);
@@ -8165,10 +8152,7 @@ class _TimelineProfilePreview extends StatelessWidget {
                 return null;
               }
               final item = resume.customSections[customIndex];
-              if (item.isBlank ||
-                  _sidebarSectionTitle.hasMatch(item.title.trim())) {
-                return null;
-              }
+              if (item.isBlank) return null;
               final lines = nonEmpty(
                 item.bullets.any((b) => b.trim().isNotEmpty)
                     ? item.bullets
@@ -8178,27 +8162,12 @@ class _TimelineProfilePreview extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   sectionTitle(item.title.trim().ifBlank('Custom section')),
-                  for (final line in lines) onTimeline(Text(line, style: bodyText)),
+                  for (final line in lines)
+                    onTimeline(Text(line, style: bodyText)),
                 ],
               );
             }
             switch (id) {
-              case ResumeBuilderSectionIds.skills:
-                final skills = _pdfAlignedSkills(resume);
-                if (skills.isEmpty) return null;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    sectionTitle('Skills'),
-                    for (final skill in skills)
-                      onTimeline(
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Text('• $skill', style: bodyText),
-                        ),
-                      ),
-                  ],
-                );
               case ResumeBuilderSectionIds.work:
                 final items = resume.visibleWorkExperiences;
                 if (items.isEmpty) return null;
