@@ -25,8 +25,6 @@ const double _charcoalCurveMetaColumnPt = 120.0;
 const double _charcoalCurveSkillLabelPt = 96.0;
 /// Fixed skill-bar track width beside the rail (page 1).
 const double _charcoalCurveSkillBarPt = 88.0;
-/// Fixed skill-bar track width in each column on full-width pages.
-const double _charcoalCurveSkillBarFullPagePt = 72.0;
 
 /// Pads main-column widgets beside the rail on page 1; no pad from page 2 so
 /// text can use the full page width.
@@ -258,54 +256,14 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
       );
     }
 
-    /// Page 1 (beside the rail): one skill per row. Full-width pages: two
-    /// columns so shorter bars sit side by side.
+    /// One skill per row so MultiPage can break between skills.
     List<pw.Widget> skillsBody() {
       if (skills.isEmpty) return const [];
       return [
-        for (var i = 0; i < skills.length; i++)
-          pw.DelayedWidget(
-            build: (context) {
-              final fullWidth = context.pageNumber > 1;
-              if (!fullWidth) {
-                return skillBar(
-                  skills[i],
-                  barWidth: _charcoalCurveSkillBarPt,
-                );
-              }
-              // Pair skills on full-width pages; odd indices are covered by
-              // the previous row.
-              if (i.isOdd) {
-                return pw.SizedBox();
-              }
-              final right =
-                  i + 1 < skills.length ? skills[i + 1] : null;
-              return pw.Padding(
-                padding: const pw.EdgeInsets.only(bottom: 0),
-                child: pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Expanded(
-                      child: skillBar(
-                        skills[i],
-                        barWidth: _charcoalCurveSkillBarFullPagePt,
-                        expandLabel: true,
-                      ),
-                    ),
-                    pw.SizedBox(width: 18),
-                    pw.Expanded(
-                      child: right == null
-                          ? pw.SizedBox()
-                          : skillBar(
-                              right,
-                              barWidth: _charcoalCurveSkillBarFullPagePt,
-                              expandLabel: true,
-                            ),
-                    ),
-                  ],
-                ),
-              );
-            },
+        for (final skill in skills)
+          skillBar(
+            skill,
+            barWidth: _charcoalCurveSkillBarPt,
           ),
       ];
     }

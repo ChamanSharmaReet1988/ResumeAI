@@ -224,11 +224,6 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                 ),
               ),
           ],
-          if (resume.skillsLinesForDisplay.isNotEmpty) ...[
-            sectionTitle('Skills', _BlueDiagonalIcon.skills),
-            for (final skill in resume.skillsLinesForDisplay.take(10))
-              bullet(skill, highlight: highlightedSkills.contains(skill)),
-          ],
           for (final section in leftSections) ...[
             sectionTitle(section.title.trim(), _BlueDiagonalIcon.language),
             for (final line in _slateSidebarRailSectionLines(section))
@@ -353,7 +348,6 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
             ),
           ..._pdfBodySectionsInBuilderOrder(
             resume,
-            exclude: {ResumeBuilderSectionIds.skills},
             buildSection: (id) {
               final customIndex = ResumeBuilderSectionIds.customIndex(id);
               if (customIndex != null) {
@@ -374,6 +368,17 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                 ];
               }
               switch (id) {
+                case ResumeBuilderSectionIds.skills:
+                  final skills = resume.skillsLinesForDisplay;
+                  if (skills.isEmpty) return null;
+                  return [
+                    sectionTitle('Skills', _BlueDiagonalIcon.skills),
+                    ..._pdfPaginatedSkillLines(
+                      skills: skills,
+                      style: bodyStyle,
+                      highlightedSkills: highlightedSkills,
+                    ),
+                  ];
                 case ResumeBuilderSectionIds.education:
                   if (education.isEmpty) return null;
                   return [

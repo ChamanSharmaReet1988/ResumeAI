@@ -65,6 +65,28 @@ List<pw.Widget> _pdfBodySectionsInBuilderOrder(
   return out;
 }
 
+/// Single-column skill lines for MultiPage body flow (one widget per skill so
+/// a page break can fall between them).
+List<pw.Widget> _pdfPaginatedSkillLines({
+  required List<String> skills,
+  required pw.TextStyle style,
+  Set<String> highlightedSkills = const {},
+  double bottom = 6,
+  bool bullets = true,
+}) {
+  if (skills.isEmpty) return const [];
+  return [
+    for (final skill in skills)
+      _headerSidebarMaybeHighlight(
+        highlight: highlightedSkills.contains(skill),
+        child: pw.Padding(
+          padding: pw.EdgeInsets.only(bottom: bottom),
+          child: pw.Text(bullets ? '• $skill' : skill, style: style),
+        ),
+      ),
+  ];
+}
+
 PdfColor _pdfRgb(Color c) => PdfColor(c.r, c.g, c.b);
 
 final RegExp _pdfContactUrlPattern = RegExp(

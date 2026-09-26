@@ -209,11 +209,6 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
               pw.SizedBox(height: 9),
             ],
           ],
-          if (resume.skillsLinesForDisplay.isNotEmpty) ...[
-            sectionTitle('Skills'),
-            for (final skill in resume.skillsLinesForDisplay.take(12))
-              bullet(skill, highlight: highlightedSkills.contains(skill)),
-          ],
           for (final section in leftSections) ...[
             sectionTitle(section.title.trim()),
             for (final line in _slateSidebarRailSectionLines(section))
@@ -346,7 +341,6 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
           ..._pdfBodySectionsInBuilderOrder(
             resume,
             exclude: {
-              ResumeBuilderSectionIds.skills,
               ResumeBuilderSectionIds.education,
             },
             buildSection: (id) {
@@ -369,6 +363,17 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
                 ];
               }
               switch (id) {
+                case ResumeBuilderSectionIds.skills:
+                  final skills = resume.skillsLinesForDisplay;
+                  if (skills.isEmpty) return null;
+                  return [
+                    sectionTitle('Skills'),
+                    ..._pdfPaginatedSkillLines(
+                      skills: skills,
+                      style: bodyStyle,
+                      highlightedSkills: highlightedSkills,
+                    ),
+                  ];
                 case ResumeBuilderSectionIds.work:
                   if (experiences.isEmpty) return null;
                   return [

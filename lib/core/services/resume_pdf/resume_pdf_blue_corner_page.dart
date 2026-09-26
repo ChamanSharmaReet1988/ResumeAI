@@ -173,7 +173,6 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
     final mainCustomSections = resume.customSections
         .where((item) => !sideSections.contains(item))
         .toSet();
-    final skills = resume.skillsLinesForDisplay;
     final summary = resume.summary.trim();
 
     final side = pw.Column(
@@ -211,23 +210,6 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
               textAlign: pw.TextAlign.justify,
             ),
           ),
-        ],
-        if (skills.isNotEmpty) ...[
-          sectionHeading('Skills', icon: _MinimalProfileIcon.puzzle),
-          for (final skill in skills)
-            _headerSidebarMaybeHighlight(
-              highlight: highlightedSkills.contains(skill),
-              child: pw.Padding(
-                padding: const pw.EdgeInsets.only(bottom: 5),
-                child: pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('•  ', style: bodyStyle),
-                    pw.Expanded(child: pw.Text(skill, style: bodyStyle)),
-                  ],
-                ),
-              ),
-            ),
         ],
         for (final section in sideSections) ...[
           sectionHeading(section.title.trim()),
@@ -351,7 +333,6 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
         build: (context) => [
           ..._pdfBodySectionsInBuilderOrder(
             resume,
-            exclude: {ResumeBuilderSectionIds.skills},
             buildSection: (id) {
               final customIndex = ResumeBuilderSectionIds.customIndex(id);
               if (customIndex != null) {
@@ -372,6 +353,20 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                 ];
               }
               switch (id) {
+                case ResumeBuilderSectionIds.skills:
+                  final skills = resume.skillsLinesForDisplay;
+                  if (skills.isEmpty) return null;
+                  return [
+                    sectionHeading(
+                      'Skills',
+                      icon: _MinimalProfileIcon.puzzle,
+                    ),
+                    ..._pdfPaginatedSkillLines(
+                      skills: skills,
+                      style: bodyStyle,
+                      highlightedSkills: highlightedSkills,
+                    ),
+                  ];
                 case ResumeBuilderSectionIds.education:
                   final items = resume.visibleEducation;
                   if (items.isEmpty) return null;

@@ -131,7 +131,6 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
     final mainCustomSections = resume.customSections
         .where((item) => !sideSections.contains(item))
         .toSet();
-    final skills = resume.skillsLinesForDisplay;
 
     final side = pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -170,14 +169,6 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                   pw.Expanded(child: pw.Text(value, style: sideItemStyle)),
                 ],
               ),
-            ),
-        ],
-        if (skills.isNotEmpty) ...[
-          pill('Skills'),
-          for (final skill in skills)
-            _headerSidebarMaybeHighlight(
-              highlight: highlightedSkills.contains(skill),
-              child: bulletLine(skill, sideItemStyle),
             ),
         ],
         for (final section in sideSections) ...[
@@ -330,7 +321,6 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
           ],
           ..._pdfBodySectionsInBuilderOrder(
             resume,
-            exclude: {ResumeBuilderSectionIds.skills},
             buildSection: (id) {
               final customIndex = ResumeBuilderSectionIds.customIndex(id);
               if (customIndex != null) {
@@ -351,6 +341,17 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                 ];
               }
               switch (id) {
+                case ResumeBuilderSectionIds.skills:
+                  final skills = resume.skillsLinesForDisplay;
+                  if (skills.isEmpty) return null;
+                  return [
+                    timelineHeading('Skills'),
+                    ..._pdfPaginatedSkillLines(
+                      skills: skills,
+                      style: bodyStyle,
+                      highlightedSkills: highlightedSkills,
+                    ),
+                  ];
                 case ResumeBuilderSectionIds.work:
                   final items = resume.visibleWorkExperiences;
                   if (items.isEmpty) return null;

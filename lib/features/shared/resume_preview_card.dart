@@ -7145,6 +7145,23 @@ List<String> _pdfAlignedSkills(ResumeData resume) {
   return resume.skillsLinesForDisplay;
 }
 
+/// Single-column skill lines for Flutter previews (mirrors PDF pagination).
+List<Widget> _previewPaginatedSkillLines(
+  List<String> skills,
+  TextStyle style, {
+  double bottom = 6,
+  bool bullets = true,
+}) {
+  if (skills.isEmpty) return const [];
+  return [
+    for (final skill in skills)
+      Padding(
+        padding: EdgeInsets.only(bottom: bottom),
+        child: Text(bullets ? '• $skill' : skill, style: style),
+      ),
+  ];
+}
+
 /// Category subtitle, then comma-separated skills under each heading.
 Widget _categorisedSkillsPreview({
   required List<SkillGroup> groups,
@@ -7264,11 +7281,6 @@ class _SlateSidebarPreview extends StatelessWidget {
   static const double _metaColumn = 104;
   static const double _columnGap = 14;
 
-  static final RegExp _railSectionTitle = RegExp(
-    r'^(languages?|awards?|certifications?|certificates?|interests?|hobbies)$',
-    caseSensitive: false,
-  );
-
   @override
   Widget build(BuildContext context) {
     final railColor = resume.slateSidebarRailColor;
@@ -7303,21 +7315,6 @@ class _SlateSidebarPreview extends StatelessWidget {
     final railHeading = style(FontWeight.w700, 15, onRail);
     final railLabel = style(FontWeight.w700, detailPt, onRail);
     final railValue = style(FontWeight.w400, detailPt - 0.5, onRail);
-
-    bool isLanguageSection(CustomSectionItem item) {
-      final normalized = item.title.trim().toLowerCase().replaceAll(
-        RegExp(r'[^a-z]'),
-        '',
-      );
-      return normalized == 'language' ||
-          normalized == 'languages' ||
-          normalized == 'langueage' ||
-          normalized == 'langueages';
-    }
-
-    bool isRailSection(CustomSectionItem item) =>
-        _railSectionTitle.hasMatch(item.title.trim()) ||
-        isLanguageSection(item);
 
     Widget ruledTitle(String title, TextStyle textStyle, Color rule) =>
         Container(
@@ -7396,8 +7393,7 @@ class _SlateSidebarPreview extends StatelessWidget {
       ('LinkedIn', resume.linkedinLink.trim()),
       ('GitHub', resume.githubLink.trim()),
     ].where((entry) => entry.$2.isNotEmpty).toList();
-    final languageSection = _classicSidebarLanguagesSection(resume);
-    final languageLines = _classicSidebarLanguages(resume);
+    final skills = _pdfAlignedSkills(resume);
 
     final rail = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -7427,42 +7423,12 @@ class _SlateSidebarPreview extends StatelessWidget {
             Text(value, style: railValue),
             const SizedBox(height: 9),
           ],
-        if (languageLines.isNotEmpty) ...[
-          ruledTitle(
-            languageSection?.title.trim().isNotEmpty == true
-                ? languageSection!.title.trim()
-                : 'Languages',
-            railHeading,
-            onRail,
-          ),
-          for (final line in languageLines)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 7),
-              child: Text(line, style: railValue.copyWith(fontSize: detailPt)),
-            ),
-        ],
-        if (_pdfAlignedSkills(resume).isNotEmpty) ...[
+        if (skills.isNotEmpty) ...[
           ruledTitle('Expertise', railHeading, onRail),
-          for (final skill in _pdfAlignedSkills(resume).take(14))
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(skill, style: railValue.copyWith(fontSize: detailPt)),
-            ),
-        ],
-        for (final section in resume.visibleCustomSections.where(
-          (item) => isRailSection(item) && !identical(item, languageSection),
-        )) ...[
-          ruledTitle(section.title.trim(), railHeading, onRail),
-          for (final line
-              in (section.bullets.any((b) => b.trim().isNotEmpty)
-                      ? section.bullets
-                      : section.content.split('\n'))
-                  .map((line) => line.trim())
-                  .where((line) => line.isNotEmpty))
-            Padding(
-              padding: const EdgeInsets.only(bottom: 7),
-              child: Text(line, style: railValue.copyWith(fontSize: detailPt)),
-            ),
+          ..._previewPaginatedSkillLines(
+            skills,
+            railValue.copyWith(fontSize: detailPt),
+          ),
         ],
       ],
     );
@@ -7498,7 +7464,7 @@ class _SlateSidebarPreview extends StatelessWidget {
                 return null;
               }
               final item = resume.customSections[customIndex];
-              if (item.isBlank || isRailSection(item)) return null;
+              if (item.isBlank) return null;
               final lines = item.bullets.any((b) => b.trim().isNotEmpty)
                   ? item.bullets.where((b) => b.trim().isNotEmpty).toList()
                   : [item.content.trim()];
@@ -7902,10 +7868,7 @@ class _AtsCleanSansPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     sectionTitle('Skills'),
-                    twoColumns([
-                      for (final skill in skills)
-                        bulletRow(skill, indent: false),
-                    ], rowGap: 0),
+                    ..._previewPaginatedSkillLines(skills, body),
                   ],
                 );
               case ResumeBuilderSectionIds.projects:
@@ -8158,14 +8121,6 @@ class _TimelineProfilePreview extends StatelessWidget {
           ),
           for (final value in contacts) sidebarBullet(value),
         ],
-        if (_pdfAlignedSkills(resume).isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.only(top: 14, bottom: 7),
-            child: ruledHeading('Skills', 13),
-          ),
-          for (final skill in _pdfAlignedSkills(resume).take(10))
-            sidebarBullet(skill),
-        ],
         for (final section in sidebarSections) ...[
           Padding(
             padding: const EdgeInsets.only(top: 14, bottom: 7),
@@ -8201,7 +8156,6 @@ class _TimelineProfilePreview extends StatelessWidget {
           previewBodySectionOrder(
             resume,
             followOrder: followBuilderSectionOrder,
-            exclude: {ResumeBuilderSectionIds.skills},
           ),
           (id) {
             final customIndex = ResumeBuilderSectionIds.customIndex(id);
@@ -8229,6 +8183,22 @@ class _TimelineProfilePreview extends StatelessWidget {
               );
             }
             switch (id) {
+              case ResumeBuilderSectionIds.skills:
+                final skills = _pdfAlignedSkills(resume);
+                if (skills.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Skills'),
+                    for (final skill in skills)
+                      onTimeline(
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text('• $skill', style: bodyText),
+                        ),
+                      ),
+                  ],
+                );
               case ResumeBuilderSectionIds.work:
                 final items = resume.visibleWorkExperiences;
                 if (items.isEmpty) return null;
@@ -8574,10 +8544,6 @@ class _SoftHeaderPreview extends StatelessWidget {
             const SizedBox(height: 9),
           ],
         ],
-        if (_pdfAlignedSkills(resume).isNotEmpty) ...[
-          sectionTitle('Skills'),
-          for (final skill in _pdfAlignedSkills(resume).take(12)) bullet(skill),
-        ],
         for (final section in leftSections) ...[
           sectionTitle(section.title.trim()),
           for (final line
@@ -8607,7 +8573,6 @@ class _SoftHeaderPreview extends StatelessWidget {
             resume,
             followOrder: followBuilderSectionOrder,
             exclude: {
-              ResumeBuilderSectionIds.skills,
               ResumeBuilderSectionIds.education,
             },
           ),
@@ -8637,6 +8602,16 @@ class _SoftHeaderPreview extends StatelessWidget {
               );
             }
             switch (id) {
+              case ResumeBuilderSectionIds.skills:
+                final skills = _pdfAlignedSkills(resume);
+                if (skills.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Skills'),
+                    ..._previewPaginatedSkillLines(skills, bodyText),
+                  ],
+                );
               case ResumeBuilderSectionIds.work:
                 final items = resume.visibleWorkExperiences;
                 if (items.isEmpty) return null;
@@ -9003,10 +8978,6 @@ class _BlueDiagonalPreview extends StatelessWidget {
               ),
             ),
         ],
-        if (_pdfAlignedSkills(resume).isNotEmpty) ...[
-          sectionTitle('Skills', Icons.settings_outlined),
-          for (final skill in _pdfAlignedSkills(resume).take(10)) bullet(skill),
-        ],
         for (final section in leftSections) ...[
           sectionTitle(section.title.trim(), Icons.language),
           for (final line
@@ -9045,7 +9016,6 @@ class _BlueDiagonalPreview extends StatelessWidget {
           previewBodySectionOrder(
             resume,
             followOrder: followBuilderSectionOrder,
-            exclude: {ResumeBuilderSectionIds.skills},
           ),
           (id) {
             final customIndex = ResumeBuilderSectionIds.customIndex(id);
@@ -9077,6 +9047,16 @@ class _BlueDiagonalPreview extends StatelessWidget {
               );
             }
             switch (id) {
+              case ResumeBuilderSectionIds.skills:
+                final skills = _pdfAlignedSkills(resume);
+                if (skills.isEmpty) return null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle('Skills', Icons.settings_outlined),
+                    ..._previewPaginatedSkillLines(skills, bodyText),
+                  ],
+                );
               case ResumeBuilderSectionIds.education:
                 final items = resume.visibleEducation;
                 if (items.isEmpty) return null;
@@ -10465,7 +10445,6 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
     final sideSections = customSections
         .where((item) => _sideSectionTitle.hasMatch(item.title.trim()))
         .toList();
-    final skills = _pdfAlignedSkills(resume);
 
     final side = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -10494,10 +10473,6 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
                 ],
               ),
             ),
-        ],
-        if (skills.isNotEmpty) ...[
-          pill('Skills'),
-          for (final skill in skills) bulletLine(skill, sideItemStyle),
         ],
         for (final section in sideSections) ...[
           pill(section.title.trim()),
@@ -10650,7 +10625,12 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
                   ),
               ];
             case ResumeBuilderSectionIds.skills:
-              return null;
+              final items = _pdfAlignedSkills(resume);
+              if (items.isEmpty) return null;
+              return [
+                timelineHeading('Skills'),
+                ..._previewPaginatedSkillLines(items, bodyStyle),
+              ];
           }
           return null;
         }),
@@ -10928,7 +10908,6 @@ class _BlueCornerPreview extends StatelessWidget
     final sideSections = customSections
         .where((item) => _sideSectionTitle.hasMatch(item.title.trim()))
         .toList();
-    final skills = _pdfAlignedSkills(resume);
 
     Widget bullet(String text) => Padding(
       padding: const EdgeInsets.only(bottom: 5),
@@ -10966,10 +10945,6 @@ class _BlueCornerPreview extends StatelessWidget
             style: bodyStyle,
             textAlign: TextAlign.justify,
           ),
-        ],
-        if (skills.isNotEmpty) ...[
-          sectionHeading('Skills', icon: Icons.extension_outlined),
-          for (final skill in skills) bullet(skill),
         ],
         for (final section in sideSections) ...[
           sectionHeading(section.title.trim()),
@@ -11052,7 +11027,12 @@ class _BlueCornerPreview extends StatelessWidget
                 ),
             ];
           case ResumeBuilderSectionIds.skills:
-            return null;
+            final items = _pdfAlignedSkills(resume);
+            if (items.isEmpty) return null;
+            return [
+              sectionHeading('Skills', icon: Icons.extension_outlined),
+              ..._previewPaginatedSkillLines(items, bodyStyle),
+            ];
         }
         return null;
       }),
@@ -11202,7 +11182,6 @@ class _ProfileTimelinePreview extends StatelessWidget
   static const double _pageBottom = 40;
   static const double _avatar = 118;
   static const double _ring = 8;
-  static const double _skillLabel = 104;
 
   static final RegExp _sideSectionTitle = RegExp(
     r'^(languages?|awards?|certifications?|certificates?|interests?|hobbies)$',
@@ -11211,7 +11190,6 @@ class _ProfileTimelinePreview extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    final accent = resume.profileTimelineAccentColor;
     final titleColor = resume.profileTimelineTitleColor;
     final mutedColor = resume.profileTimelineMutedColor;
     final ruleColor = resume.profileTimelineRuleColor;
@@ -11259,52 +11237,6 @@ class _ProfileTimelinePreview extends StatelessWidget
         ],
       ),
     );
-
-    Widget skillBar(String skill) {
-      final filled = (resume.proficiencyFractionForSkill(skill) * 100)
-          .round()
-          .clamp(8, 100);
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          children: [
-            SizedBox(
-              width: _skillLabel,
-              child: Text(skill, style: bodyStyle),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: filled,
-                    child: Container(
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(2.5),
-                      ),
-                    ),
-                  ),
-                  if (filled < 100)
-                    Expanded(
-                      flex: 100 - filled,
-                      child: Container(
-                        height: 5,
-                        margin: const EdgeInsets.only(left: 2),
-                        decoration: BoxDecoration(
-                          color: chipColor,
-                          borderRadius: BorderRadius.circular(2.5),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
 
     Widget timelineEntry({
       required String title,
@@ -11403,7 +11335,6 @@ class _ProfileTimelinePreview extends StatelessWidget
     final sideSections = customSections
         .where((item) => _sideSectionTitle.hasMatch(item.title.trim()))
         .toList();
-    final skills = _pdfAlignedSkills(resume);
 
     final side = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -11435,10 +11366,6 @@ class _ProfileTimelinePreview extends StatelessWidget
                 ],
               ),
             ),
-        ],
-        if (skills.isNotEmpty) ...[
-          sectionHeading('Skills'),
-          for (final skill in skills) skillBar(skill),
         ],
         for (final section in sideSections) ...[
           sectionHeading(section.title.trim()),
@@ -11514,8 +11441,14 @@ class _ProfileTimelinePreview extends StatelessWidget
                 ),
             ];
           case ResumeBuilderSectionIds.education:
-          case ResumeBuilderSectionIds.skills:
             return null;
+          case ResumeBuilderSectionIds.skills:
+            final items = _pdfAlignedSkills(resume);
+            if (items.isEmpty) return null;
+            return [
+              sectionHeading('Skills'),
+              ..._previewPaginatedSkillLines(items, bodyStyle, bottom: 6, bullets: false),
+            ];
         }
         return null;
       }),

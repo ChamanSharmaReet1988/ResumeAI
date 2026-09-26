@@ -12,7 +12,6 @@ const double _profileTimelinePageTopPt = _profileTimelineHeaderHeightPt + 20.0;
 const double _profileTimelinePageBottomPt = 40.0;
 const double _profileTimelineAvatarPt = 118.0;
 const double _profileTimelineRingPt = 8.0;
-const double _profileTimelineSkillLabelPt = 104.0;
 
 extension _ResumePdfProfileTimelinePage on ResumePdfService {
   void _addProfileTimelineTemplatePage(
@@ -24,7 +23,6 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) {
-    final accent = _pdfRgb(resume.profileTimelineAccentColor);
     final titleColor = _pdfRgb(resume.profileTimelineTitleColor);
     final mutedColor = _pdfRgb(resume.profileTimelineMutedColor);
     final ruleColor = _pdfRgb(resume.profileTimelineRuleColor);
@@ -84,56 +82,6 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
         ],
       ),
     );
-
-    pw.Widget skillBar(String skill) {
-      final filled = (resume.proficiencyFractionForSkill(skill) * 100)
-          .round()
-          .clamp(8, 100);
-      return _headerSidebarMaybeHighlight(
-        highlight: highlightedSkills.contains(skill),
-        child: pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 8),
-          child: pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
-            children: [
-              pw.SizedBox(
-                width: _profileTimelineSkillLabelPt,
-                child: pw.Text(skill, style: bodyStyle),
-              ),
-              pw.SizedBox(width: 10),
-              pw.Expanded(
-                child: pw.Row(
-                  children: [
-                    pw.Expanded(
-                      flex: filled,
-                      child: pw.Container(
-                        height: 5,
-                        decoration: pw.BoxDecoration(
-                          color: accent,
-                          borderRadius: pw.BorderRadius.circular(2.5),
-                        ),
-                      ),
-                    ),
-                    if (filled < 100)
-                      pw.Expanded(
-                        flex: 100 - filled,
-                        child: pw.Container(
-                          height: 5,
-                          margin: const pw.EdgeInsets.only(left: 2),
-                          decoration: pw.BoxDecoration(
-                            color: chipColor,
-                            borderRadius: pw.BorderRadius.circular(2.5),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
 
     /// Experience entry: hollow ring on the rule, role, company, date chip.
     pw.Widget timelineEntry({
@@ -249,7 +197,6 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
     final mainCustomSections = resume.customSections
         .where((item) => !sideSections.contains(item))
         .toSet();
-    final skills = resume.skillsLinesForDisplay;
     final summary = resume.summary.trim();
 
     final side = pw.Column(
@@ -288,10 +235,6 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                 ],
               ),
             ),
-        ],
-        if (skills.isNotEmpty) ...[
-          sectionHeading('Skills'),
-          for (final skill in skills) skillBar(skill),
         ],
         for (final section in sideSections) ...[
           sectionHeading(section.title.trim()),
@@ -437,7 +380,6 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
           ..._pdfBodySectionsInBuilderOrder(
             resume,
             exclude: {
-              ResumeBuilderSectionIds.skills,
               ResumeBuilderSectionIds.education,
             },
             buildSection: (id) {
@@ -460,6 +402,18 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                 ];
               }
               switch (id) {
+                case ResumeBuilderSectionIds.skills:
+                  final skills = resume.skillsLinesForDisplay;
+                  if (skills.isEmpty) return null;
+                  return [
+                    sectionHeading('Skills'),
+                    ..._pdfPaginatedSkillLines(
+                      skills: skills,
+                      style: bodyStyle,
+                      highlightedSkills: highlightedSkills,
+                      bullets: false,
+                    ),
+                  ];
                 case ResumeBuilderSectionIds.work:
                   final items = resume.visibleWorkExperiences;
                   if (items.isEmpty) return null;

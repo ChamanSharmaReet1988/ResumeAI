@@ -271,7 +271,6 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
         resume.linkedinLink.trim(),
         resume.githubLink.trim(),
       ].where((value) => value.isNotEmpty).toList();
-      final skills = resume.skillsLinesForDisplay.take(10).toList();
 
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -279,14 +278,6 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
           if (contacts.isNotEmpty) ...[
             heading('Contact'),
             for (final value in contacts) item(value, shrink: true),
-          ],
-          if (skills.isNotEmpty) ...[
-            heading('Skills'),
-            for (final skill in skills)
-              _headerSidebarMaybeHighlight(
-                highlight: highlightedSkills.contains(skill),
-                child: item(skill),
-              ),
           ],
           for (final section in sidebarSections) ...[
             heading(section.title.trim()),
@@ -449,7 +440,6 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
           ],
           ..._pdfBodySectionsInBuilderOrder(
             resume,
-            exclude: {ResumeBuilderSectionIds.skills},
             buildSection: (id) {
               final customIndex = ResumeBuilderSectionIds.customIndex(id);
               if (customIndex != null) {
@@ -472,6 +462,19 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                 ];
               }
               switch (id) {
+                case ResumeBuilderSectionIds.skills:
+                  final skills = resume.skillsLinesForDisplay;
+                  if (skills.isEmpty) return null;
+                  return [
+                    sectionTitle('Skills'),
+                    for (final widget in _pdfPaginatedSkillLines(
+                      skills: skills,
+                      style: bodyStyle,
+                      highlightedSkills: highlightedSkills,
+                    ))
+                      onTimeline(widget),
+                    pw.SizedBox(height: 6),
+                  ];
                 case ResumeBuilderSectionIds.work:
                   if (experiences.isEmpty) return null;
                   return [
