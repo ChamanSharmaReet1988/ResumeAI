@@ -7214,18 +7214,57 @@ String _headerSidebarPreviewJobLine(WorkExperience item) {
   return '$role, $company';
 }
 
-/// Same wrap-friendly breaks as the PDF Details rail so long links wrap instead
-/// of shrinking.
-String _headerSidebarPreviewWrapFriendlyLine(String text) {
-  return text
-      .replaceAll('/', '/\u200B')
-      .replaceAll('.', '.\u200B')
-      .replaceAll('@', '@\u200B')
-      .replaceAll('-', '-\u200B')
-      .replaceAll('_', '_\u200B')
-      .replaceAll('?', '?\u200B')
-      .replaceAll('=', '=\u200B')
-      .replaceAll('&', '&\u200B');
+/// Wraps long Details-rail links onto new lines at punctuation. Avoids
+/// zero-width spaces (unsupported glyphs show as "X" boxes in resume fonts).
+String _headerSidebarPreviewWrapFriendlyLine(
+  String text, {
+  int maxChars = 22,
+}) {
+  final normalized = text.trim();
+  if (normalized.isEmpty) return normalized;
+  const breakAfter = {'/', '.', '@', '-', '_', '?', '=', '&'};
+  final segments = <String>[];
+  final buf = StringBuffer();
+  for (final unit in normalized.runes) {
+    final ch = String.fromCharCode(unit);
+    buf.write(ch);
+    if (breakAfter.contains(ch)) {
+      segments.add(buf.toString());
+      buf.clear();
+    }
+  }
+  if (buf.isNotEmpty) segments.add(buf.toString());
+
+  final lines = <String>[];
+  var current = '';
+  void flush() {
+    if (current.isEmpty) return;
+    lines.add(current);
+    current = '';
+  }
+
+  for (final segment in segments) {
+    if (segment.length > maxChars) {
+      if (current.isNotEmpty) flush();
+      for (var i = 0; i < segment.length; i += maxChars) {
+        final end = (i + maxChars < segment.length)
+            ? i + maxChars
+            : segment.length;
+        lines.add(segment.substring(i, end));
+      }
+      continue;
+    }
+    if (current.isEmpty) {
+      current = segment;
+    } else if (current.length + segment.length <= maxChars) {
+      current += segment;
+    } else {
+      flush();
+      current = segment;
+    }
+  }
+  flush();
+  return lines.join('\n');
 }
 
 String _headerSidebarPreviewDateLabel(String startDate, String endDate) {
@@ -8590,7 +8629,22 @@ class _SoftHeaderPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     sectionTitle('Skills'),
-                    ..._previewPaginatedSkillLines(skills, bodyText),
+                    for (var i = 0; i < skills.length; i += 2)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: bullet(skills[i])),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: i + 1 < skills.length
+                                  ? bullet(skills[i + 1])
+                                  : const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 );
               case ResumeBuilderSectionIds.work:
@@ -8672,6 +8726,12 @@ class _SoftHeaderPreview extends StatelessWidget {
       return Row(children: mirrored ? [ring, line] : [line, ring]);
     }
 
+    // Estimate whether left-column content fits page 1; if it would spill,
+    // the live preview still shows page 1 with the sidebar (PDF paginates).
+    final showSidebar = contacts.isNotEmpty ||
+        education.isNotEmpty ||
+        leftSections.isNotEmpty;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -8736,27 +8796,29 @@ class _SoftHeaderPreview extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Positioned(
-                      left: _dividerX,
-                      top: _bandHeight + 16,
-                      bottom: 34,
-                      width: 0.8,
-                      child: ColoredBox(color: ruleColor),
-                    ),
-                    Positioned(
-                      left: _side,
-                      width: _leftWidth,
-                      top: _bandHeight + 16,
-                      bottom: 34,
-                      child: ClipRect(
-                        child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: leftColumn,
+                    if (showSidebar) ...[
+                      Positioned(
+                        left: _dividerX,
+                        top: _bandHeight + 16,
+                        bottom: 34,
+                        width: 0.8,
+                        child: ColoredBox(color: ruleColor),
+                      ),
+                      Positioned(
+                        left: _side,
+                        width: _leftWidth,
+                        top: _bandHeight + 16,
+                        bottom: 34,
+                        child: ClipRect(
+                          child: SingleChildScrollView(
+                            physics: const NeverScrollableScrollPhysics(),
+                            child: leftColumn,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                     Positioned(
-                      left: _mainLeft,
+                      left: showSidebar ? _mainLeft : _side,
                       right: _side,
                       top: _bandHeight + 16,
                       bottom: 34,
@@ -9335,13 +9397,19 @@ class _MinimalProfilePreview extends StatelessWidget {
       );
     }
 
-    Widget contactChip(IconData icon, String value) {
+    Widget contactChip(_PreviewContactIcon icon, String value) {
       return Padding(
         padding: const EdgeInsets.only(right: 16),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 13, color: mutedColor),
+            SizedBox(
+              width: 13,
+              height: 13,
+              child: CustomPaint(
+                painter: _PreviewContactIconPainter(icon, mutedColor),
+              ),
+            ),
             const SizedBox(width: 6),
             Flexible(child: Text(value, style: contactStyle)),
           ],
@@ -9558,11 +9626,15 @@ class _MinimalProfilePreview extends StatelessWidget {
       );
     }
 
-    final contacts = <(IconData, String)>[
-      if (resume.phone.trim().isNotEmpty) (Icons.phone_outlined, resume.phone.trim()),
-      if (resume.email.trim().isNotEmpty) (Icons.email_outlined, resume.email.trim()),
-      if (resume.website.trim().isNotEmpty) (Icons.language, resume.website.trim()),
-      if (resume.location.trim().isNotEmpty) (Icons.place_outlined, resume.location.trim()),
+    final contacts = <(_PreviewContactIcon, String)>[
+      if (resume.phone.trim().isNotEmpty)
+        (_PreviewContactIcon.phone, resume.phone.trim()),
+      if (resume.email.trim().isNotEmpty)
+        (_PreviewContactIcon.mail, resume.email.trim()),
+      if (resume.website.trim().isNotEmpty)
+        (_PreviewContactIcon.web, resume.website.trim()),
+      if (resume.location.trim().isNotEmpty)
+        (_PreviewContactIcon.place, resume.location.trim()),
     ];
 
     final content = ColoredBox(
@@ -11288,17 +11360,18 @@ class _ProfileTimelinePreview extends StatelessWidget
       ),
     );
 
-    final contacts = <(IconData, String)>[
-      if (resume.phone.trim().isNotEmpty) (Icons.call, resume.phone.trim()),
+    final contacts = <(_PreviewContactIcon, String)>[
+      if (resume.phone.trim().isNotEmpty)
+        (_PreviewContactIcon.phone, resume.phone.trim()),
       if (resume.website.trim().isNotEmpty)
-        (Icons.language, resume.website.trim()),
+        (_PreviewContactIcon.web, resume.website.trim()),
       if (resume.email.trim().isNotEmpty)
-        (Icons.mail_outline, resume.email.trim()),
+        (_PreviewContactIcon.mail, resume.email.trim()),
       if (resume.location.trim().isNotEmpty)
-        (Icons.place_outlined, resume.location.trim()),
+        (_PreviewContactIcon.place, resume.location.trim()),
     ];
 
-    Widget contactCell(IconData icon, String value) => Row(
+    Widget contactCell(_PreviewContactIcon icon, String value) => Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
@@ -11309,7 +11382,13 @@ class _ProfileTimelinePreview extends StatelessWidget
             color: titleColor,
             borderRadius: BorderRadius.circular(3),
           ),
-          child: Icon(icon, size: 9, color: Colors.white),
+          child: SizedBox(
+            width: 9,
+            height: 9,
+            child: CustomPaint(
+              painter: _PreviewContactIconPainter(icon, Colors.white),
+            ),
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(child: Text(value, style: bodyStyle)),
@@ -11560,3 +11639,93 @@ class _ProfileTimelinePreview extends StatelessWidget
     );
   }
 }
+
+/// Contact icons for template previews — drawn with Canvas so they never fall
+/// back to a missing Material glyph (which shows as an "X") under resume fonts.
+enum _PreviewContactIcon { phone, mail, web, place }
+
+class _PreviewContactIconPainter extends CustomPainter {
+  const _PreviewContactIconPainter(this.kind, this.color);
+
+  final _PreviewContactIcon kind;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.1
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    final fill = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    switch (kind) {
+      case _PreviewContactIcon.phone:
+        canvas.drawRect(
+          Rect.fromLTWH(w * 0.30, h * 0.08, w * 0.40, h * 0.84),
+          stroke,
+        );
+        canvas.drawRect(
+          Rect.fromLTWH(w * 0.42, h * 0.14, w * 0.16, h * 0.06),
+          fill,
+        );
+      case _PreviewContactIcon.mail:
+        canvas.drawRect(
+          Rect.fromLTWH(w * 0.08, h * 0.24, w * 0.84, h * 0.52),
+          stroke,
+        );
+        final flap = Path()
+          ..moveTo(w * 0.08, h * 0.24)
+          ..lineTo(w * 0.5, h * 0.52)
+          ..lineTo(w * 0.92, h * 0.24);
+        canvas.drawPath(flap, stroke);
+      case _PreviewContactIcon.web:
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: Offset(w * 0.5, h * 0.5),
+            width: w * 0.76,
+            height: h * 0.76,
+          ),
+          stroke,
+        );
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: Offset(w * 0.5, h * 0.5),
+            width: w * 0.32,
+            height: h * 0.76,
+          ),
+          stroke,
+        );
+        canvas.drawLine(
+          Offset(w * 0.12, h * 0.5),
+          Offset(w * 0.88, h * 0.5),
+          stroke,
+        );
+      case _PreviewContactIcon.place:
+        final pin = Path()
+          ..moveTo(w * 0.5, h * 0.10)
+          ..lineTo(w * 0.28, h * 0.58)
+          ..lineTo(w * 0.72, h * 0.58)
+          ..close();
+        canvas.drawPath(pin, fill);
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: Offset(w * 0.5, h * 0.62),
+            width: w * 0.44,
+            height: h * 0.44,
+          ),
+          fill,
+        );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PreviewContactIconPainter oldDelegate) =>
+      oldDelegate.kind != kind || oldDelegate.color != color;
+}
+

@@ -804,45 +804,67 @@ List<String> _headerSidebarSkillLines(ResumeData resume) {
   return resume.skillsLinesForDisplay;
 }
 
-/// Inserts zero-width break opportunities so long URLs/emails wrap instead of
-/// being shrunk to fit the narrow Details rail.
-String _headerSidebarWrapFriendlyLine(String text) {
-  return text
-      .replaceAll('/', '/\u200B')
-      .replaceAll('.', '.\u200B')
-      .replaceAll('@', '@\u200B')
-      .replaceAll('-', '-\u200B')
-      .replaceAll('_', '_\u200B')
-      .replaceAll('?', '?\u200B')
-      .replaceAll('=', '=\u200B')
-      .replaceAll('&', '&\u200B');
+/// Wraps long URLs/emails onto multiple lines at punctuation (no zero-width
+/// spaces — Garamond/Outfit lack those glyphs and show them as "X" boxes).
+String _headerSidebarWrapFriendlyLine(
+  String text, {
+  double fontSize = 10,
+  double usableWidth = _headerSidebarRailContentWidthPt,
+}) {
+  final normalized = text.trim();
+  if (normalized.isEmpty) return normalized;
+  final maxChars = math.max(
+    8,
+    (usableWidth / (fontSize * 0.56)).floor(),
+  );
+  const breakAfter = {'/', '.', '@', '-', '_', '?', '=', '&'};
+  final segments = <String>[];
+  final buf = StringBuffer();
+  for (final unit in normalized.runes) {
+    final ch = String.fromCharCode(unit);
+    buf.write(ch);
+    if (breakAfter.contains(ch)) {
+      segments.add(buf.toString());
+      buf.clear();
+    }
+  }
+  if (buf.isNotEmpty) segments.add(buf.toString());
+
+  final lines = <String>[];
+  var current = '';
+  void flush() {
+    if (current.isEmpty) return;
+    lines.add(current);
+    current = '';
+  }
+
+  for (final segment in segments) {
+    if (segment.length > maxChars) {
+      // Oversized chunk with no inner breaks: hard-wrap.
+      if (current.isNotEmpty) flush();
+      for (var i = 0; i < segment.length; i += maxChars) {
+        final end = math.min(i + maxChars, segment.length);
+        lines.add(segment.substring(i, end));
+      }
+      continue;
+    }
+    if (current.isEmpty) {
+      current = segment;
+    } else if (current.length + segment.length <= maxChars) {
+      current += segment;
+    } else {
+      flush();
+      current = segment;
+    }
+  }
+  flush();
+  return lines.join('\n');
 }
 
 int _headerSidebarEstimatedLineCount(String text, double fontSize) {
-  final normalized = text.trim().replaceAll(RegExp(r'\s+'), ' ');
-  if (normalized.isEmpty) {
-    return 1;
-  }
-  final maxCharsPerLine = math.max(
-    8,
-    (_headerSidebarRailContentWidthPt / (fontSize * 0.56)).floor(),
-  );
-  var currentLineLength = 0;
-  var lineCount = 1;
-  for (final word in normalized.split(' ')) {
-    final wordLength = word.length;
-    if (currentLineLength == 0) {
-      currentLineLength = wordLength;
-      continue;
-    }
-    if (currentLineLength + 1 + wordLength > maxCharsPerLine) {
-      lineCount++;
-      currentLineLength = wordLength;
-    } else {
-      currentLineLength += 1 + wordLength;
-    }
-  }
-  return lineCount;
+  final wrapped = _headerSidebarWrapFriendlyLine(text, fontSize: fontSize);
+  if (wrapped.isEmpty) return 1;
+  return wrapped.split('\n').length;
 }
 
 double _headerSidebarTextBlockHeight(String text, double bodyPt) =>
@@ -1149,7 +1171,7 @@ pw.Widget _headerSidebarRailPanel({
           for (final item in infoItems) ...[
             // Wrap long links onto the next line at full size (no shrink).
             pw.Text(
-              _headerSidebarWrapFriendlyLine(item),
+              _headerSidebarWrapFriendlyLine(item, fontSize: bodyPt),
               style: item.contains('@')
                   ? bodyStyle.copyWith(decoration: pw.TextDecoration.underline)
                   : bodyStyle,
