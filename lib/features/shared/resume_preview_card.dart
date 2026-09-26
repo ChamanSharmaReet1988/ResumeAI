@@ -2018,7 +2018,7 @@ class _HeaderSidebarPreview extends StatelessWidget {
     final education = resume.visibleEducation.take(2).toList();
     final projects = resume.visibleProjects.take(2).toList();
     final allowedCustoms = resume.visibleCustomSections.take(2).toList();
-    final skills = _pdfAlignedSkills(resume).take(7).toList();
+    final skills = _pdfAlignedSkills(resume);
     final infoItems = [
       resume.location.trim(),
       resume.phone.trim(),

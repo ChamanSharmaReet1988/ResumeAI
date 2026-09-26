@@ -2217,6 +2217,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
       ];
     }
 
+    final pagesBefore = document.document.pdfPageList.pages.length;
+
     document.addPage(
       pw.MultiPage(
         pageTheme: _headerSidebarPageTheme(
@@ -2428,5 +2430,37 @@ ResumeTypography.darkHeaderSubtitleWeight,
         ],
       ),
     );
+
+    // MultiPage only creates pages for main-column content. Append skill-only
+    // sidebar pages when expertise still needs room (same pattern as Slate).
+    final multiPageCount =
+        document.document.pdfPageList.pages.length - pagesBefore;
+    final railColor = _headerSidebarRailColorPdf(resume);
+    for (var i = multiPageCount; i < sidebarPageCount; i++) {
+      document.addPage(
+        pw.Page(
+          pageTheme: pw.PageTheme(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.fromLTRB(
+              _headerSidebarPageLeftMarginPt,
+              _headerSidebarPageTopMarginPt,
+              _headerSidebarPageLeftMarginPt + _headerSidebarMainRightInsetPt,
+              _headerSidebarPageBottomMarginPt,
+            ),
+            buildBackground: (context) => _headerSidebarRailBackgroundForSlice(
+              resume: resume,
+              garamond: garamond,
+              railColor: railColor,
+              onRail: onRail,
+              bodyPt: bodyPt,
+              pageSlice: sidebarSlices[i],
+              highlightedSkills: highlightedSkills,
+              isContinuation: true,
+            ),
+          ),
+          build: (context) => pw.SizedBox(),
+        ),
+      );
+    }
   }
 }

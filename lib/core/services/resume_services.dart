@@ -869,20 +869,24 @@ List<_HeaderSidebarPageSlice> _headerSidebarPageSlices({
       _headerSidebarPageTopMarginPt -
       _headerSidebarPageBottomMarginPt;
   const skillsHeadingHeight = 12.0 + 10.0;
+  // Leave headroom so page-1 skills are never clipped by the rail Clip/bounds.
   final firstPageSkillsAvailable =
       firstPageAvailableHeight -
       _headerSidebarDetailsHeight(infoItems, bodyPt) -
-      skillsHeadingHeight;
+      skillsHeadingHeight -
+      32;
   final continuedPageSkillsAvailable =
       pageFormat.height -
       (_headerSidebarContinuationVerticalInsetPt * 2) -
-      skillsHeadingHeight;
+      skillsHeadingHeight -
+      16;
 
   List<String> takeChunk(Iterable<String> source, double maxHeight) {
     final chunk = <String>[];
     var used = 0.0;
     for (final item in source) {
-      final height = _headerSidebarSkillItemHeight(item, bodyPt);
+      // Slightly taller than painted height so wrapped labels don't spill.
+      final height = _headerSidebarSkillItemHeight(item, bodyPt) + 2;
       if (chunk.isNotEmpty && used + height > maxHeight) {
         break;
       }
@@ -896,6 +900,16 @@ List<_HeaderSidebarPageSlice> _headerSidebarPageSlices({
     return chunk;
   }
 
+  if (skills.isEmpty) {
+    return const [
+      _HeaderSidebarPageSlice(
+        showDetails: true,
+        showSkillsHeading: true,
+        skills: <String>[],
+      ),
+    ];
+  }
+
   final slices = <_HeaderSidebarPageSlice>[];
   var index = 0;
   final firstChunk = takeChunk(
@@ -906,7 +920,7 @@ List<_HeaderSidebarPageSlice> _headerSidebarPageSlices({
   slices.add(
     _HeaderSidebarPageSlice(
       showDetails: true,
-      showSkillsHeading: true,
+      showSkillsHeading: firstChunk.isNotEmpty,
       skills: firstChunk,
     ),
   );
@@ -932,6 +946,58 @@ List<_HeaderSidebarPageSlice> _headerSidebarPageSlices({
   return slices;
 }
 
+/// Fixed-slice rail background for skill-continuation pages appended after
+/// MultiPage (pageNumber is always 1 on a standalone [pw.Page]).
+pw.Widget _headerSidebarRailBackgroundForSlice({
+  required ResumeData resume,
+  required GaramondPdfFonts garamond,
+  required PdfColor railColor,
+  required PdfColor onRail,
+  required double bodyPt,
+  required _HeaderSidebarPageSlice pageSlice,
+  required Set<String> highlightedSkills,
+  bool isContinuation = true,
+}) {
+  final railTop = isContinuation
+      ? _headerSidebarContinuationVerticalInsetPt
+      : _headerSidebarPageTopMarginPt;
+  final railBottom = isContinuation
+      ? _headerSidebarContinuationVerticalInsetPt
+      : _headerSidebarPageBottomMarginPt;
+  return pw.FullPage(
+    ignoreMargins: true,
+    child: pw.Stack(
+      children: [
+        pw.Positioned(
+          right: 0,
+          top: 0,
+          bottom: 0,
+          child: pw.Container(
+            width: _headerSidebarRailWidthPt,
+            color: railColor,
+          ),
+        ),
+        pw.Positioned(
+          right: 16,
+          top: railTop,
+          bottom: railBottom,
+          child: pw.SizedBox(
+            width: _headerSidebarRailContentWidthPt,
+            child: _headerSidebarRailPanel(
+              resume: resume,
+              garamond: garamond,
+              onRail: onRail,
+              bodyPt: bodyPt,
+              pageSlice: pageSlice,
+              highlightedSkills: highlightedSkills,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 pw.PageTheme _headerSidebarPageTheme({
   required ResumeData resume,
   required GaramondPdfFonts garamond,
@@ -952,46 +1018,18 @@ pw.PageTheme _headerSidebarPageTheme({
     ),
     buildBackground: (context) {
       final isContinuation = context.pageNumber > 1;
-      final railTop = isContinuation
-          ? _headerSidebarContinuationVerticalInsetPt
-          : _headerSidebarPageTopMarginPt;
-      final railBottom = isContinuation
-          ? _headerSidebarContinuationVerticalInsetPt
-          : _headerSidebarPageBottomMarginPt;
-      return pw.FullPage(
-        ignoreMargins: true,
-        child: context.pageNumber <= sidebarSlices.length
-            ? pw.Stack(
-                children: [
-                  pw.Positioned(
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: pw.Container(
-                      width: _headerSidebarRailWidthPt,
-                      color: railColor,
-                    ),
-                  ),
-                  pw.Positioned(
-                    right: 16,
-                    top: railTop,
-                    bottom: railBottom,
-                    child: pw.SizedBox(
-                      width: _headerSidebarRailContentWidthPt,
-                      child: _headerSidebarRailPanel(
-                        resume: resume,
-                        garamond: garamond,
-                        onRail: onRail,
-                        bodyPt: bodyPt,
-                        pageSlice: sidebarSlices[context.pageNumber - 1],
-                        highlightedSkills: highlightedSkills,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : pw.SizedBox(),
-      );
+      return context.pageNumber <= sidebarSlices.length
+          ? _headerSidebarRailBackgroundForSlice(
+              resume: resume,
+              garamond: garamond,
+              railColor: railColor,
+              onRail: onRail,
+              bodyPt: bodyPt,
+              pageSlice: sidebarSlices[context.pageNumber - 1],
+              highlightedSkills: highlightedSkills,
+              isContinuation: isContinuation,
+            )
+          : pw.FullPage(ignoreMargins: true, child: pw.SizedBox());
     },
   );
 }
