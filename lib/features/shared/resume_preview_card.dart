@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -8445,7 +8444,9 @@ class _SoftHeaderPreview extends StatelessWidget {
     return normalized == 'language' ||
         normalized == 'languages' ||
         normalized == 'langueage' ||
-        normalized == 'langueages';
+        normalized == 'langueages' ||
+        normalized.endsWith('languages') ||
+        normalized.endsWith('language');
   }
 
   @override
@@ -8545,42 +8546,32 @@ class _SoftHeaderPreview extends StatelessWidget {
         .where(_isLanguagesSection)
         .toList();
 
-    double sectionHeadingHeight() => 18 + 10 + 24;
-
-    // Discrete left blocks with heights — same pagination idea as the PDF.
-    final leftBlocks = <({Widget widget, double height})>[];
-    if (contacts.isNotEmpty) {
-      leftBlocks.add((
-        widget: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            sectionTitle('Contact'),
-            for (final value in contacts) bullet(value, textStyle: meta),
-          ],
-        ),
-        height: sectionHeadingHeight() +
-            contacts.length * (detailPt * lineH + 3) +
-            4,
-      ));
-    }
-
-    final firstEducationIndex = education.isEmpty ? -1 : leftBlocks.length;
-    for (final item in education) {
-      final dateLabel = educationDateRangeLabel(item.startDate, item.endDate);
-      final degree = item.degree.trim();
-      final score = item.score.trim();
-      var h = 9.0;
-      if (dateLabel.isNotEmpty) h += detailPt * lineH;
-      h += detailPt * lineH + 3;
-      if (degree.isNotEmpty) h += detailPt * lineH + 3;
-      if (score.isNotEmpty) h += detailPt * lineH + 3;
-      leftBlocks.add((
-        widget: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (dateLabel.isNotEmpty)
+    // Live preview is a single A4 card — Contact → Languages → Education so
+    // the language heading is not pushed below the fold by long education.
+    final leftColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (contacts.isNotEmpty) ...[
+          sectionTitle('Contact'),
+          for (final value in contacts) bullet(value, textStyle: meta),
+        ],
+        for (final section in languageSections) ...[
+          sectionTitle(
+            section.title.trim().isEmpty ? 'Language' : section.title.trim(),
+          ),
+          for (final line in section.displayLines(splitInlineItems: true))
+            bullet(line),
+        ],
+        if (education.isNotEmpty) ...[
+          sectionTitle('Education'),
+          for (final item in education) ...[
+            if (educationDateRangeLabel(
+              item.startDate,
+              item.endDate,
+            ).isNotEmpty)
               Text(
-                dateLabel,
+                educationDateRangeLabel(item.startDate, item.endDate),
                 style: style(FontWeight.w600, detailPt, titleColor),
               ),
             Text(
@@ -8588,73 +8579,17 @@ class _SoftHeaderPreview extends StatelessWidget {
               style: style(FontWeight.w700, detailPt, titleColor),
             ),
             const SizedBox(height: 3),
-            if (degree.isNotEmpty) bullet(degree),
-            if (score.isNotEmpty) bullet(score),
+            if (item.degree.trim().isNotEmpty) bullet(item.degree.trim()),
+            if (item.score.trim().isNotEmpty) bullet(item.score.trim()),
             const SizedBox(height: 9),
           ],
-        ),
-        height: h,
-      ));
-    }
+        ],
+      ],
+    );
 
-    for (final section in languageSections) {
-      final lines = nonEmpty(
-        section.bullets.any((b) => b.trim().isNotEmpty)
-            ? section.bullets
-            : section.content.split('\n'),
-      );
-      leftBlocks.add((
-        widget: sectionTitle(section.title.trim()),
-        height: sectionHeadingHeight(),
-      ));
-      for (final line in lines) {
-        leftBlocks.add((
-          widget: bullet(line),
-          height: detailPt * lineH + 3,
-        ));
-      }
-    }
-
-    final page1Budget = _pageHeight - _bandHeight - 16 - _bottom;
-    final contBudget = _pageHeight - 30 - _bottom;
-    final sidebarSlices = <List<Widget>>[];
-    if (leftBlocks.isNotEmpty) {
-      var index = 0;
-      var isFirst = true;
-      while (index < leftBlocks.length) {
-        final budget = isFirst ? page1Budget : contBudget;
-        final chunk = <Widget>[];
-        var used = 0.0;
-        var educationHeadingAdded = false;
-        while (index < leftBlocks.length) {
-          final block = leftBlocks[index];
-          final needsEdu = index == firstEducationIndex &&
-              firstEducationIndex >= 0 &&
-              !educationHeadingAdded;
-          final headingExtra = needsEdu ? sectionHeadingHeight() : 0.0;
-          if (chunk.isNotEmpty && used + block.height + headingExtra > budget) {
-            break;
-          }
-          if (needsEdu) {
-            chunk.add(sectionTitle('Education'));
-            used += headingExtra;
-            educationHeadingAdded = true;
-          }
-          chunk.add(block.widget);
-          used += block.height;
-          index++;
-        }
-        if (chunk.isEmpty) {
-          chunk.add(leftBlocks[index].widget);
-          index++;
-        }
-        sidebarSlices.add(chunk);
-        isFirst = false;
-      }
-    }
-
-    final sidebarPageCount = sidebarSlices.length;
-    final pageCount = math.max(1, sidebarPageCount);
+    final showSidebar = contacts.isNotEmpty ||
+        education.isNotEmpty ||
+        languageSections.isNotEmpty;
 
     final mainColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -8802,128 +8737,111 @@ class _SoftHeaderPreview extends StatelessWidget {
       return Row(children: mirrored ? [ring, line] : [line, ring]);
     }
 
-    Widget buildPage(int pageIndex) {
-      final firstPage = pageIndex == 0;
-      final showSidebar =
-          sidebarPageCount > 0 && pageIndex < sidebarPageCount;
-      final columnsTop = firstPage ? _bandHeight + 16 : 30.0;
-
-      return SizedBox(
-        width: _pageWidth,
-        height: _pageHeight,
-        child: Stack(
-          children: [
-            if (firstPage)
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                height: _bandHeight,
-                child: ColoredBox(
-                  color: band,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(width: _side),
-                      Expanded(child: headerRule()),
-                      const SizedBox(width: 18),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _pdfAlignedDisplayName(resume).toUpperCase(),
-                            style: style(
-                              FontWeight.w700,
-                              26,
-                              titleColor,
-                              letterSpacing: 1.4,
-                            ),
-                          ),
-                          if (resume.jobTitle.trim().isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              resume.jobTitle.trim(),
-                              style: style(
-                                FontWeight.w400,
-                                14,
-                                mutedColor,
-                                letterSpacing: 1.6,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(width: 18),
-                      Expanded(child: headerRule(mirrored: true)),
-                      const SizedBox(width: _side),
-                    ],
-                  ),
-                ),
-              ),
-            if (showSidebar) ...[
-              Positioned(
-                left: _dividerX,
-                top: columnsTop,
-                bottom: _bottom,
-                width: 0.8,
-                child: ColoredBox(color: ruleColor),
-              ),
-              Positioned(
-                left: _side,
-                width: _leftWidth,
-                top: columnsTop,
-                bottom: _bottom,
-                child: ClipRect(
-                  child: SingleChildScrollView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: sidebarSlices[pageIndex],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            // Main column content on page 1; later pages keep the inset while
-            // the sidebar continues, then go full width once it is done.
-            if (firstPage)
-              Positioned(
-                left: showSidebar ? _mainLeft : _side,
-                right: _side,
-                top: columnsTop,
-                bottom: _bottom,
-                child: ClipRect(
-                  child: SingleChildScrollView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    child: mainColumn,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-    }
+    final columnsTop = _bandHeight + 16;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final canvasHeight = _pageHeight * pageCount;
-        final displayHeight = constraints.maxHeight.isFinite
+        final height = constraints.maxHeight.isFinite
             ? constraints.maxHeight
-            : width * (canvasHeight / _pageWidth);
+            : width / ResumePreviewCard._a4AspectRatio;
         return SizedBox(
           width: width,
-          height: displayHeight,
+          height: height,
           child: ClipRect(
             child: FittedBox(
               fit: BoxFit.fitWidth,
               alignment: Alignment.topCenter,
               child: SizedBox(
                 width: _pageWidth,
-                height: canvasHeight,
-                child: Column(
+                height: _pageHeight,
+                child: Stack(
                   children: [
-                    for (var i = 0; i < pageCount; i++) buildPage(i),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      height: _bandHeight,
+                      child: ColoredBox(
+                        color: band,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(width: _side),
+                            Expanded(child: headerRule()),
+                            const SizedBox(width: 18),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _pdfAlignedDisplayName(resume).toUpperCase(),
+                                  style: style(
+                                    FontWeight.w700,
+                                    26,
+                                    titleColor,
+                                    letterSpacing: 1.4,
+                                  ),
+                                ),
+                                if (resume.jobTitle.trim().isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    resume.jobTitle.trim(),
+                                    style: style(
+                                      FontWeight.w400,
+                                      14,
+                                      mutedColor,
+                                      letterSpacing: 1.6,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(width: 18),
+                            Expanded(child: headerRule(mirrored: true)),
+                            const SizedBox(width: _side),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (showSidebar) ...[
+                      Positioned(
+                        left: _dividerX,
+                        top: columnsTop,
+                        bottom: _bottom,
+                        width: 0.8,
+                        child: ColoredBox(color: ruleColor),
+                      ),
+                      Positioned(
+                        left: _side,
+                        width: _leftWidth,
+                        top: columnsTop,
+                        bottom: _bottom,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.topCenter,
+                          child: UnconstrainedBox(
+                            constrainedAxis: Axis.horizontal,
+                            alignment: Alignment.topCenter,
+                            child: SizedBox(
+                              width: _leftWidth,
+                              child: leftColumn,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    Positioned(
+                      left: showSidebar ? _mainLeft : _side,
+                      right: _side,
+                      top: columnsTop,
+                      bottom: _bottom,
+                      child: ClipRect(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: mainColumn,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -8946,8 +8864,9 @@ Widget _avatarFallback(ResumeData resume, TextStyle initialsStyle) {
   return Center(child: Text(_pdfAlignedInitials(resume), style: initialsStyle));
 }
 
-/// Blue Diagonal live preview: colour corners, grey photo column, timeline
-/// education and experience.
+/// Blue Diagonal live preview: same content rules as Soft Header — contact,
+/// education and languages in the grey column (paginated), everything else in
+/// the main column; full width once the sidebar is covered.
 class _BlueDiagonalPreview extends StatelessWidget {
   const _BlueDiagonalPreview({
     required this.resume,
@@ -8963,12 +8882,20 @@ class _BlueDiagonalPreview extends StatelessWidget {
   static const double _columnInset = 30;
   static const double _mainLeft = 282;
   static const double _avatarSize = 176;
+  static const double _bottom = 46;
 
-  static final RegExp _leftSectionTitle = RegExp(
-    r'^(languages?|references?|referees?|awards?|certifications?|'
-    r'certificates?|interests?|hobbies)$',
-    caseSensitive: false,
-  );
+  bool _isLanguagesSection(CustomSectionItem item) {
+    final normalized = item.title.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z]'),
+      '',
+    );
+    return normalized == 'language' ||
+        normalized == 'languages' ||
+        normalized == 'langueage' ||
+        normalized == 'langueages' ||
+        normalized.endsWith('languages') ||
+        normalized.endsWith('language');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -8982,13 +8909,14 @@ class _BlueDiagonalPreview extends StatelessWidget {
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final detailPt = bodyPt - 1.5;
+    final lineH = ResumeTypography.bodyTextLineHeight;
 
     TextStyle style(FontWeight weight, double size, Color color) => TextStyle(
       fontFamily: family,
       fontWeight: weight,
       fontSize: size,
       color: color,
-      height: ResumeTypography.bodyTextLineHeight,
+      height: lineH,
     );
 
     final bodyText = style(FontWeight.w400, detailPt, mutedColor);
@@ -9085,21 +9013,19 @@ class _BlueDiagonalPreview extends StatelessWidget {
       (Icons.link, resume.linkedinLink.trim()),
       (Icons.link, resume.githubLink.trim()),
     ].where((entry) => entry.$2.isNotEmpty).toList();
-    final leftSections = resume.visibleCustomSections
-        .where((item) => _leftSectionTitle.hasMatch(item.title.trim()))
-        .toList();
+    final education = resume.visibleEducation;
+    final languageSections =
+        resume.visibleCustomSections.where(_isLanguagesSection).toList();
 
+    // Single A4 preview: Contact → Languages → Education. Languages sit above
+    // education so the heading/lines stay on-card; education can scale/clip.
+    // UnconstrainedBox lifts the vertical max so FittedBox sees true height
+    // and can scaleDown (a bounded Column would report slot height and skip).
+    final sidebarWidth = _columnWidth - _columnInset * 2;
     final leftColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (resume.summary.trim().isNotEmpty) ...[
-          sectionTitle('About Me', Icons.person),
-          Text(
-            resume.summary.trim(),
-            style: bodyText,
-            textAlign: TextAlign.justify,
-          ),
-        ],
         if (contacts.isNotEmpty) ...[
           sectionTitle('Contact', Icons.contact_page_outlined),
           for (final (icon, value) in contacts)
@@ -9113,33 +9039,50 @@ class _BlueDiagonalPreview extends StatelessWidget {
                     child: Icon(icon, size: 12, color: titleColor),
                   ),
                   const SizedBox(width: 9),
-                  Expanded(
-                    child: Text(value, style: bodyText),
-                  ),
+                  Expanded(child: Text(value, style: bodyText)),
                 ],
               ),
             ),
         ],
-        for (final section in leftSections) ...[
-          sectionTitle(section.title.trim(), Icons.language),
-          for (final line
-              in nonEmpty(
-                section.bullets.any((b) => b.trim().isNotEmpty)
-                    ? section.bullets
-                    : section.content.split('\n'),
-              ))
+        for (final section in languageSections) ...[
+          sectionTitle(
+            section.title.trim().isEmpty ? 'Language' : section.title.trim(),
+            Icons.language,
+          ),
+          for (final line in section.displayLines(splitInlineItems: true))
             bullet(line),
+        ],
+        if (education.isNotEmpty) ...[
+          sectionTitle('Education', Icons.school_outlined),
+          for (final item in education) ...[
+            if (educationDateRangeLabel(item.startDate, item.endDate).isNotEmpty)
+              Text(
+                educationDateRangeLabel(item.startDate, item.endDate),
+                style: style(FontWeight.w600, detailPt, titleColor),
+              ),
+            Text(
+              item.institution.trim().toUpperCase(),
+              style: style(FontWeight.w700, detailPt, titleColor),
+            ),
+            const SizedBox(height: 3),
+            if (item.degree.trim().isNotEmpty) bullet(item.degree.trim()),
+            if (item.score.trim().isNotEmpty) bullet(item.score.trim()),
+            const SizedBox(height: 9),
+          ],
         ],
       ],
     );
 
+    final showSidebar = contacts.isNotEmpty ||
+        education.isNotEmpty ||
+        languageSections.isNotEmpty;
+
     final mainColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Nameplate flows with the content so a long name pushes the first
-        // section down instead of overlapping it.
         Text(
           _pdfAlignedDisplayName(resume),
+
           style: style(
             FontWeight.w700,
             _pdfAlignedDisplayName(resume).length > 18 ? 26 : 34,
@@ -9154,10 +9097,21 @@ class _BlueDiagonalPreview extends StatelessWidget {
               style: style(FontWeight.w400, 16, mutedColor),
             ),
           ),
+        if (resume.summary.trim().isNotEmpty) ...[
+          sectionTitle('About Me', Icons.person),
+          Text(
+            resume.summary.trim(),
+            style: bodyText,
+            textAlign: TextAlign.justify,
+          ),
+        ],
         ..._mapPreviewBodySections(
           previewBodySectionOrder(
             resume,
             followOrder: followBuilderSectionOrder,
+            exclude: {
+              ResumeBuilderSectionIds.education,
+            },
           ),
           (id) {
             final customIndex = ResumeBuilderSectionIds.customIndex(id);
@@ -9167,10 +9121,7 @@ class _BlueDiagonalPreview extends StatelessWidget {
                 return null;
               }
               final item = resume.customSections[customIndex];
-              if (item.isBlank ||
-                  _leftSectionTitle.hasMatch(item.title.trim())) {
-                return null;
-              }
+              if (item.isBlank || _isLanguagesSection(item)) return null;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -9196,25 +9147,21 @@ class _BlueDiagonalPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     sectionTitle('Skills', Icons.settings_outlined),
-                    ..._previewPaginatedSkillLines(skills, bodyText),
-                  ],
-                );
-              case ResumeBuilderSectionIds.education:
-                final items = resume.visibleEducation;
-                if (items.isEmpty) return null;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    sectionTitle('Education', Icons.school_outlined),
-                    for (final item in items)
-                      timelineEntry(
-                        educationDateRangeLabel(item.startDate, item.endDate),
-                        item.institution.trim().ifBlank('Institution'),
-                        item.degree.trim(),
-                        [
-                          if (item.score.trim().isNotEmpty)
-                            Text(item.score.trim(), style: bodyText),
-                        ],
+                    for (var i = 0; i < skills.length; i += 2)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: bullet(skills[i])),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: i + 1 < skills.length
+                                  ? bullet(skills[i + 1])
+                                  : const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
                       ),
                   ],
                 );
@@ -9269,6 +9216,7 @@ class _BlueDiagonalPreview extends StatelessWidget {
     final avatarPath = resume.profileImagePath.trim();
     final hasProfileImage =
         avatarPath.isNotEmpty && File(avatarPath).existsSync();
+    final leftTop = 56 + _avatarSize + 14;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -9276,9 +9224,6 @@ class _BlueDiagonalPreview extends StatelessWidget {
         final height = constraints.maxHeight.isFinite
             ? constraints.maxHeight
             : width / ResumePreviewCard._a4AspectRatio;
-        final pageHeight = width > 0
-            ? _pageWidth * (height / width)
-            : _pageHeight;
         return SizedBox(
           width: width,
           height: height,
@@ -9288,16 +9233,17 @@ class _BlueDiagonalPreview extends StatelessWidget {
               alignment: Alignment.topCenter,
               child: SizedBox(
                 width: _pageWidth,
-                height: pageHeight,
+                height: _pageHeight,
                 child: Stack(
                   children: [
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: _columnWidth,
-                      child: ColoredBox(color: columnColor),
-                    ),
+                    if (showSidebar)
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: _columnWidth,
+                        child: ColoredBox(color: columnColor),
+                      ),
                     Positioned.fill(
                       child: CustomPaint(
                         painter: _BlueDiagonalCornersPainter(
@@ -9307,47 +9253,58 @@ class _BlueDiagonalPreview extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Positioned(
-                      left: _columnWidth / 2 - _avatarSize / 2,
-                      top: 56,
-                      child: Container(
-                        width: _avatarSize,
-                        height: _avatarSize,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(7),
-                        child: ClipOval(
-                          child: hasProfileImage
-                              ? Image.file(File(avatarPath), fit: BoxFit.cover)
-                              : ColoredBox(
-                                  color: const Color(0xFFD6DCE4),
-                                  child: _avatarFallback(
-                                    resume,
-                                    style(FontWeight.w700, 42, titleColor),
+                    if (showSidebar)
+                      Positioned(
+                        left: _columnWidth / 2 - _avatarSize / 2,
+                        top: 56,
+                        child: Container(
+                          width: _avatarSize,
+                          height: _avatarSize,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: const EdgeInsets.all(7),
+                          child: ClipOval(
+                            child: hasProfileImage
+                                ? Image.file(
+                                    File(avatarPath),
+                                    fit: BoxFit.cover,
+                                  )
+                                : ColoredBox(
+                                    color: const Color(0xFFD6DCE4),
+                                    child: _avatarFallback(
+                                      resume,
+                                      style(FontWeight.w700, 42, titleColor),
+                                    ),
                                   ),
-                                ),
+                          ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      left: _columnInset,
-                      width: _columnWidth - _columnInset * 2,
-                      top: 56 + _avatarSize + 14,
-                      bottom: 46,
-                      child: ClipRect(
-                        child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: leftColumn,
+                    if (showSidebar)
+                      Positioned(
+                        left: _columnInset,
+                        width: sidebarWidth,
+                        top: leftTop,
+                        bottom: _bottom,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.topCenter,
+                          child: UnconstrainedBox(
+                            constrainedAxis: Axis.horizontal,
+                            alignment: Alignment.topCenter,
+                            child: SizedBox(
+                              width: sidebarWidth,
+                              child: leftColumn,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
                     Positioned(
-                      left: _mainLeft,
+                      left: showSidebar ? _mainLeft : 40,
                       right: 40,
                       top: 120,
-                      bottom: 46,
+                      bottom: _bottom,
                       child: ClipRect(
                         child: SingleChildScrollView(
                           physics: const NeverScrollableScrollPhysics(),
@@ -9371,11 +9328,13 @@ class _BlueDiagonalCornersPainter extends CustomPainter {
     required this.accent,
     required this.accentDark,
     required this.columnWidth,
+    this.drawTop = true,
   });
 
   final Color accent;
   final Color accentDark;
   final double columnWidth;
+  final bool drawTop;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -9389,31 +9348,33 @@ class _BlueDiagonalCornersPainter extends CustomPainter {
 
     final w = size.width;
     final h = size.height;
+    if (drawTop) {
+      polygon([
+        const Offset(0, 0),
+        Offset(columnWidth, 0),
+        const Offset(0, 150),
+      ], accent);
+      polygon([
+        Offset(w - 185, 0),
+        Offset(w, 0),
+        Offset(w, 185),
+      ], accent);
+      polygon([
+        Offset(w - 185, 0),
+        Offset(w - 125, 0),
+        Offset(w, 125),
+        Offset(w, 185),
+      ], accentDark);
+    }
     polygon([
-      const Offset(0, 0),
-      Offset(columnWidth, 0),
-      const Offset(0, 150),
-    ], accent);
-    polygon([
-      Offset(w - 185, 0),
-      Offset(w, 0),
-      Offset(w, 185),
-    ], accent);
-    polygon([
-      Offset(w - 185, 0),
-      Offset(w - 125, 0),
-      Offset(w, 125),
-      Offset(w, 185),
-    ], accentDark);
-    polygon([
-      Offset(0, h),
-      Offset(w, h),
+      Offset(0, h + 1),
+      Offset(w, h + 1),
       Offset(w, h - 62),
       Offset(0, h - 26),
     ], accent);
     polygon([
-      Offset(0, h),
-      Offset(w, h),
+      Offset(0, h + 1),
+      Offset(w, h + 1),
       Offset(w, h - 26),
       Offset(0, h - 8),
     ], accentDark);
@@ -9423,7 +9384,8 @@ class _BlueDiagonalCornersPainter extends CustomPainter {
   bool shouldRepaint(_BlueDiagonalCornersPainter oldDelegate) =>
       oldDelegate.accent != accent ||
       oldDelegate.accentDark != accentDark ||
-      oldDelegate.columnWidth != columnWidth;
+      oldDelegate.columnWidth != columnWidth ||
+      oldDelegate.drawTop != drawTop;
 }
 
 /// Circular photo header, about me, dated education/experience, skills grid.
@@ -11334,6 +11296,7 @@ class _ProfileTimelinePreview extends StatelessWidget
   static const double _pageBottom = 40;
   static const double _avatar = 118;
   static const double _ring = 8;
+  static const double _gutter = _ring + 14;
 
   static final RegExp _sideSectionTitle = RegExp(
     r'^(languages?|awards?|certifications?|certificates?|interests?|hobbies)$',
@@ -11379,8 +11342,12 @@ class _ProfileTimelinePreview extends StatelessWidget
       titleColor,
     ).copyWith(fontStyle: FontStyle.italic);
 
-    Widget sectionHeading(String label) => Padding(
-      padding: const EdgeInsets.only(top: 18, bottom: 10),
+    Widget sectionHeading(String label, {bool indent = false}) => Padding(
+      padding: EdgeInsets.only(
+        left: indent ? _gutter : 0,
+        top: 18,
+        bottom: 10,
+      ),
       child: Row(
         children: [
           Text(label, style: sectionStyle),
@@ -11556,10 +11523,11 @@ class _ProfileTimelinePreview extends StatelessWidget
           return [
             sectionHeading(
               item.title.trim().isEmpty ? 'Custom section' : item.title.trim(),
+              indent: true,
             ),
             for (final line in item.displayLines())
               Padding(
-                padding: const EdgeInsets.only(bottom: 3),
+                padding: const EdgeInsets.only(left: _gutter, bottom: 3),
                 child: Text(line, style: bodyStyle),
               ),
           ];
@@ -11569,7 +11537,7 @@ class _ProfileTimelinePreview extends StatelessWidget
             final items = resume.visibleWorkExperiences;
             if (items.isEmpty) return null;
             return [
-              sectionHeading('Experience'),
+              sectionHeading('Experience', indent: true),
               for (final item in items)
                 timelineEntry(
                   title: item.role.trim().isEmpty ? 'Role' : item.role.trim(),
@@ -11584,7 +11552,7 @@ class _ProfileTimelinePreview extends StatelessWidget
             final items = resume.visibleProjects;
             if (items.isEmpty) return null;
             return [
-              sectionHeading('Projects'),
+              sectionHeading('Projects', indent: true),
               for (final item in items)
                 timelineEntry(
                   title: item.title.trim().isEmpty
@@ -11605,8 +11573,17 @@ class _ProfileTimelinePreview extends StatelessWidget
             final items = _pdfAlignedSkills(resume);
             if (items.isEmpty) return null;
             return [
-              sectionHeading('Skills'),
-              ..._previewPaginatedSkillLines(items, bodyStyle, bottom: 6, bullets: false),
+              sectionHeading('Skills', indent: true),
+              for (final widget in _previewPaginatedSkillLines(
+                items,
+                bodyStyle,
+                bottom: 6,
+                bullets: false,
+              ))
+                Padding(
+                  padding: const EdgeInsets.only(left: _gutter),
+                  child: widget,
+                ),
             ];
         }
         return null;

@@ -18,8 +18,18 @@ const double _softHeaderTopPt = 30.0;
 const double _softHeaderBottomPt = 34.0;
 
 /// Only languages live in the Soft Header left column (with contact + education).
-bool _softHeaderIsLeftSection(CustomSectionItem item) =>
-    _isClassicSidebarLanguagesTitle(item.title);
+bool _softHeaderIsLeftSection(CustomSectionItem item) {
+  final normalized = item.title.trim().toLowerCase().replaceAll(
+    RegExp(r'[^a-z]'),
+    '',
+  );
+  return normalized == 'language' ||
+      normalized == 'languages' ||
+      normalized == 'langueage' ||
+      normalized == 'langueages' ||
+      normalized.endsWith('languages') ||
+      normalized.endsWith('language');
+}
 
 /// One page of left-column content.
 class _SoftHeaderSidebarSlice {

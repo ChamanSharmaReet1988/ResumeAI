@@ -3690,14 +3690,16 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
 
         final isBlueDiagonal = resume.template.userFacingTemplate ==
             ResumeTemplate.blueDiagonal;
+        // Blue Diagonal: stretch the real A4 art to the tile so the diagonal
+        // footer lands on the card edge — no fake accent/column fills.
+        const pageHeight = 841.89;
         final pagePreview = FittedBox(
-          fit: BoxFit.fitWidth,
-          alignment: Alignment.topCenter,
+          fit: isBlueDiagonal ? BoxFit.fill : BoxFit.fitWidth,
+          alignment:
+              isBlueDiagonal ? Alignment.center : Alignment.topCenter,
           child: SizedBox(
             width: _pageWidth,
-            height: isBlueDiagonal && contentHeight != null && targetWidth > 0
-                ? _pageWidth * (contentHeight / targetWidth)
-                : null,
+            height: isBlueDiagonal ? pageHeight : null,
             child: ResumePreviewCanvas(
               resume: resume,
               showDebugLabel: false,
@@ -3707,6 +3709,8 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
             ),
           ),
         );
+
+        final scaledPageHeight = targetWidth * (pageHeight / _pageWidth);
 
         return ColoredBox(
           color: Colors.white,
@@ -3760,12 +3764,11 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
                   if (resume.template.userFacingTemplate ==
                           ResumeTemplate.boldPill &&
                       contentHeight != null &&
-                      contentHeight >
-                          targetWidth * (841.89 / _pageWidth) - 4)
+                      contentHeight > scaledPageHeight - 4)
                     Positioned(
                       left: 0,
                       right: 0,
-                      top: targetWidth * (841.89 / _pageWidth) - 2,
+                      top: scaledPageHeight - 2,
                       bottom: 0,
                       child: ColoredBox(
                         color: resume.boldPillAccentColor,

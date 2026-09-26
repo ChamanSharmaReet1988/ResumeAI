@@ -1,24 +1,55 @@
 part of 'package:resume_app/core/services/resume_services.dart';
 
 /// Blue Diagonal: diagonal colour corners, a grey photo column on the left
-/// (about, contact, skills, languages) and timeline-marked education and
-/// experience on the right.
+/// (contact, education, languages) and timeline sections on the right. The left
+/// column continues across pages until those details are fully shown; later
+/// pages use the full page width with no grey column.
 const double _blueDiagonalColumnWidthPt = 250.0;
 const double _blueDiagonalColumnInsetPt = 30.0;
 const double _blueDiagonalMainLeftPt = 282.0;
 const double _blueDiagonalMainRightPt = 40.0;
+/// Extra left inset while the grey column is present so body text clears it.
+const double _blueDiagonalContentInsetPt =
+    _blueDiagonalMainLeftPt - _blueDiagonalMainRightPt;
 const double _blueDiagonalTopPt = 34.0;
 const double _blueDiagonalBottomPt = 46.0;
 const double _blueDiagonalAvatarSizePt = 176.0;
 /// Space above the nameplate, clearing the top-right corner diagonals.
 const double _blueDiagonalHeaderHeightPt = 120.0;
 
-/// Custom sections that belong in the left column.
-final RegExp _blueDiagonalLeftSectionTitle = RegExp(
-  r'^(languages?|references?|referees?|awards?|certifications?|certificates?|'
-  r'interests?|hobbies)$',
-  caseSensitive: false,
-);
+bool _blueDiagonalIsLeftSection(CustomSectionItem item) {
+  final normalized = item.title.trim().toLowerCase().replaceAll(
+    RegExp(r'[^a-z]'),
+    '',
+  );
+  return normalized == 'language' ||
+      normalized == 'languages' ||
+      normalized == 'langueage' ||
+      normalized == 'langueages' ||
+      normalized.endsWith('languages') ||
+      normalized.endsWith('language');
+}
+
+class _BlueDiagonalSidebarSlice {
+  const _BlueDiagonalSidebarSlice(this.blocks);
+
+  final List<pw.Widget> blocks;
+}
+
+pw.Widget _blueDiagonalMainPad(
+  pw.Widget child, {
+  required int sidebarPageCount,
+}) =>
+    pw.DelayedWidget(
+      build: (context) => pw.Padding(
+        padding: pw.EdgeInsets.only(
+          left: context.pageNumber <= sidebarPageCount
+              ? _blueDiagonalContentInsetPt
+              : 0,
+        ),
+        child: child,
+      ),
+    );
 
 extension _ResumePdfBlueDiagonalPage on ResumePdfService {
   void _addBlueDiagonalTemplatePage(
@@ -37,23 +68,26 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
     final mutedColor = _pdfRgb(resume.blueDiagonalMutedColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final detailPt = bodyPt - 1.5;
+    final lineH = ResumeTypography.bodyTextLineHeight;
 
     pw.TextStyle style(
       int weight,
       double size,
       PdfColor color, {
       double? lineSpacing,
-    }) => garamondPdfTextStyle(
-      fonts,
-      weight,
-      fontSize: size,
-      color: color,
-      lineSpacing: lineSpacing,
-    );
+    }) =>
+        garamondPdfTextStyle(
+          fonts,
+          weight,
+          fontSize: size,
+          color: color,
+          lineSpacing: lineSpacing,
+        );
 
     final sectionTitleStyle = style(ResumeFontWeight.w700, 17, titleColor);
     final entryDateStyle = style(ResumeFontWeight.w700, bodyPt, titleColor);
     final entryTitleStyle = style(ResumeFontWeight.w700, detailPt, titleColor);
+    final strongMetaStyle = style(ResumeFontWeight.w600, detailPt, titleColor);
     final bodyStyle = style(
       ResumeFontWeight.w400,
       detailPt,
@@ -65,10 +99,10 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
     final education = resume.visibleEducation;
     final projects = resume.visibleProjects;
     final leftSections = resume.visibleCustomSections
-        .where((item) => _blueDiagonalLeftSectionTitle.hasMatch(item.title.trim()))
+        .where(_blueDiagonalIsLeftSection)
         .toList();
     final mainSections = resume.visibleCustomSections
-        .where((item) => !leftSections.contains(item))
+        .where((item) => !_blueDiagonalIsLeftSection(item))
         .toList();
 
     pw.Widget icon(_BlueDiagonalIcon kind, double size, PdfColor color) =>
@@ -82,16 +116,16 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
         );
 
     pw.Widget sectionTitle(String title, _BlueDiagonalIcon kind) => pw.Padding(
-      padding: const pw.EdgeInsets.only(top: 20, bottom: 12),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
-        children: [
-          icon(kind, 19, titleColor),
-          pw.SizedBox(width: 10),
-          pw.Text(title, style: sectionTitleStyle),
-        ],
-      ),
-    );
+          padding: const pw.EdgeInsets.only(top: 20, bottom: 12),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              icon(kind, 19, titleColor),
+              pw.SizedBox(width: 10),
+              pw.Text(title, style: sectionTitleStyle),
+            ],
+          ),
+        );
 
     pw.Widget bullet(String text, {bool highlight = false}) =>
         _headerSidebarMaybeHighlight(
@@ -116,7 +150,37 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
           ),
         );
 
-    /// Entry on the right column's timeline: a capped line, then the text.
+    List<pw.Widget> skillsTwoColumn(List<String> skills) {
+      if (skills.isEmpty) return const [];
+      return [
+        for (var i = 0; i < skills.length; i += 2)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 3),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Expanded(
+                  child: bullet(
+                    skills[i],
+                    highlight: highlightedSkills.contains(skills[i]),
+                  ),
+                ),
+                pw.SizedBox(width: 16),
+                pw.Expanded(
+                  child: i + 1 < skills.length
+                      ? bullet(
+                          skills[i + 1],
+                          highlight:
+                              highlightedSkills.contains(skills[i + 1]),
+                        )
+                      : pw.SizedBox(),
+                ),
+              ],
+            ),
+          ),
+      ];
+    }
+
     List<pw.Widget> timelineEntry({
       required String dates,
       required String title,
@@ -124,13 +188,13 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
       required List<pw.Widget> details,
     }) {
       pw.Widget dot() => pw.Container(
-        width: 7,
-        height: 7,
-        decoration: pw.BoxDecoration(
-          color: titleColor,
-          shape: pw.BoxShape.circle,
-        ),
-      );
+            width: 7,
+            height: 7,
+            decoration: pw.BoxDecoration(
+              color: titleColor,
+              shape: pw.BoxShape.circle,
+            ),
+          );
       return [
         pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -179,31 +243,24 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
       ];
     }
 
-    pw.Widget leftColumn() {
-      final contacts = <(_BlueDiagonalIcon, String)>[
-        (_BlueDiagonalIcon.phone, resume.phone.trim()),
-        (_BlueDiagonalIcon.mail, resume.email.trim()),
-        (_BlueDiagonalIcon.place, resume.location.trim()),
-        (_BlueDiagonalIcon.link, resume.website.trim()),
-        (_BlueDiagonalIcon.link, resume.linkedinLink.trim()),
-        (_BlueDiagonalIcon.link, resume.githubLink.trim()),
-      ].where((entry) => entry.$2.isNotEmpty).toList();
+    final contacts = <(_BlueDiagonalIcon, String)>[
+      (_BlueDiagonalIcon.phone, resume.phone.trim()),
+      (_BlueDiagonalIcon.mail, resume.email.trim()),
+      (_BlueDiagonalIcon.place, resume.location.trim()),
+      (_BlueDiagonalIcon.link, resume.website.trim()),
+      (_BlueDiagonalIcon.link, resume.linkedinLink.trim()),
+      (_BlueDiagonalIcon.link, resume.githubLink.trim()),
+    ].where((entry) => entry.$2.isNotEmpty).toList();
 
-      return pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          if (resume.summary.trim().isNotEmpty) ...[
-            sectionTitle('About Me', _BlueDiagonalIcon.person),
-            _headerSidebarMaybeHighlight(
-              highlight: highlightSummary,
-              child: pw.Text(
-                resume.summary.trim(),
-                style: bodyStyle,
-                textAlign: pw.TextAlign.justify,
-              ),
-            ),
-          ],
-          if (contacts.isNotEmpty) ...[
+    double sectionHeadingHeight() => 20 + 12 + 19;
+
+    final leftBlocks = <({pw.Widget widget, double height})>[];
+
+    if (contacts.isNotEmpty) {
+      leftBlocks.add((
+        widget: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
             sectionTitle('Contact', _BlueDiagonalIcon.contact),
             for (final (kind, value) in contacts)
               pw.Padding(
@@ -216,137 +273,270 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                       child: icon(kind, 12, titleColor),
                     ),
                     pw.SizedBox(width: 9),
-                    pw.Expanded(
-                      child: pw.Text(value, style: bodyStyle),
-                    ),
+                    pw.Expanded(child: pw.Text(value, style: bodyStyle)),
                   ],
                 ),
               ),
           ],
-          for (final section in leftSections) ...[
-            sectionTitle(section.title.trim(), _BlueDiagonalIcon.language),
-            for (final line in _slateSidebarRailSectionLines(section))
-              bullet(line),
+        ),
+        height: sectionHeadingHeight() +
+            contacts.length * (detailPt * lineH + 7) +
+            4,
+      ));
+    }
+
+    final firstEducationBlockIndex =
+        education.isEmpty ? -1 : leftBlocks.length;
+
+    for (final item in education) {
+      final dateLabel =
+          educationDateRangeLabel(item.startDate, item.endDate);
+      final degree = item.degree.trim();
+      final score = item.score.trim();
+      var h = 9.0;
+      if (dateLabel.isNotEmpty) h += detailPt * lineH;
+      h += detailPt * lineH + 3;
+      if (degree.isNotEmpty) h += detailPt * lineH + 4;
+      if (score.isNotEmpty) h += detailPt * lineH + 4;
+      leftBlocks.add((
+        widget: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            if (dateLabel.isNotEmpty)
+              pw.Text(dateLabel, style: strongMetaStyle),
+            pw.Text(
+              item.institution.trim().toUpperCase(),
+              style: style(ResumeFontWeight.w700, detailPt, titleColor),
+            ),
+            pw.SizedBox(height: 3),
+            if (degree.isNotEmpty) bullet(degree),
+            if (score.isNotEmpty) bullet(score),
+            pw.SizedBox(height: 9),
           ],
-        ],
+        ),
+        height: h,
+      ));
+    }
+
+    for (final section in leftSections) {
+      final lines = _slateSidebarRailSectionLines(section);
+      leftBlocks.add((
+        widget: sectionTitle(section.title.trim(), _BlueDiagonalIcon.language),
+        height: sectionHeadingHeight(),
+      ));
+      for (final line in lines) {
+        leftBlocks.add((
+          widget: bullet(line),
+          height: detailPt * lineH + 4,
+        ));
+      }
+    }
+
+    // Page 1 left budget clears the avatar; later pages use the full column.
+    final page1LeftBudget = PdfPageFormat.a4.height -
+        56 -
+        _blueDiagonalAvatarSizePt -
+        14 -
+        _blueDiagonalBottomPt;
+    final continuationLeftBudget = PdfPageFormat.a4.height -
+        _blueDiagonalTopPt -
+        _blueDiagonalBottomPt;
+
+    final sidebarSlices = <_BlueDiagonalSidebarSlice>[];
+    if (leftBlocks.isNotEmpty) {
+      var index = 0;
+      var isFirstSlice = true;
+      while (index < leftBlocks.length) {
+        final budget =
+            isFirstSlice ? page1LeftBudget : continuationLeftBudget;
+        final chunk = <pw.Widget>[];
+        var used = 0.0;
+        var educationHeadingAdded = false;
+
+        while (index < leftBlocks.length) {
+          final block = leftBlocks[index];
+          final needsEduHeading = index == firstEducationBlockIndex &&
+              firstEducationBlockIndex >= 0 &&
+              !educationHeadingAdded;
+          final headingExtra =
+              needsEduHeading ? sectionHeadingHeight() : 0.0;
+          if (chunk.isNotEmpty &&
+              used + block.height + headingExtra > budget) {
+            break;
+          }
+          if (needsEduHeading) {
+            chunk.add(
+              sectionTitle('Education', _BlueDiagonalIcon.education),
+            );
+            used += headingExtra;
+            educationHeadingAdded = true;
+          }
+          chunk.add(block.widget);
+          used += block.height;
+          index++;
+        }
+        if (chunk.isEmpty) {
+          chunk.add(leftBlocks[index].widget);
+          index++;
+        }
+        sidebarSlices.add(_BlueDiagonalSidebarSlice(chunk));
+        isFirstSlice = false;
+      }
+    }
+
+    final sidebarPageCount = sidebarSlices.length;
+
+    pw.Widget mainWrap(pw.Widget child) =>
+        _blueDiagonalMainPad(child, sidebarPageCount: sidebarPageCount);
+
+    pw.Widget sidebarBackground(int pageNumber) {
+      final firstPage = pageNumber == 1;
+      final showSidebar =
+          sidebarPageCount > 0 && pageNumber <= sidebarPageCount;
+      return pw.FullPage(
+        ignoreMargins: true,
+        child: pw.Stack(
+          children: [
+            if (showSidebar)
+              pw.Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: pw.Container(
+                  width: _blueDiagonalColumnWidthPt,
+                  color: columnColor,
+                ),
+              ),
+            pw.Positioned.fill(
+              child: pw.CustomPaint(
+                painter: (canvas, size) => _paintBlueDiagonals(
+                  canvas,
+                  size,
+                  accent: accent,
+                  accentDark: accentDark,
+                  drawTop: firstPage,
+                ),
+              ),
+            ),
+            if (firstPage && showSidebar)
+              pw.Positioned(
+                left: _blueDiagonalColumnWidthPt / 2 -
+                    _blueDiagonalAvatarSizePt / 2,
+                top: 56,
+                child: pw.Container(
+                  width: _blueDiagonalAvatarSizePt,
+                  height: _blueDiagonalAvatarSizePt,
+                  decoration: const pw.BoxDecoration(
+                    color: PdfColors.white,
+                    shape: pw.BoxShape.circle,
+                  ),
+                  padding: const pw.EdgeInsets.all(7),
+                  child: profileImage != null
+                      ? pw.ClipOval(
+                          child: pw.Image(
+                            profileImage,
+                            fit: pw.BoxFit.cover,
+                          ),
+                        )
+                      : pw.Container(
+                          alignment: pw.Alignment.center,
+                          decoration: pw.BoxDecoration(
+                            color: PdfColor.fromHex('#D6DCE4'),
+                            shape: pw.BoxShape.circle,
+                          ),
+                          child: pw.Text(
+                            _resumeInitials(resume),
+                            style: style(
+                              ResumeFontWeight.w700,
+                              42,
+                              titleColor,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            if (showSidebar)
+              pw.Positioned(
+                left: _blueDiagonalColumnInsetPt,
+                top: firstPage
+                    ? 56 + _blueDiagonalAvatarSizePt + 14
+                    : _blueDiagonalTopPt,
+                bottom: _blueDiagonalBottomPt,
+                child: pw.SizedBox(
+                  width: _blueDiagonalColumnWidthPt -
+                      _blueDiagonalColumnInsetPt * 2,
+                  child: pw.ClipRect(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: sidebarSlices[pageNumber - 1].blocks,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       );
     }
 
-    final left = leftColumn();
+    final pagesBefore = document.document.pdfPageList.pages.length;
 
     document.addPage(
       pw.MultiPage(
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.fromLTRB(
-            _blueDiagonalMainLeftPt,
+            _blueDiagonalMainRightPt,
             _blueDiagonalTopPt,
             _blueDiagonalMainRightPt,
             _blueDiagonalBottomPt,
           ),
-          buildBackground: (context) {
-            final firstPage = context.pageNumber == 1;
-            return pw.FullPage(
-              ignoreMargins: true,
-              child: pw.Stack(
-                children: [
-                  pw.Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: pw.Container(
-                      width: _blueDiagonalColumnWidthPt,
-                      color: columnColor,
-                    ),
-                  ),
-                  pw.Positioned.fill(
-                    child: pw.CustomPaint(
-                      painter: (canvas, size) => _paintBlueDiagonals(
-                        canvas,
-                        size,
-                        accent: accent,
-                        accentDark: accentDark,
-                        drawTop: firstPage,
-                      ),
-                    ),
-                  ),
-                  if (firstPage) ...[
-                    pw.Positioned(
-                      left:
-                          _blueDiagonalColumnWidthPt / 2 -
-                          _blueDiagonalAvatarSizePt / 2,
-                      top: 56,
-                      child: pw.Container(
-                        width: _blueDiagonalAvatarSizePt,
-                        height: _blueDiagonalAvatarSizePt,
-                        decoration: const pw.BoxDecoration(
-                          color: PdfColors.white,
-                          shape: pw.BoxShape.circle,
-                        ),
-                        padding: const pw.EdgeInsets.all(7),
-                        child: profileImage != null
-                            ? pw.ClipOval(
-                                child: pw.Image(
-                                  profileImage,
-                                  fit: pw.BoxFit.cover,
-                                ),
-                              )
-                            : pw.Container(
-                                alignment: pw.Alignment.center,
-                                decoration: pw.BoxDecoration(
-                                  color: PdfColor.fromHex('#D6DCE4'),
-                                  shape: pw.BoxShape.circle,
-                                ),
-                                child: pw.Text(
-                                  _resumeInitials(resume),
-                                  style: style(
-                                    ResumeFontWeight.w700,
-                                    42,
-                                    titleColor,
-                                  ),
-                                ),
-                              ),
-                      ),
-                    ),
-                    pw.Positioned(
-                      left: _blueDiagonalColumnInsetPt,
-                      top: 56 + _blueDiagonalAvatarSizePt + 14,
-                      bottom: _blueDiagonalBottomPt,
-                      child: pw.SizedBox(
-                        width:
-                            _blueDiagonalColumnWidthPt -
-                            _blueDiagonalColumnInsetPt * 2,
-                        child: pw.ClipRect(child: left),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            );
-          },
+          buildBackground: (context) =>
+              sidebarBackground(context.pageNumber),
         ),
         build: (context) => [
-          // Nameplate flows with the content so a long name pushes the first
-          // section down instead of overlapping it.
-          pw.SizedBox(height: _blueDiagonalHeaderHeightPt - _blueDiagonalTopPt),
-          pw.Text(
-            _displayName(resume),
-            style: style(
-              ResumeFontWeight.w700,
-              _displayName(resume).length > 18 ? 26 : 34,
-              titleColor,
+          mainWrap(
+            pw.SizedBox(
+              height: _blueDiagonalHeaderHeightPt - _blueDiagonalTopPt,
+            ),
+          ),
+          mainWrap(
+            pw.Text(
+              _displayName(resume),
+              style: style(
+                ResumeFontWeight.w700,
+                _displayName(resume).length > 18 ? 26 : 34,
+                titleColor,
+              ),
             ),
           ),
           if (resume.jobTitle.trim().isNotEmpty)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 4),
-              child: pw.Text(
-                resume.jobTitle.trim(),
-                style: style(ResumeFontWeight.w400, 16, mutedColor),
+            mainWrap(
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(top: 4),
+                child: pw.Text(
+                  resume.jobTitle.trim(),
+                  style: style(ResumeFontWeight.w400, 16, mutedColor),
+                ),
               ),
             ),
+          if (resume.summary.trim().isNotEmpty) ...[
+            mainWrap(sectionTitle('About Me', _BlueDiagonalIcon.person)),
+            mainWrap(
+              _headerSidebarMaybeHighlight(
+                highlight: highlightSummary,
+                child: pw.Text(
+                  resume.summary.trim(),
+                  style: bodyStyle,
+                  textAlign: pw.TextAlign.justify,
+                ),
+              ),
+            ),
+          ],
           ..._pdfBodySectionsInBuilderOrder(
             resume,
+            exclude: {
+              ResumeBuilderSectionIds.education,
+            },
             buildSection: (id) {
               final customIndex = ResumeBuilderSectionIds.customIndex(id);
               if (customIndex != null) {
@@ -357,13 +547,18 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                 final item = resume.customSections[customIndex];
                 if (!mainSections.contains(item)) return null;
                 return [
-                  sectionTitle(item.title.ifEmpty('Custom section'), _BlueDiagonalIcon.article),
+                  mainWrap(
+                    sectionTitle(
+                      item.title.ifEmpty('Custom section'),
+                      _BlueDiagonalIcon.article,
+                    ),
+                  ),
                   ..._pwCustomSectionBodyWidgets(
                     item,
                     garamond: fonts,
                     bodyFontPt: detailPt,
                     accentStripGaramondBody: true,
-                  ),
+                  ).map(mainWrap),
                 ];
               }
               switch (id) {
@@ -371,35 +566,17 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
-                    sectionTitle('Skills', _BlueDiagonalIcon.skills),
-                    ..._pdfPaginatedSkillLines(
-                      skills: skills,
-                      style: bodyStyle,
-                      highlightedSkills: highlightedSkills,
+                    mainWrap(
+                      sectionTitle('Skills', _BlueDiagonalIcon.skills),
                     ),
-                  ];
-                case ResumeBuilderSectionIds.education:
-                  if (education.isEmpty) return null;
-                  return [
-                    sectionTitle('Education', _BlueDiagonalIcon.education),
-                    for (final item in education)
-                      ...timelineEntry(
-                        dates: educationDateRangeLabel(
-                          item.startDate,
-                          item.endDate,
-                        ),
-                        title: item.institution.trim().ifEmpty('Institution'),
-                        subtitle: item.degree.trim(),
-                        details: [
-                          if (item.score.trim().isNotEmpty)
-                            pw.Text(item.score.trim(), style: bodyStyle),
-                        ],
-                      ),
+                    ...skillsTwoColumn(skills).map(mainWrap),
                   ];
                 case ResumeBuilderSectionIds.work:
                   if (experiences.isEmpty) return null;
                   return [
-                    sectionTitle('Experience', _BlueDiagonalIcon.work),
+                    mainWrap(
+                      sectionTitle('Experience', _BlueDiagonalIcon.work),
+                    ),
                     for (var i = 0; i < experiences.length; i++)
                       ...timelineEntry(
                         dates: educationDateRangeLabel(
@@ -409,22 +586,23 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                         title: experiences[i].role.trim().ifEmpty('Role'),
                         subtitle: experiences[i].company.trim(),
                         details: [
-                          for (final line in _workBulletLines(experiences[i]))
+                          for (final line
+                              in _workBulletLines(experiences[i]))
                             bullet(
                               line,
-                              highlight:
-                                  highlightedBulletsByExperience[i]?.contains(
-                                    line,
-                                  ) ??
+                              highlight: highlightedBulletsByExperience[i]
+                                      ?.contains(line) ??
                                   false,
                             ),
                         ],
-                      ),
+                      ).map(mainWrap),
                   ];
                 case ResumeBuilderSectionIds.projects:
                   if (projects.isEmpty) return null;
                   return [
-                    sectionTitle('Projects', _BlueDiagonalIcon.article),
+                    mainWrap(
+                      sectionTitle('Projects', _BlueDiagonalIcon.article),
+                    ),
                     for (final item in projects)
                       ...timelineEntry(
                         dates: '',
@@ -434,7 +612,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                           for (final line in _projectBulletLinesPdf(item))
                             bullet(line),
                         ],
-                      ),
+                      ).map(mainWrap),
                   ];
               }
               return null;
@@ -443,6 +621,26 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
         ],
       ),
     );
+
+    final multiPageCount =
+        document.document.pdfPageList.pages.length - pagesBefore;
+    for (var i = multiPageCount; i < sidebarPageCount; i++) {
+      document.addPage(
+        pw.Page(
+          pageTheme: pw.PageTheme(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.fromLTRB(
+              _blueDiagonalMainLeftPt,
+              _blueDiagonalTopPt,
+              _blueDiagonalMainRightPt,
+              _blueDiagonalBottomPt,
+            ),
+            buildBackground: (context) => sidebarBackground(i + 1),
+          ),
+          build: (context) => pw.SizedBox(),
+        ),
+      );
+    }
   }
 }
 
@@ -468,7 +666,6 @@ void _paintBlueDiagonals(
   final w = size.x;
   final h = size.y;
   if (drawTop) {
-    // Top-left wedge over the grey column.
     polygon(
       [
         [0, h],
@@ -477,7 +674,6 @@ void _paintBlueDiagonals(
       ],
       accent,
     );
-    // Top-right diagonal bands.
     polygon(
       [
         [w - 185, h],
@@ -496,11 +692,12 @@ void _paintBlueDiagonals(
       accentDark,
     );
   }
-  // Bottom band.
+  // Bottom band — pin to the page edge (PDF y=0) with a slight overdraw so
+  // it sits flush with the card bottom without a hairline gap.
   polygon(
     [
-      [0, 0],
-      [w, 0],
+      [0, -1],
+      [w, -1],
       [w, 62],
       [0, 26],
     ],
@@ -508,8 +705,8 @@ void _paintBlueDiagonals(
   );
   polygon(
     [
-      [0, 0],
-      [w, 0],
+      [0, -1],
+      [w, -1],
       [w, 26],
       [0, 8],
     ],
@@ -517,8 +714,6 @@ void _paintBlueDiagonals(
   );
 }
 
-/// Section and contact glyphs, drawn as simple shapes so no icon font is
-/// needed in the PDF.
 enum _BlueDiagonalIcon {
   person,
   contact,

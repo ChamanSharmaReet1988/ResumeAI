@@ -13,6 +13,10 @@ const double _profileTimelinePageBottomPt = 40.0;
 const double _profileTimelineAvatarPt = 118.0;
 const double _profileTimelineRingPt = 8.0;
 
+/// Indent that clears the timeline rule: everything in the main column except
+/// the entry markers themselves starts to the right of it.
+const double _profileTimelineGutterPt = _profileTimelineRingPt + 14.0;
+
 extension _ResumePdfProfileTimelinePage on ResumePdfService {
   void _addProfileTimelineTemplatePage(
     pw.Document document,
@@ -71,8 +75,12 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
       fontStyle: pw.FontStyle.italic,
     );
 
-    pw.Widget sectionHeading(String label) => pw.Padding(
-      padding: const pw.EdgeInsets.only(top: 18, bottom: 10),
+    pw.Widget sectionHeading(String label, {bool indent = false}) => pw.Padding(
+      padding: pw.EdgeInsets.only(
+        left: indent ? _profileTimelineGutterPt : 0,
+        top: 18,
+        bottom: 10,
+      ),
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.center,
         children: [
@@ -392,13 +400,22 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                 final item = resume.customSections[customIndex];
                 if (!mainCustomSections.contains(item)) return null;
                 return [
-                  sectionHeading(item.title.ifEmpty('Custom section')),
-                  ..._pwCustomSectionBodyWidgets(
+                  sectionHeading(
+                    item.title.ifEmpty('Custom section'),
+                    indent: true,
+                  ),
+                  for (final widget in _pwCustomSectionBodyWidgets(
                     item,
                     garamond: fonts,
                     bodyFontPt: detailPt,
                     accentStripGaramondBody: true,
-                  ),
+                  ))
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.only(
+                        left: _profileTimelineGutterPt,
+                      ),
+                      child: widget,
+                    ),
                 ];
               }
               switch (id) {
@@ -406,19 +423,25 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
-                    sectionHeading('Skills'),
-                    ..._pdfPaginatedSkillLines(
+                    sectionHeading('Skills', indent: true),
+                    for (final widget in _pdfPaginatedSkillLines(
                       skills: skills,
                       style: bodyStyle,
                       highlightedSkills: highlightedSkills,
                       bullets: false,
-                    ),
+                    ))
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(
+                          left: _profileTimelineGutterPt,
+                        ),
+                        child: widget,
+                      ),
                   ];
                 case ResumeBuilderSectionIds.work:
                   final items = resume.visibleWorkExperiences;
                   if (items.isEmpty) return null;
                   return [
-                    sectionHeading('Experience'),
+                    sectionHeading('Experience', indent: true),
                     for (var i = 0; i < items.length; i++)
                       _headerSidebarMaybeHighlight(
                         highlight:
@@ -442,7 +465,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   final items = resume.visibleProjects;
                   if (items.isEmpty) return null;
                   return [
-                    sectionHeading('Projects'),
+                    sectionHeading('Projects', indent: true),
                     for (final item in items)
                       timelineEntry(
                         title: item.title.trim().ifEmpty('Project'),

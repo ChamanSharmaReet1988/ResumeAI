@@ -728,29 +728,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     setIncluded(false);
   }
 
-  Widget _resumeSectionVisibilityLead({
-    required ResumeEditorViewModel viewModel,
-    required bool included,
-    required String sectionName,
-    required void Function(bool) setIncluded,
-  }) {
-    return IconButton(
-      tooltip: included ? context.l10n.hideFromResume : context.l10n.showOnResume,
-      onPressed: viewModel.isBusy
-          ? null
-          : () async {
-              await _toggleResumeSectionVisibility(
-                isIncluded: included,
-                sectionName: sectionName,
-                setIncluded: setIncluded,
-              );
-            },
-      icon: Icon(
-        included ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-      ),
-    );
-  }
-
   TextStyle? _resumeOrderHintStyle(BuildContext context) {
     final theme = Theme.of(context);
     return theme.textTheme.labelSmall?.copyWith(
@@ -1409,32 +1386,39 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     ResumeEditorViewModel viewModel,
     int step,
   ) {
-    final customIndex = viewModel.customIndexAtStep(step);
-    if (customIndex != null) {
-      return IconButton(
-        tooltip: context.l10n.removeSection,
-        onPressed: viewModel.isBusy
-            ? null
-            : () async {
-                await _confirmRemoveCustomSection(
-                  customIndex,
-                  popToSectionList: true,
-                );
-              },
-        icon: const ImageIcon(AssetImage('assets/fonts/delete.png')),
-      );
-    }
-
-    final included = _defaultSectionIncluded(viewModel, step);
-    final includeSetter = _defaultSectionIncludeSetter(viewModel, step);
-    if (included == null || includeSetter == null) {
+    // Personal Information includes professional summary — keep AppBar as-is.
+    if (step == ResumeEditorViewModel.personalStepIndex) {
       return null;
     }
-    return _resumeSectionVisibilityLead(
-      viewModel: viewModel,
-      included: included,
-      sectionName: viewModel.titleForStep(step, context.l10n),
-      setIncluded: includeSetter,
+
+    final scheme = Theme.of(context).colorScheme;
+    return IconButton(
+      key: const Key('section-editor-save-button'),
+      tooltip: context.l10n.save,
+      onPressed: viewModel.isBusy
+          ? null
+          : () async {
+              FocusScope.of(context).unfocus();
+              await viewModel.saveResume();
+              if (!mounted) {
+                return;
+              }
+              Navigator.of(context).pop();
+            },
+      icon: Container(
+        width: 34,
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: scheme.primary,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.check_rounded,
+          size: 20,
+          color: scheme.onPrimary,
+        ),
+      ),
     );
   }
 

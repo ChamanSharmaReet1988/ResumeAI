@@ -20,9 +20,9 @@ abstract final class PlatformMonetization {
 
   static bool get isIapEnabled => !isAndroidAdsModel;
 
-  /// Banners + interstitials on Android and iOS.
+  /// Banners + interstitials on Android and iOS. Disabled in debug builds.
   static bool get showsAds {
-    if (kIsWeb) {
+    if (kIsWeb || kDebugMode) {
       return false;
     }
     return defaultTargetPlatform == TargetPlatform.android ||
@@ -36,5 +36,6 @@ abstract final class PlatformMonetization {
   static bool get showsSettingsBanner => showsAds;
 
   /// AI Resume top banner (Android). iOS AI tab is Pro-gated / ad-free.
-  static bool get showsAiResumeBanner => isAndroidAdsModel;
+  /// Follows [showsAds] so debug builds stay ad-free.
+  static bool get showsAiResumeBanner => showsAds && isAndroidAdsModel;
 }
