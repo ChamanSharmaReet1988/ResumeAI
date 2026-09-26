@@ -666,6 +666,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Circular photo header with about, dated sections, and a skills grid.';
 
   @override
+  String get templateCharcoalCurve => 'Charcoal Curve';
+
+  @override
+  String get templateCharcoalCurveCaption =>
+      'Curved charcoal sidebar with a photo nameplate and rated skills.';
+
+  @override
+  String get templateBoldPill => 'Bold Pill';
+
+  @override
+  String get templateBoldPillCaption =>
+      'Black photo header with pill headings and a timeline column.';
+
+  @override
+  String get templateBlueCorner => 'Blue Corner';
+
+  @override
+  String get templateBlueCornerCaption =>
+      'Blue corner wedge, contact sidebar, and timeline entries.';
+
+  @override
+  String get templateProfileTimeline => 'Profile Timeline';
+
+  @override
+  String get templateProfileTimelineCaption =>
+      'Centred photo header with rated skills and date-chip experience.';
+
+  @override
   String get templateStructuredAts => 'Structured ATS';
 
   @override

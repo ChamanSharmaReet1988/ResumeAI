@@ -99,6 +99,10 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.softHeader => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.blueDiagonal => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.minimalProfile => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.charcoalCurve => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.boldPill => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.blueCorner => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.profileTimeline => kTemplateDefaultColorPresetIndex,
     ResumeTemplate.atsStructured ||
     ResumeTemplate.atsSerifRules ||
     ResumeTemplate.atsModernFlow ||
@@ -446,6 +450,81 @@ extension ResumeCorporateStyleX on ResumeData {
   Color get minimalProfileTitleColor => const Color(0xFF111111);
 
   Color get minimalProfileMutedColor => const Color(0xFF4B4B4B);
+
+  static const Color charcoalCurveNativeAccentColor = Color(0xFF3A3F45);
+
+  /// Charcoal Curve sidebar and nameplate fill.
+  Color get charcoalCurveAccentColor {
+    if (corporateColorPresetIndex >= kCorporateColorPresets.length) {
+      return charcoalCurveNativeAccentColor;
+    }
+    return corporateColorPreset.headerColor;
+  }
+
+  /// Text and icons reversed out of the charcoal sidebar.
+  Color get charcoalCurveOnAccentColor => const Color(0xFFEDEFF2);
+
+  Color get charcoalCurveTitleColor => const Color(0xFF2B2F34);
+
+  Color get charcoalCurveMutedColor => const Color(0xFF5B6168);
+
+  Color get charcoalCurveRuleColor => const Color(0xFFCBD0D6);
+
+  /// Unfilled part of a skill rating bar.
+  Color get charcoalCurveTrackColor => const Color(0xFFBFC6CE);
+
+  static const Color boldPillNativeAccentColor = Color(0xFF16181B);
+
+  /// Bold Pill header band, heading pills and timeline dots.
+  Color get boldPillAccentColor {
+    if (corporateColorPresetIndex >= kCorporateColorPresets.length) {
+      return boldPillNativeAccentColor;
+    }
+    return corporateColorPreset.headerColor;
+  }
+
+  Color get boldPillOnAccentColor => const Color(0xFFFFFFFF);
+
+  Color get boldPillTitleColor => const Color(0xFF16181B);
+
+  Color get boldPillMutedColor => const Color(0xFF4A4F55);
+
+  static const Color blueCornerNativeAccentColor = Color(0xFF5B8ED6);
+
+  /// Blue Corner wedge, section icons and timeline dots.
+  Color get blueCornerAccentColor {
+    if (corporateColorPresetIndex >= kCorporateColorPresets.length) {
+      return blueCornerNativeAccentColor;
+    }
+    return corporateColorPreset.headerColor;
+  }
+
+  Color get blueCornerTitleColor => const Color(0xFF3F4550);
+
+  Color get blueCornerMutedColor => const Color(0xFF6B7280);
+
+  Color get blueCornerRuleColor =>
+      Color.lerp(blueCornerAccentColor, Colors.white, 0.55) ??
+      const Color(0xFFAEC6E8);
+
+  static const Color profileTimelineNativeAccentColor = Color(0xFF4A4F55);
+
+  /// Profile Timeline skill bars, date chips and timeline markers.
+  Color get profileTimelineAccentColor {
+    if (corporateColorPresetIndex >= kCorporateColorPresets.length) {
+      return profileTimelineNativeAccentColor;
+    }
+    return corporateColorPreset.headerColor;
+  }
+
+  Color get profileTimelineTitleColor => const Color(0xFF32373D);
+
+  Color get profileTimelineMutedColor => const Color(0xFF63696F);
+
+  Color get profileTimelineRuleColor => const Color(0xFFD5D8DC);
+
+  /// Date chip fill and the unfilled part of a skill bar.
+  Color get profileTimelineChipColor => const Color(0xFFD9DCE0);
 
   Color get detailsSidebarAccentColor => corporateColorPreset.headerColor;
 

@@ -395,7 +395,7 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
   }
 }
 
-enum _MinimalProfileIcon { phone, mail, web, place }
+enum _MinimalProfileIcon { phone, mail, web, place, school, work, person, puzzle }
 
 void _paintMinimalProfileIcon(
   PdfGraphics canvas,
@@ -447,6 +447,46 @@ void _paintMinimalProfileIcon(
         ..lineTo(w * 0.28, h * 0.58)
         ..lineTo(w * 0.72, h * 0.58)
         ..closePath()
+        ..fillPath();
+    case _MinimalProfileIcon.school:
+      // Mortarboard: a flat cap over a short tassel.
+      canvas
+        ..moveTo(w * 0.5, h * 0.86)
+        ..lineTo(w * 0.04, h * 0.60)
+        ..lineTo(w * 0.5, h * 0.34)
+        ..lineTo(w * 0.96, h * 0.60)
+        ..closePath()
+        ..fillPath();
+      canvas
+        ..moveTo(w * 0.22, h * 0.48)
+        ..lineTo(w * 0.22, h * 0.20)
+        ..lineTo(w * 0.78, h * 0.20)
+        ..lineTo(w * 0.78, h * 0.48)
+        ..strokePath();
+    case _MinimalProfileIcon.work:
+      canvas
+        ..drawRect(w * 0.08, h * 0.16, w * 0.84, h * 0.50)
+        ..fillPath();
+      canvas
+        ..drawRect(w * 0.34, h * 0.66, w * 0.32, h * 0.16)
+        ..strokePath();
+    case _MinimalProfileIcon.person:
+      canvas
+        ..drawEllipse(w * 0.5, h * 0.72, w * 0.22, h * 0.22)
+        ..fillPath();
+      canvas
+        ..moveTo(w * 0.14, h * 0.10)
+        ..lineTo(w * 0.86, h * 0.10)
+        ..lineTo(w * 0.72, h * 0.42)
+        ..lineTo(w * 0.28, h * 0.42)
+        ..closePath()
+        ..fillPath();
+    case _MinimalProfileIcon.puzzle:
+      canvas
+        ..drawRect(w * 0.12, h * 0.12, w * 0.46, h * 0.46)
+        ..fillPath();
+      canvas
+        ..drawRect(w * 0.46, h * 0.46, w * 0.42, h * 0.42)
         ..fillPath();
   }
 }

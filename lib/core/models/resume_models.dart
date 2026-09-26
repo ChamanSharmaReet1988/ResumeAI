@@ -47,6 +47,14 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.blueDiagonal;
     case 'minimalProfile':
       return ResumeTemplate.minimalProfile;
+    case 'charcoalCurve':
+      return ResumeTemplate.charcoalCurve;
+    case 'boldPill':
+      return ResumeTemplate.boldPill;
+    case 'blueCorner':
+      return ResumeTemplate.blueCorner;
+    case 'profileTimeline':
+      return ResumeTemplate.profileTimeline;
     default:
       return ResumeTemplate.corporate;
   }
@@ -108,6 +116,22 @@ enum ResumeTemplate {
 
   /// Circular photo header, about me, dated education/experience, skills grid.
   minimalProfile,
+
+  /// Charcoal sidebar with a curved edge, photo overlapping a dark nameplate,
+  /// and a right column ending in rated skill bars.
+  charcoalCurve,
+
+  /// Black photo header, pill-shaped sidebar headings and a dotted timeline
+  /// down the main column.
+  boldPill,
+
+  /// Blue corner wedge behind a circular photo, light contact sidebar and a
+  /// dotted timeline for education and experience.
+  blueCorner,
+
+  /// Centred photo header with a contact grid, then a two-column body with
+  /// rated skills and date-chip experience entries.
+  profileTimeline,
 }
 
 enum CoverLetterTemplate {
@@ -160,6 +184,10 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.softHeader,
   ResumeTemplate.blueDiagonal,
   ResumeTemplate.minimalProfile,
+  ResumeTemplate.charcoalCurve,
+  ResumeTemplate.boldPill,
+  ResumeTemplate.blueCorner,
+  ResumeTemplate.profileTimeline,
   ResumeTemplate.atsStructured,
   ResumeTemplate.atsLatexClassic,
   ResumeTemplate.atsModernFlow,
@@ -212,6 +240,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.softHeader => 'Soft Header',
     ResumeTemplate.blueDiagonal => 'Blue Diagonal',
     ResumeTemplate.minimalProfile => 'Minimal Profile',
+    ResumeTemplate.charcoalCurve => 'Charcoal Curve',
+    ResumeTemplate.boldPill => 'Bold Pill',
+    ResumeTemplate.blueCorner => 'Blue Corner',
+    ResumeTemplate.profileTimeline => 'Profile Timeline',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -255,6 +287,14 @@ extension ResumeTemplateX on ResumeTemplate {
       'Diagonal colour corners with a photo column and timeline sections.',
     ResumeTemplate.minimalProfile =>
       'Circular photo header with about, dated sections, and a skills grid.',
+    ResumeTemplate.charcoalCurve =>
+      'Charcoal sidebar with a curved edge, photo nameplate, and rated skills.',
+    ResumeTemplate.boldPill =>
+      'Black photo header with pill headings and a dotted timeline column.',
+    ResumeTemplate.blueCorner =>
+      'Blue corner wedge, contact sidebar, and timeline education and experience.',
+    ResumeTemplate.profileTimeline =>
+      'Centred photo header with a contact grid, rated skills, and date chips.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -277,6 +317,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.timelineProfile => const Color(0xFF2E3A4C),
     ResumeTemplate.softHeader => const Color(0xFF1B3A5B),
     ResumeTemplate.blueDiagonal => const Color(0xFF2E7BC4),
+    ResumeTemplate.charcoalCurve => const Color(0xFF3A3F45),
+    ResumeTemplate.boldPill => const Color(0xFF16181B),
+    ResumeTemplate.blueCorner => const Color(0xFF5B8ED6),
+    ResumeTemplate.profileTimeline => const Color(0xFF4A4F55),
     ResumeTemplate.minimalProfile => const Color(0xFF111111),
   };
 
@@ -300,6 +344,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.timelineProfile => const Color(0xFFE9ECF1),
     ResumeTemplate.softHeader => const Color(0xFFDCEBFA),
     ResumeTemplate.blueDiagonal => const Color(0xFFDDEBF8),
+    ResumeTemplate.charcoalCurve => const Color(0xFFE4E6E9),
+    ResumeTemplate.boldPill => const Color(0xFFE3E3E4),
+    ResumeTemplate.blueCorner => const Color(0xFFE1EAF8),
+    ResumeTemplate.profileTimeline => const Color(0xFFE8E9EB),
     ResumeTemplate.minimalProfile => const Color(0xFFF4F4F5),
   };
 
@@ -324,6 +372,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.timelineProfile => 'Outfit · timeline profile',
     ResumeTemplate.softHeader => 'Outfit · soft header',
     ResumeTemplate.blueDiagonal => 'Outfit · blue diagonal',
+    ResumeTemplate.charcoalCurve => 'Outfit · charcoal curve',
+    ResumeTemplate.boldPill => 'Outfit · bold pill',
+    ResumeTemplate.blueCorner => 'Outfit · blue corner',
+    ResumeTemplate.profileTimeline => 'Outfit · profile timeline',
     ResumeTemplate.minimalProfile => 'Outfit · minimal profile',
   };
 }

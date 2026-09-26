@@ -40,6 +40,10 @@ part 'resume_pdf/resume_pdf_soft_header_page.dart';
 part 'resume_pdf/resume_pdf_blue_diagonal_page.dart';
 part 'resume_pdf/resume_pdf_cover_letter_extra_pages.dart';
 part 'resume_pdf/resume_pdf_minimal_profile_page.dart';
+part 'resume_pdf/resume_pdf_charcoal_curve_page.dart';
+part 'resume_pdf/resume_pdf_bold_pill_page.dart';
+part 'resume_pdf/resume_pdf_blue_corner_page.dart';
+part 'resume_pdf/resume_pdf_profile_timeline_page.dart';
 
 /// Emits PDF body sections (after Summary/header) in the user's saved builder
 /// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
@@ -7750,6 +7754,47 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.charcoalCurve) {
+      final document = pw.Document();
+      _addCharcoalCurveTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+    if (resume.template == ResumeTemplate.boldPill) {
+      final document = pw.Document();
+      _addBoldPillTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+    if (resume.template == ResumeTemplate.blueCorner) {
+      final document = pw.Document();
+      _addBlueCornerTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+    if (resume.template == ResumeTemplate.profileTimeline) {
+      final document = pw.Document();
+      _addProfileTimelineTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: profileImage,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.softHeader) {
       final document = pw.Document();
       _addSoftHeaderTemplatePage(
@@ -7855,6 +7900,14 @@ class ResumePdfService {
       case ResumeTemplate.blueDiagonal:
         break;
       case ResumeTemplate.minimalProfile:
+        break;
+      case ResumeTemplate.charcoalCurve:
+        break;
+      case ResumeTemplate.boldPill:
+        break;
+      case ResumeTemplate.blueCorner:
+        break;
+      case ResumeTemplate.profileTimeline:
         break;
     }
 
@@ -8089,6 +8142,82 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.charcoalCurve) {
+      final profileImagePath = await ProfileImageStorage.resolvePath(
+        resume.profileImagePath,
+        resume.id,
+      );
+      final document = pw.Document();
+      _addCharcoalCurveTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: await _loadProfileImage(profileImagePath) ??
+            (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
+    if (resume.template == ResumeTemplate.boldPill) {
+      final profileImagePath = await ProfileImageStorage.resolvePath(
+        resume.profileImagePath,
+        resume.id,
+      );
+      final document = pw.Document();
+      _addBoldPillTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: await _loadProfileImage(profileImagePath) ??
+            (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
+    if (resume.template == ResumeTemplate.blueCorner) {
+      final profileImagePath = await ProfileImageStorage.resolvePath(
+        resume.profileImagePath,
+        resume.id,
+      );
+      final document = pw.Document();
+      _addBlueCornerTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: await _loadProfileImage(profileImagePath) ??
+            (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
+    if (resume.template == ResumeTemplate.profileTimeline) {
+      final profileImagePath = await ProfileImageStorage.resolvePath(
+        resume.profileImagePath,
+        resume.id,
+      );
+      final document = pw.Document();
+      _addProfileTimelineTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: await _loadProfileImage(profileImagePath) ??
+            (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.softHeader) {
       final document = pw.Document();
       _addSoftHeaderTemplatePage(
@@ -8223,6 +8352,14 @@ class ResumePdfService {
       case ResumeTemplate.blueDiagonal:
         break;
       case ResumeTemplate.minimalProfile:
+        break;
+      case ResumeTemplate.charcoalCurve:
+        break;
+      case ResumeTemplate.boldPill:
+        break;
+      case ResumeTemplate.blueCorner:
+        break;
+      case ResumeTemplate.profileTimeline:
         break;
     }
 

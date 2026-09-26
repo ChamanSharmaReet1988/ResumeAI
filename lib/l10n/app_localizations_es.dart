@@ -667,6 +667,34 @@ class AppLocalizationsEs extends AppLocalizations {
       'Foto circular, sobre mí, secciones con fechas y cuadrícula de habilidades.';
 
   @override
+  String get templateCharcoalCurve => 'Curva carbón';
+
+  @override
+  String get templateCharcoalCurveCaption =>
+      'Barra lateral curva con placa de nombre y barras de habilidades.';
+
+  @override
+  String get templateBoldPill => 'Píldora audaz';
+
+  @override
+  String get templateBoldPillCaption =>
+      'Encabezado negro con títulos en píldora y columna de línea de tiempo.';
+
+  @override
+  String get templateBlueCorner => 'Esquina azul';
+
+  @override
+  String get templateBlueCornerCaption =>
+      'Esquina azul, barra de contacto y entradas en línea de tiempo.';
+
+  @override
+  String get templateProfileTimeline => 'Perfil con línea de tiempo';
+
+  @override
+  String get templateProfileTimelineCaption =>
+      'Encabezado centrado con habilidades valoradas y fechas en etiqueta.';
+
+  @override
   String get templateStructuredAts => 'ATS estructurado';
 
   @override

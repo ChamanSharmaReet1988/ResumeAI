@@ -1266,6 +1266,54 @@ abstract class AppLocalizations {
   /// **'Circular photo header with about, dated sections, and a skills grid.'**
   String get templateMinimalProfileCaption;
 
+  /// No description provided for @templateCharcoalCurve.
+  ///
+  /// In en, this message translates to:
+  /// **'Charcoal Curve'**
+  String get templateCharcoalCurve;
+
+  /// No description provided for @templateCharcoalCurveCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Curved charcoal sidebar with a photo nameplate and rated skills.'**
+  String get templateCharcoalCurveCaption;
+
+  /// No description provided for @templateBoldPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold Pill'**
+  String get templateBoldPill;
+
+  /// No description provided for @templateBoldPillCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Black photo header with pill headings and a timeline column.'**
+  String get templateBoldPillCaption;
+
+  /// No description provided for @templateBlueCorner.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue Corner'**
+  String get templateBlueCorner;
+
+  /// No description provided for @templateBlueCornerCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue corner wedge, contact sidebar, and timeline entries.'**
+  String get templateBlueCornerCaption;
+
+  /// No description provided for @templateProfileTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Timeline'**
+  String get templateProfileTimeline;
+
+  /// No description provided for @templateProfileTimelineCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Centred photo header with rated skills and date-chip experience.'**
+  String get templateProfileTimelineCaption;
+
   /// No description provided for @templateStructuredAts.
   ///
   /// In en, this message translates to:

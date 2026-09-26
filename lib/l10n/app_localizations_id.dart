@@ -666,6 +666,34 @@ class AppLocalizationsId extends AppLocalizations {
       'Foto bundar, tentang saya, bagian bertanggal, dan kisi keterampilan.';
 
   @override
+  String get templateCharcoalCurve => 'Lengkung Arang';
+
+  @override
+  String get templateCharcoalCurveCaption =>
+      'Sidebar arang melengkung dengan papan nama foto dan bilah keahlian.';
+
+  @override
+  String get templateBoldPill => 'Pil Tebal';
+
+  @override
+  String get templateBoldPillCaption =>
+      'Header foto hitam dengan judul pil dan kolom linimasa.';
+
+  @override
+  String get templateBlueCorner => 'Sudut Biru';
+
+  @override
+  String get templateBlueCornerCaption =>
+      'Sudut biru, sidebar kontak, dan entri linimasa.';
+
+  @override
+  String get templateProfileTimeline => 'Profil Linimasa';
+
+  @override
+  String get templateProfileTimelineCaption =>
+      'Header foto di tengah dengan bilah keahlian dan label tanggal.';
+
+  @override
   String get templateStructuredAts => 'ATS terstruktur';
 
   @override

@@ -666,6 +666,34 @@ class AppLocalizationsPt extends AppLocalizations {
       'Foto circular, sobre mim, seções com datas e grade de competências.';
 
   @override
+  String get templateCharcoalCurve => 'Curva carvão';
+
+  @override
+  String get templateCharcoalCurveCaption =>
+      'Barra lateral curva com placa de nome e barras de habilidades.';
+
+  @override
+  String get templateBoldPill => 'Pílula forte';
+
+  @override
+  String get templateBoldPillCaption =>
+      'Cabeçalho preto com títulos em pílula e coluna de linha do tempo.';
+
+  @override
+  String get templateBlueCorner => 'Canto azul';
+
+  @override
+  String get templateBlueCornerCaption =>
+      'Canto azul, barra de contato e entradas em linha do tempo.';
+
+  @override
+  String get templateProfileTimeline => 'Perfil com linha do tempo';
+
+  @override
+  String get templateProfileTimelineCaption =>
+      'Cabeçalho centrado com habilidades avaliadas e datas em etiqueta.';
+
+  @override
   String get templateStructuredAts => 'ATS estruturado';
 
   @override

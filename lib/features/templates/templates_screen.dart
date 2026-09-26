@@ -748,6 +748,39 @@ const _professionalResumeCards = <_TemplateTileData>[
     caption: 'Circular photo header with about, dated sections, and a skills grid.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'charcoal-curve',
+    resumeTemplate: ResumeTemplate.charcoalCurve,
+    previewKind: _TemplatePreviewKind.charcoalCurveResume,
+    headline: 'Charcoal Curve',
+    caption: 'Curved charcoal sidebar with a photo nameplate and rated skills.',
+    isPremium: false,
+  ),
+
+_TemplateTileData(
+    id: 'bold-pill',
+    resumeTemplate: ResumeTemplate.boldPill,
+    previewKind: _TemplatePreviewKind.boldPillResume,
+    headline: 'Bold Pill',
+    caption: 'Black photo header with pill headings and a timeline column.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'blue-corner',
+    resumeTemplate: ResumeTemplate.blueCorner,
+    previewKind: _TemplatePreviewKind.blueCornerResume,
+    headline: 'Blue Corner',
+    caption: 'Blue corner wedge, contact sidebar, and timeline entries.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'profile-timeline',
+    resumeTemplate: ResumeTemplate.profileTimeline,
+    previewKind: _TemplatePreviewKind.profileTimelineResume,
+    headline: 'Profile Timeline',
+    caption: 'Centred photo header with rated skills and date-chip experience.',
+    isPremium: false,
+  ),
 ];
 
 const _resumeTemplateCards = _professionalResumeCards;
@@ -977,6 +1010,10 @@ class _TemplateTileData {
       'soft-header' => l10n.templateSoftHeader,
       'blue-diagonal' => l10n.templateBlueDiagonal,
       'minimal-profile' => l10n.templateMinimalProfile,
+      'charcoal-curve' => l10n.templateCharcoalCurve,
+      'bold-pill' => l10n.templateBoldPill,
+      'blue-corner' => l10n.templateBlueCorner,
+      'profile-timeline' => l10n.templateProfileTimeline,
       'ats-structured' => l10n.templateStructuredAts,
       'ats-latex-classic' => l10n.templateLatexClassicAts,
       'ats-modern-flow' => l10n.templateModernFlowAts,
@@ -1015,6 +1052,10 @@ class _TemplateTileData {
       'soft-header' => l10n.templateSoftHeaderCaption,
       'blue-diagonal' => l10n.templateBlueDiagonalCaption,
       'minimal-profile' => l10n.templateMinimalProfileCaption,
+      'charcoal-curve' => l10n.templateCharcoalCurveCaption,
+      'bold-pill' => l10n.templateBoldPillCaption,
+      'blue-corner' => l10n.templateBlueCornerCaption,
+      'profile-timeline' => l10n.templateProfileTimelineCaption,
       'ats-structured' => l10n.templateStructuredAtsCaption,
       'ats-latex-classic' => l10n.templateLatexClassicAtsCaption,
       'ats-modern-flow' => l10n.templateModernFlowAtsCaption,
@@ -1053,6 +1094,10 @@ enum _TemplatePreviewKind {
   timelineProfileResume,
   softHeaderResume,
   blueDiagonalResume,
+  charcoalCurveResume,
+  boldPillResume,
+  blueCornerResume,
+  profileTimelineResume,
   minimalProfileResume,
   atsStructuredResume,
   atsSerifRulesResume,
@@ -1190,6 +1235,30 @@ class _TemplatePreviewArt extends StatelessWidget {
       _TemplatePreviewKind.blueDiagonalResume => _ResumeTemplatePreviewArt(
         resume: _applyTemplatePreviewPalette(
           _blueDiagonalTemplateResume,
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.charcoalCurveResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _charcoalCurveTemplateResume,
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.boldPillResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _boldPillTemplateResume,
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.blueCornerResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _blueCornerTemplateResume,
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.profileTimelineResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _profileTimelineTemplateResume,
           paletteSeed,
         ),
       ),
@@ -1409,6 +1478,10 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.timelineProfile => _timelineProfileTemplateResume,
       ResumeTemplate.softHeader => _softHeaderTemplateResume,
       ResumeTemplate.blueDiagonal => _blueDiagonalTemplateResume,
+      ResumeTemplate.charcoalCurve => _charcoalCurveTemplateResume,
+      ResumeTemplate.boldPill => _boldPillTemplateResume,
+      ResumeTemplate.blueCorner => _blueCornerTemplateResume,
+      ResumeTemplate.profileTimeline => _profileTimelineTemplateResume,
       ResumeTemplate.minimalProfile => _minimalProfileTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
@@ -1563,6 +1636,10 @@ ResumeData _applyTemplatePreviewPalette(
       sample.template == ResumeTemplate.softHeader ||
       sample.template == ResumeTemplate.blueDiagonal ||
       sample.template == ResumeTemplate.minimalProfile ||
+      sample.template == ResumeTemplate.charcoalCurve ||
+      sample.template == ResumeTemplate.boldPill ||
+      sample.template == ResumeTemplate.blueCorner ||
+      sample.template == ResumeTemplate.profileTimeline ||
       sample.template == ResumeTemplate.classicSidebar) {
     return sample.copyWith(
       corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
@@ -3046,6 +3123,412 @@ final ResumeData _blueDiagonalTemplateResume = ResumeData(
   ],
 );
 
+final ResumeData _boldPillTemplateResume = ResumeData(
+  id: 'template-bold-pill',
+  title: 'Bold Pill Template',
+  fullName: 'Amara Okafor',
+  jobTitle: 'Graphic Designer',
+  email: 'amara.okafor@email.com',
+  phone: '+1 (646) 555-0198',
+  location: 'Brooklyn, NY',
+  website: 'amaraokafor.studio',
+  summary:
+      'Creative and detail-oriented graphic designer with six years of experience in branding, digital design and visual storytelling. Known for work that lines up with client goals and strengthens brand identity.',
+  template: ResumeTemplate.boldPill,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Graphic Designer',
+      company: 'Halden Creative',
+      startDate: '2021',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Designed marketing materials for digital and print campaigns.',
+        'Partnered with clients to develop new brand identities.',
+        'Managed six concurrent projects under tight deadlines.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Junior Graphic Designer',
+      company: 'Norwood Agency',
+      startDate: '2019',
+      endDate: '2021',
+      description: '',
+      bullets: [
+        'Assisted on logo design and brand refresh projects.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Rimberio University',
+      degree: 'Bachelor of Visual Arts',
+      startDate: '2015',
+      endDate: '2019',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'Motion Graphics',
+    'Social Media Design',
+    'Typography & Layout',
+    'Branding & Identity',
+  ],
+  skillProficiency: const {
+    'motion graphics': 60,
+    'social media design': 85,
+    'typography & layout': 90,
+    'branding & identity': 88,
+  },
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(
+      title: 'Languages',
+      content: 'English\nSpanish\nPortuguese\nFrench',
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.boldPill,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    'custom:0',
+  ],
+);
+
+final ResumeData _blueCornerTemplateResume = ResumeData(
+  id: 'template-blue-corner',
+  title: 'Blue Corner Template',
+  fullName: 'Priya Raman',
+  jobTitle: 'Marketing Manager',
+  email: 'priya.raman@email.com',
+  phone: '+1 (415) 555-0142',
+  location: 'San Jose, CA',
+  website: 'priyaraman.co',
+  summary:
+      'Marketing manager with nine years leading brand, demand and product marketing programmes for consumer and B2B teams. Builds launch plans that connect positioning, sales enablement and measurable pipeline growth.',
+  template: ResumeTemplate.blueCorner,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Product Design Manager',
+      company: 'Arowwai Industries',
+      startDate: '2020',
+      endDate: 'Present',
+      description: '',
+      bullets: [
+        'Ran the launch calendar for three product lines with sales and support.',
+        'Grew qualified pipeline 38% over two years.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Manager',
+      company: 'Arowwai Industries',
+      startDate: '2017',
+      endDate: '2020',
+      description: '',
+      bullets: [
+        'Owned positioning and campaign planning for the retail portfolio.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Specialist',
+      company: 'Borcelle Group',
+      startDate: '2015',
+      endDate: '2017',
+      description: '',
+      bullets: [
+        'Built the competitive library used by 60 sellers.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Borcelle University',
+      degree: 'Master of Business Management',
+      startDate: '2013',
+      endDate: '2015',
+      score: '',
+    ),
+    EducationItem(
+      institution: 'Borcelle University',
+      degree: 'Bachelor of Business Management',
+      startDate: '2009',
+      endDate: '2013',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'Management Skills',
+    'Creativity',
+    'Digital Marketing',
+    'Negotiation',
+    'Critical Thinking',
+    'Leadership',
+  ],
+  skillProficiency: const {
+    'management skills': 92,
+    'creativity': 85,
+    'digital marketing': 80,
+    'negotiation': 75,
+    'critical thinking': 88,
+    'leadership': 90,
+  },
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(
+      title: 'References',
+      content:
+          'Harumi Kobayashi — Wardiere Inc. / CEO — 123-456-7890\nBailey Dupont — Wardiere Inc. / CEO — 123-456-7891',
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.blueCorner,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    'custom:0',
+  ],
+);
+
+final ResumeData _profileTimelineTemplateResume = ResumeData(
+  id: 'template-profile-timeline',
+  title: 'Profile Timeline Template',
+  fullName: 'Marcus Bell',
+  jobTitle: 'Marketing Manager',
+  email: 'marcus.bell@email.com',
+  phone: '+1 (503) 555-0121',
+  location: 'Portland, OR',
+  website: 'marcusbell.work',
+  summary:
+      'Marketing manager who turns brand strategy into campaigns teams can run. Eight years across product launches, lifecycle marketing and partner programmes for software and retail brands.',
+  template: ResumeTemplate.profileTimeline,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Product Design Manager',
+      company: 'Arowwai Industries',
+      startDate: '2020',
+      endDate: '2023',
+      description: '',
+      bullets: [
+        'Led positioning and launch plans for three product lines.',
+        'Lifted trial-to-paid conversion 22% with a new lifecycle programme.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Manager',
+      company: 'Arowwai Industries',
+      startDate: '2019',
+      endDate: '2020',
+      description: '',
+      bullets: [
+        'Ran the quarterly campaign calendar with sales and support.',
+      ],
+    ),
+    WorkExperience(
+      role: 'Marketing Manager',
+      company: 'Lumen Retail',
+      startDate: '2017',
+      endDate: '2019',
+      description: '',
+      bullets: [
+        'Grew qualified pipeline 31% across two regions.',
+      ],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Wardiere University',
+      degree: 'Master of Business Management',
+      startDate: '2015',
+      endDate: '2017',
+      score: '',
+    ),
+    EducationItem(
+      institution: 'Wardiere University',
+      degree: 'Bachelor of Business Management',
+      startDate: '2011',
+      endDate: '2015',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'Management Skills',
+    'Creativity',
+    'Digital Marketing',
+    'Negotiation',
+    'Critical Thinking',
+  ],
+  skillProficiency: const {
+    'management skills': 90,
+    'creativity': 82,
+    'digital marketing': 78,
+    'negotiation': 70,
+    'critical thinking': 86,
+  },
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(
+      title: 'Language',
+      content: 'English\nSpanish',
+    ),
+    CustomSectionItem(
+      title: 'References',
+      content:
+          'Harumi Kobayashi — Wardiere Inc. / CEO — 123-456-7890\nBailey Dupont — Wardiere Inc. / CEO — 123-456-7891',
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.profileTimeline,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    'custom:0',
+    'custom:1',
+  ],
+);
+
+final ResumeData _charcoalCurveTemplateResume = ResumeData(
+  id: 'template-charcoal-curve',
+  title: 'Charcoal Curve Template',
+  fullName: 'Ileana Moretti',
+  jobTitle: 'Graphic Designer',
+  email: 'ileana.moretti@email.com',
+  phone: '+1 (312) 555-0176',
+  location: '48 Harbor Lane, Chicago, IL',
+  website: 'ileanamoretti.design',
+  summary:
+      'Graphic designer with expertise in branding and digital design. Skilled in crafting engaging visuals that meet client goals across print, web and social.',
+  template: ResumeTemplate.charcoalCurve,
+  workExperiences: const [
+    WorkExperience(
+      role: 'Senior Graphic Designer',
+      company: 'Larana Studio',
+      startDate: '2022',
+      endDate: 'Present',
+      description: 'Designed marketing materials that lifted client engagement 31%.',
+      bullets: [],
+    ),
+    WorkExperience(
+      role: 'Graphic Designer',
+      company: 'Wardiere Studio',
+      startDate: '2019',
+      endDate: '2022',
+      description: 'Developed branding projects for clients across six industries.',
+      bullets: [],
+    ),
+    WorkExperience(
+      role: 'Freelance Graphic Designer',
+      company: 'Rimberio Studio',
+      startDate: '2017',
+      endDate: '2019',
+      description: 'Built custom designs for websites, social media and print.',
+      bullets: [],
+    ),
+  ],
+  education: const [
+    EducationItem(
+      institution: 'Borcelle University',
+      degree: 'Master of Visual Communication',
+      startDate: '2015',
+      endDate: '2017',
+      score: '',
+    ),
+    EducationItem(
+      institution: 'Larana University',
+      degree: 'Bachelor of Graphic Design',
+      startDate: '2011',
+      endDate: '2015',
+      score: '',
+    ),
+  ],
+  skills: const [
+    'Graphic Design',
+    'UI/UX Design',
+    'Video Editing',
+    'Videography',
+    'Illustration',
+  ],
+  skillProficiency: const {
+    'graphic design': 95,
+    'ui/ux design': 80,
+    'video editing': 62,
+    'videography': 72,
+    'illustration': 88,
+  },
+  projects: const [],
+  customSections: const [
+    CustomSectionItem(
+      title: 'About Me',
+      content:
+          'I am a graphic designer who enjoys creating clean, eye-catching work that brings brand ideas to life.',
+    ),
+    CustomSectionItem(
+      title: 'Languages',
+      content: 'English | Fluent\nFrench | Fluent\nGerman | Intermediate\nSpanish | Basic',
+    ),
+  ],
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  githubLink: '',
+  linkedinLink: '',
+  profileImagePath: '',
+  resumeTextFont: ResumeTextFont.inter,
+  includeWorkInResume: true,
+  includeEducationInResume: true,
+  includeSkillsInResume: true,
+  includeProjectsInResume: false,
+  bodyFontPt: kResumeBodyFontPtDefault,
+  corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+    ResumeTemplate.charcoalCurve,
+  ),
+  builderSectionOrder: const [
+    ResumeBuilderSectionIds.education,
+    ResumeBuilderSectionIds.work,
+    ResumeBuilderSectionIds.skills,
+    ResumeBuilderSectionIds.projects,
+    'custom:0',
+    'custom:1',
+  ],
+);
+
 final ResumeData _minimalProfileTemplateResume = ResumeData(
   id: 'template-minimal-profile',
   title: 'Minimal Profile Template',
@@ -3188,6 +3671,10 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.softHeader => true,
           ResumeTemplate.blueDiagonal => true,
           ResumeTemplate.minimalProfile => true,
+          ResumeTemplate.charcoalCurve => true,
+          ResumeTemplate.boldPill => true,
+          ResumeTemplate.blueCorner => true,
+          ResumeTemplate.profileTimeline => true,
           _ => false,
         };
         final bottomInset = fullHeightTemplate
@@ -7378,6 +7865,10 @@ ResumeData galleryDetailSampleForTest(ResumeTemplate template) =>
       ResumeTemplate.timelineProfile => _timelineProfileTemplateResume,
       ResumeTemplate.softHeader => _softHeaderTemplateResume,
       ResumeTemplate.blueDiagonal => _blueDiagonalTemplateResume,
+      ResumeTemplate.charcoalCurve => _charcoalCurveTemplateResume,
+      ResumeTemplate.boldPill => _boldPillTemplateResume,
+      ResumeTemplate.blueCorner => _blueCornerTemplateResume,
+      ResumeTemplate.profileTimeline => _profileTimelineTemplateResume,
       ResumeTemplate.minimalProfile => _minimalProfileTemplateResume,
       ResumeTemplate.atsSerifRules => _atsSerifRulesTemplateResume,
       ResumeTemplate.atsProfessionalBlue => _atsProfessionalBlueTemplateResume,
