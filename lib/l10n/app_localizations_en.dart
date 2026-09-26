@@ -571,6 +571,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get atsResumes => 'ATS Resumes';
 
   @override
+  String get allCoverLetters => 'All';
+
+  @override
+  String get professionalCoverLetters => 'Professional';
+
+  @override
+  String get creativeCoverLetters => 'Creative';
+
+  @override
   String get useTemplate => 'Use template';
 
   @override

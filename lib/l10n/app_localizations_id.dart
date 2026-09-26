@@ -571,6 +571,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get atsResumes => 'Resume ATS';
 
   @override
+  String get allCoverLetters => 'Semua';
+
+  @override
+  String get professionalCoverLetters => 'Profesional';
+
+  @override
+  String get creativeCoverLetters => 'Kreatif';
+
+  @override
   String get useTemplate => 'Gunakan template';
 
   @override

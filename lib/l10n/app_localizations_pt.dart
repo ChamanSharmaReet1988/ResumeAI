@@ -571,6 +571,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get atsResumes => 'Currículos ATS';
 
   @override
+  String get allCoverLetters => 'Todos';
+
+  @override
+  String get professionalCoverLetters => 'Profissional';
+
+  @override
+  String get creativeCoverLetters => 'Criativo';
+
+  @override
   String get useTemplate => 'Usar modelo';
 
   @override

@@ -1098,6 +1098,24 @@ abstract class AppLocalizations {
   /// **'ATS Resumes'**
   String get atsResumes;
 
+  /// No description provided for @allCoverLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allCoverLetters;
+
+  /// No description provided for @professionalCoverLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional'**
+  String get professionalCoverLetters;
+
+  /// No description provided for @creativeCoverLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'Creative'**
+  String get creativeCoverLetters;
+
   /// No description provided for @useTemplate.
   ///
   /// In en, this message translates to:

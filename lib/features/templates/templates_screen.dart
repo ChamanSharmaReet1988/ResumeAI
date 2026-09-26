@@ -44,9 +44,12 @@ class TemplatesScreen extends StatefulWidget {
 
 enum _ResumeCategory { all, professional, ats }
 
+enum _CoverLetterCategory { all, professional, creative }
+
 class _TemplatesScreenState extends State<TemplatesScreen> {
   _TemplateSegment _selectedSegment = _TemplateSegment.resume;
   _ResumeCategory _selectedCategory = _ResumeCategory.all;
+  _CoverLetterCategory _selectedCoverLetterCategory = _CoverLetterCategory.all;
   final Map<String, GlobalKey> _tileKeys = {};
   var _didAutoScrollToSelection = false;
 
@@ -216,17 +219,26 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       _ResumeCategory.professional => _resumeTemplateCards,
       _ResumeCategory.ats => _atsResumeCards,
     };
+    final coverLetterCards = switch (_selectedCoverLetterCategory) {
+      _CoverLetterCategory.all => _coverLetterTemplateCards,
+      _CoverLetterCategory.professional => _professionalCoverLetterCards,
+      _CoverLetterCategory.creative => _creativeCoverLetterCards,
+    };
     final visibleItems = isCoverLetterTemplatePicker
-        ? _coverLetterTemplateCards
+        ? coverLetterCards
         : isResumeTemplatePicker
         ? resumeCards
         : _selectedSegment == _TemplateSegment.resume
         ? resumeCards
-        : _coverLetterTemplateCards;
+        : coverLetterCards;
     final showResumeTemplatesSection =
         isResumeTemplatePicker ||
         (!isCoverLetterTemplatePicker &&
             _selectedSegment == _TemplateSegment.resume);
+    final showCoverLetterTemplatesSection =
+        isCoverLetterTemplatePicker ||
+        (!isResumeTemplatePicker &&
+            _selectedSegment == _TemplateSegment.coverLetter);
     final isCupertino = Theme.of(context).platform == TargetPlatform.iOS;
     final blue = Theme.of(context).colorScheme.primary;
     final inactiveColor = Theme.of(context).colorScheme.onSurfaceVariant;
@@ -378,6 +390,35 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                           setState(() => _selectedCategory = category),
                     ),
                     if (category != _ResumeCategory.values.last)
+                      const SizedBox(width: 10),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          if (showCoverLetterTemplatesSection) ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  for (final category in _CoverLetterCategory.values) ...[
+                    ChoiceChip(
+                      key: Key('cover-letter-category-${category.name}'),
+                      label: Text(switch (category) {
+                        _CoverLetterCategory.all => l10n.allCoverLetters,
+                        _CoverLetterCategory.professional =>
+                          l10n.professionalCoverLetters,
+                        _CoverLetterCategory.creative =>
+                          l10n.creativeCoverLetters,
+                      }),
+                      selected: _selectedCoverLetterCategory == category,
+                      onSelected: (_) => setState(
+                        () => _selectedCoverLetterCategory = category,
+                      ),
+                    ),
+                    if (category != _CoverLetterCategory.values.last)
                       const SizedBox(width: 10),
                   ],
                 ],
@@ -778,7 +819,7 @@ const _atsResumeCards = <_TemplateTileData>[
   ),
 ];
 
-const _coverLetterTemplateCards = <_TemplateTileData>[
+const _professionalCoverLetterCards = <_TemplateTileData>[
   _TemplateTileData(
     id: 'executive-note',
     coverLetterTemplate: CoverLetterTemplate.executiveNote,
@@ -787,6 +828,18 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
     caption: 'Clean professional cover letter with a strong header block.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'classic-business-letter',
+    coverLetterTemplate: CoverLetterTemplate.classicBusinessLetter,
+    previewKind: _TemplatePreviewKind.classicBusinessCoverLetter,
+    headline: 'Classic Business',
+    caption:
+        'Traditional business letter: date, recipient block, and left-aligned body.',
+    isPremium: false,
+  ),
+];
+
+const _creativeCoverLetterCards = <_TemplateTileData>[
   _TemplateTileData(
     id: 'minimal-letter',
     coverLetterTemplate: CoverLetterTemplate.minimalLetter,
@@ -804,15 +857,11 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
         'Oversized name, soft mint background, and a clean modern letter body.',
     isPremium: false,
   ),
-  _TemplateTileData(
-    id: 'classic-business-letter',
-    coverLetterTemplate: CoverLetterTemplate.classicBusinessLetter,
-    previewKind: _TemplatePreviewKind.classicBusinessCoverLetter,
-    headline: 'Classic Business',
-    caption:
-        'Traditional business letter: date, recipient block, and left-aligned body.',
-    isPremium: false,
-  ),
+];
+
+const _coverLetterTemplateCards = <_TemplateTileData>[
+  ..._professionalCoverLetterCards,
+  ..._creativeCoverLetterCards,
 ];
 
 class _TemplateTileData {
