@@ -5,6 +5,8 @@ part of 'package:resume_app/core/services/resume_services.dart';
 /// the main column.
 const double _slateSidebarRailWidthPt = 196.0;
 const double _slateSidebarRailInsetPt = 24.0;
+/// Gap between rail text and the white main column.
+const double _slateSidebarRailRightInsetPt = 32.0;
 const double _slateSidebarMainLeftPt = _slateSidebarRailWidthPt + 28.0;
 const double _slateSidebarMainRightPt = 34.0;
 const double _slateSidebarPageTopPt = 40.0;
@@ -208,7 +210,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
       final railValue = style(ResumeFontWeight.w400, detailPt - 0.5, onRail);
       final railItem = style(ResumeFontWeight.w400, detailPt, onRail);
 
-      // Heading rule runs to the rail's right edge, like the reference.
+      // Section headings with underline, inset with the rest of the rail.
       pw.Widget heading(String title) => pw.Container(
         width: double.infinity,
         margin: const pw.EdgeInsets.only(top: 22, bottom: 12),
@@ -241,12 +243,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          // The rail column runs to the rail's right edge (so heading rules
-          // do too); pad the photo by the left inset to centre it in the rail.
-          pw.Padding(
-            padding: const pw.EdgeInsets.only(right: _slateSidebarRailInsetPt),
-            child: pw.Center(child: avatar()),
-          ),
+          pw.Center(child: avatar()),
           pw.SizedBox(height: 6),
           heading('Contact'),
           if (contacts.isEmpty)
@@ -326,7 +323,10 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                     top: _slateSidebarPageTopPt,
                     bottom: _slateSidebarPageBottomPt,
                     child: pw.SizedBox(
-                      width: _slateSidebarRailWidthPt - _slateSidebarRailInsetPt,
+                      width:
+                          _slateSidebarRailWidthPt -
+                          _slateSidebarRailInsetPt -
+                          _slateSidebarRailRightInsetPt,
                       child: pw.ClipRect(child: rail),
                     ),
                   ),

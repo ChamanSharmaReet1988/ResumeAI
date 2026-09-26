@@ -7258,6 +7258,8 @@ class _SlateSidebarPreview extends StatelessWidget {
   static const double _pageHeight = 841.89;
   static const double _railWidth = 196;
   static const double _railInset = 24;
+  /// Gap between rail text and the white main column.
+  static const double _railRightInset = 32;
   static const double _avatarSize = 104;
   static const double _metaColumn = 104;
   static const double _columnGap = 14;
@@ -7400,22 +7402,18 @@ class _SlateSidebarPreview extends StatelessWidget {
     final rail = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Centre the photo in the rail, not in the inset content column.
-        Padding(
-          padding: const EdgeInsets.only(right: _railInset),
-          child: Center(
-            child: ClipOval(
-              child: SizedBox(
-                width: _avatarSize,
-                height: _avatarSize,
-                child: hasProfileImage
-                    ? Image.file(
-                        File(avatarPath),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => placeholder,
-                      )
-                    : placeholder,
-              ),
+        Center(
+          child: ClipOval(
+            child: SizedBox(
+              width: _avatarSize,
+              height: _avatarSize,
+              child: hasProfileImage
+                  ? Image.file(
+                      File(avatarPath),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => placeholder,
+                    )
+                  : placeholder,
             ),
           ),
         ),
@@ -7630,7 +7628,7 @@ class _SlateSidebarPreview extends StatelessWidget {
                     Positioned(
                       left: _railInset,
                       top: 40,
-                      width: _railWidth - _railInset,
+                      width: _railWidth - _railInset - _railRightInset,
                       bottom: 36,
                       child: ClipRect(
                         child: SingleChildScrollView(
