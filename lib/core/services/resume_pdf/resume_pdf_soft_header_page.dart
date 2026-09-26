@@ -1,9 +1,10 @@
 part of 'package:resume_app/core/services/resume_services.dart';
 
 /// Soft Header: tinted header band with a centred nameplate, then two columns
-/// split by a divider — contact, education and short lists on the left; profile,
-/// two-column skills and experience on the right. When the left column finishes
-/// (page 1 or 2), later pages use the full page width with no divider.
+/// split by a divider — contact, education and languages on the left; profile,
+/// two-column skills and experience on the right. The left column continues
+/// across pages until those details are fully shown; later pages use the full
+/// page width with no divider.
 const double _softHeaderBandHeightPt = 150.0;
 const double _softHeaderSidePt = 40.0;
 const double _softHeaderLeftColumnWidthPt = 196.0;
@@ -16,12 +17,9 @@ const double _softHeaderContentInsetPt =
 const double _softHeaderTopPt = 30.0;
 const double _softHeaderBottomPt = 34.0;
 
-/// Custom sections that read best in the left column.
-final RegExp _softHeaderLeftSectionTitle = RegExp(
-  r'^(languages?|references?|referees?|awards?|certifications?|certificates?|'
-  r'interests?|hobbies)$',
-  caseSensitive: false,
-);
+/// Only languages live in the Soft Header left column (with contact + education).
+bool _softHeaderIsLeftSection(CustomSectionItem item) =>
+    _isClassicSidebarLanguagesTitle(item.title);
 
 /// One page of left-column content.
 class _SoftHeaderSidebarSlice {
@@ -100,10 +98,10 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
     final education = resume.visibleEducation;
     final projects = resume.visibleProjects;
     final leftSections = resume.visibleCustomSections
-        .where((item) => _softHeaderLeftSectionTitle.hasMatch(item.title.trim()))
+        .where(_softHeaderIsLeftSection)
         .toList();
     final mainSections = resume.visibleCustomSections
-        .where((item) => !leftSections.contains(item))
+        .where((item) => !_softHeaderIsLeftSection(item))
         .toList();
 
     pw.Widget sectionTitle(String title) => pw.Container(
@@ -289,18 +287,17 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
 
     for (final section in leftSections) {
       final lines = _slateSidebarRailSectionLines(section);
+      // Heading + each language line as its own block so long lists paginate.
       leftBlocks.add((
-        widget: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            sectionTitle(section.title.trim()),
-            for (final line in lines) bullet(line),
-          ],
-        ),
-        height: sectionHeadingHeight() +
-            lines.length * (detailPt * lineH + 3) +
-            4,
+        widget: sectionTitle(section.title.trim()),
+        height: sectionHeadingHeight(),
       ));
+      for (final line in lines) {
+        leftBlocks.add((
+          widget: bullet(line),
+          height: detailPt * lineH + 3,
+        ));
+      }
     }
 
     final page1LeftBudget = PdfPageFormat.a4.height -
@@ -323,7 +320,6 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
         var used = 0.0;
         var educationHeadingAdded = false;
 
-        // Inject Education heading once when the first education block is taken.
         while (index < leftBlocks.length) {
           final block = leftBlocks[index];
           final needsEduHeading = index == firstEducationBlockIndex &&
@@ -344,7 +340,11 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
           used += block.height;
           index++;
         }
-        if (chunk.isEmpty) break;
+        if (chunk.isEmpty) {
+          // Force progress with an oversized block.
+          chunk.add(leftBlocks[index].widget);
+          index++;
+        }
         sidebarSlices.add(_SoftHeaderSidebarSlice(chunk));
         isFirstSlice = false;
       }
@@ -354,6 +354,109 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
 
     pw.Widget mainWrap(pw.Widget child) =>
         _softHeaderMainPad(child, sidebarPageCount: sidebarPageCount);
+
+    pw.Widget sidebarBackground(int pageNumber) {
+      final firstPage = pageNumber == 1;
+      final showSidebar =
+          sidebarPageCount > 0 && pageNumber <= sidebarPageCount;
+      final columnsTop =
+          firstPage ? _softHeaderBandHeightPt + 16 : _softHeaderTopPt;
+      return pw.FullPage(
+        ignoreMargins: true,
+        child: pw.Stack(
+          children: [
+            if (firstPage)
+              pw.Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                child: pw.Container(
+                  height: _softHeaderBandHeightPt,
+                  color: bandColor,
+                  alignment: pw.Alignment.center,
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.SizedBox(width: _softHeaderSidePt),
+                      pw.Expanded(child: _softHeaderRule(accent)),
+                      pw.SizedBox(width: 18),
+                      pw.Column(
+                        mainAxisSize: pw.MainAxisSize.min,
+                        children: [
+                          pw.Text(
+                            _displayName(resume).toUpperCase(),
+                            style: style(
+                              ResumeFontWeight.w700,
+                              26,
+                              titleColor,
+                              letterSpacing: 1.4,
+                            ),
+                          ),
+                          if (resume.jobTitle.trim().isNotEmpty) ...[
+                            pw.SizedBox(height: 6),
+                            pw.Text(
+                              resume.jobTitle.trim(),
+                              style: style(
+                                ResumeFontWeight.w400,
+                                14,
+                                mutedColor,
+                                letterSpacing: 1.6,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      pw.SizedBox(width: 18),
+                      pw.Expanded(
+                        child: _softHeaderRule(accent, mirrored: true),
+                      ),
+                      pw.SizedBox(width: _softHeaderSidePt),
+                    ],
+                  ),
+                ),
+              ),
+            if (showSidebar) ...[
+              pw.Positioned(
+                left: _softHeaderDividerXPt,
+                top: columnsTop,
+                bottom: _softHeaderBottomPt,
+                child: pw.Container(width: 0.8, color: ruleColor),
+              ),
+              pw.Positioned(
+                left: _softHeaderDividerXPt - 3,
+                top: columnsTop + 60,
+                child: pw.Container(
+                  width: 7,
+                  height: 7,
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.white,
+                    shape: pw.BoxShape.circle,
+                    border: pw.Border.all(color: accent, width: 1),
+                  ),
+                ),
+              ),
+              pw.Positioned(
+                left: _softHeaderSidePt,
+                top: columnsTop,
+                bottom: _softHeaderBottomPt,
+                child: pw.SizedBox(
+                  width: _softHeaderLeftColumnWidthPt,
+                  child: pw.ClipRect(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: sidebarSlices[pageNumber - 1].blocks,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    final pagesBefore = document.document.pdfPageList.pages.length;
 
     document.addPage(
       pw.MultiPage(
@@ -367,107 +470,8 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
             _softHeaderSidePt,
             _softHeaderBottomPt,
           ),
-          buildBackground: (context) {
-            final firstPage = context.pageNumber == 1;
-            final showSidebar = context.pageNumber <= sidebarPageCount;
-            final columnsTop = firstPage
-                ? _softHeaderBandHeightPt + 16
-                : _softHeaderTopPt;
-            return pw.FullPage(
-              ignoreMargins: true,
-              child: pw.Stack(
-                children: [
-                  if (firstPage)
-                    pw.Positioned(
-                      left: 0,
-                      right: 0,
-                      top: 0,
-                      child: pw.Container(
-                        height: _softHeaderBandHeightPt,
-                        color: bandColor,
-                        alignment: pw.Alignment.center,
-                        child: pw.Row(
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          crossAxisAlignment: pw.CrossAxisAlignment.center,
-                          children: [
-                            pw.SizedBox(width: _softHeaderSidePt),
-                            pw.Expanded(child: _softHeaderRule(accent)),
-                            pw.SizedBox(width: 18),
-                            pw.Column(
-                              mainAxisSize: pw.MainAxisSize.min,
-                              children: [
-                                pw.Text(
-                                  _displayName(resume).toUpperCase(),
-                                  style: style(
-                                    ResumeFontWeight.w700,
-                                    26,
-                                    titleColor,
-                                    letterSpacing: 1.4,
-                                  ),
-                                ),
-                                if (resume.jobTitle.trim().isNotEmpty) ...[
-                                  pw.SizedBox(height: 6),
-                                  pw.Text(
-                                    resume.jobTitle.trim(),
-                                    style: style(
-                                      ResumeFontWeight.w400,
-                                      14,
-                                      mutedColor,
-                                      letterSpacing: 1.6,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            pw.SizedBox(width: 18),
-                            pw.Expanded(
-                              child: _softHeaderRule(accent, mirrored: true),
-                            ),
-                            pw.SizedBox(width: _softHeaderSidePt),
-                          ],
-                        ),
-                      ),
-                    ),
-                  if (showSidebar) ...[
-                    pw.Positioned(
-                      left: _softHeaderDividerXPt,
-                      top: columnsTop,
-                      bottom: _softHeaderBottomPt,
-                      child: pw.Container(width: 0.8, color: ruleColor),
-                    ),
-                    pw.Positioned(
-                      left: _softHeaderDividerXPt - 3,
-                      top: columnsTop + 60,
-                      child: pw.Container(
-                        width: 7,
-                        height: 7,
-                        decoration: pw.BoxDecoration(
-                          color: PdfColors.white,
-                          shape: pw.BoxShape.circle,
-                          border: pw.Border.all(color: accent, width: 1),
-                        ),
-                      ),
-                    ),
-                    pw.Positioned(
-                      left: _softHeaderSidePt,
-                      top: columnsTop,
-                      bottom: _softHeaderBottomPt,
-                      child: pw.SizedBox(
-                        width: _softHeaderLeftColumnWidthPt,
-                        child: pw.ClipRect(
-                          child: pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children:
-                                sidebarSlices[context.pageNumber - 1].blocks,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            );
-          },
+          buildBackground: (context) =>
+              sidebarBackground(context.pageNumber),
         ),
         build: (context) => [
           mainWrap(
@@ -557,6 +561,28 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
         ],
       ),
     );
+
+    // MultiPage only creates pages for main content. If contact/education/
+    // languages still need sidebar pages, append them so nothing is clipped.
+    final multiPageCount =
+        document.document.pdfPageList.pages.length - pagesBefore;
+    for (var i = multiPageCount; i < sidebarPageCount; i++) {
+      document.addPage(
+        pw.Page(
+          pageTheme: pw.PageTheme(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.fromLTRB(
+              _softHeaderMainLeftPt,
+              _softHeaderTopPt,
+              _softHeaderSidePt,
+              _softHeaderBottomPt,
+            ),
+            buildBackground: (context) => sidebarBackground(i + 1),
+          ),
+          build: (context) => pw.SizedBox(),
+        ),
+      );
+    }
   }
 }
 

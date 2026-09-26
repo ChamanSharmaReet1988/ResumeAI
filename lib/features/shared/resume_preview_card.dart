@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -8416,7 +8417,8 @@ class _TimelineProfilePreview extends StatelessWidget {
 }
 
 /// Soft Header live preview, laid out on an A4 point canvas with the same
-/// metrics as the PDF page.
+/// metrics as the PDF page. Contact, education and languages stay in the left
+/// column across as many pages as needed; everything else is in the main column.
 class _SoftHeaderPreview extends StatelessWidget {
   const _SoftHeaderPreview({
     required this.resume,
@@ -8433,12 +8435,18 @@ class _SoftHeaderPreview extends StatelessWidget {
   static const double _leftWidth = 196;
   static const double _dividerX = _side + _leftWidth + 18;
   static const double _mainLeft = _dividerX + 24;
+  static const double _bottom = 34;
 
-  static final RegExp _leftSectionTitle = RegExp(
-    r'^(languages?|references?|referees?|awards?|certifications?|'
-    r'certificates?|interests?|hobbies)$',
-    caseSensitive: false,
-  );
+  bool _isLanguagesSection(CustomSectionItem item) {
+    final normalized = item.title.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z]'),
+      '',
+    );
+    return normalized == 'language' ||
+        normalized == 'languages' ||
+        normalized == 'langueage' ||
+        normalized == 'langueages';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -8452,6 +8460,7 @@ class _SoftHeaderPreview extends StatelessWidget {
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final detailPt = bodyPt - 1.5;
+    final lineH = ResumeTypography.bodyTextLineHeight;
 
     TextStyle style(
       FontWeight weight,
@@ -8464,7 +8473,7 @@ class _SoftHeaderPreview extends StatelessWidget {
       fontSize: size,
       color: color,
       letterSpacing: letterSpacing,
-      height: ResumeTypography.bodyTextLineHeight,
+      height: lineH,
     );
 
     final entryTitle = style(FontWeight.w600, bodyPt, titleColor);
@@ -8532,26 +8541,46 @@ class _SoftHeaderPreview extends StatelessWidget {
       resume.githubLink,
     ]);
     final education = resume.visibleEducation;
-    final leftSections = resume.visibleCustomSections
-        .where((item) => _leftSectionTitle.hasMatch(item.title.trim()))
+    final languageSections = resume.visibleCustomSections
+        .where(_isLanguagesSection)
         .toList();
 
-    final leftColumn = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (contacts.isNotEmpty) ...[
-          sectionTitle('Contact'),
-          for (final value in contacts) bullet(value, textStyle: meta),
-        ],
-        if (education.isNotEmpty) ...[
-          sectionTitle('Education'),
-          for (final item in education) ...[
-            if (educationDateRangeLabel(
-              item.startDate,
-              item.endDate,
-            ).isNotEmpty)
+    double sectionHeadingHeight() => 18 + 10 + 24;
+
+    // Discrete left blocks with heights — same pagination idea as the PDF.
+    final leftBlocks = <({Widget widget, double height})>[];
+    if (contacts.isNotEmpty) {
+      leftBlocks.add((
+        widget: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            sectionTitle('Contact'),
+            for (final value in contacts) bullet(value, textStyle: meta),
+          ],
+        ),
+        height: sectionHeadingHeight() +
+            contacts.length * (detailPt * lineH + 3) +
+            4,
+      ));
+    }
+
+    final firstEducationIndex = education.isEmpty ? -1 : leftBlocks.length;
+    for (final item in education) {
+      final dateLabel = educationDateRangeLabel(item.startDate, item.endDate);
+      final degree = item.degree.trim();
+      final score = item.score.trim();
+      var h = 9.0;
+      if (dateLabel.isNotEmpty) h += detailPt * lineH;
+      h += detailPt * lineH + 3;
+      if (degree.isNotEmpty) h += detailPt * lineH + 3;
+      if (score.isNotEmpty) h += detailPt * lineH + 3;
+      leftBlocks.add((
+        widget: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (dateLabel.isNotEmpty)
               Text(
-                educationDateRangeLabel(item.startDate, item.endDate),
+                dateLabel,
                 style: style(FontWeight.w600, detailPt, titleColor),
               ),
             Text(
@@ -8559,23 +8588,73 @@ class _SoftHeaderPreview extends StatelessWidget {
               style: style(FontWeight.w700, detailPt, titleColor),
             ),
             const SizedBox(height: 3),
-            if (item.degree.trim().isNotEmpty) bullet(item.degree.trim()),
-            if (item.score.trim().isNotEmpty) bullet(item.score.trim()),
+            if (degree.isNotEmpty) bullet(degree),
+            if (score.isNotEmpty) bullet(score),
             const SizedBox(height: 9),
           ],
-        ],
-        for (final section in leftSections) ...[
-          sectionTitle(section.title.trim()),
-          for (final line
-              in nonEmpty(
-                section.bullets.any((b) => b.trim().isNotEmpty)
-                    ? section.bullets
-                    : section.content.split('\n'),
-              ))
-            bullet(line),
-        ],
-      ],
-    );
+        ),
+        height: h,
+      ));
+    }
+
+    for (final section in languageSections) {
+      final lines = nonEmpty(
+        section.bullets.any((b) => b.trim().isNotEmpty)
+            ? section.bullets
+            : section.content.split('\n'),
+      );
+      leftBlocks.add((
+        widget: sectionTitle(section.title.trim()),
+        height: sectionHeadingHeight(),
+      ));
+      for (final line in lines) {
+        leftBlocks.add((
+          widget: bullet(line),
+          height: detailPt * lineH + 3,
+        ));
+      }
+    }
+
+    final page1Budget = _pageHeight - _bandHeight - 16 - _bottom;
+    final contBudget = _pageHeight - 30 - _bottom;
+    final sidebarSlices = <List<Widget>>[];
+    if (leftBlocks.isNotEmpty) {
+      var index = 0;
+      var isFirst = true;
+      while (index < leftBlocks.length) {
+        final budget = isFirst ? page1Budget : contBudget;
+        final chunk = <Widget>[];
+        var used = 0.0;
+        var educationHeadingAdded = false;
+        while (index < leftBlocks.length) {
+          final block = leftBlocks[index];
+          final needsEdu = index == firstEducationIndex &&
+              firstEducationIndex >= 0 &&
+              !educationHeadingAdded;
+          final headingExtra = needsEdu ? sectionHeadingHeight() : 0.0;
+          if (chunk.isNotEmpty && used + block.height + headingExtra > budget) {
+            break;
+          }
+          if (needsEdu) {
+            chunk.add(sectionTitle('Education'));
+            used += headingExtra;
+            educationHeadingAdded = true;
+          }
+          chunk.add(block.widget);
+          used += block.height;
+          index++;
+        }
+        if (chunk.isEmpty) {
+          chunk.add(leftBlocks[index].widget);
+          index++;
+        }
+        sidebarSlices.add(chunk);
+        isFirst = false;
+      }
+    }
+
+    final sidebarPageCount = sidebarSlices.length;
+    final pageCount = math.max(1, sidebarPageCount);
 
     final mainColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -8604,10 +8683,7 @@ class _SoftHeaderPreview extends StatelessWidget {
                 return null;
               }
               final item = resume.customSections[customIndex];
-              if (item.isBlank ||
-                  _leftSectionTitle.hasMatch(item.title.trim())) {
-                return null;
-              }
+              if (item.isBlank || _isLanguagesSection(item)) return null;
               final lines = nonEmpty(
                 item.bullets.any((b) => b.trim().isNotEmpty)
                     ? item.bullets
@@ -8726,109 +8802,128 @@ class _SoftHeaderPreview extends StatelessWidget {
       return Row(children: mirrored ? [ring, line] : [line, ring]);
     }
 
-    // Estimate whether left-column content fits page 1; if it would spill,
-    // the live preview still shows page 1 with the sidebar (PDF paginates).
-    final showSidebar = contacts.isNotEmpty ||
-        education.isNotEmpty ||
-        leftSections.isNotEmpty;
+    Widget buildPage(int pageIndex) {
+      final firstPage = pageIndex == 0;
+      final showSidebar =
+          sidebarPageCount > 0 && pageIndex < sidebarPageCount;
+      final columnsTop = firstPage ? _bandHeight + 16 : 30.0;
+
+      return SizedBox(
+        width: _pageWidth,
+        height: _pageHeight,
+        child: Stack(
+          children: [
+            if (firstPage)
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                height: _bandHeight,
+                child: ColoredBox(
+                  color: band,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(width: _side),
+                      Expanded(child: headerRule()),
+                      const SizedBox(width: 18),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _pdfAlignedDisplayName(resume).toUpperCase(),
+                            style: style(
+                              FontWeight.w700,
+                              26,
+                              titleColor,
+                              letterSpacing: 1.4,
+                            ),
+                          ),
+                          if (resume.jobTitle.trim().isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              resume.jobTitle.trim(),
+                              style: style(
+                                FontWeight.w400,
+                                14,
+                                mutedColor,
+                                letterSpacing: 1.6,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(width: 18),
+                      Expanded(child: headerRule(mirrored: true)),
+                      const SizedBox(width: _side),
+                    ],
+                  ),
+                ),
+              ),
+            if (showSidebar) ...[
+              Positioned(
+                left: _dividerX,
+                top: columnsTop,
+                bottom: _bottom,
+                width: 0.8,
+                child: ColoredBox(color: ruleColor),
+              ),
+              Positioned(
+                left: _side,
+                width: _leftWidth,
+                top: columnsTop,
+                bottom: _bottom,
+                child: ClipRect(
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: sidebarSlices[pageIndex],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            // Main column content on page 1; later pages keep the inset while
+            // the sidebar continues, then go full width once it is done.
+            if (firstPage)
+              Positioned(
+                left: showSidebar ? _mainLeft : _side,
+                right: _side,
+                top: columnsTop,
+                bottom: _bottom,
+                child: ClipRect(
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: mainColumn,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final height = constraints.maxHeight.isFinite
+        final canvasHeight = _pageHeight * pageCount;
+        final displayHeight = constraints.maxHeight.isFinite
             ? constraints.maxHeight
-            : width / ResumePreviewCard._a4AspectRatio;
+            : width * (canvasHeight / _pageWidth);
         return SizedBox(
           width: width,
-          height: height,
+          height: displayHeight,
           child: ClipRect(
             child: FittedBox(
               fit: BoxFit.fitWidth,
               alignment: Alignment.topCenter,
               child: SizedBox(
                 width: _pageWidth,
-                height: _pageHeight,
-                child: Stack(
+                height: canvasHeight,
+                child: Column(
                   children: [
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      top: 0,
-                      height: _bandHeight,
-                      child: ColoredBox(
-                        color: band,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(width: _side),
-                            Expanded(child: headerRule()),
-                            const SizedBox(width: 18),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _pdfAlignedDisplayName(resume).toUpperCase(),
-                                  style: style(
-                                    FontWeight.w700,
-                                    26,
-                                    titleColor,
-                                    letterSpacing: 1.4,
-                                  ),
-                                ),
-                                if (resume.jobTitle.trim().isNotEmpty) ...[
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    resume.jobTitle.trim(),
-                                    style: style(
-                                      FontWeight.w400,
-                                      14,
-                                      mutedColor,
-                                      letterSpacing: 1.6,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(width: 18),
-                            Expanded(child: headerRule(mirrored: true)),
-                            const SizedBox(width: _side),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (showSidebar) ...[
-                      Positioned(
-                        left: _dividerX,
-                        top: _bandHeight + 16,
-                        bottom: 34,
-                        width: 0.8,
-                        child: ColoredBox(color: ruleColor),
-                      ),
-                      Positioned(
-                        left: _side,
-                        width: _leftWidth,
-                        top: _bandHeight + 16,
-                        bottom: 34,
-                        child: ClipRect(
-                          child: SingleChildScrollView(
-                            physics: const NeverScrollableScrollPhysics(),
-                            child: leftColumn,
-                          ),
-                        ),
-                      ),
-                    ],
-                    Positioned(
-                      left: showSidebar ? _mainLeft : _side,
-                      right: _side,
-                      top: _bandHeight + 16,
-                      bottom: 34,
-                      child: ClipRect(
-                        child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: mainColumn,
-                        ),
-                      ),
-                    ),
+                    for (var i = 0; i < pageCount; i++) buildPage(i),
                   ],
                 ),
               ),
