@@ -7426,8 +7426,8 @@ class _AccentCoverLetterArt extends StatelessWidget {
     letterSpacing: 0.3,
   );
 
-  String get _family =>
-      variant == _CoverLetterArtVariant.serifFormal ? 'Garamond' : 'Arimo';
+  /// Every cover letter template exports in Outfit by default.
+  static const _family = 'Outfit';
 
   TextStyle get _detailStyle => TextStyle(
     fontFamily: _family,
@@ -7611,13 +7611,12 @@ class _AccentCoverLetterArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isSidePanel = variant == _CoverLetterArtVariant.sidePanel;
     final letter = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _header(),
         Padding(
-          padding: EdgeInsets.fromLTRB(isSidePanel ? 0 : 9, 7, 9, 9),
+          padding: const EdgeInsets.fromLTRB(9, 7, 9, 9),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -7679,16 +7678,17 @@ class _AccentCoverLetterArt extends StatelessWidget {
           color: _body,
         ),
         child: switch (variant) {
+          // Panel width tracks the PDF (190pt of 595 ≈ 32% of the page).
           _CoverLetterArtVariant.sidePanel => Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                width: 34,
+                width: 52,
                 color: Color.lerp(accent, Colors.white, 0.86),
-                padding: const EdgeInsets.fromLTRB(4, 26, 4, 4),
+                padding: const EdgeInsets.fromLTRB(5, 30, 5, 5),
                 child: Text(
                   'maya@mail.com\n+1 415 555 0142\nSeattle, WA',
-                  style: _detailStyle.copyWith(fontSize: 3.5, height: 1.6),
+                  style: _detailStyle.copyWith(fontSize: 3.6, height: 1.6),
                 ),
               ),
               Expanded(child: letter),
