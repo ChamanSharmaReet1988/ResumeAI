@@ -285,6 +285,23 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
       ));
     }
 
+    // Language (and similar short list) sections sit directly under Contact,
+    // as in the Flutter preview: education blocks are the ones that may spill
+    // to a second sidebar page, so the language list always stays on page 1.
+    for (final section in leftSections) {
+      final lines = _slateSidebarRailSectionLines(section);
+      leftBlocks.add((
+        widget: sectionTitle(section.title.trim(), _BlueDiagonalIcon.language),
+        height: sectionHeadingHeight(),
+      ));
+      for (final line in lines) {
+        leftBlocks.add((
+          widget: bullet(line),
+          height: detailPt * lineH + 4,
+        ));
+      }
+    }
+
     final firstEducationBlockIndex =
         education.isEmpty ? -1 : leftBlocks.length;
 
@@ -316,20 +333,6 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
         ),
         height: h,
       ));
-    }
-
-    for (final section in leftSections) {
-      final lines = _slateSidebarRailSectionLines(section);
-      leftBlocks.add((
-        widget: sectionTitle(section.title.trim(), _BlueDiagonalIcon.language),
-        height: sectionHeadingHeight(),
-      ));
-      for (final line in lines) {
-        leftBlocks.add((
-          widget: bullet(line),
-          height: detailPt * lineH + 4,
-        ));
-      }
     }
 
     // Page 1 left budget clears the avatar; later pages use the full column.
