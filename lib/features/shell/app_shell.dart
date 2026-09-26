@@ -28,6 +28,7 @@ import '../cover_letters/cover_letter_preview_screen.dart';
 import '../home/home_screen.dart';
 import '../premium/premium_gate.dart';
 import '../settings/settings_screen.dart';
+import '../shared/retention_feedback_dialog.dart';
 import '../shared/view_models.dart';
 import '../templates/templates_screen.dart';
 import 'app_shell_scope.dart';
@@ -140,12 +141,7 @@ class _AppShellState extends State<AppShell> {
     }
 
     try {
-      // Apple / Play system review sheet (stars). OS may suppress if quota hit.
-      await review.requestNativeReview();
-      // Native API does not report whether the user rated; stop asking this
-      // visit and again until Settings → Rate App marks completion — or keep
-      // retrying each Home visit until that flag is set.
-      review.deferUntilNextHomeVisit();
+      await presentRetentionFeedbackPrompt(context);
     } finally {
       review.endPromptOffer();
     }

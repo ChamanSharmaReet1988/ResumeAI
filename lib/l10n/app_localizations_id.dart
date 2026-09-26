@@ -79,6 +79,19 @@ class AppLocalizationsId extends AppLocalizations {
       'Jika aplikasi ini membantu, penilaian singkat sangat berarti bagi kami.';
 
   @override
+  String get retentionFeedbackTitle => 'Jangan hapus ResumeAI dulu';
+
+  @override
+  String get retentionFeedbackBody =>
+      'Jika ada yang kurang beres, kirim masukan daripada menghapus aplikasi. Kami baca setiap pesan dan terus memperbaiki aplikasi.';
+
+  @override
+  String get sendFeedback => 'Kirim masukan';
+
+  @override
+  String get keepUsingApp => 'Saya tetap pakai';
+
+  @override
   String get maybeLater => 'Nanti saja';
 
   @override
@@ -749,6 +762,62 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get templateRuledLetterheadCaption =>
       'Kop surat klasik bergaris dengan blok pengirim dan isi rata kiri.';
+
+  @override
+  String get templateCorporateHeaderLetter => 'Header Korporat';
+
+  @override
+  String get templateCorporateHeaderLetterCaption =>
+      'Bidang header gelap dengan nama dan kontak berwarna putih.';
+
+  @override
+  String get templateBoxedContactLetter => 'Kontak Kotak';
+
+  @override
+  String get templateBoxedContactLetterCaption =>
+      'Nama di kiri dengan panel kontak berbingkai di kanan.';
+
+  @override
+  String get templateSerifFormalLetter => 'Serif Formal';
+
+  @override
+  String get templateSerifFormalLetterCaption =>
+      'Kop surat serif di tengah dengan garis di bawah nama.';
+
+  @override
+  String get templateMonogramLetter => 'Monogram';
+
+  @override
+  String get templateMonogramLetterCaption =>
+      'Inisial bulat di samping blok nama dan kontak.';
+
+  @override
+  String get templateBannerLetter => 'Surat Banner';
+
+  @override
+  String get templateBannerLetterCaption =>
+      'Banner warna dua nada di bagian atas halaman.';
+
+  @override
+  String get templateSidePanelLetter => 'Panel Samping';
+
+  @override
+  String get templateSidePanelLetterCaption =>
+      'Panel samping berwarna lembut untuk detail kontak.';
+
+  @override
+  String get templateOutlineFrameLetter => 'Bingkai Garis';
+
+  @override
+  String get templateOutlineFrameLetterCaption =>
+      'Bingkai warna tipis mengelilingi kop surat di tengah.';
+
+  @override
+  String get templateDotAccentLetter => 'Aksen Titik';
+
+  @override
+  String get templateDotAccentLetterCaption =>
+      'Deretan titik warna di atas nama yang modern.';
 
   @override
   String get autoSync => 'Sinkronisasi otomatis';

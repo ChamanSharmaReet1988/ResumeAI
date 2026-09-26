@@ -123,6 +123,30 @@ enum CoverLetterTemplate {
 
   /// Classic letterhead with horizontal rules under the sender block.
   ruledLetterhead,
+
+  /// Dark header band with the name and contact reversed out of it.
+  corporateHeaderLetter,
+
+  /// Name on the left with a boxed contact panel on the right.
+  boxedContactLetter,
+
+  /// Centred serif letterhead with a rule under the name.
+  serifFormalLetter,
+
+  /// Circular monogram beside the name block.
+  monogramLetter,
+
+  /// Two-tone banner across the top of the page.
+  gradientBannerLetter,
+
+  /// Tinted side panel carrying the contact details.
+  sidePanelLetter,
+
+  /// Thin accent frame drawn around the page.
+  outlineFrameLetter,
+
+  /// Row of accent dots above the nameplate.
+  dotGridLetter,
 }
 
 const availableResumeTemplates = <ResumeTemplate>[
@@ -323,6 +347,14 @@ extension CoverLetterTemplateX on CoverLetterTemplate {
     CoverLetterTemplate.classicBusinessLetter => 'Classic Business',
     CoverLetterTemplate.accentBarLetter => 'Accent Bar',
     CoverLetterTemplate.ruledLetterhead => 'Ruled Letterhead',
+    CoverLetterTemplate.corporateHeaderLetter => 'Corporate Header',
+    CoverLetterTemplate.boxedContactLetter => 'Boxed Contact',
+    CoverLetterTemplate.serifFormalLetter => 'Serif Formal',
+    CoverLetterTemplate.monogramLetter => 'Monogram',
+    CoverLetterTemplate.gradientBannerLetter => 'Banner Letter',
+    CoverLetterTemplate.sidePanelLetter => 'Side Panel',
+    CoverLetterTemplate.outlineFrameLetter => 'Outline Frame',
+    CoverLetterTemplate.dotGridLetter => 'Dot Accent',
   };
 
   Color get accentColor => switch (this) {
@@ -332,6 +364,14 @@ extension CoverLetterTemplateX on CoverLetterTemplate {
     CoverLetterTemplate.classicBusinessLetter => const Color(0xFF374151),
     CoverLetterTemplate.accentBarLetter => const Color(0xFF0F4C81),
     CoverLetterTemplate.ruledLetterhead => const Color(0xFF1E293B),
+    CoverLetterTemplate.corporateHeaderLetter => const Color(0xFF243044),
+    CoverLetterTemplate.boxedContactLetter => const Color(0xFF15616D),
+    CoverLetterTemplate.serifFormalLetter => const Color(0xFF5B4636),
+    CoverLetterTemplate.monogramLetter => const Color(0xFF6D4AA7),
+    CoverLetterTemplate.gradientBannerLetter => const Color(0xFF2E7BC4),
+    CoverLetterTemplate.sidePanelLetter => const Color(0xFFCC5A3A),
+    CoverLetterTemplate.outlineFrameLetter => const Color(0xFF0F766E),
+    CoverLetterTemplate.dotGridLetter => const Color(0xFFD08700),
   };
 }
 
@@ -885,6 +925,7 @@ class CoverLetterData {
     this.lastSyncedAt,
     required this.bodyFontPt,
     required this.corporateColorPresetIndex,
+    this.textFont = ResumeTextFont.outfit,
   });
 
   factory CoverLetterData.empty() {
@@ -901,6 +942,7 @@ class CoverLetterData {
       lastSyncedAt: null,
       bodyFontPt: kResumeBodyFontPtDefault,
       corporateColorPresetIndex: 0,
+      textFont: ResumeTextFont.outfit,
     );
   }
 
@@ -927,6 +969,7 @@ class CoverLetterData {
       corporateColorPresetIndex:
           (json['corporateColorPresetIndex'] as num?)?.toInt() ??
           defaultColorPresetIndexForCoverLetterTemplate(template),
+      textFont: coverLetterTextFontFromStorage(json['textFont'] as String?),
     );
   }
 
@@ -946,6 +989,13 @@ class CoverLetterData {
 
   /// Accent/header palette index (see `corporate_resume_style.dart`).
   final int corporateColorPresetIndex;
+
+  /// Letter typeface picked in the Color & Font sheet: Outfit (the default,
+  /// matching the resume templates) or Garamond.
+  final ResumeTextFont textFont;
+
+  /// Whether the letter renders in Outfit; Garamond is the only alternative.
+  bool get usesOutfitCoverLetterFont => textFont != ResumeTextFont.garamond;
 
   bool get hasMeaningfulContent =>
       title.trim().isNotEmpty ||
@@ -981,6 +1031,7 @@ class CoverLetterData {
     Object? lastSyncedAt = _coverLetterDateSentinel,
     int? bodyFontPt,
     int? corporateColorPresetIndex,
+    ResumeTextFont? textFont,
   }) {
     return CoverLetterData(
       id: id ?? this.id,
@@ -998,6 +1049,7 @@ class CoverLetterData {
       bodyFontPt: bodyFontPt ?? this.bodyFontPt,
       corporateColorPresetIndex:
           corporateColorPresetIndex ?? this.corporateColorPresetIndex,
+      textFont: textFont ?? this.textFont,
     );
   }
 
@@ -1015,6 +1067,7 @@ class CoverLetterData {
       'lastSyncedAt': lastSyncedAt?.toIso8601String(),
       'bodyFontPt': bodyFontPt,
       'corporateColorPresetIndex': corporateColorPresetIndex,
+      'textFont': textFont.name,
     };
   }
 }

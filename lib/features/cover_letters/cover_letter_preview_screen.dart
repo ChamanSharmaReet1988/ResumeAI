@@ -6,6 +6,7 @@ import 'package:resume_app/l10n/l10n_ext.dart';
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/resume_text_font.dart';
 import '../../core/services/analytics_events.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/resume_services.dart';
@@ -177,6 +178,36 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              context.l10n.resumeFont,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 10,
+                              children: [
+                                // Outfit first: it is every letter's default.
+                                for (final font in const [
+                                  ResumeTextFont.outfit,
+                                  ResumeTextFont.garamond,
+                                ])
+                                  ChoiceChip(
+                                    key: Key('cover-letter-font-${font.name}'),
+                                    label: Text(font.label),
+                                    selected:
+                                        letter.usesOutfitCoverLetterFont ==
+                                        (font == ResumeTextFont.outfit),
+                                    onSelected: (_) =>
+                                        viewModel.updateCoverLetter(
+                                          (current) =>
+                                              current.copyWith(textFont: font),
+                                        ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 30),
                             Text(
                               context.l10n.fontSize,
                               style: theme.textTheme.titleSmall?.copyWith(
@@ -377,7 +408,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                                   )
                                 : NativePdfPreview(
                                     key: ValueKey(
-                                      '${letter.template.name}-${letter.bodyFontPt}-${letter.corporateColorPresetIndex}-${letter.updatedAt.microsecondsSinceEpoch}',
+                                      '${letter.template.name}-${letter.textFont.name}-${letter.bodyFontPt}-${letter.corporateColorPresetIndex}-${letter.updatedAt.microsecondsSinceEpoch}',
                                     ),
                                     documentKey:
                                         '${letter.id}-${letter.updatedAt.microsecondsSinceEpoch}',

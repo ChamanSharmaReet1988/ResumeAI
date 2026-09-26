@@ -79,6 +79,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Si la app te está ayudando, una valoración rápida nos ayuda mucho.';
 
   @override
+  String get retentionFeedbackTitle => 'Por favor, no elimines ResumeAI';
+
+  @override
+  String get retentionFeedbackBody =>
+      'Si algo no funciona, envíanos comentarios en lugar de desinstalar. Leemos cada mensaje y seguimos mejorando la app.';
+
+  @override
+  String get sendFeedback => 'Enviar comentarios';
+
+  @override
+  String get keepUsingApp => 'Seguiré usándola';
+
+  @override
   String get maybeLater => 'Ahora no';
 
   @override
@@ -750,6 +763,62 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get templateRuledLetterheadCaption =>
       'Membrete clásico con reglas, bloque del remitente y cuerpo alineado a la izquierda.';
+
+  @override
+  String get templateCorporateHeaderLetter => 'Encabezado corporativo';
+
+  @override
+  String get templateCorporateHeaderLetterCaption =>
+      'Banda oscura con tu nombre y contacto en blanco.';
+
+  @override
+  String get templateBoxedContactLetter => 'Contacto en caja';
+
+  @override
+  String get templateBoxedContactLetterCaption =>
+      'Nombre a la izquierda y panel de contacto a la derecha.';
+
+  @override
+  String get templateSerifFormalLetter => 'Serif formal';
+
+  @override
+  String get templateSerifFormalLetterCaption =>
+      'Membrete serif centrado con una línea bajo el nombre.';
+
+  @override
+  String get templateMonogramLetter => 'Monograma';
+
+  @override
+  String get templateMonogramLetterCaption =>
+      'Iniciales en círculo junto al nombre y el contacto.';
+
+  @override
+  String get templateBannerLetter => 'Carta con banner';
+
+  @override
+  String get templateBannerLetterCaption =>
+      'Banner de color a dos tonos en la parte superior.';
+
+  @override
+  String get templateSidePanelLetter => 'Panel lateral';
+
+  @override
+  String get templateSidePanelLetterCaption =>
+      'Panel lateral con color suave para tus datos de contacto.';
+
+  @override
+  String get templateOutlineFrameLetter => 'Marco fino';
+
+  @override
+  String get templateOutlineFrameLetterCaption =>
+      'Marco de color fino alrededor de un membrete centrado.';
+
+  @override
+  String get templateDotAccentLetter => 'Puntos de color';
+
+  @override
+  String get templateDotAccentLetterCaption =>
+      'Fila de puntos de color sobre un nombre moderno.';
 
   @override
   String get autoSync => 'Sincronización automática';

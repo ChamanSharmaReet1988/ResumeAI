@@ -122,6 +122,14 @@ int defaultColorPresetIndexForCoverLetterTemplate(
       kTemplateDefaultColorPresetIndex,
     CoverLetterTemplate.accentBarLetter => kTemplateDefaultColorPresetIndex,
     CoverLetterTemplate.ruledLetterhead => kTemplateDefaultColorPresetIndex,
+    CoverLetterTemplate.corporateHeaderLetter ||
+    CoverLetterTemplate.boxedContactLetter ||
+    CoverLetterTemplate.serifFormalLetter ||
+    CoverLetterTemplate.monogramLetter ||
+    CoverLetterTemplate.gradientBannerLetter ||
+    CoverLetterTemplate.sidePanelLetter ||
+    CoverLetterTemplate.outlineFrameLetter ||
+    CoverLetterTemplate.dotGridLetter => kTemplateDefaultColorPresetIndex,
   };
 }
 

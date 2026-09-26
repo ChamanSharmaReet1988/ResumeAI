@@ -855,6 +855,38 @@ const _professionalCoverLetterCards = <_TemplateTileData>[
         'Classic ruled letterhead with formal sender block and left-aligned body.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'corporate-header-letter',
+    coverLetterTemplate: CoverLetterTemplate.corporateHeaderLetter,
+    previewKind: _TemplatePreviewKind.corporateHeaderCoverLetter,
+    headline: 'Corporate Header',
+    caption: 'Dark header band with your name and contact details reversed out.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'boxed-contact-letter',
+    coverLetterTemplate: CoverLetterTemplate.boxedContactLetter,
+    previewKind: _TemplatePreviewKind.boxedContactCoverLetter,
+    headline: 'Boxed Contact',
+    caption: 'Name on the left with a boxed contact panel on the right.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'serif-formal-letter',
+    coverLetterTemplate: CoverLetterTemplate.serifFormalLetter,
+    previewKind: _TemplatePreviewKind.serifFormalCoverLetter,
+    headline: 'Serif Formal',
+    caption: 'Centred serif letterhead with a rule under the name.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'monogram-letter',
+    coverLetterTemplate: CoverLetterTemplate.monogramLetter,
+    previewKind: _TemplatePreviewKind.monogramCoverLetter,
+    headline: 'Monogram',
+    caption: 'Circular initials beside a clean name and contact block.',
+    isPremium: false,
+  ),
 ];
 
 const _creativeCoverLetterCards = <_TemplateTileData>[
@@ -873,6 +905,38 @@ const _creativeCoverLetterCards = <_TemplateTileData>[
     headline: 'Mint Letter',
     caption:
         'Oversized name, soft mint background, and a clean modern letter body.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'gradient-banner-letter',
+    coverLetterTemplate: CoverLetterTemplate.gradientBannerLetter,
+    previewKind: _TemplatePreviewKind.gradientBannerCoverLetter,
+    headline: 'Banner Letter',
+    caption: 'Two-tone colour banner across the top of the page.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'side-panel-letter',
+    coverLetterTemplate: CoverLetterTemplate.sidePanelLetter,
+    previewKind: _TemplatePreviewKind.sidePanelCoverLetter,
+    headline: 'Side Panel',
+    caption: 'Tinted side panel holding your contact details.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'outline-frame-letter',
+    coverLetterTemplate: CoverLetterTemplate.outlineFrameLetter,
+    previewKind: _TemplatePreviewKind.outlineFrameCoverLetter,
+    headline: 'Outline Frame',
+    caption: 'Thin colour frame around a centred letterhead.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'dot-accent-letter',
+    coverLetterTemplate: CoverLetterTemplate.dotGridLetter,
+    previewKind: _TemplatePreviewKind.dotGridCoverLetter,
+    headline: 'Dot Accent',
+    caption: 'Row of colour dots above a modern nameplate.',
     isPremium: false,
   ),
 ];
@@ -927,6 +991,14 @@ class _TemplateTileData {
       'classic-business-letter' => l10n.templateClassicBusiness,
       'accent-bar-letter' => l10n.templateAccentBarLetter,
       'ruled-letterhead' => l10n.templateRuledLetterhead,
+      'corporate-header-letter' => l10n.templateCorporateHeaderLetter,
+      'boxed-contact-letter' => l10n.templateBoxedContactLetter,
+      'serif-formal-letter' => l10n.templateSerifFormalLetter,
+      'monogram-letter' => l10n.templateMonogramLetter,
+      'gradient-banner-letter' => l10n.templateBannerLetter,
+      'side-panel-letter' => l10n.templateSidePanelLetter,
+      'outline-frame-letter' => l10n.templateOutlineFrameLetter,
+      'dot-accent-letter' => l10n.templateDotAccentLetter,
       _ => headline,
     };
   }
@@ -957,6 +1029,14 @@ class _TemplateTileData {
       'classic-business-letter' => l10n.templateClassicBusinessCaption,
       'accent-bar-letter' => l10n.templateAccentBarLetterCaption,
       'ruled-letterhead' => l10n.templateRuledLetterheadCaption,
+      'corporate-header-letter' => l10n.templateCorporateHeaderLetterCaption,
+      'boxed-contact-letter' => l10n.templateBoxedContactLetterCaption,
+      'serif-formal-letter' => l10n.templateSerifFormalLetterCaption,
+      'monogram-letter' => l10n.templateMonogramLetterCaption,
+      'gradient-banner-letter' => l10n.templateBannerLetterCaption,
+      'side-panel-letter' => l10n.templateSidePanelLetterCaption,
+      'outline-frame-letter' => l10n.templateOutlineFrameLetterCaption,
+      'dot-accent-letter' => l10n.templateDotAccentLetterCaption,
       _ => caption,
     };
   }
@@ -989,6 +1069,14 @@ enum _TemplatePreviewKind {
   classicBusinessCoverLetter,
   accentBarCoverLetter,
   ruledLetterheadCoverLetter,
+  corporateHeaderCoverLetter,
+  boxedContactCoverLetter,
+  serifFormalCoverLetter,
+  monogramCoverLetter,
+  gradientBannerCoverLetter,
+  sidePanelCoverLetter,
+  outlineFrameCoverLetter,
+  dotGridCoverLetter,
 }
 
 class _TemplatePreviewArt extends StatelessWidget {
@@ -1182,6 +1270,46 @@ class _TemplatePreviewArt extends StatelessWidget {
         const _AccentBarCoverLetterArt(),
       _TemplatePreviewKind.ruledLetterheadCoverLetter =>
         const _RuledLetterheadCoverLetterArt(),
+      _TemplatePreviewKind.corporateHeaderCoverLetter =>
+        const _AccentCoverLetterArt(
+          variant: _CoverLetterArtVariant.corporateHeader,
+          accent: Color(0xFF243044),
+        ),
+      _TemplatePreviewKind.boxedContactCoverLetter =>
+        const _AccentCoverLetterArt(
+          variant: _CoverLetterArtVariant.boxedContact,
+          accent: Color(0xFF15616D),
+        ),
+      _TemplatePreviewKind.serifFormalCoverLetter =>
+        const _AccentCoverLetterArt(
+          variant: _CoverLetterArtVariant.serifFormal,
+          accent: Color(0xFF5B4636),
+        ),
+      _TemplatePreviewKind.monogramCoverLetter =>
+        const _AccentCoverLetterArt(
+          variant: _CoverLetterArtVariant.monogram,
+          accent: Color(0xFF6D4AA7),
+        ),
+      _TemplatePreviewKind.gradientBannerCoverLetter =>
+        const _AccentCoverLetterArt(
+          variant: _CoverLetterArtVariant.gradientBanner,
+          accent: Color(0xFF2E7BC4),
+        ),
+      _TemplatePreviewKind.sidePanelCoverLetter =>
+        const _AccentCoverLetterArt(
+          variant: _CoverLetterArtVariant.sidePanel,
+          accent: Color(0xFFCC5A3A),
+        ),
+      _TemplatePreviewKind.outlineFrameCoverLetter =>
+        const _AccentCoverLetterArt(
+          variant: _CoverLetterArtVariant.outlineFrame,
+          accent: Color(0xFF0F766E),
+        ),
+      _TemplatePreviewKind.dotGridCoverLetter =>
+        const _AccentCoverLetterArt(
+          variant: _CoverLetterArtVariant.dotGrid,
+          accent: Color(0xFFD08700),
+        ),
     };
 
     return LayoutBuilder(
@@ -6267,7 +6395,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
           child: DefaultTextStyle(
             style: const TextStyle(
-              fontFamily: 'Garamond',
+              fontFamily: 'Outfit',
               fontSize: 4.35,
               fontWeight: FontWeight.w400,
               height: 1.34,
@@ -6279,7 +6407,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                 const Text(
                   'October 6, 2026',
                   style: TextStyle(
-                    fontFamily: 'Garamond',
+                    fontFamily: 'Outfit',
                     color: muted,
                     fontWeight: FontWeight.w500,
                   ),
@@ -6291,7 +6419,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                   'Computers Forever\n'
                   '1224 Main Street, Allentown, PA 55555',
                   style: TextStyle(
-                    fontFamily: 'Garamond',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w500,
                     height: 1.38,
@@ -6301,7 +6429,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Dear Ms. Smith:',
                   style: TextStyle(
-                    fontFamily: 'Garamond',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w500,
                   ),
@@ -6325,7 +6453,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Sincerely,',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w500,
                   ),
@@ -6334,7 +6462,7 @@ class _ClassicBusinessCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Martin Stein',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontWeight: FontWeight.w700,
                   ),
@@ -6369,7 +6497,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(9, 9, 9, 10),
           child: DefaultTextStyle(
             style: const TextStyle(
-              fontFamily: 'Arimo',
+              fontFamily: 'Outfit',
               fontSize: 4.45,
               fontWeight: FontWeight.w400,
               height: 1.38,
@@ -6391,7 +6519,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                       Text(
                         'MAYA FERNANDES',
                         style: TextStyle(
-                          fontFamily: 'Arimo',
+                          fontFamily: 'Outfit',
                           color: Colors.white,
                           fontSize: 8.2,
                           fontWeight: FontWeight.w700,
@@ -6402,7 +6530,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                       Text(
                         'mfernandes@mail.com  |  +1 646 555 0131  |  Brooklyn, NY',
                         style: TextStyle(
-                          fontFamily: 'Arimo',
+                          fontFamily: 'Outfit',
                           color: Color(0xFFD7E4F5),
                           fontSize: 4.45,
                           fontWeight: FontWeight.w400,
@@ -6417,7 +6545,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                 const Text(
                   'March 30, 2026',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: muted,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6427,7 +6555,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Hiring Manager\nNorthpeak Studio\nNew York, NY',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6438,7 +6566,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Dear Hiring Manager,',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6458,7 +6586,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Sincerely,',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6468,7 +6596,7 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Maya Fernandes',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w700,
@@ -6503,7 +6631,7 @@ class _AccentBarCoverLetterArt extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 10, 9, 10),
           child: DefaultTextStyle(
             style: const TextStyle(
-              fontFamily: 'Arimo',
+              fontFamily: 'Outfit',
               fontSize: 4.45,
               fontWeight: FontWeight.w400,
               height: 1.38,
@@ -6531,7 +6659,7 @@ class _AccentBarCoverLetterArt extends StatelessWidget {
                           Text(
                             'JORDAN BLAKE',
                             style: TextStyle(
-                              fontFamily: 'Arimo',
+                              fontFamily: 'Outfit',
                               color: accent,
                               fontSize: 8.0,
                               fontWeight: FontWeight.w700,
@@ -6542,7 +6670,7 @@ class _AccentBarCoverLetterArt extends StatelessWidget {
                           Text(
                             'jblake@mail.com  ·  +1 415 555 0198  ·  San Francisco, CA',
                             style: TextStyle(
-                              fontFamily: 'Arimo',
+                              fontFamily: 'Outfit',
                               color: muted,
                               fontSize: 4.2,
                               fontWeight: FontWeight.w400,
@@ -6557,7 +6685,7 @@ class _AccentBarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Hiring Manager\nHarbor Analytics\nSan Francisco, CA',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6568,7 +6696,7 @@ class _AccentBarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Dear Hiring Manager,',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6588,7 +6716,7 @@ class _AccentBarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Sincerely,',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6598,7 +6726,7 @@ class _AccentBarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Jordan Blake',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w700,
@@ -6634,7 +6762,7 @@ class _RuledLetterheadCoverLetterArt extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
           child: DefaultTextStyle(
             style: const TextStyle(
-              fontFamily: 'Arimo',
+              fontFamily: 'Outfit',
               fontSize: 4.45,
               fontWeight: FontWeight.w400,
               height: 1.38,
@@ -6648,7 +6776,7 @@ class _RuledLetterheadCoverLetterArt extends StatelessWidget {
                     'PRIYA NATHAN',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Arimo',
+                      fontFamily: 'Outfit',
                       color: accent,
                       fontSize: 8.0,
                       fontWeight: FontWeight.w700,
@@ -6662,7 +6790,7 @@ class _RuledLetterheadCoverLetterArt extends StatelessWidget {
                     'pnathan@mail.com  |  +1 312 555 0144  |  Chicago, IL',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Arimo',
+                      fontFamily: 'Outfit',
                       color: muted,
                       fontSize: 4.2,
                       fontWeight: FontWeight.w400,
@@ -6677,7 +6805,7 @@ class _RuledLetterheadCoverLetterArt extends StatelessWidget {
                 const Text(
                   'April 12, 2026',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: muted,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6687,7 +6815,7 @@ class _RuledLetterheadCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Hiring Committee\nLumen Finance\nChicago, IL',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6698,7 +6826,7 @@ class _RuledLetterheadCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Dear Hiring Committee,',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6718,7 +6846,7 @@ class _RuledLetterheadCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Respectfully,',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w500,
@@ -6728,7 +6856,7 @@ class _RuledLetterheadCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Priya Nathan',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: ResumeTypography.atsStructuredBodyTextColor,
                     fontSize: 4.9,
                     fontWeight: FontWeight.w700,
@@ -6763,7 +6891,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(11, 10, 11, 12),
           child: DefaultTextStyle(
             style: const TextStyle(
-              fontFamily: 'Arimo',
+              fontFamily: 'Outfit',
               fontSize: 4.6,
               fontWeight: FontWeight.w400,
               height: 1.45,
@@ -6775,7 +6903,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                 const Text(
                   'NOAH PARK',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 8.4,
                     fontWeight: FontWeight.w700,
                     color: accent,
@@ -6787,7 +6915,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                   'noah.park@mail.com  |  +1 206 555 0126  |  Seattle, WA',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     color: muted,
                     fontSize: 4.45,
                     fontWeight: FontWeight.w400,
@@ -6801,7 +6929,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                   child: Text(
                     'Dear Product Team,',
                     style: TextStyle(
-                      fontFamily: 'Arimo',
+                      fontFamily: 'Outfit',
                       color: ResumeTypography.atsStructuredBodyTextColor,
                       fontSize: 4.9,
                       fontWeight: FontWeight.w500,
@@ -6838,7 +6966,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                   child: Text(
                     'Best regards,',
                     style: TextStyle(
-                      fontFamily: 'Arimo',
+                      fontFamily: 'Outfit',
                       color: ResumeTypography.atsStructuredBodyTextColor,
                       fontSize: 4.9,
                       fontWeight: FontWeight.w500,
@@ -6851,7 +6979,7 @@ class _MinimalCoverLetterArt extends StatelessWidget {
                   child: Text(
                     'Noah Park',
                     style: TextStyle(
-                      fontFamily: 'Arimo',
+                      fontFamily: 'Outfit',
                       color: ResumeTypography.atsStructuredBodyTextColor,
                       fontSize: 4.9,
                       fontWeight: FontWeight.w700,
@@ -6885,7 +7013,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
           child: DefaultTextStyle(
             style: const TextStyle(
-              fontFamily: 'Arimo',
+              fontFamily: 'Outfit',
               fontSize: 4.35,
               fontWeight: FontWeight.w400,
               height: 1.42,
@@ -6897,7 +7025,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'DANIELLE BRASSEUR',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 8.2,
                     fontWeight: FontWeight.w700,
                     color: text,
@@ -6908,7 +7036,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 const Text(
                   '4567 8th Avenue, Carson City, NV 10111  |  (313) 555-0100  |  danielle@example.com  |  www.linkedin.com',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 4.2,
                     fontWeight: FontWeight.w700,
                     color: muted,
@@ -6923,7 +7051,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 const Text(
                   '4 April 20XX',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 4.65,
                     fontWeight: FontWeight.w700,
                     color: text,
@@ -6933,7 +7061,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Hiring Manager\nDowntown Credit Union\n123 Main Street\nSeattle, WA 87654',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 4.6,
                     fontWeight: FontWeight.w400,
                     color: text,
@@ -6944,7 +7072,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Dear Guy Oz,',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 4.75,
                     fontWeight: FontWeight.w700,
                     color: text,
@@ -6954,7 +7082,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'I am writing to express my interest in the accountant position at Downtown Credit Union. My accounting degree and public accounting background align well with your team’s needs.',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 4.35,
                     fontWeight: FontWeight.w400,
                     color: text,
@@ -6965,7 +7093,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'At Trey Research and Bandter Real Estate, I supported tax prep, bookkeeping, payroll, and invoice workflows, and I would welcome the chance to contribute similar support to your organization.',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 4.35,
                     fontWeight: FontWeight.w400,
                     color: text,
@@ -6976,7 +7104,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Sincerely,',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 4.5,
                     fontWeight: FontWeight.w400,
                     color: text,
@@ -6986,7 +7114,7 @@ class _SidebarCoverLetterArt extends StatelessWidget {
                 const Text(
                   'Danielle Brasseur',
                   style: TextStyle(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Outfit',
                     fontSize: 4.65,
                     fontWeight: FontWeight.w400,
                     color: text,
@@ -7262,3 +7390,332 @@ ResumeData galleryDetailSampleForTest(ResumeTemplate template) =>
       ResumeTemplate.atsCleanSans =>
         _atsSampleFor(template),
     };
+
+/// Header treatments for the eight newer cover letters, so their gallery tiles
+/// share one miniature letter body.
+enum _CoverLetterArtVariant {
+  corporateHeader,
+  boxedContact,
+  serifFormal,
+  monogram,
+  gradientBanner,
+  sidePanel,
+  outlineFrame,
+  dotGrid,
+}
+
+class _AccentCoverLetterArt extends StatelessWidget {
+  const _AccentCoverLetterArt({required this.variant, required this.accent});
+
+  final _CoverLetterArtVariant variant;
+  final Color accent;
+
+  static const _name = 'MAYA FERNANDES';
+  static const _details = 'maya@mail.com  ·  +1 415 555 0142  ·  Seattle, WA';
+  static const _muted = Color(0xFF5E6369);
+  static const _body = ResumeTypography.atsStructuredBodyTextColor;
+
+  TextStyle get _nameStyle => TextStyle(
+    fontFamily: _family,
+    color: variant == _CoverLetterArtVariant.corporateHeader ||
+            variant == _CoverLetterArtVariant.gradientBanner
+        ? Colors.white
+        : accent,
+    fontSize: 8,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.3,
+  );
+
+  String get _family =>
+      variant == _CoverLetterArtVariant.serifFormal ? 'Garamond' : 'Arimo';
+
+  TextStyle get _detailStyle => TextStyle(
+    fontFamily: _family,
+    color: variant == _CoverLetterArtVariant.corporateHeader ||
+            variant == _CoverLetterArtVariant.gradientBanner
+        ? const Color(0xFFE2E8F0)
+        : _muted,
+    fontSize: 4.2,
+    fontWeight: FontWeight.w400,
+  );
+
+  Widget _header() {
+    switch (variant) {
+      case _CoverLetterArtVariant.corporateHeader:
+        return Container(
+          width: double.infinity,
+          color: accent,
+          padding: const EdgeInsets.fromLTRB(9, 10, 9, 9),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_name, style: _nameStyle),
+              const SizedBox(height: 2),
+              Text(_details, style: _detailStyle),
+            ],
+          ),
+        );
+      case _CoverLetterArtVariant.gradientBanner:
+        return Stack(
+          children: [
+            Container(
+              width: double.infinity,
+              height: 34,
+              color: accent,
+              padding: const EdgeInsets.fromLTRB(9, 9, 9, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_name, style: _nameStyle),
+                  const SizedBox(height: 2),
+                  Text(_details, style: _detailStyle),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 0,
+              bottom: 0,
+              child: Container(
+                width: 46,
+                height: 5,
+                color: Color.lerp(accent, Colors.black, 0.45),
+              ),
+            ),
+          ],
+        );
+      case _CoverLetterArtVariant.boxedContact:
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(9, 10, 9, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: Text(_name, style: _nameStyle)),
+                  const SizedBox(width: 6),
+                  Container(
+                    width: 52,
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: accent, width: 0.5),
+                    ),
+                    child: Text(
+                      'maya@mail.com\n+1 415 555 0142\nSeattle, WA',
+                      style: _detailStyle.copyWith(fontSize: 3.6, height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Container(height: 1.4, color: accent),
+            ],
+          ),
+        );
+      case _CoverLetterArtVariant.serifFormal:
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(9, 11, 9, 0),
+          child: Column(
+            children: [
+              Text(_name, style: _nameStyle),
+              const SizedBox(height: 2),
+              Text(_details, style: _detailStyle, textAlign: TextAlign.center),
+              const SizedBox(height: 5),
+              Container(height: 0.6, color: accent),
+            ],
+          ),
+        );
+      case _CoverLetterArtVariant.monogram:
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(9, 10, 9, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+                child: const Text(
+                  'MF',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: Colors.white,
+                    fontSize: 6,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Maya Fernandes', style: _nameStyle),
+                    const SizedBox(height: 1),
+                    Text(_details, style: _detailStyle),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      case _CoverLetterArtVariant.dotGrid:
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(9, 10, 9, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  for (var i = 0; i < 6; i++) ...[
+                    if (i > 0) const SizedBox(width: 3),
+                    Container(
+                      width: 4.5,
+                      height: 4.5,
+                      decoration: BoxDecoration(
+                        color: Color.lerp(accent, Colors.white, i * 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(_name, style: _nameStyle),
+              const SizedBox(height: 2),
+              Text(_details, style: _detailStyle),
+            ],
+          ),
+        );
+      case _CoverLetterArtVariant.sidePanel:
+      case _CoverLetterArtVariant.outlineFrame:
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(9, 11, 9, 0),
+          child: Column(
+            crossAxisAlignment: variant == _CoverLetterArtVariant.outlineFrame
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start,
+            children: [
+              Text(_name, style: _nameStyle),
+              const SizedBox(height: 2),
+              if (variant == _CoverLetterArtVariant.outlineFrame)
+                Text(_details, style: _detailStyle, textAlign: TextAlign.center)
+              else
+                Container(width: 22, height: 1.6, color: accent),
+            ],
+          ),
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isSidePanel = variant == _CoverLetterArtVariant.sidePanel;
+    final letter = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _header(),
+        Padding(
+          padding: EdgeInsets.fromLTRB(isSidePanel ? 0 : 9, 7, 9, 9),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Hiring Manager\nNorthwind Studio\nSeattle, WA',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: _body,
+                  fontSize: 4.6,
+                  fontWeight: FontWeight.w500,
+                  height: 1.38,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Dear Hiring Manager,',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: _body,
+                  fontSize: 4.7,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 3),
+              const _MiniCoverLetterParagraph(
+                text:
+                    'I am writing to apply for the Marketing Manager role at Northwind Studio, bringing eight years of brand and demand work for consumer and B2B products.',
+              ),
+              const SizedBox(height: 3),
+              const _MiniCoverLetterParagraph(
+                text:
+                    'At Lumen Retail I owned positioning and launch plans for three product lines and grew qualified pipeline by 38% in two years.',
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                'Sincerely,\nMaya Fernandes',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  color: _body,
+                  fontSize: 4.7,
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: DefaultTextStyle(
+        style: const TextStyle(
+          fontFamily: 'Outfit',
+          fontSize: 4.4,
+          fontWeight: FontWeight.w400,
+          height: 1.38,
+          color: _body,
+        ),
+        child: switch (variant) {
+          _CoverLetterArtVariant.sidePanel => Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 34,
+                color: Color.lerp(accent, Colors.white, 0.86),
+                padding: const EdgeInsets.fromLTRB(4, 26, 4, 4),
+                child: Text(
+                  'maya@mail.com\n+1 415 555 0142\nSeattle, WA',
+                  style: _detailStyle.copyWith(fontSize: 3.5, height: 1.6),
+                ),
+              ),
+              Expanded(child: letter),
+            ],
+          ),
+          _CoverLetterArtVariant.outlineFrame => Padding(
+            padding: const EdgeInsets.all(5),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border.all(color: accent, width: 0.7),
+              ),
+              child: letter,
+            ),
+          ),
+          _ => letter,
+        },
+      ),
+    );
+  }
+}
+
+/// Gallery tile art for a cover letter template; used by tests that render
+/// the tiles.
+@visibleForTesting
+Widget coverLetterTileArtForTest(CoverLetterTemplate template) {
+  final item = _coverLetterTemplateCards.firstWhere(
+    (card) => card.coverLetterTemplate == template,
+  );
+  return _TemplatePreviewArt(item: item);
+}

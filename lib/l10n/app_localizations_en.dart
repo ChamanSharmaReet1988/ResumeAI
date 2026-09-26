@@ -79,6 +79,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'If this app is helping you, a quick rating would mean a lot.';
 
   @override
+  String get retentionFeedbackTitle => 'Please don\'t remove ResumeAI';
+
+  @override
+  String get retentionFeedbackBody =>
+      'If something isn\'t working, send us feedback instead of uninstalling. We read every message and keep improving the app.';
+
+  @override
+  String get sendFeedback => 'Send feedback';
+
+  @override
+  String get keepUsingApp => 'I\'ll keep using it';
+
+  @override
   String get maybeLater => 'Maybe later';
 
   @override
@@ -749,6 +762,62 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get templateRuledLetterheadCaption =>
       'Classic ruled letterhead with formal sender block and left-aligned body.';
+
+  @override
+  String get templateCorporateHeaderLetter => 'Corporate Header';
+
+  @override
+  String get templateCorporateHeaderLetterCaption =>
+      'Dark header band with your name and contact details reversed out.';
+
+  @override
+  String get templateBoxedContactLetter => 'Boxed Contact';
+
+  @override
+  String get templateBoxedContactLetterCaption =>
+      'Name on the left with a boxed contact panel on the right.';
+
+  @override
+  String get templateSerifFormalLetter => 'Serif Formal';
+
+  @override
+  String get templateSerifFormalLetterCaption =>
+      'Centred serif letterhead with a rule under the name.';
+
+  @override
+  String get templateMonogramLetter => 'Monogram';
+
+  @override
+  String get templateMonogramLetterCaption =>
+      'Circular initials beside a clean name and contact block.';
+
+  @override
+  String get templateBannerLetter => 'Banner Letter';
+
+  @override
+  String get templateBannerLetterCaption =>
+      'Two-tone colour banner across the top of the page.';
+
+  @override
+  String get templateSidePanelLetter => 'Side Panel';
+
+  @override
+  String get templateSidePanelLetterCaption =>
+      'Tinted side panel holding your contact details.';
+
+  @override
+  String get templateOutlineFrameLetter => 'Outline Frame';
+
+  @override
+  String get templateOutlineFrameLetterCaption =>
+      'Thin colour frame around a centred letterhead.';
+
+  @override
+  String get templateDotAccentLetter => 'Dot Accent';
+
+  @override
+  String get templateDotAccentLetterCaption =>
+      'Row of colour dots above a modern nameplate.';
 
   @override
   String get autoSync => 'Auto sync';

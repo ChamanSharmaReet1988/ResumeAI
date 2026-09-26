@@ -91,7 +91,7 @@ void main() {
           gridView.childrenDelegate as SliverChildBuilderDelegate;
 
       expect(delegate.crossAxisCount, 2);
-      expect(childrenDelegate.childCount, 17);
+      expect(childrenDelegate.childCount, 18);
       expect(
         find.byKey(const Key('template-segmented-button')),
         findsOneWidget,
@@ -161,7 +161,7 @@ void main() {
       );
       final coverLetterChildrenDelegate =
           coverLetterGrid.childrenDelegate as SliverChildBuilderDelegate;
-      expect(coverLetterChildrenDelegate.childCount, 4);
+      expect(coverLetterChildrenDelegate.childCount, 14);
       expect(
         find.byKey(const Key('template-image-executive-note')),
         findsOneWidget,

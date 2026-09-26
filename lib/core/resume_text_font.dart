@@ -399,6 +399,14 @@ extension ResumeTextFontX on ResumeTextFont {
   };
 }
 
+/// Cover letters render in Outfit like the resume templates, with Garamond as
+/// the single alternative offered in the Color & Font sheet, so any other
+/// stored value (including none) resolves to Outfit.
+ResumeTextFont coverLetterTextFontFromStorage(String? raw) =>
+    raw == ResumeTextFont.garamond.name
+        ? ResumeTextFont.garamond
+        : ResumeTextFont.outfit;
+
 ResumeTextFont resumeTextFontFromStorage(String? raw) {
   if (raw == null || raw.isEmpty) {
     return ResumeTextFont.inter;

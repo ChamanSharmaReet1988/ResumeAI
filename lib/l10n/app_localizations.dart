@@ -240,6 +240,30 @@ abstract class AppLocalizations {
   /// **'If this app is helping you, a quick rating would mean a lot.'**
   String get ratePromptBody;
 
+  /// No description provided for @retentionFeedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please don\'t remove ResumeAI'**
+  String get retentionFeedbackTitle;
+
+  /// No description provided for @retentionFeedbackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If something isn\'t working, send us feedback instead of uninstalling. We read every message and keep improving the app.'**
+  String get retentionFeedbackBody;
+
+  /// No description provided for @sendFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Send feedback'**
+  String get sendFeedback;
+
+  /// No description provided for @keepUsingApp.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll keep using it'**
+  String get keepUsingApp;
+
   /// No description provided for @maybeLater.
   ///
   /// In en, this message translates to:
@@ -1409,6 +1433,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Classic ruled letterhead with formal sender block and left-aligned body.'**
   String get templateRuledLetterheadCaption;
+
+  /// No description provided for @templateCorporateHeaderLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Corporate Header'**
+  String get templateCorporateHeaderLetter;
+
+  /// No description provided for @templateCorporateHeaderLetterCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark header band with your name and contact details reversed out.'**
+  String get templateCorporateHeaderLetterCaption;
+
+  /// No description provided for @templateBoxedContactLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Boxed Contact'**
+  String get templateBoxedContactLetter;
+
+  /// No description provided for @templateBoxedContactLetterCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on the left with a boxed contact panel on the right.'**
+  String get templateBoxedContactLetterCaption;
+
+  /// No description provided for @templateSerifFormalLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Serif Formal'**
+  String get templateSerifFormalLetter;
+
+  /// No description provided for @templateSerifFormalLetterCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Centred serif letterhead with a rule under the name.'**
+  String get templateSerifFormalLetterCaption;
+
+  /// No description provided for @templateMonogramLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Monogram'**
+  String get templateMonogramLetter;
+
+  /// No description provided for @templateMonogramLetterCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Circular initials beside a clean name and contact block.'**
+  String get templateMonogramLetterCaption;
+
+  /// No description provided for @templateBannerLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Banner Letter'**
+  String get templateBannerLetter;
+
+  /// No description provided for @templateBannerLetterCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-tone colour banner across the top of the page.'**
+  String get templateBannerLetterCaption;
+
+  /// No description provided for @templateSidePanelLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Side Panel'**
+  String get templateSidePanelLetter;
+
+  /// No description provided for @templateSidePanelLetterCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Tinted side panel holding your contact details.'**
+  String get templateSidePanelLetterCaption;
+
+  /// No description provided for @templateOutlineFrameLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Outline Frame'**
+  String get templateOutlineFrameLetter;
+
+  /// No description provided for @templateOutlineFrameLetterCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Thin colour frame around a centred letterhead.'**
+  String get templateOutlineFrameLetterCaption;
+
+  /// No description provided for @templateDotAccentLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Dot Accent'**
+  String get templateDotAccentLetter;
+
+  /// No description provided for @templateDotAccentLetterCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Row of colour dots above a modern nameplate.'**
+  String get templateDotAccentLetterCaption;
 
   /// No description provided for @autoSync.
   ///
