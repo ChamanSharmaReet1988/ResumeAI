@@ -9760,6 +9760,32 @@ Widget _minimalProfileReferenceColumn(
   );
 }
 
+/// Real lady photo filling the Charcoal Curve picture box edge-to-edge
+/// (same quality approach as Corporate's male headshot).
+Widget _charcoalCurveAvatarPlaceholder(ResumeData resume) {
+  if (resume.isGallerySample) {
+    return Image.asset(
+      kSampleAvatarFemaleAsset,
+      fit: BoxFit.cover,
+      alignment: Alignment.center,
+      width: double.infinity,
+      height: double.infinity,
+      filterQuality: FilterQuality.medium,
+    );
+  }
+  return Center(
+    child: Text(
+      _pdfAlignedInitials(resume),
+      style: TextStyle(
+        color: resume.charcoalCurveAccentColor,
+        fontSize: 30,
+        fontWeight: FontWeight.w700,
+        fontFamily: ResumeTextFont.outfit.flutterFontFamily,
+      ),
+    ),
+  );
+}
+
 /// Charcoal Curve live preview: curved charcoal rail, photo nameplate, and a
 /// main column that finishes with rated skill bars. Mirrors the PDF page.
 class _CharcoalCurvePreview extends StatelessWidget {
@@ -9779,6 +9805,10 @@ class _CharcoalCurvePreview extends StatelessWidget {
   static const double _avatarSize = 140;
   static const double _avatarLeft = 34;
   static const double _avatarTop = 48;
+  /// Other corners of the photo box.
+  static const double _avatarCornerRadius = 18;
+  /// Bottom-right corner is 3× the other corners.
+  static const double _avatarCornerRadiusBottomRight = _avatarCornerRadius * 3;
   static const double _mainLeft = _railWidth + 32;
   static const double _mainRight = 40;
   static const double _pageTop = 48;
@@ -10228,22 +10258,33 @@ class _CharcoalCurvePreview extends StatelessWidget {
                     width: _avatarSize,
                     height: _avatarSize,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
-                      child: ColoredBox(
-                        color: Color.lerp(accent, Colors.white, 0.55) ?? accent,
-                        child: hasProfileImage
-                            ? Image.file(
-                                File(avatarPath),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => _avatarFallback(
-                                  resume,
-                                  style(FontWeight.w700, 30, accent),
-                                ),
-                              )
-                            : _avatarFallback(
-                                resume,
-                                style(FontWeight.w700, 30, accent),
-                              ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(_avatarCornerRadius),
+                        topRight: Radius.circular(_avatarCornerRadius),
+                        bottomLeft: Radius.circular(_avatarCornerRadius),
+                        bottomRight:
+                            Radius.circular(_avatarCornerRadiusBottomRight),
+                      ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ColoredBox(
+                            color:
+                                Color.lerp(accent, Colors.white, 0.55) ??
+                                accent,
+                          ),
+                          if (hasProfileImage)
+                            Image.file(
+                              File(avatarPath),
+                              fit: BoxFit.cover,
+                              alignment: Alignment.center,
+                              filterQuality: FilterQuality.medium,
+                              errorBuilder: (_, _, _) =>
+                                  _charcoalCurveAvatarPlaceholder(resume),
+                            )
+                          else
+                            _charcoalCurveAvatarPlaceholder(resume),
+                        ],
                       ),
                     ),
                   ),

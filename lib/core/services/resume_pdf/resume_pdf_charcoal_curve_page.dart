@@ -9,6 +9,9 @@ const double _charcoalCurveRailTopPt = 150.0;
 const double _charcoalCurveAvatarPt = 140.0;
 const double _charcoalCurveAvatarLeftPt = 34.0;
 const double _charcoalCurveAvatarTopPt = 48.0;
+const double _charcoalCurveAvatarCornerPt = 18.0;
+const double _charcoalCurveAvatarCornerBottomRightPt =
+    _charcoalCurveAvatarCornerPt * 3;
 const double _charcoalCurveMainLeftPt = _charcoalCurveRailWidthPt + 32.0;
 const double _charcoalCurveMainRightPt = 40.0;
 const double _charcoalCurvePageTopPt = 48.0;
@@ -324,25 +327,44 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                   pw.Positioned(
                     left: _charcoalCurveAvatarLeftPt,
                     top: _charcoalCurveAvatarTopPt,
-                    child: pw.ClipRRect(
-                      horizontalRadius: 18,
-                      verticalRadius: 18,
-                      child: pw.Container(
-                        width: _charcoalCurveAvatarPt,
-                        height: _charcoalCurveAvatarPt,
+                    child: pw.Container(
+                      width: _charcoalCurveAvatarPt,
+                      height: _charcoalCurveAvatarPt,
+                      alignment: pw.Alignment.center,
+                      decoration: pw.BoxDecoration(
                         color: _pdfMix(accent, PdfColors.white, 0.55),
-                        alignment: pw.Alignment.center,
-                        child: profileImage != null
-                            ? pw.Image(profileImage, fit: pw.BoxFit.cover)
-                            : pw.Text(
-                                _resumeInitials(resume),
-                                style: style(
-                                  ResumeFontWeight.w700,
-                                  30,
-                                  accent,
-                                ),
+                        borderRadius: const pw.BorderRadius.only(
+                          topLeft: pw.Radius.circular(
+                            _charcoalCurveAvatarCornerPt,
+                          ),
+                          topRight: pw.Radius.circular(
+                            _charcoalCurveAvatarCornerPt,
+                          ),
+                          bottomLeft: pw.Radius.circular(
+                            _charcoalCurveAvatarCornerPt,
+                          ),
+                          bottomRight: pw.Radius.circular(
+                            _charcoalCurveAvatarCornerBottomRightPt,
+                          ),
+                        ),
+                        image: profileImage == null
+                            ? null
+                            : pw.DecorationImage(
+                                image: profileImage,
+                                fit: pw.BoxFit.cover,
+                                alignment: pw.Alignment.center,
                               ),
                       ),
+                      child: profileImage != null
+                          ? null
+                          : pw.Text(
+                              _resumeInitials(resume),
+                              style: style(
+                                ResumeFontWeight.w700,
+                                30,
+                                accent,
+                              ),
+                            ),
                     ),
                   ),
                   pw.Positioned(
