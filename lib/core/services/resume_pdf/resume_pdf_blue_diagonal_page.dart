@@ -209,16 +209,15 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
               pw.Padding(
                 padding: const pw.EdgeInsets.only(bottom: 7),
                 child: pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    icon(kind, 12, titleColor),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.only(top: 1),
+                      child: icon(kind, 12, titleColor),
+                    ),
                     pw.SizedBox(width: 9),
                     pw.Expanded(
-                      child: pw.FittedBox(
-                        fit: pw.BoxFit.scaleDown,
-                        alignment: pw.Alignment.centerLeft,
-                        child: pw.Text(value, style: bodyStyle),
-                      ),
+                      child: pw.Text(value, style: bodyStyle),
                     ),
                   ],
                 ),

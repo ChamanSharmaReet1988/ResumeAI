@@ -8088,16 +8088,16 @@ class _TimelineProfilePreview extends StatelessWidget {
     Widget sidebarBullet(String text) => Padding(
       padding: const EdgeInsets.only(bottom: 5),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 4,
             height: 4,
-            margin: const EdgeInsets.only(right: 7),
+            margin: const EdgeInsets.only(top: 3, right: 7),
             decoration: BoxDecoration(color: band, shape: BoxShape.circle),
           ),
           Expanded(
-            child: Text(text, style: sidebarItem, maxLines: 2),
+            child: Text(text, style: sidebarItem),
           ),
         ],
       ),
@@ -8937,11 +8937,15 @@ class _BlueDiagonalPreview extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 7),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(icon, size: 12, color: titleColor),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Icon(icon, size: 12, color: titleColor),
+                  ),
                   const SizedBox(width: 9),
                   Expanded(
-                    child: Text(value, style: bodyText, maxLines: 1),
+                    child: Text(value, style: bodyText),
                   ),
                 ],
               ),

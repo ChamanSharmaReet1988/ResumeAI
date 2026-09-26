@@ -51,7 +51,7 @@ pw.Widget _timelineProfileMainPad(
 
 List<_TimelineProfilePageSlice> _timelineProfilePageSlices({
   required List<String> skills,
-  required int contactCount,
+  required List<String> contacts,
   required double detailPt,
   PdfPageFormat pageFormat = PdfPageFormat.a4,
 }) {
@@ -67,11 +67,25 @@ List<_TimelineProfilePageSlice> _timelineProfilePageSlices({
       pageFormat.height - _timelineProfileTopPt - _timelineProfileBottomPt;
 
   const headingBlock = 14.0 + 7.0 + 13.0 + 4.0 + 1.0;
-  final contactRowHeight =
-      (detailPt - 0.5) * ResumeTypography.bodyTextLineHeight + 5;
-  final contactBlock = contactCount == 0
+  final contactLineHeight =
+      (detailPt - 0.5) * ResumeTypography.bodyTextLineHeight;
+  // Links wrap to the next line (no shrink), so budget height per contact.
+  double contactItemHeight(String value) {
+    final lines = _slateSidebarEstimatedSkillLines(
+      value,
+      detailPt - 0.5,
+      railTextWidth - 11,
+    );
+    return lines * contactLineHeight + 5;
+  }
+
+  final contactBlock = contacts.isEmpty
       ? 0.0
-      : headingBlock + contactCount * contactRowHeight;
+      : headingBlock +
+            contacts.fold<double>(
+              0,
+              (sum, value) => sum + contactItemHeight(value),
+            );
 
   double skillHeight(String item) {
     final lines = _slateSidebarEstimatedSkillLines(
@@ -222,7 +236,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
 
     final sidebarSlices = _timelineProfilePageSlices(
       skills: skills,
-      contactCount: contacts.length,
+      contacts: contacts,
       detailPt: detailPt,
     );
     final sidebarPageCount = sidebarSlices.length;
@@ -354,31 +368,25 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
         ),
       );
 
-      pw.Widget item(String text, {bool shrink = false}) => pw.Padding(
+      pw.Widget item(String text) => pw.Padding(
         padding: const pw.EdgeInsets.only(bottom: 5),
         child: pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Container(
               width: 4,
               height: 4,
-              margin: const pw.EdgeInsets.only(right: 7),
+              margin: const pw.EdgeInsets.only(top: 3, right: 7),
               decoration: pw.BoxDecoration(
                 color: bandColor,
                 shape: pw.BoxShape.circle,
               ),
             ),
             pw.Expanded(
-              child: shrink
-                  ? pw.FittedBox(
-                      fit: pw.BoxFit.scaleDown,
-                      alignment: pw.Alignment.centerLeft,
-                      child: pw.Text(text, style: itemStyle),
-                    )
-                  : _headerSidebarMaybeHighlight(
-                      highlight: highlightedSkills.contains(text),
-                      child: pw.Text(text, style: itemStyle),
-                    ),
+              child: _headerSidebarMaybeHighlight(
+                highlight: highlightedSkills.contains(text),
+                child: pw.Text(text, style: itemStyle),
+              ),
             ),
           ],
         ),
@@ -389,7 +397,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
         children: [
           if (slice.showContact && contacts.isNotEmpty) ...[
             heading('Contact'),
-            for (final value in contacts) item(value, shrink: true),
+            for (final value in contacts) item(value),
           ],
           if (slice.showSkillsHeading) heading('Skills'),
           for (final skill in slice.skills) item(skill),
