@@ -79,19 +79,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Jika aplikasi ini membantu, penilaian singkat sangat berarti bagi kami.';
 
   @override
-  String get retentionFeedbackTitle => 'Jangan hapus ResumeAI dulu';
-
-  @override
-  String get retentionFeedbackBody =>
-      'Jika ada yang kurang beres, kirim masukan daripada menghapus aplikasi. Kami baca setiap pesan dan terus memperbaiki aplikasi.';
-
-  @override
-  String get sendFeedback => 'Kirim masukan';
-
-  @override
-  String get keepUsingApp => 'Saya tetap pakai';
-
-  @override
   String get maybeLater => 'Nanti saja';
 
   @override

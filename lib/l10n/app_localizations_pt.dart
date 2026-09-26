@@ -79,19 +79,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Se o app está te ajudando, uma avaliação rápida faz muita diferença.';
 
   @override
-  String get retentionFeedbackTitle => 'Por favor, não remova o ResumeAI';
-
-  @override
-  String get retentionFeedbackBody =>
-      'Se algo não estiver funcionando, envie um feedback em vez de desinstalar. Lemos cada mensagem e seguimos melhorando o app.';
-
-  @override
-  String get sendFeedback => 'Enviar feedback';
-
-  @override
-  String get keepUsingApp => 'Vou continuar usando';
-
-  @override
   String get maybeLater => 'Agora não';
 
   @override

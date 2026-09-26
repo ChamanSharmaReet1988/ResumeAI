@@ -2338,9 +2338,7 @@ class _HeaderSidebarPreview extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 6),
                               child: Text(
-                                item,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
+                                _headerSidebarPreviewWrapFriendlyLine(item),
                                 style: item.contains('@')
                                     ? railBodyStyle.copyWith(
                                         decoration: TextDecoration.underline,
@@ -7214,6 +7212,20 @@ String _headerSidebarPreviewJobLine(WorkExperience item) {
   if (role.isEmpty) return company;
   if (company.isEmpty) return role;
   return '$role, $company';
+}
+
+/// Same wrap-friendly breaks as the PDF Details rail so long links wrap instead
+/// of shrinking.
+String _headerSidebarPreviewWrapFriendlyLine(String text) {
+  return text
+      .replaceAll('/', '/\u200B')
+      .replaceAll('.', '.\u200B')
+      .replaceAll('@', '@\u200B')
+      .replaceAll('-', '-\u200B')
+      .replaceAll('_', '_\u200B')
+      .replaceAll('?', '?\u200B')
+      .replaceAll('=', '=\u200B')
+      .replaceAll('&', '&\u200B');
 }
 
 String _headerSidebarPreviewDateLabel(String startDate, String endDate) {

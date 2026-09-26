@@ -28,7 +28,6 @@ import '../cover_letters/cover_letter_preview_screen.dart';
 import '../home/home_screen.dart';
 import '../premium/premium_gate.dart';
 import '../settings/settings_screen.dart';
-import '../shared/retention_feedback_dialog.dart';
 import '../shared/view_models.dart';
 import '../templates/templates_screen.dart';
 import 'app_shell_scope.dart';
@@ -43,7 +42,6 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
   HomeSegment _homeSegment = HomeSegment.resumes;
-  ResumeLibraryViewModel? _resumeLibrary;
   StreamSubscription<DeepLinkDestination>? _deepLinkSubscription;
   bool _deepLinkListenerAttached = false;
   bool _recordedLaunchHomeVisit = false;
@@ -56,15 +54,10 @@ class _AppShellState extends State<AppShell> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final library = context.read<ResumeLibraryViewModel>();
-    if (!identical(_resumeLibrary, library)) {
-      _resumeLibrary?.removeListener(_onResumeLibraryChanged);
-      _resumeLibrary = library;
-      _resumeLibrary!.addListener(_onResumeLibraryChanged);
-      final countLaunchVisit = !_recordedLaunchHomeVisit;
+    if (!_recordedLaunchHomeVisit) {
       _recordedLaunchHomeVisit = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        unawaited(_onHomeBecameVisible(countVisit: countLaunchVisit));
+        unawaited(_onHomeBecameVisible(countVisit: true));
       });
     }
     _attachDeepLinkListenerIfNeeded();
@@ -102,12 +95,7 @@ class _AppShellState extends State<AppShell> {
   @override
   void dispose() {
     _deepLinkSubscription?.cancel();
-    _resumeLibrary?.removeListener(_onResumeLibraryChanged);
     super.dispose();
-  }
-
-  void _onResumeLibraryChanged() {
-    _maybePromptHomeReview();
   }
 
   Future<void> _onHomeBecameVisible({required bool countVisit}) async {
@@ -118,32 +106,6 @@ class _AppShellState extends State<AppShell> {
     review.onArrivedAtHome();
     if (countVisit) {
       await review.recordHomeVisit();
-    }
-    await _maybePromptHomeReview();
-  }
-
-  Future<void> _maybePromptHomeReview() async {
-    if (!mounted || _currentIndex != 0) {
-      return;
-    }
-    final library = _resumeLibrary;
-    if (library == null || library.isLoading) {
-      return;
-    }
-
-    final review = context.read<InAppReviewPromptService>();
-    if (!await review.claimHomePrompt(resumeCount: library.resumes.length)) {
-      return;
-    }
-    if (!mounted) {
-      review.endPromptOffer();
-      return;
-    }
-
-    try {
-      await presentRetentionFeedbackPrompt(context);
-    } finally {
-      review.endPromptOffer();
     }
   }
 
@@ -174,7 +136,6 @@ class _AppShellState extends State<AppShell> {
       _homeSegment = HomeSegment.resumes;
     });
     context.read<InAppReviewPromptService>().onArrivedAtHome();
-    _maybePromptHomeReview();
   }
 
   void _goToHomeCoverLetterTab() {
@@ -183,7 +144,6 @@ class _AppShellState extends State<AppShell> {
       _homeSegment = HomeSegment.coverLetters;
     });
     context.read<InAppReviewPromptService>().onArrivedAtHome();
-    _maybePromptHomeReview();
   }
 
   String _activeHeaderTitle(AppLocalizations l10n) {

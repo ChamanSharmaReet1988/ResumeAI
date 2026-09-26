@@ -240,30 +240,6 @@ abstract class AppLocalizations {
   /// **'If this app is helping you, a quick rating would mean a lot.'**
   String get ratePromptBody;
 
-  /// No description provided for @retentionFeedbackTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Please don\'t remove ResumeAI'**
-  String get retentionFeedbackTitle;
-
-  /// No description provided for @retentionFeedbackBody.
-  ///
-  /// In en, this message translates to:
-  /// **'If something isn\'t working, send us feedback instead of uninstalling. We read every message and keep improving the app.'**
-  String get retentionFeedbackBody;
-
-  /// No description provided for @sendFeedback.
-  ///
-  /// In en, this message translates to:
-  /// **'Send feedback'**
-  String get sendFeedback;
-
-  /// No description provided for @keepUsingApp.
-  ///
-  /// In en, this message translates to:
-  /// **'I\'ll keep using it'**
-  String get keepUsingApp;
-
   /// No description provided for @maybeLater.
   ///
   /// In en, this message translates to:

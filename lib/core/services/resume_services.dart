@@ -804,6 +804,20 @@ List<String> _headerSidebarSkillLines(ResumeData resume) {
   return resume.skillsLinesForDisplay;
 }
 
+/// Inserts zero-width break opportunities so long URLs/emails wrap instead of
+/// being shrunk to fit the narrow Details rail.
+String _headerSidebarWrapFriendlyLine(String text) {
+  return text
+      .replaceAll('/', '/\u200B')
+      .replaceAll('.', '.\u200B')
+      .replaceAll('@', '@\u200B')
+      .replaceAll('-', '-\u200B')
+      .replaceAll('_', '_\u200B')
+      .replaceAll('?', '?\u200B')
+      .replaceAll('=', '=\u200B')
+      .replaceAll('&', '&\u200B');
+}
+
 int _headerSidebarEstimatedLineCount(String text, double fontSize) {
   final normalized = text.trim().replaceAll(RegExp(r'\s+'), ' ');
   if (normalized.isEmpty) {
@@ -1133,17 +1147,12 @@ pw.Widget _headerSidebarRailPanel({
           pw.Text('Add contact details', style: bodyStyle)
         else
           for (final item in infoItems) ...[
-            // Links have no spaces to wrap on and would be clipped by the
-            // narrow rail, so scale the line down when it does not fit.
-            pw.FittedBox(
-              fit: pw.BoxFit.scaleDown,
-              alignment: pw.Alignment.centerLeft,
-              child: pw.Text(
-                item,
-                style: item.contains('@')
-                    ? bodyStyle.copyWith(decoration: pw.TextDecoration.underline)
-                    : bodyStyle,
-              ),
+            // Wrap long links onto the next line at full size (no shrink).
+            pw.Text(
+              _headerSidebarWrapFriendlyLine(item),
+              style: item.contains('@')
+                  ? bodyStyle.copyWith(decoration: pw.TextDecoration.underline)
+                  : bodyStyle,
             ),
             pw.SizedBox(height: 6),
           ],
