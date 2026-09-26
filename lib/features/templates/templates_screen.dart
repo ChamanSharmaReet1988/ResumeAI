@@ -3756,6 +3756,22 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
                       ),
                     ),
                   // The tile can be taller than the scaled page, so continue
+                  // the bold pill footer bar to the bottom of the tile.
+                  if (resume.template.userFacingTemplate ==
+                          ResumeTemplate.boldPill &&
+                      contentHeight != null &&
+                      contentHeight >
+                          targetWidth * (841.89 / _pageWidth) - 4)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: targetWidth * (841.89 / _pageWidth) - 2,
+                      bottom: 0,
+                      child: ColoredBox(
+                        color: resume.boldPillAccentColor,
+                      ),
+                    ),
+                  // The tile can be taller than the scaled page, so continue
                   // the sidebar band to the bottom of the tile.
                   if (resume.template.userFacingTemplate ==
                       ResumeTemplate.timelineProfile)
