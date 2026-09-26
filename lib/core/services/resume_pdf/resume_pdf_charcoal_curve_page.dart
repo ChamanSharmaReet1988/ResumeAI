@@ -14,10 +14,25 @@ const double _charcoalCurveAvatarCornerBottomRightPt =
     _charcoalCurveAvatarCornerPt * 3;
 const double _charcoalCurveMainLeftPt = _charcoalCurveRailWidthPt + 32.0;
 const double _charcoalCurveMainRightPt = 40.0;
+/// Extra left inset used on page 1 so body text clears the charcoal rail.
+/// From page 2 the MultiPage uses full-width side margins instead.
+const double _charcoalCurvePage1ContentInsetPt =
+    _charcoalCurveMainLeftPt - _charcoalCurveMainRightPt;
 const double _charcoalCurvePageTopPt = 48.0;
 const double _charcoalCurvePageBottomPt = 40.0;
 const double _charcoalCurveMetaColumnPt = 120.0;
 const double _charcoalCurveSkillLabelPt = 128.0;
+
+/// Pads main-column widgets beside the rail on page 1; no pad from page 2 so
+/// text can use the full page width.
+pw.Widget _charcoalCurveMainPad(pw.Widget child) => pw.DelayedWidget(
+  build: (context) => pw.Padding(
+    padding: pw.EdgeInsets.only(
+      left: context.pageNumber == 1 ? _charcoalCurvePage1ContentInsetPt : 0,
+    ),
+    child: child,
+  ),
+);
 
 /// Custom sections with these titles read as a short "about" paragraph in the
 /// rail instead of a main-column section.
@@ -94,8 +109,9 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
     pw.Widget splitRow({
       required List<pw.Widget> meta,
       required List<pw.Widget> detail,
+      double bottom = 12,
     }) => pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 12),
+      padding: pw.EdgeInsets.only(bottom: bottom),
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -116,6 +132,59 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
         ],
       ),
     );
+
+    /// Work rows split into separate widgets so a page break can fall between
+    /// bullets instead of leaving a large empty band at the bottom of page 1.
+    List<pw.Widget> workEntry(
+      WorkExperience item, {
+      bool highlight = false,
+    }) {
+      final bullets = _workBulletLines(item);
+      final meta = <pw.Widget>[
+        pw.Text(
+          item.company.trim().ifEmpty('Company'),
+          style: entryTitleStyle,
+        ),
+        pw.SizedBox(height: 2),
+        pw.Text(
+          educationDateRangeLabel(item.startDate, item.endDate),
+          style: bodyStyle,
+        ),
+      ];
+      pw.Widget indent(pw.Widget child) => pw.Padding(
+        padding: const pw.EdgeInsets.only(
+          left: _charcoalCurveMetaColumnPt + 18,
+          top: 3,
+        ),
+        child: child,
+      );
+      final header = _headerSidebarMaybeHighlight(
+        highlight: highlight,
+        child: splitRow(
+          meta: meta,
+          detail: [
+            pw.Text(
+              item.role.trim().ifEmpty('Role'),
+              style: entryTitleStyle,
+            ),
+            if (bullets.isNotEmpty) ...[
+              pw.SizedBox(height: 3),
+              pw.Text(bullets.first, style: bodyStyle),
+            ],
+          ],
+          bottom: bullets.length <= 1 ? 12 : 0,
+        ),
+      );
+      return [
+        header,
+        for (final line in bullets.skip(1))
+          _headerSidebarMaybeHighlight(
+            highlight: highlight,
+            child: indent(pw.Text(line, style: bodyStyle)),
+          ),
+        if (bullets.length > 1) pw.SizedBox(height: 12),
+      ];
+    }
 
     pw.Widget skillBar(String skill) {
       final filled = (resume.proficiencyFractionForSkill(skill) * 100)
@@ -297,33 +366,37 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
       pw.MultiPage(
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4,
+          // Full-page side margins; page 1 body is inset via
+          // [_charcoalCurveMainPad] so it clears the rail. Page 2+ uses the
+          // full width with no black sidebar.
           margin: const pw.EdgeInsets.fromLTRB(
-            _charcoalCurveMainLeftPt,
+            _charcoalCurveMainRightPt,
             _charcoalCurvePageTopPt,
             _charcoalCurveMainRightPt,
             _charcoalCurvePageBottomPt,
           ),
-          buildBackground: (context) => pw.FullPage(
-            ignoreMargins: true,
-            child: pw.Stack(
-              children: [
-                pw.Positioned(
-                  left: 0,
-                  top: context.pageNumber == 1 ? _charcoalCurveRailTopPt : 0,
-                  bottom: 0,
-                  child: pw.Container(
-                    width: _charcoalCurveRailWidthPt,
-                    decoration: pw.BoxDecoration(
-                      color: accent,
-                      borderRadius: context.pageNumber == 1
-                          ? const pw.BorderRadius.only(
-                              topRight: pw.Radius.circular(78),
-                            )
-                          : null,
+          buildBackground: (context) {
+            if (context.pageNumber != 1) {
+              return pw.SizedBox();
+            }
+            return pw.FullPage(
+              ignoreMargins: true,
+              child: pw.Stack(
+                children: [
+                  pw.Positioned(
+                    left: 0,
+                    top: _charcoalCurveRailTopPt,
+                    bottom: 0,
+                    child: pw.Container(
+                      width: _charcoalCurveRailWidthPt,
+                      decoration: pw.BoxDecoration(
+                        color: accent,
+                        borderRadius: const pw.BorderRadius.only(
+                          topRight: pw.Radius.circular(78),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                if (context.pageNumber == 1) ...[
                   pw.Positioned(
                     left: _charcoalCurveAvatarLeftPt,
                     top: _charcoalCurveAvatarTopPt,
@@ -382,176 +455,158 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     ),
                   ),
                 ],
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
-        build: (context) => [
-          pw.Container(
-            width: double.infinity,
-            padding: const pw.EdgeInsets.fromLTRB(24, 22, 24, 22),
-            decoration: pw.BoxDecoration(
-              color: accent,
-              borderRadius: const pw.BorderRadius.only(
-                topLeft: pw.Radius.circular(8),
-                bottomLeft: pw.Radius.circular(8),
-                topRight: pw.Radius.circular(46),
-                bottomRight: pw.Radius.circular(46),
+        build: (context) {
+          final body = <pw.Widget>[
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.fromLTRB(24, 22, 24, 22),
+              decoration: pw.BoxDecoration(
+                color: accent,
+                borderRadius: const pw.BorderRadius.only(
+                  topLeft: pw.Radius.circular(8),
+                  bottomLeft: pw.Radius.circular(8),
+                  topRight: pw.Radius.circular(46),
+                  bottomRight: pw.Radius.circular(46),
+                ),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(_displayName(resume), style: nameStyle),
+                  if (resume.jobTitle.trim().isNotEmpty) ...[
+                    pw.SizedBox(height: 5),
+                    pw.Text(resume.jobTitle.trim(), style: jobStyle),
+                  ],
+                ],
               ),
             ),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(_displayName(resume), style: nameStyle),
-                if (resume.jobTitle.trim().isNotEmpty) ...[
-                  pw.SizedBox(height: 5),
-                  pw.Text(resume.jobTitle.trim(), style: jobStyle),
-                ],
-              ],
-            ),
-          ),
-          if (summary.isNotEmpty) ...[
-            sectionHeading('Summary'),
-            _headerSidebarMaybeHighlight(
-              highlight: highlightSummary,
-              child: pw.Text(summary, style: bodyStyle),
-            ),
-          ],
-          ..._pdfBodySectionsInBuilderOrder(
-            resume,
-            buildSection: (id) {
-              final customIndex = ResumeBuilderSectionIds.customIndex(id);
-              if (customIndex != null) {
-                if (customIndex < 0 ||
-                    customIndex >= resume.customSections.length) {
-                  return null;
-                }
-                final item = resume.customSections[customIndex];
-                if (!mainCustomSections.contains(item)) return null;
-                return [
-                  sectionHeading(item.title.ifEmpty('Custom section')),
-                  ..._pwCustomSectionBodyWidgets(
-                    item,
-                    garamond: fonts,
-                    bodyFontPt: detailPt,
-                    accentStripGaramondBody: true,
-                  ),
-                ];
-              }
-              switch (id) {
-                case ResumeBuilderSectionIds.education:
-                  final items = resume.visibleEducation;
-                  if (items.isEmpty) return null;
+            if (summary.isNotEmpty) ...[
+              sectionHeading('Summary'),
+              _headerSidebarMaybeHighlight(
+                highlight: highlightSummary,
+                child: pw.Text(summary, style: bodyStyle),
+              ),
+            ],
+            ..._pdfBodySectionsInBuilderOrder(
+              resume,
+              buildSection: (id) {
+                final customIndex = ResumeBuilderSectionIds.customIndex(id);
+                if (customIndex != null) {
+                  if (customIndex < 0 ||
+                      customIndex >= resume.customSections.length) {
+                    return null;
+                  }
+                  final item = resume.customSections[customIndex];
+                  if (!mainCustomSections.contains(item)) return null;
                   return [
-                    sectionHeading('Education'),
-                    for (final item in items)
-                      splitRow(
-                        meta: [
-                          pw.Text(
-                            item.institution.trim().ifEmpty('Institution'),
-                            style: entryTitleStyle,
-                          ),
-                          if (educationScoreDisplayLabel(item).isNotEmpty) ...[
-                            pw.SizedBox(height: 2),
-                            pw.Text(
-                              educationScoreDisplayLabel(item),
-                              style: bodyStyle,
-                            ),
-                          ],
-                        ],
-                        detail: [
-                          pw.Text(
-                            educationDateRangeLabel(
-                              item.startDate,
-                              item.endDate,
-                            ),
-                            style: bodyStyle,
-                          ),
-                          if (item.degree.trim().isNotEmpty) ...[
-                            pw.SizedBox(height: 2),
-                            pw.Text(item.degree.trim(), style: bodyStyle),
-                          ],
-                        ],
-                      ),
+                    sectionHeading(item.title.ifEmpty('Custom section')),
+                    ..._pwCustomSectionBodyWidgets(
+                      item,
+                      garamond: fonts,
+                      bodyFontPt: detailPt,
+                      accentStripGaramondBody: true,
+                    ),
                   ];
-                case ResumeBuilderSectionIds.work:
-                  final items = resume.visibleWorkExperiences;
-                  if (items.isEmpty) return null;
-                  return [
-                    sectionHeading('Work Experience'),
-                    for (var i = 0; i < items.length; i++)
-                      _headerSidebarMaybeHighlight(
-                        highlight:
-                            highlightedBulletsByExperience[i]?.isNotEmpty ??
-                            false,
-                        child: splitRow(
+                }
+                switch (id) {
+                  case ResumeBuilderSectionIds.education:
+                    final items = resume.visibleEducation;
+                    if (items.isEmpty) return null;
+                    return [
+                      sectionHeading('Education'),
+                      for (final item in items)
+                        splitRow(
                           meta: [
                             pw.Text(
-                              items[i].company.trim().ifEmpty('Company'),
+                              item.institution.trim().ifEmpty('Institution'),
                               style: entryTitleStyle,
                             ),
-                            pw.SizedBox(height: 2),
-                            pw.Text(
-                              educationDateRangeLabel(
-                                items[i].startDate,
-                                items[i].endDate,
+                            if (educationScoreDisplayLabel(
+                              item,
+                            ).isNotEmpty) ...[
+                              pw.SizedBox(height: 2),
+                              pw.Text(
+                                educationScoreDisplayLabel(item),
+                                style: bodyStyle,
                               ),
-                              style: bodyStyle,
-                            ),
+                            ],
                           ],
                           detail: [
                             pw.Text(
-                              items[i].role.trim().ifEmpty('Role'),
-                              style: entryTitleStyle,
+                              educationDateRangeLabel(
+                                item.startDate,
+                                item.endDate,
+                              ),
+                              style: bodyStyle,
                             ),
-                            for (final line in _workBulletLines(items[i])) ...[
-                              pw.SizedBox(height: 3),
-                              pw.Text(line, style: bodyStyle),
+                            if (item.degree.trim().isNotEmpty) ...[
+                              pw.SizedBox(height: 2),
+                              pw.Text(item.degree.trim(), style: bodyStyle),
                             ],
                           ],
                         ),
-                      ),
-                  ];
-                case ResumeBuilderSectionIds.skills:
-                  if (skills.isEmpty) return null;
-                  return [
-                    sectionHeading('Skills'),
-                    for (final skill in skills) skillBar(skill),
-                  ];
-                case ResumeBuilderSectionIds.projects:
-                  final items = resume.visibleProjects;
-                  if (items.isEmpty) return null;
-                  return [
-                    sectionHeading('Projects'),
-                    for (final item in items)
-                      splitRow(
-                        meta: [
-                          pw.Text(
-                            item.title.trim().ifEmpty('Project'),
-                            style: entryTitleStyle,
-                          ),
-                          if (item.subtitle.trim().isNotEmpty) ...[
-                            pw.SizedBox(height: 2),
-                            pw.Text(item.subtitle.trim(), style: bodyStyle),
+                    ];
+                  case ResumeBuilderSectionIds.work:
+                    final items = resume.visibleWorkExperiences;
+                    if (items.isEmpty) return null;
+                    return [
+                      sectionHeading('Work Experience'),
+                      for (var i = 0; i < items.length; i++)
+                        ...workEntry(
+                          items[i],
+                          highlight:
+                              highlightedBulletsByExperience[i]?.isNotEmpty ??
+                              false,
+                        ),
+                    ];
+                  case ResumeBuilderSectionIds.skills:
+                    if (skills.isEmpty) return null;
+                    return [
+                      sectionHeading('Skills'),
+                      for (final skill in skills) skillBar(skill),
+                    ];
+                  case ResumeBuilderSectionIds.projects:
+                    final items = resume.visibleProjects;
+                    if (items.isEmpty) return null;
+                    return [
+                      sectionHeading('Projects'),
+                      for (final item in items)
+                        splitRow(
+                          meta: [
+                            pw.Text(
+                              item.title.trim().ifEmpty('Project'),
+                              style: entryTitleStyle,
+                            ),
+                            if (item.subtitle.trim().isNotEmpty) ...[
+                              pw.SizedBox(height: 2),
+                              pw.Text(item.subtitle.trim(), style: bodyStyle),
+                            ],
                           ],
-                        ],
-                        detail: [
-                          for (final line in [
-                            item.overview.trim(),
-                            item.impact.trim(),
-                            ...item.bullets.map((bullet) => bullet.trim()),
-                          ].where((line) => line.isNotEmpty)) ...[
-                            pw.Text(line, style: bodyStyle),
-                            pw.SizedBox(height: 3),
+                          detail: [
+                            for (final line in [
+                              item.overview.trim(),
+                              item.impact.trim(),
+                              ...item.bullets.map((bullet) => bullet.trim()),
+                            ].where((line) => line.isNotEmpty)) ...[
+                              pw.Text(line, style: bodyStyle),
+                              pw.SizedBox(height: 3),
+                            ],
                           ],
-                        ],
-                      ),
-                  ];
-              }
-              return null;
-            },
-          ),
-        ],
+                        ),
+                    ];
+                }
+                return null;
+              },
+            ),
+          ];
+          return [
+            for (final widget in body) _charcoalCurveMainPad(widget),
+          ];
+        },
       ),
     );
   }
