@@ -734,31 +734,19 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     required String sectionName,
     required void Function(bool) setIncluded,
   }) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return Transform.translate(
-      offset: const Offset(0, 2),
-      child: IconButton(
-        tooltip: included ? context.l10n.hideFromResume : context.l10n.showOnResume,
-        style: IconButton.styleFrom(
-          foregroundColor: primary,
-          padding: const EdgeInsetsDirectional.only(start: 6, end: 2),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          visualDensity: VisualDensity.compact,
-        ),
-        onPressed: viewModel.isBusy
-            ? null
-            : () async {
-                await _toggleResumeSectionVisibility(
-                  isIncluded: included,
-                  sectionName: sectionName,
-                  setIncluded: setIncluded,
-                );
-              },
-        icon: Icon(
-          included ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-          size: 24,
-        ),
+    return IconButton(
+      tooltip: included ? context.l10n.hideFromResume : context.l10n.showOnResume,
+      onPressed: viewModel.isBusy
+          ? null
+          : () async {
+              await _toggleResumeSectionVisibility(
+                isIncluded: included,
+                sectionName: sectionName,
+                setIncluded: setIncluded,
+              );
+            },
+      icon: Icon(
+        included ? Icons.visibility_outlined : Icons.visibility_off_outlined,
       ),
     );
   }
@@ -1334,7 +1322,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
-  Future<void> _confirmRemoveCustomSection(int index) async {
+  Future<void> _confirmRemoveCustomSection(
+    int index, {
+    bool popToSectionList = false,
+  }) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -1360,6 +1351,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       return;
     }
     context.read<ResumeEditorViewModel>().removeCustomSection(index);
+    if (!popToSectionList || !mounted) {
+      return;
+    }
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
   }
 
   Future<void> _openSection(int step) async {
@@ -1381,6 +1379,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           child: _ResumeSectionEditorScreen(
             step: normalizedStep,
             title: viewModel.titleForStep(normalizedStep, context.l10n),
+            titleLeadingBuilder: (context, editor) =>
+                _sectionEditorTitleAction(editor, normalizedStep),
             chrome: _editorChrome,
             buildContent: (context, editor) =>
                 _buildStepContentForStep(normalizedStep, editor),
@@ -1402,6 +1402,39 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget? _sectionEditorTitleAction(
+    ResumeEditorViewModel viewModel,
+    int step,
+  ) {
+    final customIndex = viewModel.customIndexAtStep(step);
+    if (customIndex != null) {
+      return IconButton(
+        tooltip: context.l10n.removeSection,
+        onPressed: viewModel.isBusy
+            ? null
+            : () async {
+                await _confirmRemoveCustomSection(
+                  customIndex,
+                  popToSectionList: true,
+                );
+              },
+        icon: const ImageIcon(AssetImage('assets/fonts/delete.png')),
+      );
+    }
+
+    final included = _defaultSectionIncluded(viewModel, step);
+    final includeSetter = _defaultSectionIncludeSetter(viewModel, step);
+    if (included == null || includeSetter == null) {
+      return null;
+    }
+    return _resumeSectionVisibilityLead(
+      viewModel: viewModel,
+      included: included,
+      sectionName: viewModel.titleForStep(step, context.l10n),
+      setIncluded: includeSetter,
     );
   }
 
@@ -1938,8 +1971,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       ],
     );
     return _StepSurface(
-      title: context.l10n.personalInformationTitle,
-      subtitle: context.l10n.personalInformationSubtitle,
+      title: '',
+      subtitle: '',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2071,14 +2104,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Widget _buildWorkStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
-      title: context.l10n.workExperienceTitle,
+      title: '',
       subtitle: '',
-      titleTrailing: _resumeSectionVisibilityLead(
-        viewModel: viewModel,
-        included: viewModel.resume.includeWorkInResume,
-        sectionName: context.l10n.workExperienceTitle,
-        setIncluded: viewModel.setIncludeWorkInResume,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2447,14 +2474,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Widget _buildEducationStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
-      title: context.l10n.sectionEducation,
-      subtitle: context.l10n.educationSubtitle,
-      titleTrailing: _resumeSectionVisibilityLead(
-        viewModel: viewModel,
-        included: viewModel.resume.includeEducationInResume,
-        sectionName: context.l10n.sectionEducation,
-        setIncluded: viewModel.setIncludeEducationInResume,
-      ),
+      title: '',
+      subtitle: '',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2657,14 +2678,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
 
     return _StepSurface(
-      title: context.l10n.sectionSkills,
-      subtitle: context.l10n.skillsSubtitle,
-      titleTrailing: _resumeSectionVisibilityLead(
-        viewModel: viewModel,
-        included: viewModel.resume.includeSkillsInResume,
-        sectionName: context.l10n.sectionSkills,
-        setIncluded: viewModel.setIncludeSkillsInResume,
-      ),
+      title: '',
+      subtitle: '',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -3095,14 +3110,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
   Widget _buildProjectsStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
-      title: context.l10n.sectionProjects,
-      subtitle: context.l10n.projectsSubtitle,
-      titleTrailing: _resumeSectionVisibilityLead(
-        viewModel: viewModel,
-        included: viewModel.resume.includeProjectsInResume,
-        sectionName: context.l10n.sectionProjects,
-        setIncluded: viewModel.setIncludeProjectsInResume,
-      ),
+      title: '',
+      subtitle: '',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -3312,25 +3321,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final item = viewModel.resume.customSections[index];
 
     return _StepSurface(
-      title: _customSectionStepTitle(context, item, index),
-      subtitle: item.layoutMode == CustomSectionLayoutMode.projects
-          ? context.l10n.customSectionProjectsSubtitle
-          : '',
-      titleTrailing: IconButton(
-        tooltip: context.l10n.removeSection,
-        style: IconButton.styleFrom(
-          padding: const EdgeInsetsDirectional.only(start: 6, end: 2),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          visualDensity: VisualDensity.compact,
-        ),
-        onPressed: viewModel.isBusy
-            ? null
-            : () async {
-                await _confirmRemoveCustomSection(index);
-              },
-        icon: const ImageIcon(AssetImage('assets/fonts/delete.png')),
-      ),
+      title: '',
+      subtitle: '',
       child: item.layoutMode == CustomSectionLayoutMode.projects
           ? _buildCustomSectionProjectsEditor(viewModel, index, item)
           : Column(
@@ -3695,18 +3687,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 }
 
-String _customSectionStepTitle(
-  BuildContext context,
-  CustomSectionItem item,
-  int index,
-) {
-  final t = item.title.trim();
-  if (t.isEmpty) {
-    return context.l10n.categoryNumber(index + 1);
-  }
-  return t;
-}
-
 enum _CustomSectionCreationType { normal, advance }
 
 class _NewCustomSectionDialogResult {
@@ -3719,7 +3699,7 @@ class _NewCustomSectionDialogResult {
   final _CustomSectionCreationType type;
 }
 
-class _ResumeSectionEditorScreen extends StatelessWidget {
+class _ResumeSectionEditorScreen extends StatefulWidget {
   const _ResumeSectionEditorScreen({
     required this.step,
     required this.title,
@@ -3732,6 +3712,7 @@ class _ResumeSectionEditorScreen extends StatelessWidget {
     required this.showEducationKeyboardHideButton,
     required this.onFocusPrevious,
     required this.onFocusNext,
+    this.titleLeadingBuilder,
   });
 
   final int step;
@@ -3746,103 +3727,157 @@ class _ResumeSectionEditorScreen extends StatelessWidget {
   final bool Function() showEducationKeyboardHideButton;
   final VoidCallback onFocusPrevious;
   final VoidCallback onFocusNext;
+  final Widget? Function(BuildContext context, ResumeEditorViewModel viewModel)?
+      titleLeadingBuilder;
+
+  @override
+  State<_ResumeSectionEditorScreen> createState() =>
+      _ResumeSectionEditorScreenState();
+}
+
+class _ResumeSectionEditorScreenState extends State<_ResumeSectionEditorScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+  }
+
+  double _keyboardInset(BuildContext context) {
+    final view = View.of(context);
+    return view.viewInsets.bottom / view.devicePixelRatio;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ResumeEditorViewModel>(
       builder: (context, viewModel, _) {
         return ValueListenableBuilder<int>(
-          valueListenable: chrome,
-          builder: (context, _, __) {
-            final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+          valueListenable: widget.chrome,
+          builder: (context, _, _) {
+            final keyboardInset = _keyboardInset(context);
             final showPersonalBar =
-                keyboardInset > 0 && showPersonalKeyboardBar();
+                keyboardInset > 0 && widget.showPersonalKeyboardBar();
             final showProjectBar =
-                keyboardInset > 0 && showProjectKeyboardBar();
+                keyboardInset > 0 && widget.showProjectKeyboardBar();
             final showCustomBar =
-                keyboardInset > 0 && showCustomKeyboardBar();
+                keyboardInset > 0 && widget.showCustomKeyboardBar();
             final showWorkHide =
-                keyboardInset > 0 && showWorkKeyboardHideButton();
+                keyboardInset > 0 && widget.showWorkKeyboardHideButton();
             final showEducationHide =
-                keyboardInset > 0 && showEducationKeyboardHideButton();
-            final isIosPersonal =
-                Theme.of(context).platform == TargetPlatform.iOS && step == 0;
+                keyboardInset > 0 && widget.showEducationKeyboardHideButton();
+            final showNavBar = showPersonalBar || showProjectBar;
+            final showHideButton = showNavBar ||
+                showCustomBar ||
+                showWorkHide ||
+                showEducationHide;
+            final isIosPersonal = Theme.of(context).platform ==
+                    TargetPlatform.iOS &&
+                widget.step == 0;
             final keyboardToolbarPadding = isIosPersonal ? 72.0 : 0.0;
+            final leading =
+                widget.titleLeadingBuilder?.call(context, viewModel);
+            final bottomSafe = MediaQuery.paddingOf(context).bottom;
 
             return Scaffold(
               resizeToAvoidBottomInset: false,
               appBar: AppBar(
                 leadingWidth: 56,
                 titleSpacing: 2,
-                title: Text(title),
+                title: Text(widget.title),
+                actions: leading == null
+                    ? null
+                    : [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: leading,
+                        ),
+                      ],
               ),
-              body: SafeArea(
-                child: Stack(
-                  children: [
-                    SingleChildScrollView(
-                      key: Key('step-scroll-$step'),
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.fromLTRB(
-                        20,
-                        16,
-                        20,
-                        24 + keyboardInset + keyboardToolbarPadding,
+              body: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned.fill(
+                    child: SafeArea(
+                      bottom: false,
+                      child: SingleChildScrollView(
+                        key: Key('step-scroll-${widget.step}'),
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.fromLTRB(
+                          20,
+                          16,
+                          20,
+                          24 +
+                              keyboardInset +
+                              keyboardToolbarPadding +
+                              (keyboardInset > 0 ? 56 : bottomSafe),
+                        ),
+                        child: widget.buildContent(context, viewModel),
                       ),
-                      child: buildContent(context, viewModel),
                     ),
-                    if (showPersonalBar || showProjectBar || showCustomBar)
-                      Positioned(
-                        left: 12,
-                        bottom: keyboardInset + 8,
-                        child: Material(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(14),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 4,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  tooltip: context.l10n.previousField,
-                                  onPressed: onFocusPrevious,
-                                  icon: const Icon(
-                                    Icons.keyboard_arrow_up_rounded,
-                                  ),
+                  ),
+                  if (showNavBar)
+                    Positioned(
+                      left: 12,
+                      bottom: keyboardInset + 8,
+                      child: Material(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(14),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: context.l10n.previousField,
+                                onPressed: widget.onFocusPrevious,
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_up_rounded,
                                 ),
-                                IconButton(
-                                  tooltip: context.l10n.nextField,
-                                  onPressed: onFocusNext,
-                                  icon: const Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                  ),
+                              ),
+                              IconButton(
+                                tooltip: context.l10n.nextField,
+                                onPressed: widget.onFocusNext,
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    if (showPersonalBar ||
-                        showProjectBar ||
-                        showCustomBar ||
-                        showWorkHide ||
-                        showEducationHide)
-                      Positioned(
-                        right: 12,
-                        bottom: keyboardInset + 8,
-                        child: IconButton.filledTonal(
-                          onPressed: () => FocusScope.of(context).unfocus(),
-                          icon: const Icon(Icons.keyboard_hide_rounded),
-                          tooltip: context.l10n.hideKeyboard,
-                        ),
+                    ),
+                  if (showHideButton)
+                    Positioned(
+                      right: 12,
+                      bottom: keyboardInset + 8,
+                      child: IconButton.filledTonal(
+                        onPressed: () => FocusScope.of(context).unfocus(),
+                        icon: const Icon(Icons.keyboard_hide_rounded),
+                        tooltip: context.l10n.hideKeyboard,
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             );
           },
@@ -4189,44 +4224,47 @@ class _StepSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasTitle = title.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (titleTrailing == null)
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            )
-          else
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
+          if (hasTitle) ...[
+            if (titleTrailing == null)
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              )
+            else
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
                     ),
-                  ),
-                  titleTrailing!,
-                ],
+                    titleTrailing!,
+                  ],
+                ),
               ),
-            ),
-          if (subtitle.trim().isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            if (subtitle.trim().isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
+            ],
+            const SizedBox(height: 8),
           ],
-          const SizedBox(height: 8),
           child,
         ],
       ),
