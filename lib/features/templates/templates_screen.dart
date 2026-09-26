@@ -3741,6 +3741,21 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
                       ),
                     ),
                   // The tile can be taller than the scaled page, so continue
+                  // the charcoal rail to the bottom of the tile.
+                  if (resume.template.userFacingTemplate ==
+                      ResumeTemplate.charcoalCurve)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: ColoredBox(
+                        color: resume.charcoalCurveAccentColor,
+                        child: SizedBox(
+                          width: targetWidth * (206 / _pageWidth),
+                        ),
+                      ),
+                    ),
+                  // The tile can be taller than the scaled page, so continue
                   // the sidebar band to the bottom of the tile.
                   if (resume.template.userFacingTemplate ==
                       ResumeTemplate.timelineProfile)
