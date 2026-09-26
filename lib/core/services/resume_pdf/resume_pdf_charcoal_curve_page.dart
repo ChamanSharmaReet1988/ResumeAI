@@ -21,7 +21,12 @@ const double _charcoalCurvePage1ContentInsetPt =
 const double _charcoalCurvePageTopPt = 48.0;
 const double _charcoalCurvePageBottomPt = 40.0;
 const double _charcoalCurveMetaColumnPt = 120.0;
-const double _charcoalCurveSkillLabelPt = 128.0;
+/// Skill name column (narrower so the bar does not dominate the row).
+const double _charcoalCurveSkillLabelPt = 96.0;
+/// Fixed skill-bar track width beside the rail (page 1).
+const double _charcoalCurveSkillBarPt = 88.0;
+/// Fixed skill-bar track width in each column on full-width pages.
+const double _charcoalCurveSkillBarFullPagePt = 72.0;
 
 /// Pads main-column widgets beside the rail on page 1; no pad from page 2 so
 /// text can use the full page width.
@@ -186,10 +191,51 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
       ];
     }
 
-    pw.Widget skillBar(String skill) {
+    final skills = resume.skillsLinesForDisplay;
+
+    pw.Widget skillBar(
+      String skill, {
+      required double barWidth,
+      bool expandLabel = false,
+    }) {
       final filled = (resume.proficiencyFractionForSkill(skill) * 100)
           .round()
           .clamp(8, 100);
+      final label = pw.Text(skill, style: entryTitleStyle);
+      final track = pw.SizedBox(
+        width: barWidth,
+        child: pw.Row(
+          children: [
+            pw.Expanded(
+              flex: filled,
+              child: pw.Container(
+                height: 7,
+                decoration: pw.BoxDecoration(
+                  color: accent,
+                  borderRadius: const pw.BorderRadius.only(
+                    topLeft: pw.Radius.circular(3.5),
+                    bottomLeft: pw.Radius.circular(3.5),
+                  ),
+                ),
+              ),
+            ),
+            if (filled < 100)
+              pw.Expanded(
+                flex: 100 - filled,
+                child: pw.Container(
+                  height: 7,
+                  decoration: pw.BoxDecoration(
+                    color: trackColor,
+                    borderRadius: const pw.BorderRadius.only(
+                      topRight: pw.Radius.circular(3.5),
+                      bottomRight: pw.Radius.circular(3.5),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
       return _headerSidebarMaybeHighlight(
         highlight: highlightedSkills.contains(skill),
         child: pw.Padding(
@@ -197,50 +243,71 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
           child: pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
-              pw.SizedBox(
-                width: _charcoalCurveSkillLabelPt,
-                child: pw.Text(skill, style: entryTitleStyle),
-              ),
-              pw.SizedBox(width: 14),
-              // The pdf package has no FractionallySizedBox, so the filled
-              // and empty parts of the bar share the row as flex weights.
-              pw.Expanded(
-                child: pw.Row(
-                  children: [
-                    pw.Expanded(
-                      flex: filled,
-                      child: pw.Container(
-                        height: 7,
-                        decoration: pw.BoxDecoration(
-                          color: accent,
-                          borderRadius: const pw.BorderRadius.only(
-                            topLeft: pw.Radius.circular(3.5),
-                            bottomLeft: pw.Radius.circular(3.5),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (filled < 100)
-                      pw.Expanded(
-                        flex: 100 - filled,
-                        child: pw.Container(
-                          height: 7,
-                          decoration: pw.BoxDecoration(
-                            color: trackColor,
-                            borderRadius: const pw.BorderRadius.only(
-                              topRight: pw.Radius.circular(3.5),
-                              bottomRight: pw.Radius.circular(3.5),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+              if (expandLabel)
+                pw.Expanded(child: label)
+              else
+                pw.SizedBox(
+                  width: _charcoalCurveSkillLabelPt,
+                  child: label,
                 ),
-              ),
+              pw.SizedBox(width: 10),
+              track,
             ],
           ),
         ),
       );
+    }
+
+    /// Page 1 (beside the rail): one skill per row. Full-width pages: two
+    /// columns so shorter bars sit side by side.
+    List<pw.Widget> skillsBody() {
+      if (skills.isEmpty) return const [];
+      return [
+        for (var i = 0; i < skills.length; i++)
+          pw.DelayedWidget(
+            build: (context) {
+              final fullWidth = context.pageNumber > 1;
+              if (!fullWidth) {
+                return skillBar(
+                  skills[i],
+                  barWidth: _charcoalCurveSkillBarPt,
+                );
+              }
+              // Pair skills on full-width pages; odd indices are covered by
+              // the previous row.
+              if (i.isOdd) {
+                return pw.SizedBox();
+              }
+              final right =
+                  i + 1 < skills.length ? skills[i + 1] : null;
+              return pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 0),
+                child: pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Expanded(
+                      child: skillBar(
+                        skills[i],
+                        barWidth: _charcoalCurveSkillBarFullPagePt,
+                        expandLabel: true,
+                      ),
+                    ),
+                    pw.SizedBox(width: 18),
+                    pw.Expanded(
+                      child: right == null
+                          ? pw.SizedBox()
+                          : skillBar(
+                              right,
+                              barWidth: _charcoalCurveSkillBarFullPagePt,
+                              expandLabel: true,
+                            ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ];
     }
 
     final aboutSections = resume.customSections
@@ -360,7 +427,6 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
     );
 
     final summary = resume.summary.trim();
-    final skills = resume.skillsLinesForDisplay;
 
     document.addPage(
       pw.MultiPage(
@@ -567,7 +633,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     if (skills.isEmpty) return null;
                     return [
                       sectionHeading('Skills'),
-                      for (final skill in skills) skillBar(skill),
+                      ...skillsBody(),
                     ];
                   case ResumeBuilderSectionIds.projects:
                     final items = resume.visibleProjects;

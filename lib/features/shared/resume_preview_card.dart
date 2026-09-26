@@ -9812,7 +9812,8 @@ class _CharcoalCurvePreview extends StatelessWidget {
   static const double _pageTop = 48;
   static const double _pageBottom = 40;
   static const double _metaColumn = 120;
-  static const double _skillLabel = 128;
+  static const double _skillLabel = 96;
+  static const double _skillBarWidth = 88;
 
   static final RegExp _railAboutTitle = RegExp(
     r'^(about( me)?|profile|objective)$',
@@ -9913,8 +9914,9 @@ class _CharcoalCurvePreview extends StatelessWidget {
               width: _skillLabel,
               child: Text(skill, style: entryTitleStyle),
             ),
-            const SizedBox(width: 14),
-            Expanded(
+            const SizedBox(width: 10),
+            SizedBox(
+              width: _skillBarWidth,
               child: Row(
                 children: [
                   Expanded(
