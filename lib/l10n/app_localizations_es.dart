@@ -1163,7 +1163,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get newSection => 'Nueva sección';
 
   @override
-  String get newSectionTitleHint => 'p. ej. Certificaciones, Premios';
+  String get newSectionTitleHint => 'p. ej. Certificado, Referencias, Premios';
 
   @override
   String get sectionTypeNormal => 'Normal';
@@ -1344,7 +1344,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get educationSubtitle =>
-      'Incluye tu título, institución y período de estudios.';
+      'Incluye tu título o diploma, institución y período de estudios.';
 
   @override
   String educationNumber(int number) {
@@ -1371,7 +1371,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get institution => 'Institución';
 
   @override
-  String get degree => 'Título';
+  String get degree => 'Título / Diploma';
 
   @override
   String get startYear => 'Año de inicio';

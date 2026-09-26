@@ -1162,7 +1162,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newSection => 'New section';
 
   @override
-  String get newSectionTitleHint => 'e.g. Certifications, Awards';
+  String get newSectionTitleHint => 'e.g. Certificate, Reference, Awards';
 
   @override
   String get sectionTypeNormal => 'Normal';
@@ -1343,7 +1343,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get educationSubtitle =>
-      'Include your degree, institution, and study timeline.';
+      'Include your degree or diploma, institution, and study timeline.';
 
   @override
   String educationNumber(int number) {
@@ -1364,13 +1364,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteEducationEntryMessage =>
-      'This will remove this school and degree from your resume. This cannot be undone.';
+      'This will remove this school and qualification from your resume. This cannot be undone.';
 
   @override
   String get institution => 'Institution';
 
   @override
-  String get degree => 'Degree';
+  String get degree => 'Degree / Diploma';
 
   @override
   String get startYear => 'Start year';

@@ -2049,7 +2049,7 @@ abstract class AppLocalizations {
   /// No description provided for @newSectionTitleHint.
   ///
   /// In en, this message translates to:
-  /// **'e.g. Certifications, Awards'**
+  /// **'e.g. Certificate, Reference, Awards'**
   String get newSectionTitleHint;
 
   /// No description provided for @sectionTypeNormal.
@@ -2379,7 +2379,7 @@ abstract class AppLocalizations {
   /// No description provided for @educationSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Include your degree, institution, and study timeline.'**
+  /// **'Include your degree or diploma, institution, and study timeline.'**
   String get educationSubtitle;
 
   /// No description provided for @educationNumber.
@@ -2415,7 +2415,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteEducationEntryMessage.
   ///
   /// In en, this message translates to:
-  /// **'This will remove this school and degree from your resume. This cannot be undone.'**
+  /// **'This will remove this school and qualification from your resume. This cannot be undone.'**
   String get deleteEducationEntryMessage;
 
   /// No description provided for @institution.
@@ -2427,7 +2427,7 @@ abstract class AppLocalizations {
   /// No description provided for @degree.
   ///
   /// In en, this message translates to:
-  /// **'Degree'**
+  /// **'Degree / Diploma'**
   String get degree;
 
   /// No description provided for @startYear.

@@ -1159,7 +1159,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get newSection => 'Bagian baru';
 
   @override
-  String get newSectionTitleHint => 'mis. Sertifikasi, Penghargaan';
+  String get newSectionTitleHint => 'mis. Sertifikat, Referensi, Penghargaan';
 
   @override
   String get sectionTypeNormal => 'Normal';
@@ -1339,7 +1339,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get educationSubtitle =>
-      'Sertakan gelar, institusi, dan jangka waktu studi Anda.';
+      'Sertakan gelar atau diploma, institusi, dan jangka waktu studi Anda.';
 
   @override
   String educationNumber(int number) {
@@ -1366,7 +1366,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get institution => 'Institusi';
 
   @override
-  String get degree => 'Gelar';
+  String get degree => 'Gelar / Diploma';
 
   @override
   String get startYear => 'Tahun mulai';
