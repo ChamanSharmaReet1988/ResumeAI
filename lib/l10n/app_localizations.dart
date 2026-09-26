@@ -1386,6 +1386,30 @@ abstract class AppLocalizations {
   /// **'Traditional business letter: date, recipient block, and left-aligned body.'**
   String get templateClassicBusinessCaption;
 
+  /// No description provided for @templateAccentBarLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent Bar'**
+  String get templateAccentBarLetter;
+
+  /// No description provided for @templateAccentBarLetterCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Left accent stripe with a bold name header and clean formal body.'**
+  String get templateAccentBarLetterCaption;
+
+  /// No description provided for @templateRuledLetterhead.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruled Letterhead'**
+  String get templateRuledLetterhead;
+
+  /// No description provided for @templateRuledLetterheadCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic ruled letterhead with formal sender block and left-aligned body.'**
+  String get templateRuledLetterheadCaption;
+
   /// No description provided for @autoSync.
   ///
   /// In en, this message translates to:

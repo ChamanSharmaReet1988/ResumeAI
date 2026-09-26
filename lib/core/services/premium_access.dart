@@ -12,6 +12,8 @@ abstract final class PremiumAccess {
     'minimal-letter',
     'sidebar-letter',
     'classic-business-letter',
+    'accent-bar-letter',
+    'ruled-letterhead',
   };
 
   /// AI Resume tab (and Create ATS) requires Pro on iOS only.

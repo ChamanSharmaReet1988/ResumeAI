@@ -837,6 +837,24 @@ const _professionalCoverLetterCards = <_TemplateTileData>[
         'Traditional business letter: date, recipient block, and left-aligned body.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'accent-bar-letter',
+    coverLetterTemplate: CoverLetterTemplate.accentBarLetter,
+    previewKind: _TemplatePreviewKind.accentBarCoverLetter,
+    headline: 'Accent Bar',
+    caption:
+        'Left accent stripe with a bold name header and clean formal body.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'ruled-letterhead',
+    coverLetterTemplate: CoverLetterTemplate.ruledLetterhead,
+    previewKind: _TemplatePreviewKind.ruledLetterheadCoverLetter,
+    headline: 'Ruled Letterhead',
+    caption:
+        'Classic ruled letterhead with formal sender block and left-aligned body.',
+    isPremium: false,
+  ),
 ];
 
 const _creativeCoverLetterCards = <_TemplateTileData>[
@@ -907,6 +925,8 @@ class _TemplateTileData {
       'minimal-letter' => l10n.templateMinimalLetter,
       'sidebar-letter' => l10n.templateMintLetter,
       'classic-business-letter' => l10n.templateClassicBusiness,
+      'accent-bar-letter' => l10n.templateAccentBarLetter,
+      'ruled-letterhead' => l10n.templateRuledLetterhead,
       _ => headline,
     };
   }
@@ -935,6 +955,8 @@ class _TemplateTileData {
       'minimal-letter' => l10n.templateMinimalLetterCaption,
       'sidebar-letter' => l10n.templateMintLetterCaption,
       'classic-business-letter' => l10n.templateClassicBusinessCaption,
+      'accent-bar-letter' => l10n.templateAccentBarLetterCaption,
+      'ruled-letterhead' => l10n.templateRuledLetterheadCaption,
       _ => caption,
     };
   }
@@ -965,6 +987,8 @@ enum _TemplatePreviewKind {
   minimalCoverLetter,
   sidebarCoverLetter,
   classicBusinessCoverLetter,
+  accentBarCoverLetter,
+  ruledLetterheadCoverLetter,
 }
 
 class _TemplatePreviewArt extends StatelessWidget {
@@ -1154,6 +1178,10 @@ class _TemplatePreviewArt extends StatelessWidget {
       _TemplatePreviewKind.sidebarCoverLetter => const _SidebarCoverLetterArt(),
       _TemplatePreviewKind.classicBusinessCoverLetter =>
         const _ClassicBusinessCoverLetterArt(),
+      _TemplatePreviewKind.accentBarCoverLetter =>
+        const _AccentBarCoverLetterArt(),
+      _TemplatePreviewKind.ruledLetterheadCoverLetter =>
+        const _RuledLetterheadCoverLetterArt(),
     };
 
     return LayoutBuilder(
@@ -6439,6 +6467,266 @@ class _ExecutiveNoteCoverLetterArt extends StatelessWidget {
                 const SizedBox(height: 2),
                 const Text(
                   'Maya Fernandes',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccentBarCoverLetterArt extends StatelessWidget {
+  const _AccentBarCoverLetterArt();
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = Color(0xFF0F4C81);
+    const text = Color(0xFF31363C);
+    const muted = Color(0xFF5E6369);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.zero,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.zero,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 10, 9, 10),
+          child: DefaultTextStyle(
+            style: const TextStyle(
+              fontFamily: 'Arimo',
+              fontSize: 4.45,
+              fontWeight: FontWeight.w400,
+              height: 1.38,
+              color: text,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'JORDAN BLAKE',
+                            style: TextStyle(
+                              fontFamily: 'Arimo',
+                              color: accent,
+                              fontSize: 8.0,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'jblake@mail.com  ·  +1 415 555 0198  ·  San Francisco, CA',
+                            style: TextStyle(
+                              fontFamily: 'Arimo',
+                              color: muted,
+                              fontSize: 4.2,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Hiring Manager\nHarbor Analytics\nSan Francisco, CA',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                    height: 1.38,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Dear Hiring Manager,',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                const _MiniCoverLetterParagraph(
+                  text:
+                      'I am writing to apply for the Senior Product Analyst role at Harbor Analytics, bringing experience across insight delivery, stakeholder partnership, and measurable growth outcomes.',
+                ),
+                const SizedBox(height: 3),
+                const _MiniCoverLetterParagraph(
+                  text:
+                      'At Meridian Labs I led dashboards and experiments that clarified roadmap priorities and improved conversion across key customer journeys.',
+                ),
+                const Spacer(),
+                const Text(
+                  'Sincerely,',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Jordan Blake',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RuledLetterheadCoverLetterArt extends StatelessWidget {
+  const _RuledLetterheadCoverLetterArt();
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = Color(0xFF1E293B);
+    const text = Color(0xFF31363C);
+    const muted = Color(0xFF475569);
+    const rule = Color(0xFFCBD5E1);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.zero,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.zero,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
+          child: DefaultTextStyle(
+            style: const TextStyle(
+              fontFamily: 'Arimo',
+              fontSize: 4.45,
+              fontWeight: FontWeight.w400,
+              height: 1.38,
+              color: text,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Center(
+                  child: Text(
+                    'PRIYA NATHAN',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Arimo',
+                      color: accent,
+                      fontSize: 8.0,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.35,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                const Center(
+                  child: Text(
+                    'pnathan@mail.com  |  +1 312 555 0144  |  Chicago, IL',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Arimo',
+                      color: muted,
+                      fontSize: 4.2,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Container(height: 1.6, color: accent),
+                const SizedBox(height: 1.5),
+                Container(height: 0.6, color: rule),
+                const SizedBox(height: 6),
+                const Text(
+                  'April 12, 2026',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: muted,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                const Text(
+                  'Hiring Committee\nLumen Finance\nChicago, IL',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                    height: 1.38,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Dear Hiring Committee,',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                const _MiniCoverLetterParagraph(
+                  text:
+                      'I am pleased to apply for the Operations Manager position at Lumen Finance, bringing experience in process design, cross-team coordination, and reliable delivery under pressure.',
+                ),
+                const SizedBox(height: 3),
+                const _MiniCoverLetterParagraph(
+                  text:
+                      'In my current role I improved onboarding cycle time and strengthened reporting cadence so leaders could act on clearer operational signals.',
+                ),
+                const Spacer(),
+                const Text(
+                  'Respectfully,',
+                  style: TextStyle(
+                    fontFamily: 'Arimo',
+                    color: ResumeTypography.atsStructuredBodyTextColor,
+                    fontSize: 4.9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Priya Nathan',
                   style: TextStyle(
                     fontFamily: 'Arimo',
                     color: ResumeTypography.atsStructuredBodyTextColor,

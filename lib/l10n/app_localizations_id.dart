@@ -737,6 +737,20 @@ class AppLocalizationsId extends AppLocalizations {
       'Surat bisnis tradisional: tanggal, blok penerima, dan isi rata kiri.';
 
   @override
+  String get templateAccentBarLetter => 'Bilah aksen';
+
+  @override
+  String get templateAccentBarLetterCaption =>
+      'Garis aksen kiri dengan header nama tebal dan badan surat formal.';
+
+  @override
+  String get templateRuledLetterhead => 'Kop surat bergaris';
+
+  @override
+  String get templateRuledLetterheadCaption =>
+      'Kop surat klasik bergaris dengan blok pengirim dan isi rata kiri.';
+
+  @override
   String get autoSync => 'Sinkronisasi otomatis';
 
   @override

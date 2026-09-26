@@ -795,6 +795,8 @@ void main() {
         CoverLetterTemplate.minimalLetter,
         CoverLetterTemplate.sidebarLetter,
         CoverLetterTemplate.classicBusinessLetter,
+        CoverLetterTemplate.accentBarLetter,
+        CoverLetterTemplate.ruledLetterhead,
       ];
 
       for (final template in templates) {

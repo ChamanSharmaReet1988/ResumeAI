@@ -738,6 +738,20 @@ class AppLocalizationsEs extends AppLocalizations {
       'Carta comercial tradicional: fecha, destinatario y cuerpo alineado a la izquierda.';
 
   @override
+  String get templateAccentBarLetter => 'Barra de acento';
+
+  @override
+  String get templateAccentBarLetterCaption =>
+      'Franja lateral de acento con encabezado de nombre en negrita y cuerpo formal.';
+
+  @override
+  String get templateRuledLetterhead => 'Membrete con reglas';
+
+  @override
+  String get templateRuledLetterheadCaption =>
+      'Membrete clásico con reglas, bloque del remitente y cuerpo alineado a la izquierda.';
+
+  @override
   String get autoSync => 'Sincronización automática';
 
   @override

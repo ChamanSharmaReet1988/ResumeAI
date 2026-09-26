@@ -737,6 +737,20 @@ class AppLocalizationsPt extends AppLocalizations {
       'Carta comercial tradicional: data, destinatário e corpo alinhado à esquerda.';
 
   @override
+  String get templateAccentBarLetter => 'Barra de destaque';
+
+  @override
+  String get templateAccentBarLetterCaption =>
+      'Faixa lateral de destaque com cabeçalho de nome em negrito e corpo formal.';
+
+  @override
+  String get templateRuledLetterhead => 'Timbre com linhas';
+
+  @override
+  String get templateRuledLetterheadCaption =>
+      'Timbre clássico com linhas, bloco do remetente e corpo alinhado à esquerda.';
+
+  @override
   String get autoSync => 'Sincronização automática';
 
   @override

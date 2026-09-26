@@ -117,6 +117,12 @@ enum CoverLetterTemplate {
 
   /// Traditional left-aligned letter: date, recipient block, body (ATS-friendly).
   classicBusinessLetter,
+
+  /// Left accent bar with a bold name header block.
+  accentBarLetter,
+
+  /// Classic letterhead with horizontal rules under the sender block.
+  ruledLetterhead,
 }
 
 const availableResumeTemplates = <ResumeTemplate>[
@@ -315,6 +321,8 @@ extension CoverLetterTemplateX on CoverLetterTemplate {
     CoverLetterTemplate.minimalLetter => 'Minimal Letter',
     CoverLetterTemplate.sidebarLetter => 'Mint Letter',
     CoverLetterTemplate.classicBusinessLetter => 'Classic Business',
+    CoverLetterTemplate.accentBarLetter => 'Accent Bar',
+    CoverLetterTemplate.ruledLetterhead => 'Ruled Letterhead',
   };
 
   Color get accentColor => switch (this) {
@@ -322,6 +330,8 @@ extension CoverLetterTemplateX on CoverLetterTemplate {
     CoverLetterTemplate.minimalLetter => const Color(0xFF9A6B2F),
     CoverLetterTemplate.sidebarLetter => const Color(0xFF4DBB82),
     CoverLetterTemplate.classicBusinessLetter => const Color(0xFF374151),
+    CoverLetterTemplate.accentBarLetter => const Color(0xFF0F4C81),
+    CoverLetterTemplate.ruledLetterhead => const Color(0xFF1E293B),
   };
 }
 

@@ -737,6 +737,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Traditional business letter: date, recipient block, and left-aligned body.';
 
   @override
+  String get templateAccentBarLetter => 'Accent Bar';
+
+  @override
+  String get templateAccentBarLetterCaption =>
+      'Left accent stripe with a bold name header and clean formal body.';
+
+  @override
+  String get templateRuledLetterhead => 'Ruled Letterhead';
+
+  @override
+  String get templateRuledLetterheadCaption =>
+      'Classic ruled letterhead with formal sender block and left-aligned body.';
+
+  @override
   String get autoSync => 'Auto sync';
 
   @override

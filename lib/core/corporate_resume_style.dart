@@ -120,6 +120,8 @@ int defaultColorPresetIndexForCoverLetterTemplate(
     CoverLetterTemplate.sidebarLetter => kTemplateDefaultColorPresetIndex,
     CoverLetterTemplate.classicBusinessLetter =>
       kTemplateDefaultColorPresetIndex,
+    CoverLetterTemplate.accentBarLetter => kTemplateDefaultColorPresetIndex,
+    CoverLetterTemplate.ruledLetterhead => kTemplateDefaultColorPresetIndex,
   };
 }
 
