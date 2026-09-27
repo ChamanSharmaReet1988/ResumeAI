@@ -230,6 +230,18 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
         ];
       }
       if (id == ResumeBuilderSectionIds.skills) {
+        // Categorised skills keep their headings instead of being flattened
+        // into the four-column grid.
+        if (resume.showCategorisedSkills) {
+          return [
+            sectionHeading('Skills'),
+            ..._categorisedSkillsPdfWidgets(
+              resume,
+              bodyStyle: bodyStyle,
+              categoryStyle: entryTitleStyle,
+            ),
+          ];
+        }
         final skills = resume.skillsLinesForDisplay;
         if (skills.isEmpty) return null;
         return [sectionHeading('Skills'), skillsGrid(skills)];

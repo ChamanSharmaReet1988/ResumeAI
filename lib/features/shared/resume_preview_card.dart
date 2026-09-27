@@ -8634,6 +8634,21 @@ class _SoftHeaderPreview extends StatelessWidget {
             }
             switch (id) {
               case ResumeBuilderSectionIds.skills:
+                // Categorised skills keep their headings instead of being
+                // flattened into the two-column list.
+                if (resume.showCategorisedSkills) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      sectionTitle('Skills'),
+                      _categorisedSkillsPreview(
+                        groups: resume.skillGroupsForResume,
+                        bodyStyle: bodyText,
+                        categoryStyle: entryTitle,
+                      ),
+                    ],
+                  );
+                }
                 final skills = _pdfAlignedSkills(resume);
                 if (skills.isEmpty) return null;
                 return Column(
@@ -9141,6 +9156,21 @@ class _BlueDiagonalPreview extends StatelessWidget {
             }
             switch (id) {
               case ResumeBuilderSectionIds.skills:
+                // Categorised skills keep their headings instead of being
+                // flattened into the two-column list.
+                if (resume.showCategorisedSkills) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      sectionTitle('Skills', Icons.settings_outlined),
+                      _categorisedSkillsPreview(
+                        groups: resume.skillGroupsForResume,
+                        bodyStyle: bodyText,
+                        categoryStyle: entryTitle,
+                      ),
+                    ],
+                  );
+                }
                 final skills = _pdfAlignedSkills(resume);
                 if (skills.isEmpty) return null;
                 return Column(
@@ -9617,6 +9647,21 @@ class _MinimalProfilePreview extends StatelessWidget {
         );
       }
       if (id == ResumeBuilderSectionIds.skills) {
+        // Categorised skills keep their headings instead of being flattened
+        // into the four-column grid.
+        if (resume.showCategorisedSkills) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              sectionHeading('Skills'),
+              _categorisedSkillsPreview(
+                groups: resume.skillGroupsForResume,
+                bodyStyle: bodyStyle,
+                categoryStyle: entryTitleStyle,
+              ),
+            ],
+          );
+        }
         final skills = _pdfAlignedSkills(resume);
         if (skills.isEmpty) return null;
         return Column(

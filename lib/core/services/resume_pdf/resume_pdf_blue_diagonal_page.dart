@@ -566,6 +566,20 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
               }
               switch (id) {
                 case ResumeBuilderSectionIds.skills:
+                  // Categorised skills keep their headings instead of being
+                  // flattened into the two-column list.
+                  if (resume.showCategorisedSkills) {
+                    return [
+                      mainWrap(
+                        sectionTitle('Skills', _BlueDiagonalIcon.skills),
+                      ),
+                      ..._categorisedSkillsPdfWidgets(
+                        resume,
+                        bodyStyle: bodyStyle,
+                        categoryStyle: strongMetaStyle,
+                      ).map(mainWrap),
+                    ];
+                  }
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
