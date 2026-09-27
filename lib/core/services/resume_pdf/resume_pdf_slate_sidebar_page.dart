@@ -77,6 +77,24 @@ int _slateSidebarEstimatedSkillLines(
   return lineCount;
 }
 
+/// Marks a rail line as a skill category heading rather than a skill.
+const String _slateSidebarCategoryMark = '\u241F';
+
+/// Rail lines for the expertise block: plain skills, or a heading line and a
+/// comma-separated line per category when categorised skills are on.
+List<String> _slateSidebarSkillLines(ResumeData resume) {
+  if (!resume.showCategorisedSkills) {
+    return resume.skillsLinesForDisplay;
+  }
+  return [
+    for (final group in resume.skillGroupsForResume) ...[
+      if (group.heading.trim().isNotEmpty)
+        '$_slateSidebarCategoryMark${group.heading.trim()}',
+      group.skillsCommaSeparated,
+    ],
+  ];
+}
+
 /// Splits contact + expertise across pages so every skill fits in the rail.
 List<_SlateSidebarPageSlice> _slateSidebarPageSlices({
   required List<String> skills,
@@ -247,7 +265,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
     final experiences = resume.visibleWorkExperiences;
     final education = resume.visibleEducation;
     final projects = resume.visibleProjects;
-    final skills = resume.skillsLinesForDisplay;
+    final skills = _slateSidebarSkillLines(resume);
 
     pw.Widget sectionTitle(String title) => pw.Container(
       width: double.infinity,
@@ -405,13 +423,25 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
           ],
           if (slice.showExpertiseHeading) heading('Expertise'),
           for (final skill in slice.skills)
-            _headerSidebarMaybeHighlight(
-              highlight: highlightedSkills.contains(skill),
-              child: pw.Padding(
-                padding: const pw.EdgeInsets.only(bottom: 7),
-                child: pw.Text('• $skill', style: railItem),
+            if (skill.startsWith(_slateSidebarCategoryMark))
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(top: 3, bottom: 3),
+                child: pw.Text(
+                  skill.substring(_slateSidebarCategoryMark.length),
+                  style: railItem.copyWith(fontWeight: pw.FontWeight.bold),
+                ),
+              )
+            else
+              _headerSidebarMaybeHighlight(
+                highlight: highlightedSkills.contains(skill),
+                child: pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 7),
+                  child: pw.Text(
+                    resume.showCategorisedSkills ? skill : '\u2022 $skill',
+                    style: railItem,
+                  ),
+                ),
               ),
-            ),
         ],
       );
     }

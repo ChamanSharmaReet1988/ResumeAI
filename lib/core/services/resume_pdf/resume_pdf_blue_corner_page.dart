@@ -566,6 +566,23 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
               }
               switch (id) {
                 case ResumeBuilderSectionIds.skills:
+                  // Categorised skills keep their headings instead of being
+                  // flattened into the plain list.
+                  if (resume.showCategorisedSkills) {
+                    return [
+                      mainWrap(
+                        sectionHeading(
+                          'Skills',
+                          icon: _MinimalProfileIcon.puzzle,
+                        ),
+                      ),
+                      ..._categorisedSkillsPdfWidgets(
+                        resume,
+                        bodyStyle: bodyStyle,
+                        categoryStyle: entryTitleStyle,
+                      ).map((widget) => mainWrap(widget, indentTimeline: true)),
+                    ];
+                  }
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [

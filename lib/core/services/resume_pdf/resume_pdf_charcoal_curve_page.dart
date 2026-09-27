@@ -614,6 +614,18 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                         ),
                     ];
                   case ResumeBuilderSectionIds.skills:
+                    // Categorised skills keep their headings; the rated bars
+                    // are a flat-list presentation.
+                    if (resume.showCategorisedSkills) {
+                      return [
+                        sectionHeading('Skills'),
+                        ..._categorisedSkillsPdfWidgets(
+                          resume,
+                          bodyStyle: bodyStyle,
+                          categoryStyle: entryTitleStyle,
+                        ),
+                      ];
+                    }
                     if (skills.isEmpty) return null;
                     return [
                       sectionHeading('Skills'),

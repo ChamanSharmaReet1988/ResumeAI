@@ -531,6 +531,18 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
               }
               switch (id) {
                 case ResumeBuilderSectionIds.skills:
+                  // Categorised skills keep their headings instead of being
+                  // flattened into the plain list.
+                  if (resume.showCategorisedSkills) {
+                    return [
+                      mainWrap(timelineHeading('Skills')),
+                      ..._categorisedSkillsPdfWidgets(
+                        resume,
+                        bodyStyle: bodyStyle,
+                        categoryStyle: entryTitleStyle,
+                      ).map(mainWrap),
+                    ];
+                  }
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
