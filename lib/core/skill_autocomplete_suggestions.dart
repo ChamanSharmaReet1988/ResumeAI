@@ -3,6 +3,7 @@
 
 import 'skill_suggestions_extra.dart';
 import 'skill_suggestions_professions.dart';
+import 'skill_suggestions_everyday.dart';
 
 const List<String> kSkillSuggestionCore = [
   '.NET',
@@ -237,6 +238,7 @@ const List<String> kSkillSuggestionPool = [
   ...kSkillSuggestionCore,
   ...kSkillSuggestionExtra,
   ...kSkillSuggestionProfessions,
+  ...kSkillSuggestionEveryday,
 ];
 
 /// Returns up to [maxItems] suggestions for the current query.

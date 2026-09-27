@@ -462,7 +462,6 @@ const List<String> kSkillSuggestionExtra = [
   'Microsoft Word',
   'Notion',
   'Slack',
-  'Trello',
   'Zoom',
 
   // AI & modern tooling
@@ -471,8 +470,6 @@ const List<String> kSkillSuggestionExtra = [
   'Copilot',
   'Cursor',
   'Generative AI',
-  'Hugging Face',
-  'LangChain',
   'OpenAI API',
   'Prompt Engineering',
   'RAG Systems',
@@ -498,7 +495,6 @@ const List<String> kSkillSuggestionExtra = [
   'Content Marketing',
   'Email Marketing',
   'Google Ads',
-  'HubSpot',
   'Lead Generation',
   'Market Research',
   'Meta Ads',
