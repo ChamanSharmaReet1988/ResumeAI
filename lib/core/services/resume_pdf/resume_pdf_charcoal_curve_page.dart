@@ -37,10 +37,10 @@ pw.Widget _charcoalCurveMainPad(pw.Widget child) => pw.DelayedWidget(
   ),
 );
 
-/// Custom sections with these titles read as a short "about" paragraph in the
-/// rail instead of a main-column section.
-final RegExp _charcoalCurveRailAboutTitle = RegExp(
-  r'^(about( me)?|profile|objective)$',
+/// The rail carries the professional summary, contact details and language
+/// list; every other section belongs in the main column.
+final RegExp _charcoalCurveRailLanguageTitle = RegExp(
+  r'^(languages?|language skills|spoken languages?)$',
   caseSensitive: false,
 );
 
@@ -256,33 +256,61 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
       );
     }
 
-    /// One skill per row so MultiPage can break between skills.
+    /// Two skills per row, laid out side by side once the page is full width
+    /// and stacked while the rail still takes the left third. Each row is its
+    /// own widget so MultiPage can break between rows.
     List<pw.Widget> skillsBody() {
       if (skills.isEmpty) return const [];
-      return [
-        for (final skill in skills)
-          skillBar(
-            skill,
-            barWidth: _charcoalCurveSkillBarPt,
+      final rows = <pw.Widget>[];
+      for (var i = 0; i < skills.length; i += 2) {
+        final first = skills[i];
+        final second = i + 1 < skills.length ? skills[i + 1] : null;
+        rows.add(
+          pw.DelayedWidget(
+            build: (context) => context.pageNumber == 1
+                ? pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      skillBar(first, barWidth: _charcoalCurveSkillBarPt),
+                      if (second != null)
+                        skillBar(second, barWidth: _charcoalCurveSkillBarPt),
+                    ],
+                  )
+                : pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Expanded(
+                        child: skillBar(
+                          first,
+                          barWidth: _charcoalCurveSkillBarPt,
+                        ),
+                      ),
+                      pw.SizedBox(width: 28),
+                      pw.Expanded(
+                        child: second == null
+                            ? pw.SizedBox()
+                            : skillBar(
+                                second,
+                                barWidth: _charcoalCurveSkillBarPt,
+                              ),
+                      ),
+                    ],
+                  ),
           ),
-      ];
+        );
+      }
+      return rows;
     }
 
-    final aboutSections = resume.customSections
+    final railListSections = resume.customSections
         .where(
           (item) =>
               !item.isBlank &&
-              _charcoalCurveRailAboutTitle.hasMatch(item.title.trim()),
+              _charcoalCurveRailLanguageTitle.hasMatch(item.title.trim()),
         )
-        .toList();
-    final railListSections = resume.customSections
-        .where((item) => !item.isBlank && _slateSidebarIsRailSection(item))
         .toList();
     final mainCustomSections = resume.customSections
-        .where(
-          (item) =>
-              !aboutSections.contains(item) && !railListSections.contains(item),
-        )
+        .where((item) => !railListSections.contains(item))
         .toSet();
 
     final contacts = <(_MinimalProfileIcon, String)>[
@@ -336,14 +364,16 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
       );
     }
 
+    final summary = resume.summary.trim();
+
     final rail = pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        for (final section in aboutSections) ...[
-          railHeading(section.title.trim()),
-          pw.Text(
-            section.displayLines().join(' '),
-            style: railBodyStyle,
+        if (summary.isNotEmpty) ...[
+          railHeading('Professional Summary'),
+          _headerSidebarMaybeHighlight(
+            highlight: highlightSummary,
+            child: pw.Text(summary, style: railBodyStyle),
           ),
         ],
         if (contacts.isNotEmpty) ...[
@@ -383,8 +413,6 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
         ],
       ],
     );
-
-    final summary = resume.summary.trim();
 
     document.addPage(
       pw.MultiPage(
@@ -508,13 +536,6 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                 ],
               ),
             ),
-            if (summary.isNotEmpty) ...[
-              sectionHeading('Summary'),
-              _headerSidebarMaybeHighlight(
-                highlight: highlightSummary,
-                child: pw.Text(summary, style: bodyStyle),
-              ),
-            ],
             ..._pdfBodySectionsInBuilderOrder(
               resume,
               buildSection: (id) {

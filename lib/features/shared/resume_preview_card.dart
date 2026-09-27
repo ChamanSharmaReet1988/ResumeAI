@@ -9954,15 +9954,13 @@ class _CharcoalCurvePreview extends StatelessWidget {
   static const double _skillLabel = 96;
   static const double _skillBarWidth = 88;
 
-  static final RegExp _railAboutTitle = RegExp(
-    r'^(about( me)?|profile|objective)$',
+  /// The rail carries the professional summary, contact details and language
+  /// list; every other section belongs in the main column.
+  static final RegExp _railLanguageTitle = RegExp(
+    r'^(languages?|language skills|spoken languages?)$',
     caseSensitive: false,
   );
 
-  static final RegExp _railListTitle = RegExp(
-    r'^(languages?|awards?|certifications?|certificates?|interests?|hobbies)$',
-    caseSensitive: false,
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -10092,11 +10090,8 @@ class _CharcoalCurvePreview extends StatelessWidget {
     }
 
     final customSections = resume.visibleCustomSections;
-    final aboutSections = customSections
-        .where((item) => _railAboutTitle.hasMatch(item.title.trim()))
-        .toList();
     final railListSections = customSections
-        .where((item) => _railListTitle.hasMatch(item.title.trim()))
+        .where((item) => _railLanguageTitle.hasMatch(item.title.trim()))
         .toList();
 
     Widget railHeading(String label) => Padding(
@@ -10154,9 +10149,9 @@ class _CharcoalCurvePreview extends StatelessWidget {
     final rail = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final section in aboutSections) ...[
-          railHeading(section.title.trim()),
-          Text(section.displayLines().join(' '), style: railBodyStyle),
+        if (resume.summary.trim().isNotEmpty) ...[
+          railHeading('Professional Summary'),
+          Text(resume.summary.trim(), style: railBodyStyle),
         ],
         if (contacts.isNotEmpty) ...[
           railHeading('Contact'),
@@ -10181,10 +10176,7 @@ class _CharcoalCurvePreview extends StatelessWidget {
     );
 
     final mainCustomSections = customSections
-        .where(
-          (item) =>
-              !aboutSections.contains(item) && !railListSections.contains(item),
-        )
+        .where((item) => !railListSections.contains(item))
         .toSet();
     final skills = _pdfAlignedSkills(resume);
 
@@ -10214,10 +10206,6 @@ class _CharcoalCurvePreview extends StatelessWidget {
             ],
           ),
         ),
-        if (resume.summary.trim().isNotEmpty) ...[
-          sectionHeading('Summary'),
-          Text(resume.summary.trim(), style: bodyStyle),
-        ],
         ...(() {
           List<Widget>? buildSection(String id) {
             final customIndex = ResumeBuilderSectionIds.customIndex(id);
