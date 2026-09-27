@@ -3905,20 +3905,28 @@ class LocalAiResumeService {
           : inputs.languageBase,
     );
 
-    final cityLine = inputs.cityLine.trim() == inputs.addressLine.trim()
-        ? ''
-        : '${inputs.cityLine}\n';
+    // Plain contact block, one detail per line: the shape applicant tracking
+    // systems parse most reliably. Blank details are left out rather than
+    // printed as bracketed placeholders.
+    final senderLines = <String>[
+      inputs.senderName,
+      inputs.addressLine,
+      if (inputs.cityLine.trim() != inputs.addressLine.trim()) inputs.cityLine,
+      inputs.emailLine,
+      inputs.phoneLine,
+      currentDate,
+    ].map((line) => line.trim()).where((line) {
+      if (line.isEmpty) return false;
+      // Drop the "[Your Address]" style stand-ins.
+      return !(line.startsWith('[') && line.endsWith(']'));
+    }).toList();
 
-    return '${inputs.senderName}\n'
-        '${inputs.addressLine}\n'
-        '$cityLine'
-        '${inputs.emailLine}\n'
-        '${inputs.phoneLine}\n'
-        '$currentDate\n\n'
-        '${locale.hiringManager}\n'
-        '${inputs.companyName}\n'
-        '[Company Address]\n'
-        '[City, State, Zip Code]\n\n';
+    final recipientLines = <String>[
+      locale.hiringManager,
+      inputs.companyName,
+    ].map((line) => line.trim()).where((line) => line.isNotEmpty).toList();
+
+    return '${senderLines.join('\n')}\n\n${recipientLines.join('\n')}\n\n';
   }
 
   String _composeEnglishCoverLetterBody(
@@ -3931,10 +3939,17 @@ class LocalAiResumeService {
     final fit = _englishCoverLetterFit(inputs, variant);
     final strengths = _englishCoverLetterStrengths(inputs, locale, variant);
     final closing = _englishCoverLetterClosing(inputs, variant);
+    // A subject line naming the exact role is what applicant tracking systems
+    // and recruiters read first.
+    final subject = _coverLetterSubjectLine(inputs);
+    final keywords = _coverLetterKeywordSentence(inputs);
+    final keywordBlock = keywords.isEmpty ? '' : '$keywords\n\n';
 
-    return '$greeting\n\n'
+    return '$subject\n\n'
+        '$greeting\n\n'
         '$opening\n\n'
         '$fit\n\n'
+        '$keywordBlock'
         '$strengths\n\n'
         '$closing\n\n'
         '${locale.sincerely}\n\n'
@@ -3948,101 +3963,98 @@ class LocalAiResumeService {
   ) {
     final greeting = _localizedCoverLetterGreeting(inputs, locale, variant);
     final opening = locale.opening(inputs.roleName, inputs.companyName);
-    // The evidence line is built from the resume's own wording, which is in
-    // the resume's language. Adding it here would leave an English sentence in
-    // a letter the user asked for in another language, so the localized letter
-    // states the same fact from a template using only names and job titles.
-    final evidence = _localizedCoverLetterEvidenceLine(inputs, variant);
-    final fitBase = locale.fit(inputs.roleName, inputs.primarySkill);
-    final fit = evidence.isEmpty ? fitBase : '$fitBase $evidence';
+    // Nothing here comes from a resume, so no sentence can arrive in the wrong
+    // language or name an employer the user did not enter.
+    final fit = locale.fit(inputs.roleName, inputs.primarySkill);
     final languageSentence = inputs.language.trim().isEmpty
         ? ''
         : locale.languageSentence(inputs.languageNative);
     final strengths = locale.strengths(languageSentence);
     final closing = locale.closing(inputs.companyName, inputs.roleName);
+    final subject = _coverLetterSubjectLine(inputs);
+    final keywords = _coverLetterKeywordSentence(inputs);
+    final keywordBlock = keywords.isEmpty ? '' : '$keywords\n\n';
 
-    return '$greeting\n\n'
+    return '$subject\n\n'
+        '$greeting\n\n'
         '$opening\n\n'
         '$fit\n\n'
+        '$keywordBlock'
         '$strengths\n\n'
         '$closing\n\n'
         '${locale.sincerely}\n\n'
         '${inputs.senderName}';
   }
 
-  /// "In my role as {role} at {company}." in the letter's language, with no
-  /// resume prose so nothing stays in the original language.
-  String _localizedCoverLetterEvidenceLine(
-    _CoverLetterInputs inputs,
-    int variant,
-  ) {
-    final experiences = inputs.workExperiences;
-    if (experiences.isEmpty) {
-      return '';
-    }
-    final experience = experiences[variant % experiences.length];
-    final role = experience.role.trim().isEmpty
-        ? inputs.backgroundRole.trim()
-        : experience.role.trim();
-    final company = experience.company.trim();
-    if (role.isEmpty && company.isEmpty) {
-      return '';
-    }
-    return _coverLetterExperienceSentence(
-      languageBase: inputs.languageBase.isEmpty
-          ? 'English'
-          : inputs.languageBase,
-      role: role,
-      company: company,
-    );
+
+
+  /// "Subject: Application for {role} at {company}" in the letter's language.
+  /// Stand-in for the skills sentence when the user entered no skills.
+  String _coverLetterGenericSkillPhrase(String languageBase) {
+    return switch (languageBase) {
+      'Spanish' => 'las responsabilidades principales de este puesto',
+      'Portuguese' => 'as principais responsabilidades desta vaga',
+      'French' => 'les responsabilités clés de ce poste',
+      'German' => 'die zentralen Aufgaben dieser Position',
+      'Italian' => 'le responsabilità principali di questo ruolo',
+      'Indonesian' => 'tanggung jawab utama posisi ini',
+      'Hindi' => 'इस पद की मुख्य ज़िम्मेदारियों',
+      'Bengali' => 'এই পদের মূল দায়িত্ব',
+      'Arabic' => 'المسؤوليات الأساسية لهذه الوظيفة',
+      'Chinese, Mandarin' => '该职位的核心职责',
+      'Japanese' => 'この職務の中心的な業務',
+      'Russian' => 'ключевые задачи этой позиции',
+      _ => 'the core responsibilities of this role',
+    };
   }
 
-  String _coverLetterExperienceSentence({
-    required String languageBase,
-    required String role,
-    required String company,
-  }) {
-    final hasCompany = company.isNotEmpty;
-    return switch (languageBase) {
-      'Spanish' => hasCompany
-          ? 'Anteriormente trabajé como $role en $company.'
-          : 'Anteriormente trabajé como $role.',
-      'Portuguese' => hasCompany
-          ? 'Anteriormente trabalhei como $role na $company.'
-          : 'Anteriormente trabalhei como $role.',
-      'French' => hasCompany
-          ? "J'ai précédemment travaillé comme $role chez $company."
-          : "J'ai précédemment travaillé comme $role.",
-      'German' => hasCompany
-          ? 'Zuvor war ich als $role bei $company tätig.'
-          : 'Zuvor war ich als $role tätig.',
-      'Italian' => hasCompany
-          ? 'In precedenza ho lavorato come $role presso $company.'
-          : 'In precedenza ho lavorato come $role.',
-      'Indonesian' => hasCompany
-          ? 'Sebelumnya saya bekerja sebagai $role di $company.'
-          : 'Sebelumnya saya bekerja sebagai $role.',
-      'Hindi' => hasCompany
-          ? 'इससे पहले मैंने $company में $role के रूप में काम किया।'
-          : 'इससे पहले मैंने $role के रूप में काम किया।',
-      'Bengali' => hasCompany
-          ? 'এর আগে আমি $company-তে $role হিসেবে কাজ করেছি।'
-          : 'এর আগে আমি $role হিসেবে কাজ করেছি।',
-      'Arabic' => hasCompany
-          ? 'عملت سابقًا بصفتي $role في $company.'
-          : 'عملت سابقًا بصفتي $role.',
-      'Chinese, Mandarin' => hasCompany
-          ? '我曾在$company担任$role。'
-          : '我曾担任$role。',
-      'Japanese' => hasCompany
-          ? '以前は$companyで$roleを務めていました。'
-          : '以前は$roleを務めていました。',
-      'Russian' => hasCompany
-          ? 'Ранее я работал(а) на позиции $role в компании $company.'
-          : 'Ранее я работал(а) на позиции $role.',
-      _ => hasCompany
-          ? 'Most recently, I worked as $role at $company.'
-          : 'Most recently, I worked as $role.',
+  String _coverLetterSubjectLine(_CoverLetterInputs inputs) {
+    final role = inputs.roleName;
+    final company = inputs.companyName;
+    return switch (inputs.languageBase.isEmpty
+        ? 'English'
+        : inputs.languageBase) {
+      'Spanish' => 'Asunto: Candidatura para $role en $company',
+      'Portuguese' => 'Assunto: Candidatura para $role na $company',
+      'French' => 'Objet : Candidature au poste de $role chez $company',
+      'German' => 'Betreff: Bewerbung als $role bei $company',
+      'Italian' => 'Oggetto: Candidatura per $role presso $company',
+      'Indonesian' => 'Perihal: Lamaran untuk posisi $role di $company',
+      'Hindi' => 'विषय: $company में $role पद के लिए आवेदन',
+      'Bengali' => 'বিষয়: $company-তে $role পদের জন্য আবেদন',
+      'Arabic' => 'الموضوع: طلب توظيف لوظيفة $role في $company',
+      'Chinese, Mandarin' => '主题：应聘$company的$role职位',
+      'Japanese' => '件名：$companyの$role職への応募',
+      'Russian' => 'Тема: заявка на позицию $role в компании $company',
+      _ => 'Subject: Application for $role at $company',
+    };
+  }
+
+  /// One plain sentence listing the skills the user entered, so an applicant
+  /// tracking system can match them as keywords.
+  String _coverLetterKeywordSentence(_CoverLetterInputs inputs) {
+    final skills = inputs.enteredSkills;
+    if (skills.isEmpty) {
+      return '';
+    }
+    final list = skills.join(', ');
+    final role = inputs.roleName;
+    return switch (inputs.languageBase.isEmpty
+        ? 'English'
+        : inputs.languageBase) {
+      'Spanish' => 'Competencias clave para $role: $list.',
+      'Portuguese' => 'Competências principais para $role: $list.',
+      'French' => 'Compétences clés pour le poste de $role : $list.',
+      'German' => 'Kernkompetenzen für $role: $list.',
+      'Italian' => 'Competenze chiave per $role: $list.',
+      'Indonesian' => 'Keahlian utama untuk $role: $list.',
+      'Hindi' => '$role के लिए मुख्य कौशल: $list।',
+      'Bengali' => '$role-এর জন্য মূল দক্ষতা: $list।',
+      'Arabic' => 'المهارات الأساسية لوظيفة $role: $list.',
+      'Chinese, Mandarin' => '$role相关核心技能：$list。',
+      'Japanese' => '$roleに関する主なスキル：$list。',
+      'Russian' => 'Ключевые навыки для позиции $role: $list.',
+      _ => 'Core skills for $role: $list.',
     };
   }
 
@@ -4111,25 +4123,41 @@ class LocalAiResumeService {
 
   String _englishCoverLetterFit(_CoverLetterInputs inputs, int variant) {
     final role = inputs.roleName;
-    final skills = inputs.primarySkill;
-    final evidence = inputs.experienceEvidenceLine(variant);
-    final background = inputs.backgroundRole;
+    final company = inputs.companyName;
+    final skills = inputs.enteredSkills;
+    final hasSkills = skills.isNotEmpty;
+    final skillList = inputs.primarySkill;
 
-    final evidenceSuffix = evidence.isEmpty ? '' : ' $evidence';
+    if (!hasSkills) {
+      return switch (variant % _coverLetterVariantCount) {
+        0 =>
+          'I am confident I can step into $role and contribute quickly. I focus on understanding the goal first, then delivering work that holds up under review.',
+        1 =>
+          'What I would bring to $role is steady delivery, clear communication, and the habit of checking that the work actually solves the problem.',
+        2 =>
+          'I believe I am a strong fit for $role because I connect day-to-day execution with the wider goal, and I keep stakeholders informed as the work moves.',
+        3 =>
+          'The $role position aligns with how I already work: scoped goals, steady communication, and attention to the details that decide whether a project lands.',
+        4 =>
+          'Hiring for $role often comes down to whether someone learns the context quickly and delivers without drama. That is where I am most effective.',
+        _ =>
+          'I am looking for a place where reliable delivery is valued, and $role at $company looks like that kind of opportunity.',
+      };
+    }
 
     return switch (variant % _coverLetterVariantCount) {
       0 =>
-        'In my work as $background, I have built depth in $skills and learned how to translate that into outcomes stakeholders can see. I am confident I can bring the same approach to $role at ${inputs.companyName}.$evidenceSuffix',
+        'My core strengths are $skillList, and I apply them to work that stakeholders can measure. I am confident I can bring the same approach to $role at $company.',
       1 =>
-        'What I would bring to $role is a grounded mix of $skills, good judgment under pressure, and the habit of checking that the work actually solves the problem. That combination has served me well in $background roles.$evidenceSuffix',
+        'What I would bring to $role is a grounded mix of $skillList, good judgment under pressure, and the habit of checking that the work actually solves the problem.',
       2 =>
-        'I believe I am a strong fit for $role because I can connect day-to-day execution with the bigger picture. My strengths in $skills are backed by hands-on experience, not just resume keywords.$evidenceSuffix',
+        'I believe I am a strong fit for $role because my strengths in $skillList are backed by hands-on delivery, not just keywords on a page.',
       3 =>
-        'The $role position aligns with how I already work: scoped goals, steady communication, and attention to $skills where they matter most. I am used to partnering across functions and closing loops without a lot of overhead.$evidenceSuffix',
+        'The $role position aligns with how I already work: scoped goals, steady communication, and attention to $skillList where they matter most.',
       4 =>
-        'Hiring for $role often comes down to whether someone can learn the context quickly and deliver without drama. That is where I am most effective, especially when $skills are central to the work.$evidenceSuffix',
+        'Hiring for $role often comes down to whether someone can learn the context quickly and deliver. That is where I am most effective, especially when $skillList are central to the work.',
       _ =>
-        'I am not looking for a generic next job; I am looking for a place where $skills and reliable delivery are valued. $role at ${inputs.companyName} looks like that kind of opportunity, and my background in $background supports that read.$evidenceSuffix',
+        'I am looking for a place where $skillList and reliable delivery are valued, and $role at $company looks like that kind of opportunity.',
     };
   }
 
@@ -7943,23 +7971,19 @@ class LocalAiResumeService {
         .map((item) => item.trim())
         .where((item) => item.isNotEmpty)
         .toList();
-    final resumeSkills = resume.skills
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
-    final skillPool = highlightedSkills.isNotEmpty
-        ? highlightedSkills
-        : resumeSkills;
+    final skillPool = highlightedSkills;
     final primarySkill = skillPool.isEmpty
-        ? roleName
+        ? _coverLetterGenericSkillPhrase(
+            languageBase.isEmpty ? 'English' : languageBase,
+          )
         : _joinNaturalListLocalized(
             skillPool.take(4).toList(),
             languageBase.isEmpty ? 'English' : languageBase,
           );
-    final backgroundRole = resume.jobTitle.trim().isEmpty
-        ? 'a professional'
-        : resume.jobTitle.trim();
-    final summaryHook = _summaryHookFromResume(resume);
+    // The body is written from what the user entered, so a previous job title
+    // or resume summary never appears in the letter.
+    final backgroundRole = roleName;
+    const summaryHook = '';
     final workExperiences = resume.visibleWorkExperiences
         .where((item) => !item.isBlank)
         .toList();
@@ -7993,6 +8017,7 @@ class LocalAiResumeService {
       languageBase: languageBase,
       languageNative: languageNative,
       summaryHook: summaryHook,
+      enteredSkills: highlightedSkills,
       workExperiences: workExperiences,
       evidenceLineBuilder: (variant) => _coverLetterExperienceEvidenceLine(
         workExperiences: workExperiences,
@@ -8066,6 +8091,7 @@ class _CoverLetterInputs {
     required this.languageBase,
     required this.languageNative,
     required this.summaryHook,
+    this.enteredSkills = const <String>[],
     required this.workExperiences,
     required this.evidenceLineBuilder,
   });
@@ -8083,6 +8109,9 @@ class _CoverLetterInputs {
   final String languageBase;
   final String languageNative;
   final String summaryHook;
+
+  /// Skills exactly as the user entered them on the cover letter screen.
+  final List<String> enteredSkills;
   final List<WorkExperience> workExperiences;
   final String Function(int variant) evidenceLineBuilder;
 
