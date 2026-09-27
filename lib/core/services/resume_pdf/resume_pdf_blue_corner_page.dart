@@ -1,7 +1,10 @@
 part of 'package:resume_app/core/services/resume_services.dart';
 
 /// Blue Corner: a blue wedge in the top-left behind a circular photo, a light
-/// contact sidebar, and dotted timeline education and experience entries.
+/// contact sidebar, and dotted timeline entries. Contact and languages stay in
+/// the sidebar until they are fully shown. Page 1 keeps the photo column;
+/// later pages use the full width once that sidebar content is finished, with
+/// skills in two columns on those pages.
 const double _blueCornerSideWidthPt = 214.0;
 const double _blueCornerSideInsetPt = 34.0;
 const double _blueCornerWedgePt = 250.0;
@@ -9,9 +12,36 @@ const double _blueCornerAvatarPt = 138.0;
 const double _blueCornerHeaderBottomPt = 300.0;
 const double _blueCornerMainLeftPt = 258.0;
 const double _blueCornerMainRightPt = 42.0;
+
+/// Left margin once the sidebar is finished, matching the right margin.
+const double _blueCornerFullWidthLeftPt = _blueCornerMainRightPt;
+
+/// Extra left inset while the photo column or sidebar is still on the page.
+const double _blueCornerContentInsetPt =
+    _blueCornerMainLeftPt - _blueCornerFullWidthLeftPt;
 const double _blueCornerPageTopPt = 46.0;
 const double _blueCornerPageBottomPt = 42.0;
 const double _blueCornerTimelineDotPt = 8.0;
+
+/// One page of Blue Corner sidebar content (contact, then languages).
+class _BlueCornerSidebarSlice {
+  const _BlueCornerSidebarSlice(this.blocks);
+
+  final List<pw.Widget> blocks;
+}
+
+bool _blueCornerIsLanguageSection(CustomSectionItem item) {
+  final normalized = item.title.trim().toLowerCase().replaceAll(
+    RegExp(r'[^a-z]'),
+    '',
+  );
+  return normalized == 'language' ||
+      normalized == 'languages' ||
+      normalized == 'langueage' ||
+      normalized == 'langueages' ||
+      normalized.endsWith('languages') ||
+      normalized.endsWith('language');
+}
 
 extension _ResumePdfBlueCornerPage on ResumePdfService {
   void _addBlueCornerTemplatePage(
@@ -167,170 +197,340 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
         (_MinimalProfileIcon.web, resume.linkedinLink.trim()),
     ];
 
-    final sideSections = resume.customSections
-        .where((item) => !item.isBlank && _slateSidebarIsRailSection(item))
+    final languageSections = resume.customSections
+        .where((item) => !item.isBlank && _blueCornerIsLanguageSection(item))
         .toList();
     final mainCustomSections = resume.customSections
-        .where((item) => !sideSections.contains(item))
+        .where((item) => !languageSections.contains(item))
         .toSet();
     final summary = resume.summary.trim();
 
-    final side = pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        if (contacts.isNotEmpty) ...[
-          sectionHeading('Contact', icon: _MinimalProfileIcon.phone),
-          for (final (icon, value) in contacts)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 7),
-              child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.SizedBox(
-                    width: 11,
-                    height: 11,
-                    child: pw.CustomPaint(
-                      painter: (canvas, size) =>
-                          _paintMinimalProfileIcon(canvas, size, icon, accent),
-                    ),
-                  ),
-                  pw.SizedBox(width: 8),
-                  pw.Expanded(child: pw.Text(value, style: bodyStyle)),
-                ],
-              ),
-            ),
-        ],
-        if (summary.isNotEmpty) ...[
-          sectionHeading('About Me', icon: _MinimalProfileIcon.person),
-          _headerSidebarMaybeHighlight(
-            highlight: highlightSummary,
-            child: pw.Text(
-              summary,
-              style: bodyStyle,
-              textAlign: pw.TextAlign.justify,
+    pw.Widget contactRow(_MinimalProfileIcon icon, String value) => pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 7),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 11,
+            height: 11,
+            child: pw.CustomPaint(
+              painter: (canvas, size) =>
+                  _paintMinimalProfileIcon(canvas, size, icon, accent),
             ),
           ),
+          pw.SizedBox(width: 8),
+          pw.Expanded(child: pw.Text(value, style: bodyStyle)),
         ],
-        for (final section in sideSections) ...[
-          sectionHeading(section.title.trim()),
-          for (final line in _slateSidebarRailSectionLines(section))
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 5),
-              child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('•  ', style: bodyStyle),
-                  pw.Expanded(child: pw.Text(line, style: bodyStyle)),
-                ],
+      ),
+    );
+
+    pw.Widget sideBullet(String line) => pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 5),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text('•  ', style: bodyStyle),
+          pw.Expanded(child: pw.Text(line, style: bodyStyle)),
+        ],
+      ),
+    );
+
+    final sideInnerWidth = _blueCornerSideWidthPt - _blueCornerSideInsetPt * 2;
+    final lineHeight = detailPt * ResumeTypography.bodyTextLineHeight;
+
+    double wrappedLines(String text, double width) {
+      final trimmed = text.trim();
+      if (trimmed.isEmpty) return 1;
+      final perLine = (width / (detailPt * 0.48)).floor().clamp(8, 80);
+      var lines = 1;
+      var used = 0;
+      for (final word in trimmed.split(RegExp(r'\s+'))) {
+        final len = word.length;
+        if (used == 0) {
+          if (len <= perLine) {
+            used = len;
+          } else {
+            lines += (len / perLine).ceil() - 1;
+            final remainder = len % perLine;
+            used = remainder == 0 ? perLine : remainder;
+          }
+        } else if (used + 1 + len <= perLine) {
+          used += 1 + len;
+        } else {
+          lines++;
+          if (len <= perLine) {
+            used = len;
+          } else {
+            lines += (len / perLine).ceil() - 1;
+            final remainder = len % perLine;
+            used = remainder == 0 ? perLine : remainder;
+          }
+        }
+      }
+      return lines.toDouble();
+    }
+
+    const headingHeight = 58.0;
+    final contactTextWidth = sideInnerWidth - 11 - 8;
+    final bulletTextWidth = sideInnerWidth - 16;
+    final leftBlocks = <({pw.Widget widget, double height})>[];
+    if (contacts.isNotEmpty) {
+      leftBlocks.add((
+        widget: sectionHeading('Contact', icon: _MinimalProfileIcon.phone),
+        height: headingHeight,
+      ));
+      for (final (icon, value) in contacts) {
+        final lines = wrappedLines(value, contactTextWidth);
+        leftBlocks.add((
+          widget: contactRow(icon, value),
+          height: math.max(11, lines * lineHeight) + 11,
+        ));
+      }
+    }
+    for (final section in languageSections) {
+      leftBlocks.add((
+        widget: sectionHeading(section.title.trim()),
+        height: headingHeight,
+      ));
+      for (final line in _slateSidebarRailSectionLines(section)) {
+        final lines = wrappedLines(line, bulletTextWidth);
+        leftBlocks.add((
+          widget: sideBullet(line),
+          height: lines * lineHeight + 9,
+        ));
+      }
+    }
+
+    final page1LeftBudget =
+        PdfPageFormat.a4.height -
+        _blueCornerHeaderBottomPt -
+        _blueCornerPageBottomPt;
+    final continuationLeftBudget =
+        PdfPageFormat.a4.height -
+        _blueCornerPageTopPt -
+        _blueCornerPageBottomPt;
+    final sidebarSlices = <_BlueCornerSidebarSlice>[];
+    var blockIndex = 0;
+    var isFirstSlice = true;
+    while (blockIndex < leftBlocks.length) {
+      final budget = isFirstSlice ? page1LeftBudget : continuationLeftBudget;
+      final chunk = <pw.Widget>[];
+      var used = 0.0;
+      while (blockIndex < leftBlocks.length) {
+        final block = leftBlocks[blockIndex];
+        if (chunk.isNotEmpty && used + block.height > budget) break;
+        chunk.add(block.widget);
+        used += block.height;
+        blockIndex++;
+      }
+      if (chunk.isEmpty) {
+        chunk.add(leftBlocks[blockIndex].widget);
+        blockIndex++;
+      }
+      sidebarSlices.add(_BlueCornerSidebarSlice(chunk));
+      isFirstSlice = false;
+    }
+
+    final sidebarPageCount = sidebarSlices.length;
+
+    bool usesSideColumn(int pageNumber) =>
+        pageNumber == 1 || pageNumber <= sidebarPageCount;
+
+    pw.Widget mainWrap(pw.Widget child) => pw.DelayedWidget(
+      build: (context) => pw.Padding(
+        padding: pw.EdgeInsets.only(
+          left: usesSideColumn(context.pageNumber)
+              ? _blueCornerContentInsetPt
+              : 0,
+        ),
+        child: child,
+      ),
+    );
+
+    pw.Widget skillLine(String skill) => _headerSidebarMaybeHighlight(
+      highlight: highlightedSkills.contains(skill),
+      child: pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 6),
+        child: pw.Text('• $skill', style: bodyStyle),
+      ),
+    );
+
+    /// One column beside the photo or sidebar; two columns on a full-width page.
+    List<pw.Widget> skillsBody(List<String> skills) {
+      if (skills.isEmpty) return const [];
+      final rows = <pw.Widget>[];
+      for (var i = 0; i < skills.length; i += 2) {
+        final first = skills[i];
+        final second = i + 1 < skills.length ? skills[i + 1] : null;
+        rows.add(
+          pw.DelayedWidget(
+            build: (context) {
+              final beside = usesSideColumn(context.pageNumber);
+              final child = beside
+                  ? pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        skillLine(first),
+                        if (second != null) skillLine(second),
+                      ],
+                    )
+                  : pw.Row(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Expanded(child: skillLine(first)),
+                        pw.SizedBox(width: 18),
+                        pw.Expanded(
+                          child: second == null
+                              ? pw.SizedBox()
+                              : skillLine(second),
+                        ),
+                      ],
+                    );
+              return pw.Padding(
+                padding: pw.EdgeInsets.only(
+                  left: beside ? _blueCornerContentInsetPt : 0,
+                ),
+                child: pw.Inseparable(child: child),
+              );
+            },
+          ),
+        );
+      }
+      return rows;
+    }
+
+    pw.Widget pageBackground(int pageNumber) => pw.FullPage(
+      ignoreMargins: true,
+      child: pw.Stack(
+        children: [
+          if (pageNumber == 1) ...[
+            pw.Positioned(
+              left: 0,
+              top: 0,
+              child: pw.SizedBox(
+                width: _blueCornerWedgePt,
+                height: _blueCornerWedgePt,
+                child: pw.CustomPaint(
+                  painter: (canvas, size) {
+                    canvas
+                      ..setFillColor(accent)
+                      ..moveTo(0, size.y)
+                      ..lineTo(size.x, size.y)
+                      ..lineTo(0, 0)
+                      ..closePath()
+                      ..fillPath();
+                  },
+                ),
               ),
             ),
+            pw.Positioned(
+              left: _blueCornerSideWidthPt / 2 - _blueCornerAvatarPt / 2,
+              top: 56,
+              child: pw.Container(
+                width: _blueCornerAvatarPt,
+                height: _blueCornerAvatarPt,
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.white,
+                  shape: pw.BoxShape.circle,
+                  border: pw.Border.all(color: PdfColors.white, width: 5),
+                ),
+                alignment: pw.Alignment.center,
+                child: profileImage != null
+                    ? pw.ClipOval(
+                        child: pw.SizedBox(
+                          width: _blueCornerAvatarPt,
+                          height: _blueCornerAvatarPt,
+                          child: pw.Image(profileImage, fit: pw.BoxFit.cover),
+                        ),
+                      )
+                    : pw.Text(
+                        _resumeInitials(resume),
+                        style: style(ResumeFontWeight.w700, 30, accent),
+                      ),
+              ),
+            ),
+            pw.Positioned(
+              left: _blueCornerSideInsetPt,
+              top: _blueCornerAvatarPt + 72,
+              child: pw.SizedBox(
+                width: _blueCornerSideWidthPt - _blueCornerSideInsetPt * 2,
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(_displayName(resume), style: nameStyle),
+                    if (resume.jobTitle.trim().isNotEmpty) ...[
+                      pw.SizedBox(height: 3),
+                      pw.Text(resume.jobTitle.trim(), style: jobStyle),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (sidebarPageCount > 0 && pageNumber <= sidebarPageCount)
+            pw.Positioned(
+              left: _blueCornerSideInsetPt,
+              top: pageNumber == 1
+                  ? _blueCornerHeaderBottomPt
+                  : _blueCornerPageTopPt,
+              bottom: _blueCornerPageBottomPt,
+              child: pw.SizedBox(
+                width: _blueCornerSideWidthPt - _blueCornerSideInsetPt * 2,
+                child: pw.ClipRect(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: sidebarSlices[pageNumber - 1].blocks,
+                  ),
+                ),
+              ),
+            ),
+          // Timeline rule the entry dots sit on.
+          pw.Positioned(
+            left:
+                (usesSideColumn(pageNumber)
+                    ? _blueCornerMainLeftPt
+                    : _blueCornerFullWidthLeftPt) +
+                _blueCornerTimelineDotPt / 2,
+            top: pageNumber == 1
+                ? _blueCornerPageTopPt + 40
+                : _blueCornerPageTopPt,
+            bottom: _blueCornerPageBottomPt,
+            child: pw.Container(width: 1, color: ruleColor),
+          ),
         ],
-      ],
+      ),
     );
+
+    final pagesBefore = document.document.pdfPageList.pages.length;
 
     document.addPage(
       pw.MultiPage(
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.fromLTRB(
-            _blueCornerMainLeftPt,
+            _blueCornerFullWidthLeftPt,
             _blueCornerPageTopPt,
             _blueCornerMainRightPt,
             _blueCornerPageBottomPt,
           ),
-          buildBackground: (context) => pw.FullPage(
-            ignoreMargins: true,
-            child: pw.Stack(
-              children: [
-                if (context.pageNumber == 1) ...[
-                  pw.Positioned(
-                    left: 0,
-                    top: 0,
-                    child: pw.SizedBox(
-                      width: _blueCornerWedgePt,
-                      height: _blueCornerWedgePt,
-                      child: pw.CustomPaint(
-                        painter: (canvas, size) {
-                          canvas
-                            ..setFillColor(accent)
-                            ..moveTo(0, size.y)
-                            ..lineTo(size.x, size.y)
-                            ..lineTo(0, 0)
-                            ..closePath()
-                            ..fillPath();
-                        },
-                      ),
-                    ),
-                  ),
-                  pw.Positioned(
-                    left:
-                        _blueCornerSideWidthPt / 2 - _blueCornerAvatarPt / 2,
-                    top: 56,
-                    child: pw.Container(
-                      width: _blueCornerAvatarPt,
-                      height: _blueCornerAvatarPt,
-                      decoration: pw.BoxDecoration(
-                        color: PdfColors.white,
-                        shape: pw.BoxShape.circle,
-                        border: pw.Border.all(color: PdfColors.white, width: 5),
-                      ),
-                      alignment: pw.Alignment.center,
-                      child: profileImage != null
-                          ? pw.ClipOval(
-                              child: pw.SizedBox(
-                                width: _blueCornerAvatarPt,
-                                height: _blueCornerAvatarPt,
-                                child: pw.Image(
-                                  profileImage,
-                                  fit: pw.BoxFit.cover,
-                                ),
-                              ),
-                            )
-                          : pw.Text(
-                              _resumeInitials(resume),
-                              style: style(ResumeFontWeight.w700, 30, accent),
-                            ),
-                    ),
-                  ),
-                  pw.Positioned(
-                    left: _blueCornerSideInsetPt,
-                    top: _blueCornerAvatarPt + 72,
-                    child: pw.SizedBox(
-                      width: _blueCornerSideWidthPt - _blueCornerSideInsetPt * 2,
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(_displayName(resume), style: nameStyle),
-                          if (resume.jobTitle.trim().isNotEmpty) ...[
-                            pw.SizedBox(height: 3),
-                            pw.Text(resume.jobTitle.trim(), style: jobStyle),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  pw.Positioned(
-                    left: _blueCornerSideInsetPt,
-                    top: _blueCornerHeaderBottomPt,
-                    bottom: _blueCornerPageBottomPt,
-                    child: pw.SizedBox(
-                      width: _blueCornerSideWidthPt - _blueCornerSideInsetPt * 2,
-                      child: pw.ClipRect(child: side),
-                    ),
-                  ),
-                ],
-                // Timeline rule the entry dots sit on.
-                pw.Positioned(
-                  left: _blueCornerMainLeftPt + _blueCornerTimelineDotPt / 2,
-                  top: _blueCornerPageTopPt + 40,
-                  bottom: _blueCornerPageBottomPt,
-                  child: pw.Container(width: 1, color: ruleColor),
-                ),
-              ],
-            ),
-          ),
+          buildBackground: (context) => pageBackground(context.pageNumber),
         ),
         build: (context) => [
+          if (summary.isNotEmpty) ...[
+            mainWrap(
+              sectionHeading('About Me', icon: _MinimalProfileIcon.person),
+            ),
+            mainWrap(
+              _headerSidebarMaybeHighlight(
+                highlight: highlightSummary,
+                child: pw.Text(
+                  summary,
+                  style: bodyStyle,
+                  textAlign: pw.TextAlign.justify,
+                ),
+              ),
+            ),
+          ],
           ..._pdfBodySectionsInBuilderOrder(
             resume,
             buildSection: (id) {
@@ -343,13 +543,15 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                 final item = resume.customSections[customIndex];
                 if (!mainCustomSections.contains(item)) return null;
                 return [
-                  sectionHeading(item.title.ifEmpty('Custom section')),
+                  mainWrap(
+                    sectionHeading(item.title.ifEmpty('Custom section')),
+                  ),
                   ..._pwCustomSectionBodyWidgets(
                     item,
                     garamond: fonts,
                     bodyFontPt: detailPt,
                     accentStripGaramondBody: true,
-                  ),
+                  ).map(mainWrap),
                 ];
               }
               switch (id) {
@@ -357,59 +559,65 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
-                    sectionHeading(
-                      'Skills',
-                      icon: _MinimalProfileIcon.puzzle,
+                    mainWrap(
+                      sectionHeading(
+                        'Skills',
+                        icon: _MinimalProfileIcon.puzzle,
+                      ),
                     ),
-                    ..._pdfPaginatedSkillLines(
-                      skills: skills,
-                      style: bodyStyle,
-                      highlightedSkills: highlightedSkills,
-                    ),
+                    ...skillsBody(skills),
                   ];
                 case ResumeBuilderSectionIds.education:
                   final items = resume.visibleEducation;
                   if (items.isEmpty) return null;
                   return [
-                    sectionHeading(
-                      'Education',
-                      icon: _MinimalProfileIcon.school,
+                    mainWrap(
+                      sectionHeading(
+                        'Education',
+                        icon: _MinimalProfileIcon.school,
+                      ),
                     ),
                     for (final item in items)
-                      timelineEntry(
-                        title: item.degree.trim().ifEmpty('Degree'),
-                        organisation: item.institution.trim(),
-                        dates: educationDateRangeLabel(
-                          item.startDate,
-                          item.endDate,
+                      mainWrap(
+                        timelineEntry(
+                          title: item.degree.trim().ifEmpty('Degree'),
+                          organisation: item.institution.trim(),
+                          dates: educationDateRangeLabel(
+                            item.startDate,
+                            item.endDate,
+                          ),
+                          details: [
+                            if (educationScoreDisplayLabel(item).isNotEmpty)
+                              educationScoreDisplayLabel(item),
+                          ],
                         ),
-                        details: [
-                          if (educationScoreDisplayLabel(item).isNotEmpty)
-                            educationScoreDisplayLabel(item),
-                        ],
                       ),
                   ];
                 case ResumeBuilderSectionIds.work:
                   final items = resume.visibleWorkExperiences;
                   if (items.isEmpty) return null;
                   return [
-                    sectionHeading(
-                      'Experience',
-                      icon: _MinimalProfileIcon.work,
+                    mainWrap(
+                      sectionHeading(
+                        'Experience',
+                        icon: _MinimalProfileIcon.work,
+                      ),
                     ),
                     for (var i = 0; i < items.length; i++)
-                      _headerSidebarMaybeHighlight(
-                        highlight:
-                            highlightedBulletsByExperience[i]?.isNotEmpty ??
-                            false,
-                        child: timelineEntry(
-                          title: items[i].role.trim().ifEmpty('Role'),
-                          organisation: items[i].company.trim(),
-                          dates: educationDateRangeLabel(
-                            items[i].startDate,
-                            items[i].endDate,
+                      mainWrap(
+                        _headerSidebarMaybeHighlight(
+                          highlight:
+                              highlightedBulletsByExperience[i]?.isNotEmpty ??
+                              false,
+                          child: timelineEntry(
+                            title: items[i].role.trim().ifEmpty('Role'),
+                            organisation: items[i].company.trim(),
+                            dates: educationDateRangeLabel(
+                              items[i].startDate,
+                              items[i].endDate,
+                            ),
+                            details: _workBulletLines(items[i]),
                           ),
-                          details: _workBulletLines(items[i]),
                         ),
                       ),
                   ];
@@ -417,17 +625,19 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                   final items = resume.visibleProjects;
                   if (items.isEmpty) return null;
                   return [
-                    sectionHeading('Projects'),
+                    mainWrap(sectionHeading('Projects')),
                     for (final item in items)
-                      timelineEntry(
-                        title: item.title.trim().ifEmpty('Project'),
-                        organisation: item.subtitle.trim(),
-                        dates: '',
-                        details: [
-                          item.overview.trim(),
-                          item.impact.trim(),
-                          ...item.bullets.map((bullet) => bullet.trim()),
-                        ].where((line) => line.isNotEmpty).toList(),
+                      mainWrap(
+                        timelineEntry(
+                          title: item.title.trim().ifEmpty('Project'),
+                          organisation: item.subtitle.trim(),
+                          dates: '',
+                          details: [
+                            item.overview.trim(),
+                            item.impact.trim(),
+                            ...item.bullets.map((bullet) => bullet.trim()),
+                          ].where((line) => line.isNotEmpty).toList(),
+                        ),
                       ),
                   ];
               }
@@ -437,5 +647,25 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
         ],
       ),
     );
+
+    final multiPageCount =
+        document.document.pdfPageList.pages.length - pagesBefore;
+    for (var i = multiPageCount; i < sidebarPageCount; i++) {
+      document.addPage(
+        pw.Page(
+          pageTheme: pw.PageTheme(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.fromLTRB(
+              _blueCornerFullWidthLeftPt,
+              _blueCornerPageTopPt,
+              _blueCornerMainRightPt,
+              _blueCornerPageBottomPt,
+            ),
+            buildBackground: (context) => pageBackground(i + 1),
+          ),
+          build: (context) => pw.SizedBox(),
+        ),
+      );
+    }
   }
 }

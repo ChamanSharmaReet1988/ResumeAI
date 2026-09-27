@@ -10964,10 +10964,18 @@ class _BlueCornerPreview extends StatelessWidget
   static const double _pageBottom = 42;
   static const double _dot = 8;
 
-  static final RegExp _sideSectionTitle = RegExp(
-    r'^(languages?|awards?|certifications?|certificates?|interests?|hobbies)$',
-    caseSensitive: false,
-  );
+  static bool _isLanguageSection(CustomSectionItem item) {
+    final normalized = item.title.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z]'),
+      '',
+    );
+    return normalized == 'language' ||
+        normalized == 'languages' ||
+        normalized == 'langueage' ||
+        normalized == 'langueages' ||
+        normalized.endsWith('languages') ||
+        normalized.endsWith('language');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11083,9 +11091,8 @@ class _BlueCornerPreview extends StatelessWidget
         (Icons.language, resume.linkedinLink.trim()),
     ];
 
-    final customSections = resume.visibleCustomSections;
-    final sideSections = customSections
-        .where((item) => _sideSectionTitle.hasMatch(item.title.trim()))
+    final sideSections = resume.visibleCustomSections
+        .where(_isLanguageSection)
         .toList();
 
     Widget bullet(String text) => Padding(
@@ -11117,14 +11124,6 @@ class _BlueCornerPreview extends StatelessWidget
               ),
             ),
         ],
-        if (resume.summary.trim().isNotEmpty) ...[
-          sectionHeading('About Me', icon: Icons.person_outline),
-          Text(
-            resume.summary.trim(),
-            style: bodyStyle,
-            textAlign: TextAlign.justify,
-          ),
-        ],
         for (final section in sideSections) ...[
           sectionHeading(section.title.trim()),
           for (final line in section.displayLines(splitInlineItems: true))
@@ -11133,9 +11132,15 @@ class _BlueCornerPreview extends StatelessWidget
       ],
     );
 
+    final summary = resume.summary.trim();
     final main = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: mapSections((id) {
+      children: [
+        if (summary.isNotEmpty) ...[
+          sectionHeading('About Me', icon: Icons.person_outline),
+          Text(summary, style: bodyStyle, textAlign: TextAlign.justify),
+        ],
+        ...mapSections((id) {
         final customIndex = ResumeBuilderSectionIds.customIndex(id);
         if (customIndex != null) {
           if (customIndex < 0 || customIndex >= resume.customSections.length) {
@@ -11215,6 +11220,7 @@ class _BlueCornerPreview extends StatelessWidget
         }
         return null;
       }),
+      ],
     );
 
     final avatarPath = resume.profileImagePath.trim();

@@ -935,6 +935,106 @@ void main() {
     expect(pageTwo, contains('SKILL'));
   });
 
+  test('blue corner keeps contact and languages in the sidebar', () async {
+    final service = ResumePdfService();
+    final skills = List<String>.generate(
+      40,
+      (index) => 'Skill number ${index + 1} with a longer label',
+    );
+    final languages = List<String>.generate(
+      28,
+      (index) => 'Language ${index + 1}',
+    );
+    final resume = ResumeData.empty(template: ResumeTemplate.blueCorner)
+        .copyWith(
+          fullName: 'Priya Raman',
+          jobTitle: 'Marketing Manager',
+          email: 'priya.raman@email.com',
+          phone: '+1 (415) 555-0142',
+          location: 'San Jose, CA',
+          website: 'priyaraman.co',
+          summary: 'Marketing manager focused on launch plans and pipeline.',
+          skills: skills,
+          workExperiences: const [
+            WorkExperience(
+              role: 'Marketing Manager',
+              company: 'Arowwai Industries',
+              startDate: '2020',
+              endDate: 'Present',
+              description: '',
+              bullets: ['Grew qualified pipeline over two years.'],
+            ),
+          ],
+          education: const [
+            EducationItem(
+              institution: 'Borcelle University',
+              degree: 'Master of Business Management',
+              startDate: '2013',
+              endDate: '2015',
+              score: '',
+            ),
+          ],
+          customSections: [
+            CustomSectionItem(
+              title: 'Languages',
+              content: languages.join('\n'),
+            ),
+            const CustomSectionItem(
+              title: 'Awards',
+              content: 'Marketing prize 2022',
+            ),
+          ],
+          builderSectionOrder: const [
+            'skills',
+            'work',
+            'education',
+            'custom:0',
+            'custom:1',
+          ],
+        );
+
+    final bytes = await service.buildPdf(resume);
+    expect(bytes, isNotEmpty);
+    final document = sfpdf.PdfDocument(inputBytes: bytes);
+    addTearDown(document.dispose);
+    expect(document.pages.count, greaterThan(1));
+    final text = sfpdf.PdfTextExtractor(
+      document,
+    ).extractText().replaceAll(RegExp(r'\s+'), ' ').toUpperCase();
+    expect(text, contains('CONTACT'));
+    expect(text, contains('LANGUAGES'));
+    expect(text, contains('LANGUAGE 1'));
+    expect(text, contains('LANGUAGE 28'));
+    expect(text, contains('ABOUT ME'));
+    expect(text, contains('SKILLS'));
+    expect(text, contains('SKILL NUMBER 1'));
+    expect(text, contains('SKILL NUMBER 40'));
+    expect(text, contains('AWARDS'));
+    expect(text, contains('EXPERIENCE'));
+    expect(text, contains('EDUCATION'));
+
+    final shortBytes = await service.buildPdf(
+      resume.copyWith(
+        customSections: const [
+          CustomSectionItem(
+            title: 'Languages',
+            content: 'English\nSpanish\nPortuguese\nFrench',
+          ),
+        ],
+      ),
+    );
+    final shortDoc = sfpdf.PdfDocument(inputBytes: shortBytes);
+    addTearDown(shortDoc.dispose);
+    expect(shortDoc.pages.count, greaterThan(1));
+    final pageTwo = sfpdf.PdfTextExtractor(shortDoc)
+        .extractText(startPageIndex: 1)
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .toUpperCase();
+    expect(pageTwo, isNot(contains('LANGUAGES')));
+    expect(pageTwo, isNot(contains('CONTACT')));
+    expect(pageTwo, contains('SKILL'));
+  });
+
   test('Languages summary custom section fills list slots in templates', () {
     final resume = ResumeData.empty(template: ResumeTemplate.atsClassicCv)
         .copyWith(
