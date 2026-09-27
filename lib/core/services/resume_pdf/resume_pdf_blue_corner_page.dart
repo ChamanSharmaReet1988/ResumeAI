@@ -132,55 +132,78 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
 
     /// Timeline entry: dot on the rule, title, italic organisation, dates on
     /// the right, then the detail lines.
-    pw.Widget timelineEntry({
+    /// An entry as a list of widgets rather than one Row: a Row cannot break
+    /// across pages, so a tall entry used to jump to the next page whole and
+    /// leave the rest of the page empty. Split this way only the part that
+    /// does not fit moves on.
+    List<pw.Widget> timelineEntry({
       required String title,
       required String organisation,
       required String dates,
       required List<String> details,
-    }) => pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 14),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Container(
-            width: _blueCornerTimelineDotPt,
-            height: _blueCornerTimelineDotPt,
-            margin: const pw.EdgeInsets.only(top: 3, right: 12),
-            decoration: pw.BoxDecoration(
-              color: accent,
-              shape: pw.BoxShape.circle,
+      bool last = false,
+    }) {
+      const detailIndent = _blueCornerTimelineDotPt + 12;
+      pw.Widget indented(pw.Widget child) => pw.Padding(
+        padding: const pw.EdgeInsets.only(left: detailIndent),
+        child: child,
+      );
+
+      return [
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Container(
+              width: _blueCornerTimelineDotPt,
+              height: _blueCornerTimelineDotPt,
+              margin: const pw.EdgeInsets.only(top: 3, right: 12),
+              decoration: pw.BoxDecoration(
+                color: accent,
+                shape: pw.BoxShape.circle,
+              ),
             ),
-          ),
-          pw.Expanded(
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Expanded(child: pw.Text(title, style: entryTitleStyle)),
-                    if (dates.isNotEmpty) ...[
-                      pw.SizedBox(width: 10),
-                      pw.Text(dates, style: bodyStyle),
-                    ],
+            pw.Expanded(
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Expanded(child: pw.Text(title, style: entryTitleStyle)),
+                  if (dates.isNotEmpty) ...[
+                    pw.SizedBox(width: 10),
+                    pw.Text(dates, style: bodyStyle),
                   ],
-                ),
-                if (organisation.isNotEmpty) ...[
-                  pw.SizedBox(height: 1),
-                  pw.Text(organisation, style: entrySubStyle),
                 ],
-                for (final line in details) ...[
-                  pw.SizedBox(height: 3),
-                  pw.Text(
-                    line,
-                    style: bodyStyle,
-                    textAlign: pw.TextAlign.justify,
-                  ),
-                ],
-              ],
+              ),
+            ),
+          ],
+        ),
+        if (organisation.isNotEmpty)
+          indented(
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 1),
+              child: pw.Text(organisation, style: entrySubStyle),
             ),
           ),
-        ],
+        for (final line in details)
+          indented(
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 3),
+              child: pw.Text(
+                line,
+                style: bodyStyle,
+                textAlign: pw.TextAlign.justify,
+              ),
+            ),
+          ),
+        if (!last) pw.SizedBox(height: 14),
+      ];
+    }
+
+    /// Heading plus the widget under it as one unbreakable block, so a heading
+    /// never sits alone at the bottom of a page.
+    pw.Widget keepWithNext(List<pw.Widget> children) => pw.Inseparable(
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: children,
       ),
     );
 
@@ -597,75 +620,90 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                 case ResumeBuilderSectionIds.education:
                   final items = resume.visibleEducation;
                   if (items.isEmpty) return null;
+                  final educationWidgets = <pw.Widget>[
+                    for (var i = 0; i < items.length; i++)
+                      ...timelineEntry(
+                        title: items[i].degree.trim().ifEmpty('Degree'),
+                        organisation: items[i].institution.trim(),
+                        dates: educationDateRangeLabel(
+                          items[i].startDate,
+                          items[i].endDate,
+                        ),
+                        details: [
+                          if (educationScoreDisplayLabel(items[i]).isNotEmpty)
+                            educationScoreDisplayLabel(items[i]),
+                        ],
+                        last: i == items.length - 1,
+                      ),
+                  ];
                   return [
                     mainWrap(
-                      sectionHeading(
-                        'Education',
-                        icon: _MinimalProfileIcon.school,
-                      ),
-                    ),
-                    for (final item in items)
-                      mainWrap(
-                        timelineEntry(
-                          title: item.degree.trim().ifEmpty('Degree'),
-                          organisation: item.institution.trim(),
-                          dates: educationDateRangeLabel(
-                            item.startDate,
-                            item.endDate,
-                          ),
-                          details: [
-                            if (educationScoreDisplayLabel(item).isNotEmpty)
-                              educationScoreDisplayLabel(item),
-                          ],
+                      keepWithNext([
+                        sectionHeading(
+                          'Education',
+                          icon: _MinimalProfileIcon.school,
                         ),
-                      ),
+                        educationWidgets.first,
+                      ]),
+                    ),
+                    ...educationWidgets.skip(1).map(mainWrap),
                   ];
                 case ResumeBuilderSectionIds.work:
                   final items = resume.visibleWorkExperiences;
                   if (items.isEmpty) return null;
+                  final experienceWidgets = <pw.Widget>[
+                    for (var i = 0; i < items.length; i++)
+                      ...timelineEntry(
+                        title: items[i].role.trim().ifEmpty('Role'),
+                        organisation: items[i].company.trim(),
+                        dates: educationDateRangeLabel(
+                          items[i].startDate,
+                          items[i].endDate,
+                        ),
+                        details: _workBulletLines(items[i]),
+                        last: i == items.length - 1,
+                      ),
+                  ];
                   return [
                     mainWrap(
-                      sectionHeading(
-                        'Experience',
-                        icon: _MinimalProfileIcon.work,
-                      ),
-                    ),
-                    for (var i = 0; i < items.length; i++)
-                      mainWrap(
-                        _headerSidebarMaybeHighlight(
-                          highlight:
-                              highlightedBulletsByExperience[i]?.isNotEmpty ??
-                              false,
-                          child: timelineEntry(
-                            title: items[i].role.trim().ifEmpty('Role'),
-                            organisation: items[i].company.trim(),
-                            dates: educationDateRangeLabel(
-                              items[i].startDate,
-                              items[i].endDate,
-                            ),
-                            details: _workBulletLines(items[i]),
-                          ),
+                      keepWithNext([
+                        sectionHeading(
+                          'Experience',
+                          icon: _MinimalProfileIcon.work,
                         ),
-                      ),
+                        experienceWidgets.first,
+                      ]),
+                    ),
+                    ...experienceWidgets.skip(1).map(mainWrap),
                   ];
                 case ResumeBuilderSectionIds.projects:
                   final items = resume.visibleProjects;
                   if (items.isEmpty) return null;
-                  return [
-                    mainWrap(sectionHeading('Projects', icon: _MinimalProfileIcon.folder)),
-                    for (final item in items)
-                      mainWrap(
-                        timelineEntry(
-                          title: item.title.trim().ifEmpty('Project'),
-                          organisation: item.subtitle.trim(),
-                          dates: '',
-                          details: [
-                            item.overview.trim(),
-                            item.impact.trim(),
-                            ...item.bullets.map((bullet) => bullet.trim()),
-                          ].where((line) => line.isNotEmpty).toList(),
-                        ),
+                  final projectWidgets = <pw.Widget>[
+                    for (var i = 0; i < items.length; i++)
+                      ...timelineEntry(
+                        title: items[i].title.trim().ifEmpty('Project'),
+                        organisation: items[i].subtitle.trim(),
+                        dates: '',
+                        details: [
+                          items[i].overview.trim(),
+                          items[i].impact.trim(),
+                          ...items[i].bullets.map((bullet) => bullet.trim()),
+                        ].where((line) => line.isNotEmpty).toList(),
+                        last: i == items.length - 1,
                       ),
+                  ];
+                  return [
+                    mainWrap(
+                      keepWithNext([
+                        sectionHeading(
+                          'Projects',
+                          icon: _MinimalProfileIcon.folder,
+                        ),
+                        projectWidgets.first,
+                      ]),
+                    ),
+                    ...projectWidgets.skip(1).map(mainWrap),
                   ];
               }
               return null;
