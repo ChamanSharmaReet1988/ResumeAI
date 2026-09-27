@@ -134,72 +134,85 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
     }
 
     /// Experience entry: hollow ring on the rule, role, company, date chip.
-    pw.Widget timelineEntry({
+    /// An entry as a list of widgets rather than one Row: a Row cannot break
+    /// across pages, so a tall entry used to jump to the next page whole and
+    /// leave the rest of the page empty. Split this way the entry flows, and
+    /// only the parts that do not fit move on.
+    List<pw.Widget> timelineEntry({
       required String title,
       required String meta,
       required String dates,
       required List<String> details,
-    }) => pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 14),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Container(
-            width: _profileTimelineRingPt,
-            height: _profileTimelineRingPt,
-            margin: const pw.EdgeInsets.only(top: 3, right: 14),
-            decoration: pw.BoxDecoration(
-              shape: pw.BoxShape.circle,
-              border: pw.Border.all(color: titleColor, width: 1.4),
+      bool last = false,
+    }) {
+      pw.Widget indented(pw.Widget child) => pw.Padding(
+        padding: const pw.EdgeInsets.only(left: _profileTimelineGutterPt),
+        child: child,
+      );
+
+      return [
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Container(
+              width: _profileTimelineRingPt,
+              height: _profileTimelineRingPt,
+              margin: const pw.EdgeInsets.only(top: 3, right: 14),
+              decoration: pw.BoxDecoration(
+                shape: pw.BoxShape.circle,
+                border: pw.Border.all(color: titleColor, width: 1.4),
+              ),
+            ),
+            pw.Expanded(
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Expanded(child: pw.Text(title, style: entryTitleStyle)),
+                  if (dates.isNotEmpty) ...[
+                    pw.SizedBox(width: 10),
+                    pw.Container(
+                      padding: const pw.EdgeInsets.fromLTRB(9, 3, 9, 4),
+                      decoration: pw.BoxDecoration(
+                        color: chipColor,
+                        borderRadius: pw.BorderRadius.circular(9),
+                      ),
+                      child: pw.Text(dates, style: chipStyle),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (meta.isNotEmpty)
+          indented(
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 2),
+              child: pw.Text(meta, style: bodyStyle),
             ),
           ),
-          pw.Expanded(
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Expanded(child: pw.Text(title, style: entryTitleStyle)),
-                    if (dates.isNotEmpty) ...[
-                      pw.SizedBox(width: 10),
-                      pw.Container(
-                        padding: const pw.EdgeInsets.fromLTRB(9, 3, 9, 4),
-                        decoration: pw.BoxDecoration(
-                          color: chipColor,
-                          borderRadius: pw.BorderRadius.circular(9),
-                        ),
-                        child: pw.Text(dates, style: chipStyle),
-                      ),
-                    ],
-                  ],
-                ),
-                if (meta.isNotEmpty) ...[
-                  pw.SizedBox(height: 2),
-                  pw.Text(meta, style: bodyStyle),
-                ],
-                for (final line in details) ...[
-                  pw.SizedBox(height: 3),
-                  pw.Row(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text('•  ', style: bodyStyle),
-                      pw.Expanded(
-                        child: pw.Text(
-                          line,
-                          style: bodyStyle,
-                          textAlign: pw.TextAlign.justify,
-                        ),
-                      ),
-                    ],
+        for (final line in details)
+          indented(
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 3),
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('\u2022  ', style: bodyStyle),
+                  pw.Expanded(
+                    child: pw.Text(
+                      line,
+                      style: bodyStyle,
+                      textAlign: pw.TextAlign.justify,
+                    ),
                   ),
                 ],
-              ],
+              ),
             ),
           ),
-        ],
-      ),
-    );
+        if (!last) pw.SizedBox(height: 14),
+      ];
+    }
 
     final contacts = <(_MinimalProfileIcon, String)>[
       if (resume.phone.trim().isNotEmpty)
@@ -604,6 +617,15 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
       );
     }
 
+    /// Heading plus the item under it as one unbreakable block, so a heading
+    /// never sits alone at the bottom of a page with its content overleaf.
+    pw.Widget keepWithNext(List<pw.Widget> children) => pw.Inseparable(
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+
     document.addPage(
       pw.MultiPage(
         pageTheme: pw.PageTheme(
@@ -681,54 +703,67 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   }
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
+                  final skillRows = skillsBody(skills);
                   return [
-                    mainWrap(sectionHeading('Skills', indent: true)),
-                    ...skillsBody(skills),
+                    keepWithNext([
+                      mainWrap(sectionHeading('Skills', indent: true)),
+                      if (skillRows.isNotEmpty) skillRows.first,
+                    ]),
+                    ...skillRows.skip(1),
                   ];
                 case ResumeBuilderSectionIds.work:
                   final items = resume.visibleWorkExperiences;
                   if (items.isEmpty) return null;
-                  return [
-                    mainWrap(sectionHeading('Experience', indent: true)),
+                  final experienceWidgets = <pw.Widget>[
                     for (var i = 0; i < items.length; i++)
-                      mainWrap(
-                        _headerSidebarMaybeHighlight(
-                          highlight:
-                              highlightedBulletsByExperience[i]?.isNotEmpty ??
-                              false,
-                          child: timelineEntry(
-                            title: items[i].role.trim().ifEmpty('Role'),
-                            meta: [
-                              items[i].company.trim(),
-                              resume.location.trim(),
-                            ].where((part) => part.isNotEmpty).join('  |  '),
-                            dates: educationDateRangeLabel(
-                              items[i].startDate,
-                              items[i].endDate,
-                            ),
-                            details: _workBulletLines(items[i]),
-                          ),
+                      ...timelineEntry(
+                        title: items[i].role.trim().ifEmpty('Role'),
+                        meta: [
+                          items[i].company.trim(),
+                          resume.location.trim(),
+                        ].where((part) => part.isNotEmpty).join('  |  '),
+                        dates: educationDateRangeLabel(
+                          items[i].startDate,
+                          items[i].endDate,
                         ),
+                        details: _workBulletLines(items[i]),
+                        last: i == items.length - 1,
                       ),
+                  ];
+                  return [
+                    mainWrap(
+                      keepWithNext([
+                        sectionHeading('Experience', indent: true),
+                        experienceWidgets.first,
+                      ]),
+                    ),
+                    ...experienceWidgets.skip(1).map(mainWrap),
                   ];
                 case ResumeBuilderSectionIds.projects:
                   final items = resume.visibleProjects;
                   if (items.isEmpty) return null;
-                  return [
-                    mainWrap(sectionHeading('Projects', indent: true)),
-                    for (final item in items)
-                      mainWrap(
-                        timelineEntry(
-                          title: item.title.trim().ifEmpty('Project'),
-                          meta: item.subtitle.trim(),
-                          dates: '',
-                          details: [
-                            item.overview.trim(),
-                            item.impact.trim(),
-                            ...item.bullets.map((bullet) => bullet.trim()),
-                          ].where((line) => line.isNotEmpty).toList(),
-                        ),
+                  final projectWidgets = <pw.Widget>[
+                    for (var i = 0; i < items.length; i++)
+                      ...timelineEntry(
+                        title: items[i].title.trim().ifEmpty('Project'),
+                        meta: items[i].subtitle.trim(),
+                        dates: '',
+                        details: [
+                          items[i].overview.trim(),
+                          items[i].impact.trim(),
+                          ...items[i].bullets.map((bullet) => bullet.trim()),
+                        ].where((line) => line.isNotEmpty).toList(),
+                        last: i == items.length - 1,
                       ),
+                  ];
+                  return [
+                    mainWrap(
+                      keepWithNext([
+                        sectionHeading('Projects', indent: true),
+                        projectWidgets.first,
+                      ]),
+                    ),
+                    ...projectWidgets.skip(1).map(mainWrap),
                   ];
               }
               return null;
