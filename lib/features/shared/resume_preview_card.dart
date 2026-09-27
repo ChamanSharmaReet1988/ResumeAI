@@ -10963,6 +10963,7 @@ class _BlueCornerPreview extends StatelessWidget
   static const double _pageTop = 46;
   static const double _pageBottom = 42;
   static const double _dot = 8;
+  static const double _timelineGutter = _dot + 12;
 
   static bool _isLanguageSection(CustomSectionItem item) {
     final normalized = item.title.trim().toLowerCase().replaceAll(
@@ -11138,7 +11139,10 @@ class _BlueCornerPreview extends StatelessWidget
       children: [
         if (summary.isNotEmpty) ...[
           sectionHeading('About Me', icon: Icons.person_outline),
-          Text(summary, style: bodyStyle, textAlign: TextAlign.justify),
+          Padding(
+            padding: const EdgeInsets.only(left: _timelineGutter),
+            child: Text(summary, style: bodyStyle, textAlign: TextAlign.justify),
+          ),
         ],
         ...mapSections((id) {
         final customIndex = ResumeBuilderSectionIds.customIndex(id);
@@ -11154,7 +11158,10 @@ class _BlueCornerPreview extends StatelessWidget
             ),
             for (final line in item.displayLines())
               Padding(
-                padding: const EdgeInsets.only(bottom: 3),
+                padding: const EdgeInsets.only(
+                  left: _timelineGutter,
+                  bottom: 3,
+                ),
                 child: Text(line, style: bodyStyle),
               ),
           ];
@@ -11211,11 +11218,28 @@ class _BlueCornerPreview extends StatelessWidget
                 ),
             ];
           case ResumeBuilderSectionIds.skills:
+            if (resume.showCategorisedSkills) {
+              return [
+                sectionHeading('Skills', icon: Icons.extension_outlined),
+                Padding(
+                  padding: const EdgeInsets.only(left: _timelineGutter),
+                  child: _categorisedSkillsPreview(
+                    groups: resume.skillGroupsForResume,
+                    bodyStyle: bodyStyle,
+                    categoryStyle: entryTitleStyle,
+                  ),
+                ),
+              ];
+            }
             final items = _pdfAlignedSkills(resume);
             if (items.isEmpty) return null;
             return [
               sectionHeading('Skills', icon: Icons.extension_outlined),
-              ..._previewPaginatedSkillLines(items, bodyStyle),
+              for (final widget in _previewPaginatedSkillLines(items, bodyStyle))
+                Padding(
+                  padding: const EdgeInsets.only(left: _timelineGutter),
+                  child: widget,
+                ),
             ];
         }
         return null;

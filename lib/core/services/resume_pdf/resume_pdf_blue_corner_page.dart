@@ -336,12 +336,16 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
     bool usesSideColumn(int pageNumber) =>
         pageNumber == 1 || pageNumber <= sidebarPageCount;
 
-    pw.Widget mainWrap(pw.Widget child) => pw.DelayedWidget(
+    pw.Widget mainWrap(
+      pw.Widget child, {
+      bool indentTimeline = false,
+    }) => pw.DelayedWidget(
       build: (context) => pw.Padding(
         padding: pw.EdgeInsets.only(
-          left: usesSideColumn(context.pageNumber)
-              ? _blueCornerContentInsetPt
-              : 0,
+          left: (usesSideColumn(context.pageNumber)
+                  ? _blueCornerContentInsetPt
+                  : 0) +
+              (indentTimeline ? _blueCornerTimelineDotPt + 12 : 0),
         ),
         child: child,
       ),
@@ -388,7 +392,9 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     );
               return pw.Padding(
                 padding: pw.EdgeInsets.only(
-                  left: beside ? _blueCornerContentInsetPt : 0,
+                  left: (beside ? _blueCornerContentInsetPt : 0) +
+                      _blueCornerTimelineDotPt +
+                      12,
                 ),
                 child: pw.Inseparable(child: child),
               );
@@ -529,6 +535,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                   textAlign: pw.TextAlign.justify,
                 ),
               ),
+              indentTimeline: true,
             ),
           ],
           ..._pdfBodySectionsInBuilderOrder(
@@ -551,7 +558,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     garamond: fonts,
                     bodyFontPt: detailPt,
                     accentStripGaramondBody: true,
-                  ).map(mainWrap),
+                  ).map((w) => mainWrap(w, indentTimeline: true)),
                 ];
               }
               switch (id) {
