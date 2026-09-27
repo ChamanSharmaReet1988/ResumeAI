@@ -164,21 +164,43 @@ class ResumeImportService {
         }
       }
 
-      final textLines = extractor.extractTextLines();
+      // Some documents make the line extractor throw (a RangeError inside
+      // syncfusion). One failing strategy must not abort the import, so the
+      // plain-text read below still gets its chance.
+      List<sfpdf.TextLine> textLines;
+      try {
+        textLines = extractor.extractTextLines();
+      } catch (_) {
+        textLines = const <sfpdf.TextLine>[];
+      }
       if (textLines.isNotEmpty) {
         // Columns first: on two-column resumes the top-sorted read interleaves
         // the sidebar with the main column and the parser cannot recover.
-        addCandidate(_buildPdfSplitColumnText(textLines, document));
-        addCandidate(_buildPdfTopSortedText(textLines));
-        addCandidate(_buildPdfColumnAwareText(textLines, document));
+        for (final build in [
+          () => _buildPdfSplitColumnText(textLines, document),
+          () => _buildPdfTopSortedText(textLines),
+          () => _buildPdfColumnAwareText(textLines, document),
+        ]) {
+          try {
+            addCandidate(build());
+          } catch (_) {
+            // Skip this reading strategy and keep the others.
+          }
+        }
       }
 
       // Some PDF writers (including this app's own exports) emit every word as
       // a separate text run, and the plain extractor then returns one word per
       // line. The line-based resume parser reads that as dozens of fake jobs,
       // so only fall back to it when the line-based reads produced nothing.
-      final plainText = extractor.extractText();
-      if (candidates.isEmpty || !_looksWordPerLine(plainText)) {
+      String plainText;
+      try {
+        plainText = extractor.extractText();
+      } catch (_) {
+        plainText = '';
+      }
+      if (plainText.isNotEmpty &&
+          (candidates.isEmpty || !_looksWordPerLine(plainText))) {
         addCandidate(plainText);
       }
 

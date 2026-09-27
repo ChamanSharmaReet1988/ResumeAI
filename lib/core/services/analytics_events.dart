@@ -23,6 +23,9 @@ abstract final class AnalyticsEvents {
   static const String premiumRestoreSuccess = 'premium_restore_ok';
   static const String iCloudBackupSync = 'icloud_backup_sync';
   static const String deepLinkOpen = 'deep_link_open';
+
+  /// A bottom-navigation tab the user tapped; carries `tab` and `tab_index`.
+  static const String tabSelected = 'tab_selected';
 }
 
 /// Prefixes event names for Analytics: `resumeapp_ios_*` / `resumeapp_android_*`.
@@ -60,6 +63,18 @@ Future<void> logAnalyticsEvent(
     // Analytics must never block user flows.
   }
 }
+
+/// Names the shell tabs for [AnalyticsEvents.tabSelected].
+Map<String, Object> shellTabAnalytics(int index) => {
+  'tab': switch (index) {
+    0 => 'home',
+    1 => 'templates',
+    2 => 'resume_ai',
+    3 => 'settings',
+    _ => 'tab_$index',
+  },
+  'tab_index': index,
+};
 
 Map<String, Object> resumeTemplateAnalytics(ResumeTemplate template) => {
       'template_id': template.name,

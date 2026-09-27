@@ -114,6 +114,14 @@ class _AppShellState extends State<AppShell> {
       return;
     }
 
+    unawaited(
+      logAnalyticsEvent(
+        context,
+        AnalyticsEvents.tabSelected,
+        parameters: shellTabAnalytics(index),
+      ),
+    );
+
     // iOS: AI Resume is Pro — open Go Premium instead of the tab when locked.
     if (index == _aiResumeTabIndex &&
         PremiumAccess.atsAiCreateRequiresPremium) {

@@ -4745,6 +4745,9 @@ class LocalAiResumeService {
         .replaceAll('\r\n', '\n')
         .replaceAll('\r', '\n')
         .trim();
+    // Narrow columns wrap e-mail addresses and profile URLs mid-token
+    // ("rohan.kapoor@gmail." / "com"), which dropped them entirely.
+    final contactText = _repairWrappedImportedContacts(normalizedText);
     final lines = normalizedText
         .split('\n')
         .map((line) => line.trim())
@@ -4778,6 +4781,12 @@ class LocalAiResumeService {
       fallbackTitle: fallbackTitle,
     );
 
+    final workExperiences = _extractImportedWorkExperiences(
+      experienceLines: experienceLines,
+      fallbackJobTitle: jobTitle,
+    );
+    final education = _extractImportedEducation(educationLines);
+
     return ResumeData.empty(template: template.userFacingTemplate).copyWith(
       title: _normalizeImportedResumeTitle(
         sourceTitle: fallbackTitle,
@@ -4787,31 +4796,74 @@ class LocalAiResumeService {
       fullName: fullName,
       jobTitle: jobTitle,
       email:
-          _firstRegexMatch(normalizedText, RegExp(r'[\w\.-]+@[\w\.-]+\.\w+')) ??
+          _firstRegexMatch(contactText, RegExp(r'[\w\.-]+@[\w\.-]+\.\w+')) ??
           '',
-      phone: _extractImportedPhone(normalizedText),
+      phone: _extractImportedPhone(contactText),
       location: _inferImportedLocation(headerLines),
-      website: _extractImportedWebsite(normalizedText),
+      website: _extractImportedWebsite(contactText),
       summary: _collectImportedSummary(
         summaryLines: summaryLines,
         headerLines: headerLines,
         allLines: lines,
       ),
-      workExperiences: _extractImportedWorkExperiences(
-        experienceLines: experienceLines,
-        fallbackJobTitle: jobTitle,
-      ),
-      education: _extractImportedEducation(educationLines),
+      workExperiences: workExperiences,
+      education: education,
       skills: _extractImportedSkills(
         skillLines: skillsLines,
         resumeText: normalizedText,
+        exclusions: _importedSkillExclusions(
+          fullName: fullName,
+          jobTitle: jobTitle,
+          headerLines: headerLines,
+          workExperiences: workExperiences,
+          education: education,
+        ),
+        nameFragments: _importedSkillNameFragments(
+          fullName: fullName,
+          headerLines: headerLines,
+        ),
       ).take(50).toList(),
       projects: _extractImportedProjects(projectLines),
       customSections: _extractImportedCustomSections(sections),
-      githubLink: _extractImportedLink(normalizedText, 'github.com'),
-      linkedinLink: _extractImportedLink(normalizedText, 'linkedin.com'),
+      githubLink: _extractImportedLink(contactText, 'github.com'),
+      linkedinLink: _extractImportedLink(contactText, 'linkedin.com'),
       updatedAt: DateTime.now(),
     );
+  }
+
+  /// Rejoins contact tokens a narrow column split across two lines. Only these
+  /// shapes are joined, so unrelated lines stay separate.
+  String _repairWrappedImportedContacts(String text) {
+    final lines = text.split('\n');
+    final repaired = <String>[];
+    for (final raw in lines) {
+      final line = raw.trim();
+      if (repaired.isNotEmpty && line.isNotEmpty) {
+        final previous = repaired.last;
+        // "rohan.kapo" + "or@gmail.com"
+        final isEmailTail = RegExp(r'^[\w.-]{0,4}@[\w.-]+\.\w+').hasMatch(line);
+        final previousEndsMidToken =
+            RegExp(r'[\w.-]$').hasMatch(previous) && !previous.contains('@');
+        // "rohan.kapoor@gmail." + "com"
+        final isDomainTail =
+            RegExp(r'^[a-z]{2,6}$', caseSensitive: false).hasMatch(line) &&
+            previous.contains('@') &&
+            previous.endsWith('.');
+        // "linkedin.com/in/" + "rohankapoor"
+        final isUrlTail =
+            RegExp(r'^[\w-]{1,14}$').hasMatch(line) &&
+            RegExp(
+              r'(https?://|www\.|[a-z0-9-]+\.(com|net|org|io|dev|co|in|me))[\w./-]*[/.]$',
+              caseSensitive: false,
+            ).hasMatch(previous);
+        if ((isEmailTail && previousEndsMidToken) || isDomainTail || isUrlTail) {
+          repaired[repaired.length - 1] = '$previous$line';
+          continue;
+        }
+      }
+      repaired.add(line);
+    }
+    return repaired.join('\n');
   }
 
   Map<String, List<String>> _splitImportedResumeSections(List<String> lines) {
@@ -4846,6 +4898,16 @@ class LocalAiResumeService {
     'summary': 'summary',
     'profile': 'summary',
     'objective': 'summary',
+    'contact': 'contact',
+    'contacts': 'contact',
+    'contact me': 'contact',
+    'contact info': 'contact',
+    'contact information': 'contact',
+    'contact details': 'contact',
+    'personal details': 'contact',
+    'personal information': 'contact',
+    'about me': 'summary',
+    'about': 'summary',
     'technical skills': 'skills',
     'core competencies': 'skills',
     'key competencies': 'skills',
@@ -4854,6 +4916,18 @@ class LocalAiResumeService {
     'tools and technologies': 'skills',
     'tools & technologies': 'skills',
     'technologies': 'skills',
+    'expertise': 'skills',
+    'areas of expertise': 'skills',
+    'core expertise': 'skills',
+    'technical expertise': 'skills',
+    'skill set': 'skills',
+    'skills & expertise': 'skills',
+    'skills and expertise': 'skills',
+    'competencies': 'skills',
+    'proficiencies': 'skills',
+    'technical proficiencies': 'skills',
+    'strengths': 'skills',
+    'key strengths': 'skills',
     'skills': 'skills',
     'professional experience': 'experience',
     'project experience': 'experience',
@@ -5036,15 +5110,128 @@ class LocalAiResumeService {
     return fallbackLines.join(' ').trim();
   }
 
+  /// Name-like fragments ("Rohan", "Kapoor", "RK", and the pieces a column
+  /// split leaves behind) that must never be stored as skills.
+  Set<String> _importedSkillNameFragments({
+    required String fullName,
+    required List<String> headerLines,
+  }) {
+    final fragments = <String>{};
+    void addValue(String value) {
+      final cleaned = value.trim().toLowerCase();
+      if (cleaned.length >= 2 && !_isKnownImportedSkill(cleaned)) {
+        fragments.add(cleaned);
+      }
+    }
+
+    addValue(fullName);
+    final nameWords = fullName
+        .split(RegExp(r'\s+'))
+        .where((word) => word.trim().length > 1)
+        .toList();
+    for (final word in nameWords) {
+      addValue(word);
+    }
+    if (nameWords.length >= 2) {
+      addValue(nameWords.map((word) => word[0]).join());
+    }
+    // Contact lines fragment badly when a column is split, leaving pieces like
+    // "oor" from a wrapped profile URL.
+    for (final line in headerLines.where(_isImportedContactLine)) {
+      for (final word in line.split(RegExp(r'[\s|,\u00b7\u2022]+'))) {
+        addValue(word);
+      }
+    }
+    return fragments;
+  }
+
+  /// Values that must never be saved as a skill: the candidate's own details,
+  /// their employers and schools, and sidebar column labels.
+  Set<String> _importedSkillExclusions({
+    required String fullName,
+    required String jobTitle,
+    required List<String> headerLines,
+    required List<WorkExperience> workExperiences,
+    required List<EducationItem> education,
+  }) {
+    final exclusions = <String>{
+      'contact', 'contacts', 'contact me', 'contact info',
+      'contact information', 'about', 'about me', 'profile', 'summary',
+      'objective', 'address', 'phone', 'mobile', 'email', 'e-mail', 'website',
+      'portfolio', 'linkedin', 'github', 'name', 'expertise', 'skills',
+      'education', 'experience', 'projects', 'languages', 'references',
+      'reference', 'declaration', 'personal details', 'date of birth',
+      'nationality', 'gender', 'marital status',
+    };
+
+    void addValue(String value) {
+      final cleaned = value.trim().toLowerCase();
+      if (cleaned.isNotEmpty) exclusions.add(cleaned);
+    }
+
+    addValue(fullName);
+    addValue(jobTitle);
+    for (final line in headerLines) {
+      // A row of mostly known skill names is the skills list, not contact text.
+      final parts = line
+          .split(RegExp(r'[|,\u00b7\u2022]'))
+          .map((part) => part.trim())
+          .where((part) => part.isNotEmpty)
+          .toList();
+      final knownCount = parts.where(_isKnownImportedSkill).length;
+      if (parts.length >= 3 && knownCount * 2 >= parts.length) continue;
+      addValue(line);
+      for (final part in parts) {
+        if (!_isKnownImportedSkill(part)) addValue(part);
+      }
+    }
+    // Employers and schools are proper nouns we already identified.
+    for (final item in workExperiences) {
+      addValue(item.company);
+      addValue(item.role);
+    }
+    for (final item in education) {
+      addValue(item.institution);
+      addValue(item.degree);
+    }
+    // Job-title words are not skills unless they are known skill names.
+    for (final word in [
+      ...jobTitle.split(RegExp(r'\s+')),
+      for (final item in workExperiences) ...item.role.split(RegExp(r'\s+')),
+    ]) {
+      final cleaned = word.trim();
+      if (cleaned.length > 2 && !_isKnownImportedSkill(cleaned)) {
+        addValue(cleaned);
+      }
+    }
+    return exclusions;
+  }
+
   List<String> _extractImportedSkills({
     required List<String> skillLines,
     required String resumeText,
+    Set<String> exclusions = const <String>{},
+    Set<String> nameFragments = const <String>{},
   }) {
     final values = <String>{};
-    final sources = skillLines.isNotEmpty
-        ? skillLines
-        : _extractKeywords(resumeText).take(10).toList();
+    // Only a real skills section is trusted. Keywords lifted from the summary
+    // or bullets are guesses, and a wrong skill is worse than a missing one.
+    final bulletLines = skillLines.where(_isImportedBulletLine).toList();
+    // A bulleted list is the skills list. Plain lines beside it usually come
+    // from another column, so they are kept only when they name a known skill.
+    final sources = bulletLines.isNotEmpty
+        ? [
+            ...bulletLines,
+            ...skillLines.where(
+              (line) =>
+                  !_isImportedBulletLine(line) && _isKnownImportedSkill(line),
+            ),
+          ]
+        : skillLines;
 
+    // Items are gathered across the whole section first so a name split over
+    // two lines ("Jetpack" / "Compose") can be rejoined.
+    final rawItems = <String>[];
     for (final source in sources) {
       final normalized = stripPdfListMarkerLeftovers(source)
           .replaceAll('•', ',')
@@ -5052,18 +5239,33 @@ class LocalAiResumeService {
           .replaceAll('·', ',')
           .replaceAll(';', ',')
           .replaceAll(RegExp(r'\s{2,}'), ',');
-      for (final item in normalized.split(',')) {
-        final cleaned = stripPdfListMarkerLeftovers(
-          item.replaceAll(RegExp(r'^[\-\*\u2022]\s*'), ''),
-        );
-        if (!_isValidImportedSkill(cleaned)) {
-          continue;
-        }
-        final splitSkills = _splitKnownImportedSkills(cleaned);
-        for (final skill in splitSkills) {
-          if (_isValidImportedSkill(skill)) {
-            values.add(skill);
-          }
+      rawItems.addAll(
+        normalized
+            .split(',')
+            .map(
+              (item) => stripPdfListMarkerLeftovers(
+                item.replaceAll(RegExp(r'^[\-\*\u2022]\s*'), ''),
+              ),
+            )
+            .where((item) => item.isNotEmpty),
+      );
+    }
+    for (final cleaned in _mergeSplitImportedSkills(rawItems)) {
+      if (!_isValidImportedSkill(
+        cleaned,
+        exclusions: exclusions,
+        nameFragments: nameFragments,
+      )) {
+        continue;
+      }
+      final splitSkills = _splitKnownImportedSkills(cleaned);
+      for (final skill in splitSkills) {
+        if (_isValidImportedSkill(
+          skill,
+          exclusions: exclusions,
+          nameFragments: nameFragments,
+        )) {
+          values.add(skill);
         }
       }
     }
@@ -5071,7 +5273,37 @@ class LocalAiResumeService {
     return values.toList();
   }
 
-  bool _isValidImportedSkill(String skill) {
+  /// Skill name from the pool, matched case-insensitively.
+  bool _isKnownImportedSkill(String value) {
+    final cleaned = value.trim().toLowerCase();
+    if (cleaned.isEmpty) return false;
+    return kSkillSuggestionPool.any((skill) => skill.toLowerCase() == cleaned);
+  }
+
+  /// Wide layouts separate skill columns with runs of spaces, which can also
+  /// fall inside a name ("Jetpack  Compose"). Adjacent fragments are rejoined
+  /// when the pair spells a known skill.
+  List<String> _mergeSplitImportedSkills(List<String> items) {
+    final merged = <String>[];
+    for (var i = 0; i < items.length; i++) {
+      if (i + 1 < items.length) {
+        final joined = '${items[i]} ${items[i + 1]}'.trim();
+        if (_isKnownImportedSkill(joined)) {
+          merged.add(joined);
+          i++;
+          continue;
+        }
+      }
+      merged.add(items[i]);
+    }
+    return merged;
+  }
+
+  bool _isValidImportedSkill(
+    String skill, {
+    Set<String> exclusions = const <String>{},
+    Set<String> nameFragments = const <String>{},
+  }) {
     final cleaned = stripPdfListMarkerLeftovers(skill);
     if (cleaned.isEmpty) {
       return false;
@@ -5095,6 +5327,45 @@ class LocalAiResumeService {
       return false;
     }
     if (cleaned.split(RegExp(r'\s+')).length > 4) {
+      return false;
+    }
+    final lower = cleaned.toLowerCase();
+    // The candidate's own details and the labels beside a sidebar skills list.
+    if (exclusions.contains(lower)) {
+      return false;
+    }
+    // Function words only appear when a sentence has bled into the column.
+    if (RegExp(
+      r'\b(with|and|of|the|for|to|in|on|at|by|from|that|this|using|over|across|including|experience|years?)\b',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
+      return false;
+    }
+    // A fragment of the candidate's own name, left by a column split.
+    if (nameFragments.contains(lower) ||
+        (lower.length >= 3 &&
+            nameFragments.any(
+              (value) => value.length > lower.length && value.contains(lower),
+            ))) {
+      return false;
+    }
+    // A web address, handle or e-mail fragment is contact data, not a skill.
+    if (RegExp(
+      r'(@|https?:|www\.|\.(com|net|org|io|dev|co|in|me)\b)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
+      return false;
+    }
+    if (RegExp(r'[:;]$').hasMatch(cleaned) ||
+        !RegExp(r'[a-z]', caseSensitive: false).hasMatch(cleaned)) {
+      return false;
+    }
+    // Initials or a stray monogram from an avatar placeholder.
+    if (cleaned.length <= 3 && cleaned == cleaned.toUpperCase()) {
+      return _isKnownImportedSkill(cleaned);
+    }
+    // Numbers belong to phone numbers, dates and metrics, not skill names.
+    if (RegExp(r'\d{3,}').hasMatch(cleaned)) {
       return false;
     }
     return true;
@@ -5387,12 +5658,8 @@ class LocalAiResumeService {
       }
 
       if (!started) {
-        final lower = line.toLowerCase();
-        if (lower.contains('project') &&
-            !_isImportedContactLine(line) &&
-            !_looksLikeImportedDateLine(line)) {
+        if (_isImportedProjectsHeadingLine(line)) {
           started = true;
-          collected.add(line);
         }
         continue;
       }
@@ -5503,6 +5770,16 @@ class LocalAiResumeService {
     return ResumeData.defaultTitle;
   }
 
+  /// Whether [sourceText] really has that section's heading line.
+  bool _sourceHasSectionHeading(String sourceText, String section) {
+    for (final line in sourceText.split('\n')) {
+      if (_matchImportedSectionHeading(line.trim()) == section) return true;
+    }
+    return section == 'projects'
+        ? sourceText.split('\n').any(_isImportedProjectsHeadingLine)
+        : false;
+  }
+
   int _scoreImportedResumeParse(ResumeData resume, String sourceText) {
     var score = 0;
 
@@ -5597,12 +5874,12 @@ class LocalAiResumeService {
         resume.visibleEducation.isEmpty) {
       score -= 10;
     }
-    if (_containsAny(lower, const ['skills', 'core competencies']) &&
+    if (_sourceHasSectionHeading(sourceText, 'skills') &&
         resume.skills.isEmpty) {
       score -= 10;
     }
-    if (_containsAny(lower, const ['projects', 'project']) &&
-        resume.visibleProjects.isEmpty) {
+    if (_sourceHasSectionHeading(sourceText, 'projects') &&
+        resume.visibleProjects.where((item) => !item.isBlank).isEmpty) {
       score -= 8;
     }
     if (_containsAny(lower, const ['summary', 'profile']) &&
@@ -5840,10 +6117,52 @@ class LocalAiResumeService {
     final detailLines = entry
         .where((line) => !_isImportedBulletLine(line))
         .toList();
-    final title = detailLines.isNotEmpty ? detailLines.first.trim() : 'Project';
-    final overview = detailLines.skip(1).take(2).join(' ').trim();
+    final trimmed = detailLines
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    final title = trimmed.isEmpty ? '' : trimmed.first;
+    // Without a title that reads like a project name the entry is a stray line
+    // from a neighbouring section, so nothing is saved for it.
+    if (!_looksLikeImportedProjectTitle(title)) {
+      return const ProjectItem.empty();
+    }
+    final overview = trimmed.skip(1).take(2).join(' ').trim();
 
     return ProjectItem(title: title, overview: overview, bullets: bullets);
+  }
+
+  /// A standalone "Projects" heading, not a sentence mentioning a project.
+  bool _isImportedProjectsHeadingLine(String line) {
+    final cleaned = line
+        .trim()
+        .replaceAll(RegExp(r'[:\-\u2013\u2014]+$'), '')
+        .trim()
+        .toLowerCase();
+    if (cleaned.isEmpty || cleaned.split(RegExp(r'\s+')).length > 3) {
+      return false;
+    }
+    return RegExp(
+      r'^(key |selected |personal |academic |side |notable |featured |major )?projects?( portfolio| undertaken| handled)?$',
+    ).hasMatch(cleaned);
+  }
+
+  /// Title we are confident names a project.
+  bool _looksLikeImportedProjectTitle(String title) {
+    final cleaned = title.trim();
+    if (cleaned.length < 3 || cleaned.endsWith('.')) return false;
+    if (_isImportedBulletLine(cleaned) ||
+        _isImportedContactLine(cleaned) ||
+        _looksLikeImportedDateLine(cleaned)) {
+      return false;
+    }
+    if (_matchImportedSectionHeading(cleaned) != null ||
+        _isImportedProjectsHeadingLine(cleaned)) {
+      return false;
+    }
+    if (!RegExp(r'[a-z]', caseSensitive: false).hasMatch(cleaned)) return false;
+    if (cleaned.length <= 3 && cleaned == cleaned.toUpperCase()) return false;
+    return cleaned.split(RegExp(r'\s+')).length <= 10;
   }
 
   bool _looksLikeImportedDateLine(String line) {
