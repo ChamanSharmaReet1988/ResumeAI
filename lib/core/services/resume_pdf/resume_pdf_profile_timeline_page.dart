@@ -49,6 +49,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
     Set<String> highlightedSkills = const {},
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) {
+    final accent = _pdfRgb(resume.profileTimelineAccentColor);
     final titleColor = _pdfRgb(resume.profileTimelineTitleColor);
     final mutedColor = _pdfRgb(resume.profileTimelineMutedColor);
     final ruleColor = _pdfRgb(resume.profileTimelineRuleColor);
@@ -109,7 +110,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                 height: _profileTimelineRingPt,
                 decoration: pw.BoxDecoration(
                   shape: pw.BoxShape.circle,
-                  color: titleColor,
+                  color: accent,
                 ),
               ),
               pw.SizedBox(width: 14),
@@ -160,7 +161,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
               margin: const pw.EdgeInsets.only(top: 3, right: 14),
               decoration: pw.BoxDecoration(
                 shape: pw.BoxShape.circle,
-                border: pw.Border.all(color: titleColor, width: 1.4),
+                border: pw.Border.all(color: accent, width: 1.4),
               ),
             ),
             pw.Expanded(
@@ -233,7 +234,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
           height: 16,
           alignment: pw.Alignment.center,
           decoration: pw.BoxDecoration(
-            color: titleColor,
+            color: accent,
             borderRadius: pw.BorderRadius.circular(3),
           ),
           child: pw.SizedBox(

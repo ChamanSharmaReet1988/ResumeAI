@@ -11418,6 +11418,7 @@ class _ProfileTimelinePreview extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
+    final accent = resume.profileTimelineAccentColor;
     final titleColor = resume.profileTimelineTitleColor;
     final mutedColor = resume.profileTimelineMutedColor;
     final ruleColor = resume.profileTimelineRuleColor;
@@ -11486,7 +11487,7 @@ class _ProfileTimelinePreview extends StatelessWidget
             margin: const EdgeInsets.only(top: 3, right: 14),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: titleColor, width: 1.4),
+              border: Border.all(color: accent, width: 1.4),
             ),
           ),
           Expanded(
@@ -11554,7 +11555,7 @@ class _ProfileTimelinePreview extends StatelessWidget
           height: 16,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: titleColor,
+            color: accent,
             borderRadius: BorderRadius.circular(3),
           ),
           child: SizedBox(

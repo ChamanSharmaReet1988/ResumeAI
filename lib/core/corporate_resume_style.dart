@@ -521,10 +521,16 @@ extension ResumeCorporateStyleX on ResumeData {
 
   Color get profileTimelineMutedColor => const Color(0xFF63696F);
 
-  Color get profileTimelineRuleColor => const Color(0xFFD5D8DC);
+  /// Section rules and the timeline line, tinted from the chosen accent so the
+  /// colour picker visibly changes the page.
+  Color get profileTimelineRuleColor =>
+      Color.lerp(profileTimelineAccentColor, Colors.white, 0.62) ??
+      const Color(0xFFD5D8DC);
 
-  /// Date chip fill and the unfilled part of a skill bar.
-  Color get profileTimelineChipColor => const Color(0xFFD9DCE0);
+  /// Date chip fill, also tinted from the accent.
+  Color get profileTimelineChipColor =>
+      Color.lerp(profileTimelineAccentColor, Colors.white, 0.80) ??
+      const Color(0xFFD9DCE0);
 
   Color get detailsSidebarAccentColor => corporateColorPreset.headerColor;
 
