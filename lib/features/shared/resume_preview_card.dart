@@ -7474,7 +7474,16 @@ class _SlateSidebarPreview extends StatelessWidget {
             Text(value, style: railValue),
             const SizedBox(height: 9),
           ],
-        if (skills.isNotEmpty) ...[
+        if (resume.showCategorisedSkills) ...[
+          ruledTitle('Expertise', railHeading, onRail),
+          // Category headings are bold so they read as headings against the
+          // skills listed under them (mirrors the PDF rail).
+          _categorisedSkillsPreview(
+            groups: resume.skillGroupsForResume,
+            bodyStyle: railValue.copyWith(fontSize: detailPt),
+            categoryStyle: railLabel,
+          ),
+        ] else if (skills.isNotEmpty) ...[
           ruledTitle('Expertise', railHeading, onRail),
           ..._previewPaginatedSkillLines(
             skills,
@@ -11672,6 +11681,20 @@ class _ProfileTimelinePreview extends StatelessWidget
           case ResumeBuilderSectionIds.education:
             return null;
           case ResumeBuilderSectionIds.skills:
+            // Categorised skills keep their headings, as the PDF page does.
+            if (resume.showCategorisedSkills) {
+              return [
+                sectionHeading('Skills', indent: true),
+                Padding(
+                  padding: const EdgeInsets.only(left: _gutter),
+                  child: _categorisedSkillsPreview(
+                    groups: resume.skillGroupsForResume,
+                    bodyStyle: bodyStyle,
+                    categoryStyle: entryTitleStyle,
+                  ),
+                ),
+              ];
+            }
             final items = _pdfAlignedSkills(resume);
             if (items.isEmpty) return null;
             return [

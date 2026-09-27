@@ -428,7 +428,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                 padding: const pw.EdgeInsets.only(top: 3, bottom: 3),
                 child: pw.Text(
                   skill.substring(_slateSidebarCategoryMark.length),
-                  style: railItem.copyWith(fontWeight: pw.FontWeight.bold),
+                  style: railLabel,
                 ),
               )
             else
