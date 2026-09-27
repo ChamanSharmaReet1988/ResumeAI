@@ -256,9 +256,10 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
       );
     }
 
-    /// Two skills per row, laid out side by side once the page is full width
-    /// and stacked while the rail still takes the left third. Each row is its
-    /// own widget so MultiPage can break between rows.
+    /// Two skills per row once the page is full width, stacked beside the rail.
+    /// Wrapped in [pw.Inseparable] so MultiPage moves a row to the next page
+    /// instead of spanning it — a spanned column crashes PDF save (blank
+    /// preview) when Skills is the first body section after the summary.
     List<pw.Widget> skillsBody() {
       if (skills.isEmpty) return const [];
       final rows = <pw.Widget>[];
@@ -267,35 +268,39 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
         final second = i + 1 < skills.length ? skills[i + 1] : null;
         rows.add(
           pw.DelayedWidget(
-            build: (context) => context.pageNumber == 1
-                ? pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      skillBar(first, barWidth: _charcoalCurveSkillBarPt),
-                      if (second != null)
-                        skillBar(second, barWidth: _charcoalCurveSkillBarPt),
-                    ],
-                  )
-                : pw.Row(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Expanded(
-                        child: skillBar(
-                          first,
-                          barWidth: _charcoalCurveSkillBarPt,
+            build: (context) {
+              final besideRail = context.pageNumber == 1;
+              final child = besideRail
+                  ? pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        skillBar(first, barWidth: _charcoalCurveSkillBarPt),
+                        if (second != null)
+                          skillBar(second, barWidth: _charcoalCurveSkillBarPt),
+                      ],
+                    )
+                  : pw.Row(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Expanded(
+                          child: skillBar(
+                            first,
+                            barWidth: _charcoalCurveSkillBarPt,
+                          ),
                         ),
-                      ),
-                      pw.SizedBox(width: 28),
-                      pw.Expanded(
-                        child: second == null
-                            ? pw.SizedBox()
-                            : skillBar(
-                                second,
-                                barWidth: _charcoalCurveSkillBarPt,
-                              ),
-                      ),
-                    ],
-                  ),
+                        pw.SizedBox(width: 28),
+                        pw.Expanded(
+                          child: second == null
+                              ? pw.SizedBox()
+                              : skillBar(
+                                  second,
+                                  barWidth: _charcoalCurveSkillBarPt,
+                                ),
+                        ),
+                      ],
+                    );
+              return pw.Inseparable(child: child);
+            },
           ),
         );
       }
