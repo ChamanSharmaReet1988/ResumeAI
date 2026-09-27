@@ -9,13 +9,35 @@ const double _profileTimelinePageLeftPt = 44.0;
 const double _profileTimelineMainLeftPt = 284.0;
 const double _profileTimelineMainRightPt = 44.0;
 const double _profileTimelinePageTopPt = _profileTimelineHeaderHeightPt + 20.0;
+const double _profileTimelineContinuationTopPt = 44.0;
 const double _profileTimelinePageBottomPt = 40.0;
 const double _profileTimelineAvatarPt = 118.0;
 const double _profileTimelineRingPt = 8.0;
+const double _profileTimelineFullWidthLeftPt = _profileTimelinePageLeftPt;
+const double _profileTimelineContentInsetPt =
+    _profileTimelineMainLeftPt - _profileTimelineFullWidthLeftPt;
 
 /// Indent that clears the timeline rule: everything in the main column except
 /// the entry markers themselves starts to the right of it.
 const double _profileTimelineGutterPt = _profileTimelineRingPt + 14.0;
+
+class _ProfileTimelineSidebarSlice {
+  const _ProfileTimelineSidebarSlice(this.blocks);
+  final List<pw.Widget> blocks;
+}
+
+bool _profileTimelineIsLanguageSection(CustomSectionItem item) {
+  final normalized = item.title.trim().toLowerCase().replaceAll(
+    RegExp(r'[^a-z]'),
+    '',
+  );
+  return normalized == 'language' ||
+      normalized == 'languages' ||
+      normalized == 'langueage' ||
+      normalized == 'langueages' ||
+      normalized.endsWith('languages') ||
+      normalized.endsWith('language');
+}
 
 extension _ResumePdfProfileTimelinePage on ResumePdfService {
   void _addProfileTimelineTemplatePage(
@@ -75,21 +97,41 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
       fontStyle: pw.FontStyle.italic,
     );
 
-    pw.Widget sectionHeading(String label, {bool indent = false}) => pw.Padding(
-      padding: pw.EdgeInsets.only(
-        left: indent ? _profileTimelineGutterPt : 0,
-        top: 18,
-        bottom: 10,
-      ),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
-        children: [
-          pw.Text(label, style: sectionStyle),
-          pw.SizedBox(width: 12),
-          pw.Expanded(child: pw.Container(height: 1, color: ruleColor)),
-        ],
-      ),
-    );
+    pw.Widget sectionHeading(String label, {bool indent = false}) {
+      if (indent) {
+        return pw.Padding(
+          padding: const pw.EdgeInsets.only(top: 18, bottom: 10),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Container(
+                width: _profileTimelineRingPt,
+                height: _profileTimelineRingPt,
+                decoration: pw.BoxDecoration(
+                  shape: pw.BoxShape.circle,
+                  color: titleColor,
+                ),
+              ),
+              pw.SizedBox(width: 14),
+              pw.Text(label, style: sectionStyle),
+              pw.SizedBox(width: 12),
+              pw.Expanded(child: pw.Container(height: 1, color: ruleColor)),
+            ],
+          ),
+        );
+      }
+      return pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 18, bottom: 10),
+        child: pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Text(label, style: sectionStyle),
+            pw.SizedBox(width: 12),
+            pw.Expanded(child: pw.Container(height: 1, color: ruleColor)),
+          ],
+        ),
+      );
+    }
 
     /// Experience entry: hollow ring on the rule, role, company, date chip.
     pw.Widget timelineEntry({
@@ -199,192 +241,386 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
       ],
     );
 
-    final sideSections = resume.customSections
-        .where((item) => !item.isBlank && _slateSidebarIsRailSection(item))
+    final languageSections = resume.customSections
+        .where(
+          (item) => !item.isBlank && _profileTimelineIsLanguageSection(item),
+        )
         .toList();
     final mainCustomSections = resume.customSections
-        .where((item) => !sideSections.contains(item))
+        .where((item) => !languageSections.contains(item))
         .toSet();
     final summary = resume.summary.trim();
 
-    final side = pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        if (summary.isNotEmpty) ...[
-          sectionHeading('About Me'),
-          _headerSidebarMaybeHighlight(
-            highlight: highlightSummary,
-            child: pw.Text(summary, style: bodyStyle),
+    final sideInnerWidth = _profileTimelineSideWidthPt;
+    final lineHeight = detailPt * ResumeTypography.bodyTextLineHeight;
+
+    double wrappedLines(String text, double width) {
+      final trimmed = text.trim();
+      if (trimmed.isEmpty) return 1;
+      final perLine = (width / (detailPt * 0.48)).floor().clamp(8, 80);
+      var lines = 1;
+      var used = 0;
+      for (final word in trimmed.split(RegExp(r'\s+'))) {
+        final len = word.length;
+        if (used == 0) {
+          if (len <= perLine) {
+            used = len;
+          } else {
+            lines += (len / perLine).ceil() - 1;
+            final remainder = len % perLine;
+            used = remainder == 0 ? perLine : remainder;
+          }
+        } else if (used + 1 + len <= perLine) {
+          used += 1 + len;
+        } else {
+          lines++;
+          if (len <= perLine) {
+            used = len;
+          } else {
+            lines += (len / perLine).ceil() - 1;
+            final remainder = len % perLine;
+            used = remainder == 0 ? perLine : remainder;
+          }
+        }
+      }
+      return lines.toDouble();
+    }
+
+    final leftBlocks = <({pw.Widget widget, double height})>[];
+    if (summary.isNotEmpty) {
+      leftBlocks.add((
+        widget: sectionHeading('About Me'),
+        height: 43.0,
+      ));
+      final lines = wrappedLines(summary, sideInnerWidth);
+      leftBlocks.add((
+        widget: _headerSidebarMaybeHighlight(
+          highlight: highlightSummary,
+          child: pw.Text(summary, style: bodyStyle),
+        ),
+        height: lines * lineHeight + 8,
+      ));
+    }
+    if (resume.visibleEducation.isNotEmpty) {
+      leftBlocks.add((
+        widget: sectionHeading('Education'),
+        height: 43.0,
+      ));
+      for (final item in resume.visibleEducation) {
+        var h = 0.0;
+        final degree = item.degree.trim().ifEmpty('Degree');
+        final degreeLines = wrappedLines(degree, sideInnerWidth);
+        h += degreeLines * (bodyPt * ResumeTypography.bodyTextLineHeight);
+        if (item.institution.trim().isNotEmpty) {
+          final instLines =
+              wrappedLines(item.institution.trim(), sideInnerWidth);
+          h += instLines * lineHeight;
+        }
+        final dateLabel =
+            educationDateRangeLabel(item.startDate, item.endDate);
+        if (dateLabel.isNotEmpty) {
+          h += lineHeight;
+        }
+        final scoreLabel = educationScoreDisplayLabel(item);
+        if (scoreLabel.isNotEmpty) {
+          h += lineHeight;
+        }
+        h += 10.0;
+        leftBlocks.add((
+          widget: pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 10),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(degree, style: entryTitleStyle),
+                if (item.institution.trim().isNotEmpty)
+                  pw.Text(item.institution.trim(), style: bodyStyle),
+                if (dateLabel.isNotEmpty)
+                  pw.Text(dateLabel, style: bodyStyle),
+                if (scoreLabel.isNotEmpty)
+                  pw.Text(scoreLabel, style: bodyStyle),
+              ],
+            ),
           ),
-        ],
-        if (resume.visibleEducation.isNotEmpty) ...[
-          sectionHeading('Education'),
-          for (final item in resume.visibleEducation)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 10),
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(
-                    item.degree.trim().ifEmpty('Degree'),
-                    style: entryTitleStyle,
-                  ),
-                  if (item.institution.trim().isNotEmpty)
-                    pw.Text(item.institution.trim(), style: bodyStyle),
-                  pw.Text(
-                    educationDateRangeLabel(item.startDate, item.endDate),
-                    style: bodyStyle,
-                  ),
-                  if (educationScoreDisplayLabel(item).isNotEmpty)
-                    pw.Text(
-                      educationScoreDisplayLabel(item),
-                      style: bodyStyle,
-                    ),
-                ],
-              ),
+          height: h,
+        ));
+      }
+    }
+    for (final section in languageSections) {
+      leftBlocks.add((
+        widget: sectionHeading(section.title.trim()),
+        height: 43.0,
+      ));
+      for (final line in _slateSidebarRailSectionLines(section)) {
+        final lines = wrappedLines(line, sideInnerWidth - 16);
+        leftBlocks.add((
+          widget: pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 5),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text('•  ', style: bodyStyle),
+                pw.Expanded(child: pw.Text(line, style: bodyStyle)),
+              ],
             ),
-        ],
-        for (final section in sideSections) ...[
-          sectionHeading(section.title.trim()),
-          for (final line in _slateSidebarRailSectionLines(section))
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 5),
-              child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('•  ', style: bodyStyle),
-                  pw.Expanded(child: pw.Text(line, style: bodyStyle)),
-                ],
-              ),
-            ),
-        ],
-      ],
+          ),
+          height: lines * lineHeight + 5,
+        ));
+      }
+    }
+
+    final page1LeftBudget = PdfPageFormat.a4.height -
+        _profileTimelinePageTopPt -
+        _profileTimelinePageBottomPt;
+    final continuationLeftBudget = PdfPageFormat.a4.height -
+        _profileTimelineContinuationTopPt -
+        _profileTimelinePageBottomPt;
+
+    final sidebarSlices = <_ProfileTimelineSidebarSlice>[];
+    if (leftBlocks.isNotEmpty) {
+      var blockIndex = 0;
+      var isFirstSlice = true;
+      while (blockIndex < leftBlocks.length) {
+        final budget = isFirstSlice ? page1LeftBudget : continuationLeftBudget;
+        final chunk = <pw.Widget>[];
+        var used = 0.0;
+        while (blockIndex < leftBlocks.length) {
+          final block = leftBlocks[blockIndex];
+          if (chunk.isNotEmpty && used + block.height > budget) break;
+          chunk.add(block.widget);
+          used += block.height;
+          blockIndex++;
+        }
+        if (chunk.isEmpty) {
+          chunk.add(leftBlocks[blockIndex].widget);
+          blockIndex++;
+        }
+        sidebarSlices.add(_ProfileTimelineSidebarSlice(chunk));
+        isFirstSlice = false;
+      }
+    }
+
+    final sidebarPageCount = sidebarSlices.length;
+
+    bool usesSideColumn(int pageNumber) =>
+        sidebarPageCount > 0 && pageNumber <= sidebarPageCount;
+
+    pw.Widget mainWrap(pw.Widget child) => pw.DelayedWidget(
+      build: (context) => pw.Padding(
+        padding: pw.EdgeInsets.only(
+          left: usesSideColumn(context.pageNumber)
+              ? _profileTimelineContentInsetPt
+              : 0,
+        ),
+        child: child,
+      ),
     );
+
+    pw.Widget skillLine(String skill) => _headerSidebarMaybeHighlight(
+      highlight: highlightedSkills.contains(skill),
+      child: pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 6),
+        child: pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text('• ', style: bodyStyle),
+            pw.Expanded(child: pw.Text(skill, style: bodyStyle)),
+          ],
+        ),
+      ),
+    );
+
+    List<pw.Widget> skillsBody(List<String> skills) {
+      if (skills.isEmpty) return const [];
+      final rows = <pw.Widget>[];
+      for (var i = 0; i < skills.length; i += 2) {
+        final first = skills[i];
+        final second = i + 1 < skills.length ? skills[i + 1] : null;
+        rows.add(
+          pw.DelayedWidget(
+            build: (context) {
+              final besideSidebar = usesSideColumn(context.pageNumber);
+              final child = besideSidebar
+                  ? pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        skillLine(first),
+                        if (second != null) skillLine(second),
+                      ],
+                    )
+                  : pw.Row(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Expanded(child: skillLine(first)),
+                        pw.SizedBox(width: 18),
+                        pw.Expanded(
+                          child: second == null
+                              ? pw.SizedBox()
+                              : skillLine(second),
+                        ),
+                      ],
+                    );
+              return pw.Padding(
+                padding: pw.EdgeInsets.only(
+                  left: (besideSidebar ? _profileTimelineContentInsetPt : 0) +
+                      _profileTimelineGutterPt,
+                ),
+                child: pw.Inseparable(child: child),
+              );
+            },
+          ),
+        );
+      }
+      return rows;
+    }
+
+    pw.Widget pageBackground(int pageNumber) {
+      final firstPage = pageNumber == 1;
+      final showSidebar = usesSideColumn(pageNumber);
+      final timelineX = showSidebar
+          ? _profileTimelineMainLeftPt + _profileTimelineRingPt / 2
+          : _profileTimelineFullWidthLeftPt + _profileTimelineRingPt / 2;
+
+      return pw.FullPage(
+        ignoreMargins: true,
+        child: pw.Stack(
+          children: [
+            if (firstPage)
+              pw.Positioned(
+                left: _profileTimelinePageLeftPt,
+                right: _profileTimelineMainRightPt,
+                top: 44,
+                child: pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                  children: [
+                    pw.Container(
+                      width: _profileTimelineAvatarPt,
+                      height: _profileTimelineAvatarPt,
+                      decoration: pw.BoxDecoration(
+                        color: chipColor,
+                        shape: pw.BoxShape.circle,
+                        border: pw.Border.all(color: ruleColor, width: 4),
+                      ),
+                      alignment: pw.Alignment.center,
+                      child: profileImage != null
+                          ? pw.ClipOval(
+                              child: pw.SizedBox(
+                                width: _profileTimelineAvatarPt,
+                                height: _profileTimelineAvatarPt,
+                                child: pw.Image(
+                                  profileImage,
+                                  fit: pw.BoxFit.cover,
+                                ),
+                              ),
+                            )
+                          : pw.Text(
+                              _resumeInitials(resume),
+                              style: style(
+                                ResumeFontWeight.w700,
+                                28,
+                                titleColor,
+                              ),
+                            ),
+                    ),
+                    pw.SizedBox(width: 26),
+                    pw.Expanded(
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.center,
+                        children: [
+                          pw.Text(
+                            _displayName(resume).toUpperCase(),
+                            style: nameStyle,
+                          ),
+                          if (resume.jobTitle.trim().isNotEmpty) ...[
+                            pw.SizedBox(height: 4),
+                            pw.Text(
+                              resume.jobTitle.trim(),
+                              style: jobStyle,
+                            ),
+                          ],
+                          if (contacts.isNotEmpty) ...[
+                            pw.SizedBox(height: 14),
+                            for (var i = 0; i < contacts.length; i += 2)
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.only(
+                                  bottom: 6,
+                                ),
+                                child: pw.Row(
+                                  crossAxisAlignment:
+                                      pw.CrossAxisAlignment.start,
+                                  children: [
+                                    pw.Expanded(
+                                      child: contactCell(
+                                        contacts[i].$1,
+                                        contacts[i].$2,
+                                      ),
+                                    ),
+                                    pw.SizedBox(width: 16),
+                                    pw.Expanded(
+                                      child: i + 1 < contacts.length
+                                          ? contactCell(
+                                              contacts[i + 1].$1,
+                                              contacts[i + 1].$2,
+                                            )
+                                          : pw.SizedBox(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (showSidebar)
+              pw.Positioned(
+                left: _profileTimelinePageLeftPt,
+                top: firstPage
+                    ? _profileTimelinePageTopPt
+                    : _profileTimelineContinuationTopPt,
+                bottom: _profileTimelinePageBottomPt,
+                child: pw.SizedBox(
+                  width: _profileTimelineSideWidthPt,
+                  child: pw.ClipRect(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: sidebarSlices[pageNumber - 1].blocks,
+                    ),
+                  ),
+                ),
+              ),
+            pw.Positioned(
+              left: timelineX,
+              top: firstPage
+                  ? _profileTimelinePageTopPt + 40
+                  : _profileTimelineContinuationTopPt,
+              bottom: _profileTimelinePageBottomPt,
+              child: pw.Container(width: 1, color: ruleColor),
+            ),
+          ],
+        ),
+      );
+    }
 
     document.addPage(
       pw.MultiPage(
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.fromLTRB(
-            _profileTimelineMainLeftPt,
-            _profileTimelinePageTopPt,
+            _profileTimelineFullWidthLeftPt,
+            _profileTimelineContinuationTopPt,
             _profileTimelineMainRightPt,
             _profileTimelinePageBottomPt,
           ),
-          buildBackground: (context) => pw.FullPage(
-            ignoreMargins: true,
-            child: pw.Stack(
-              children: [
-                if (context.pageNumber == 1) ...[
-                  pw.Positioned(
-                    left: _profileTimelinePageLeftPt,
-                    right: _profileTimelineMainRightPt,
-                    top: 44,
-                    child: pw.Row(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                      children: [
-                        pw.Container(
-                          width: _profileTimelineAvatarPt,
-                          height: _profileTimelineAvatarPt,
-                          decoration: pw.BoxDecoration(
-                            color: chipColor,
-                            shape: pw.BoxShape.circle,
-                            border: pw.Border.all(color: ruleColor, width: 4),
-                          ),
-                          alignment: pw.Alignment.center,
-                          child: profileImage != null
-                              ? pw.ClipOval(
-                                  child: pw.SizedBox(
-                                    width: _profileTimelineAvatarPt,
-                                    height: _profileTimelineAvatarPt,
-                                    child: pw.Image(
-                                      profileImage,
-                                      fit: pw.BoxFit.cover,
-                                    ),
-                                  ),
-                                )
-                              : pw.Text(
-                                  _resumeInitials(resume),
-                                  style: style(
-                                    ResumeFontWeight.w700,
-                                    28,
-                                    titleColor,
-                                  ),
-                                ),
-                        ),
-                        pw.SizedBox(width: 26),
-                        pw.Expanded(
-                          child: pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.center,
-                            children: [
-                              pw.Text(
-                                _displayName(resume).toUpperCase(),
-                                style: nameStyle,
-                              ),
-                              if (resume.jobTitle.trim().isNotEmpty) ...[
-                                pw.SizedBox(height: 4),
-                                pw.Text(
-                                  resume.jobTitle.trim(),
-                                  style: jobStyle,
-                                ),
-                              ],
-                              if (contacts.isNotEmpty) ...[
-                                pw.SizedBox(height: 14),
-                                for (var i = 0; i < contacts.length; i += 2)
-                                  pw.Padding(
-                                    padding: const pw.EdgeInsets.only(
-                                      bottom: 6,
-                                    ),
-                                    child: pw.Row(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.start,
-                                      children: [
-                                        pw.Expanded(
-                                          child: contactCell(
-                                            contacts[i].$1,
-                                            contacts[i].$2,
-                                          ),
-                                        ),
-                                        pw.SizedBox(width: 16),
-                                        pw.Expanded(
-                                          child: i + 1 < contacts.length
-                                              ? contactCell(
-                                                  contacts[i + 1].$1,
-                                                  contacts[i + 1].$2,
-                                                )
-                                              : pw.SizedBox(),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  pw.Positioned(
-                    left: _profileTimelinePageLeftPt,
-                    top: _profileTimelinePageTopPt,
-                    bottom: _profileTimelinePageBottomPt,
-                    child: pw.SizedBox(
-                      width: _profileTimelineSideWidthPt,
-                      child: pw.ClipRect(child: side),
-                    ),
-                  ),
-                ],
-                pw.Positioned(
-                  left: _profileTimelineMainLeftPt + _profileTimelineRingPt / 2,
-                  top: _profileTimelinePageTopPt + 40,
-                  bottom: _profileTimelinePageBottomPt,
-                  child: pw.Container(width: 1, color: ruleColor),
-                ),
-              ],
-            ),
-          ),
+          buildBackground: (context) => pageBackground(context.pageNumber),
         ),
         build: (context) => [
+          pw.SizedBox(
+            height:
+                _profileTimelinePageTopPt - _profileTimelineContinuationTopPt,
+          ),
           ..._pdfBodySectionsInBuilderOrder(
             resume,
             exclude: {
@@ -400,9 +636,11 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                 final item = resume.customSections[customIndex];
                 if (!mainCustomSections.contains(item)) return null;
                 return [
-                  sectionHeading(
-                    item.title.ifEmpty('Custom section'),
-                    indent: true,
+                  mainWrap(
+                    sectionHeading(
+                      item.title.ifEmpty('Custom section'),
+                      indent: true,
+                    ),
                   ),
                   for (final widget in _pwCustomSectionBodyWidgets(
                     item,
@@ -410,54 +648,66 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                     bodyFontPt: detailPt,
                     accentStripGaramondBody: true,
                   ))
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.only(
-                        left: _profileTimelineGutterPt,
-                      ),
-                      child: widget,
-                    ),
-                ];
-              }
-              switch (id) {
-                case ResumeBuilderSectionIds.skills:
-                  final skills = resume.skillsLinesForDisplay;
-                  if (skills.isEmpty) return null;
-                  return [
-                    sectionHeading('Skills', indent: true),
-                    for (final widget in _pdfPaginatedSkillLines(
-                      skills: skills,
-                      style: bodyStyle,
-                      highlightedSkills: highlightedSkills,
-                      bullets: false,
-                    ))
+                    mainWrap(
                       pw.Padding(
                         padding: const pw.EdgeInsets.only(
                           left: _profileTimelineGutterPt,
                         ),
                         child: widget,
                       ),
+                    ),
+                ];
+              }
+              switch (id) {
+                case ResumeBuilderSectionIds.skills:
+                  if (resume.showCategorisedSkills) {
+                    return [
+                      mainWrap(sectionHeading('Skills', indent: true)),
+                      ..._categorisedSkillsPdfWidgets(
+                        resume,
+                        bodyStyle: bodyStyle,
+                        categoryStyle: entryTitleStyle,
+                      ).map(
+                        (w) => mainWrap(
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.only(
+                              left: _profileTimelineGutterPt,
+                            ),
+                            child: w,
+                          ),
+                        ),
+                      ),
+                    ];
+                  }
+                  final skills = resume.skillsLinesForDisplay;
+                  if (skills.isEmpty) return null;
+                  return [
+                    mainWrap(sectionHeading('Skills', indent: true)),
+                    ...skillsBody(skills),
                   ];
                 case ResumeBuilderSectionIds.work:
                   final items = resume.visibleWorkExperiences;
                   if (items.isEmpty) return null;
                   return [
-                    sectionHeading('Experience', indent: true),
+                    mainWrap(sectionHeading('Experience', indent: true)),
                     for (var i = 0; i < items.length; i++)
-                      _headerSidebarMaybeHighlight(
-                        highlight:
-                            highlightedBulletsByExperience[i]?.isNotEmpty ??
-                            false,
-                        child: timelineEntry(
-                          title: items[i].role.trim().ifEmpty('Role'),
-                          meta: [
-                            items[i].company.trim(),
-                            resume.location.trim(),
-                          ].where((part) => part.isNotEmpty).join('  |  '),
-                          dates: educationDateRangeLabel(
-                            items[i].startDate,
-                            items[i].endDate,
+                      mainWrap(
+                        _headerSidebarMaybeHighlight(
+                          highlight:
+                              highlightedBulletsByExperience[i]?.isNotEmpty ??
+                              false,
+                          child: timelineEntry(
+                            title: items[i].role.trim().ifEmpty('Role'),
+                            meta: [
+                              items[i].company.trim(),
+                              resume.location.trim(),
+                            ].where((part) => part.isNotEmpty).join('  |  '),
+                            dates: educationDateRangeLabel(
+                              items[i].startDate,
+                              items[i].endDate,
+                            ),
+                            details: _workBulletLines(items[i]),
                           ),
-                          details: _workBulletLines(items[i]),
                         ),
                       ),
                   ];
@@ -465,17 +715,19 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   final items = resume.visibleProjects;
                   if (items.isEmpty) return null;
                   return [
-                    sectionHeading('Projects', indent: true),
+                    mainWrap(sectionHeading('Projects', indent: true)),
                     for (final item in items)
-                      timelineEntry(
-                        title: item.title.trim().ifEmpty('Project'),
-                        meta: item.subtitle.trim(),
-                        dates: '',
-                        details: [
-                          item.overview.trim(),
-                          item.impact.trim(),
-                          ...item.bullets.map((bullet) => bullet.trim()),
-                        ].where((line) => line.isNotEmpty).toList(),
+                      mainWrap(
+                        timelineEntry(
+                          title: item.title.trim().ifEmpty('Project'),
+                          meta: item.subtitle.trim(),
+                          dates: '',
+                          details: [
+                            item.overview.trim(),
+                            item.impact.trim(),
+                            ...item.bullets.map((bullet) => bullet.trim()),
+                          ].where((line) => line.isNotEmpty).toList(),
+                        ),
                       ),
                   ];
               }

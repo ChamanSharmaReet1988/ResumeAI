@@ -1052,4 +1052,75 @@ void main() {
       'Hindi',
     ]);
   });
+
+  test('profileTimeline template PDF paginates with sidebar on page 1 and full width on continuation', () async {
+    final service = ResumePdfService();
+    final resume = ResumeData.empty(template: ResumeTemplate.profileTimeline).copyWith(
+      fullName: 'Aarav Sharma',
+      jobTitle: 'Lead Software Architect',
+      summary: 'Experienced architect specializing in distributed systems and cloud platforms.',
+      phone: '+1 555 123 4567',
+      email: 'aarav@example.com',
+      location: 'San Francisco, CA',
+      education: [
+        const EducationItem(
+          institution: 'Stanford University',
+          degree: 'M.S. Computer Science',
+          startDate: '2016',
+          endDate: '2018',
+        ),
+      ],
+      skills: List.generate(16, (i) => 'Skill Name $i'),
+      workExperiences: List.generate(
+        6,
+        (i) => WorkExperience(
+          role: 'Architect Role $i',
+          company: 'Tech Corp $i',
+          startDate: '202$i',
+          endDate: 'Present',
+          description: 'Designed and deployed enterprise scale microservices and cloud infrastructure.',
+          bullets: [
+            'Led migration of monolithic architecture to cloud native containers.',
+            'Reduced deployment latency by 45% and improved reliability.',
+          ],
+        ),
+      ),
+      customSections: const [
+        CustomSectionItem(
+          title: 'Languages',
+          content: 'English\nSpanish\nHindi',
+        ),
+        CustomSectionItem(
+          title: 'Certifications',
+          content: 'AWS Certified Solutions Architect\nGoogle Cloud Professional Architect',
+        ),
+      ],
+    );
+
+    final bytes = await service.buildPdf(resume);
+    final doc = sfpdf.PdfDocument(inputBytes: bytes);
+    addTearDown(doc.dispose);
+
+    expect(doc.pages.count, greaterThan(1));
+    final fullText = sfpdf.PdfTextExtractor(doc)
+        .extractText()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .toUpperCase();
+    expect(fullText, contains('AARAV SHARMA'));
+    expect(fullText, contains('ABOUT ME'));
+    expect(fullText, contains('EDUCATION'));
+    expect(fullText, contains('LANGUAGES'));
+    expect(fullText, contains('EXPERIENCE'));
+    expect(fullText, contains('SKILLS'));
+    expect(fullText, contains('CERTIFICATIONS'));
+
+    // Page 2 should not re-render page 1 sidebar items (Languages) since they fit on page 1
+    final pageTwoText = sfpdf.PdfTextExtractor(doc)
+        .extractText(startPageIndex: 1)
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .toUpperCase();
+    expect(pageTwoText, isNot(contains('LANGUAGES')));
+    expect(pageTwoText, isNot(contains('ABOUT ME')));
+  });
 }
+

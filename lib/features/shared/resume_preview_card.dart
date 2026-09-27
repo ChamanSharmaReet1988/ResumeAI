@@ -11394,10 +11394,18 @@ class _ProfileTimelinePreview extends StatelessWidget
   static const double _ring = 8;
   static const double _gutter = _ring + 14;
 
-  static final RegExp _sideSectionTitle = RegExp(
-    r'^(languages?|awards?|certifications?|certificates?|interests?|hobbies)$',
-    caseSensitive: false,
-  );
+  static bool _isLanguageSection(CustomSectionItem item) {
+    final normalized = item.title.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z]'),
+      '',
+    );
+    return normalized == 'language' ||
+        normalized == 'languages' ||
+        normalized == 'langueage' ||
+        normalized == 'langueages' ||
+        normalized.endsWith('languages') ||
+        normalized.endsWith('language');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11554,9 +11562,7 @@ class _ProfileTimelinePreview extends StatelessWidget
     );
 
     final customSections = resume.visibleCustomSections;
-    final sideSections = customSections
-        .where((item) => _sideSectionTitle.hasMatch(item.title.trim()))
-        .toList();
+    final sideSections = customSections.where(_isLanguageSection).toList();
 
     final side = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
