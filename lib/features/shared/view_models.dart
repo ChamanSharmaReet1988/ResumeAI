@@ -1442,6 +1442,10 @@ class CoverLetterEditorViewModel extends ChangeNotifier {
         role: normalized.role,
         skillToHighlight: normalized.skillToHighlight,
         language: normalized.language,
+        senderName: normalized.senderName,
+        senderEmail: normalized.senderEmail,
+        senderPhone: normalized.senderPhone,
+        senderLocation: normalized.senderLocation,
         regenerate: false,
         attemptIndex: 0,
       );
@@ -1489,6 +1493,10 @@ class CoverLetterEditorViewModel extends ChangeNotifier {
         role: normalized.role,
         skillToHighlight: normalized.skillToHighlight,
         language: normalized.language,
+        senderName: normalized.senderName,
+        senderEmail: normalized.senderEmail,
+        senderPhone: normalized.senderPhone,
+        senderLocation: normalized.senderLocation,
         regenerate: true,
         attemptIndex: attemptIndex,
       );

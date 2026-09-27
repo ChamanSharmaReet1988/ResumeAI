@@ -206,6 +206,44 @@ class CoverLetterEditorScreen extends StatelessWidget {
                                 ),
                           ),
                           const SizedBox(height: 20),
+                          // Sender details for the letterhead. Blank fields
+                          // fall back to the selected resume, so the letter
+                          // keeps working for people who have one.
+                          _SyncTextField(
+                            label: context.l10n.fullName,
+                            value: viewModel.coverLetter.senderName,
+                            textCapitalization: TextCapitalization.words,
+                            onChanged: (value) => viewModel.updateCoverLetter(
+                              (current) => current.copyWith(senderName: value),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _SyncTextField(
+                            label: context.l10n.email,
+                            value: viewModel.coverLetter.senderEmail,
+                            onChanged: (value) => viewModel.updateCoverLetter(
+                              (current) => current.copyWith(senderEmail: value),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _SyncTextField(
+                            label: context.l10n.phoneNumber,
+                            value: viewModel.coverLetter.senderPhone,
+                            onChanged: (value) => viewModel.updateCoverLetter(
+                              (current) => current.copyWith(senderPhone: value),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _SyncTextField(
+                            label: context.l10n.location,
+                            value: viewModel.coverLetter.senderLocation,
+                            textCapitalization: TextCapitalization.words,
+                            onChanged: (value) => viewModel.updateCoverLetter(
+                              (current) =>
+                                  current.copyWith(senderLocation: value),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                           _SyncTextField(
                             label: context.l10n.companyName,
                             value: viewModel.coverLetter.company,

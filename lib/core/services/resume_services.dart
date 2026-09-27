@@ -3835,6 +3835,10 @@ class LocalAiResumeService {
     String language = '',
     bool regenerate = false,
     int attemptIndex = 0,
+    String senderName = '',
+    String senderEmail = '',
+    String senderPhone = '',
+    String senderLocation = '',
   }) async {
     return _simulate(
       () => _buildCoverLetter(
@@ -3844,6 +3848,10 @@ class LocalAiResumeService {
         skillToHighlight: skillToHighlight,
         language: language,
         variantIndex: regenerate ? attemptIndex : 0,
+        senderName: senderName,
+        senderEmail: senderEmail,
+        senderPhone: senderPhone,
+        senderLocation: senderLocation,
       ),
     );
   }
@@ -3857,6 +3865,10 @@ class LocalAiResumeService {
     required String skillToHighlight,
     required String language,
     required int variantIndex,
+    String senderName = '',
+    String senderEmail = '',
+    String senderPhone = '',
+    String senderLocation = '',
   }) {
     final inputs = _coverLetterInputsFromResume(
       resume: resume,
@@ -3864,6 +3876,10 @@ class LocalAiResumeService {
       role: role,
       skillToHighlight: skillToHighlight,
       language: language,
+      senderName: senderName,
+      senderEmail: senderEmail,
+      senderPhone: senderPhone,
+      senderLocation: senderLocation,
     );
     final variant = variantIndex % _coverLetterVariantCount;
     final languageBase = inputs.languageBase.isEmpty
@@ -3889,9 +3905,13 @@ class LocalAiResumeService {
           : inputs.languageBase,
     );
 
+    final cityLine = inputs.cityLine.trim() == inputs.addressLine.trim()
+        ? ''
+        : '${inputs.cityLine}\n';
+
     return '${inputs.senderName}\n'
         '${inputs.addressLine}\n'
-        '${inputs.cityLine}\n'
+        '$cityLine'
         '${inputs.emailLine}\n'
         '${inputs.phoneLine}\n'
         '$currentDate\n\n'
@@ -3928,7 +3948,11 @@ class LocalAiResumeService {
   ) {
     final greeting = _localizedCoverLetterGreeting(inputs, locale, variant);
     final opening = locale.opening(inputs.roleName, inputs.companyName);
-    final evidence = inputs.experienceEvidenceLine(variant);
+    // The evidence line is built from the resume's own wording, which is in
+    // the resume's language. Adding it here would leave an English sentence in
+    // a letter the user asked for in another language, so the localized letter
+    // states the same fact from a template using only names and job titles.
+    final evidence = _localizedCoverLetterEvidenceLine(inputs, variant);
     final fitBase = locale.fit(inputs.roleName, inputs.primarySkill);
     final fit = evidence.isEmpty ? fitBase : '$fitBase $evidence';
     final languageSentence = inputs.language.trim().isEmpty
@@ -3944,6 +3968,82 @@ class LocalAiResumeService {
         '$closing\n\n'
         '${locale.sincerely}\n\n'
         '${inputs.senderName}';
+  }
+
+  /// "In my role as {role} at {company}." in the letter's language, with no
+  /// resume prose so nothing stays in the original language.
+  String _localizedCoverLetterEvidenceLine(
+    _CoverLetterInputs inputs,
+    int variant,
+  ) {
+    final experiences = inputs.workExperiences;
+    if (experiences.isEmpty) {
+      return '';
+    }
+    final experience = experiences[variant % experiences.length];
+    final role = experience.role.trim().isEmpty
+        ? inputs.backgroundRole.trim()
+        : experience.role.trim();
+    final company = experience.company.trim();
+    if (role.isEmpty && company.isEmpty) {
+      return '';
+    }
+    return _coverLetterExperienceSentence(
+      languageBase: inputs.languageBase.isEmpty
+          ? 'English'
+          : inputs.languageBase,
+      role: role,
+      company: company,
+    );
+  }
+
+  String _coverLetterExperienceSentence({
+    required String languageBase,
+    required String role,
+    required String company,
+  }) {
+    final hasCompany = company.isNotEmpty;
+    return switch (languageBase) {
+      'Spanish' => hasCompany
+          ? 'Anteriormente trabajé como $role en $company.'
+          : 'Anteriormente trabajé como $role.',
+      'Portuguese' => hasCompany
+          ? 'Anteriormente trabalhei como $role na $company.'
+          : 'Anteriormente trabalhei como $role.',
+      'French' => hasCompany
+          ? "J'ai précédemment travaillé comme $role chez $company."
+          : "J'ai précédemment travaillé comme $role.",
+      'German' => hasCompany
+          ? 'Zuvor war ich als $role bei $company tätig.'
+          : 'Zuvor war ich als $role tätig.',
+      'Italian' => hasCompany
+          ? 'In precedenza ho lavorato come $role presso $company.'
+          : 'In precedenza ho lavorato come $role.',
+      'Indonesian' => hasCompany
+          ? 'Sebelumnya saya bekerja sebagai $role di $company.'
+          : 'Sebelumnya saya bekerja sebagai $role.',
+      'Hindi' => hasCompany
+          ? 'इससे पहले मैंने $company में $role के रूप में काम किया।'
+          : 'इससे पहले मैंने $role के रूप में काम किया।',
+      'Bengali' => hasCompany
+          ? 'এর আগে আমি $company-তে $role হিসেবে কাজ করেছি।'
+          : 'এর আগে আমি $role হিসেবে কাজ করেছি।',
+      'Arabic' => hasCompany
+          ? 'عملت سابقًا بصفتي $role في $company.'
+          : 'عملت سابقًا بصفتي $role.',
+      'Chinese, Mandarin' => hasCompany
+          ? '我曾在$company担任$role。'
+          : '我曾担任$role。',
+      'Japanese' => hasCompany
+          ? '以前は$companyで$roleを務めていました。'
+          : '以前は$roleを務めていました。',
+      'Russian' => hasCompany
+          ? 'Ранее я работал(а) на позиции $role в компании $company.'
+          : 'Ранее я работал(а) на позиции $role.',
+      _ => hasCompany
+          ? 'Most recently, I worked as $role at $company.'
+          : 'Most recently, I worked as $role.',
+    };
   }
 
   String _englishCoverLetterGreeting(_CoverLetterInputs inputs, int variant) {
@@ -4157,7 +4257,39 @@ class LocalAiResumeService {
     if (start >= 0 && end > start) {
       return trimmed.substring(start + 1, end).trim();
     }
-    return _coverLetterLanguageName(trimmed);
+    // The sentence that names the language sits inside a letter written in
+    // that language, so the language's own name belongs there.
+    return switch (_coverLetterLanguageName(trimmed)) {
+      'Spanish' => 'español',
+      'Portuguese' => 'português',
+      'French' => 'français',
+      'German' => 'Deutsch',
+      'Italian' => 'italiano',
+      'Dutch' => 'Nederlands',
+      'Indonesian' => 'Bahasa Indonesia',
+      'Malay' => 'Bahasa Melayu',
+      'Hindi' => 'हिन्दी',
+      'Bengali' => 'বাংলা',
+      'Urdu' => 'اردو',
+      'Arabic' => 'العربية',
+      'Chinese, Mandarin' => '中文',
+      'Japanese' => '日本語',
+      'Korean' => '한국어',
+      'Russian' => 'русский',
+      'Turkish' => 'Türkçe',
+      'Vietnamese' => 'Tiếng Việt',
+      'Thai' => 'ภาษาไทย',
+      'Polish' => 'polski',
+      'Ukrainian' => 'українська',
+      'Filipino' => 'Filipino',
+      'Swahili' => 'Kiswahili',
+      'Tamil' => 'தமிழ்',
+      'Telugu' => 'తెలుగు',
+      'Marathi' => 'मराठी',
+      'Gujarati' => 'ગુજરાતી',
+      'Punjabi' => 'ਪੰਜਾਬੀ',
+      final other => other,
+    };
   }
 
   _CoverLetterLocale _coverLetterLocaleFor(String languageBase) {
@@ -7797,6 +7929,10 @@ class LocalAiResumeService {
     required String role,
     required String skillToHighlight,
     required String language,
+    String senderName = '',
+    String senderEmail = '',
+    String senderPhone = '',
+    String senderLocation = '',
   }) {
     final languageBase = _coverLetterLanguageName(language);
     final languageNative = _coverLetterLanguageNativeName(language);
@@ -7828,10 +7964,20 @@ class LocalAiResumeService {
         .where((item) => !item.isBlank)
         .toList();
 
-    final fullName = resume.fullName.trim();
-    final location = resume.location.trim();
-    final email = resume.email.trim();
-    final phone = resume.phone.trim();
+    // What the user typed on the cover letter screen wins; the selected
+    // resume only fills the gaps.
+    final fullName = senderName.trim().isNotEmpty
+        ? senderName.trim()
+        : resume.fullName.trim();
+    final location = senderLocation.trim().isNotEmpty
+        ? senderLocation.trim()
+        : resume.location.trim();
+    final email = senderEmail.trim().isNotEmpty
+        ? senderEmail.trim()
+        : resume.email.trim();
+    final phone = senderPhone.trim().isNotEmpty
+        ? senderPhone.trim()
+        : resume.phone.trim();
 
     return _CoverLetterInputs(
       senderName: fullName.isEmpty ? '[Your Name]' : fullName,

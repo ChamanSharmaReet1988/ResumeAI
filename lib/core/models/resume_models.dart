@@ -978,6 +978,10 @@ class CoverLetterData {
     required this.bodyFontPt,
     required this.corporateColorPresetIndex,
     this.textFont = ResumeTextFont.outfit,
+    this.senderName = '',
+    this.senderEmail = '',
+    this.senderPhone = '',
+    this.senderLocation = '',
   });
 
   factory CoverLetterData.empty() {
@@ -1022,6 +1026,10 @@ class CoverLetterData {
           (json['corporateColorPresetIndex'] as num?)?.toInt() ??
           defaultColorPresetIndexForCoverLetterTemplate(template),
       textFont: coverLetterTextFontFromStorage(json['textFont'] as String?),
+      senderName: json['senderName'] as String? ?? '',
+      senderEmail: json['senderEmail'] as String? ?? '',
+      senderPhone: json['senderPhone'] as String? ?? '',
+      senderLocation: json['senderLocation'] as String? ?? '',
     );
   }
 
@@ -1048,6 +1056,13 @@ class CoverLetterData {
 
   /// Whether the letter renders in Outfit; Garamond is the only alternative.
   bool get usesOutfitCoverLetterFont => textFont != ResumeTextFont.garamond;
+
+  /// Sender details typed on the cover letter screen. When blank the generator
+  /// falls back to the selected resume, so existing letters are unchanged.
+  final String senderName;
+  final String senderEmail;
+  final String senderPhone;
+  final String senderLocation;
 
   bool get hasMeaningfulContent =>
       title.trim().isNotEmpty ||
@@ -1084,6 +1099,10 @@ class CoverLetterData {
     int? bodyFontPt,
     int? corporateColorPresetIndex,
     ResumeTextFont? textFont,
+    String? senderName,
+    String? senderEmail,
+    String? senderPhone,
+    String? senderLocation,
   }) {
     return CoverLetterData(
       id: id ?? this.id,
@@ -1102,6 +1121,10 @@ class CoverLetterData {
       corporateColorPresetIndex:
           corporateColorPresetIndex ?? this.corporateColorPresetIndex,
       textFont: textFont ?? this.textFont,
+      senderName: senderName ?? this.senderName,
+      senderEmail: senderEmail ?? this.senderEmail,
+      senderPhone: senderPhone ?? this.senderPhone,
+      senderLocation: senderLocation ?? this.senderLocation,
     );
   }
 
@@ -1120,6 +1143,10 @@ class CoverLetterData {
       'bodyFontPt': bodyFontPt,
       'corporateColorPresetIndex': corporateColorPresetIndex,
       'textFont': textFont.name,
+      'senderName': senderName,
+      'senderEmail': senderEmail,
+      'senderPhone': senderPhone,
+      'senderLocation': senderLocation,
     };
   }
 }
