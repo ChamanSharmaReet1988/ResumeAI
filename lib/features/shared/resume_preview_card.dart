@@ -10495,11 +10495,20 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
   static const double _avatar = 118;
   static const double _footerHeight = 26;
   static const double _dot = 11;
+  static const double _fullWidthLeft = _mainRight;
 
-  static final RegExp _sideSectionTitle = RegExp(
-    r'^(languages?|awards?|certifications?|certificates?|interests?|hobbies)$',
-    caseSensitive: false,
-  );
+  static bool _isLanguageSection(CustomSectionItem item) {
+    final normalized = item.title.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z]'),
+      '',
+    );
+    return normalized == 'language' ||
+        normalized == 'languages' ||
+        normalized == 'langueage' ||
+        normalized == 'langueages' ||
+        normalized.endsWith('languages') ||
+        normalized.endsWith('language');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10589,9 +10598,8 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
     ];
 
     final customSections = resume.visibleCustomSections;
-    final sideSections = customSections
-        .where((item) => _sideSectionTitle.hasMatch(item.title.trim()))
-        .toList();
+    final sideSections = customSections.where(_isLanguageSection).toList();
+    final hasSidebar = contacts.isNotEmpty || sideSections.isNotEmpty;
 
     final side = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -10774,6 +10782,29 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
             case ResumeBuilderSectionIds.skills:
               final items = _pdfAlignedSkills(resume);
               if (items.isEmpty) return null;
+              if (!hasSidebar) {
+                return [
+                  timelineHeading('Skills'),
+                  for (var i = 0; i < items.length; i += 2)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text('• ${items[i]}', style: bodyStyle),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: i + 1 < items.length
+                                ? Text('• ${items[i + 1]}', style: bodyStyle)
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
+                      ),
+                    ),
+                ];
+              }
               return [
                 timelineHeading('Skills'),
                 ..._previewPaginatedSkillLines(items, bodyStyle),
@@ -10852,27 +10883,28 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
                   ),
                 ),
               ),
-              Positioned(
-                left: _sideInset,
-                top: _pageTop,
-                width: _sideWidth - _sideInset,
-                bottom: _pageBottom + _footerHeight,
-                child: ClipRect(
-                  child: SingleChildScrollView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    child: side,
+              if (hasSidebar)
+                Positioned(
+                  left: _sideInset,
+                  top: _pageTop,
+                  width: _sideWidth - _sideInset,
+                  bottom: _pageBottom + _footerHeight,
+                  child: ClipRect(
+                    child: SingleChildScrollView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: side,
+                    ),
                   ),
                 ),
-              ),
               Positioned(
-                left: _timelineX,
+                left: hasSidebar ? _timelineX : _fullWidthLeft - _timelineGap,
                 top: _headerHeight + 40,
                 width: 1.5,
                 bottom: _pageBottom + _footerHeight,
                 child: ColoredBox(color: accent),
               ),
               Positioned(
-                left: _mainLeft,
+                left: hasSidebar ? _mainLeft : _fullWidthLeft,
                 right: _mainRight,
                 top: _pageTop,
                 bottom: _pageBottom,

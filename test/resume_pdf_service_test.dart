@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:resume_app/core/corporate_resume_style.dart';
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/resume_services.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart' as sfpdf;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -584,32 +585,31 @@ void main() {
 
   test('highlighted header sidebar template PDF renders successfully', () async {
     final service = ResumePdfService();
-    final resume = ResumeData.empty(
-      template: ResumeTemplate.headerSidebar,
-    ).copyWith(
-      title: 'Header Sidebar Highlight Test',
-      fullName: 'Gregory Walls',
-      jobTitle: 'Carpenter',
-      email: 'gregory.walls@email.com',
-      phone: '(203) 555-0142',
-      location: 'Bethel, CT',
-      summary: 'Reliable carpenter with residential framing experience.',
-      workExperiences: const [
-        WorkExperience(
-          role: 'Carpenter',
-          company: 'Timothy Glover Carpentry Inc., Bethel',
-          startDate: 'March 2011',
-          endDate: 'August 2019',
-          description: '',
-          bullets: [
-            'Built and finished custom interiors for residential clients.',
+    final resume = ResumeData.empty(template: ResumeTemplate.headerSidebar)
+        .copyWith(
+          title: 'Header Sidebar Highlight Test',
+          fullName: 'Gregory Walls',
+          jobTitle: 'Carpenter',
+          email: 'gregory.walls@email.com',
+          phone: '(203) 555-0142',
+          location: 'Bethel, CT',
+          summary: 'Reliable carpenter with residential framing experience.',
+          workExperiences: const [
+            WorkExperience(
+              role: 'Carpenter',
+              company: 'Timothy Glover Carpentry Inc., Bethel',
+              startDate: 'March 2011',
+              endDate: 'August 2019',
+              description: '',
+              bullets: [
+                'Built and finished custom interiors for residential clients.',
+              ],
+            ),
           ],
-        ),
-      ],
-      skills: const ['Mechanical Skills', 'Mathematical Skills'],
-      includeProjectsInResume: false,
-      projects: const [],
-    );
+          skills: const ['Mechanical Skills', 'Mathematical Skills'],
+          includeProjectsInResume: false,
+          projects: const [],
+        );
     final pdfBytes = await service.buildHighlightedResumePdf(
       resume: resume,
       highlightSummary: true,
@@ -842,6 +842,99 @@ void main() {
     expect(bytes, isNotEmpty);
   });
 
+  test('bold pill keeps contact and languages in the sidebar', () async {
+    final service = ResumePdfService();
+    final skills = List<String>.generate(
+      40,
+      (index) => 'Skill number ${index + 1} with a longer label',
+    );
+    final languages = List<String>.generate(
+      28,
+      (index) => 'Language ${index + 1}',
+    );
+    final resume = ResumeData.empty(template: ResumeTemplate.boldPill).copyWith(
+      fullName: 'Amara Okafor',
+      jobTitle: 'Graphic Designer',
+      email: 'amara.okafor@email.com',
+      phone: '+1 (646) 555-0198',
+      location: 'Brooklyn, NY',
+      website: 'amaraokafor.studio',
+      summary:
+          'Creative designer with experience in branding and visual storytelling.',
+      skills: skills,
+      workExperiences: const [
+        WorkExperience(
+          role: 'Graphic Designer',
+          company: 'Halden Creative',
+          startDate: '2021',
+          endDate: 'Present',
+          description: '',
+          bullets: ['Designed marketing materials for print and digital.'],
+        ),
+      ],
+      education: const [
+        EducationItem(
+          institution: 'Rimberio University',
+          degree: 'Bachelor of Visual Arts',
+          startDate: '2015',
+          endDate: '2019',
+          score: '',
+        ),
+      ],
+      customSections: [
+        CustomSectionItem(title: 'Languages', content: languages.join('\n')),
+        const CustomSectionItem(title: 'Awards', content: 'Design prize 2022'),
+      ],
+      builderSectionOrder: const [
+        'skills',
+        'work',
+        'education',
+        'custom:0',
+        'custom:1',
+      ],
+    );
+
+    final bytes = await service.buildPdf(resume);
+    expect(bytes, isNotEmpty);
+
+    final document = sfpdf.PdfDocument(inputBytes: bytes);
+    addTearDown(document.dispose);
+    expect(document.pages.count, greaterThan(1));
+    final text = sfpdf.PdfTextExtractor(
+      document,
+    ).extractText().replaceAll(RegExp(r'\s+'), ' ');
+    expect(text, contains('CONTACT'));
+    expect(text, contains('LANGUAGES'));
+    expect(text, contains('Language 1'));
+    expect(text, contains('Language 28'));
+    expect(text, contains('SKILLS'));
+    expect(text, contains('Skill number 1'));
+    expect(text, contains('Skill number 40'));
+    expect(text, contains('AWARDS'));
+    expect(text, contains('WORK EXPERIENCE'));
+    expect(text, contains('EDUCATION'));
+
+    final shortSidebar = resume.copyWith(
+      customSections: const [
+        CustomSectionItem(
+          title: 'Languages',
+          content: 'English\nSpanish\nPortuguese\nFrench',
+        ),
+      ],
+    );
+    final shortBytes = await service.buildPdf(shortSidebar);
+    final shortDoc = sfpdf.PdfDocument(inputBytes: shortBytes);
+    addTearDown(shortDoc.dispose);
+    expect(shortDoc.pages.count, greaterThan(1));
+    final pageTwo = sfpdf.PdfTextExtractor(shortDoc)
+        .extractText(startPageIndex: 1)
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .toUpperCase();
+    expect(pageTwo, isNot(contains('LANGUAGES')));
+    expect(pageTwo, isNot(contains('CONTACT')));
+    expect(pageTwo, contains('SKILL'));
+  });
+
   test('Languages summary custom section fills list slots in templates', () {
     final resume = ResumeData.empty(template: ResumeTemplate.atsClassicCv)
         .copyWith(
@@ -854,9 +947,9 @@ void main() {
           ],
         );
 
-    expect(
-      resume.classicCvLanguagePairs.map((item) => item.name),
-      ['English', 'Hindi'],
-    );
+    expect(resume.classicCvLanguagePairs.map((item) => item.name), [
+      'English',
+      'Hindi',
+    ]);
   });
 }
