@@ -11155,6 +11155,7 @@ class _BlueCornerPreview extends StatelessWidget
           return [
             sectionHeading(
               item.title.trim().isEmpty ? 'Custom section' : item.title.trim(),
+              icon: Icons.article_outlined,
             ),
             for (final line in item.displayLines())
               Padding(
@@ -11202,7 +11203,7 @@ class _BlueCornerPreview extends StatelessWidget
             final items = resume.visibleProjects;
             if (items.isEmpty) return null;
             return [
-              sectionHeading('Projects'),
+              sectionHeading('Projects', icon: Icons.folder_outlined),
               for (final item in items)
                 timelineEntry(
                   title: item.title.trim().isEmpty

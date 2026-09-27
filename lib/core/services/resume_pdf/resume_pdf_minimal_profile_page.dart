@@ -407,7 +407,7 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
   }
 }
 
-enum _MinimalProfileIcon { phone, mail, web, place, school, work, person, puzzle }
+enum _MinimalProfileIcon { phone, mail, web, place, school, work, person, puzzle, folder, article }
 
 void _paintMinimalProfileIcon(
   PdfGraphics canvas,
@@ -500,6 +500,34 @@ void _paintMinimalProfileIcon(
       canvas
         ..drawRect(w * 0.46, h * 0.46, w * 0.42, h * 0.42)
         ..fillPath();
+    case _MinimalProfileIcon.folder:
+      // Tab on top-left, then the folder body.
+      canvas
+        ..moveTo(w * 0.08, h * 0.70)
+        ..lineTo(w * 0.08, h * 0.40)
+        ..lineTo(w * 0.38, h * 0.40)
+        ..lineTo(w * 0.50, h * 0.28)
+        ..lineTo(w * 0.92, h * 0.28)
+        ..lineTo(w * 0.92, h * 0.70)
+        ..closePath()
+        ..fillPath();
+    case _MinimalProfileIcon.article:
+      // Document outline with two lines inside.
+      canvas
+        ..drawRect(w * 0.18, h * 0.12, w * 0.64, h * 0.76)
+        ..strokePath();
+      canvas
+        ..moveTo(w * 0.30, h * 0.38)
+        ..lineTo(w * 0.70, h * 0.38)
+        ..strokePath();
+      canvas
+        ..moveTo(w * 0.30, h * 0.54)
+        ..lineTo(w * 0.70, h * 0.54)
+        ..strokePath();
+      canvas
+        ..moveTo(w * 0.30, h * 0.68)
+        ..lineTo(w * 0.58, h * 0.68)
+        ..strokePath();
   }
 }
 

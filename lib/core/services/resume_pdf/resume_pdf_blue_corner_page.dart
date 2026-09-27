@@ -551,7 +551,10 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                 if (!mainCustomSections.contains(item)) return null;
                 return [
                   mainWrap(
-                    sectionHeading(item.title.ifEmpty('Custom section')),
+                    sectionHeading(
+                      item.title.ifEmpty('Custom section'),
+                      icon: _MinimalProfileIcon.article,
+                    ),
                   ),
                   ..._pwCustomSectionBodyWidgets(
                     item,
@@ -632,7 +635,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                   final items = resume.visibleProjects;
                   if (items.isEmpty) return null;
                   return [
-                    mainWrap(sectionHeading('Projects')),
+                    mainWrap(sectionHeading('Projects', icon: _MinimalProfileIcon.folder)),
                     for (final item in items)
                       mainWrap(
                         timelineEntry(
