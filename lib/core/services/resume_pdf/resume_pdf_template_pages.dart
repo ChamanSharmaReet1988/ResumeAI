@@ -894,6 +894,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
       sidebarPageCount: sidebarPageCount,
     );
 
+    final pagesBefore = document.document.pdfPageList.pages.length;
+
     document.addPage(
       pw.MultiPage(
         pageTheme: _classicSidebarPageTheme(
@@ -1130,6 +1132,30 @@ ResumeTypography.darkHeaderSubtitleWeight,
         ],
       ),
     );
+    // The rail can need more pages than the body fills; without these the
+    // last skills would never be drawn.
+    final bodyPageCount =
+        document.document.pdfPageList.pages.length - pagesBefore;
+    for (var page = bodyPageCount; page < sidebarPageCount; page++) {
+      document.addPage(
+        pw.Page(
+          pageTheme: _classicSidebarPageTheme(
+            resume: resume,
+            railColor: _classicSidebarRailColorPdf(resume),
+            dividerColor: dividerColor,
+            accentColor: accentColor,
+            titleColor: titleColor,
+            mutedColor: mutedColor,
+            bodyPt: bodyPt,
+            sectionTitlePt: sectionTitlePt,
+            garamond: garamond,
+            profileImage: profileImage,
+          ),
+          build: (context) => pw.SizedBox(),
+        ),
+      );
+    }
+
   }
 
   pw.Widget _buildClassicSidebarHeader(

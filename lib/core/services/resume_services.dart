@@ -1542,9 +1542,7 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
           (
             type: _ClassicSidebarSectionType.skills,
             items: resume.showCategorisedSkills
-                ? resume.skillGroupsForResume
-                      .map((group) => group.skillsCommaSeparated)
-                      .toList()
+                ? _classicSidebarCategorisedSkillItems(resume)
                 : resume.skillsLinesForDisplay,
             highlightedItems: highlightedSkills,
           ),
@@ -1556,21 +1554,30 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
           ),
       ];
 
-  final pageOneSections = <_ClassicSidebarPageSection>[];
-  final pageTwoSections = <_ClassicSidebarPageSection>[];
-  final pages = [pageOneSections, pageTwoSections];
-  var pageIndex = 0;
-  var skillsSectionTitleUsed = false;
+  // Rail pages grow on demand: a fixed pair silently dropped whatever did not
+  // fit on the second page.
+  final pages = <List<_ClassicSidebarPageSection>>[
+    <_ClassicSidebarPageSection>[],
+  ];
   final availableHeights = <double>[
     _classicSidebarAvailablePanelHeight(pageFormat) -
         _classicSidebarFirstPageHeaderHeight(),
-    _classicSidebarAvailablePanelHeight(pageFormat),
   ];
+  void addRailPage() {
+    pages.add(<_ClassicSidebarPageSection>[]);
+    availableHeights.add(_classicSidebarAvailablePanelHeight(pageFormat));
+  }
+
+  var pageIndex = 0;
+  var skillsSectionTitleUsed = false;
 
   for (final section in sections) {
     var itemIndex = 0;
 
-    while (itemIndex < section.items.length && pageIndex < pages.length) {
+    while (itemIndex < section.items.length) {
+      if (pageIndex >= pages.length) {
+        addRailPage();
+      }
       final pageSections = pages[pageIndex];
       final sectionOverhead =
           (pageSections.isNotEmpty ? _classicSidebarInterSectionHeight() : 0) +
@@ -1631,12 +1638,11 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
   }
 
   final slices = <_ClassicSidebarPageSlice>[
-    _ClassicSidebarPageSlice(showAvatar: true, sections: pageOneSections),
+    _ClassicSidebarPageSlice(showAvatar: true, sections: pages.first),
   ];
-  if (pageTwoSections.isNotEmpty) {
-    slices.add(
-      _ClassicSidebarPageSlice(showAvatar: false, sections: pageTwoSections),
-    );
+  for (final page in pages.skip(1)) {
+    if (page.isEmpty) continue;
+    slices.add(_ClassicSidebarPageSlice(showAvatar: false, sections: page));
   }
   return slices;
 }
@@ -1675,9 +1681,12 @@ int _classicSidebarEstimatedLineCount(String text, double fontSize) {
   }
 
   final usableWidth = _classicSidebarContentWidthPt - 14;
+  // 0.53em matches Outfit's average advance more closely than 0.56; the old
+  // value overestimated line counts, so the rail stopped well short of the
+  // page bottom.
   final maxCharsPerLine = math.max(
     8,
-    (usableWidth / (fontSize * 0.56)).floor(),
+    (usableWidth / (fontSize * 0.50)).floor(),
   );
   var currentLineLength = 0;
   var lineCount = 1;
@@ -1697,6 +1706,75 @@ int _classicSidebarEstimatedLineCount(String text, double fontSize) {
   }
 
   return lineCount;
+}
+
+/// Marks a rail line as a skill category heading rather than a skill line.
+const String _classicSidebarCategoryMark = '\u241F';
+
+/// Rail lines for categorised skills: a heading line per category, then its
+/// skills in chunks short enough to flow onto the next rail page. Keeping a
+/// whole category as one line pushed a long one to the next page and left the
+/// rest of the rail empty.
+List<String> _classicSidebarCategorisedSkillItems(ResumeData resume) {
+  const maxChunkChars = 80;
+  final items = <String>[];
+  for (final group in resume.skillGroupsForResume) {
+    final heading = group.heading.trim();
+    if (heading.isNotEmpty) {
+      items.add('$_classicSidebarCategoryMark$heading');
+    }
+    final skills = group.skills
+        .map((skill) => skill.trim())
+        .where((skill) => skill.isNotEmpty)
+        .toList();
+    var chunk = <String>[];
+    var length = 0;
+    for (final skill in skills) {
+      final added = chunk.isEmpty ? skill.length : length + 2 + skill.length;
+      if (chunk.isNotEmpty && added > maxChunkChars) {
+        items.add(chunk.join(', '));
+        chunk = <String>[skill];
+        length = skill.length;
+        continue;
+      }
+      chunk.add(skill);
+      length = added;
+    }
+    if (chunk.isNotEmpty) {
+      items.add(chunk.join(', '));
+    }
+  }
+  return items;
+}
+
+/// Renders the rail lines this page was given: heading lines in the category
+/// style, everything else as skills.
+List<pw.Widget> _classicSidebarCategorisedSkillWidgets({
+  required List<String> lines,
+  required pw.TextStyle bodyStyle,
+  required pw.TextStyle categoryStyle,
+  double groupSpacing = 7,
+}) {
+  final widgets = <pw.Widget>[];
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    if (line.startsWith(_classicSidebarCategoryMark)) {
+      if (widgets.isNotEmpty) {
+        widgets.add(pw.SizedBox(height: groupSpacing));
+      }
+      widgets
+        ..add(
+          pw.Text(
+            line.substring(_classicSidebarCategoryMark.length),
+            style: categoryStyle,
+          ),
+        )
+        ..add(pw.SizedBox(height: 2));
+      continue;
+    }
+    widgets.add(pw.Text(line, style: bodyStyle));
+  }
+  return widgets;
 }
 
 pw.Widget _classicSidebarPanel({
@@ -1787,8 +1865,10 @@ pw.Widget _classicSidebarPanel({
                   ),
                   pw.SizedBox(height: 14),
                 ],
-                ..._categorisedSkillsPdfWidgets(
-                  resume,
+                // Only the categories allotted to this rail page: rendering
+                // every group here repeated the whole skills block on page 2.
+                ..._classicSidebarCategorisedSkillWidgets(
+                  lines: pageSlice.sections[index].items,
                   bodyStyle: garamond != null
                       ? garamondPdfTextStyle(
                           garamond,
