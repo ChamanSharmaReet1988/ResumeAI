@@ -3690,11 +3690,13 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
 
         final isBlueDiagonal = resume.template.userFacingTemplate ==
             ResumeTemplate.blueDiagonal;
-        // Blue Diagonal: stretch the real A4 art to the tile so the diagonal
-        // footer lands on the card edge — no fake accent/column fills.
+        // Blue Diagonal fills the tile so its diagonal footer lands on the
+        // card edge. BoxFit.cover scales evenly and crops a sliver of width;
+        // BoxFit.fill stretched the page and turned the photo circle into an
+        // oval.
         const pageHeight = 841.89;
         final pagePreview = FittedBox(
-          fit: isBlueDiagonal ? BoxFit.fill : BoxFit.fitWidth,
+          fit: isBlueDiagonal ? BoxFit.cover : BoxFit.fitWidth,
           alignment:
               isBlueDiagonal ? Alignment.center : Alignment.topCenter,
           child: SizedBox(
@@ -6407,11 +6409,14 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Center(
-                        child: ClipOval(
-                          child: SizedBox(
-                            width: 52,
-                            height: 52,
-                            child: hasProfileImage
+                        // The rail is 60 wide with 6pt padding, so a 52pt box
+                        // was squeezed to 48 and the "circle" came out oval.
+                        // A square box inside the available width keeps it round.
+                        child: SizedBox.square(
+                          dimension: 44,
+                          child: ClipOval(
+                            child: SizedBox.expand(
+                              child: hasProfileImage
                                 ? Image.file(
                                     File(avatarPath),
                                     fit: BoxFit.cover,
@@ -6440,6 +6445,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
                                       ),
                                     ),
                                   ),
+                            ),
                           ),
                         ),
                       ),
@@ -8233,6 +8239,15 @@ class _AccentCoverLetterArt extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Gallery tile art for a resume template; used by tests that render tiles.
+@visibleForTesting
+Widget resumeTileArtForTest(ResumeTemplate template) {
+  final item = [..._professionalResumeCards, ..._atsResumeCards].firstWhere(
+    (card) => card.resumeTemplate == template,
+  );
+  return _TemplatePreviewArt(item: item);
 }
 
 /// Gallery tile art for a cover letter template; used by tests that render
