@@ -23,6 +23,17 @@
         <meta-data
             android:name="android.max_aspect"
             android:value="2.5" />
+        <!-- Android is ads-only, so the BILLING permission is removed above.
+             The in_app_purchase plugin still merges Play Billing's proxy
+             activities, and Play can start them to resume an old purchase
+             flow. With no billing permission the PendingIntent they expect is
+             null and the activity crashes on launch, so they are removed too. -->
+        <activity
+            android:name="com.android.billingclient.api.ProxyBillingActivity"
+            tools:node="remove" />
+        <activity
+            android:name="com.android.billingclient.api.ProxyBillingActivityV2"
+            tools:node="remove" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

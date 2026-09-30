@@ -63,7 +63,8 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
     final titleColor = _pdfRgb(resume.boldPillTitleColor);
     final mutedColor = _pdfRgb(resume.boldPillMutedColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 0.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     pw.TextStyle style(
       int weight,
@@ -501,7 +502,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                 child: pw.Text(
                   summary,
                   style: bodyStyle,
-                  textAlign: pw.TextAlign.justify,
+                  textAlign: pw.TextAlign.left,
                 ),
               ),
             ),

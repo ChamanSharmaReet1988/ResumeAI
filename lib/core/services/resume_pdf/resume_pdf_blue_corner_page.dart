@@ -58,7 +58,8 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
     final mutedColor = _pdfRgb(resume.blueCornerMutedColor);
     final ruleColor = _pdfRgb(resume.blueCornerRuleColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     pw.TextStyle style(
       int weight,
@@ -190,7 +191,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
               child: pw.Text(
                 line,
                 style: bodyStyle,
-                textAlign: pw.TextAlign.justify,
+                textAlign: pw.TextAlign.left,
               ),
             ),
           ),
@@ -555,7 +556,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                 child: pw.Text(
                   summary,
                   style: bodyStyle,
-                  textAlign: pw.TextAlign.justify,
+                  textAlign: pw.TextAlign.left,
                 ),
               ),
               indentTimeline: true,

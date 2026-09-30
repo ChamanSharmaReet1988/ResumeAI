@@ -67,7 +67,8 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
     final titleColor = _pdfRgb(resume.blueDiagonalTitleColor);
     final mutedColor = _pdfRgb(resume.blueDiagonalMutedColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
     final lineH = ResumeTypography.bodyTextLineHeight;
 
     pw.TextStyle style(
@@ -530,7 +531,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                 child: pw.Text(
                   resume.summary.trim(),
                   style: bodyStyle,
-                  textAlign: pw.TextAlign.justify,
+                  textAlign: pw.TextAlign.left,
                 ),
               ),
             ),

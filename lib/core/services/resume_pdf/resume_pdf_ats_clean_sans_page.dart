@@ -20,7 +20,7 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
   }) {
     final accent = _atsAccentPdf(resume);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final textPt = bodyPt - 1;
+    final textPt = bodyPt;
 
     pw.TextStyle style(
       int weight,
@@ -77,7 +77,7 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
                   child: pw.Text(
                     text,
                     style: bodyStyle,
-                    textAlign: pw.TextAlign.justify,
+                    textAlign: pw.TextAlign.left,
                   ),
                 ),
               ],
@@ -192,7 +192,7 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
               child: pw.Text(
                 resume.summary.trim(),
                 style: bodyStyle,
-                textAlign: pw.TextAlign.justify,
+                textAlign: pw.TextAlign.left,
               ),
             ),
           ],

@@ -1601,7 +1601,7 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
         final itemHeight = _classicSidebarEstimatedItemHeight(
           item,
           bodyPt,
-          itemBottom: section.type == _ClassicSidebarSectionType.skills ? 6 : 8,
+          itemBottom: _classicSidebarRailItemBottom(resume, section.type),
         );
         if (pageItems.isNotEmpty && availableHeights[pageIndex] < itemHeight) {
           break;
@@ -1660,6 +1660,38 @@ double _classicSidebarInterSectionHeight() =>
 
 double _classicSidebarSectionTitleHeight(double sectionTitlePt) =>
     sectionTitlePt + 8;
+
+/// Items the rail must fit across its pages (skills plus languages).
+int _classicSidebarRailItemCount(ResumeData resume) =>
+    (resume.showCategorisedSkills
+            ? _classicSidebarCategorisedSkillItems(resume)
+            : resume.skillsLinesForDisplay)
+        .length +
+    _classicSidebarLanguageLines(resume).length;
+
+/// Gap under each rail item. It tightens as the list grows so a long skills
+/// list packs into the pages the body already needs instead of pushing a
+/// sidebar-only page past the end of the resume.
+double _classicSidebarRailItemBottom(
+  ResumeData resume,
+  _ClassicSidebarSectionType type,
+) {
+  final base = type == _ClassicSidebarSectionType.skills ? 6.0 : 8.0;
+  final count = _classicSidebarRailItemCount(resume);
+  if (count <= 20) {
+    return base;
+  }
+  return count <= 34 ? base - 3 : base - 4.5;
+}
+
+/// Gap under a rail section heading, tightened alongside the item spacing.
+double _classicSidebarRailTitleGap(
+  ResumeData resume,
+  _ClassicSidebarSectionType type,
+) {
+  final base = type == _ClassicSidebarSectionType.skills ? 14.0 : 8.0;
+  return _classicSidebarRailItemCount(resume) <= 20 ? base : base - 6;
+}
 
 double _classicSidebarMinItemHeight(double bodyPt) =>
     bodyPt * ResumeTypography.classicSidebarBodyLineHeight;
@@ -1863,7 +1895,12 @@ pw.Widget _classicSidebarPanel({
                             color: titleColor,
                           ),
                   ),
-                  pw.SizedBox(height: 14),
+                  pw.SizedBox(
+                    height: _classicSidebarRailTitleGap(
+                      resume,
+                      _ClassicSidebarSectionType.skills,
+                    ),
+                  ),
                 ],
                 // Only the categories allotted to this rail page: rendering
                 // every group here repeated the whole skills block on page 2.
@@ -1909,16 +1946,14 @@ pw.Widget _classicSidebarPanel({
               highlightedItems: pageSlice.sections[index].highlightedItems,
               highlightColor: highlightColor,
               showTitle: pageSlice.sections[index].showSectionTitle,
-              itemBottom:
-                  pageSlice.sections[index].type ==
-                      _ClassicSidebarSectionType.skills
-                  ? 6
-                  : 8,
-              titleBottomGap:
-                  pageSlice.sections[index].type ==
-                      _ClassicSidebarSectionType.skills
-                  ? 14
-                  : 8,
+              itemBottom: _classicSidebarRailItemBottom(
+                resume,
+                pageSlice.sections[index].type,
+              ),
+              titleBottomGap: _classicSidebarRailTitleGap(
+                resume,
+                pageSlice.sections[index].type,
+              ),
             ),
         ],
       ],

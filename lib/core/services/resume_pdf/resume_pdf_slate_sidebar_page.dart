@@ -226,7 +226,8 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
     final mutedColor = _pdfRgb(resume.slateSidebarMutedColor);
     const onRail = PdfColors.white;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     pw.TextStyle style(
       int weight,

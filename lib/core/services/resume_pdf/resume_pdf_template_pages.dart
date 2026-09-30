@@ -2115,7 +2115,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     final sectionTitleStyle = garamondPdfTextStyle(
       garamond,
       ResumeFontWeight.w700,
-      fontSize: 13,
+      fontSize: bodyPt + 2,
       color: titleColor,
     );
     final nameStyle = garamondPdfTextStyle(
@@ -2127,7 +2127,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
     final jobTitleStyle = garamondPdfTextStyle(
       garamond,
       ResumeFontWeight.w500,
-      fontSize: 10,
+      fontSize: bodyPt - 1,
       color: mutedColor,
       lineSpacing: 1,
     );

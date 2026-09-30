@@ -55,7 +55,8 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
     final ruleColor = _pdfRgb(resume.profileTimelineRuleColor);
     final chipColor = _pdfRgb(resume.profileTimelineChipColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     pw.TextStyle style(
       int weight,
@@ -204,7 +205,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                     child: pw.Text(
                       line,
                       style: bodyStyle,
-                      textAlign: pw.TextAlign.justify,
+                      textAlign: pw.TextAlign.left,
                     ),
                   ),
                 ],

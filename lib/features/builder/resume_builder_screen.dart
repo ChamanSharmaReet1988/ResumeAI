@@ -1386,11 +1386,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     ResumeEditorViewModel viewModel,
     int step,
   ) {
-    // Personal Information includes professional summary — keep AppBar as-is.
-    if (step == ResumeEditorViewModel.personalStepIndex) {
-      return null;
-    }
-
     final scheme = Theme.of(context).colorScheme;
     return IconButton(
       key: const Key('section-editor-save-button'),

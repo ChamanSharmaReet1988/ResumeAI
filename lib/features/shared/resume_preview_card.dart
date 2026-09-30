@@ -1978,7 +1978,7 @@ class _HeaderSidebarPreview extends StatelessWidget {
     );
     final sectionTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w700,
-      fontSize: 13,
+      fontSize: bodyPt + 2,
       color: titleColor,
       height: 1.2,
     );
@@ -1990,7 +1990,7 @@ class _HeaderSidebarPreview extends StatelessWidget {
     );
     final jobTitleStyle = ResumeTypography.garamondPreviewStyle(
       weight: ResumeFontWeight.w500,
-      fontSize: 10,
+      fontSize: bodyPt - 1,
       color: mutedColor,
       height: 1.2,
       letterSpacing: 1.4,
@@ -7342,7 +7342,8 @@ class _SlateSidebarPreview extends StatelessWidget {
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     TextStyle style(FontWeight weight, double size, Color color) => TextStyle(
       fontFamily: family,
@@ -7706,7 +7707,7 @@ class _AtsCleanSansPreview extends StatelessWidget {
     final family = resume.usesOutfitResumeFont
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
-    final textPt = resume.effectiveBodyFontPt.toDouble() - 1;
+    final textPt = resume.effectiveBodyFontPt.toDouble();
 
     TextStyle style(
       FontWeight weight,
@@ -7742,7 +7743,7 @@ class _AtsCleanSansPreview extends StatelessWidget {
         children: [
           SizedBox(width: 12, child: Text('•', style: body)),
           Expanded(
-            child: Text(text, style: body, textAlign: TextAlign.justify),
+            child: Text(text, style: body, textAlign: TextAlign.left),
           ),
         ],
       ),
@@ -7832,7 +7833,7 @@ class _AtsCleanSansPreview extends StatelessWidget {
           ),
         if (resume.summary.trim().isNotEmpty) ...[
           sectionTitle('Professional Summary'),
-          Text(resume.summary.trim(), style: body, textAlign: TextAlign.justify),
+          Text(resume.summary.trim(), style: body, textAlign: TextAlign.left),
         ],
         ..._mapPreviewBodySections(
           previewBodySectionOrder(
@@ -8017,7 +8018,8 @@ class _TimelineProfilePreview extends StatelessWidget {
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     TextStyle style(
       FontWeight weight,
@@ -8096,7 +8098,7 @@ class _TimelineProfilePreview extends StatelessWidget {
         children: [
           SizedBox(width: 10, child: Text('•', style: bodyText)),
           Expanded(
-            child: Text(text, style: bodyText, textAlign: TextAlign.justify),
+            child: Text(text, style: bodyText, textAlign: TextAlign.left),
           ),
         ],
       ),
@@ -8193,7 +8195,7 @@ class _TimelineProfilePreview extends StatelessWidget {
             Text(
               resume.summary.trim(),
               style: bodyText,
-              textAlign: TextAlign.justify,
+              textAlign: TextAlign.left,
             ),
           ),
           const SizedBox(height: 6),
@@ -8469,7 +8471,8 @@ class _SoftHeaderPreview extends StatelessWidget {
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
     final lineH = ResumeTypography.bodyTextLineHeight;
 
     TextStyle style(
@@ -8516,7 +8519,7 @@ class _SoftHeaderPreview extends StatelessWidget {
       ),
     );
 
-    Widget bullet(String text, {TextStyle? textStyle, bool justify = false}) =>
+    Widget bullet(String text, {TextStyle? textStyle}) =>
         Padding(
           padding: const EdgeInsets.only(bottom: 3),
           child: Row(
@@ -8535,7 +8538,7 @@ class _SoftHeaderPreview extends StatelessWidget {
                 child: Text(
                   text,
                   style: textStyle ?? bodyText,
-                  textAlign: justify ? TextAlign.justify : TextAlign.left,
+                  textAlign: TextAlign.left,
                 ),
               ),
             ],
@@ -8608,7 +8611,7 @@ class _SoftHeaderPreview extends StatelessWidget {
           Text(
             resume.summary.trim(),
             style: bodyText,
-            textAlign: TextAlign.justify,
+            textAlign: TextAlign.left,
           ),
         ],
         ..._mapPreviewBodySections(
@@ -8715,7 +8718,7 @@ class _SoftHeaderPreview extends StatelessWidget {
                           in nonEmpty(item.bullets).isNotEmpty
                               ? nonEmpty(item.bullets)
                               : nonEmpty([item.description]))
-                        bullet(line, justify: true),
+                        bullet(line),
                       const SizedBox(height: 12),
                     ],
                   ],
@@ -8736,7 +8739,7 @@ class _SoftHeaderPreview extends StatelessWidget {
                         Text(item.subtitle.trim(), style: bodyText),
                       const SizedBox(height: 5),
                       for (final line in nonEmpty(item.bullets))
-                        bullet(line, justify: true),
+                        bullet(line),
                       const SizedBox(height: 12),
                     ],
                   ],
@@ -8932,7 +8935,8 @@ class _BlueDiagonalPreview extends StatelessWidget {
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
     final lineH = ResumeTypography.bodyTextLineHeight;
 
     TextStyle style(FontWeight weight, double size, Color color) => TextStyle(
@@ -9126,7 +9130,7 @@ class _BlueDiagonalPreview extends StatelessWidget {
           Text(
             resume.summary.trim(),
             style: bodyText,
-            textAlign: TextAlign.justify,
+            textAlign: TextAlign.left,
           ),
         ],
         ..._mapPreviewBodySections(
@@ -9469,7 +9473,7 @@ class _MinimalProfilePreview extends StatelessWidget {
     final contactStyle = style(FontWeight.w400, bodyPt - 1, mutedColor);
     final sectionStyle = style(FontWeight.w800, 13.5, titleColor, height: 1.1);
     final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
-    final bodyStyle = style(FontWeight.w400, bodyPt - 0.5, mutedColor);
+    final bodyStyle = style(FontWeight.w400, bodyPt, mutedColor);
     final initialsStyle = style(FontWeight.w700, 22, accent);
 
     Widget sectionHeading(String label, {bool showRule = true}) {
@@ -9983,7 +9987,8 @@ class _CharcoalCurvePreview extends StatelessWidget {
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 0.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     TextStyle style(FontWeight weight, double size, Color color) => TextStyle(
       fontFamily: family,
@@ -10529,7 +10534,8 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 0.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     TextStyle style(FontWeight weight, double size, Color color) => TextStyle(
       fontFamily: family,
@@ -10654,7 +10660,7 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
           Text(
             resume.summary.trim(),
             style: bodyStyle,
-            textAlign: TextAlign.justify,
+            textAlign: TextAlign.left,
           ),
         ],
         ...mapSections((id) {
@@ -10997,7 +11003,8 @@ class _BlueCornerPreview extends StatelessWidget
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     TextStyle style(FontWeight weight, double size, Color color) => TextStyle(
       fontFamily: family,
@@ -11079,7 +11086,7 @@ class _BlueCornerPreview extends StatelessWidget
                     child: Text(
                       line,
                       style: bodyStyle,
-                      textAlign: TextAlign.justify,
+                      textAlign: TextAlign.left,
                     ),
                   ),
               ],
@@ -11150,7 +11157,7 @@ class _BlueCornerPreview extends StatelessWidget
           sectionHeading('About Me', icon: Icons.person_outline),
           Padding(
             padding: const EdgeInsets.only(left: _timelineGutter),
-            child: Text(summary, style: bodyStyle, textAlign: TextAlign.justify),
+            child: Text(summary, style: bodyStyle, textAlign: TextAlign.left),
           ),
         ],
         ...mapSections((id) {
@@ -11427,7 +11434,8 @@ class _ProfileTimelinePreview extends StatelessWidget
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     TextStyle style(FontWeight weight, double size, Color color) => TextStyle(
       fontFamily: family,
@@ -11523,7 +11531,7 @@ class _ProfileTimelinePreview extends StatelessWidget
                           child: Text(
                             line,
                             style: bodyStyle,
-                            textAlign: TextAlign.justify,
+                            textAlign: TextAlign.left,
                           ),
                         ),
                       ],

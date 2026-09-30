@@ -70,7 +70,8 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
     final mutedColor = _pdfRgb(resume.softHeaderMutedColor);
     final ruleColor = _pdfRgb(resume.softHeaderRuleColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 1.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
     final lineH = ResumeTypography.bodyTextLineHeight;
 
     pw.TextStyle style(
@@ -137,7 +138,6 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
       String text, {
       bool highlight = false,
       pw.TextStyle? textStyle,
-      bool justify = false,
     }) =>
         _headerSidebarMaybeHighlight(
           highlight: highlight,
@@ -159,8 +159,7 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
                   child: pw.Text(
                     text,
                     style: textStyle ?? bodyStyle,
-                    textAlign:
-                        justify ? pw.TextAlign.justify : pw.TextAlign.left,
+                    textAlign: pw.TextAlign.left,
                   ),
                 ),
               ],
@@ -202,7 +201,6 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
           for (final line in _workBulletLines(item))
             bullet(
               line,
-              justify: true,
               highlight:
                   highlightedBulletsByExperience[index]?.contains(line) ?? false,
             ),
@@ -497,7 +495,7 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
                 child: pw.Text(
                   resume.summary.trim(),
                   style: bodyStyle,
-                  textAlign: pw.TextAlign.justify,
+                  textAlign: pw.TextAlign.left,
                 ),
               ),
             ),
@@ -572,7 +570,7 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
                         ),
                       mainWrap(pw.SizedBox(height: 5)),
                       for (final line in _projectBulletLinesPdf(item))
-                        mainWrap(bullet(line, justify: true)),
+                        mainWrap(bullet(line)),
                       mainWrap(pw.SizedBox(height: 12)),
                     ],
                   ];

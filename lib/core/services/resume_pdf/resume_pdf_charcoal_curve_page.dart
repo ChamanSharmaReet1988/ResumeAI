@@ -61,7 +61,8 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
     final ruleColor = _pdfRgb(resume.charcoalCurveRuleColor);
     final trackColor = _pdfRgb(resume.charcoalCurveTrackColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final detailPt = bodyPt - 0.5;
+    // Body copy renders at the slider size; only dated/rail lines step down.
+    final detailPt = bodyPt;
 
     pw.TextStyle style(
       int weight,

@@ -359,7 +359,7 @@ extension ResumeCorporateStyleX on ResumeData {
 
   Color get headerSidebarTitleColor => const Color(0xFF111827);
 
-  Color get headerSidebarMutedColor => const Color(0xFF8A8F98);
+  Color get headerSidebarMutedColor => const Color(0xFF5F656C);
 
   Color get headerSidebarOnRailColor => Colors.white;
 
@@ -470,8 +470,9 @@ extension ResumeCorporateStyleX on ResumeData {
 
   Color get charcoalCurveRuleColor => const Color(0xFFCBD0D6);
 
-  /// Unfilled part of a skill rating bar.
-  Color get charcoalCurveTrackColor => const Color(0xFFBFC6CE);
+  /// Unfilled part of a skill rating bar. Dark enough to read against the
+  /// white page (3.1:1); the old #BFC6CE was only 1.7:1 and looked blank.
+  Color get charcoalCurveTrackColor => const Color(0xFF8B939C);
 
   static const Color boldPillNativeAccentColor = Color(0xFF16181B);
 

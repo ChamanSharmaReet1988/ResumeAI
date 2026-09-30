@@ -22,7 +22,7 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
     final mutedColor = _pdfRgb(resume.minimalProfileMutedColor);
     final accent = _pdfRgb(resume.minimalProfileAccentColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final textPt = bodyPt - 0.5;
+    final textPt = bodyPt;
 
     pw.TextStyle style(
       int weight,
