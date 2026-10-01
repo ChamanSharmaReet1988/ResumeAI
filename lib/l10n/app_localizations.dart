@@ -3383,6 +3383,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days}d ago'**
   String jobsPostedDaysAgo(int days);
+
+  /// No description provided for @sampleFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Alex Morgan'**
+  String get sampleFullName;
+
+  /// No description provided for @sampleJobTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Designer'**
+  String get sampleJobTitle;
+
+  /// No description provided for @sampleEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'alex.morgan@email.com'**
+  String get sampleEmail;
+
+  /// No description provided for @samplePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 415 555 0198'**
+  String get samplePhone;
+
+  /// No description provided for @sampleLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'San Francisco, CA'**
+  String get sampleLocation;
+
+  /// No description provided for @sampleSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Product designer with 5 years of experience turning research into simple, usable products. I work closely with engineering and write clearly about what we ship.'**
+  String get sampleSummary;
+
+  /// No description provided for @sampleObjective.
+  ///
+  /// In en, this message translates to:
+  /// **'Seeking a product design role where I can shape clear, useful experiences and help a team ship work people enjoy.'**
+  String get sampleObjective;
+
+  /// No description provided for @sampleWorkRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Designer'**
+  String get sampleWorkRole;
+
+  /// No description provided for @sampleWorkCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Northstar Labs'**
+  String get sampleWorkCompany;
+
+  /// No description provided for @sampleWorkStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Jan 2021'**
+  String get sampleWorkStart;
+
+  /// No description provided for @sampleWorkEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get sampleWorkEnd;
+
+  /// No description provided for @sampleWorkDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned onboarding and raised activation by 18%.\nPartnered with engineering to ship a shared design system.\nRan weekly research and turned findings into shipped work.'**
+  String get sampleWorkDescription;
+
+  /// No description provided for @sampleReferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Available on request. Maya Chen, Design Manager, Northstar Labs.'**
+  String get sampleReferences;
+
+  /// No description provided for @sampleEducationInstitution.
+  ///
+  /// In en, this message translates to:
+  /// **'State University'**
+  String get sampleEducationInstitution;
+
+  /// No description provided for @sampleEducationDegree.
+  ///
+  /// In en, this message translates to:
+  /// **'B.A. in Design'**
+  String get sampleEducationDegree;
+
+  /// No description provided for @sampleEducationStart.
+  ///
+  /// In en, this message translates to:
+  /// **'2016'**
+  String get sampleEducationStart;
+
+  /// No description provided for @sampleEducationEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'2020'**
+  String get sampleEducationEnd;
+
+  /// No description provided for @sampleEducationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Studied interaction design and visual communication.'**
+  String get sampleEducationDescription;
+
+  /// No description provided for @sampleSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Figma\nUser research\nPrototyping\nDesign systems\nWireframing\nAccessibility'**
+  String get sampleSkills;
 }
 
 class _AppLocalizationsDelegate

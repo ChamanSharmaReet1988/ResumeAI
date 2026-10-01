@@ -838,5 +838,24 @@
         "type": "int"
       }
     }
-  }
+  },
+  "sampleFullName": "Alex Morgan",
+  "sampleJobTitle": "Desainer Produk",
+  "sampleEmail": "alex.morgan@email.com",
+  "samplePhone": "+1 415 555 0198",
+  "sampleLocation": "San Francisco, CA",
+  "sampleSummary": "Desainer produk dengan 5 tahun pengalaman mengubah riset menjadi produk yang sederhana dan mudah dipakai. Saya bekerja dekat dengan tim teknis dan menjelaskan dengan jelas apa yang kami rilis.",
+  "sampleObjective": "Mencari peran desainer produk untuk merancang pengalaman yang jelas dan berguna, serta membantu tim merilis karya yang disukai orang.",
+  "sampleWorkRole": "Desainer Produk",
+  "sampleWorkCompany": "Northstar Labs",
+  "sampleWorkStart": "Jan 2021",
+  "sampleWorkEnd": "Present",
+  "sampleWorkDescription": "Merancang ulang onboarding dan menaikkan aktivasi sebesar 18%.\nBekerja dengan tim teknis untuk merilis sistem desain bersama.\nMenjalankan riset mingguan dan mengubah temuan menjadi karya yang dirilis.",
+  "sampleReferences": "Tersedia jika diminta. Maya Chen, Manajer Desain, Northstar Labs.",
+  "sampleEducationInstitution": "Universitas Negeri",
+  "sampleEducationDegree": "Sarjana Desain",
+  "sampleEducationStart": "2016",
+  "sampleEducationEnd": "2020",
+  "sampleEducationDescription": "Mempelajari desain interaksi dan komunikasi visual.",
+  "sampleSkills": "Figma\nRiset pengguna\nPrototipe\nSistem desain\nWireframe\nAksesibilitas"
 }

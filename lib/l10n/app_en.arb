@@ -936,5 +936,24 @@
         "type": "int"
       }
     }
-  }
+  },
+  "sampleFullName": "Alex Morgan",
+  "sampleJobTitle": "Product Designer",
+  "sampleEmail": "alex.morgan@email.com",
+  "samplePhone": "+1 415 555 0198",
+  "sampleLocation": "San Francisco, CA",
+  "sampleSummary": "Product designer with 5 years of experience turning research into simple, usable products. I work closely with engineering and write clearly about what we ship.",
+  "sampleObjective": "Seeking a product design role where I can shape clear, useful experiences and help a team ship work people enjoy.",
+  "sampleWorkRole": "Product Designer",
+  "sampleWorkCompany": "Northstar Labs",
+  "sampleWorkStart": "Jan 2021",
+  "sampleWorkEnd": "Present",
+  "sampleWorkDescription": "Redesigned onboarding and raised activation by 18%.\nPartnered with engineering to ship a shared design system.\nRan weekly research and turned findings into shipped work.",
+  "sampleReferences": "Available on request. Maya Chen, Design Manager, Northstar Labs.",
+  "sampleEducationInstitution": "State University",
+  "sampleEducationDegree": "B.A. in Design",
+  "sampleEducationStart": "2016",
+  "sampleEducationEnd": "2020",
+  "sampleEducationDescription": "Studied interaction design and visual communication.",
+  "sampleSkills": "Figma\nUser research\nPrototyping\nDesign systems\nWireframing\nAccessibility"
 }

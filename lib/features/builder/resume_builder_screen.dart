@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -1831,6 +1832,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       buildDefaultDragHandles: false,
       clipBehavior: Clip.none,
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+      // The default drag preview paints a surface rectangle behind the row,
+      // including the gap under the cell. Keep only the cell itself.
+      proxyDecorator: (Widget child, int index, Animation<double> animation) {
+        return _TrimBottom(
+          trim: 12,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: child,
+          ),
+        );
+      },
       onReorder: (oldIndex, newIndex) {
         if (!_isEditingSections) {
           return;
@@ -4146,6 +4158,62 @@ class _BuilderActionTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Drops the transparent gap under a section row so a drag preview is only
+/// the cell.
+class _TrimBottom extends SingleChildRenderObjectWidget {
+  const _TrimBottom({required this.trim, required super.child});
+
+  final double trim;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderTrimBottom(trim);
+  }
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderTrimBottom renderObject) {
+    renderObject.trim = trim;
+  }
+}
+
+class _RenderTrimBottom extends RenderProxyBox {
+  _RenderTrimBottom(this._trim);
+
+  double _trim;
+
+  set trim(double value) {
+    if (_trim == value) {
+      return;
+    }
+    _trim = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.smallest;
+      return;
+    }
+    child.layout(constraints, parentUsesSize: true);
+    final height = math.max(0.0, child.size.height - _trim);
+    size = Size(child.size.width, height);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    context.pushClipRect(
+      needsCompositing,
+      offset,
+      Offset.zero & size,
+      (PaintingContext context, Offset offset) {
+        super.paint(context, offset);
+      },
     );
   }
 }

@@ -1913,4 +1913,67 @@ class AppLocalizationsId extends AppLocalizations {
   String jobsPostedDaysAgo(int days) {
     return '${days}h lalu';
   }
+
+  @override
+  String get sampleFullName => 'Alex Morgan';
+
+  @override
+  String get sampleJobTitle => 'Desainer Produk';
+
+  @override
+  String get sampleEmail => 'alex.morgan@email.com';
+
+  @override
+  String get samplePhone => '+1 415 555 0198';
+
+  @override
+  String get sampleLocation => 'San Francisco, CA';
+
+  @override
+  String get sampleSummary =>
+      'Desainer produk dengan 5 tahun pengalaman mengubah riset menjadi produk yang sederhana dan mudah dipakai. Saya bekerja dekat dengan tim teknis dan menjelaskan dengan jelas apa yang kami rilis.';
+
+  @override
+  String get sampleObjective =>
+      'Mencari peran desainer produk untuk merancang pengalaman yang jelas dan berguna, serta membantu tim merilis karya yang disukai orang.';
+
+  @override
+  String get sampleWorkRole => 'Desainer Produk';
+
+  @override
+  String get sampleWorkCompany => 'Northstar Labs';
+
+  @override
+  String get sampleWorkStart => 'Jan 2021';
+
+  @override
+  String get sampleWorkEnd => 'Present';
+
+  @override
+  String get sampleWorkDescription =>
+      'Merancang ulang onboarding dan menaikkan aktivasi sebesar 18%.\nBekerja dengan tim teknis untuk merilis sistem desain bersama.\nMenjalankan riset mingguan dan mengubah temuan menjadi karya yang dirilis.';
+
+  @override
+  String get sampleReferences =>
+      'Tersedia jika diminta. Maya Chen, Manajer Desain, Northstar Labs.';
+
+  @override
+  String get sampleEducationInstitution => 'Universitas Negeri';
+
+  @override
+  String get sampleEducationDegree => 'Sarjana Desain';
+
+  @override
+  String get sampleEducationStart => '2016';
+
+  @override
+  String get sampleEducationEnd => '2020';
+
+  @override
+  String get sampleEducationDescription =>
+      'Mempelajari desain interaksi dan komunikasi visual.';
+
+  @override
+  String get sampleSkills =>
+      'Figma\nRiset pengguna\nPrototipe\nSistem desain\nWireframe\nAksesibilitas';
 }

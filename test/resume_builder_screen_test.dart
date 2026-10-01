@@ -90,6 +90,35 @@ void main() {
     );
   }
 
+  test('a new resume starts with sample content in every section', () {
+    final draft = ResumeLibraryViewModel(
+      repository: _FakeResumeRepository(),
+    ).newDraft();
+
+    expect(draft.template, ResumeTemplate.accentStrip);
+    expect(draft.fullName, 'Alex Morgan');
+    expect(draft.jobTitle, isNotEmpty);
+    expect(draft.email, isNotEmpty);
+    expect(draft.phone, isNotEmpty);
+    expect(draft.location, isNotEmpty);
+    expect(draft.summary, isNotEmpty);
+    expect(draft.linkedinLink, isNotEmpty);
+    expect(draft.website, isNotEmpty);
+    expect(draft.workExperiences.single.role, isNotEmpty);
+    expect(draft.workExperiences.single.company, isNotEmpty);
+    expect(draft.workExperiences.single.bullets, isNotEmpty);
+    expect(draft.education.single.institution, isNotEmpty);
+    expect(draft.education.single.degree, isNotEmpty);
+    expect(draft.education.single.description, isNotEmpty);
+    expect(draft.skills, isNotEmpty);
+    expect(draft.customSections, hasLength(2));
+    expect(draft.customSections[0].title, 'Objective');
+    expect(draft.customSections[0].content, isNotEmpty);
+    expect(draft.customSections[1].title, 'References');
+    expect(draft.customSections[1].content, isNotEmpty);
+    expect(draft.includeProjectsInResume, isFalse);
+  });
+
   test('skills can grow without hard cap', () async {
     for (var index = 0; index < 80; index++) {
       expect(viewModel.addSkill('Skill $index'), isTrue);

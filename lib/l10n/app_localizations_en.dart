@@ -1909,4 +1909,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String jobsPostedDaysAgo(int days) {
     return '${days}d ago';
   }
+
+  @override
+  String get sampleFullName => 'Alex Morgan';
+
+  @override
+  String get sampleJobTitle => 'Product Designer';
+
+  @override
+  String get sampleEmail => 'alex.morgan@email.com';
+
+  @override
+  String get samplePhone => '+1 415 555 0198';
+
+  @override
+  String get sampleLocation => 'San Francisco, CA';
+
+  @override
+  String get sampleSummary =>
+      'Product designer with 5 years of experience turning research into simple, usable products. I work closely with engineering and write clearly about what we ship.';
+
+  @override
+  String get sampleObjective =>
+      'Seeking a product design role where I can shape clear, useful experiences and help a team ship work people enjoy.';
+
+  @override
+  String get sampleWorkRole => 'Product Designer';
+
+  @override
+  String get sampleWorkCompany => 'Northstar Labs';
+
+  @override
+  String get sampleWorkStart => 'Jan 2021';
+
+  @override
+  String get sampleWorkEnd => 'Present';
+
+  @override
+  String get sampleWorkDescription =>
+      'Redesigned onboarding and raised activation by 18%.\nPartnered with engineering to ship a shared design system.\nRan weekly research and turned findings into shipped work.';
+
+  @override
+  String get sampleReferences =>
+      'Available on request. Maya Chen, Design Manager, Northstar Labs.';
+
+  @override
+  String get sampleEducationInstitution => 'State University';
+
+  @override
+  String get sampleEducationDegree => 'B.A. in Design';
+
+  @override
+  String get sampleEducationStart => '2016';
+
+  @override
+  String get sampleEducationEnd => '2020';
+
+  @override
+  String get sampleEducationDescription =>
+      'Studied interaction design and visual communication.';
+
+  @override
+  String get sampleSkills =>
+      'Figma\nUser research\nPrototyping\nDesign systems\nWireframing\nAccessibility';
 }

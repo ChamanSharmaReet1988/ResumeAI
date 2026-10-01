@@ -1918,4 +1918,67 @@ class AppLocalizationsEs extends AppLocalizations {
   String jobsPostedDaysAgo(int days) {
     return 'hace $days d';
   }
+
+  @override
+  String get sampleFullName => 'Alex Morgan';
+
+  @override
+  String get sampleJobTitle => 'Diseñador de producto';
+
+  @override
+  String get sampleEmail => 'alex.morgan@email.com';
+
+  @override
+  String get samplePhone => '+1 415 555 0198';
+
+  @override
+  String get sampleLocation => 'San Francisco, CA';
+
+  @override
+  String get sampleSummary =>
+      'Diseñador de producto con 5 años de experiencia convirtiendo la investigación en productos claros y fáciles de usar. Trabajo de cerca con ingeniería y explico con claridad lo que lanzamos.';
+
+  @override
+  String get sampleObjective =>
+      'Busco un puesto de diseño de producto en el que pueda crear experiencias claras y útiles y ayudar a un equipo a lanzar trabajo que la gente disfrute.';
+
+  @override
+  String get sampleWorkRole => 'Diseñador de producto';
+
+  @override
+  String get sampleWorkCompany => 'Northstar Labs';
+
+  @override
+  String get sampleWorkStart => 'Jan 2021';
+
+  @override
+  String get sampleWorkEnd => 'Present';
+
+  @override
+  String get sampleWorkDescription =>
+      'Rediseñé la incorporación y aumenté la activación un 18%.\nTrabajé con ingeniería para lanzar un sistema de diseño compartido.\nHice investigación semanal y convertí los hallazgos en trabajo publicado.';
+
+  @override
+  String get sampleReferences =>
+      'Disponibles a petición. Maya Chen, responsable de diseño, Northstar Labs.';
+
+  @override
+  String get sampleEducationInstitution => 'Universidad Estatal';
+
+  @override
+  String get sampleEducationDegree => 'Grado en Diseño';
+
+  @override
+  String get sampleEducationStart => '2016';
+
+  @override
+  String get sampleEducationEnd => '2020';
+
+  @override
+  String get sampleEducationDescription =>
+      'Estudié diseño de interacción y comunicación visual.';
+
+  @override
+  String get sampleSkills =>
+      'Figma\nInvestigación de usuarios\nPrototipos\nSistemas de diseño\nWireframes\nAccesibilidad';
 }

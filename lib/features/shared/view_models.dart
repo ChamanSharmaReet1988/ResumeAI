@@ -62,7 +62,7 @@ class ResumeLibraryViewModel extends ChangeNotifier {
   bool _isLoading = false;
   List<ResumeData> _resumes = const [];
   String? _selectedResumeId;
-  ResumeTemplate _defaultTemplate = ResumeTemplate.atsLatexClassic;
+  ResumeTemplate _defaultTemplate = ResumeTemplate.accentStrip;
 
   bool get isLoading => _isLoading;
   List<ResumeData> get resumes => _resumes;
@@ -149,16 +149,81 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     return renamed;
   }
 
-  ResumeData newDraft({AppLocalizations? l10n}) =>
-      ResumeData.empty(
-        template: _defaultTemplate,
-        objectiveTitle: l10n?.sectionObjective ?? 'Objective',
-        referencesTitle: l10n?.sectionReferences ?? 'References',
-      ).copyWith(
-        corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
-          _defaultTemplate,
+  ResumeData newDraft({AppLocalizations? l10n}) {
+    final objectiveTitle = l10n?.sectionObjective ?? 'Objective';
+    final referencesTitle = l10n?.sectionReferences ?? 'References';
+    final skills = _sampleLines(
+      l10n?.sampleSkills ??
+          'Figma\nUser research\nPrototyping\nDesign systems\nWireframing\nAccessibility',
+    );
+    final workLines = _sampleLines(
+      l10n?.sampleWorkDescription ??
+          'Redesigned onboarding and raised activation by 18%.\nPartnered with engineering to ship a shared design system.\nRan weekly research and turned findings into shipped work.',
+    );
+    return ResumeData.empty(
+      template: _defaultTemplate,
+      objectiveTitle: objectiveTitle,
+      referencesTitle: referencesTitle,
+    ).copyWith(
+      corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+        _defaultTemplate,
+      ),
+      fullName: l10n?.sampleFullName ?? 'Alex Morgan',
+      jobTitle: l10n?.sampleJobTitle ?? 'Product Designer',
+      email: l10n?.sampleEmail ?? 'alex.morgan@email.com',
+      phone: l10n?.samplePhone ?? '+1 415 555 0198',
+      location: l10n?.sampleLocation ?? 'San Francisco, CA',
+      linkedinLink: 'https://linkedin.com/in/alexmorgan',
+      website: 'https://alexmorgan.design',
+      summary:
+          l10n?.sampleSummary ??
+          'Product designer with 5 years of experience turning research into simple, usable products. I work closely with engineering and write clearly about what we ship.',
+      skills: skills,
+      workExperiences: [
+        WorkExperience(
+          role: l10n?.sampleWorkRole ?? 'Product Designer',
+          company: l10n?.sampleWorkCompany ?? 'Northstar Labs',
+          startDate: l10n?.sampleWorkStart ?? 'Jan 2021',
+          endDate: l10n?.sampleWorkEnd ?? 'Present',
+          description: '',
+          bullets: workLines,
         ),
-      );
+      ],
+      education: [
+        EducationItem(
+          institution: l10n?.sampleEducationInstitution ?? 'State University',
+          degree: l10n?.sampleEducationDegree ?? 'B.A. in Design',
+          startDate: l10n?.sampleEducationStart ?? '2016',
+          endDate: l10n?.sampleEducationEnd ?? '2020',
+          description:
+              l10n?.sampleEducationDescription ??
+              'Studied interaction design and visual communication.',
+        ),
+      ],
+      customSections: [
+        CustomSectionItem(
+          title: objectiveTitle,
+          content:
+              l10n?.sampleObjective ??
+              'Seeking a product design role where I can shape clear, useful experiences and help a team ship work people enjoy.',
+        ),
+        CustomSectionItem(
+          title: referencesTitle,
+          content:
+              l10n?.sampleReferences ??
+              'Available on request. Maya Chen, Design Manager, Northstar Labs.',
+        ),
+      ],
+    );
+  }
+
+  List<String> _sampleLines(String value) {
+    return value
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+  }
 
   String _duplicateTitle(String title) {
     final trimmed = title.trim();

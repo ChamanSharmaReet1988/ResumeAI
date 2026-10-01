@@ -1915,4 +1915,67 @@ class AppLocalizationsPt extends AppLocalizations {
   String jobsPostedDaysAgo(int days) {
     return 'há $days d';
   }
+
+  @override
+  String get sampleFullName => 'Alex Morgan';
+
+  @override
+  String get sampleJobTitle => 'Designer de produto';
+
+  @override
+  String get sampleEmail => 'alex.morgan@email.com';
+
+  @override
+  String get samplePhone => '+1 415 555 0198';
+
+  @override
+  String get sampleLocation => 'San Francisco, CA';
+
+  @override
+  String get sampleSummary =>
+      'Designer de produto com 5 anos de experiência a transformar pesquisa em produtos simples e fáceis de usar. Trabalho de perto com engenharia e explico com clareza o que lançamos.';
+
+  @override
+  String get sampleObjective =>
+      'Procuro uma função de design de produto em que possa criar experiências claras e úteis e ajudar uma equipe a lançar trabalho que as pessoas gostem de usar.';
+
+  @override
+  String get sampleWorkRole => 'Designer de produto';
+
+  @override
+  String get sampleWorkCompany => 'Northstar Labs';
+
+  @override
+  String get sampleWorkStart => 'Jan 2021';
+
+  @override
+  String get sampleWorkEnd => 'Present';
+
+  @override
+  String get sampleWorkDescription =>
+      'Redesenhei a integração e aumentei a ativação em 18%.\nTrabalhei com engenharia para lançar um sistema de design partilhado.\nFiz pesquisa semanal e transformei os resultados em trabalho publicado.';
+
+  @override
+  String get sampleReferences =>
+      'Disponíveis mediante pedido. Maya Chen, gestora de design, Northstar Labs.';
+
+  @override
+  String get sampleEducationInstitution => 'Universidade Estadual';
+
+  @override
+  String get sampleEducationDegree => 'Licenciatura em Design';
+
+  @override
+  String get sampleEducationStart => '2016';
+
+  @override
+  String get sampleEducationEnd => '2020';
+
+  @override
+  String get sampleEducationDescription =>
+      'Estudei design de interação e comunicação visual.';
+
+  @override
+  String get sampleSkills =>
+      'Figma\nPesquisa com usuários\nProtótipos\nSistemas de design\nWireframes\nAcessibilidade';
 }
