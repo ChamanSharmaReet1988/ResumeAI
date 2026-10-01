@@ -1440,6 +1440,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get company => 'Perusahaan';
 
   @override
+  String get period => 'Periode';
+
+  @override
+  String get periodHint => '2024 - Sekarang';
+
+  @override
   String get startDate => 'Tanggal mulai';
 
   @override
@@ -1616,6 +1622,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bulletPoints => 'Poin';
+
+  @override
+  String get showContentAsBullets => 'Tampilkan sebagai poin';
+
+  @override
+  String get customSectionBulletHint =>
+      'Satu baris per poin. Baris baru memulai poin berikutnya.';
 
   @override
   String get workDescriptionLabel => 'Deskripsi';

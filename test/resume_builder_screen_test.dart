@@ -517,9 +517,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('custom-section-content-2')), findsOneWidget);
+    expect(
+      find.byKey(const Key('custom-section-bullets-switch-2')),
+      findsOneWidget,
+    );
     expect(textFieldByLabel('Organisation'), findsNothing);
     expect(find.text('Bullet points'), findsNothing);
     expect(viewModel.resume.customSections.last.showEntryDetails, isFalse);
+
+    await tester.enterText(
+      find.byKey(const Key('custom-section-content-2')),
+      'First award\nSecond award',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('custom-section-bullets-switch-2')));
+    await tester.pumpAndSettle();
+
+    final section = viewModel.resume.customSections.last;
+    expect(section.layoutMode, CustomSectionLayoutMode.bullets);
+    expect(section.bullets, ['First award', 'Second award']);
   });
 
   testWidgets(
@@ -538,11 +554,22 @@ void main() {
       expect(find.text('Item 1'), findsOneWidget);
       expect(textFieldByLabel('Name'), findsOneWidget);
       expect(textFieldByLabel('Company'), findsOneWidget);
-      expect(find.text('Start date'), findsOneWidget);
-      expect(find.text('End date'), findsOneWidget);
+      expect(textFieldByLabel('Period'), findsOneWidget);
+      expect(find.text('Start date'), findsNothing);
+      expect(find.text('End date'), findsNothing);
       expect(textFieldByLabel('Summary'), findsOneWidget);
-      expect(find.byKey(const Key('custom-entry-start-2-0')), findsOneWidget);
-      expect(find.byKey(const Key('custom-entry-end-2-0')), findsOneWidget);
+      expect(find.byKey(const Key('custom-entry-period-2-0')), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('custom-entry-period-2-0')),
+        '2024 - Present',
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        viewModel.resume.customSections.last.entries.first.period,
+        '2024 - Present',
+      );
       expect(textFieldByLabel('Organisation'), findsNothing);
       expect(find.text('Bullet points'), findsNothing);
       expect(viewModel.resume.customSections.last.showEntryDetails, isTrue);

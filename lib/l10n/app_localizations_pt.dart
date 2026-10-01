@@ -1442,6 +1442,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get company => 'Empresa';
 
   @override
+  String get period => 'Período';
+
+  @override
+  String get periodHint => '2024 - Atual';
+
+  @override
   String get startDate => 'Data de início';
 
   @override
@@ -1619,6 +1625,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get bulletPoints => 'Marcadores';
+
+  @override
+  String get showContentAsBullets => 'Mostrar como marcadores';
+
+  @override
+  String get customSectionBulletHint =>
+      'Uma linha por marcador. Uma nova linha começa o próximo marcador.';
 
   @override
   String get workDescriptionLabel => 'Descrição';

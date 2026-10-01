@@ -851,126 +851,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-  Future<void> _pickCustomEntryDate({
-    required int sectionIndex,
-    required int entryIndex,
-    required bool isEndDate,
-    required String currentValue,
-  }) async {
-    _unfocusActiveField();
-
-    if (isEndDate) {
-      final selection = await showModalBottomSheet<_EndDateSelection>(
-        context: context,
-        backgroundColor: Theme.of(context).cardColor,
-        builder: (context) {
-          final primaryColor = Theme.of(context).colorScheme.primary;
-
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(
-                left: BottomSheetInsets.leftPadding,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: BottomSheetInsets.topSpacing),
-                  ListTile(
-                    leading: IconTheme(
-                      data: IconThemeData(color: primaryColor),
-                      child: const _ThinCalendarIcon(
-                        strokeWidth:
-                            _ResumeBuilderScreenState._calendarIconStroke,
-                      ),
-                    ),
-                    title: Text(context.l10n.chooseMonthAndYear),
-                    onTap: () =>
-                        Navigator.of(context).pop(_EndDateSelection.chooseDate),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.work_history_outlined,
-                      color: primaryColor,
-                    ),
-                    title: Text(context.l10n.present),
-                    onTap: () =>
-                        Navigator.of(context).pop(_EndDateSelection.present),
-                  ),
-                  if (currentValue.trim().isNotEmpty)
-                    ListTile(
-                      leading: Icon(Icons.clear_rounded, color: primaryColor),
-                      title: Text(context.l10n.clearDate),
-                      onTap: () =>
-                          Navigator.of(context).pop(_EndDateSelection.clear),
-                    ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
-
-      if (!mounted || selection == null) {
-        return;
-      }
-
-      switch (selection) {
-        case _EndDateSelection.present:
-          _updateCustomEntryDate(
-            sectionIndex: sectionIndex,
-            entryIndex: entryIndex,
-            isEndDate: true,
-            value: 'Present',
-          );
-          return;
-        case _EndDateSelection.clear:
-          _updateCustomEntryDate(
-            sectionIndex: sectionIndex,
-            entryIndex: entryIndex,
-            isEndDate: true,
-            value: '',
-          );
-          return;
-        case _EndDateSelection.chooseDate:
-          break;
-      }
-    }
-
-    final selectedDate = await _showMonthYearPicker(
-      title: isEndDate
-          ? context.l10n.selectEndMonthAndYear
-          : context.l10n.selectStartMonthAndYear,
-      initialDate: _initialWorkPickerDate(currentValue),
-    );
-
-    if (!mounted || selectedDate == null) {
-      return;
-    }
-
-    _updateCustomEntryDate(
-      sectionIndex: sectionIndex,
-      entryIndex: entryIndex,
-      isEndDate: isEndDate,
-      value: DateFormat('MMM yyyy').format(selectedDate),
-    );
-  }
-
-  void _updateCustomEntryDate({
-    required int sectionIndex,
-    required int entryIndex,
-    required bool isEndDate,
-    required String value,
-  }) {
-    context.read<ResumeEditorViewModel>().updateCustomSectionEntry(
-      sectionIndex,
-      entryIndex,
-      (current) => current.copyWith(
-        startDate: isEndDate ? current.startDate : value,
-        endDate: isEndDate ? value : current.endDate,
-      ),
-    );
-  }
-
   DateTime _initialWorkPickerDate(String currentValue) {
     final trimmed = currentValue.trim();
     if (trimmed.isNotEmpty && trimmed.toLowerCase() != 'present') {
@@ -2549,6 +2429,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
       ];
     }
+    if (!item.showEntryDetails &&
+        item.layoutMode != CustomSectionLayoutMode.projects) {
+      return [
+        _focusNodeForExtendedKeyboardField(
+          'custom-section-content-$customIndex',
+        ),
+      ];
+    }
     if (item.usesItemEntries) {
       final count = item.entries.isEmpty ? 1 : item.entries.length;
       return [
@@ -2558,6 +2446,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
           _focusNodeForExtendedKeyboardField(
             'custom-entry-company-$customIndex-$i',
+          ),
+          _focusNodeForExtendedKeyboardField(
+            'custom-entry-period-$customIndex-$i',
           ),
           _focusNodeForExtendedKeyboardField(
             'custom-entry-summary-$customIndex-$i',
@@ -3209,6 +3100,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 const SizedBox(height: 16),
                 if (item.usesItemEntries)
                   _buildCustomSectionItemsEditor(viewModel, index, item)
+                else if (!item.showEntryDetails)
+                  _buildNormalCustomSectionEditor(viewModel, index, item)
                 else ...[
                   if (item.showEntryDetails) ...[
                     _ResponsiveFieldGroup(
@@ -3326,6 +3219,95 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 ],
               ],
             ),
+    );
+  }
+
+  List<String> _bulletLinesFromContent(String content) => content
+      .split('\n')
+      .map((line) => line.trim())
+      .where((line) => line.isNotEmpty)
+      .toList();
+
+  Widget _buildNormalCustomSectionEditor(
+    ResumeEditorViewModel viewModel,
+    int index,
+    CustomSectionItem item,
+  ) {
+    final showAsBullets = item.layoutMode == CustomSectionLayoutMode.bullets;
+    final fieldValue =
+        showAsBullets &&
+            item.content.trim().isEmpty &&
+            item.bullets.any((line) => line.trim().isNotEmpty)
+        ? item.bullets.join('\n')
+        : item.content;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                context.l10n.showContentAsBullets,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ),
+            Switch(
+              key: Key('custom-section-bullets-switch-$index'),
+              value: showAsBullets,
+              onChanged: viewModel.isBusy
+                  ? null
+                  : (enabled) {
+                      viewModel.updateCustomSection(index, (current) {
+                        if (!enabled) {
+                          return current.copyWith(
+                            layoutMode: CustomSectionLayoutMode.summary,
+                          );
+                        }
+                        final source = current.content.trim().isNotEmpty
+                            ? current.content
+                            : current.bullets.join('\n');
+                        return current.copyWith(
+                          content: source,
+                          layoutMode: CustomSectionLayoutMode.bullets,
+                          bullets: _bulletLinesFromContent(source),
+                        );
+                      });
+                    },
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        _ResponsiveFieldGroup(
+          children: [
+            _SyncTextField(
+              key: Key('custom-section-content-$index'),
+              label: context.l10n.summary,
+              value: fieldValue,
+              textCapitalization: TextCapitalization.sentences,
+              hintText: showAsBullets
+                  ? context.l10n.customSectionBulletHint
+                  : context.l10n.customSectionSummaryHint,
+              minLines: 5,
+              maxLines: null,
+              fullWidth: true,
+              focusNode: _focusNodeForExtendedKeyboardField(
+                'custom-section-content-$index',
+              ),
+              onChanged: (value) => viewModel.updateCustomSection(index, (
+                current,
+              ) {
+                if (current.layoutMode != CustomSectionLayoutMode.bullets) {
+                  return current.copyWith(content: value);
+                }
+                return current.copyWith(
+                  content: value,
+                  bullets: _bulletLinesFromContent(value),
+                );
+              }),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -3450,31 +3432,27 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               (current) => current.copyWith(company: value),
                             ),
                       ),
-                      _PickerField(
+                      _SyncTextField(
                         key: Key(
-                          'custom-entry-start-$sectionIndex-$entryIndex',
+                          'custom-entry-period-$sectionIndex-$entryIndex',
                         ),
-                        label: context.l10n.startDate,
-                        value: row.startDate,
-                        hintText: context.l10n.monthYearHint,
-                        onTap: () => _pickCustomEntryDate(
-                          sectionIndex: sectionIndex,
-                          entryIndex: entryIndex,
-                          isEndDate: false,
-                          currentValue: row.startDate,
+                        label: context.l10n.period,
+                        value: row.dateLabel,
+                        hintText: context.l10n.periodHint,
+                        textCapitalization: TextCapitalization.none,
+                        focusNode: _focusNodeForExtendedKeyboardField(
+                          'custom-entry-period-$sectionIndex-$entryIndex',
                         ),
-                      ),
-                      _PickerField(
-                        key: Key('custom-entry-end-$sectionIndex-$entryIndex'),
-                        label: context.l10n.endDate,
-                        value: row.endDate,
-                        hintText: context.l10n.monthYearHint,
-                        onTap: () => _pickCustomEntryDate(
-                          sectionIndex: sectionIndex,
-                          entryIndex: entryIndex,
-                          isEndDate: true,
-                          currentValue: row.endDate,
-                        ),
+                        onChanged: (value) =>
+                            viewModel.updateCustomSectionEntry(
+                              sectionIndex,
+                              entryIndex,
+                              (current) => current.copyWith(
+                                period: value,
+                                startDate: '',
+                                endDate: '',
+                              ),
+                            ),
                       ),
                       _SyncTextField(
                         key: Key(

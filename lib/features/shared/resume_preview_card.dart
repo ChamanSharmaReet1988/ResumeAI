@@ -203,6 +203,7 @@ class ResumePreviewCanvas extends StatelessWidget {
       ),
       ResumeTemplate.accentStrip => _AccentStripPreview(
         resume: resume,
+        scrollable: scrollable,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),
       ResumeTemplate.headerSidebar => _HeaderSidebarPreview(
@@ -986,27 +987,37 @@ List<Widget> _advancedCustomEntryPreviewWidgets(
   CustomSectionItem item,
   TextStyle bodyStyle, {
   bool showAllContent = false,
+  TextStyle? titleStyle,
 }) {
+  final heading = titleStyle ?? bodyStyle.copyWith(fontWeight: FontWeight.w600);
   return [
     for (final entry in item.visibleEntries) ...[
-      if (entry.headline.isNotEmpty)
+      if (entry.dateLabel.isNotEmpty)
         Text(
-          entry.headline,
-          style: bodyStyle.copyWith(fontWeight: FontWeight.w600),
+          entry.dateLabel,
+          style: heading,
           maxLines: showAllContent ? null : 2,
           overflow: showAllContent ? null : TextOverflow.ellipsis,
         ),
-      if (entry.summary.trim().isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(top: 2),
-          child: Text(
-            entry.summary.trim(),
-            style: bodyStyle,
-            maxLines: showAllContent ? null : 5,
-            overflow: showAllContent ? null : TextOverflow.ellipsis,
-          ),
+      if (entry.nameCompanyLine.isNotEmpty) ...[
+        if (entry.dateLabel.isNotEmpty) const SizedBox(height: 4),
+        Text(
+          entry.nameCompanyLine,
+          style: heading,
+          maxLines: showAllContent ? null : 2,
+          overflow: showAllContent ? null : TextOverflow.ellipsis,
         ),
-      const SizedBox(height: 6),
+      ],
+      if (entry.summary.trim().isNotEmpty) ...[
+        const SizedBox(height: 6),
+        Text(
+          entry.summary.trim(),
+          style: bodyStyle,
+          maxLines: showAllContent ? null : 4,
+          overflow: showAllContent ? null : TextOverflow.ellipsis,
+        ),
+      ],
+      const SizedBox(height: 12),
     ],
   ];
 }
@@ -1019,7 +1030,11 @@ Widget _corporateCustomSectionBodyInner(
   if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: _advancedCustomEntryPreviewWidgets(item, bodyStyle),
+      children: _advancedCustomEntryPreviewWidgets(
+        item,
+        bodyStyle,
+        titleStyle: titleStyle,
+      ),
     );
   }
   if (item.layoutMode == CustomSectionLayoutMode.projects) {
@@ -1119,6 +1134,7 @@ List<Widget> _customSectionFlowPreviewBody(
       section,
       bodyStyle,
       showAllContent: showAllContent,
+      titleStyle: titleStyle,
     );
   }
   if (section.layoutMode == CustomSectionLayoutMode.projects) {
@@ -3694,10 +3710,12 @@ List<Widget> _latexPreviewProjects(
 class _AccentStripPreview extends StatelessWidget {
   const _AccentStripPreview({
     required this.resume,
+    this.scrollable = true,
     this.followBuilderSectionOrder = true,
   });
 
   final ResumeData resume;
+  final bool scrollable;
   final bool followBuilderSectionOrder;
 
   @override
@@ -3715,7 +3733,7 @@ class _AccentStripPreview extends StatelessWidget {
     final education = resume.visibleEducation.take(2).toList();
     final skills = _pdfAlignedSkills(resume).take(6).toList();
     final projects = resume.visibleProjects.take(1).toList();
-    final customSections = resume.visibleCustomSections.take(1).toList();
+    final customSections = resume.visibleCustomSections;
 
     final bodyStyle = ResumeTypography.accentStripBodyPreviewStyle(
       fontSize: bodyPt,
@@ -3771,7 +3789,9 @@ class _AccentStripPreview extends StatelessWidget {
                     child: Container(width: 34, color: accent),
                   ),
                   SingleChildScrollView(
-                    physics: const NeverScrollableScrollPhysics(),
+                    physics: scrollable
+                        ? const ClampingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(96, 34, 38, 30),
                       child: Column(
@@ -3832,6 +3852,7 @@ class _AccentStripPreview extends StatelessWidget {
                                     _AccentStripCustomSectionBlock(
                                       item: item,
                                       bodyStyle: bodyStyle,
+                                      titleStyle: subsectionStyle,
                                     ),
                                   ],
                                 );
@@ -4129,13 +4150,25 @@ class _AccentStripCustomSectionBlock extends StatelessWidget {
   const _AccentStripCustomSectionBlock({
     required this.item,
     required this.bodyStyle,
+    this.titleStyle,
   });
 
   final CustomSectionItem item;
   final TextStyle bodyStyle;
+  final TextStyle? titleStyle;
 
   @override
   Widget build(BuildContext context) {
+    if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: _advancedCustomEntryPreviewWidgets(
+          item,
+          bodyStyle,
+          titleStyle: titleStyle,
+        ),
+      );
+    }
     if (item.layoutMode == CustomSectionLayoutMode.projects) {
       final entries = item.visibleProjectEntries.take(2).toList();
       if (entries.isEmpty) {
@@ -4165,7 +4198,6 @@ class _AccentStripCustomSectionBlock extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: item.bullets
-            .take(3)
             .where((value) => value.trim().isNotEmpty)
             .map(
               (bullet) => Padding(
@@ -6531,6 +6563,19 @@ class _ClassicCustomSectionBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: _advancedCustomEntryPreviewWidgets(
+          item,
+          bodyStyle.copyWith(color: mutedColor),
+          titleStyle: bodyStyle.copyWith(
+            color: mutedColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
     if (item.layoutMode == CustomSectionLayoutMode.projects) {
       final entries = item.visibleProjectEntries.take(2).toList();
       if (entries.isEmpty) {
@@ -6563,7 +6608,7 @@ class _ClassicCustomSectionBlock extends StatelessWidget {
     }
     if (item.layoutMode == CustomSectionLayoutMode.bullets) {
       return _ClassicBulletList(
-        items: item.bullets.take(3).toList(),
+        items: item.bullets.where((value) => value.trim().isNotEmpty).toList(),
         textStyle: bodyStyle.copyWith(color: mutedColor),
         bulletColor: bulletColor,
       );
@@ -7645,6 +7690,25 @@ class _SlateSidebarPreview extends StatelessWidget {
               }
               final item = resume.customSections[customIndex];
               if (item.isBlank) return null;
+              if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ruledTitle(
+                      item.title.trim().ifBlank('Custom section'),
+                      sectionTitleStyle,
+                      titleColor,
+                    ),
+                    ..._advancedCustomEntryPreviewWidgets(
+                      item,
+                      detailStyle,
+                      titleStyle: detailStyle.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                );
+              }
               final lines = item.bullets.any((b) => b.trim().isNotEmpty)
                   ? item.bullets.where((b) => b.trim().isNotEmpty).toList()
                   : [item.content.trim()];
@@ -7968,6 +8032,19 @@ class _AtsCleanSansPreview extends StatelessWidget {
               }
               final item = resume.customSections[customIndex];
               if (item.isBlank) return null;
+              if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle(item.title.trim().ifBlank('Custom section')),
+                    ..._advancedCustomEntryPreviewWidgets(
+                      item,
+                      body,
+                      titleStyle: body.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                );
+              }
               final bullets = nonEmpty(item.bullets);
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -8337,6 +8414,19 @@ class _TimelineProfilePreview extends StatelessWidget {
               }
               final item = resume.customSections[customIndex];
               if (item.isBlank) return null;
+              if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle(item.title.trim().ifBlank('Custom section')),
+                    ..._advancedCustomEntryPreviewWidgets(
+                      item,
+                      bodyText,
+                      titleStyle: bodyText.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                );
+              }
               final lines = nonEmpty(
                 item.bullets.any((b) => b.trim().isNotEmpty)
                     ? item.bullets
@@ -8757,6 +8847,19 @@ class _SoftHeaderPreview extends StatelessWidget {
               }
               final item = resume.customSections[customIndex];
               if (item.isBlank || _isLanguagesSection(item)) return null;
+              if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle(item.title.trim().ifBlank('Custom section')),
+                    ..._advancedCustomEntryPreviewWidgets(
+                      item,
+                      bodyText,
+                      titleStyle: bodyText.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                );
+              }
               final lines = nonEmpty(
                 item.bullets.any((b) => b.trim().isNotEmpty)
                     ? item.bullets
@@ -9277,6 +9380,22 @@ class _BlueDiagonalPreview extends StatelessWidget {
               }
               final item = resume.customSections[customIndex];
               if (item.isBlank || _isLanguagesSection(item)) return null;
+              if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle(
+                      item.title.trim().ifBlank('Custom section'),
+                      Icons.article_outlined,
+                    ),
+                    ..._advancedCustomEntryPreviewWidgets(
+                      item,
+                      bodyText,
+                      titleStyle: bodyText.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                );
+              }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

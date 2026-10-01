@@ -2556,6 +2556,18 @@ abstract class AppLocalizations {
   /// **'Company'**
   String get company;
 
+  /// No description provided for @period.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get period;
+
+  /// No description provided for @periodHint.
+  ///
+  /// In en, this message translates to:
+  /// **'2024 - Present'**
+  String get periodHint;
+
   /// No description provided for @startDate.
   ///
   /// In en, this message translates to:
@@ -2873,6 +2885,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bullet points'**
   String get bulletPoints;
+
+  /// No description provided for @showContentAsBullets.
+  ///
+  /// In en, this message translates to:
+  /// **'Show as bullet points'**
+  String get showContentAsBullets;
+
+  /// No description provided for @customSectionBulletHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One line per bullet. A new line starts the next bullet.'**
+  String get customSectionBulletHint;
 
   /// No description provided for @workDescriptionLabel.
   ///

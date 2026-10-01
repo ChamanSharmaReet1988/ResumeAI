@@ -313,22 +313,28 @@ List<pw.Widget> _pwCompactProjectWidgets(
 
 List<pw.Widget> _pwCustomSectionEntryWidgets(
   CustomSectionItem item,
-  pw.TextStyle bodyStyle,
-) {
+  pw.TextStyle bodyStyle, {
+  pw.TextStyle? headingStyle,
+}) {
+  final heading = headingStyle ?? bodyStyle.copyWith(fontWeight: pw.FontWeight.bold);
   final entries = item.visibleEntries;
   return [
     for (var i = 0; i < entries.length; i++) ...[
-      if (entries[i].headline.isNotEmpty)
-        pw.Text(
-          entries[i].headline,
-          style: bodyStyle.copyWith(fontWeight: pw.FontWeight.bold),
+      if (entries[i].dateLabel.isNotEmpty)
+        pw.Text(entries[i].dateLabel, style: heading),
+      if (entries[i].nameCompanyLine.isNotEmpty)
+        pw.Padding(
+          padding: pw.EdgeInsets.only(
+            top: entries[i].dateLabel.isNotEmpty ? 4 : 0,
+          ),
+          child: pw.Text(entries[i].nameCompanyLine, style: heading),
         ),
       if (entries[i].summary.trim().isNotEmpty)
         pw.Padding(
-          padding: const pw.EdgeInsets.only(top: 2),
+          padding: const pw.EdgeInsets.only(top: 6),
           child: pw.Text(entries[i].summary.trim(), style: bodyStyle),
         ),
-      if (i != entries.length - 1) pw.SizedBox(height: 8),
+      if (i != entries.length - 1) pw.SizedBox(height: 12),
     ],
   ];
 }
@@ -433,7 +439,18 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
           ),
         ];
   if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
-    return _pwCustomSectionEntryWidgets(item, bodyStyle);
+    final heading = garamond != null && accentStripGaramondBody
+        ? garamondPdfTextStyle(
+            garamond,
+            ResumeTypography.accentStripSubtitleWeight,
+            fontSize: ResumeTypography.accentStripSubsectionPt,
+          )
+        : null;
+    return _pwCustomSectionEntryWidgets(
+      item,
+      bodyStyle,
+      headingStyle: heading,
+    );
   }
   switch (item.layoutMode) {
     case CustomSectionLayoutMode.summary:

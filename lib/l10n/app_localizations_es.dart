@@ -1445,6 +1445,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get company => 'Empresa';
 
   @override
+  String get period => 'Periodo';
+
+  @override
+  String get periodHint => '2024 - Actualidad';
+
+  @override
   String get startDate => 'Fecha de inicio';
 
   @override
@@ -1621,6 +1627,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bulletPoints => 'Viñetas';
+
+  @override
+  String get showContentAsBullets => 'Mostrar como viñetas';
+
+  @override
+  String get customSectionBulletHint =>
+      'Una línea por viñeta. Una línea nueva empieza la siguiente viñeta.';
 
   @override
   String get workDescriptionLabel => 'Descripción';

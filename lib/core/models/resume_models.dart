@@ -1541,6 +1541,7 @@ class CustomSectionEntry {
   const CustomSectionEntry({
     this.name = '',
     this.company = '',
+    this.period = '',
     this.startDate = '',
     this.endDate = '',
     this.summary = '',
@@ -1550,6 +1551,11 @@ class CustomSectionEntry {
 
   final String name;
   final String company;
+
+  /// Free-text span such as `2024 - Present`. Shown where work dates appear.
+  final String period;
+
+  /// Kept so resumes saved with separate dates still load.
   final String startDate;
   final String endDate;
   final String summary;
@@ -1557,9 +1563,28 @@ class CustomSectionEntry {
   bool get isBlank =>
       name.trim().isEmpty &&
       company.trim().isEmpty &&
+      period.trim().isEmpty &&
       startDate.trim().isEmpty &&
       endDate.trim().isEmpty &&
       summary.trim().isEmpty;
+
+  /// The period as typed, or a legacy start/end range.
+  String get dateLabel {
+    final typed = period.trim();
+    if (typed.isNotEmpty) return typed;
+    final start = startDate.trim();
+    final end = endDate.trim();
+    if (start.isEmpty && end.isEmpty) return '';
+    if (start.isEmpty) return end;
+    if (end.isEmpty) return start;
+    return '$start – $end';
+  }
+
+  /// `Name | Company` from whichever parts are set.
+  String get nameCompanyLine => [
+    name.trim(),
+    company.trim(),
+  ].where((part) => part.isNotEmpty).join(' | ');
 
   /// `Name, Company  |  Jan 2020 - Present` from whichever parts are set.
   String get headline {
@@ -1567,7 +1592,7 @@ class CustomSectionEntry {
       name.trim(),
       company.trim(),
     ].where((part) => part.isNotEmpty).join(', ');
-    final dates = educationDateRangeLabel(startDate, endDate);
+    final dates = dateLabel;
     if (who.isEmpty) return dates;
     if (dates.isEmpty) return who;
     return '$who  |  $dates';
@@ -1576,6 +1601,7 @@ class CustomSectionEntry {
   CustomSectionEntry copyWith({
     String? name,
     String? company,
+    String? period,
     String? startDate,
     String? endDate,
     String? summary,
@@ -1583,6 +1609,7 @@ class CustomSectionEntry {
     return CustomSectionEntry(
       name: name ?? this.name,
       company: company ?? this.company,
+      period: period ?? this.period,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       summary: summary ?? this.summary,
@@ -1593,6 +1620,7 @@ class CustomSectionEntry {
     return {
       'name': name,
       'company': company,
+      'period': period,
       'startDate': startDate,
       'endDate': endDate,
       'summary': summary,
@@ -1600,13 +1628,28 @@ class CustomSectionEntry {
   }
 
   factory CustomSectionEntry.fromJson(Map<String, dynamic> json) {
+    final startDate = json['startDate'] as String? ?? '';
+    final endDate = json['endDate'] as String? ?? '';
+    final storedPeriod = json['period'] as String? ?? '';
     return CustomSectionEntry(
       name: json['name'] as String? ?? '',
       company: json['company'] as String? ?? '',
-      startDate: json['startDate'] as String? ?? '',
-      endDate: json['endDate'] as String? ?? '',
+      period: storedPeriod.trim().isNotEmpty
+          ? storedPeriod
+          : _legacyPeriod(startDate, endDate),
+      startDate: startDate,
+      endDate: endDate,
       summary: json['summary'] as String? ?? '',
     );
+  }
+
+  static String _legacyPeriod(String startDate, String endDate) {
+    final start = startDate.trim();
+    final end = endDate.trim();
+    if (start.isEmpty && end.isEmpty) return '';
+    if (start.isEmpty) return end;
+    if (end.isEmpty) return start;
+    return '$start – $end';
   }
 }
 
@@ -1691,8 +1734,10 @@ class CustomSectionItem {
       parsedEntries = [
         CustomSectionEntry(
           company: json['subtitle'] as String? ?? '',
-          startDate: json['startDate'] as String? ?? '',
-          endDate: json['endDate'] as String? ?? '',
+          period: CustomSectionEntry._legacyPeriod(
+            json['startDate'] as String? ?? '',
+            json['endDate'] as String? ?? '',
+          ),
           summary: json['content'] as String? ?? '',
         ),
       ];

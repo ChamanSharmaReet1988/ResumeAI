@@ -1443,6 +1443,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get company => 'Company';
 
   @override
+  String get period => 'Period';
+
+  @override
+  String get periodHint => '2024 - Present';
+
+  @override
   String get startDate => 'Start date';
 
   @override
@@ -1619,6 +1625,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bulletPoints => 'Bullet points';
+
+  @override
+  String get showContentAsBullets => 'Show as bullet points';
+
+  @override
+  String get customSectionBulletHint =>
+      'One line per bullet. A new line starts the next bullet.';
 
   @override
   String get workDescriptionLabel => 'Description';
