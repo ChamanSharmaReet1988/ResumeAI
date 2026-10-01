@@ -212,7 +212,7 @@ void main() {
   });
 
   testWidgets(
-    'preview back with backPopsToHome dismisses editor and content screens',
+    'preview back returns to the cover letter edit screen',
     (tester) async {
       final repository = _FakeCoverLetterRepository();
       final appPreferences = AppPreferences.inMemory(isPremium: true);
@@ -257,9 +257,7 @@ void main() {
                                   CoverLetterEditorViewModel
                                 >.value(
                                   value: viewModel,
-                                  child: const CoverLetterEditorScreen(
-                                    backPopsToHome: true,
-                                  ),
+                                  child: const CoverLetterEditorScreen(),
                                 ),
                           ),
                         );
@@ -314,9 +312,11 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      expect(find.text('Open editor'), findsOneWidget);
-      expect(find.byType(CoverLetterEditorScreen), findsNothing);
-      expect(find.byType(CoverLetterContentScreen), findsNothing);
+      expect(find.byType(CoverLetterContentScreen), findsOneWidget);
+      expect(
+        find.byKey(const Key('preview-cover-letter-button')),
+        findsOneWidget,
+      );
       expect(
         find.byKey(const Key('cover-letter-preview-screen')),
         findsNothing,
@@ -325,7 +325,7 @@ void main() {
   );
 
   testWidgets(
-    'content preview back with backPopsToHome dismisses content screen',
+    'content preview back returns to the cover letter edit screen',
     (tester) async {
       final repository = _FakeCoverLetterRepository();
       final appPreferences = AppPreferences.inMemory(isPremium: true);
@@ -375,9 +375,7 @@ void main() {
                                   CoverLetterEditorViewModel
                                 >.value(
                                   value: viewModel,
-                                  child: const CoverLetterContentScreen(
-                                    backPopsToHome: true,
-                                  ),
+                                  child: const CoverLetterContentScreen(),
                                 ),
                           ),
                         );
@@ -406,8 +404,11 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      expect(find.text('Open content'), findsOneWidget);
-      expect(find.byType(CoverLetterContentScreen), findsNothing);
+      expect(find.byType(CoverLetterContentScreen), findsOneWidget);
+      expect(
+        find.byKey(const Key('preview-cover-letter-button')),
+        findsOneWidget,
+      );
       expect(find.byType(CoverLetterPreviewScreen), findsNothing);
     },
   );

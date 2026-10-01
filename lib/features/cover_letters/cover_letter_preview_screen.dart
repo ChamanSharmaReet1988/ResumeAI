@@ -16,13 +16,7 @@ import '../shared/view_models.dart';
 import '../templates/templates_screen.dart';
 
 class CoverLetterPreviewScreen extends StatefulWidget {
-  const CoverLetterPreviewScreen({super.key, this.backPopsToHome = false});
-
-  /// When `true`, the system/back control pops with `null` so the caller can
-  /// return to the home screen (e.g. home preview, or editor preview where
-  /// the editor routes are popped as well). When `false`, back returns to the
-  /// cover letter content screen underneath.
-  final bool backPopsToHome;
+  const CoverLetterPreviewScreen({super.key});
 
   @override
   State<CoverLetterPreviewScreen> createState() =>
@@ -135,11 +129,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
     if (!navigator.canPop()) {
       return;
     }
-    if (widget.backPopsToHome) {
-      navigator.pop<bool?>(null);
-      return;
-    }
-    navigator.pop(true);
+    navigator.pop();
   }
 
   Future<void> _showCoverLetterStyleSheet() async {

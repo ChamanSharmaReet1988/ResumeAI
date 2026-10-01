@@ -464,7 +464,7 @@ class _AppShellState extends State<AppShell> {
         builder: (_) =>
             ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
               value: viewModel,
-              child: CoverLetterEditorScreen(backPopsToHome: backPopsToHome),
+              child: const CoverLetterEditorScreen(),
             ),
       ),
     );
@@ -492,7 +492,7 @@ class _AppShellState extends State<AppShell> {
         builder: (_) =>
             ChangeNotifierProvider<CoverLetterEditorViewModel>.value(
               value: viewModel,
-              child: CoverLetterContentScreen(backPopsToHome: backPopsToHome),
+              child: const CoverLetterContentScreen(),
             ),
       ),
     );
