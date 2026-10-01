@@ -77,7 +77,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         (entry) =>
             (entry.key.startsWith('work-role-') ||
                 entry.key.startsWith('work-company-') ||
-                entry.key.startsWith('work-bullet-')) &&
+                entry.key.startsWith('work-description-')) &&
             entry.value.hasFocus,
       );
 
@@ -119,7 +119,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
     int fieldRank(String key) {
       if (key.startsWith('project-title-')) return 0;
-      if (key.startsWith('project-bullet-')) return 1;
+      if (key.startsWith('project-description-')) return 1;
       return 99;
     }
 
@@ -1618,13 +1618,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             titleSpacing: 2,
             title: Text(currentTitle, style: titleStyle),
             actions: [
-              TextButton(
-                key: const Key('builder-edit-sections-button'),
-                onPressed: () {
-                  setState(() => _isEditingSections = !_isEditingSections);
-                },
-                child: Text(
-                  _isEditingSections ? context.l10n.done : context.l10n.edit,
+              // Lines the label up with the right edge of the section cards,
+              // which sit 16px in from the screen edge.
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: TextButton(
+                  key: const Key('builder-edit-sections-button'),
+                  onPressed: () {
+                    setState(() => _isEditingSections = !_isEditingSections);
+                  },
+                  child: Text(
+                    _isEditingSections ? context.l10n.done : context.l10n.edit,
+                  ),
                 ),
               ),
             ],
@@ -2228,85 +2233,34 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       ],
                     ),
                     const SizedBox(height: 26),
-                    ...(() {
-                      final displayBullets = List<String>.from(item.bullets);
-                      return <Widget>[
-                        ...displayBullets.asMap().entries.map((bulletEntry) {
-                          final bulletIndex = bulletEntry.key;
-                          final bullet = bulletEntry.value;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _BulletField(
-                              fieldKey: Key('work-bullet-$index-$bulletIndex'),
-                              label: context.l10n.bulletNumber(bulletIndex + 1),
-                              value: bullet,
-                              deleteEnabled: !viewModel.isBusy,
-                              focusNode: _focusNodeForExtendedKeyboardField(
-                                'work-bullet-$index-$bulletIndex',
-                              ),
-                              onChanged: (value) => viewModel
-                                  .updateWorkExperience(index, (current) {
-                                    final updated = List<String>.from(
-                                      current.bullets,
-                                    );
-                                    if (bulletIndex < updated.length) {
-                                      updated[bulletIndex] = value;
-                                    }
-                                    return current.copyWith(
-                                      bullets: updated,
-                                      layoutMode:
-                                          WorkExperienceLayoutMode.bullets,
-                                    );
-                                  }),
-                              onDelete: () {
-                                _confirmRemoval(
-                                  title: context.l10n.removeBulletTitle,
-                                  message:
-                                      context.l10n.removeBulletFromJob,
-                                  onConfirm: () {
-                                    viewModel.updateWorkExperience(
-                                      index,
-                                      (current) {
-                                        final updated = List<String>.from(
-                                          current.bullets,
-                                        );
-                                        if (bulletIndex >= updated.length) {
-                                          return current;
-                                        }
-                                        updated.removeAt(bulletIndex);
-                                        return current.copyWith(
-                                          bullets: updated,
-                                          layoutMode:
-                                              WorkExperienceLayoutMode.bullets,
-                                        );
-                                      },
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 14),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: _buildAddBulletPointButton(
-                            onPressed: viewModel.isBusy
-                                ? null
-                                : () {
-                                    viewModel.updateWorkExperience(
-                                      index,
-                                      (current) => current.copyWith(
-                                        bullets: [...current.bullets, ''],
-                                        layoutMode:
-                                            WorkExperienceLayoutMode.bullets,
-                                      ),
-                                    );
-                                  },
-                          ),
-                        ),
-                      ];
-                    })(),
+                    // One field instead of a list of bullet rows: each line the
+                    // user types is a bullet, and a resume that already has
+                    // bullets (or a legacy description) opens with them here.
+                    _SyncTextField(
+                      key: Key('work-description-$index'),
+                      label: context.l10n.workDescriptionLabel,
+                      hintText: context.l10n.workDescriptionHint,
+                      value: item.bullets.isEmpty
+                          ? item.description
+                          : item.bullets.join('\n'),
+                      textCapitalization: TextCapitalization.sentences,
+                      minLines: 5,
+                      maxLines: null,
+                      fullWidth: true,
+                      focusNode: _focusNodeForExtendedKeyboardField(
+                        'work-description-$index',
+                      ),
+                      onChanged: (value) =>
+                          viewModel.updateWorkExperience(index, (current) {
+                            return current.copyWith(
+                              bullets: value.split('\n'),
+                              // Folded into the bullets above, so it must not
+                              // render a second time through the legacy path.
+                              description: '',
+                              layoutMode: WorkExperienceLayoutMode.bullets,
+                            );
+                          }),
+                    ),
                   ],
                 ),
               ),
@@ -2585,28 +2539,30 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             currentValue: item.endDate,
                           ),
                         ),
+                        // Replaces the old marks/score input. A resume saved
+                        // with a score opens with it here, so nothing is lost.
                         _SyncTextField(
-                          label: context.l10n.marksScore,
-                          value: item.score,
-                          hintText: context.l10n.marksScoreHint,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          suffixIcon: _EducationScorePercentToggle(
-                            active: item.showScoreAsPercent,
-                            onPressed: viewModel.isBusy
-                                ? null
-                                : () => viewModel.updateEducation(
-                                    index,
-                                    (current) => current.copyWith(
-                                      showScoreAsPercent:
-                                          !current.showScoreAsPercent,
-                                    ),
-                                  ),
+                          key: Key('education-description-$index'),
+                          label: context.l10n.educationDescriptionLabel,
+                          hintText: context.l10n.educationDescriptionHint,
+                          value: item.description.trim().isEmpty
+                              ? educationScoreDisplayLabel(item)
+                              : item.description,
+                          textCapitalization: TextCapitalization.sentences,
+                          minLines: 3,
+                          maxLines: null,
+                          fullWidth: true,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'education-description-$index',
                           ),
                           onChanged: (value) => viewModel.updateEducation(
                             index,
-                            (current) => current.copyWith(score: value),
+                            // Folded into the description, so the legacy score
+                            // must not render a second time.
+                            (current) => current.copyWith(
+                              description: value,
+                              score: '',
+                            ),
                           ),
                         ),
                       ],
@@ -3193,66 +3149,36 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                       ],
                     ),
                     const SizedBox(height: 26),
-                    ...item.bullets.asMap().entries.map((bulletEntry) {
-                      final bi = bulletEntry.key;
-                      final text = bulletEntry.value;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _BulletField(
-                          fieldKey: Key('project-bullet-$index-$bi'),
-                          label: context.l10n.bulletNumber(bi + 1),
-                          value: text,
-                          hintText: context.l10n.enterBulletPoint,
-                          deleteEnabled: !viewModel.isBusy,
-                          focusNode: _focusNodeForExtendedKeyboardField(
-                            'project-bullet-$index-$bi',
-                          ),
-                          onChanged: (value) =>
-                              viewModel.updateProject(index, (current) {
-                                final next = List<String>.from(
-                                  current.bullets,
-                                );
-                                if (bi < next.length) {
-                                  next[bi] = value;
-                                }
-                                return current.copyWith(bullets: next);
-                              }),
-                          onDelete: () {
-                            _confirmRemoval(
-                              title: context.l10n.removeBulletTitle,
-                              message:
-                                  context.l10n.removeBulletFromProject,
-                              onConfirm: () {
-                                viewModel.updateProject(index, (current) {
-                                  final next = List<String>.from(
-                                    current.bullets,
-                                  );
-                                  if (bi < next.length) {
-                                    next.removeAt(bi);
-                                  }
-                                  return current.copyWith(bullets: next);
-                                });
-                              },
-                            );
-                          },
-                        ),
-                      );
-                    }),
-                    const SizedBox(height: 14),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: _buildAddBulletPointButton(
-                        onPressed: viewModel.isBusy
-                            ? null
-                            : () {
-                                viewModel.updateProject(
-                                  index,
-                                  (current) => current.copyWith(
-                                    bullets: [...current.bullets, ''],
-                                  ),
-                                );
-                              },
+                    // One field instead of a list of bullet rows: each line is
+                    // a bullet, and a project that already has bullets (or a
+                    // legacy overview/impact) opens with them here.
+                    _SyncTextField(
+                      key: Key('project-description-$index'),
+                      label: context.l10n.projectDescriptionLabel,
+                      hintText: context.l10n.projectDescriptionHint,
+                      value: item.bullets.isEmpty
+                          ? [
+                              item.overview.trim(),
+                              item.impact.trim(),
+                            ].where((part) => part.isNotEmpty).join('\n')
+                          : item.bullets.join('\n'),
+                      textCapitalization: TextCapitalization.sentences,
+                      minLines: 5,
+                      maxLines: null,
+                      fullWidth: true,
+                      focusNode: _focusNodeForExtendedKeyboardField(
+                        'project-description-$index',
                       ),
+                      onChanged: (value) =>
+                          viewModel.updateProject(index, (current) {
+                            return current.copyWith(
+                              bullets: value.split('\n'),
+                              // Folded into the bullets above, so they must not
+                              // render a second time through the legacy path.
+                              overview: '',
+                              impact: '',
+                            );
+                          }),
                     ),
                   ],
                 ),
@@ -3973,7 +3899,7 @@ class _BuilderSectionTile extends StatelessWidget {
                     child: Text(
                       title,
                       style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                          ?.copyWith(fontWeight: FontWeight.w400),
                     ),
                   ),
                   if (isEditing && onDelete != null)
@@ -4639,62 +4565,6 @@ class _BulletField extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _EducationScorePercentToggle extends StatelessWidget {
-  const _EducationScorePercentToggle({
-    required this.active,
-    required this.onPressed,
-  });
-
-  final bool active;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    const toggleSize = 24.0;
-    const borderRadius = 4.0;
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 19),
-      child: Material(
-        color: active
-            ? primary.withValues(alpha: 0.15)
-            : theme.colorScheme.outline.withValues(alpha: 0.1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(borderRadius),
-          splashFactory: NoSplash.splashFactory,
-          highlightColor: primary.withValues(alpha: 0.08),
-          child: Tooltip(
-            message: active
-                ? context.l10n.hidePercentOnResume
-                : context.l10n.showPercentOnResume,
-            child: SizedBox.square(
-              dimension: toggleSize,
-              child: Center(
-                child: Text(
-                  '%',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                    height: 1,
-                    color: active ? primary : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

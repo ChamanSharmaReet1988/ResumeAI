@@ -1601,6 +1601,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bulletPoints => 'Marcadores';
 
   @override
+  String get workDescriptionLabel => 'Descrição';
+
+  @override
+  String get workDescriptionHint =>
+      'Uma linha por conquista. Cada linha vira um marcador no seu currículo.';
+
+  @override
+  String get educationDescriptionLabel => 'Descrição';
+
+  @override
+  String get educationDescriptionHint =>
+      'Disciplinas, conquistas ou notas — uma por linha.';
+
+  @override
+  String get projectDescriptionLabel => 'Descrição';
+
+  @override
+  String get projectDescriptionHint =>
+      'O que você construiu e o impacto — uma linha para cada.';
+
+  @override
   String get customSectionSummaryHint =>
       'Escreva a seção como um parágrafo curto para o seu currículo.';
 

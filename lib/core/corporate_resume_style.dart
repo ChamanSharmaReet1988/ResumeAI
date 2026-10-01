@@ -357,7 +357,7 @@ extension ResumeCorporateStyleX on ResumeData {
     return corporateColorPreset.headerColor;
   }
 
-  Color get headerSidebarTitleColor => const Color(0xFF111827);
+  Color get headerSidebarTitleColor => const Color(0xFF000000);
 
   Color get headerSidebarMutedColor => const Color(0xFF5F656C);
 

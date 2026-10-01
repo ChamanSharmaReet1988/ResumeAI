@@ -1259,6 +1259,7 @@ class EducationItem {
     required this.degree,
     required this.startDate,
     required this.endDate,
+    this.description = '',
     this.score = '',
     this.showScoreAsPercent = false,
   });
@@ -1268,6 +1269,7 @@ class EducationItem {
       degree = '',
       startDate = '',
       endDate = '',
+      description = '',
       score = '',
       showScoreAsPercent = false;
 
@@ -1292,6 +1294,7 @@ class EducationItem {
       degree: json['degree'] as String? ?? '',
       startDate: json['startDate'] as String? ?? '',
       endDate: json['endDate'] as String? ?? (json['year'] as String? ?? ''),
+      description: json['description'] as String? ?? '',
       score: score,
       showScoreAsPercent: showScoreAsPercent,
     );
@@ -1301,6 +1304,10 @@ class EducationItem {
   final String degree;
   final String startDate;
   final String endDate;
+
+  /// Free text under the degree. Replaces the score field the editor used to
+  /// show; [score] is still read so older resumes keep their value.
+  final String description;
   final String score;
   final bool showScoreAsPercent;
 
@@ -1309,6 +1316,7 @@ class EducationItem {
       degree.trim().isEmpty &&
       startDate.trim().isEmpty &&
       endDate.trim().isEmpty &&
+      description.trim().isEmpty &&
       score.trim().isEmpty;
 
   EducationItem copyWith({
@@ -1316,6 +1324,7 @@ class EducationItem {
     String? degree,
     String? startDate,
     String? endDate,
+    String? description,
     String? score,
     bool? showScoreAsPercent,
   }) {
@@ -1324,6 +1333,7 @@ class EducationItem {
       degree: degree ?? this.degree,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      description: description ?? this.description,
       score: score ?? this.score,
       showScoreAsPercent: showScoreAsPercent ?? this.showScoreAsPercent,
     );
@@ -1335,6 +1345,7 @@ class EducationItem {
       'degree': degree,
       'startDate': startDate,
       'endDate': endDate,
+      'description': description,
       'score': score,
       'showScoreAsPercent': showScoreAsPercent,
     };
@@ -1351,6 +1362,16 @@ String educationScoreDisplayLabel(EducationItem item) {
     return '$base%';
   }
   return base;
+}
+
+/// The free-text line under a degree. Prefers the description the editor now
+/// captures, and falls back to the score older resumes still carry.
+String educationDetailLine(EducationItem item) {
+  final description = item.description.trim();
+  if (description.isNotEmpty) {
+    return description;
+  }
+  return educationScoreDisplayLabel(item);
 }
 
 /// `2014 - 2018`, or a single year if only one side is set (matches template card).

@@ -1600,6 +1600,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bulletPoints => 'Bullet points';
 
   @override
+  String get workDescriptionLabel => 'Description';
+
+  @override
+  String get workDescriptionHint =>
+      'One line per achievement. Each line becomes a bullet on your resume.';
+
+  @override
+  String get educationDescriptionLabel => 'Description';
+
+  @override
+  String get educationDescriptionHint =>
+      'Coursework, achievements or grades — one per line.';
+
+  @override
+  String get projectDescriptionLabel => 'Description';
+
+  @override
+  String get projectDescriptionHint =>
+      'What you built and the impact — one line each.';
+
+  @override
   String get customSectionSummaryHint =>
       'Write the section as a short paragraph for your resume.';
 

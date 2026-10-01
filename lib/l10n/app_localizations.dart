@@ -2832,6 +2832,42 @@ abstract class AppLocalizations {
   /// **'Bullet points'**
   String get bulletPoints;
 
+  /// No description provided for @workDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get workDescriptionLabel;
+
+  /// No description provided for @workDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One line per achievement. Each line becomes a bullet on your resume.'**
+  String get workDescriptionHint;
+
+  /// No description provided for @educationDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get educationDescriptionLabel;
+
+  /// No description provided for @educationDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Coursework, achievements or grades — one per line.'**
+  String get educationDescriptionHint;
+
+  /// No description provided for @projectDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get projectDescriptionLabel;
+
+  /// No description provided for @projectDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What you built and the impact — one line each.'**
+  String get projectDescriptionHint;
+
   /// No description provided for @customSectionSummaryHint.
   ///
   /// In en, this message translates to:

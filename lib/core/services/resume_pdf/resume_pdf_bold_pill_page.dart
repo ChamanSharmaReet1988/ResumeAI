@@ -61,7 +61,8 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
     final accent = _pdfRgb(resume.boldPillAccentColor);
     final onAccent = _pdfRgb(resume.boldPillOnAccentColor);
     final titleColor = _pdfRgb(resume.boldPillTitleColor);
-    final mutedColor = _pdfRgb(resume.boldPillMutedColor);
+    // Body copy is black on every template; greys stay for dates and rails.
+    final bodyInk = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     // Body copy renders at the slider size; only dated/rail lines step down.
     final detailPt = bodyPt;
@@ -87,7 +88,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
     final bodyStyle = style(
       ResumeFontWeight.w400,
       detailPt,
-      mutedColor,
+      bodyInk,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt),
     );
     final sideItemStyle = style(
@@ -629,11 +630,11 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                                         item.degree.trim(),
                                         style: bodyStyle,
                                       ),
-                                    if (educationScoreDisplayLabel(
+                                    if (educationDetailLine(
                                       item,
                                     ).isNotEmpty)
                                       pw.Text(
-                                        educationScoreDisplayLabel(item),
+                                        educationDetailLine(item),
                                         style: bodyStyle,
                                       ),
                                   ],

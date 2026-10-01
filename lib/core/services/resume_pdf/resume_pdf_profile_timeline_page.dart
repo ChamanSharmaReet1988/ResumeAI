@@ -52,6 +52,8 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
     final accent = _pdfRgb(resume.profileTimelineAccentColor);
     final titleColor = _pdfRgb(resume.profileTimelineTitleColor);
     final mutedColor = _pdfRgb(resume.profileTimelineMutedColor);
+    // Body copy is black on every template; greys stay for dates and rails.
+    final bodyInk = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     final ruleColor = _pdfRgb(resume.profileTimelineRuleColor);
     final chipColor = _pdfRgb(resume.profileTimelineChipColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
@@ -88,7 +90,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
     final bodyStyle = style(
       ResumeFontWeight.w400,
       detailPt,
-      mutedColor,
+      bodyInk,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt),
     );
     final chipStyle = garamondPdfTextStyle(
@@ -336,7 +338,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
         if (dateLabel.isNotEmpty) {
           h += lineHeight;
         }
-        final scoreLabel = educationScoreDisplayLabel(item);
+        final scoreLabel = educationDetailLine(item);
         if (scoreLabel.isNotEmpty) {
           h += lineHeight;
         }

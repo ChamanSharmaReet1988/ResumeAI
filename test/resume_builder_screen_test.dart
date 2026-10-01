@@ -334,7 +334,9 @@ void main() {
     expect(find.text('Beta Institute'), findsWidgets);
   });
 
-  testWidgets('projects show bullet points input only', (tester) async {
+  testWidgets('projects show a title and one description field', (
+    tester,
+  ) async {
     viewModel.setStep(4);
 
     await pumpBuilder(tester);
@@ -345,7 +347,8 @@ void main() {
     expect(find.text('Overview'), findsNothing);
     expect(find.text('Tools & Technologies'), findsNothing);
     expect(find.text('Bullet 1'), findsNothing);
-    expect(find.text('Add bullet point'), findsOneWidget);
+    expect(find.text('Add bullet point'), findsNothing);
+    expect(find.byKey(const Key('project-description-0')), findsOneWidget);
   });
 
   testWidgets(
@@ -878,7 +881,7 @@ void main() {
     expect(repository.savedResumes.last.fullName, 'Auto Saved Name');
   });
 
-  testWidgets('education score % toggle updates resume JSON', (tester) async {
+  testWidgets('education description replaces the score field', (tester) async {
     viewModel.setStep(2);
     viewModel.updateResume(
       (resume) => resume.copyWith(
@@ -889,27 +892,35 @@ void main() {
             startDate: '2020',
             endDate: '2024',
             score: '92',
+            showScoreAsPercent: true,
           ),
         ],
       ),
     );
 
-    await pumpBuilder(tester);
+    await pumpBuilder(tester, size: const Size(520, 1400));
     await openSection(tester, 2);
 
-    expect(viewModel.resume.education.first.showScoreAsPercent, isFalse);
+    // The marks/score input and its % toggle are gone.
+    expect(find.text('Marks / score'), findsNothing);
+    expect(find.text('%'), findsNothing);
 
-    await tester.tap(find.text('%'));
-    await tester.pumpAndSettle();
+    // A resume saved with a score opens with it in the description field.
+    final field = find.byKey(const Key('education-description-0'));
+    expect(field, findsOneWidget);
+    final input = find.descendant(of: field, matching: find.byType(TextField));
+    expect(tester.widget<TextField>(input).controller?.text, '92%');
 
-    expect(viewModel.resume.education.first.showScoreAsPercent, isTrue);
-    expect(educationScoreDisplayLabel(viewModel.resume.education.first), '92%');
+    await tester.enterText(input, 'First class honours');
+    await tester.pump(const Duration(milliseconds: 300));
 
-    await tester.tap(find.text('%'));
-    await tester.pumpAndSettle();
+    final saved = viewModel.resume.education.first;
+    expect(saved.description, 'First class honours');
+    expect(saved.score, '', reason: 'the legacy score must not render twice');
+    expect(educationDetailLine(saved), 'First class honours');
 
-    expect(viewModel.resume.education.first.showScoreAsPercent, isFalse);
-    expect(educationScoreDisplayLabel(viewModel.resume.education.first), '92');
+    // Lets the field's scroll-into-view timer finish before the test ends.
+    await tester.pump(const Duration(milliseconds: 300));
   });
 
   testWidgets('added skills show one row with an efficiency slider', (

@@ -68,6 +68,8 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
     final accent = _pdfRgb(resume.softHeaderAccentColor);
     final titleColor = _pdfRgb(resume.softHeaderTitleColor);
     final mutedColor = _pdfRgb(resume.softHeaderMutedColor);
+    // Body copy is black on every template; greys stay for dates and rails.
+    final bodyInk = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     final ruleColor = _pdfRgb(resume.softHeaderRuleColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     // Body copy renders at the slider size; only dated/rail lines step down.
@@ -101,7 +103,7 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
     final bodyStyle = style(
       ResumeFontWeight.w400,
       detailPt,
-      mutedColor,
+      bodyInk,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt),
     );
 
@@ -267,7 +269,7 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
       final dateLabel =
           educationDateRangeLabel(item.startDate, item.endDate);
       final degree = item.degree.trim();
-      final score = item.score.trim();
+      final score = educationDetailLine(item);
       var h = 9.0;
       if (dateLabel.isNotEmpty) h += detailPt * lineH;
       h += detailPt * lineH + 3;

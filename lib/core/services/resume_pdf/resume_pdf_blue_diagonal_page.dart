@@ -66,6 +66,8 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
     final columnColor = _pdfRgb(resume.blueDiagonalColumnColor);
     final titleColor = _pdfRgb(resume.blueDiagonalTitleColor);
     final mutedColor = _pdfRgb(resume.blueDiagonalMutedColor);
+    // Body copy is black on every template; greys stay for dates and rails.
+    final bodyInk = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     // Body copy renders at the slider size; only dated/rail lines step down.
     final detailPt = bodyPt;
@@ -92,7 +94,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
     final bodyStyle = style(
       ResumeFontWeight.w400,
       detailPt,
-      mutedColor,
+      bodyInk,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt),
     );
 
@@ -310,7 +312,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
       final dateLabel =
           educationDateRangeLabel(item.startDate, item.endDate);
       final degree = item.degree.trim();
-      final score = item.score.trim();
+      final score = educationDetailLine(item);
       var h = 9.0;
       if (dateLabel.isNotEmpty) h += detailPt * lineH;
       h += detailPt * lineH + 3;

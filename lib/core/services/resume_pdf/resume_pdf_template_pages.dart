@@ -1973,10 +1973,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
             style: pw.TextStyle(color: mutedColor, fontSize: bodyPt),
           ),
         ],
-        if (educationScoreDisplayLabel(item).isNotEmpty) ...[
+        if (educationDetailLine(item).isNotEmpty) ...[
           pw.SizedBox(height: 3),
           pw.Text(
-            educationScoreDisplayLabel(item),
+            educationDetailLine(item),
             style: pw.TextStyle(color: mutedColor, fontSize: bodyPt - 0.2),
           ),
         ],

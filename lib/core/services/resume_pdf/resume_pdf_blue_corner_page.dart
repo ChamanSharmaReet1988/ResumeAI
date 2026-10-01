@@ -56,6 +56,8 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
     final accent = _pdfRgb(resume.blueCornerAccentColor);
     final titleColor = _pdfRgb(resume.blueCornerTitleColor);
     final mutedColor = _pdfRgb(resume.blueCornerMutedColor);
+    // Body copy is black on every template; greys stay for dates and rails.
+    final bodyInk = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     final ruleColor = _pdfRgb(resume.blueCornerRuleColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     // Body copy renders at the slider size; only dated/rail lines step down.
@@ -88,7 +90,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
     final bodyStyle = style(
       ResumeFontWeight.w400,
       detailPt,
-      mutedColor,
+      bodyInk,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt),
     );
 
@@ -631,8 +633,8 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                           items[i].endDate,
                         ),
                         details: [
-                          if (educationScoreDisplayLabel(items[i]).isNotEmpty)
-                            educationScoreDisplayLabel(items[i]),
+                          if (educationDetailLine(items[i]).isNotEmpty)
+                            educationDetailLine(items[i]),
                         ],
                         last: i == items.length - 1,
                       ),

@@ -176,6 +176,8 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
     final sidebarColor = _pdfRgb(resume.timelineProfileSidebarColor);
     final titleColor = _pdfRgb(resume.timelineProfileTitleColor);
     final mutedColor = _pdfRgb(resume.timelineProfileMutedColor);
+    // Body copy is black on every template; greys stay for dates and rails.
+    final bodyInk = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     final ruleColor = _pdfRgb(resume.timelineProfileRuleColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     // Body copy renders at the slider size; only dated/rail lines step down.
@@ -218,7 +220,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
     final bodyStyle = style(
       ResumeFontWeight.w400,
       detailPt,
-      mutedColor,
+      bodyInk,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt),
     );
 
@@ -635,9 +637,9 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                           ),
                           subtitle: item.institution.trim(),
                           details: [
-                            if (item.score.trim().isNotEmpty)
+                            if (educationDetailLine(item).isNotEmpty)
                               pw.Text(
-                                item.score.trim(),
+                                educationDetailLine(item),
                                 style: entryTitleStyle,
                               ),
                           ],

@@ -24,6 +24,8 @@ import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
 import 'platform_monetization.dart';
 import 'profile_image_storage.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart' as sfpdf;
+
 import 'resume_docx_exporter.dart';
 import 'resume_pdf/calibri_pdf_fonts.dart' hide darkHeaderInitialsPdfStyle;
 import 'resume_pdf/garamond_pdf_fonts.dart';
@@ -1556,6 +1558,13 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
 
   // Rail pages grow on demand: a fixed pair silently dropped whatever did not
   // fit on the second page.
+  final railFit = _classicSidebarRailFit(
+    resume,
+    bodyPt,
+    sectionTitlePt,
+    pageFormat: pageFormat,
+  );
+
   final pages = <List<_ClassicSidebarPageSection>>[
     <_ClassicSidebarPageSection>[],
   ];
@@ -1581,7 +1590,8 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
       final pageSections = pages[pageIndex];
       final sectionOverhead =
           (pageSections.isNotEmpty ? _classicSidebarInterSectionHeight() : 0) +
-          _classicSidebarSectionTitleHeight(sectionTitlePt);
+          _classicSidebarSectionTitleHeight(sectionTitlePt) +
+          railFit.titleGap;
       if (availableHeights[pageIndex] <=
           sectionOverhead + _classicSidebarMinItemHeight(bodyPt)) {
         pageIndex++;
@@ -1591,17 +1601,18 @@ List<_ClassicSidebarPageSlice> _classicSidebarPageSlices({
       if (pageSections.isNotEmpty) {
         availableHeights[pageIndex] -= _classicSidebarInterSectionHeight();
       }
-      availableHeights[pageIndex] -= _classicSidebarSectionTitleHeight(
-        sectionTitlePt,
-      );
+      // The heading gap is drawn too; not reserving it let the last item
+      // overflow the panel and get clipped at the page edge.
+      availableHeights[pageIndex] -=
+          _classicSidebarSectionTitleHeight(sectionTitlePt) + railFit.titleGap;
 
       final pageItems = <String>[];
       while (itemIndex < section.items.length) {
         final item = section.items[itemIndex];
         final itemHeight = _classicSidebarEstimatedItemHeight(
           item,
-          bodyPt,
-          itemBottom: _classicSidebarRailItemBottom(resume, section.type),
+          railFit.fontPt,
+          itemBottom: _classicSidebarRailItemBottom(railFit, section.type),
         );
         if (pageItems.isNotEmpty && availableHeights[pageIndex] < itemHeight) {
           break;
@@ -1661,37 +1672,101 @@ double _classicSidebarInterSectionHeight() =>
 double _classicSidebarSectionTitleHeight(double sectionTitlePt) =>
     sectionTitlePt + 8;
 
-/// Items the rail must fit across its pages (skills plus languages).
-int _classicSidebarRailItemCount(ResumeData resume) =>
-    (resume.showCategorisedSkills
-            ? _classicSidebarCategorisedSkillItems(resume)
-            : resume.skillsLinesForDisplay)
-        .length +
-    _classicSidebarLanguageLines(resume).length;
-
-/// Gap under each rail item. It tightens as the list grows so a long skills
-/// list packs into the pages the body already needs instead of pushing a
-/// sidebar-only page past the end of the resume.
-double _classicSidebarRailItemBottom(
+/// Rail type that actually fits. Returns the loosest size and spacing whose
+/// skills and languages all sit inside the first page's rail, so the rail
+/// never asks for a page the body does not already fill. Slicing and drawing
+/// both call this with the same inputs, so their measurements cannot drift.
+({double fontPt, double skillBottom, double languageBottom, double titleGap})
+_classicSidebarRailFit(
   ResumeData resume,
-  _ClassicSidebarSectionType type,
-) {
-  final base = type == _ClassicSidebarSectionType.skills ? 6.0 : 8.0;
-  final count = _classicSidebarRailItemCount(resume);
-  if (count <= 20) {
-    return base;
+  double bodyPt,
+  double sectionTitlePt, {
+  PdfPageFormat pageFormat = PdfPageFormat.a4,
+}) {
+  final skillItems = resume.showCategorisedSkills
+      ? _classicSidebarCategorisedSkillItems(resume)
+      : resume.skillsLinesForDisplay;
+  final languageItems = _classicSidebarLanguageLines(resume);
+  final sectionCount =
+      (skillItems.isEmpty ? 0 : 1) + (languageItems.isEmpty ? 0 : 1);
+  final available =
+      _classicSidebarAvailablePanelHeight(pageFormat) -
+      _classicSidebarFirstPageHeaderHeight() -
+      _classicSidebarRailSafetyMarginPt;
+
+  double requiredHeight(
+    ({double fontPt, double skillBottom, double languageBottom, double titleGap})
+    fit,
+  ) {
+    var total =
+        sectionCount *
+        (_classicSidebarSectionTitleHeight(sectionTitlePt) + fit.titleGap);
+    if (sectionCount > 1) {
+      total += _classicSidebarInterSectionHeight();
+    }
+    for (final item in skillItems) {
+      total += _classicSidebarEstimatedItemHeight(
+        item,
+        fit.fontPt,
+        itemBottom: fit.skillBottom,
+      );
+    }
+    for (final item in languageItems) {
+      total += _classicSidebarEstimatedItemHeight(
+        item,
+        fit.fontPt,
+        itemBottom: fit.languageBottom,
+      );
+    }
+    return total;
   }
-  return count <= 34 ? base - 3 : base - 4.5;
+
+  // Loosest first: normal resumes keep the original rail, long lists tighten
+  // spacing before they give up any type size, and the rail never drops below
+  // [_classicSidebarRailMinFontPt].
+  const steps = <({double scale, double skill, double language, double gap})>[
+    (scale: 1.00, skill: 6.0, language: 8.0, gap: 14.0),
+    (scale: 1.00, skill: 3.0, language: 5.0, gap: 8.0),
+    (scale: 1.00, skill: 1.5, language: 3.5, gap: 6.0),
+    (scale: 0.94, skill: 1.5, language: 3.0, gap: 6.0),
+    (scale: 0.88, skill: 1.2, language: 2.5, gap: 5.0),
+    (scale: 0.82, skill: 1.0, language: 2.0, gap: 4.0),
+    (scale: 0.76, skill: 0.8, language: 1.5, gap: 4.0),
+    (scale: 0.75, skill: 0.4, language: 0.8, gap: 3.0),
+  ];
+
+  ({double fontPt, double skillBottom, double languageBottom, double titleGap})
+  fitFor(({double scale, double skill, double language, double gap}) step) => (
+    fontPt: math.max(_classicSidebarRailMinFontPt, bodyPt * step.scale),
+    skillBottom: step.skill,
+    languageBottom: step.language,
+    titleGap: step.gap,
+  );
+
+  for (final step in steps) {
+    final candidate = fitFor(step);
+    if (requiredHeight(candidate) <= available) {
+      return candidate;
+    }
+  }
+  return fitFor(steps.last);
 }
 
-/// Gap under a rail section heading, tightened alongside the item spacing.
-double _classicSidebarRailTitleGap(
-  ResumeData resume,
+/// The rail is secondary text, but it still has to be readable in print.
+const double _classicSidebarRailMinFontPt = 9.0;
+
+/// Slack kept at the foot of the rail so estimate rounding cannot push the
+/// last line against the page edge, where it would be clipped away.
+const double _classicSidebarRailSafetyMarginPt = 14.0;
+
+/// Per-item bottom gap for a rail section, from [_classicSidebarRailFit].
+double _classicSidebarRailItemBottom(
+  ({double fontPt, double skillBottom, double languageBottom, double titleGap})
+  fit,
   _ClassicSidebarSectionType type,
-) {
-  final base = type == _ClassicSidebarSectionType.skills ? 14.0 : 8.0;
-  return _classicSidebarRailItemCount(resume) <= 20 ? base : base - 6;
-}
+) => type == _ClassicSidebarSectionType.skills
+    ? fit.skillBottom
+    : fit.languageBottom;
 
 double _classicSidebarMinItemHeight(double bodyPt) =>
     bodyPt * ResumeTypography.classicSidebarBodyLineHeight;
@@ -1825,6 +1900,8 @@ pw.Widget _classicSidebarPanel({
   final avatarInitialsPt = ResumeTypography.classicSidebarAvatarInitialsFontPt(
     resume.classicSidebarScaledPt(ResumeTypography.classicSidebarNamePt),
   );
+  // Same inputs as the slicing pass, so the drawn rail matches what was measured.
+  final railFit = _classicSidebarRailFit(resume, bodyPt, sectionTitlePt);
   return pw.SizedBox(
     width: _classicSidebarContentWidthPt,
     child: pw.Column(
@@ -1895,12 +1972,7 @@ pw.Widget _classicSidebarPanel({
                             color: titleColor,
                           ),
                   ),
-                  pw.SizedBox(
-                    height: _classicSidebarRailTitleGap(
-                      resume,
-                      _ClassicSidebarSectionType.skills,
-                    ),
-                  ),
+                  pw.SizedBox(height: railFit.titleGap),
                 ],
                 // Only the categories allotted to this rail page: rendering
                 // every group here repeated the whole skills block on page 2.
@@ -1910,19 +1982,17 @@ pw.Widget _classicSidebarPanel({
                       ? garamondPdfTextStyle(
                           garamond,
                           ResumeTypography.classicSidebarBodyWeight,
-                          fontSize: bodyPt,
+                          fontSize: railFit.fontPt,
                           color: titleColor,
                         )
                       : pw.TextStyle(
-                          fontSize: bodyPt,
+                          fontSize: railFit.fontPt,
                           color: titleColor,
                         ),
                   categoryStyle: _skillCategorySubtitlePdfStyle(
                     garamond,
                     weight: ResumeTypography.classicSidebarSubtitleWeight,
-                    fontSize: resume.classicSidebarScaledPt(
-                      ResumeTypography.classicSidebarSubtitlePt,
-                    ),
+                    fontSize: railFit.fontPt,
                     color: titleColor,
                   ),
                 ),
@@ -1939,7 +2009,7 @@ pw.Widget _classicSidebarPanel({
               titleColor: titleColor,
               bulletColor: accentColor,
               textColor: titleColor,
-              fontSize: bodyPt,
+              fontSize: railFit.fontPt,
               sectionTitlePt: sectionTitlePt,
               garamond: garamond,
               textWeight: ResumeTypography.classicSidebarBodyWeight,
@@ -1947,13 +2017,10 @@ pw.Widget _classicSidebarPanel({
               highlightColor: highlightColor,
               showTitle: pageSlice.sections[index].showSectionTitle,
               itemBottom: _classicSidebarRailItemBottom(
-                resume,
+                railFit,
                 pageSlice.sections[index].type,
               ),
-              titleBottomGap: _classicSidebarRailTitleGap(
-                resume,
-                pageSlice.sections[index].type,
-              ),
+              titleBottomGap: railFit.titleGap,
             ),
         ],
       ],
@@ -7336,6 +7403,7 @@ class LocalAiResumeService {
           item.degree,
           item.startDate,
           item.endDate,
+          item.description,
           item.score,
         ],
       ),
@@ -8308,7 +8376,47 @@ class ResumePdfService {
     return _ensureGaramondPdfFonts();
   }
 
-  Future<Uint8List> buildPdf(ResumeData resume) async {
+  /// Removes trailing pages that carry no text.
+  ///
+  /// A section's closing rule or spacing can be pushed past the bottom of a
+  /// full page, and `MultiPage` then opens another page to hold it — the
+  /// reader sees an empty sheet with only the template's background on it.
+  /// Pages the sidebar genuinely needs still hold their own text, so they are
+  /// never touched.
+  Uint8List _withoutBlankTrailingPages(Uint8List bytes) {
+    sfpdf.PdfDocument? document;
+    try {
+      document = sfpdf.PdfDocument(inputBytes: bytes);
+      var removed = false;
+      while (document.pages.count > 1) {
+        final last = document.pages.count - 1;
+        final text = sfpdf.PdfTextExtractor(document)
+            .extractText(startPageIndex: last, endPageIndex: last)
+            .trim();
+        if (text.isNotEmpty) {
+          break;
+        }
+        document.pages.removeAt(last);
+        removed = true;
+      }
+      if (!removed) {
+        return bytes;
+      }
+      return Uint8List.fromList(document.saveSync());
+    } catch (_) {
+      // Never fail an export over this; the untrimmed document is still valid.
+      return bytes;
+    } finally {
+      document?.dispose();
+    }
+  }
+
+  /// Builds the resume PDF, then drops any trailing page the layout left
+  /// blank (see [_withoutBlankTrailingPages]).
+  Future<Uint8List> buildPdf(ResumeData resume) async =>
+      _withoutBlankTrailingPages(await _buildPdfPages(resume));
+
+  Future<Uint8List> _buildPdfPages(ResumeData resume) async {
     final profileImagePath = await ProfileImageStorage.resolvePath(
       resume.profileImagePath,
       resume.id,
@@ -8614,7 +8722,22 @@ class ResumePdfService {
     return document.save();
   }
 
+  /// As [buildPdf], for the analyser's highlighted preview.
   Future<Uint8List> buildHighlightedResumePdf({
+    required ResumeData resume,
+    bool highlightSummary = false,
+    Set<String> highlightedSkills = const {},
+    Map<int, Set<String>> highlightedBulletsByExperience = const {},
+  }) async => _withoutBlankTrailingPages(
+    await _buildHighlightedResumePdfPages(
+      resume: resume,
+      highlightSummary: highlightSummary,
+      highlightedSkills: highlightedSkills,
+      highlightedBulletsByExperience: highlightedBulletsByExperience,
+    ),
+  );
+
+  Future<Uint8List> _buildHighlightedResumePdfPages({
     required ResumeData resume,
     bool highlightSummary = false,
     Set<String> highlightedSkills = const {},

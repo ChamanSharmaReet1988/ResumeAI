@@ -799,6 +799,12 @@
   "customSectionProjectsSubtitle": "Add entries with a title and bullet points, like the Projects section.",
   "removeSection": "Remove section",
   "bulletPoints": "Bullet points",
+  "workDescriptionLabel": "Description",
+  "workDescriptionHint": "One line per achievement. Each line becomes a bullet on your resume.",
+  "educationDescriptionLabel": "Description",
+  "educationDescriptionHint": "Coursework, achievements or grades — one per line.",
+  "projectDescriptionLabel": "Description",
+  "projectDescriptionHint": "What you built and the impact — one line each.",
   "customSectionSummaryHint": "Write the section as a short paragraph for your resume.",
   "entryNumber": "Entry {number}",
   "@entryNumber": {

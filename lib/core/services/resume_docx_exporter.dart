@@ -187,10 +187,8 @@ class ResumeDocxExporter {
             final meta = [
               if (_dateRange(item.startDate, item.endDate).isNotEmpty)
                 _dateRange(item.startDate, item.endDate),
-              if (item.score.trim().isNotEmpty)
-                item.showScoreAsPercent
-                    ? 'Score: ${item.score.trim()}%'
-                    : 'Score: ${item.score.trim()}',
+              if (educationDetailLine(item).isNotEmpty)
+                educationDetailLine(item),
             ].where((part) => part.isNotEmpty).join(' · ');
             if (meta.isNotEmpty) {
               buffer.write(

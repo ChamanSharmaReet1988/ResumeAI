@@ -1597,6 +1597,27 @@ class AppLocalizationsId extends AppLocalizations {
   String get bulletPoints => 'Poin';
 
   @override
+  String get workDescriptionLabel => 'Deskripsi';
+
+  @override
+  String get workDescriptionHint =>
+      'Satu baris per pencapaian. Setiap baris menjadi poin di resume Anda.';
+
+  @override
+  String get educationDescriptionLabel => 'Deskripsi';
+
+  @override
+  String get educationDescriptionHint =>
+      'Mata kuliah, pencapaian, atau nilai — satu per baris.';
+
+  @override
+  String get projectDescriptionLabel => 'Deskripsi';
+
+  @override
+  String get projectDescriptionHint =>
+      'Apa yang Anda bangun dan dampaknya — satu baris masing-masing.';
+
+  @override
   String get customSectionSummaryHint =>
       'Tulis bagian ini sebagai paragraf singkat untuk resume Anda.';
 

@@ -57,7 +57,8 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
     final accent = _pdfRgb(resume.charcoalCurveAccentColor);
     final onAccent = _pdfRgb(resume.charcoalCurveOnAccentColor);
     final titleColor = _pdfRgb(resume.charcoalCurveTitleColor);
-    final mutedColor = _pdfRgb(resume.charcoalCurveMutedColor);
+    // Body copy is black on every template; greys stay for dates and rails.
+    final bodyInk = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     final ruleColor = _pdfRgb(resume.charcoalCurveRuleColor);
     final trackColor = _pdfRgb(resume.charcoalCurveTrackColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
@@ -84,7 +85,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
     final bodyStyle = style(
       ResumeFontWeight.w400,
       detailPt,
-      mutedColor,
+      bodyInk,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt),
     );
     final railHeadingStyle = style(ResumeFontWeight.w700, 12.5, onAccent);
@@ -201,37 +202,31 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
           .round()
           .clamp(8, 100);
       final label = pw.Text(skill, style: entryTitleStyle);
+      // The channel is always drawn at full width with the rating laid over
+      // it. Splitting the bar into filled/unfilled halves meant the unfilled
+      // half disappeared whenever the row was narrow or the rating was full,
+      // so the bar read as a solid line with nothing behind it.
       final track = pw.SizedBox(
         width: barWidth,
-        child: pw.Row(
+        height: 7,
+        child: pw.Stack(
           children: [
-            pw.Expanded(
-              flex: filled,
-              child: pw.Container(
-                height: 7,
-                decoration: pw.BoxDecoration(
-                  color: accent,
-                  borderRadius: const pw.BorderRadius.only(
-                    topLeft: pw.Radius.circular(3.5),
-                    bottomLeft: pw.Radius.circular(3.5),
-                  ),
-                ),
+            pw.Container(
+              width: barWidth,
+              height: 7,
+              decoration: pw.BoxDecoration(
+                color: trackColor,
+                borderRadius: pw.BorderRadius.circular(3.5),
               ),
             ),
-            if (filled < 100)
-              pw.Expanded(
-                flex: 100 - filled,
-                child: pw.Container(
-                  height: 7,
-                  decoration: pw.BoxDecoration(
-                    color: trackColor,
-                    borderRadius: const pw.BorderRadius.only(
-                      topRight: pw.Radius.circular(3.5),
-                      bottomRight: pw.Radius.circular(3.5),
-                    ),
-                  ),
-                ),
+            pw.Container(
+              width: barWidth * filled / 100,
+              height: 7,
+              decoration: pw.BoxDecoration(
+                color: accent,
+                borderRadius: pw.BorderRadius.circular(3.5),
               ),
+            ),
           ],
         ),
       );
@@ -576,12 +571,12 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                               item.institution.trim().ifEmpty('Institution'),
                               style: entryTitleStyle,
                             ),
-                            if (educationScoreDisplayLabel(
+                            if (educationDetailLine(
                               item,
                             ).isNotEmpty) ...[
                               pw.SizedBox(height: 2),
                               pw.Text(
-                                educationScoreDisplayLabel(item),
+                                educationDetailLine(item),
                                 style: bodyStyle,
                               ),
                             ],

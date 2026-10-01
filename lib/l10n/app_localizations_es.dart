@@ -1602,6 +1602,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bulletPoints => 'Viñetas';
 
   @override
+  String get workDescriptionLabel => 'Descripción';
+
+  @override
+  String get workDescriptionHint =>
+      'Una línea por logro. Cada línea se convierte en una viñeta en tu currículum.';
+
+  @override
+  String get educationDescriptionLabel => 'Descripción';
+
+  @override
+  String get educationDescriptionHint =>
+      'Asignaturas, logros o notas: uno por línea.';
+
+  @override
+  String get projectDescriptionLabel => 'Descripción';
+
+  @override
+  String get projectDescriptionHint =>
+      'Lo que construiste y su impacto: una línea para cada uno.';
+
+  @override
   String get customSectionSummaryHint =>
       'Escribe la sección como un párrafo corto para tu currículum.';
 

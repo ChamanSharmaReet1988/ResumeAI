@@ -4574,12 +4574,12 @@ class _AtsModernFlowPreview extends StatelessWidget {
                                     maxLines: 3,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (educationScoreDisplayLabel(
+                                  if (educationDetailLine(
                                     item,
                                   ).isNotEmpty) ...[
                                     const SizedBox(height: 2),
                                     Text(
-                                      educationScoreDisplayLabel(item),
+                                      educationDetailLine(item),
                                       style: bodyStyle,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
@@ -5666,7 +5666,7 @@ class _AtsClassicCvPreview extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   for (final line
-                                      in education[i].score
+                                      in educationDetailLine(education[i])
                                           .split(RegExp(r'\n+'))
                                           .map((s) => s.trim())
                                           .where((s) => s.isNotEmpty)
@@ -7336,7 +7336,6 @@ class _SlateSidebarPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final railColor = resume.slateSidebarRailColor;
     final titleColor = resume.slateSidebarTitleColor;
-    final mutedColor = resume.slateSidebarMutedColor;
     const onRail = Colors.white;
     final family = resume.usesOutfitResumeFont
         ? ResumeTextFont.outfit.flutterFontFamily
@@ -7363,7 +7362,7 @@ class _SlateSidebarPreview extends StatelessWidget {
     ).copyWith(letterSpacing: 1.2);
     final sectionTitleStyle = style(FontWeight.w700, 16, titleColor);
     final roleStyle = style(FontWeight.w600, bodyPt - 0.5, titleColor);
-    final detailStyle = style(FontWeight.w400, detailPt, mutedColor);
+    final detailStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
     final railHeading = style(FontWeight.w700, 15, onRail);
     final railLabel = style(FontWeight.w700, detailPt, onRail);
     final railValue = style(FontWeight.w400, detailPt - 0.5, onRail);
@@ -7588,11 +7587,11 @@ class _SlateSidebarPreview extends StatelessWidget {
                           item.institution.trim().ifBlank('Education'),
                         ),
                         details: [
-                          if (item.score.trim().isNotEmpty)
+                          if (educationDetailLine(item).isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 3),
                               child: Text(
-                                item.score.trim(),
+                                educationDetailLine(item),
                                 style: detailStyle,
                               ),
                             ),
@@ -7901,8 +7900,11 @@ class _AtsCleanSansPreview extends StatelessWidget {
                             if (item.degree.trim().isNotEmpty &&
                                 item.institution.trim().isNotEmpty)
                               Text(item.institution.trim(), style: body),
-                            if (item.score.trim().isNotEmpty)
-                              bulletRow(item.score.trim(), indent: false),
+                            if (educationDetailLine(item).isNotEmpty)
+                              bulletRow(
+                                educationDetailLine(item),
+                                indent: false,
+                              ),
                             if (educationDateRangeLabel(
                               item.startDate,
                               item.endDate,
@@ -8037,7 +8039,7 @@ class _TimelineProfilePreview extends StatelessWidget {
 
     final entryTitle = style(FontWeight.w600, bodyPt, titleColor);
     final meta = style(FontWeight.w400, detailPt, mutedColor);
-    final bodyText = style(FontWeight.w400, detailPt, mutedColor);
+    final bodyText = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
     final sidebarItem = style(FontWeight.w400, detailPt - 0.5, mutedColor);
 
     List<String> nonEmpty(Iterable<String> lines) => lines
@@ -8270,8 +8272,11 @@ class _TimelineProfilePreview extends StatelessWidget {
                         educationDateRangeLabel(item.startDate, item.endDate),
                         item.institution.trim(),
                         [
-                          if (item.score.trim().isNotEmpty)
-                            Text(item.score.trim(), style: entryTitle),
+                          if (educationDetailLine(item).isNotEmpty)
+                            Text(
+                              educationDetailLine(item),
+                              style: entryTitle,
+                            ),
                         ],
                       ),
                   ],
@@ -8491,7 +8496,7 @@ class _SoftHeaderPreview extends StatelessWidget {
 
     final entryTitle = style(FontWeight.w600, bodyPt, titleColor);
     final meta = style(FontWeight.w400, detailPt, mutedColor);
-    final bodyText = style(FontWeight.w400, detailPt, mutedColor);
+    final bodyText = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
 
     List<String> nonEmpty(Iterable<String> lines) => lines
         .map((line) => line.trim())
@@ -8592,7 +8597,8 @@ class _SoftHeaderPreview extends StatelessWidget {
             ),
             const SizedBox(height: 3),
             if (item.degree.trim().isNotEmpty) bullet(item.degree.trim()),
-            if (item.score.trim().isNotEmpty) bullet(item.score.trim()),
+            if (educationDetailLine(item).isNotEmpty)
+              bullet(educationDetailLine(item)),
             const SizedBox(height: 9),
           ],
         ],
@@ -8947,7 +8953,7 @@ class _BlueDiagonalPreview extends StatelessWidget {
       height: lineH,
     );
 
-    final bodyText = style(FontWeight.w400, detailPt, mutedColor);
+    final bodyText = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
     final entryDate = style(FontWeight.w700, bodyPt, titleColor);
     final entryTitle = style(FontWeight.w700, detailPt, titleColor);
 
@@ -9094,7 +9100,8 @@ class _BlueDiagonalPreview extends StatelessWidget {
             ),
             const SizedBox(height: 3),
             if (item.degree.trim().isNotEmpty) bullet(item.degree.trim()),
-            if (item.score.trim().isNotEmpty) bullet(item.score.trim()),
+            if (educationDetailLine(item).isNotEmpty)
+              bullet(educationDetailLine(item)),
             const SizedBox(height: 9),
           ],
         ],
@@ -9473,7 +9480,7 @@ class _MinimalProfilePreview extends StatelessWidget {
     final contactStyle = style(FontWeight.w400, bodyPt - 1, mutedColor);
     final sectionStyle = style(FontWeight.w800, 13.5, titleColor, height: 1.1);
     final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
-    final bodyStyle = style(FontWeight.w400, bodyPt, mutedColor);
+    final bodyStyle = style(FontWeight.w400, bodyPt, ResumeTypography.atsStructuredBodyTextColor);
     final initialsStyle = style(FontWeight.w700, 22, accent);
 
     Widget sectionHeading(String label, {bool showRule = true}) {
@@ -9637,7 +9644,7 @@ class _MinimalProfilePreview extends StatelessWidget {
                 dates: educationDateRangeLabel(item.startDate, item.endDate),
                 organisation: item.institution.trim(),
                 title: item.degree.trim().isEmpty ? 'Degree' : item.degree.trim(),
-                detail: educationScoreDisplayLabel(item),
+                detail: educationDetailLine(item),
               ),
           ],
         );
@@ -9980,7 +9987,6 @@ class _CharcoalCurvePreview extends StatelessWidget {
     final accent = resume.charcoalCurveAccentColor;
     final onAccent = resume.charcoalCurveOnAccentColor;
     final titleColor = resume.charcoalCurveTitleColor;
-    final mutedColor = resume.charcoalCurveMutedColor;
     final ruleColor = resume.charcoalCurveRuleColor;
     final trackColor = resume.charcoalCurveTrackColor;
     final family = resume.usesOutfitResumeFont
@@ -10006,7 +10012,7 @@ class _CharcoalCurvePreview extends StatelessWidget {
     );
     final sectionStyle = style(FontWeight.w700, 14, titleColor);
     final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
-    final bodyStyle = style(FontWeight.w400, detailPt, mutedColor);
+    final bodyStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
     final railHeadingStyle = style(FontWeight.w700, 12.5, onAccent);
     final railBodyStyle = style(
       FontWeight.w400,
@@ -10066,35 +10072,28 @@ class _CharcoalCurvePreview extends StatelessWidget {
               child: Text(skill, style: entryTitleStyle),
             ),
             const SizedBox(width: 10),
+            // Full channel with the rating over it; mirrors the PDF.
             SizedBox(
               width: _skillBarWidth,
-              child: Row(
+              height: 7,
+              child: Stack(
                 children: [
-                  Expanded(
-                    flex: filled,
-                    child: Container(
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: const BorderRadius.horizontal(
-                          left: Radius.circular(3.5),
-                        ),
-                      ),
+                  Container(
+                    width: _skillBarWidth,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: trackColor,
+                      borderRadius: BorderRadius.circular(3.5),
                     ),
                   ),
-                  if (filled < 100)
-                    Expanded(
-                      flex: 100 - filled,
-                      child: Container(
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: trackColor,
-                          borderRadius: const BorderRadius.horizontal(
-                            right: Radius.circular(3.5),
-                          ),
-                        ),
-                      ),
+                  Container(
+                    width: _skillBarWidth * filled / 100,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: accent,
+                      borderRadius: BorderRadius.circular(3.5),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -10256,9 +10255,9 @@ class _CharcoalCurvePreview extends StatelessWidget {
                               : item.institution.trim(),
                           style: entryTitleStyle,
                         ),
-                        if (educationScoreDisplayLabel(item).isNotEmpty)
+                        if (educationDetailLine(item).isNotEmpty)
                           Text(
-                            educationScoreDisplayLabel(item),
+                            educationDetailLine(item),
                             style: bodyStyle,
                           ),
                       ],
@@ -10529,7 +10528,6 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
     final accent = resume.boldPillAccentColor;
     final onAccent = resume.boldPillOnAccentColor;
     final titleColor = resume.boldPillTitleColor;
-    final mutedColor = resume.boldPillMutedColor;
     final family = resume.usesOutfitResumeFont
         ? ResumeTextFont.outfit.flutterFontFamily
         : ResumeTextFont.garamond.flutterFontFamily;
@@ -10550,7 +10548,7 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
     final pillStyle = style(FontWeight.w700, 12.5, onAccent);
     final sectionStyle = style(FontWeight.w800, 15, titleColor);
     final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
-    final bodyStyle = style(FontWeight.w400, detailPt, mutedColor);
+    final bodyStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
     final sideItemStyle = style(FontWeight.w400, detailPt, titleColor);
 
     Widget pill(String label) => Padding(
@@ -10745,9 +10743,9 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
                               ),
                               if (item.degree.trim().isNotEmpty)
                                 Text(item.degree.trim(), style: bodyStyle),
-                              if (educationScoreDisplayLabel(item).isNotEmpty)
+                              if (educationDetailLine(item).isNotEmpty)
                                 Text(
-                                  educationScoreDisplayLabel(item),
+                                  educationDetailLine(item),
                                   style: bodyStyle,
                                 ),
                             ],
@@ -11023,7 +11021,7 @@ class _BlueCornerPreview extends StatelessWidget
       detailPt,
       mutedColor,
     ).copyWith(fontStyle: FontStyle.italic);
-    final bodyStyle = style(FontWeight.w400, detailPt, mutedColor);
+    final bodyStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
 
     Widget sectionHeading(String label, {IconData? icon, bool rule = true}) =>
         Padding(
@@ -11197,8 +11195,8 @@ class _BlueCornerPreview extends StatelessWidget
                   organisation: item.institution.trim(),
                   dates: educationDateRangeLabel(item.startDate, item.endDate),
                   details: [
-                    if (educationScoreDisplayLabel(item).isNotEmpty)
-                      educationScoreDisplayLabel(item),
+                    if (educationDetailLine(item).isNotEmpty)
+                      educationDetailLine(item),
                   ],
                 ),
             ];
@@ -11457,7 +11455,7 @@ class _ProfileTimelinePreview extends StatelessWidget
     ).copyWith(letterSpacing: 2);
     final sectionStyle = style(FontWeight.w700, 15, titleColor);
     final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
-    final bodyStyle = style(FontWeight.w400, detailPt, mutedColor);
+    final bodyStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
     final chipStyle = style(
       FontWeight.w600,
       detailPt - 1,
@@ -11607,8 +11605,8 @@ class _ProfileTimelinePreview extends StatelessWidget
                     educationDateRangeLabel(item.startDate, item.endDate),
                     style: bodyStyle,
                   ),
-                  if (educationScoreDisplayLabel(item).isNotEmpty)
-                    Text(educationScoreDisplayLabel(item), style: bodyStyle),
+                  if (educationDetailLine(item).isNotEmpty)
+                    Text(educationDetailLine(item), style: bodyStyle),
                 ],
               ),
             ),

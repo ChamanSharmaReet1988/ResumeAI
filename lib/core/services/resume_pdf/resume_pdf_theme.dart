@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart' show TtfParser;
 import 'package:pdf/widgets.dart' as pw;
@@ -30,9 +28,12 @@ double pdfFontLineHeightEm(pw.Font font) {
 /// Turns a spacing written as `(lineHeight − 1) × fontSize` into the gap the
 /// pdf package needs so lines really sit `lineHeight × fontSize` apart.
 ///
-/// Without this, each font's own line height (about 1.2em for Inter, 1.3em
-/// for Garamond) was added on top, and body text rendered at 1.4–1.7×.
-/// Never goes below the font's natural line height.
+/// Without this, each font's own line height (about 1.21em for Inter, 1.31em
+/// for Outfit) was added on top, and body text rendered at 1.4–1.7×.
+///
+/// The result may be negative: a font whose own line box is taller than the
+/// requested height (Outfit needs -1.26pt to sit at 1.2 × 12pt) can only be
+/// tightened by pulling the lines back together.
 double pdfLineSpacingForFont(
   pw.Font font,
   double fontSize,
@@ -41,10 +42,7 @@ double pdfLineSpacingForFont(
   if (lineSpacing == null || lineSpacing <= 0) {
     return lineSpacing ?? 0;
   }
-  return math.max(
-    0,
-    lineSpacing - (pdfFontLineHeightEm(font) - 1) * fontSize,
-  );
+  return lineSpacing - (pdfFontLineHeightEm(font) - 1) * fontSize;
 }
 
 /// Same [ResumeTextFont] choices as the in-app resume preview ([ResumePreviewCard]).

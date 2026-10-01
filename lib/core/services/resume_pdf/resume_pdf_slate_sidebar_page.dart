@@ -224,6 +224,8 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
     final railColor = _pdfRgb(resume.slateSidebarRailColor);
     final titleColor = _pdfRgb(resume.slateSidebarTitleColor);
     final mutedColor = _pdfRgb(resume.slateSidebarMutedColor);
+    // Body copy is black on every template; greys stay for dates and rails.
+    final bodyInk = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     const onRail = PdfColors.white;
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     // Body copy renders at the slider size; only dated/rail lines step down.
@@ -259,7 +261,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
     final detailStyle = style(
       ResumeFontWeight.w400,
       detailPt,
-      mutedColor,
+      bodyInk,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt),
     );
 
@@ -521,7 +523,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                   style: style(
                     ResumeFontWeight.w400,
                     detailPt,
-                    mutedColor,
+                    bodyInk,
                     lineSpacing:
                         ResumeTypography.bodyPdfLineSpacingFor(detailPt),
                   ),
@@ -592,11 +594,11 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                             item.institution.trim().ifEmpty('Education'),
                           ),
                           details: [
-                            if (item.score.trim().isNotEmpty)
+                            if (educationDetailLine(item).isNotEmpty)
                               pw.Padding(
                                 padding: const pw.EdgeInsets.only(top: 3),
                                 child: pw.Text(
-                                  item.score.trim(),
+                                  educationDetailLine(item),
                                   style: detailStyle,
                                 ),
                               ),

@@ -261,8 +261,8 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
                           if (item.institution.trim().isNotEmpty &&
                               item.degree.trim().isNotEmpty)
                             pw.Text(item.institution.trim(), style: bodyStyle),
-                          if (item.score.trim().isNotEmpty)
-                            skillBullet(item.score.trim()),
+                          if (educationDetailLine(item).isNotEmpty)
+                            skillBullet(educationDetailLine(item)),
                           if (educationDateRangeLabel(
                             item.startDate,
                             item.endDate,

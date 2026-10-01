@@ -1132,7 +1132,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                             '${range.isNotEmpty ? '  |  Graduated: $range' : ''}';
                         out.add(pw.SizedBox(height: 2));
                         out.add(pw.Text(line, style: bodyStyle));
-                        final scoreLabel = educationScoreDisplayLabel(item);
+                        final scoreLabel = educationDetailLine(item);
                         if (scoreLabel.isNotEmpty) {
                           out.add(pw.Text(scoreLabel, style: bodyStyle));
                         }
@@ -1268,11 +1268,11 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 item.institution.ifEmpty('Institution'),
                 style: italicStyle,
               ),
-              if (educationScoreDisplayLabel(item).isNotEmpty)
+              if (educationDetailLine(item).isNotEmpty)
                 pw.Align(
                   alignment: pw.Alignment.centerRight,
                   child: pw.Text(
-                    educationScoreDisplayLabel(item),
+                    educationDetailLine(item),
                     style: bodyStyle,
                   ),
                 ),
@@ -3248,7 +3248,8 @@ extension _ResumePdfAtsPages on ResumePdfService {
           .replaceAll(' - ', ' – ')
           .replaceAll(' — ', ' – ');
 
-  List<String> _classicCvScoreLines(EducationItem item) => item.score
+  List<String> _classicCvScoreLines(EducationItem item) =>
+      educationDetailLine(item)
       .split(RegExp(r'\n+'))
       .map((line) => line.trim())
       .where((line) => line.isNotEmpty)

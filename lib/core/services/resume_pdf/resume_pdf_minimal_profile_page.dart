@@ -20,6 +20,8 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
   }) {
     final titleColor = _pdfRgb(resume.minimalProfileTitleColor);
     final mutedColor = _pdfRgb(resume.minimalProfileMutedColor);
+    // Body copy is black on every template; greys stay for dates and rails.
+    final bodyInk = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     final accent = _pdfRgb(resume.minimalProfileAccentColor);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final textPt = bodyPt;
@@ -45,7 +47,7 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
     final bodyStyle = style(
       ResumeFontWeight.w400,
       textPt,
-      mutedColor,
+      bodyInk,
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(textPt),
     );
 
@@ -199,7 +201,7 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
               dates: educationDateRangeLabel(item.startDate, item.endDate),
               organisation: item.institution.trim(),
               title: item.degree.trim().isEmpty ? 'Degree' : item.degree.trim(),
-              detail: educationScoreDisplayLabel(item),
+              detail: educationDetailLine(item),
             ),
         ];
       }
