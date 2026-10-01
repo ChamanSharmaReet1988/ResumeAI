@@ -10,6 +10,7 @@ const double _timelineProfileBandHeightPt = 150.0;
 const double _timelineProfileAvatarSizePt = 126.0;
 const double _timelineProfileMainLeftPt = 230.0;
 const double _timelineProfileMainRightPt = 36.0;
+
 /// Extra left inset while the sidebar is present so body text clears it.
 const double _timelineProfileSidebarContentInsetPt =
     _timelineProfileMainLeftPt - _timelineProfileMainRightPt;
@@ -93,8 +94,7 @@ List<_TimelineProfilePageSlice> _timelineProfilePageSlices({
       detailPt - 0.5,
       railTextWidth - 11,
     );
-    return (lines * (detailPt - 0.5) * ResumeTypography.bodyTextLineHeight) +
-        7;
+    return (lines * (detailPt - 0.5) * ResumeTypography.bodyTextLineHeight) + 7;
   }
 
   List<String> takeChunk(Iterable<String> source, double maxHeight) {
@@ -262,7 +262,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(title.toUpperCase(), style: sectionTitleStyle),
+                pw.Text(title, style: sectionTitleStyle),
                 pw.SizedBox(height: 4),
                 pw.Container(height: 1, color: ruleColor),
               ],
@@ -357,14 +357,18 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
         titleColor,
         letterSpacing: 1.1,
       );
-      final itemStyle = style(ResumeFontWeight.w400, detailPt - 0.5, mutedColor);
+      final itemStyle = style(
+        ResumeFontWeight.w400,
+        detailPt - 0.5,
+        mutedColor,
+      );
 
       pw.Widget heading(String title) => pw.Padding(
         padding: const pw.EdgeInsets.only(top: 14, bottom: 7),
         child: pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text(title.toUpperCase(), style: headingStyle),
+            pw.Text(title, style: headingStyle),
             pw.SizedBox(height: 4),
             pw.Container(height: 1, color: ruleColor),
           ],
@@ -481,11 +485,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                           ),
                           child: pw.Text(
                             _resumeInitials(resume),
-                            style: style(
-                              ResumeFontWeight.w700,
-                              32,
-                              titleColor,
-                            ),
+                            style: style(ResumeFontWeight.w700, 32, titleColor),
                           ),
                         ),
                 ),
@@ -586,6 +586,27 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                   }
                   final item = resume.customSections[customIndex];
                   if (item.isBlank) return null;
+                  if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                    return [
+                      sectionTitle(item.title.ifEmpty('Custom section')),
+                      for (final work in item.visibleEntries.map(
+                        (entry) => entry.toWorkExperience(),
+                      ))
+                        ...entry(
+                          title: work.company.trim().ifEmpty('Company'),
+                          dates: educationDateRangeLabel(
+                            work.startDate,
+                            work.endDate,
+                          ).toUpperCase(),
+                          subtitle: work.role.trim(),
+                          details: [
+                            for (final line in _workBulletLines(work))
+                              bullet(line),
+                          ],
+                        ),
+                      pw.SizedBox(height: 6),
+                    ];
+                  }
                   return [
                     sectionTitle(item.title.ifEmpty('Custom section')),
                     for (final widget in _pwCustomSectionBodyWidgets(
@@ -602,7 +623,12 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                   case ResumeBuilderSectionIds.work:
                     if (experiences.isEmpty) return null;
                     return [
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Work Experience',
+                        ),
+                      ),
                       for (var i = 0; i < experiences.length; i++)
                         ...entry(
                           title: experiences[i].company.trim().ifEmpty(
@@ -618,8 +644,9 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                               bullet(
                                 line,
                                 highlight:
-                                    highlightedBulletsByExperience[i]
-                                        ?.contains(line) ??
+                                    highlightedBulletsByExperience[i]?.contains(
+                                      line,
+                                    ) ??
                                     false,
                               ),
                           ],
@@ -628,7 +655,12 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                   case ResumeBuilderSectionIds.education:
                     if (education.isEmpty) return null;
                     return [
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'Education',
+                        ),
+                      ),
                       for (final item in education)
                         ...entry(
                           title: item.degree.trim().ifEmpty(
@@ -651,7 +683,12 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                   case ResumeBuilderSectionIds.projects:
                     if (projects.isEmpty) return null;
                     return [
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
+                      ),
                       for (final item in projects)
                         ...entry(
                           title: item.title.trim().ifEmpty('Project'),

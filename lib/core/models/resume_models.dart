@@ -717,12 +717,19 @@ class ResumeData {
       includeSkillsInResume ? skills : const <String>[];
 
   /// True when Skills should render as category subtitle + comma-separated skills.
-  /// Heading to print for a built-in section. [fallback] is the wording the
-  /// template would otherwise use, so each template keeps its own house style
-  /// ("Experience" vs "Work Experience") until the user renames the section.
+  /// Heading to print for a built-in section. Matches the builder section list
+  /// ("Work Experience", "Education", "Skills", "Projects") until the user
+  /// renames it. [fallback] is only used for ids outside that list.
   String sectionHeading(String sectionId, String fallback) {
     final custom = sectionTitles[sectionId]?.trim() ?? '';
-    return custom.isEmpty ? fallback : custom;
+    if (custom.isNotEmpty) return custom;
+    return switch (sectionId) {
+      ResumeBuilderSectionIds.work => 'Work Experience',
+      ResumeBuilderSectionIds.education => 'Education',
+      ResumeBuilderSectionIds.skills => 'Skills',
+      ResumeBuilderSectionIds.projects => 'Projects',
+      _ => fallback,
+    };
   }
 
   bool get showCategorisedSkills =>
@@ -1596,6 +1603,28 @@ class CustomSectionEntry {
     if (who.isEmpty) return dates;
     if (dates.isEmpty) return who;
     return '$who  |  $dates';
+  }
+
+  /// Same fields an experience row prints: name as the role, company under it,
+  /// the typed period as the date, and each summary line as a bullet.
+  WorkExperience toWorkExperience() {
+    final roleName = name.trim();
+    final organisation = company.trim();
+    final lines = summary
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    return WorkExperience(
+      role: roleName.isNotEmpty
+          ? roleName
+          : (organisation.isNotEmpty ? organisation : 'Item'),
+      company: roleName.isNotEmpty ? organisation : '',
+      startDate: dateLabel,
+      endDate: '',
+      description: '',
+      bullets: lines,
+    );
   }
 
   CustomSectionEntry copyWith({

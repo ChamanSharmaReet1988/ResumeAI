@@ -79,13 +79,19 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
     final nameStyle = style(ResumeFontWeight.w400, 30, accent);
     final jobStyle = style(ResumeFontWeight.w400, 13, mutedColor);
     final sectionStyle = style(ResumeFontWeight.w600, 15, titleColor);
-    final entryTitleStyle = style(ResumeFontWeight.w600, bodyPt, titleColor);
+    final entryTitleStyle = style(
+      ResumeFontWeight.w600,
+      bodyPt,
+      titleColor,
+      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(bodyPt),
+    );
     final entrySubStyle = garamondPdfTextStyle(
       fonts,
       ResumeFontWeight.w400,
       fontSize: detailPt,
       color: mutedColor,
       fontStyle: pw.FontStyle.italic,
+      lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt),
     );
     final bodyStyle = style(
       ResumeFontWeight.w400,
@@ -171,8 +177,14 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                 children: [
                   pw.Expanded(child: pw.Text(title, style: entryTitleStyle)),
                   if (dates.isNotEmpty) ...[
-                    pw.SizedBox(width: 10),
-                    pw.Text(dates, style: bodyStyle),
+                    pw.SizedBox(width: 12),
+                    pw.Flexible(
+                      child: pw.Text(
+                        dates,
+                        style: bodyStyle,
+                        textAlign: pw.TextAlign.right,
+                      ),
+                    ),
                   ],
                 ],
               ),
@@ -182,8 +194,14 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
         if (organisation.isNotEmpty)
           indented(
             pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 1),
-              child: pw.Text(organisation, style: entrySubStyle),
+              padding: const pw.EdgeInsets.only(top: 4),
+              child: _BlueCornerItalicLine(
+                // Italic ink is wider than the advances the line is sized by.
+                // A later layout at that exact width wraps the last word, then
+                // clips it to the one-line box so it paints on the next line.
+                slack: detailPt * 0.75,
+                child: pw.Text(organisation, style: entrySubStyle),
+              ),
             ),
           ),
         for (final line in details)
@@ -362,20 +380,19 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
     bool usesSideColumn(int pageNumber) =>
         pageNumber == 1 || pageNumber <= sidebarPageCount;
 
-    pw.Widget mainWrap(
-      pw.Widget child, {
-      bool indentTimeline = false,
-    }) => pw.DelayedWidget(
-      build: (context) => pw.Padding(
-        padding: pw.EdgeInsets.only(
-          left: (usesSideColumn(context.pageNumber)
-                  ? _blueCornerContentInsetPt
-                  : 0) +
-              (indentTimeline ? _blueCornerTimelineDotPt + 12 : 0),
-        ),
-        child: child,
-      ),
-    );
+    pw.Widget mainWrap(pw.Widget child, {bool indentTimeline = false}) =>
+        pw.DelayedWidget(
+          build: (context) => pw.Padding(
+            padding: pw.EdgeInsets.only(
+              left:
+                  (usesSideColumn(context.pageNumber)
+                      ? _blueCornerContentInsetPt
+                      : 0) +
+                  (indentTimeline ? _blueCornerTimelineDotPt + 12 : 0),
+            ),
+            child: child,
+          ),
+        );
 
     pw.Widget skillLine(String skill) => _headerSidebarMaybeHighlight(
       highlight: highlightedSkills.contains(skill),
@@ -418,7 +435,8 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     );
               return pw.Padding(
                 padding: pw.EdgeInsets.only(
-                  left: (beside ? _blueCornerContentInsetPt : 0) +
+                  left:
+                      (beside ? _blueCornerContentInsetPt : 0) +
                       _blueCornerTimelineDotPt +
                       12,
                 ),
@@ -575,6 +593,36 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                 }
                 final item = resume.customSections[customIndex];
                 if (!mainCustomSections.contains(item)) return null;
+                if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                  final entries = item.visibleEntries
+                      .map((entry) => entry.toWorkExperience())
+                      .toList();
+                  final entryWidgets = <pw.Widget>[
+                    for (var i = 0; i < entries.length; i++)
+                      ...timelineEntry(
+                        title: entries[i].role.trim().ifEmpty('Role'),
+                        organisation: entries[i].company.trim(),
+                        dates: educationDateRangeLabel(
+                          entries[i].startDate,
+                          entries[i].endDate,
+                        ),
+                        details: _workBulletLines(entries[i]),
+                        last: i == entries.length - 1,
+                      ),
+                  ];
+                  return [
+                    mainWrap(
+                      keepWithNext([
+                        sectionHeading(
+                          item.title.ifEmpty('Custom section'),
+                          icon: _MinimalProfileIcon.article,
+                        ),
+                        entryWidgets.first,
+                      ]),
+                    ),
+                    ...entryWidgets.skip(1).map(mainWrap),
+                  ];
+                }
                 return [
                   mainWrap(
                     sectionHeading(
@@ -598,7 +646,10 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     return [
                       mainWrap(
                         sectionHeading(
-                          resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.skills,
+                            'Skills',
+                          ),
                           icon: _MinimalProfileIcon.puzzle,
                         ),
                       ),
@@ -614,7 +665,10 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                   return [
                     mainWrap(
                       sectionHeading(
-                        resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
                         icon: _MinimalProfileIcon.puzzle,
                       ),
                     ),
@@ -643,7 +697,10 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     mainWrap(
                       keepWithNext([
                         sectionHeading(
-                          resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.education,
+                            'Education',
+                          ),
                           icon: _MinimalProfileIcon.school,
                         ),
                         educationWidgets.first,
@@ -671,7 +728,10 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     mainWrap(
                       keepWithNext([
                         sectionHeading(
-                          resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.work,
+                            'Experience',
+                          ),
                           icon: _MinimalProfileIcon.work,
                         ),
                         experienceWidgets.first,
@@ -700,7 +760,10 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     mainWrap(
                       keepWithNext([
                         sectionHeading(
-                          resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.projects,
+                            'Projects',
+                          ),
                           icon: _MinimalProfileIcon.folder,
                         ),
                         projectWidgets.first,
@@ -735,5 +798,34 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
         ),
       );
     }
+  }
+}
+
+/// Reports a slightly wider box than [child] so a follow-up layout at the
+/// measured width still has room for italic side bearings.
+class _BlueCornerItalicLine extends pw.SingleChildWidget {
+  _BlueCornerItalicLine({required this.slack, required pw.Widget child})
+    : super(child: child);
+
+  final double slack;
+
+  @override
+  void layout(
+    pw.Context context,
+    pw.BoxConstraints constraints, {
+    bool parentUsesSize = false,
+  }) {
+    child!.layout(context, constraints, parentUsesSize: parentUsesSize);
+    assert(child!.box != null);
+    box = constraints.constrainRect(
+      width: child!.box!.width + slack,
+      height: child!.box!.height,
+    );
+  }
+
+  @override
+  void paint(pw.Context context) {
+    super.paint(context);
+    paintChild(context);
   }
 }

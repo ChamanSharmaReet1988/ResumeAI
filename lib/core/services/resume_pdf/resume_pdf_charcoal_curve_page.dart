@@ -14,6 +14,7 @@ const double _charcoalCurveAvatarCornerBottomRightPt =
     _charcoalCurveAvatarCornerPt * 3;
 const double _charcoalCurveMainLeftPt = _charcoalCurveRailWidthPt + 32.0;
 const double _charcoalCurveMainRightPt = 40.0;
+
 /// Extra left inset used on page 1 so body text clears the charcoal rail.
 /// From page 2 the MultiPage uses full-width side margins instead.
 const double _charcoalCurvePage1ContentInsetPt =
@@ -21,8 +22,10 @@ const double _charcoalCurvePage1ContentInsetPt =
 const double _charcoalCurvePageTopPt = 48.0;
 const double _charcoalCurvePageBottomPt = 40.0;
 const double _charcoalCurveMetaColumnPt = 120.0;
+
 /// Skill name column (narrower so the bar does not dominate the row).
 const double _charcoalCurveSkillLabelPt = 96.0;
+
 /// Fixed skill-bar track width beside the rail (page 1).
 const double _charcoalCurveSkillBarPt = 88.0;
 
@@ -79,7 +82,11 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
     );
 
     final nameStyle = style(ResumeFontWeight.w800, 24, onAccent);
-    final jobStyle = style(ResumeFontWeight.w400, 13, _pdfMix(onAccent, accent, 0.35));
+    final jobStyle = style(
+      ResumeFontWeight.w400,
+      13,
+      _pdfMix(onAccent, accent, 0.35),
+    );
     final sectionStyle = style(ResumeFontWeight.w700, 14, titleColor);
     final entryTitleStyle = style(ResumeFontWeight.w700, bodyPt, titleColor);
     final bodyStyle = style(
@@ -95,7 +102,11 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
       _pdfMix(onAccent, accent, 0.25),
       lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(detailPt - 0.5),
     );
-    final railStrongStyle = style(ResumeFontWeight.w700, detailPt - 0.5, onAccent);
+    final railStrongStyle = style(
+      ResumeFontWeight.w700,
+      detailPt - 0.5,
+      onAccent,
+    );
 
     pw.Widget sectionHeading(String label) => pw.Padding(
       padding: const pw.EdgeInsets.only(top: 16, bottom: 9),
@@ -140,16 +151,10 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
 
     /// Work rows split into separate widgets so a page break can fall between
     /// bullets instead of leaving a large empty band at the bottom of page 1.
-    List<pw.Widget> workEntry(
-      WorkExperience item, {
-      bool highlight = false,
-    }) {
+    List<pw.Widget> workEntry(WorkExperience item, {bool highlight = false}) {
       final bullets = _workBulletLines(item);
       final meta = <pw.Widget>[
-        pw.Text(
-          item.company.trim().ifEmpty('Company'),
-          style: entryTitleStyle,
-        ),
+        pw.Text(item.company.trim().ifEmpty('Company'), style: entryTitleStyle),
         pw.SizedBox(height: 2),
         pw.Text(
           educationDateRangeLabel(item.startDate, item.endDate),
@@ -168,10 +173,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
         child: splitRow(
           meta: meta,
           detail: [
-            pw.Text(
-              item.role.trim().ifEmpty('Role'),
-              style: entryTitleStyle,
-            ),
+            pw.Text(item.role.trim().ifEmpty('Role'), style: entryTitleStyle),
             if (bullets.isNotEmpty) ...[
               pw.SizedBox(height: 3),
               pw.Text(bullets.first, style: bodyStyle),
@@ -240,10 +242,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
               if (expandLabel)
                 pw.Expanded(child: label)
               else
-                pw.SizedBox(
-                  width: _charcoalCurveSkillLabelPt,
-                  child: label,
-                ),
+                pw.SizedBox(width: _charcoalCurveSkillLabelPt, child: label),
               pw.SizedBox(width: 10),
               track,
             ],
@@ -399,9 +398,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     ),
                   ),
                   pw.SizedBox(width: 8),
-                  pw.Expanded(
-                    child: pw.Text(value, style: railBodyStyle),
-                  ),
+                  pw.Expanded(child: pw.Text(value, style: railBodyStyle)),
                 ],
               ),
             ),
@@ -485,20 +482,14 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                           ? null
                           : pw.Text(
                               _resumeInitials(resume),
-                              style: style(
-                                ResumeFontWeight.w700,
-                                30,
-                                accent,
-                              ),
+                              style: style(ResumeFontWeight.w700, 30, accent),
                             ),
                     ),
                   ),
                   pw.Positioned(
                     left: _charcoalCurveRailInsetPt,
                     top:
-                        _charcoalCurveAvatarTopPt +
-                        _charcoalCurveAvatarPt +
-                        18,
+                        _charcoalCurveAvatarTopPt + _charcoalCurveAvatarPt + 18,
                     bottom: _charcoalCurvePageBottomPt,
                     child: pw.SizedBox(
                       width:
@@ -548,6 +539,15 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                   }
                   final item = resume.customSections[customIndex];
                   if (!mainCustomSections.contains(item)) return null;
+                  if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                    return [
+                      sectionHeading(item.title.ifEmpty('Custom section')),
+                      for (final work in item.visibleEntries.map(
+                        (entry) => entry.toWorkExperience(),
+                      ))
+                        ...workEntry(work, highlight: false),
+                    ];
+                  }
                   return [
                     sectionHeading(item.title.ifEmpty('Custom section')),
                     ..._pwCustomSectionBodyWidgets(
@@ -563,7 +563,12 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     final items = resume.visibleEducation;
                     if (items.isEmpty) return null;
                     return [
-                      sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+                      sectionHeading(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'Education',
+                        ),
+                      ),
                       for (final item in items)
                         splitRow(
                           meta: [
@@ -571,9 +576,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                               item.institution.trim().ifEmpty('Institution'),
                               style: entryTitleStyle,
                             ),
-                            if (educationDetailLine(
-                              item,
-                            ).isNotEmpty) ...[
+                            if (educationDetailLine(item).isNotEmpty) ...[
                               pw.SizedBox(height: 2),
                               pw.Text(
                                 educationDetailLine(item),
@@ -600,7 +603,12 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     final items = resume.visibleWorkExperiences;
                     if (items.isEmpty) return null;
                     return [
-                      sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
+                      sectionHeading(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Work Experience',
+                        ),
+                      ),
                       for (var i = 0; i < items.length; i++)
                         ...workEntry(
                           items[i],
@@ -614,7 +622,12 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     // are a flat-list presentation.
                     if (resume.showCategorisedSkills) {
                       return [
-                        sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                        sectionHeading(
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.skills,
+                            'Skills',
+                          ),
+                        ),
                         ..._categorisedSkillsPdfWidgets(
                           resume,
                           bodyStyle: bodyStyle,
@@ -624,14 +637,24 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     }
                     if (skills.isEmpty) return null;
                     return [
-                      sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                      sectionHeading(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
+                      ),
                       ...skillsBody(),
                     ];
                   case ResumeBuilderSectionIds.projects:
                     final items = resume.visibleProjects;
                     if (items.isEmpty) return null;
                     return [
-                      sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                      sectionHeading(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
+                      ),
                       for (final item in items)
                         splitRow(
                           meta: [
@@ -661,9 +684,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
               },
             ),
           ];
-          return [
-            for (final widget in body) _charcoalCurveMainPad(widget),
-          ];
+          return [for (final widget in body) _charcoalCurveMainPad(widget)];
         },
       ),
     );

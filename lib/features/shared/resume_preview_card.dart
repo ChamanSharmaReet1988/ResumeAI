@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:resume_app/l10n/app_localizations.dart';
 
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_builder_section_order.dart';
@@ -96,6 +97,16 @@ class ResumePreviewCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = Localizations.of<AppLocalizations>(
+      context,
+      AppLocalizations,
+    );
+    final resume = l10n == null
+        ? this.resume
+        : ResumeBuilderSectionIds.resumeWithSectionListTitles(
+            this.resume,
+            l10n,
+          );
     final theme = Theme.of(context);
     final previewTemplate = resume.template.userFacingTemplate;
     final base = theme.textTheme;
@@ -544,10 +555,29 @@ class _DarkHeaderPreview extends StatelessWidget {
               }
               return _CorporatePdfLikeSection(
                 outerPadding: _CorporatePdfMetrics.sectionOuter(),
-                title: item.title.ifBlank('Custom section').toUpperCase(),
+                title: item.title.ifBlank('Custom section'),
                 titleColor: preset.titleColor,
                 lineColor: _CorporatePdfMetrics.lineColor,
-                child: _corporateCustomSectionBody(item, bodyStyle),
+                child: item.usesItemEntries && item.visibleEntries.isNotEmpty
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final entry in item.visibleEntries)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                bottom:
+                                    _CorporatePdfMetrics.experienceBlockBottom,
+                              ),
+                              child: _CorporateExperienceBlock(
+                                item: entry.toWorkExperience(),
+                                dateColor: _CorporatePdfMetrics.dateMutedColor,
+                                bodyStyle: bodyStyle,
+                                subtitleStyle: subtitleStyle,
+                              ),
+                            ),
+                        ],
+                      )
+                    : _corporateCustomSectionBody(item, bodyStyle),
               );
             }
             switch (id) {
@@ -555,7 +585,10 @@ class _DarkHeaderPreview extends StatelessWidget {
                 if (!resume.includeWorkInResume) return null;
                 return _CorporatePdfLikeSection(
                   outerPadding: _CorporatePdfMetrics.sectionOuter(),
-                  title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
+                  title: resume.sectionHeading(
+                    ResumeBuilderSectionIds.work,
+                    'EXPERIENCE',
+                  ),
                   titleColor: preset.titleColor,
                   lineColor: _CorporatePdfMetrics.lineColor,
                   hasContent: resume.visibleWorkExperiences.isNotEmpty,
@@ -581,7 +614,10 @@ class _DarkHeaderPreview extends StatelessWidget {
                 if (!resume.includeEducationInResume) return null;
                 return _CorporatePdfLikeSection(
                   outerPadding: _CorporatePdfMetrics.sectionOuter(),
-                  title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
+                  title: resume.sectionHeading(
+                    ResumeBuilderSectionIds.education,
+                    'EDUCATION',
+                  ),
                   titleColor: preset.titleColor,
                   lineColor: _CorporatePdfMetrics.lineColor,
                   hasContent: resume.visibleEducation.isNotEmpty,
@@ -605,11 +641,13 @@ class _DarkHeaderPreview extends StatelessWidget {
               case ResumeBuilderSectionIds.skills:
                 return _CorporatePdfLikeSection(
                   outerPadding: _CorporatePdfMetrics.sectionOuter(),
-                  title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(),
+                  title: resume.sectionHeading(
+                    ResumeBuilderSectionIds.skills,
+                    'SKILLS',
+                  ),
                   titleColor: preset.titleColor,
                   lineColor: _CorporatePdfMetrics.lineColor,
-                  hasContent:
-                      resume.showCategorisedSkills || skills.isNotEmpty,
+                  hasContent: resume.showCategorisedSkills || skills.isNotEmpty,
                   child: _CorporateSkillsColumns(
                     skills: skills,
                     bodyStyle: bodyStyle,
@@ -621,7 +659,10 @@ class _DarkHeaderPreview extends StatelessWidget {
                 if (!resume.includeProjectsInResume) return null;
                 return _CorporatePdfLikeSection(
                   outerPadding: _CorporatePdfMetrics.sectionOuter(),
-                  title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(),
+                  title: resume.sectionHeading(
+                    ResumeBuilderSectionIds.projects,
+                    'PROJECTS',
+                  ),
                   titleColor: preset.titleColor,
                   lineColor: _CorporatePdfMetrics.lineColor,
                   hasContent: resume.visibleProjects.isNotEmpty,
@@ -958,10 +999,7 @@ Widget? _customSectionMetaPreview(CustomSectionItem item, TextStyle bodyStyle) {
   }
   return Padding(
     padding: const EdgeInsets.only(bottom: 3),
-    child: Text(
-      meta,
-      style: bodyStyle.copyWith(fontWeight: FontWeight.w600),
-    ),
+    child: Text(meta, style: bodyStyle.copyWith(fontWeight: FontWeight.w600)),
   );
 }
 
@@ -969,18 +1007,37 @@ Widget _corporateCustomSectionBody(
   CustomSectionItem item,
   TextStyle bodyStyle, {
   TextStyle? titleStyle,
+  List<Widget> Function(List<WorkExperience> items)? experienceEntries,
 }) {
+  if (item.usesItemEntries &&
+      item.visibleEntries.isNotEmpty &&
+      experienceEntries != null) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: experienceEntries(
+        item.visibleEntries.map((entry) => entry.toWorkExperience()).toList(),
+      ),
+    );
+  }
   final meta = _customSectionMetaPreview(item, bodyStyle);
   if (meta != null) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         meta,
-        _corporateCustomSectionBodyInner(item, bodyStyle, titleStyle: titleStyle),
+        _corporateCustomSectionBodyInner(
+          item,
+          bodyStyle,
+          titleStyle: titleStyle,
+        ),
       ],
     );
   }
-  return _corporateCustomSectionBodyInner(item, bodyStyle, titleStyle: titleStyle);
+  return _corporateCustomSectionBodyInner(
+    item,
+    bodyStyle,
+    titleStyle: titleStyle,
+  );
 }
 
 List<Widget> _advancedCustomEntryPreviewWidgets(
@@ -1102,7 +1159,15 @@ List<Widget> _customSectionFlowPreviewWidgets(
   TextStyle bodyStyle, {
   bool showAllContent = false,
   TextStyle? titleStyle,
+  List<Widget> Function(List<WorkExperience> items)? experienceEntries,
 }) {
+  if (section.usesItemEntries &&
+      section.visibleEntries.isNotEmpty &&
+      experienceEntries != null) {
+    return experienceEntries(
+      section.visibleEntries.map((entry) => entry.toWorkExperience()).toList(),
+    );
+  }
   final meta = _customSectionMetaPreview(section, bodyStyle);
   if (meta != null) {
     return [
@@ -1279,6 +1344,67 @@ class _CreativePreview extends StatelessWidget {
         : '';
     final summaryMaxLines = showAllContent ? null : 5;
 
+    List<Widget> creativeExperienceEntries(List<WorkExperience> items) {
+      return [
+        for (final item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: RichText(
+                        maxLines: showAllContent ? null : 2,
+                        overflow: showAllContent
+                            ? TextOverflow.clip
+                            : TextOverflow.ellipsis,
+                        text: TextSpan(
+                          style: subtitleStyle,
+                          children: [
+                            TextSpan(
+                              text: item.role.ifBlank('Role').toUpperCase(),
+                            ),
+                            TextSpan(
+                              text: ' / ${item.company.ifBlank('Company')}',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (_creativeExperienceDateRange(
+                      item.startDate,
+                      item.endDate,
+                    ).isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        _creativeExperienceDateRange(
+                          item.startDate,
+                          item.endDate,
+                        ),
+                        maxLines: showAllContent ? null : 1,
+                        overflow: showAllContent ? null : TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                        style: bodyStyle.copyWith(fontStyle: FontStyle.italic),
+                      ),
+                    ],
+                  ],
+                ),
+                _CreativeBulletColumn(
+                  items: showAllContent
+                      ? _workBulletLines(item)
+                      : _workBulletLines(item).take(1).toList(),
+                  bodyStyle: bodyStyle,
+                  maxLines: showAllContent ? null : 1,
+                ),
+              ],
+            ),
+          ),
+      ];
+    }
+
     return DefaultTextStyle.merge(
       style: TextStyle(fontFamily: ResumeTextFont.outfit.flutterFontFamily),
       child: Stack(
@@ -1406,8 +1532,9 @@ class _CreativePreview extends StatelessWidget {
                         followOrder: followBuilderSectionOrder,
                       ),
                       (id) {
-                        final customIndex =
-                            ResumeBuilderSectionIds.customIndex(id);
+                        final customIndex = ResumeBuilderSectionIds.customIndex(
+                          id,
+                        );
                         if (customIndex != null) {
                           if (customIndex >= resume.customSections.length) {
                             return null;
@@ -1422,9 +1549,7 @@ class _CreativePreview extends StatelessWidget {
                             children: [
                               const SizedBox(height: sectionGap),
                               _CreativeSidebarHeading(
-                                title: section.title.ifBlank(
-                                  'Custom Section',
-                                ),
+                                title: section.title.ifBlank('Custom Section'),
                                 lineColor: lineColor,
                                 sectionTitlePt: sectionTitlePt,
                               ),
@@ -1432,6 +1557,8 @@ class _CreativePreview extends StatelessWidget {
                               ..._customSectionFlowPreviewWidgets(
                                 section,
                                 bodyStyle,
+                                showAllContent: showAllContent,
+                                experienceEntries: creativeExperienceEntries,
                               ),
                             ],
                           );
@@ -1443,85 +1570,16 @@ class _CreativePreview extends StatelessWidget {
                               children: [
                                 const SizedBox(height: sectionGap),
                                 _CreativeSidebarHeading(
-                                  title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
+                                  title: resume.sectionHeading(
+                                    ResumeBuilderSectionIds.work,
+                                    'EXPERIENCE',
+                                  ),
                                   lineColor: lineColor,
                                   sectionTitlePt: sectionTitlePt,
                                 ),
                                 const SizedBox(height: headingGap),
                                 if (experiences.isNotEmpty)
-                                  ...experiences.map((item) {
-                                    final bullets = _workBulletLines(item);
-                                    final dateLabel =
-                                        _creativeExperienceDateRange(
-                                      item.startDate,
-                                      item.endDate,
-                                    );
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 8,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Expanded(
-                                                child: RichText(
-                                                  maxLines: showAllContent
-                                                      ? null
-                                                      : 2,
-                                                  overflow: showAllContent
-                                                      ? TextOverflow.clip
-                                                      : TextOverflow.ellipsis,
-                                                  text: TextSpan(
-                                                    style: subtitleStyle,
-                                                    children: [
-                                                      TextSpan(
-                                                        text: item.role
-                                                            .ifBlank('Role')
-                                                            .toUpperCase(),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            ' / ${item.company.ifBlank('Company')}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              if (dateLabel.isNotEmpty) ...[
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  dateLabel,
-                                                  maxLines: showAllContent
-                                                      ? null
-                                                      : 1,
-                                                  overflow: showAllContent
-                                                      ? null
-                                                      : TextOverflow.ellipsis,
-                                                  textAlign: TextAlign.right,
-                                                  style: bodyStyle.copyWith(
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                          _CreativeBulletColumn(
-                                            items: showAllContent
-                                                ? bullets
-                                                : bullets.take(1).toList(),
-                                            bodyStyle: bodyStyle,
-                                            maxLines:
-                                                showAllContent ? null : 1,
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  })
+                                  ...creativeExperienceEntries(experiences)
                                 else
                                   Text(
                                     'Add your work experience details.',
@@ -1536,7 +1594,10 @@ class _CreativePreview extends StatelessWidget {
                               children: [
                                 const SizedBox(height: sectionGap),
                                 _CreativeSidebarHeading(
-                                  title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
+                                  title: resume.sectionHeading(
+                                    ResumeBuilderSectionIds.education,
+                                    'EDUCATION',
+                                  ),
                                   lineColor: lineColor,
                                   sectionTitlePt: sectionTitlePt,
                                 ),
@@ -1590,7 +1651,10 @@ class _CreativePreview extends StatelessWidget {
                               children: [
                                 const SizedBox(height: sectionGap),
                                 _CreativeSidebarHeading(
-                                  title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(),
+                                  title: resume.sectionHeading(
+                                    ResumeBuilderSectionIds.skills,
+                                    'SKILLS',
+                                  ),
                                   lineColor: lineColor,
                                   sectionTitlePt: sectionTitlePt,
                                 ),
@@ -1608,16 +1672,14 @@ class _CreativePreview extends StatelessWidget {
                                     children: [
                                       Expanded(
                                         child: _CreativeBulletColumn(
-                                          items:
-                                              skills.take(midpoint).toList(),
+                                          items: skills.take(midpoint).toList(),
                                           bodyStyle: bodyStyle,
                                         ),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: _CreativeBulletColumn(
-                                          items:
-                                              skills.skip(midpoint).toList(),
+                                          items: skills.skip(midpoint).toList(),
                                           bodyStyle: bodyStyle,
                                         ),
                                       ),
@@ -1631,7 +1693,10 @@ class _CreativePreview extends StatelessWidget {
                               children: [
                                 const SizedBox(height: sectionGap),
                                 _CreativeSidebarHeading(
-                                  title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(),
+                                  title: resume.sectionHeading(
+                                    ResumeBuilderSectionIds.projects,
+                                    'PROJECTS',
+                                  ),
                                   lineColor: lineColor,
                                   sectionTitlePt: sectionTitlePt,
                                 ),
@@ -1642,9 +1707,7 @@ class _CreativePreview extends StatelessWidget {
                                   ...projects.map((item) {
                                     final lines = _projectBulletLines(item);
                                     return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 8,
-                                      ),
+                                      padding: const EdgeInsets.only(bottom: 8),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -1831,7 +1894,13 @@ class _ClassicSidebarPreview extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (resume.showCategorisedSkills) ...[
-                            Text(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(), style: sectionTitleStyle),
+                            Text(
+                              resume.sectionHeading(
+                                ResumeBuilderSectionIds.skills,
+                                'SKILLS',
+                              ),
+                              style: sectionTitleStyle,
+                            ),
                             SizedBox(height: 14),
                             _categorisedSkillsPreview(
                               groups: resume.skillGroupsForResume,
@@ -1842,7 +1911,10 @@ class _ClassicSidebarPreview extends StatelessWidget {
                             ),
                           ] else
                             _ClassicSidebarListSection(
-                              title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(),
+                              title: resume.sectionHeading(
+                                ResumeBuilderSectionIds.skills,
+                                'SKILLS',
+                              ),
                               items: skills,
                               bulletColor: accentColor,
                               titleStyle: sectionTitleStyle,
@@ -1947,21 +2019,47 @@ class _ClassicSidebarPreview extends StatelessWidget {
                               return null;
                             }
                             return _ClassicContentSection(
-                              title: section.title.trim().toUpperCase(),
+                              title: section.title.trim(),
                               titleStyle: sectionTitleStyle,
                               topDividerColor: sectionBorderColor,
-                              child: _ClassicCustomSectionBlock(
-                                item: section,
-                                bodyStyle: bodyStyle,
-                                mutedColor: mutedColor,
-                                bulletColor: titleColor,
-                              ),
+                              child:
+                                  section.usesItemEntries &&
+                                      section.visibleEntries.isNotEmpty
+                                  ? Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        for (final entry
+                                            in section.visibleEntries)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 10,
+                                            ),
+                                            child: _ClassicExperienceBlock(
+                                              item: entry.toWorkExperience(),
+                                              bodyStyle: bodyStyle,
+                                              subtitleStyle: subtitleStyle,
+                                              bulletColor: titleColor,
+                                              maxBulletLines: 2,
+                                            ),
+                                          ),
+                                      ],
+                                    )
+                                  : _ClassicCustomSectionBlock(
+                                      item: section,
+                                      bodyStyle: bodyStyle,
+                                      mutedColor: mutedColor,
+                                      bulletColor: titleColor,
+                                    ),
                             );
                           }
                           switch (id) {
                             case ResumeBuilderSectionIds.work:
                               return _ClassicContentSection(
-                                title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
+                                title: resume.sectionHeading(
+                                  ResumeBuilderSectionIds.work,
+                                  'EXPERIENCE',
+                                ),
                                 titleStyle: sectionTitleStyle,
                                 topDividerColor: sectionBorderColor,
                                 child: experiences.isEmpty
@@ -1993,7 +2091,10 @@ class _ClassicSidebarPreview extends StatelessWidget {
                               );
                             case ResumeBuilderSectionIds.education:
                               return _ClassicContentSection(
-                                title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
+                                title: resume.sectionHeading(
+                                  ResumeBuilderSectionIds.education,
+                                  'EDUCATION',
+                                ),
                                 titleStyle: sectionTitleStyle,
                                 topDividerColor: sectionBorderColor,
                                 child: education.isEmpty
@@ -2025,12 +2126,14 @@ class _ClassicSidebarPreview extends StatelessWidget {
                             case ResumeBuilderSectionIds.projects:
                               if (projects.isEmpty) return null;
                               return _ClassicContentSection(
-                                title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(),
+                                title: resume.sectionHeading(
+                                  ResumeBuilderSectionIds.projects,
+                                  'PROJECTS',
+                                ),
                                 titleStyle: sectionTitleStyle,
                                 topDividerColor: sectionBorderColor,
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     for (final item in projects)
                                       Padding(
@@ -2317,12 +2420,37 @@ class _HeaderSidebarPreview extends StatelessWidget {
                                         style: sectionTitleStyle,
                                       ),
                                       const SizedBox(height: 8),
-                                      _ClassicCustomSectionBlock(
-                                        item: section,
-                                        bodyStyle: bodyStyle,
-                                        mutedColor: mutedColor,
-                                        bulletColor: titleColor,
-                                      ),
+                                      section.usesItemEntries &&
+                                              section.visibleEntries.isNotEmpty
+                                          ? Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                for (final entry
+                                                    in section.visibleEntries)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          bottom: 12,
+                                                        ),
+                                                    child:
+                                                        _HeaderSidebarExperienceBlock(
+                                                          item: entry
+                                                              .toWorkExperience(),
+                                                          jobLineStyle:
+                                                              jobLineStyle,
+                                                          dateStyle: dateStyle,
+                                                          bodyStyle: bodyStyle,
+                                                        ),
+                                                  ),
+                                              ],
+                                            )
+                                          : _ClassicCustomSectionBlock(
+                                              item: section,
+                                              bodyStyle: bodyStyle,
+                                              mutedColor: mutedColor,
+                                              bulletColor: titleColor,
+                                            ),
                                     ],
                                   ),
                                 );
@@ -2356,12 +2484,13 @@ class _HeaderSidebarPreview extends StatelessWidget {
                                               padding: const EdgeInsets.only(
                                                 bottom: 12,
                                               ),
-                                              child: _HeaderSidebarExperienceBlock(
-                                                item: item,
-                                                jobLineStyle: jobLineStyle,
-                                                dateStyle: dateStyle,
-                                                bodyStyle: bodyStyle,
-                                              ),
+                                              child:
+                                                  _HeaderSidebarExperienceBlock(
+                                                    item: item,
+                                                    jobLineStyle: jobLineStyle,
+                                                    dateStyle: dateStyle,
+                                                    bodyStyle: bodyStyle,
+                                                  ),
                                             ),
                                       ],
                                     ),
@@ -2374,7 +2503,10 @@ class _HeaderSidebarPreview extends StatelessWidget {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
+                                          resume.sectionHeading(
+                                            ResumeBuilderSectionIds.education,
+                                            'Education',
+                                          ),
                                           style: sectionTitleStyle,
                                         ),
                                         const SizedBox(height: 8),
@@ -2391,12 +2523,13 @@ class _HeaderSidebarPreview extends StatelessWidget {
                                               padding: const EdgeInsets.only(
                                                 bottom: 10,
                                               ),
-                                              child: _HeaderSidebarEducationBlock(
-                                                item: item,
-                                                titleStyle: jobLineStyle,
-                                                dateStyle: dateStyle,
-                                                bodyStyle: bodyStyle,
-                                              ),
+                                              child:
+                                                  _HeaderSidebarEducationBlock(
+                                                    item: item,
+                                                    titleStyle: jobLineStyle,
+                                                    dateStyle: dateStyle,
+                                                    bodyStyle: bodyStyle,
+                                                  ),
                                             ),
                                       ],
                                     ),
@@ -2410,7 +2543,10 @@ class _HeaderSidebarPreview extends StatelessWidget {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
+                                          resume.sectionHeading(
+                                            ResumeBuilderSectionIds.projects,
+                                            'Projects',
+                                          ),
                                           style: sectionTitleStyle,
                                         ),
                                         const SizedBox(height: 8),
@@ -2469,7 +2605,10 @@ class _HeaderSidebarPreview extends StatelessWidget {
                             ),
                         const SizedBox(height: 14),
                         Text(
-                          resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.skills,
+                            'Skills',
+                          ),
                           style: railHeadingStyle,
                         ),
                         const SizedBox(height: 10),
@@ -2709,7 +2848,10 @@ class _DetailsSidebarPreview extends StatelessWidget {
                   ),
                   SizedBox(height: _sectionGap),
                   _DetailsSidebarRailSectionHeading(
-                    title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(),
+                    title: resume.sectionHeading(
+                      ResumeBuilderSectionIds.skills,
+                      'SKILLS',
+                    ),
                     titleColor: titleColor,
                     dividerColor: dividerColor,
                   ),
@@ -2771,8 +2913,9 @@ class _DetailsSidebarPreview extends StatelessWidget {
                         exclude: {ResumeBuilderSectionIds.skills},
                       ),
                       (id) {
-                        final customIndex =
-                            ResumeBuilderSectionIds.customIndex(id);
+                        final customIndex = ResumeBuilderSectionIds.customIndex(
+                          id,
+                        );
                         if (customIndex != null) {
                           if (customIndex >= resume.customSections.length) {
                             return null;
@@ -2783,21 +2926,47 @@ class _DetailsSidebarPreview extends StatelessWidget {
                             return null;
                           }
                           return _DetailsSidebarContentSection(
-                            title: section.title.trim().toUpperCase(),
+                            title: section.title.trim(),
                             titleColor: titleColor,
                             dividerColor: dividerColor,
-                            child: _ClassicCustomSectionBlock(
-                              item: section,
-                              bodyStyle: bodyStyle,
-                              mutedColor: mutedColor,
-                              bulletColor: titleColor,
-                            ),
+                            child:
+                                section.usesItemEntries &&
+                                    section.visibleEntries.isNotEmpty
+                                ? Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      for (final entry
+                                          in section.visibleEntries)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 12,
+                                          ),
+                                          child: _DetailsSidebarExperienceBlock(
+                                            item: entry.toWorkExperience(),
+                                            bodyStyle: bodyStyle,
+                                            titleColor: titleColor,
+                                            mutedColor: mutedColor,
+                                            bulletColor: titleColor,
+                                          ),
+                                        ),
+                                    ],
+                                  )
+                                : _ClassicCustomSectionBlock(
+                                    item: section,
+                                    bodyStyle: bodyStyle,
+                                    mutedColor: mutedColor,
+                                    bulletColor: titleColor,
+                                  ),
                           );
                         }
                         switch (id) {
                           case ResumeBuilderSectionIds.work:
                             return _DetailsSidebarContentSection(
-                              title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
+                              title: resume.sectionHeading(
+                                ResumeBuilderSectionIds.work,
+                                'EXPERIENCE',
+                              ),
                               titleColor: titleColor,
                               dividerColor: dividerColor,
                               child: resume.visibleWorkExperiences.isEmpty
@@ -2820,19 +2989,22 @@ class _DetailsSidebarPreview extends StatelessWidget {
                                             ),
                                             child:
                                                 _DetailsSidebarExperienceBlock(
-                                              item: item,
-                                              bodyStyle: bodyStyle,
-                                              titleColor: titleColor,
-                                              mutedColor: mutedColor,
-                                              bulletColor: titleColor,
-                                            ),
+                                                  item: item,
+                                                  bodyStyle: bodyStyle,
+                                                  titleColor: titleColor,
+                                                  mutedColor: mutedColor,
+                                                  bulletColor: titleColor,
+                                                ),
                                           ),
                                       ],
                                     ),
                             );
                           case ResumeBuilderSectionIds.education:
                             return _DetailsSidebarContentSection(
-                              title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
+                              title: resume.sectionHeading(
+                                ResumeBuilderSectionIds.education,
+                                'EDUCATION',
+                              ),
                               titleColor: titleColor,
                               dividerColor: dividerColor,
                               child: resume.visibleEducation.isEmpty
@@ -2854,11 +3026,11 @@ class _DetailsSidebarPreview extends StatelessWidget {
                                             ),
                                             child:
                                                 _DetailsSidebarEducationBlock(
-                                              item: item,
-                                              bodyStyle: bodyStyle,
-                                              titleColor: titleColor,
-                                              mutedColor: mutedColor,
-                                            ),
+                                                  item: item,
+                                                  bodyStyle: bodyStyle,
+                                                  titleColor: titleColor,
+                                                  mutedColor: mutedColor,
+                                                ),
                                           ),
                                       ],
                                     ),
@@ -2866,7 +3038,10 @@ class _DetailsSidebarPreview extends StatelessWidget {
                           case ResumeBuilderSectionIds.projects:
                             if (projects.isEmpty) return null;
                             return _DetailsSidebarContentSection(
-                              title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(),
+                              title: resume.sectionHeading(
+                                ResumeBuilderSectionIds.projects,
+                                'PROJECTS',
+                              ),
                               titleColor: titleColor,
                               dividerColor: dividerColor,
                               child: Column(
@@ -3039,7 +3214,7 @@ class _AtsStructuredPreview extends StatelessWidget {
                 children: [
                   const SizedBox(height: _sectionGap),
                   _atsBandTitle(
-                    section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
+                    section.title.trim().ifBlank('ADDITIONAL'),
                     accent,
                     band,
                   ),
@@ -3048,6 +3223,13 @@ class _AtsStructuredPreview extends StatelessWidget {
                     section,
                     bodyStyle,
                     showAllContent: showAllContent,
+                    experienceEntries: (items) =>
+                        _atsStructuredExperienceBlocks(
+                          works: items,
+                          bodyStyle: bodyStyle,
+                          subtitleStyle: subtitleStyle,
+                          showAllContent: showAllContent,
+                        ),
                   ),
                 ],
               );
@@ -3059,7 +3241,14 @@ class _AtsStructuredPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: _sectionGap),
-                    _atsBandTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(), accent, band),
+                    _atsBandTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.work,
+                        'EXPERIENCE',
+                      ),
+                      accent,
+                      band,
+                    ),
                     const SizedBox(height: 6),
                     ..._atsStructuredExperienceBlocks(
                       works: works,
@@ -3075,7 +3264,14 @@ class _AtsStructuredPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: _sectionGap),
-                    _atsBandTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(), accent, band),
+                    _atsBandTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.education,
+                        'EDUCATION',
+                      ),
+                      accent,
+                      band,
+                    ),
                     const SizedBox(height: 6),
                     ..._atsStructuredEducationBlocks(
                       items: education,
@@ -3094,7 +3290,14 @@ class _AtsStructuredPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: _sectionGap),
-                    _atsBandTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(), accent, band),
+                    _atsBandTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.skills,
+                        'SKILLS',
+                      ),
+                      accent,
+                      band,
+                    ),
                     const SizedBox(height: 6),
                     _atsStructuredSkillsGrid(
                       skills: skills,
@@ -3113,7 +3316,14 @@ class _AtsStructuredPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: _sectionGap),
-                    _atsBandTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(), accent, band),
+                    _atsBandTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.projects,
+                        'PROJECTS',
+                      ),
+                      accent,
+                      band,
+                    ),
                     const SizedBox(height: 6),
                     for (final project in projects)
                       ..._atsStructuredProjectBlocks(
@@ -3495,6 +3705,12 @@ class _AtsLatexClassicPreview extends StatelessWidget {
                     section,
                     bodyStyle,
                     showAllContent: showAllContent,
+                    experienceEntries: (items) => _latexPreviewExperience(
+                      items,
+                      bodyStyle,
+                      boldStyle,
+                      italicStyle,
+                    ),
                   ),
                 ],
               );
@@ -3505,7 +3721,14 @@ class _AtsLatexClassicPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _latexPreviewSection(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), sectionStyle, ink),
+                    _latexPreviewSection(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.work,
+                        'Experience',
+                      ),
+                      sectionStyle,
+                      ink,
+                    ),
                     ..._latexPreviewExperience(
                       resume.visibleWorkExperiences,
                       bodyStyle,
@@ -3519,7 +3742,14 @@ class _AtsLatexClassicPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _latexPreviewSection(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'), sectionStyle, ink),
+                    _latexPreviewSection(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.education,
+                        'Education',
+                      ),
+                      sectionStyle,
+                      ink,
+                    ),
                     ..._latexPreviewEducation(
                       resume.visibleEducation,
                       bodyStyle,
@@ -3537,7 +3767,14 @@ class _AtsLatexClassicPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _latexPreviewSection(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), sectionStyle, ink),
+                    _latexPreviewSection(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.skills,
+                        'Skills',
+                      ),
+                      sectionStyle,
+                      ink,
+                    ),
                     _atsStructuredSkillsGrid(
                       skills: _pdfAlignedSkills(resume),
                       bodyStyle: bodyStyle,
@@ -3555,7 +3792,14 @@ class _AtsLatexClassicPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _latexPreviewSection(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), sectionStyle, ink),
+                    _latexPreviewSection(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.projects,
+                        'Projects',
+                      ),
+                      sectionStyle,
+                      ink,
+                    ),
                     ..._latexPreviewProjects(
                       resume.visibleProjects,
                       bodyStyle,
@@ -3588,7 +3832,7 @@ Widget _latexPreviewSection(String title, TextStyle style, Color ink) {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(title.toUpperCase(), style: style),
+        Text(title, style: style),
         Container(height: 0.8, color: ink.withValues(alpha: 0.75)),
       ],
     ),
@@ -3834,8 +4078,7 @@ class _AccentStripPreview extends StatelessWidget {
                                     resume.customSections.length) {
                                   return null;
                                 }
-                                final item =
-                                    resume.customSections[customIndex];
+                                final item = resume.customSections[customIndex];
                                 if (item.isBlank ||
                                     !customSections.contains(item)) {
                                   return null;
@@ -3845,7 +4088,7 @@ class _AccentStripPreview extends StatelessWidget {
                                   children: [
                                     SizedBox(height: sectionGap - 6),
                                     _AccentStripSectionTitle(
-                                      title: item.title.trim().toUpperCase(),
+                                      title: item.title.trim(),
                                       style: headingStyle,
                                     ),
                                     const SizedBox(height: 10),
@@ -3866,7 +4109,10 @@ class _AccentStripPreview extends StatelessWidget {
                                     children: [
                                       SizedBox(height: sectionGap),
                                       _AccentStripSectionTitle(
-                                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
+                                        title: resume.sectionHeading(
+                                          ResumeBuilderSectionIds.work,
+                                          'EXPERIENCE',
+                                        ),
                                         style: headingStyle,
                                       ),
                                       const SizedBox(height: 10),
@@ -3892,7 +4138,10 @@ class _AccentStripPreview extends StatelessWidget {
                                     children: [
                                       SizedBox(height: sectionGap - 4),
                                       _AccentStripSectionTitle(
-                                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
+                                        title: resume.sectionHeading(
+                                          ResumeBuilderSectionIds.education,
+                                          'EDUCATION',
+                                        ),
                                         style: headingStyle,
                                       ),
                                       const SizedBox(height: 10),
@@ -3920,7 +4169,10 @@ class _AccentStripPreview extends StatelessWidget {
                                     children: [
                                       SizedBox(height: sectionGap - 6),
                                       _AccentStripSectionTitle(
-                                        title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(),
+                                        title: resume.sectionHeading(
+                                          ResumeBuilderSectionIds.skills,
+                                          'SKILLS',
+                                        ),
                                         style: headingStyle,
                                       ),
                                       const SizedBox(height: 10),
@@ -3953,7 +4205,10 @@ class _AccentStripPreview extends StatelessWidget {
                                     children: [
                                       SizedBox(height: sectionGap - 6),
                                       _AccentStripSectionTitle(
-                                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(),
+                                        title: resume.sectionHeading(
+                                          ResumeBuilderSectionIds.projects,
+                                          'PROJECTS',
+                                        ),
                                         style: headingStyle,
                                       ),
                                       const SizedBox(height: 10),
@@ -4160,13 +4415,22 @@ class _AccentStripCustomSectionBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+      final heading =
+          titleStyle ?? bodyStyle.copyWith(fontWeight: FontWeight.w600);
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: _advancedCustomEntryPreviewWidgets(
-          item,
-          bodyStyle,
-          titleStyle: titleStyle,
-        ),
+        children: [
+          for (final entry in item.visibleEntries)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _AccentStripExperienceBlock(
+                item: entry.toWorkExperience(),
+                dateStyle: heading,
+                bodyStyle: bodyStyle,
+                roleStyle: heading,
+              ),
+            ),
+        ],
       );
     }
     if (item.layoutMode == CustomSectionLayoutMode.projects) {
@@ -4374,18 +4638,24 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                 (id) {
                   final customIndex = ResumeBuilderSectionIds.customIndex(id);
                   if (customIndex != null) {
-                    // Ends after Projects — omit custom sections.
-                    return null;
-                  }
-                  switch (id) {
-                    case ResumeBuilderSectionIds.work:
-                      if (!resume.includeWorkInResume || works.isEmpty) {
-                        return null;
-                      }
-                      return ruledSection(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), [
-                        for (final item in works) ...[
+                    if (customIndex < 0 ||
+                        customIndex >= resume.customSections.length) {
+                      return null;
+                    }
+                    final section = resume.customSections[customIndex];
+                    if (!section.usesItemEntries ||
+                        section.visibleEntries.isEmpty ||
+                        section.isBlank) {
+                      return null;
+                    }
+                    return ruledSection(
+                      section.title.trim().ifBlank('Additional'),
+                      [
+                        for (final work in section.visibleEntries.map(
+                          (entry) => entry.toWorkExperience(),
+                        )) ...[
                           Text(
-                            item.role.trim().ifBlank('Role'),
+                            work.role.trim().ifBlank('Role'),
                             style: subtitleStyle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -4396,7 +4666,7 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  item.company.trim().ifBlank('Company'),
+                                  work.company.trim().ifBlank('Company'),
                                   style: bodyStyle.copyWith(
                                     fontStyle: FontStyle.italic,
                                   ),
@@ -4405,13 +4675,13 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                                 ),
                               ),
                               if (educationDateRangeLabel(
-                                item.startDate,
-                                item.endDate,
+                                work.startDate,
+                                work.endDate,
                               ).isNotEmpty)
                                 Text(
                                   educationDateRangeLabel(
-                                    item.startDate,
-                                    item.endDate,
+                                    work.startDate,
+                                    work.endDate,
                                   ),
                                   style: bodyStyle.copyWith(
                                     fontStyle: FontStyle.italic,
@@ -4422,58 +4692,129 @@ class _AtsSerifRulesPreview extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                         ],
-                      ]);
+                      ],
+                    );
+                  }
+                  switch (id) {
+                    case ResumeBuilderSectionIds.work:
+                      if (!resume.includeWorkInResume || works.isEmpty) {
+                        return null;
+                      }
+                      return ruledSection(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Experience',
+                        ),
+                        [
+                          for (final item in works) ...[
+                            Text(
+                              item.role.trim().ifBlank('Role'),
+                              style: subtitleStyle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    item.company.trim().ifBlank('Company'),
+                                    style: bodyStyle.copyWith(
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (educationDateRangeLabel(
+                                  item.startDate,
+                                  item.endDate,
+                                ).isNotEmpty)
+                                  Text(
+                                    educationDateRangeLabel(
+                                      item.startDate,
+                                      item.endDate,
+                                    ),
+                                    style: bodyStyle.copyWith(
+                                      fontStyle: FontStyle.italic,
+                                      color: _ink.withValues(alpha: 0.72),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                          ],
+                        ],
+                      );
                     case ResumeBuilderSectionIds.education:
                       if (!resume.includeEducationInResume || edu.isEmpty) {
                         return null;
                       }
-                      return ruledSection(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'), [
-                        for (final item in edu) ...[
-                          Text(
-                            '${item.degree.trim().ifBlank('Degree')} · ${educationDateRangeLabel(item.startDate, item.endDate)}',
-                            style: subtitleStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            item.institution.trim().ifBlank('Institution'),
-                            style: bodyStyle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
+                      return ruledSection(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'Education',
+                        ),
+                        [
+                          for (final item in edu) ...[
+                            Text(
+                              '${item.degree.trim().ifBlank('Degree')} · ${educationDateRangeLabel(item.startDate, item.endDate)}',
+                              style: subtitleStyle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              item.institution.trim().ifBlank('Institution'),
+                              style: bodyStyle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                          ],
                         ],
-                      ]);
+                      );
                     case ResumeBuilderSectionIds.skills:
                       if (!resume.includeSkillsInResume ||
                           !(resume.showCategorisedSkills ||
                               skills.isNotEmpty)) {
                         return null;
                       }
-                      return ruledSection(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), [
-                        _atsStructuredSkillsGrid(
-                          skills: skills,
-                          bodyStyle: bodyStyle,
-                          showAllContent: false,
-                          resume: resume,
-                          categoryStyle: subtitleStyle,
+                      return ruledSection(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
                         ),
-                      ]);
+                        [
+                          _atsStructuredSkillsGrid(
+                            skills: skills,
+                            bodyStyle: bodyStyle,
+                            showAllContent: false,
+                            resume: resume,
+                            categoryStyle: subtitleStyle,
+                          ),
+                        ],
+                      );
                     case ResumeBuilderSectionIds.projects:
-                      if (!resume.includeProjectsInResume ||
-                          projects.isEmpty) {
+                      if (!resume.includeProjectsInResume || projects.isEmpty) {
                         return null;
                       }
-                      return ruledSection(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), [
-                        for (final project in projects)
-                          ..._atsStructuredProjectBlocks(
-                            project: project,
-                            bodyStyle: bodyStyle,
-                            subtitleStyle: subtitleStyle,
-                            showAllContent: false,
-                          ),
-                      ]);
+                      return ruledSection(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
+                        [
+                          for (final project in projects)
+                            ..._atsStructuredProjectBlocks(
+                              project: project,
+                              bodyStyle: bodyStyle,
+                              subtitleStyle: subtitleStyle,
+                              showAllContent: false,
+                            ),
+                        ],
+                      );
                     default:
                       return null;
                   }
@@ -4527,6 +4868,39 @@ class _AtsModernFlowPreview extends StatelessWidget {
     final skills = _pdfAlignedSkills(resume).take(8).toList();
     final projects = resume.visibleProjects.take(2).toList();
     final customSections = resume.visibleCustomSections;
+
+    List<Widget> flowExperience(List<WorkExperience> items) => [
+      for (var i = 0; i < items.length; i++) ...[
+        Text(
+          '${items[i].role.trim().ifBlank('Role')} — ${items[i].company.trim().ifBlank('Company')}',
+          style: subtitleStyle,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (educationDateRangeLabel(
+          items[i].startDate,
+          items[i].endDate,
+        ).isNotEmpty)
+          Text(
+            educationDateRangeLabel(items[i].startDate, items[i].endDate),
+            style: bodyStyle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        for (final bullet
+            in items[i].bullets.where((b) => b.trim().isNotEmpty).take(3))
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              '• ${bullet.trim()}',
+              style: bodyStyle,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        if (i < items.length - 1) const SizedBox(height: 8),
+      ],
+    ];
 
     Widget flowRule() =>
         Container(height: 1, color: ink.withValues(alpha: 0.22));
@@ -4622,20 +4996,28 @@ class _AtsModernFlowPreview extends StatelessWidget {
                       return null;
                     }
                     final section = resume.customSections[customIndex];
-                    if (section.isBlank ||
-                        !customSections.contains(section)) {
+                    if (section.isBlank || !customSections.contains(section)) {
                       return null;
                     }
                     return flowSection(
                       section.title.trim().ifBlank('Additional'),
-                      [..._customSectionFlowPreviewWidgets(section, bodyStyle)],
+                      [
+                        ..._customSectionFlowPreviewWidgets(
+                          section,
+                          bodyStyle,
+                          experienceEntries: flowExperience,
+                        ),
+                      ],
                     );
                   }
                   switch (id) {
                     case ResumeBuilderSectionIds.work:
                       if (!resume.includeWorkInResume) return null;
                       return flowSection(
-                        resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Experience',
+                        ),
                         works.isEmpty
                             ? [
                                 Text(
@@ -4645,49 +5027,15 @@ class _AtsModernFlowPreview extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ]
-                            : [
-                                for (var i = 0; i < works.length; i++) ...[
-                                  Text(
-                                    '${works[i].role.trim().ifBlank('Role')} — ${works[i].company.trim().ifBlank('Company')}',
-                                    style: subtitleStyle,
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (educationDateRangeLabel(
-                                    works[i].startDate,
-                                    works[i].endDate,
-                                  ).isNotEmpty)
-                                    Text(
-                                      educationDateRangeLabel(
-                                        works[i].startDate,
-                                        works[i].endDate,
-                                      ),
-                                      style: bodyStyle,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  for (final bullet
-                                      in works[i].bullets
-                                          .where((b) => b.trim().isNotEmpty)
-                                          .take(3))
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 2),
-                                      child: Text(
-                                        '• ${bullet.trim()}',
-                                        style: bodyStyle,
-                                        maxLines: 4,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  if (i < works.length - 1)
-                                    const SizedBox(height: 8),
-                                ],
-                              ],
+                            : flowExperience(works),
                       );
                     case ResumeBuilderSectionIds.education:
                       if (!resume.includeEducationInResume) return null;
                       return flowSection(
-                        resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'Education',
+                        ),
                         education.isEmpty
                             ? [
                                 Text(
@@ -4713,9 +5061,7 @@ class _AtsModernFlowPreview extends StatelessWidget {
                                     maxLines: 3,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (educationDetailLine(
-                                    item,
-                                  ).isNotEmpty) ...[
+                                  if (educationDetailLine(item).isNotEmpty) ...[
                                     const SizedBox(height: 2),
                                     Text(
                                       educationDetailLine(item),
@@ -4731,7 +5077,10 @@ class _AtsModernFlowPreview extends StatelessWidget {
                     case ResumeBuilderSectionIds.skills:
                       if (!resume.includeSkillsInResume) return null;
                       return flowSection(
-                        resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
                         skills.isEmpty
                             ? [
                                 Text(
@@ -4752,19 +5101,24 @@ class _AtsModernFlowPreview extends StatelessWidget {
                               ],
                       );
                     case ResumeBuilderSectionIds.projects:
-                      if (!resume.includeProjectsInResume ||
-                          projects.isEmpty) {
+                      if (!resume.includeProjectsInResume || projects.isEmpty) {
                         return null;
                       }
-                      return flowSection(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), [
-                        for (final project in projects)
-                          ..._atsStructuredProjectBlocks(
-                            project: project,
-                            bodyStyle: bodyStyle,
-                            subtitleStyle: subtitleStyle,
-                            showAllContent: false,
-                          ),
-                      ]);
+                      return flowSection(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
+                        [
+                          for (final project in projects)
+                            ..._atsStructuredProjectBlocks(
+                              project: project,
+                              bodyStyle: bodyStyle,
+                              subtitleStyle: subtitleStyle,
+                              showAllContent: false,
+                            ),
+                        ],
+                      );
                     default:
                       return null;
                   }
@@ -4838,6 +5192,58 @@ class _AtsCenterClassicPreview extends StatelessWidget {
     final projects = resume.visibleProjects.take(2).toList();
     final education = resume.visibleEducation.take(2).toList();
     final customSections = resume.visibleCustomSections;
+
+    List<Widget> centerExperience(List<WorkExperience> items) => [
+      for (final item in items)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.company.trim().ifBlank('Company'),
+                      style: highlightStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (educationDateRangeLabel(
+                    item.startDate,
+                    item.endDate,
+                  ).isNotEmpty)
+                    Text(
+                      educationDateRangeLabel(item.startDate, item.endDate),
+                      style: sectionSubtitleStyle,
+                    ),
+                ],
+              ),
+              Text(
+                item.role.trim().ifBlank('Role'),
+                style: bodyStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              for (final bullet in _workBulletLines(item).take(3))
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: ResumeTypography.atsCenterClassicBulletIndentPt,
+                    top: 2,
+                  ),
+                  child: Text(
+                    '• ${bullet.trim()}',
+                    style: bodyStyle,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
+        ),
+    ];
 
     Widget sectionRule() => Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -4913,8 +5319,7 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                       return null;
                     }
                     final section = resume.customSections[customIndex];
-                    if (section.isBlank ||
-                        !customSections.contains(section)) {
+                    if (section.isBlank || !customSections.contains(section)) {
                       return null;
                     }
                     return Column(
@@ -4922,16 +5327,14 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                       children: [
                         sectionRule(),
                         Text(
-                          section.title
-                              .trim()
-                              .ifBlank('ADDITIONAL')
-                              .toUpperCase(),
+                          section.title.trim().ifBlank('ADDITIONAL'),
                           style: sectionTitleStyle,
                         ),
                         const SizedBox(height: 6),
                         ..._customSectionFlowPreviewWidgets(
                           section,
                           bodyStyle,
+                          experienceEntries: centerExperience,
                         ),
                       ],
                     );
@@ -4943,65 +5346,15 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           sectionRule(),
-                          Text(resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(), style: sectionTitleStyle),
-                          const SizedBox(height: 6),
-                          for (final item in works)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          item.company.trim().ifBlank(
-                                            'Company',
-                                          ),
-                                          style: highlightStyle,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      if (educationDateRangeLabel(
-                                        item.startDate,
-                                        item.endDate,
-                                      ).isNotEmpty)
-                                        Text(
-                                          educationDateRangeLabel(
-                                            item.startDate,
-                                            item.endDate,
-                                          ),
-                                          style: sectionSubtitleStyle,
-                                        ),
-                                    ],
-                                  ),
-                                  Text(
-                                    item.role.trim().ifBlank('Role'),
-                                    style: bodyStyle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  for (final bullet
-                                      in _workBulletLines(item).take(3))
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: ResumeTypography
-                                            .atsCenterClassicBulletIndentPt,
-                                        top: 2,
-                                      ),
-                                      child: Text(
-                                        '• ${bullet.trim()}',
-                                        style: bodyStyle,
-                                        maxLines: 4,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                ],
-                              ),
+                          Text(
+                            resume.sectionHeading(
+                              ResumeBuilderSectionIds.work,
+                              'EXPERIENCE',
                             ),
+                            style: sectionTitleStyle,
+                          ),
+                          const SizedBox(height: 6),
+                          ...centerExperience(works),
                         ],
                       );
                     case ResumeBuilderSectionIds.education:
@@ -5010,7 +5363,13 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           sectionRule(),
-                          Text(resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(), style: sectionTitleStyle),
+                          Text(
+                            resume.sectionHeading(
+                              ResumeBuilderSectionIds.education,
+                              'EDUCATION',
+                            ),
+                            style: sectionTitleStyle,
+                          ),
                           const SizedBox(height: 6),
                           if (education.isEmpty)
                             Text(
@@ -5045,7 +5404,13 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           sectionRule(),
-                          Text(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(), style: sectionTitleStyle),
+                          Text(
+                            resume.sectionHeading(
+                              ResumeBuilderSectionIds.skills,
+                              'SKILLS',
+                            ),
+                            style: sectionTitleStyle,
+                          ),
                           const SizedBox(height: 6),
                           if (resume.showCategorisedSkills)
                             _categorisedSkillsPreview(
@@ -5065,15 +5430,20 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                         ],
                       );
                     case ResumeBuilderSectionIds.projects:
-                      if (!resume.includeProjectsInResume ||
-                          projects.isEmpty) {
+                      if (!resume.includeProjectsInResume || projects.isEmpty) {
                         return null;
                       }
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           sectionRule(),
-                          Text(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(), style: sectionTitleStyle),
+                          Text(
+                            resume.sectionHeading(
+                              ResumeBuilderSectionIds.projects,
+                              'PROJECTS',
+                            ),
+                            style: sectionTitleStyle,
+                          ),
                           const SizedBox(height: 6),
                           for (final project in projects) ...[
                             Text(
@@ -5289,8 +5659,65 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                 (id) {
                   final customIndex = ResumeBuilderSectionIds.customIndex(id);
                   if (customIndex != null) {
-                    // Professional Blue preview historically omits customs.
-                    return null;
+                    if (customIndex < 0 ||
+                        customIndex >= resume.customSections.length) {
+                      return null;
+                    }
+                    final section = resume.customSections[customIndex];
+                    if (!section.usesItemEntries ||
+                        section.visibleEntries.isEmpty ||
+                        section.isBlank) {
+                      return null;
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 12),
+                        sectionTitleWithRule(
+                          section.title.trim().ifBlank('Additional'),
+                        ),
+                        for (final work in section.visibleEntries.map(
+                          (entry) => entry.toWorkExperience(),
+                        ))
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        work.company.trim().ifBlank('Company'),
+                                        style: subtitleStyle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (educationDateRangeLabel(
+                                      work.startDate,
+                                      work.endDate,
+                                    ).isNotEmpty)
+                                      Text(
+                                        educationDateRangeLabel(
+                                          work.startDate,
+                                          work.endDate,
+                                        ),
+                                        style: subtitleStyle,
+                                      ),
+                                  ],
+                                ),
+                                Text(
+                                  work.role.trim().ifBlank('Role'),
+                                  style: bodyStyle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    );
                   }
                   switch (id) {
                     case ResumeBuilderSectionIds.work:
@@ -5348,7 +5775,12 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const SizedBox(height: 12),
-                          sectionTitleWithRule(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+                          sectionTitleWithRule(
+                            resume.sectionHeading(
+                              ResumeBuilderSectionIds.education,
+                              'Education',
+                            ),
+                          ),
                           if (education.isEmpty)
                             Text(
                               'Add schools and programs.',
@@ -5410,15 +5842,19 @@ class _AtsProfessionalBluePreview extends StatelessWidget {
                         ],
                       );
                     case ResumeBuilderSectionIds.projects:
-                      if (!resume.includeProjectsInResume ||
-                          projects.isEmpty) {
+                      if (!resume.includeProjectsInResume || projects.isEmpty) {
                         return null;
                       }
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const SizedBox(height: 12),
-                          sectionTitleWithRule(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                          sectionTitleWithRule(
+                            resume.sectionHeading(
+                              ResumeBuilderSectionIds.projects,
+                              'Projects',
+                            ),
+                          ),
                           for (final project in projects)
                             ..._atsStructuredProjectBlocks(
                               project: project,
@@ -5530,7 +5966,10 @@ class _AtsClassicCvPreview extends StatelessWidget {
     }
 
     Widget personalGrid() {
-      Widget pair(({String label, String value}) row, {TextAlign valueAlign = TextAlign.left}) {
+      Widget pair(
+        ({String label, String value}) row, {
+        TextAlign valueAlign = TextAlign.left,
+      }) {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -5650,12 +6089,95 @@ class _AtsClassicCvPreview extends StatelessWidget {
                         identical(section, languagesSection)) {
                       return null;
                     }
+                    if (section.usesItemEntries &&
+                        section.visibleEntries.isNotEmpty) {
+                      final entries = section.visibleEntries
+                          .map((entry) => entry.toWorkExperience())
+                          .toList();
+                      return Column(
+                        children: [
+                          for (var i = 0; i < entries.length; i++) ...[
+                            if (i == 0) rule(),
+                            if (i > 0) const SizedBox(height: 8),
+                            rail(
+                              left: i == 0
+                                  ? section.title.trim().ifBlank('Additional')
+                                  : dateRange(
+                                      entries[i].startDate,
+                                      entries[i].endDate,
+                                    ),
+                              content: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Text.rich(
+                                      TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: entries[i].role
+                                                .trim()
+                                                .ifBlank('Role'),
+                                            style: boldStyle,
+                                          ),
+                                          if (splitTrailingEmDash(
+                                            entries[i].company,
+                                          ).head.isNotEmpty)
+                                            TextSpan(
+                                              text:
+                                                  ' — ${splitTrailingEmDash(entries[i].company).head}',
+                                              style: bodyStyle,
+                                            ),
+                                        ],
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (splitTrailingEmDash(
+                                    entries[i].company,
+                                  ).tail.isNotEmpty)
+                                    Text(
+                                      splitTrailingEmDash(
+                                        entries[i].company,
+                                      ).tail,
+                                      style: bodyStyle,
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            rail(
+                              left: i == 0
+                                  ? dateRange(
+                                      entries[i].startDate,
+                                      entries[i].endDate,
+                                    )
+                                  : '',
+                              content: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  for (final b in _workBulletLines(
+                                    entries[i],
+                                  ).take(2))
+                                    Text(
+                                      '• $b',
+                                      style: bodyStyle,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         rule(),
                         rail(
-                          left: section.title.trim().ifBlank('Additional').toUpperCase(),
+                          left: section.title.trim().ifBlank('Additional'),
                           content: Text(
                             section.content.trim().isNotEmpty
                                 ? section.content.trim()
@@ -5735,8 +6257,9 @@ class _AtsClassicCvPreview extends StatelessWidget {
                               content: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  for (final b
-                                      in _workBulletLines(works[i]).take(2))
+                                  for (final b in _workBulletLines(
+                                    works[i],
+                                  ).take(2))
                                     Text(
                                       '• $b',
                                       style: bodyStyle,
@@ -5776,7 +6299,9 @@ class _AtsClassicCvPreview extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  if (education[i].institution.trim().isNotEmpty)
+                                  if (education[i].institution
+                                      .trim()
+                                      .isNotEmpty)
                                     Flexible(
                                       child: Text(
                                         [
@@ -5866,7 +6391,10 @@ class _AtsClassicCvPreview extends StatelessWidget {
                         children: [
                           rule(),
                           rail(
-                            left: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(),
+                            left: resume.sectionHeading(
+                              ResumeBuilderSectionIds.skills,
+                              'SKILLS',
+                            ),
                             content: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: skillWidgets,
@@ -5892,9 +6420,9 @@ class _AtsClassicCvPreview extends StatelessWidget {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  for (final b
-                                      in _projectBulletLines(projects[i])
-                                          .take(2))
+                                  for (final b in _projectBulletLines(
+                                    projects[i],
+                                  ).take(2))
                                     Text(
                                       '• $b',
                                       style: bodyStyle,
@@ -5993,6 +6521,55 @@ class _AtsExecutivePreview extends StatelessWidget {
     final projects = resume.visibleProjects.take(2).toList();
     final customSections = resume.visibleCustomSections;
 
+    List<Widget> executiveExperience(List<WorkExperience> items) => [
+      for (var i = 0; i < items.length; i++) ...[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                items[i].role.trim().ifBlank('Role').toUpperCase(),
+                style: subtitleStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (educationDateRangeLabel(
+              items[i].startDate,
+              items[i].endDate,
+            ).isNotEmpty)
+              Flexible(
+                child: Text(
+                  educationDateRangeLabel(items[i].startDate, items[i].endDate),
+                  textAlign: TextAlign.right,
+                  style: subtitleStyle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          items[i].company.trim().ifBlank('Company'),
+          style: bodyStyle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        for (final bullet in _workBulletLines(items[i]).take(3))
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              '• $bullet',
+              style: bodyStyle,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        if (i < items.length - 1) const SizedBox(height: 8),
+      ],
+    ];
+
     Widget executiveSection(String title, List<Widget> children) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -6090,20 +6667,28 @@ class _AtsExecutivePreview extends StatelessWidget {
                       return null;
                     }
                     final section = resume.customSections[customIndex];
-                    if (section.isBlank ||
-                        !customSections.contains(section)) {
+                    if (section.isBlank || !customSections.contains(section)) {
                       return null;
                     }
                     return executiveSection(
-                      section.title.trim().ifBlank('ADDITIONAL').toUpperCase(),
-                      [..._customSectionFlowPreviewWidgets(section, bodyStyle)],
+                      section.title.trim().ifBlank('ADDITIONAL'),
+                      [
+                        ..._customSectionFlowPreviewWidgets(
+                          section,
+                          bodyStyle,
+                          experienceEntries: executiveExperience,
+                        ),
+                      ],
                     );
                   }
                   switch (id) {
                     case ResumeBuilderSectionIds.work:
                       if (!resume.includeWorkInResume) return null;
                       return executiveSection(
-                        resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'EXPERIENCE',
+                        ),
                         works.isEmpty
                             ? [
                                 Text(
@@ -6113,68 +6698,15 @@ class _AtsExecutivePreview extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ]
-                            : [
-                                for (var i = 0; i < works.length; i++) ...[
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          works[i].role
-                                              .trim()
-                                              .ifBlank('Role')
-                                              .toUpperCase(),
-                                          style: subtitleStyle,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      if (educationDateRangeLabel(
-                                        works[i].startDate,
-                                        works[i].endDate,
-                                      ).isNotEmpty)
-                                        Flexible(
-                                          child: Text(
-                                            educationDateRangeLabel(
-                                              works[i].startDate,
-                                              works[i].endDate,
-                                            ),
-                                            textAlign: TextAlign.right,
-                                            style: subtitleStyle,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    works[i].company.trim().ifBlank('Company'),
-                                    style: bodyStyle,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  for (final bullet
-                                      in _workBulletLines(works[i]).take(3))
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 2),
-                                      child: Text(
-                                        '• $bullet',
-                                        style: bodyStyle,
-                                        maxLines: 4,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  if (i < works.length - 1)
-                                    const SizedBox(height: 8),
-                                ],
-                              ],
+                            : executiveExperience(works),
                       );
                     case ResumeBuilderSectionIds.education:
                       if (!resume.includeEducationInResume) return null;
                       return executiveSection(
-                        resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'EDUCATION',
+                        ),
                         education.isEmpty
                             ? [
                                 Text(
@@ -6215,7 +6747,10 @@ class _AtsExecutivePreview extends StatelessWidget {
                     case ResumeBuilderSectionIds.skills:
                       if (!resume.includeSkillsInResume) return null;
                       return executiveSection(
-                        resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(),
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'SKILLS',
+                        ),
                         skills.isEmpty
                             ? [
                                 Text(
@@ -6236,19 +6771,24 @@ class _AtsExecutivePreview extends StatelessWidget {
                               ],
                       );
                     case ResumeBuilderSectionIds.projects:
-                      if (!resume.includeProjectsInResume ||
-                          projects.isEmpty) {
+                      if (!resume.includeProjectsInResume || projects.isEmpty) {
                         return null;
                       }
-                      return executiveSection(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(), [
-                        for (final project in projects)
-                          ..._atsStructuredProjectBlocks(
-                            project: project,
-                            bodyStyle: bodyStyle,
-                            subtitleStyle: subtitleStyle,
-                            showAllContent: false,
-                          ),
-                      ]);
+                      return executiveSection(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'PROJECTS',
+                        ),
+                        [
+                          for (final project in projects)
+                            ..._atsStructuredProjectBlocks(
+                              project: project,
+                              bodyStyle: bodyStyle,
+                              subtitleStyle: subtitleStyle,
+                              showAllContent: false,
+                            ),
+                        ],
+                      );
                     default:
                       return null;
                   }
@@ -7169,7 +7709,8 @@ class _CreativeProfileAvatar extends StatelessWidget {
                 width: width,
                 height: height,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _avatarFallback(resume, initialsStyle),
+                errorBuilder: (_, _, _) =>
+                    _avatarFallback(resume, initialsStyle),
               )
             : _avatarFallback(resume, initialsStyle),
       ),
@@ -7373,10 +7914,7 @@ String _headerSidebarPreviewJobLine(WorkExperience item) {
 
 /// Wraps long Details-rail links onto new lines at punctuation. Avoids
 /// zero-width spaces (unsupported glyphs show as "X" boxes in resume fonts).
-String _headerSidebarPreviewWrapFriendlyLine(
-  String text, {
-  int maxChars = 22,
-}) {
+String _headerSidebarPreviewWrapFriendlyLine(String text, {int maxChars = 22}) {
   final normalized = text.trim();
   if (normalized.isEmpty) return normalized;
   const breakAfter = {'/', '.', '@', '-', '_', '?', '=', '&'};
@@ -7483,6 +8021,7 @@ class _SlateSidebarPreview extends StatelessWidget {
   static const double _pageHeight = 841.89;
   static const double _railWidth = 196;
   static const double _railInset = 24;
+
   /// Gap between rail text and the white main column.
   static const double _railRightInset = 32;
   static const double _avatarSize = 104;
@@ -7509,9 +8048,11 @@ class _SlateSidebarPreview extends StatelessWidget {
       height: ResumeTypography.bodyTextLineHeight,
     );
 
-    final nameStyle = style(FontWeight.w700, 30, titleColor).copyWith(
-      height: 1.1,
-    );
+    final nameStyle = style(
+      FontWeight.w700,
+      30,
+      titleColor,
+    ).copyWith(height: 1.1);
     final jobTitleStyle = style(
       FontWeight.w400,
       13,
@@ -7519,7 +8060,11 @@ class _SlateSidebarPreview extends StatelessWidget {
     ).copyWith(letterSpacing: 1.2);
     final sectionTitleStyle = style(FontWeight.w700, 16, titleColor);
     final roleStyle = style(FontWeight.w600, bodyPt - 0.5, titleColor);
-    final detailStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
+    final detailStyle = style(
+      FontWeight.w400,
+      detailPt,
+      ResumeTypography.atsStructuredBodyTextColor,
+    );
     final railHeading = style(FontWeight.w700, 15, onRail);
     final railLabel = style(FontWeight.w700, detailPt, onRail);
     final railValue = style(FontWeight.w400, detailPt - 0.5, onRail);
@@ -7556,33 +8101,39 @@ class _SlateSidebarPreview extends StatelessWidget {
       child: dates.isEmpty && organisation.isEmpty
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [Text(title, style: roleStyle), ...details],
+              children: [
+                Text(title, style: roleStyle),
+                ...details,
+              ],
             )
           : Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: _metaColumn,
-            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (dates.isNotEmpty) Text(dates, style: detailStyle),
-                if (organisation.isNotEmpty) ...[
-                  const SizedBox(height: 3),
-                  Text(organisation, style: detailStyle),
-                ],
+                SizedBox(
+                  width: _metaColumn,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (dates.isNotEmpty) Text(dates, style: detailStyle),
+                      if (organisation.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(organisation, style: detailStyle),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: _columnGap),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: roleStyle),
+                      ...details,
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-          const SizedBox(width: _columnGap),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [Text(title, style: roleStyle), ...details],
-            ),
-          ),
-        ],
-      ),
     );
 
     final avatarPath = resume.profileImagePath.trim();
@@ -7699,13 +8250,21 @@ class _SlateSidebarPreview extends StatelessWidget {
                       sectionTitleStyle,
                       titleColor,
                     ),
-                    ..._advancedCustomEntryPreviewWidgets(
-                      item,
-                      detailStyle,
-                      titleStyle: detailStyle.copyWith(
-                        fontWeight: FontWeight.w600,
+                    for (final work in item.visibleEntries.map(
+                      (e) => e.toWorkExperience(),
+                    ))
+                      datedEntry(
+                        dates: educationDateRangeLabel(
+                          work.startDate,
+                          work.endDate,
+                        ),
+                        organisation: work.company.trim(),
+                        title: work.role.trim().ifBlank('Role'),
+                        details: [
+                          for (final line in _workBulletLines(work))
+                            bullet(line),
+                        ],
                       ),
-                    ),
                   ],
                 );
               }
@@ -7730,7 +8289,14 @@ class _SlateSidebarPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ruledTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), sectionTitleStyle, titleColor),
+                    ruledTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.work,
+                        'Experience',
+                      ),
+                      sectionTitleStyle,
+                      titleColor,
+                    ),
                     for (final item in experiences)
                       datedEntry(
                         dates: educationDateRangeLabel(
@@ -7759,7 +8325,14 @@ class _SlateSidebarPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ruledTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'), sectionTitleStyle, titleColor),
+                    ruledTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.education,
+                        'Education',
+                      ),
+                      sectionTitleStyle,
+                      titleColor,
+                    ),
                     for (final item in education)
                       datedEntry(
                         dates: educationDateRangeLabel(
@@ -7788,7 +8361,14 @@ class _SlateSidebarPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ruledTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), sectionTitleStyle, titleColor),
+                    ruledTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.projects,
+                        'Projects',
+                      ),
+                      sectionTitleStyle,
+                      titleColor,
+                    ),
                     for (final item in projects)
                       datedEntry(
                         dates: '',
@@ -7905,18 +8485,11 @@ class _AtsCleanSansPreview extends StatelessWidget {
     );
 
     final strong = style(FontWeight.w600, textPt + 0.5);
-    final body = style(
-      FontWeight.w400,
-      textPt,
-      color: const Color(0xFF2B2B2B),
-    );
+    final body = style(FontWeight.w400, textPt, color: const Color(0xFF2B2B2B));
 
     Widget sectionTitle(String title) => Padding(
       padding: const EdgeInsets.only(top: 18, bottom: 6),
-      child: Text(
-        title.toUpperCase(),
-        style: style(FontWeight.w600, 14, color: accent),
-      ),
+      child: Text(title, style: style(FontWeight.w600, 14, color: accent)),
     );
 
     Widget bulletRow(String text, {bool indent = true}) => Padding(
@@ -8037,11 +8610,17 @@ class _AtsCleanSansPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     sectionTitle(item.title.trim().ifBlank('Custom section')),
-                    ..._advancedCustomEntryPreviewWidgets(
-                      item,
-                      body,
-                      titleStyle: body.copyWith(fontWeight: FontWeight.w600),
-                    ),
+                    for (final work in item.visibleEntries.map(
+                      (e) => e.toWorkExperience(),
+                    ))
+                      entry(
+                        work.role.trim().ifBlank('Role'),
+                        educationDateRangeLabel(work.startDate, work.endDate),
+                        work.company.trim(),
+                        nonEmpty(work.bullets).isNotEmpty
+                            ? nonEmpty(work.bullets)
+                            : nonEmpty([work.description]),
+                      ),
                   ],
                 );
               }
@@ -8064,7 +8643,12 @@ class _AtsCleanSansPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.work,
+                        'Work Experience',
+                      ),
+                    ),
                     for (final item in items)
                       entry(
                         item.role.trim().ifBlank('Role'),
@@ -8082,7 +8666,12 @@ class _AtsCleanSansPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.education,
+                        'Education',
+                      ),
+                    ),
                     twoColumns([
                       for (final item in items)
                         Column(
@@ -8127,7 +8716,12 @@ class _AtsCleanSansPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.skills,
+                        'Skills',
+                      ),
+                    ),
                     ..._previewPaginatedSkillLines(skills, body),
                   ],
                 );
@@ -8137,7 +8731,12 @@ class _AtsCleanSansPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.projects,
+                        'Projects',
+                      ),
+                    ),
                     for (final item in items)
                       entry(
                         item.title.trim().ifBlank('Project'),
@@ -8236,7 +8835,11 @@ class _TimelineProfilePreview extends StatelessWidget {
 
     final entryTitle = style(FontWeight.w600, bodyPt, titleColor);
     final meta = style(FontWeight.w400, detailPt, mutedColor);
-    final bodyText = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
+    final bodyText = style(
+      FontWeight.w400,
+      detailPt,
+      ResumeTypography.atsStructuredBodyTextColor,
+    );
     final sidebarItem = style(FontWeight.w400, detailPt - 0.5, mutedColor);
 
     List<String> nonEmpty(Iterable<String> lines) => lines
@@ -8248,7 +8851,7 @@ class _TimelineProfilePreview extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title.toUpperCase(),
+          title,
           style: style(FontWeight.w700, size, titleColor, letterSpacing: 1.1),
         ),
         const SizedBox(height: 4),
@@ -8357,9 +8960,7 @@ class _TimelineProfilePreview extends StatelessWidget {
             margin: const EdgeInsets.only(top: 3, right: 7),
             decoration: BoxDecoration(color: band, shape: BoxShape.circle),
           ),
-          Expanded(
-            child: Text(text, style: sidebarItem),
-          ),
+          Expanded(child: Text(text, style: sidebarItem)),
         ],
       ),
     );
@@ -8377,7 +8978,10 @@ class _TimelineProfilePreview extends StatelessWidget {
         if (skills.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.only(top: 14, bottom: 7),
-            child: ruledHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), 13),
+            child: ruledHeading(
+              resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+              13,
+            ),
           ),
           for (final skill in skills) sidebarBullet(skill),
         ],
@@ -8419,11 +9023,24 @@ class _TimelineProfilePreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     sectionTitle(item.title.trim().ifBlank('Custom section')),
-                    ..._advancedCustomEntryPreviewWidgets(
-                      item,
-                      bodyText,
-                      titleStyle: bodyText.copyWith(fontWeight: FontWeight.w600),
-                    ),
+                    for (final work in item.visibleEntries.map(
+                      (e) => e.toWorkExperience(),
+                    ))
+                      entry(
+                        work.company.trim().ifBlank('Company'),
+                        educationDateRangeLabel(
+                          work.startDate,
+                          work.endDate,
+                        ).toUpperCase(),
+                        work.role.trim(),
+                        [
+                          for (final line
+                              in nonEmpty(work.bullets).isNotEmpty
+                                  ? nonEmpty(work.bullets)
+                                  : nonEmpty([work.description]))
+                            bullet(line),
+                        ],
+                      ),
                   ],
                 );
               }
@@ -8448,7 +9065,12 @@ class _TimelineProfilePreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.work,
+                        'Work Experience',
+                      ),
+                    ),
                     for (final item in items)
                       entry(
                         item.company.trim().ifBlank('Company'),
@@ -8473,7 +9095,12 @@ class _TimelineProfilePreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.education,
+                        'Education',
+                      ),
+                    ),
                     for (final item in items)
                       entry(
                         item.degree.trim().ifBlank(
@@ -8483,10 +9110,7 @@ class _TimelineProfilePreview extends StatelessWidget {
                         item.institution.trim(),
                         [
                           if (educationDetailLine(item).isNotEmpty)
-                            Text(
-                              educationDetailLine(item),
-                              style: entryTitle,
-                            ),
+                            Text(educationDetailLine(item), style: entryTitle),
                         ],
                       ),
                   ],
@@ -8497,13 +9121,21 @@ class _TimelineProfilePreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.projects,
+                        'Projects',
+                      ),
+                    ),
                     for (final item in items)
                       entry(
                         item.title.trim().ifBlank('Project'),
                         '',
                         item.subtitle.trim(),
-                        [for (final line in nonEmpty(item.bullets)) bullet(line)],
+                        [
+                          for (final line in nonEmpty(item.bullets))
+                            bullet(line),
+                        ],
                       ),
                   ],
                 );
@@ -8706,7 +9338,11 @@ class _SoftHeaderPreview extends StatelessWidget {
 
     final entryTitle = style(FontWeight.w600, bodyPt, titleColor);
     final meta = style(FontWeight.w400, detailPt, mutedColor);
-    final bodyText = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
+    final bodyText = style(
+      FontWeight.w400,
+      detailPt,
+      ResumeTypography.atsStructuredBodyTextColor,
+    );
 
     List<String> nonEmpty(Iterable<String> lines) => lines
         .map((line) => line.trim())
@@ -8727,38 +9363,37 @@ class _SoftHeaderPreview extends StatelessWidget {
             ),
           ),
           Text(
-            title.toUpperCase(),
+            title,
             style: style(FontWeight.w700, 15, titleColor, letterSpacing: 2.2),
           ),
         ],
       ),
     );
 
-    Widget bullet(String text, {TextStyle? textStyle}) =>
-        Padding(
-          padding: const EdgeInsets.only(bottom: 3),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 3,
-                height: 3,
-                margin: const EdgeInsets.only(top: 5, right: 8),
-                decoration: BoxDecoration(
-                  color: mutedColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  text,
-                  style: textStyle ?? bodyText,
-                  textAlign: TextAlign.left,
-                ),
-              ),
-            ],
+    Widget bullet(String text, {TextStyle? textStyle}) => Padding(
+      padding: const EdgeInsets.only(bottom: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 3,
+            height: 3,
+            margin: const EdgeInsets.only(top: 5, right: 8),
+            decoration: BoxDecoration(
+              color: mutedColor,
+              shape: BoxShape.circle,
+            ),
           ),
-        );
+          Expanded(
+            child: Text(
+              text,
+              style: textStyle ?? bodyText,
+              textAlign: TextAlign.left,
+            ),
+          ),
+        ],
+      ),
+    );
 
     final contacts = nonEmpty([
       resume.phone,
@@ -8791,7 +9426,12 @@ class _SoftHeaderPreview extends StatelessWidget {
             bullet(line),
         ],
         if (education.isNotEmpty) ...[
-          sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+          sectionTitle(
+            resume.sectionHeading(
+              ResumeBuilderSectionIds.education,
+              'Education',
+            ),
+          ),
           for (final item in education) ...[
             if (educationDateRangeLabel(
               item.startDate,
@@ -8815,7 +9455,8 @@ class _SoftHeaderPreview extends StatelessWidget {
       ],
     );
 
-    final showSidebar = contacts.isNotEmpty ||
+    final showSidebar =
+        contacts.isNotEmpty ||
         education.isNotEmpty ||
         languageSections.isNotEmpty;
 
@@ -8834,9 +9475,7 @@ class _SoftHeaderPreview extends StatelessWidget {
           previewBodySectionOrder(
             resume,
             followOrder: followBuilderSectionOrder,
-            exclude: {
-              ResumeBuilderSectionIds.education,
-            },
+            exclude: {ResumeBuilderSectionIds.education},
           ),
           (id) {
             final customIndex = ResumeBuilderSectionIds.customIndex(id);
@@ -8852,11 +9491,37 @@ class _SoftHeaderPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     sectionTitle(item.title.trim().ifBlank('Custom section')),
-                    ..._advancedCustomEntryPreviewWidgets(
-                      item,
-                      bodyText,
-                      titleStyle: bodyText.copyWith(fontWeight: FontWeight.w600),
-                    ),
+                    for (final work in item.visibleEntries.map(
+                      (e) => e.toWorkExperience(),
+                    )) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              work.company.trim().ifBlank('Company'),
+                              style: entryTitle,
+                            ),
+                          ),
+                          Text(
+                            educationDateRangeLabel(
+                              work.startDate,
+                              work.endDate,
+                            ).toUpperCase(),
+                            style: meta,
+                          ),
+                        ],
+                      ),
+                      if (work.role.trim().isNotEmpty)
+                        Text(work.role.trim(), style: bodyText),
+                      const SizedBox(height: 5),
+                      for (final line
+                          in nonEmpty(work.bullets).isNotEmpty
+                              ? nonEmpty(work.bullets)
+                              : nonEmpty([work.description]))
+                        bullet(line),
+                      const SizedBox(height: 12),
+                    ],
                   ],
                 );
               }
@@ -8881,7 +9546,12 @@ class _SoftHeaderPreview extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
+                      ),
                       _categorisedSkillsPreview(
                         groups: resume.skillGroupsForResume,
                         bodyStyle: bodyText,
@@ -8895,7 +9565,12 @@ class _SoftHeaderPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.skills,
+                        'Skills',
+                      ),
+                    ),
                     for (var i = 0; i < skills.length; i += 2)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 3),
@@ -8920,7 +9595,12 @@ class _SoftHeaderPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.work,
+                        'Work Experience',
+                      ),
+                    ),
                     for (final item in items) ...[
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -8958,7 +9638,12 @@ class _SoftHeaderPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.projects,
+                        'Projects',
+                      ),
+                    ),
                     for (final item in items) ...[
                       Text(
                         item.title.trim().ifBlank('Project'),
@@ -8967,8 +9652,7 @@ class _SoftHeaderPreview extends StatelessWidget {
                       if (item.subtitle.trim().isNotEmpty)
                         Text(item.subtitle.trim(), style: bodyText),
                       const SizedBox(height: 5),
-                      for (final line in nonEmpty(item.bullets))
-                        bullet(line),
+                      for (final line in nonEmpty(item.bullets)) bullet(line),
                       const SizedBox(height: 12),
                     ],
                   ],
@@ -9176,7 +9860,11 @@ class _BlueDiagonalPreview extends StatelessWidget {
       height: lineH,
     );
 
-    final bodyText = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
+    final bodyText = style(
+      FontWeight.w400,
+      detailPt,
+      ResumeTypography.atsStructuredBodyTextColor,
+    );
     final entryDate = style(FontWeight.w700, bodyPt, titleColor);
     final entryTitle = style(FontWeight.w700, detailPt, titleColor);
 
@@ -9271,8 +9959,9 @@ class _BlueDiagonalPreview extends StatelessWidget {
       (Icons.link, resume.githubLink.trim()),
     ].where((entry) => entry.$2.isNotEmpty).toList();
     final education = resume.visibleEducation;
-    final languageSections =
-        resume.visibleCustomSections.where(_isLanguagesSection).toList();
+    final languageSections = resume.visibleCustomSections
+        .where(_isLanguagesSection)
+        .toList();
 
     // Single A4 preview: Contact → Languages → Education. Languages sit above
     // education so the heading/lines stay on-card; education can scale/clip.
@@ -9310,9 +9999,18 @@ class _BlueDiagonalPreview extends StatelessWidget {
             bullet(line),
         ],
         if (education.isNotEmpty) ...[
-          sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'), Icons.school_outlined),
+          sectionTitle(
+            resume.sectionHeading(
+              ResumeBuilderSectionIds.education,
+              'Education',
+            ),
+            Icons.school_outlined,
+          ),
           for (final item in education) ...[
-            if (educationDateRangeLabel(item.startDate, item.endDate).isNotEmpty)
+            if (educationDateRangeLabel(
+              item.startDate,
+              item.endDate,
+            ).isNotEmpty)
               Text(
                 educationDateRangeLabel(item.startDate, item.endDate),
                 style: style(FontWeight.w600, detailPt, titleColor),
@@ -9331,7 +10029,8 @@ class _BlueDiagonalPreview extends StatelessWidget {
       ],
     );
 
-    final showSidebar = contacts.isNotEmpty ||
+    final showSidebar =
+        contacts.isNotEmpty ||
         education.isNotEmpty ||
         languageSections.isNotEmpty;
 
@@ -9367,9 +10066,7 @@ class _BlueDiagonalPreview extends StatelessWidget {
           previewBodySectionOrder(
             resume,
             followOrder: followBuilderSectionOrder,
-            exclude: {
-              ResumeBuilderSectionIds.education,
-            },
+            exclude: {ResumeBuilderSectionIds.education},
           ),
           (id) {
             final customIndex = ResumeBuilderSectionIds.customIndex(id);
@@ -9388,11 +10085,21 @@ class _BlueDiagonalPreview extends StatelessWidget {
                       item.title.trim().ifBlank('Custom section'),
                       Icons.article_outlined,
                     ),
-                    ..._advancedCustomEntryPreviewWidgets(
-                      item,
-                      bodyText,
-                      titleStyle: bodyText.copyWith(fontWeight: FontWeight.w600),
-                    ),
+                    for (final work in item.visibleEntries.map(
+                      (e) => e.toWorkExperience(),
+                    ))
+                      timelineEntry(
+                        educationDateRangeLabel(work.startDate, work.endDate),
+                        work.role.trim().ifBlank('Role'),
+                        work.company.trim(),
+                        [
+                          for (final line
+                              in nonEmpty(work.bullets).isNotEmpty
+                                  ? nonEmpty(work.bullets)
+                                  : nonEmpty([work.description]))
+                            bullet(line),
+                        ],
+                      ),
                   ],
                 );
               }
@@ -9403,12 +10110,11 @@ class _BlueDiagonalPreview extends StatelessWidget {
                     item.title.trim().ifBlank('Custom section'),
                     Icons.article_outlined,
                   ),
-                  for (final line
-                      in nonEmpty(
-                        item.bullets.any((b) => b.trim().isNotEmpty)
-                            ? item.bullets
-                            : [item.content],
-                      ))
+                  for (final line in nonEmpty(
+                    item.bullets.any((b) => b.trim().isNotEmpty)
+                        ? item.bullets
+                        : [item.content],
+                  ))
                     bullet(line),
                 ],
               );
@@ -9421,7 +10127,13 @@ class _BlueDiagonalPreview extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), Icons.settings_outlined),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
+                        Icons.settings_outlined,
+                      ),
                       _categorisedSkillsPreview(
                         groups: resume.skillGroupsForResume,
                         bodyStyle: bodyText,
@@ -9435,7 +10147,13 @@ class _BlueDiagonalPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), Icons.settings_outlined),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.skills,
+                        'Skills',
+                      ),
+                      Icons.settings_outlined,
+                    ),
                     for (var i = 0; i < skills.length; i += 2)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 3),
@@ -9460,7 +10178,13 @@ class _BlueDiagonalPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), Icons.work_outline),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.work,
+                        'Experience',
+                      ),
+                      Icons.work_outline,
+                    ),
                     for (final item in items)
                       timelineEntry(
                         educationDateRangeLabel(item.startDate, item.endDate),
@@ -9482,7 +10206,13 @@ class _BlueDiagonalPreview extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), Icons.article_outlined),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.projects,
+                        'Projects',
+                      ),
+                      Icons.article_outlined,
+                    ),
                     for (final item in items)
                       timelineEntry(
                         '',
@@ -9643,11 +10373,7 @@ class _BlueDiagonalCornersPainter extends CustomPainter {
         Offset(columnWidth, 0),
         const Offset(0, 150),
       ], accent);
-      polygon([
-        Offset(w - 185, 0),
-        Offset(w, 0),
-        Offset(w, 185),
-      ], accent);
+      polygon([Offset(w - 185, 0), Offset(w, 0), Offset(w, 185)], accent);
       polygon([
         Offset(w - 185, 0),
         Offset(w - 125, 0),
@@ -9705,7 +10431,12 @@ class _MinimalProfilePreview extends StatelessWidget {
     final hasProfileImage =
         avatarPath.isNotEmpty && File(avatarPath).existsSync();
 
-    TextStyle style(FontWeight weight, double size, Color color, {double height = 1.35}) {
+    TextStyle style(
+      FontWeight weight,
+      double size,
+      Color color, {
+      double height = 1.35,
+    }) {
       return TextStyle(
         fontWeight: weight,
         fontSize: size,
@@ -9719,11 +10450,15 @@ class _MinimalProfilePreview extends StatelessWidget {
     final contactStyle = style(FontWeight.w400, bodyPt - 1, mutedColor);
     final sectionStyle = style(FontWeight.w800, 13.5, titleColor, height: 1.1);
     final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
-    final bodyStyle = style(FontWeight.w400, bodyPt, ResumeTypography.atsStructuredBodyTextColor);
+    final bodyStyle = style(
+      FontWeight.w400,
+      bodyPt,
+      ResumeTypography.atsStructuredBodyTextColor,
+    );
     final initialsStyle = style(FontWeight.w700, 22, accent);
 
     Widget sectionHeading(String label, {bool showRule = true}) {
-      final heading = Text(label.toUpperCase(), style: sectionStyle);
+      final heading = Text(label, style: sectionStyle);
       if (!showRule) {
         return Padding(
           padding: const EdgeInsets.only(top: 22, bottom: 10),
@@ -9851,7 +10586,13 @@ class _MinimalProfilePreview extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _minimalProfileReferenceColumn(left, entryTitleStyle, bodyStyle)),
+                Expanded(
+                  child: _minimalProfileReferenceColumn(
+                    left,
+                    entryTitleStyle,
+                    bodyStyle,
+                  ),
+                ),
                 const SizedBox(width: 24),
                 Expanded(
                   child: right == null
@@ -9877,12 +10618,19 @@ class _MinimalProfilePreview extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+            sectionHeading(
+              resume.sectionHeading(
+                ResumeBuilderSectionIds.education,
+                'Education',
+              ),
+            ),
             for (final item in items)
               datedEntry(
                 dates: educationDateRangeLabel(item.startDate, item.endDate),
                 organisation: item.institution.trim(),
-                title: item.degree.trim().isEmpty ? 'Degree' : item.degree.trim(),
+                title: item.degree.trim().isEmpty
+                    ? 'Degree'
+                    : item.degree.trim(),
                 detail: educationDetailLine(item),
               ),
           ],
@@ -9894,13 +10642,18 @@ class _MinimalProfilePreview extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience')),
+            sectionHeading(
+              resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
+            ),
             for (final item in items)
               datedEntry(
                 dates: educationDateRangeLabel(item.startDate, item.endDate),
                 organisation: item.company.trim(),
                 title: item.role.trim().isEmpty ? 'Role' : item.role.trim(),
-                detail: _minimalProfileEntryDetail(item.description, item.bullets),
+                detail: _minimalProfileEntryDetail(
+                  item.description,
+                  item.bullets,
+                ),
               ),
           ],
         );
@@ -9912,7 +10665,9 @@ class _MinimalProfilePreview extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+              sectionHeading(
+                resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+              ),
               _categorisedSkillsPreview(
                 groups: resume.skillGroupsForResume,
                 bodyStyle: bodyStyle,
@@ -9926,7 +10681,9 @@ class _MinimalProfilePreview extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+            sectionHeading(
+              resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+            ),
             skillsGrid(skills),
           ],
         );
@@ -9937,14 +10694,24 @@ class _MinimalProfilePreview extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+            sectionHeading(
+              resume.sectionHeading(
+                ResumeBuilderSectionIds.projects,
+                'Projects',
+              ),
+            ),
             for (final item in items)
               datedEntry(
                 dates: item.subtitle.trim(),
                 organisation: '',
-                title: item.title.trim().isEmpty ? 'Project' : item.title.trim(),
+                title: item.title.trim().isEmpty
+                    ? 'Project'
+                    : item.title.trim(),
                 detail: _minimalProfileEntryDetail(
-                  [item.overview, item.impact].where((s) => s.trim().isNotEmpty).join(' '),
+                  [
+                    item.overview,
+                    item.impact,
+                  ].where((s) => s.trim().isNotEmpty).join(' '),
                   item.bullets,
                 ),
               ),
@@ -9959,21 +10726,45 @@ class _MinimalProfilePreview extends StatelessWidget {
       }
       final section = resume.customSections[customIndex];
       if (section.isBlank) return null;
-      final title = section.title.trim().isEmpty ? 'Section' : section.title.trim();
+      final title = section.title.trim().isEmpty
+          ? 'Section'
+          : section.title.trim();
+      if (section.usesItemEntries && section.visibleEntries.isNotEmpty) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            sectionHeading(title),
+            for (final work in section.visibleEntries.map(
+              (e) => e.toWorkExperience(),
+            ))
+              datedEntry(
+                dates: educationDateRangeLabel(work.startDate, work.endDate),
+                organisation: work.company.trim(),
+                title: work.role.trim().isEmpty ? 'Role' : work.role.trim(),
+                detail: _minimalProfileEntryDetail(
+                  work.description,
+                  work.bullets,
+                ),
+              ),
+          ],
+        );
+      }
       if (_isMinimalProfileReferencesSection(section)) {
         final refs = _minimalProfileReferences(section);
         if (refs.isEmpty) return null;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            sectionHeading(title),
-            referencesGrid(refs),
-          ],
+          children: [sectionHeading(title), referencesGrid(refs)],
         );
       }
       final lines = section.layoutMode == CustomSectionLayoutMode.bullets
-          ? section.bullets.map((item) => item.trim()).where((item) => item.isNotEmpty)
-          : section.content.split('\n').map((item) => item.trim()).where((item) => item.isNotEmpty);
+          ? section.bullets
+                .map((item) => item.trim())
+                .where((item) => item.isNotEmpty)
+          : section.content
+                .split('\n')
+                .map((item) => item.trim())
+                .where((item) => item.isNotEmpty);
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -10087,7 +10878,10 @@ List<String> _minimalProfileBodyOrder(
 String _minimalProfileEntryDetail(String description, List<String> bullets) {
   final text = description.trim();
   if (text.isNotEmpty) return text;
-  return bullets.map((item) => item.trim()).where((item) => item.isNotEmpty).join(' ');
+  return bullets
+      .map((item) => item.trim())
+      .where((item) => item.isNotEmpty)
+      .join(' ');
 }
 
 bool _isMinimalProfileReferencesSection(CustomSectionItem section) {
@@ -10148,8 +10942,7 @@ Widget _minimalProfileReferenceColumn(
     children: [
       Text(ref.name, style: titleStyle),
       if (ref.role.isNotEmpty) Text(ref.role, style: bodyStyle),
-      if (ref.phone.isNotEmpty)
-        Text('Phone  ${ref.phone}', style: bodyStyle),
+      if (ref.phone.isNotEmpty) Text('Phone  ${ref.phone}', style: bodyStyle),
       if (ref.social.isNotEmpty)
         Text('Social  ${ref.social}', style: bodyStyle),
     ],
@@ -10201,8 +10994,10 @@ class _CharcoalCurvePreview extends StatelessWidget {
   static const double _avatarSize = 140;
   static const double _avatarLeft = 34;
   static const double _avatarTop = 48;
+
   /// Other corners of the photo box.
   static const double _avatarCornerRadius = 18;
+
   /// Bottom-right corner is 3× the other corners.
   static const double _avatarCornerRadiusBottomRight = _avatarCornerRadius * 3;
   static const double _mainLeft = _railWidth + 32;
@@ -10219,7 +11014,6 @@ class _CharcoalCurvePreview extends StatelessWidget {
     r'^(languages?|language skills|spoken languages?)$',
     caseSensitive: false,
   );
-
 
   @override
   Widget build(BuildContext context) {
@@ -10243,7 +11037,11 @@ class _CharcoalCurvePreview extends StatelessWidget {
       height: ResumeTypography.bodyTextLineHeight,
     );
 
-    final nameStyle = style(FontWeight.w800, 24, onAccent).copyWith(height: 1.1);
+    final nameStyle = style(
+      FontWeight.w800,
+      24,
+      onAccent,
+    ).copyWith(height: 1.1);
     final jobStyle = style(
       FontWeight.w400,
       13,
@@ -10251,7 +11049,11 @@ class _CharcoalCurvePreview extends StatelessWidget {
     );
     final sectionStyle = style(FontWeight.w700, 14, titleColor);
     final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
-    final bodyStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
+    final bodyStyle = style(
+      FontWeight.w400,
+      detailPt,
+      ResumeTypography.atsStructuredBodyTextColor,
+    );
     final railHeadingStyle = style(FontWeight.w700, 12.5, onAccent);
     final railBodyStyle = style(
       FontWeight.w400,
@@ -10353,10 +11155,7 @@ class _CharcoalCurvePreview extends StatelessWidget {
         children: [
           Text(label, style: railHeadingStyle),
           const SizedBox(height: 5),
-          Container(
-            height: 0.7,
-            color: Color.lerp(onAccent, accent, 0.55),
-          ),
+          Container(height: 0.7, color: Color.lerp(onAccent, accent, 0.55)),
         ],
       ),
     );
@@ -10468,10 +11267,49 @@ class _CharcoalCurvePreview extends StatelessWidget {
               }
               final item = resume.customSections[customIndex];
               if (!mainCustomSections.contains(item)) return null;
+              if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                return [
+                  sectionHeading(
+                    item.title.trim().isEmpty
+                        ? 'Custom section'
+                        : item.title.trim(),
+                  ),
+                  for (final work in item.visibleEntries.map(
+                    (e) => e.toWorkExperience(),
+                  ))
+                    splitRow(
+                      meta: [
+                        Text(
+                          work.company.trim().isEmpty
+                              ? 'Company'
+                              : work.company.trim(),
+                          style: entryTitleStyle,
+                        ),
+                        Text(
+                          educationDateRangeLabel(work.startDate, work.endDate),
+                          style: bodyStyle,
+                        ),
+                      ],
+                      detail: [
+                        Text(
+                          work.role.trim().isEmpty ? 'Role' : work.role.trim(),
+                          style: entryTitleStyle,
+                        ),
+                        for (final line in _workBulletLines(work))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text(line, style: bodyStyle),
+                          ),
+                      ],
+                    ),
+                ];
+              }
               return [
-                sectionHeading(item.title.trim().isEmpty
-                    ? 'Custom section'
-                    : item.title.trim()),
+                sectionHeading(
+                  item.title.trim().isEmpty
+                      ? 'Custom section'
+                      : item.title.trim(),
+                ),
                 for (final line in item.displayLines())
                   Padding(
                     padding: const EdgeInsets.only(bottom: 3),
@@ -10484,7 +11322,12 @@ class _CharcoalCurvePreview extends StatelessWidget {
                 final items = resume.visibleEducation;
                 if (items.isEmpty) return null;
                 return [
-                  sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+                  sectionHeading(
+                    resume.sectionHeading(
+                      ResumeBuilderSectionIds.education,
+                      'Education',
+                    ),
+                  ),
                   for (final item in items)
                     splitRow(
                       meta: [
@@ -10495,17 +11338,11 @@ class _CharcoalCurvePreview extends StatelessWidget {
                           style: entryTitleStyle,
                         ),
                         if (educationDetailLine(item).isNotEmpty)
-                          Text(
-                            educationDetailLine(item),
-                            style: bodyStyle,
-                          ),
+                          Text(educationDetailLine(item), style: bodyStyle),
                       ],
                       detail: [
                         Text(
-                          educationDateRangeLabel(
-                            item.startDate,
-                            item.endDate,
-                          ),
+                          educationDateRangeLabel(item.startDate, item.endDate),
                           style: bodyStyle,
                         ),
                         if (item.degree.trim().isNotEmpty)
@@ -10517,7 +11354,12 @@ class _CharcoalCurvePreview extends StatelessWidget {
                 final items = resume.visibleWorkExperiences;
                 if (items.isEmpty) return null;
                 return [
-                  sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
+                  sectionHeading(
+                    resume.sectionHeading(
+                      ResumeBuilderSectionIds.work,
+                      'Work Experience',
+                    ),
+                  ),
                   for (final item in items)
                     splitRow(
                       meta: [
@@ -10528,10 +11370,7 @@ class _CharcoalCurvePreview extends StatelessWidget {
                           style: entryTitleStyle,
                         ),
                         Text(
-                          educationDateRangeLabel(
-                            item.startDate,
-                            item.endDate,
-                          ),
+                          educationDateRangeLabel(item.startDate, item.endDate),
                           style: bodyStyle,
                         ),
                       ],
@@ -10551,14 +11390,24 @@ class _CharcoalCurvePreview extends StatelessWidget {
               case ResumeBuilderSectionIds.skills:
                 if (skills.isEmpty) return null;
                 return [
-                  sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                  sectionHeading(
+                    resume.sectionHeading(
+                      ResumeBuilderSectionIds.skills,
+                      'Skills',
+                    ),
+                  ),
                   for (final skill in skills) skillBar(skill),
                 ];
               case ResumeBuilderSectionIds.projects:
                 final items = resume.visibleProjects;
                 if (items.isEmpty) return null;
                 return [
-                  sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                  sectionHeading(
+                    resume.sectionHeading(
+                      ResumeBuilderSectionIds.projects,
+                      'Projects',
+                    ),
+                  ),
                   for (final item in items)
                     splitRow(
                       meta: [
@@ -10641,8 +11490,9 @@ class _CharcoalCurvePreview extends StatelessWidget {
                         topLeft: Radius.circular(_avatarCornerRadius),
                         topRight: Radius.circular(_avatarCornerRadius),
                         bottomLeft: Radius.circular(_avatarCornerRadius),
-                        bottomRight:
-                            Radius.circular(_avatarCornerRadiusBottomRight),
+                        bottomRight: Radius.circular(
+                          _avatarCornerRadiusBottomRight,
+                        ),
                       ),
                       child: Stack(
                         fit: StackFit.expand,
@@ -10722,7 +11572,8 @@ mixin _FixedColumnPreviewSections on StatelessWidget {
 
 /// Bold Pill live preview: black photo header, pill sidebar headings, dotted
 /// timeline main column, black footer bar. Mirrors the PDF page.
-class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections {
+class _BoldPillPreview extends StatelessWidget
+    with _FixedColumnPreviewSections {
   const _BoldPillPreview({
     required this.resume,
     this.followBuilderSectionOrder = true,
@@ -10782,12 +11633,20 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
       height: ResumeTypography.bodyTextLineHeight,
     );
 
-    final nameStyle = style(FontWeight.w800, 27, onAccent).copyWith(height: 1.1);
+    final nameStyle = style(
+      FontWeight.w800,
+      27,
+      onAccent,
+    ).copyWith(height: 1.1);
     final jobStyle = style(FontWeight.w400, 14, onAccent);
     final pillStyle = style(FontWeight.w700, 12.5, onAccent);
     final sectionStyle = style(FontWeight.w800, 15, titleColor);
     final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
-    final bodyStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
+    final bodyStyle = style(
+      FontWeight.w400,
+      detailPt,
+      ResumeTypography.atsStructuredBodyTextColor,
+    );
     final sideItemStyle = style(FontWeight.w400, detailPt, titleColor);
 
     Widget pill(String label) => Padding(
@@ -10798,7 +11657,7 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
           color: accent,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(label.toUpperCase(), style: pillStyle),
+        child: Text(label, style: pillStyle),
       ),
     );
 
@@ -10820,17 +11679,14 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Text(label.toUpperCase(), style: sectionStyle),
+          Text(label, style: sectionStyle),
           Positioned(
             left: -_timelineGap - _dot / 2 - 0.75,
             top: 4,
             child: Container(
               width: _dot,
               height: _dot,
-              decoration: BoxDecoration(
-                color: accent,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
             ),
           ),
         ],
@@ -10909,9 +11765,57 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
             }
             final item = resume.customSections[customIndex];
             if (sideSections.contains(item) || item.isBlank) return null;
+            if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+              return [
+                timelineHeading(
+                  item.title.trim().isEmpty
+                      ? 'Custom section'
+                      : item.title.trim(),
+                ),
+                for (final work in item.visibleEntries.map(
+                  (e) => e.toWorkExperience(),
+                ))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                work.role.trim().isEmpty
+                                    ? 'Role'
+                                    : work.role.trim(),
+                                style: entryTitleStyle,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              educationDateRangeLabel(
+                                work.startDate,
+                                work.endDate,
+                              ),
+                              style: entryTitleStyle,
+                            ),
+                          ],
+                        ),
+                        if (work.company.trim().isNotEmpty)
+                          Text(work.company.trim(), style: bodyStyle),
+                        const SizedBox(height: 4),
+                        for (final line in _workBulletLines(work))
+                          bulletLine(line, bodyStyle),
+                      ],
+                    ),
+                  ),
+              ];
+            }
             return [
               timelineHeading(
-                item.title.trim().isEmpty ? 'Custom section' : item.title.trim(),
+                item.title.trim().isEmpty
+                    ? 'Custom section'
+                    : item.title.trim(),
               ),
               for (final line in item.displayLines())
                 bulletLine(line, bodyStyle),
@@ -10922,7 +11826,12 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
               final items = resume.visibleWorkExperiences;
               if (items.isEmpty) return null;
               return [
-                timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
+                timelineHeading(
+                  resume.sectionHeading(
+                    ResumeBuilderSectionIds.work,
+                    'Work Experience',
+                  ),
+                ),
                 for (final item in items)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
@@ -10963,7 +11872,12 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
               final items = resume.visibleEducation;
               if (items.isEmpty) return null;
               return [
-                timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+                timelineHeading(
+                  resume.sectionHeading(
+                    ResumeBuilderSectionIds.education,
+                    'Education',
+                  ),
+                ),
                 for (final item in items)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
@@ -10992,10 +11906,7 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          educationDateRangeLabel(
-                            item.startDate,
-                            item.endDate,
-                          ),
+                          educationDateRangeLabel(item.startDate, item.endDate),
                           style: bodyStyle,
                         ),
                       ],
@@ -11006,7 +11917,12 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
               final items = resume.visibleProjects;
               if (items.isEmpty) return null;
               return [
-                timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                timelineHeading(
+                  resume.sectionHeading(
+                    ResumeBuilderSectionIds.projects,
+                    'Projects',
+                  ),
+                ),
                 for (final item in items)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
@@ -11036,7 +11952,12 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
               if (items.isEmpty) return null;
               if (!hasSidebar) {
                 return [
-                  timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                  timelineHeading(
+                    resume.sectionHeading(
+                      ResumeBuilderSectionIds.skills,
+                      'Skills',
+                    ),
+                  ),
                   for (var i = 0; i < items.length; i += 2)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
@@ -11058,7 +11979,12 @@ class _BoldPillPreview extends StatelessWidget with _FixedColumnPreviewSections 
                 ];
               }
               return [
-                timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                timelineHeading(
+                  resume.sectionHeading(
+                    ResumeBuilderSectionIds.skills,
+                    'Skills',
+                  ),
+                ),
                 ..._previewPaginatedSkillLines(items, bodyStyle),
               ];
           }
@@ -11260,7 +12186,11 @@ class _BlueCornerPreview extends StatelessWidget
       detailPt,
       mutedColor,
     ).copyWith(fontStyle: FontStyle.italic);
-    final bodyStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
+    final bodyStyle = style(
+      FontWeight.w400,
+      detailPt,
+      ResumeTypography.atsStructuredBodyTextColor,
+    );
 
     Widget sectionHeading(String label, {IconData? icon, bool rule = true}) =>
         Padding(
@@ -11310,13 +12240,22 @@ class _BlueCornerPreview extends StatelessWidget
                   children: [
                     Expanded(child: Text(title, style: entryTitleStyle)),
                     if (dates.isNotEmpty) ...[
-                      const SizedBox(width: 10),
-                      Text(dates, style: bodyStyle),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Text(
+                          dates,
+                          style: bodyStyle,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
                     ],
                   ],
                 ),
                 if (organisation.isNotEmpty)
-                  Text(organisation, style: entrySubStyle),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(organisation, style: entrySubStyle),
+                  ),
                 for (final line in details)
                   Padding(
                     padding: const EdgeInsets.only(top: 3),
@@ -11398,106 +12337,170 @@ class _BlueCornerPreview extends StatelessWidget
           ),
         ],
         ...mapSections((id) {
-        final customIndex = ResumeBuilderSectionIds.customIndex(id);
-        if (customIndex != null) {
-          if (customIndex < 0 || customIndex >= resume.customSections.length) {
-            return null;
-          }
-          final item = resume.customSections[customIndex];
-          if (sideSections.contains(item) || item.isBlank) return null;
-          return [
-            sectionHeading(
-              item.title.trim().isEmpty ? 'Custom section' : item.title.trim(),
-              icon: Icons.article_outlined,
-            ),
-            for (final line in item.displayLines())
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: _timelineGutter,
-                  bottom: 3,
-                ),
-                child: Text(line, style: bodyStyle),
-              ),
-          ];
-        }
-        switch (id) {
-          case ResumeBuilderSectionIds.education:
-            final items = resume.visibleEducation;
-            if (items.isEmpty) return null;
-            return [
-              sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'), icon: Icons.school_outlined),
-              for (final item in items)
-                timelineEntry(
-                  title: item.degree.trim().isEmpty
-                      ? 'Degree'
-                      : item.degree.trim(),
-                  organisation: item.institution.trim(),
-                  dates: educationDateRangeLabel(item.startDate, item.endDate),
-                  details: [
-                    if (educationDetailLine(item).isNotEmpty)
-                      educationDetailLine(item),
-                  ],
-                ),
-            ];
-          case ResumeBuilderSectionIds.work:
-            final items = resume.visibleWorkExperiences;
-            if (items.isEmpty) return null;
-            return [
-              sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), icon: Icons.work_outline),
-              for (final item in items)
-                timelineEntry(
-                  title: item.role.trim().isEmpty ? 'Role' : item.role.trim(),
-                  organisation: item.company.trim(),
-                  dates: educationDateRangeLabel(item.startDate, item.endDate),
-                  details: _workBulletLines(item),
-                ),
-            ];
-          case ResumeBuilderSectionIds.projects:
-            final items = resume.visibleProjects;
-            if (items.isEmpty) return null;
-            return [
-              sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), icon: Icons.folder_outlined),
-              for (final item in items)
-                timelineEntry(
-                  title: item.title.trim().isEmpty
-                      ? 'Project'
-                      : item.title.trim(),
-                  organisation: item.subtitle.trim(),
-                  dates: '',
-                  details: [
-                    item.overview.trim(),
-                    item.impact.trim(),
-                    ...item.bullets.map((bullet) => bullet.trim()),
-                  ].where((line) => line.isNotEmpty).toList(),
-                ),
-            ];
-          case ResumeBuilderSectionIds.skills:
-            if (resume.showCategorisedSkills) {
+          final customIndex = ResumeBuilderSectionIds.customIndex(id);
+          if (customIndex != null) {
+            if (customIndex < 0 ||
+                customIndex >= resume.customSections.length) {
+              return null;
+            }
+            final item = resume.customSections[customIndex];
+            if (sideSections.contains(item) || item.isBlank) return null;
+            if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
               return [
-                sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), icon: Icons.extension_outlined),
-                Padding(
-                  padding: const EdgeInsets.only(left: _timelineGutter),
-                  child: _categorisedSkillsPreview(
-                    groups: resume.skillGroupsForResume,
-                    bodyStyle: bodyStyle,
-                    categoryStyle: entryTitleStyle,
-                  ),
+                sectionHeading(
+                  item.title.trim().isEmpty
+                      ? 'Custom section'
+                      : item.title.trim(),
+                  icon: Icons.article_outlined,
                 ),
+                for (final work in item.visibleEntries.map(
+                  (e) => e.toWorkExperience(),
+                ))
+                  timelineEntry(
+                    title: work.role.trim().isEmpty ? 'Role' : work.role.trim(),
+                    organisation: work.company.trim(),
+                    dates: educationDateRangeLabel(
+                      work.startDate,
+                      work.endDate,
+                    ),
+                    details: _workBulletLines(work),
+                  ),
               ];
             }
-            final items = _pdfAlignedSkills(resume);
-            if (items.isEmpty) return null;
             return [
-              sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), icon: Icons.extension_outlined),
-              for (final widget in _previewPaginatedSkillLines(items, bodyStyle))
+              sectionHeading(
+                item.title.trim().isEmpty
+                    ? 'Custom section'
+                    : item.title.trim(),
+                icon: Icons.article_outlined,
+              ),
+              for (final line in item.displayLines())
                 Padding(
-                  padding: const EdgeInsets.only(left: _timelineGutter),
-                  child: widget,
+                  padding: const EdgeInsets.only(
+                    left: _timelineGutter,
+                    bottom: 3,
+                  ),
+                  child: Text(line, style: bodyStyle),
                 ),
             ];
-        }
-        return null;
-      }),
+          }
+          switch (id) {
+            case ResumeBuilderSectionIds.education:
+              final items = resume.visibleEducation;
+              if (items.isEmpty) return null;
+              return [
+                sectionHeading(
+                  resume.sectionHeading(
+                    ResumeBuilderSectionIds.education,
+                    'Education',
+                  ),
+                  icon: Icons.school_outlined,
+                ),
+                for (final item in items)
+                  timelineEntry(
+                    title: item.degree.trim().isEmpty
+                        ? 'Degree'
+                        : item.degree.trim(),
+                    organisation: item.institution.trim(),
+                    dates: educationDateRangeLabel(
+                      item.startDate,
+                      item.endDate,
+                    ),
+                    details: [
+                      if (educationDetailLine(item).isNotEmpty)
+                        educationDetailLine(item),
+                    ],
+                  ),
+              ];
+            case ResumeBuilderSectionIds.work:
+              final items = resume.visibleWorkExperiences;
+              if (items.isEmpty) return null;
+              return [
+                sectionHeading(
+                  resume.sectionHeading(
+                    ResumeBuilderSectionIds.work,
+                    'Experience',
+                  ),
+                  icon: Icons.work_outline,
+                ),
+                for (final item in items)
+                  timelineEntry(
+                    title: item.role.trim().isEmpty ? 'Role' : item.role.trim(),
+                    organisation: item.company.trim(),
+                    dates: educationDateRangeLabel(
+                      item.startDate,
+                      item.endDate,
+                    ),
+                    details: _workBulletLines(item),
+                  ),
+              ];
+            case ResumeBuilderSectionIds.projects:
+              final items = resume.visibleProjects;
+              if (items.isEmpty) return null;
+              return [
+                sectionHeading(
+                  resume.sectionHeading(
+                    ResumeBuilderSectionIds.projects,
+                    'Projects',
+                  ),
+                  icon: Icons.folder_outlined,
+                ),
+                for (final item in items)
+                  timelineEntry(
+                    title: item.title.trim().isEmpty
+                        ? 'Project'
+                        : item.title.trim(),
+                    organisation: item.subtitle.trim(),
+                    dates: '',
+                    details: [
+                      item.overview.trim(),
+                      item.impact.trim(),
+                      ...item.bullets.map((bullet) => bullet.trim()),
+                    ].where((line) => line.isNotEmpty).toList(),
+                  ),
+              ];
+            case ResumeBuilderSectionIds.skills:
+              if (resume.showCategorisedSkills) {
+                return [
+                  sectionHeading(
+                    resume.sectionHeading(
+                      ResumeBuilderSectionIds.skills,
+                      'Skills',
+                    ),
+                    icon: Icons.extension_outlined,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: _timelineGutter),
+                    child: _categorisedSkillsPreview(
+                      groups: resume.skillGroupsForResume,
+                      bodyStyle: bodyStyle,
+                      categoryStyle: entryTitleStyle,
+                    ),
+                  ),
+                ];
+              }
+              final items = _pdfAlignedSkills(resume);
+              if (items.isEmpty) return null;
+              return [
+                sectionHeading(
+                  resume.sectionHeading(
+                    ResumeBuilderSectionIds.skills,
+                    'Skills',
+                  ),
+                  icon: Icons.extension_outlined,
+                ),
+                for (final widget in _previewPaginatedSkillLines(
+                  items,
+                  bodyStyle,
+                ))
+                  Padding(
+                    padding: const EdgeInsets.only(left: _timelineGutter),
+                    child: widget,
+                  ),
+              ];
+          }
+          return null;
+        }),
       ],
     );
 
@@ -11694,7 +12697,11 @@ class _ProfileTimelinePreview extends StatelessWidget
     ).copyWith(letterSpacing: 2);
     final sectionStyle = style(FontWeight.w700, 15, titleColor);
     final entryTitleStyle = style(FontWeight.w700, bodyPt, titleColor);
-    final bodyStyle = style(FontWeight.w400, detailPt, ResumeTypography.atsStructuredBodyTextColor);
+    final bodyStyle = style(
+      FontWeight.w400,
+      detailPt,
+      ResumeTypography.atsStructuredBodyTextColor,
+    );
     final chipStyle = style(
       FontWeight.w600,
       detailPt - 1,
@@ -11702,11 +12709,7 @@ class _ProfileTimelinePreview extends StatelessWidget
     ).copyWith(fontStyle: FontStyle.italic);
 
     Widget sectionHeading(String label, {bool indent = false}) => Padding(
-      padding: EdgeInsets.only(
-        left: indent ? _gutter : 0,
-        top: 18,
-        bottom: 10,
-      ),
+      padding: EdgeInsets.only(left: indent ? _gutter : 0, top: 18, bottom: 10),
       child: Row(
         children: [
           Text(label, style: sectionStyle),
@@ -11827,7 +12830,12 @@ class _ProfileTimelinePreview extends StatelessWidget
           Text(resume.summary.trim(), style: bodyStyle),
         ],
         if (resume.visibleEducation.isNotEmpty) ...[
-          sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+          sectionHeading(
+            resume.sectionHeading(
+              ResumeBuilderSectionIds.education,
+              'Education',
+            ),
+          ),
           for (final item in resume.visibleEducation)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -11877,6 +12885,28 @@ class _ProfileTimelinePreview extends StatelessWidget
           }
           final item = resume.customSections[customIndex];
           if (sideSections.contains(item) || item.isBlank) return null;
+          if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+            return [
+              sectionHeading(
+                item.title.trim().isEmpty
+                    ? 'Custom section'
+                    : item.title.trim(),
+                indent: true,
+              ),
+              for (final work in item.visibleEntries.map(
+                (e) => e.toWorkExperience(),
+              ))
+                timelineEntry(
+                  title: work.role.trim().isEmpty ? 'Role' : work.role.trim(),
+                  meta: [
+                    work.company.trim(),
+                    resume.location.trim(),
+                  ].where((part) => part.isNotEmpty).join('  |  '),
+                  dates: educationDateRangeLabel(work.startDate, work.endDate),
+                  details: _workBulletLines(work),
+                ),
+            ];
+          }
           return [
             sectionHeading(
               item.title.trim().isEmpty ? 'Custom section' : item.title.trim(),
@@ -11894,13 +12924,20 @@ class _ProfileTimelinePreview extends StatelessWidget
             final items = resume.visibleWorkExperiences;
             if (items.isEmpty) return null;
             return [
-              sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), indent: true),
+              sectionHeading(
+                resume.sectionHeading(
+                  ResumeBuilderSectionIds.work,
+                  'Experience',
+                ),
+                indent: true,
+              ),
               for (final item in items)
                 timelineEntry(
                   title: item.role.trim().isEmpty ? 'Role' : item.role.trim(),
-                  meta: [item.company.trim(), resume.location.trim()]
-                      .where((part) => part.isNotEmpty)
-                      .join('  |  '),
+                  meta: [
+                    item.company.trim(),
+                    resume.location.trim(),
+                  ].where((part) => part.isNotEmpty).join('  |  '),
                   dates: educationDateRangeLabel(item.startDate, item.endDate),
                   details: _workBulletLines(item),
                 ),
@@ -11909,7 +12946,13 @@ class _ProfileTimelinePreview extends StatelessWidget
             final items = resume.visibleProjects;
             if (items.isEmpty) return null;
             return [
-              sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), indent: true),
+              sectionHeading(
+                resume.sectionHeading(
+                  ResumeBuilderSectionIds.projects,
+                  'Projects',
+                ),
+                indent: true,
+              ),
               for (final item in items)
                 timelineEntry(
                   title: item.title.trim().isEmpty
@@ -11930,7 +12973,13 @@ class _ProfileTimelinePreview extends StatelessWidget
             // Categorised skills keep their headings, as the PDF page does.
             if (resume.showCategorisedSkills) {
               return [
-                sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), indent: true),
+                sectionHeading(
+                  resume.sectionHeading(
+                    ResumeBuilderSectionIds.skills,
+                    'Skills',
+                  ),
+                  indent: true,
+                ),
                 Padding(
                   padding: const EdgeInsets.only(left: _gutter),
                   child: _categorisedSkillsPreview(
@@ -11944,7 +12993,10 @@ class _ProfileTimelinePreview extends StatelessWidget
             final items = _pdfAlignedSkills(resume);
             if (items.isEmpty) return null;
             return [
-              sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), indent: true),
+              sectionHeading(
+                resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+                indent: true,
+              ),
               for (final widget in _previewPaginatedSkillLines(
                 items,
                 bodyStyle,
@@ -12171,4 +13223,3 @@ class _PreviewContactIconPainter extends CustomPainter {
   bool shouldRepaint(covariant _PreviewContactIconPainter oldDelegate) =>
       oldDelegate.kind != kind || oldDelegate.color != color;
 }
-

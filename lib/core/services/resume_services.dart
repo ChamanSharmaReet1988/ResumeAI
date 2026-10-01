@@ -14,6 +14,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'app_preferences.dart';
 import '../corporate_resume_style.dart';
+import '../../l10n/app_localizations.dart';
 import '../models/resume_builder_section_order.dart';
 import '../models/resume_models.dart';
 import '../resume_font_weight.dart';
@@ -222,7 +223,10 @@ const pw.EdgeInsets _pwBulletTrailingMargin = pw.EdgeInsets.only(
 /// zero-size bullet so the text column does not shift. Stacked widgets also
 /// lose the [pw.TextStyle.lineSpacing] that a single multi-line Text applied
 /// between its own lines, so it is added back as bottom margin.
-List<pw.Widget> _pwSplitBulletWidgets(String text, {required pw.TextStyle style}) {
+List<pw.Widget> _pwSplitBulletWidgets(
+  String text, {
+  required pw.TextStyle style,
+}) {
   final segments = text.split('\n');
   if (segments.length == 1) {
     return [pw.Bullet(text: text, style: style)];
@@ -316,7 +320,8 @@ List<pw.Widget> _pwCustomSectionEntryWidgets(
   pw.TextStyle bodyStyle, {
   pw.TextStyle? headingStyle,
 }) {
-  final heading = headingStyle ?? bodyStyle.copyWith(fontWeight: pw.FontWeight.bold);
+  final heading =
+      headingStyle ?? bodyStyle.copyWith(fontWeight: pw.FontWeight.bold);
   final entries = item.visibleEntries;
   return [
     for (var i = 0; i < entries.length; i++) ...[
@@ -345,10 +350,7 @@ pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: _pwCustomSectionEntryWidgets(
         item,
-        pw.TextStyle(
-          color: PdfColors.black,
-          fontSize: ResumeTypography.bodyPt,
-        ),
+        pw.TextStyle(color: PdfColors.black, fontSize: ResumeTypography.bodyPt),
       ),
     );
   }
@@ -401,6 +403,7 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
   bool atsExecutiveGaramondBody = false,
   bool atsCenterClassicGaramondBody = false,
   bool atsProfessionalBlueGaramondBody = false,
+  List<pw.Widget> Function(List<WorkExperience> items)? experienceEntry,
 }) {
   final bodyStyle = garamond != null && bodyFontPt != null
       ? accentStripGaramondBody
@@ -432,12 +435,17 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
             padding: const pw.EdgeInsets.only(bottom: 3),
             child: pw.Text(
               meta,
-              style: bodyStyle.copyWith(
-                fontWeight: pw.FontWeight.bold,
-              ),
+              style: bodyStyle.copyWith(fontWeight: pw.FontWeight.bold),
             ),
           ),
         ];
+  if (item.usesItemEntries &&
+      item.visibleEntries.isNotEmpty &&
+      experienceEntry != null) {
+    return experienceEntry(
+      item.visibleEntries.map((entry) => entry.toWorkExperience()).toList(),
+    );
+  }
   if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
     final heading = garamond != null && accentStripGaramondBody
         ? garamondPdfTextStyle(
@@ -446,11 +454,7 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
             fontSize: ResumeTypography.accentStripSubsectionPt,
           )
         : null;
-    return _pwCustomSectionEntryWidgets(
-      item,
-      bodyStyle,
-      headingStyle: heading,
-    );
+    return _pwCustomSectionEntryWidgets(item, bodyStyle, headingStyle: heading);
   }
   switch (item.layoutMode) {
     case CustomSectionLayoutMode.summary:
@@ -785,7 +789,9 @@ class _HeaderSidebarDynamicInset extends pw.Widget with pw.SpanningWidget {
   pw.Widget? _wrapped;
 
   double _rightInsetFor(pw.Context context) =>
-      context.pageNumber <= sidebarPageCount ? _headerSidebarMainRightInsetPt : 0;
+      context.pageNumber <= sidebarPageCount
+      ? _headerSidebarMainRightInsetPt
+      : 0;
 
   @override
   void layout(
@@ -887,10 +893,7 @@ String _headerSidebarWrapFriendlyLine(
 }) {
   final normalized = text.trim();
   if (normalized.isEmpty) return normalized;
-  final maxChars = math.max(
-    8,
-    (usableWidth / (fontSize * 0.56)).floor(),
-  );
+  final maxChars = math.max(8, (usableWidth / (fontSize * 0.56)).floor());
   const breakAfter = {'/', '.', '@', '-', '_', '?', '=', '&'};
   final segments = <String>[];
   final buf = StringBuffer();
@@ -1159,10 +1162,7 @@ pw.Widget _headerSidebarSkillDots({
           width: _headerSidebarSkillDotSizePt,
           height: _headerSidebarSkillDotSizePt,
           alignment: pw.Alignment.center,
-          decoration: pw.BoxDecoration(
-            color: color,
-            shape: pw.BoxShape.circle,
-          ),
+          decoration: pw.BoxDecoration(color: color, shape: pw.BoxShape.circle),
           child: i <= level
               ? null
               : pw.Container(
@@ -1337,7 +1337,7 @@ pw.Widget _creativeSectionHeadingRow({
   return pw.Row(
     crossAxisAlignment: pw.CrossAxisAlignment.center,
     children: [
-      pw.Text(title.toUpperCase(), style: headingStyle),
+      pw.Text(title, style: headingStyle),
       pw.SizedBox(width: 8),
       pw.Expanded(child: pw.Container(height: 1.2, color: lineColor)),
     ],
@@ -1770,7 +1770,12 @@ _classicSidebarRailFit(
       _classicSidebarRailSafetyMarginPt;
 
   double requiredHeight(
-    ({double fontPt, double skillBottom, double languageBottom, double titleGap})
+    ({
+      double fontPt,
+      double skillBottom,
+      double languageBottom,
+      double titleGap,
+    })
     fit,
   ) {
     var total =
@@ -2131,7 +2136,7 @@ pw.Widget _classicSidebarListSection({
     children: [
       if (showTitle)
         pw.Text(
-          title.toUpperCase(),
+          title,
           style: _classicSidebarPdfTextStyle(
             garamond,
             ResumeTypography.classicSidebarSectionTitleWeight,
@@ -2601,9 +2606,10 @@ pw.Widget _detailsSidebarPanel({
         ],
         if (pageSlice.showSkillsHeading) ...[
           _detailsSidebarSidebarHeading(
-            title: resume
-                .sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS')
-                .toUpperCase(),
+            title: resume.sectionHeading(
+              ResumeBuilderSectionIds.skills,
+              'SKILLS',
+            ),
             titleColor: titleColor,
             dividerColor: dividerColor,
           ),
@@ -3250,8 +3256,9 @@ class ResumeRepository {
           return;
         }
 
-        final pendingLetterIds =
-            Set<String>.from(_pendingGoogleDriveCoverLetterIds);
+        final pendingLetterIds = Set<String>.from(
+          _pendingGoogleDriveCoverLetterIds,
+        );
         _pendingGoogleDriveCoverLetterIds.clear();
 
         if (!await service.hasAuthorizedSession()) {
@@ -3682,15 +3689,13 @@ class LocalAiResumeService {
               .where((skill) => _resumeEvidencesSkill(sourceResume, skill))
               .take(keywordBudget)
               .toList()
-        : _prepareTargetKeywords(
-            [
-              ...sourceResume.skills,
-              ..._jobTitleSkillSuggestions(
-                sourceResume.jobTitle,
-              ).where((skill) => _resumeEvidencesSkill(sourceResume, skill)),
-              ...missingKeywords,
-            ],
-          ).take(keywordBudget).toList();
+        : _prepareTargetKeywords([
+            ...sourceResume.skills,
+            ..._jobTitleSkillSuggestions(
+              sourceResume.jobTitle,
+            ).where((skill) => _resumeEvidencesSkill(sourceResume, skill)),
+            ...missingKeywords,
+          ]).take(keywordBudget).toList();
 
     var optimizedJobTitle = sourceResume.jobTitle.trim();
     if (hasJobDescription) {
@@ -3736,14 +3741,15 @@ class LocalAiResumeService {
       if (item.isBlank) {
         return item;
       }
-      final improvedBullets = _tailorWorkExperienceBullets(
-        item: item,
-        targetJobTitle: optimizedJobTitle,
-      )
-          .map(_formatAiAtsBullet)
-          .where((bullet) => bullet.isNotEmpty)
-          .take(bulletLimit)
-          .toList();
+      final improvedBullets =
+          _tailorWorkExperienceBullets(
+                item: item,
+                targetJobTitle: optimizedJobTitle,
+              )
+              .map(_formatAiAtsBullet)
+              .where((bullet) => bullet.isNotEmpty)
+              .take(bulletLimit)
+              .toList();
       final existing = item.bullets
           .map((bullet) => bullet.trim())
           .where((bullet) => bullet.isNotEmpty)
@@ -3772,9 +3778,7 @@ class LocalAiResumeService {
           .where((bullet) => bullet.isNotEmpty)
           .toList();
       final polished = existing
-          .map(
-            (bullet) => _formatAiAtsBullet(_polishBulletForAts(bullet)),
-          )
+          .map((bullet) => _formatAiAtsBullet(_polishBulletForAts(bullet)))
           .where((bullet) => bullet.isNotEmpty)
           .toList();
       if (polished.length >= 2) {
@@ -3795,7 +3799,10 @@ class LocalAiResumeService {
       final normalized = <String>[];
       for (final bullet in generated) {
         final cleaned = _formatAiAtsBullet(bullet);
-        final key = cleaned.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+        final key = cleaned
+            .toLowerCase()
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .trim();
         if (key.isEmpty || !seen.add(key)) {
           continue;
         }
@@ -3911,10 +3918,10 @@ class LocalAiResumeService {
       if (item.isBlank || evidence.length >= 2) {
         continue;
       }
-      final lines = [...item.bullets, item.description]
-          .map(_firstMeaningfulSentence)
-          .where((line) => line.isNotEmpty)
-          .toList();
+      final lines = [
+        ...item.bullets,
+        item.description,
+      ].map(_firstMeaningfulSentence).where((line) => line.isNotEmpty).toList();
       if (lines.isNotEmpty) {
         evidence.add(
           _normalizeSentenceForResume(lines[attemptIndex % lines.length]),
@@ -4093,18 +4100,20 @@ class LocalAiResumeService {
     // Plain contact block, one detail per line: the shape applicant tracking
     // systems parse most reliably. Blank details are left out rather than
     // printed as bracketed placeholders.
-    final senderLines = <String>[
-      inputs.senderName,
-      inputs.addressLine,
-      if (inputs.cityLine.trim() != inputs.addressLine.trim()) inputs.cityLine,
-      inputs.emailLine,
-      inputs.phoneLine,
-      currentDate,
-    ].map((line) => line.trim()).where((line) {
-      if (line.isEmpty) return false;
-      // Drop the "[Your Address]" style stand-ins.
-      return !(line.startsWith('[') && line.endsWith(']'));
-    }).toList();
+    final senderLines =
+        <String>[
+          inputs.senderName,
+          inputs.addressLine,
+          if (inputs.cityLine.trim() != inputs.addressLine.trim())
+            inputs.cityLine,
+          inputs.emailLine,
+          inputs.phoneLine,
+          currentDate,
+        ].map((line) => line.trim()).where((line) {
+          if (line.isEmpty) return false;
+          // Drop the "[Your Address]" style stand-ins.
+          return !(line.startsWith('[') && line.endsWith(']'));
+        }).toList();
 
     final recipientLines = <String>[
       locale.hiringManager,
@@ -4170,8 +4179,6 @@ class LocalAiResumeService {
         '${locale.sincerely}\n\n'
         '${inputs.senderName}';
   }
-
-
 
   /// "Subject: Application for {role} at {company}" in the letter's language.
   /// Stand-in for the skills sentence when the user entered no skills.
@@ -5208,7 +5215,9 @@ class LocalAiResumeService {
               r'(https?://|www\.|[a-z0-9-]+\.(com|net|org|io|dev|co|in|me))[\w./-]*[/.]$',
               caseSensitive: false,
             ).hasMatch(previous);
-        if ((isEmailTail && previousEndsMidToken) || isDomainTail || isUrlTail) {
+        if ((isEmailTail && previousEndsMidToken) ||
+            isDomainTail ||
+            isUrlTail) {
           repaired[repaired.length - 1] = '$previous$line';
           continue;
         }
@@ -5507,13 +5516,40 @@ class LocalAiResumeService {
     required List<EducationItem> education,
   }) {
     final exclusions = <String>{
-      'contact', 'contacts', 'contact me', 'contact info',
-      'contact information', 'about', 'about me', 'profile', 'summary',
-      'objective', 'address', 'phone', 'mobile', 'email', 'e-mail', 'website',
-      'portfolio', 'linkedin', 'github', 'name', 'expertise', 'skills',
-      'education', 'experience', 'projects', 'languages', 'references',
-      'reference', 'declaration', 'personal details', 'date of birth',
-      'nationality', 'gender', 'marital status',
+      'contact',
+      'contacts',
+      'contact me',
+      'contact info',
+      'contact information',
+      'about',
+      'about me',
+      'profile',
+      'summary',
+      'objective',
+      'address',
+      'phone',
+      'mobile',
+      'email',
+      'e-mail',
+      'website',
+      'portfolio',
+      'linkedin',
+      'github',
+      'name',
+      'expertise',
+      'skills',
+      'education',
+      'experience',
+      'projects',
+      'languages',
+      'references',
+      'reference',
+      'declaration',
+      'personal details',
+      'date of birth',
+      'nationality',
+      'gender',
+      'marital status',
     };
 
     void addValue(String value) {
@@ -5666,7 +5702,8 @@ class LocalAiResumeService {
     if (_matchImportedSectionHeading(cleaned) != null) {
       return false;
     }
-    if (_isImportedContactLine(cleaned) || _looksLikeImportedDateLine(cleaned)) {
+    if (_isImportedContactLine(cleaned) ||
+        _looksLikeImportedDateLine(cleaned)) {
       return false;
     }
     if (cleaned.endsWith('.')) {
@@ -7800,67 +7837,180 @@ class LocalAiResumeService {
 
   /// Words that show up in job ads but are not skills a resume should list.
   static const Set<String> _jobAdGenericWords = {
-    'senior', 'junior', 'lead', 'principal', 'staff', 'head', 'manager',
-    'product', 'products', 'platform', 'platforms', 'growth', 'engineering',
-    'team', 'teams', 'company', 'customer', 'customers', 'users', 'role',
-    'roadmap', 'business', 'technology', 'solutions', 'work', 'people',
-    'payment', 'payments', 'project', 'projects', 'design',
+    'senior',
+    'junior',
+    'lead',
+    'principal',
+    'staff',
+    'head',
+    'manager',
+    'product',
+    'products',
+    'platform',
+    'platforms',
+    'growth',
+    'engineering',
+    'team',
+    'teams',
+    'company',
+    'customer',
+    'customers',
+    'users',
+    'role',
+    'roadmap',
+    'business',
+    'technology',
+    'solutions',
+    'work',
+    'people',
+    'payment',
+    'payments',
+    'project',
+    'projects',
+    'design',
   };
 
   static const Set<String> _jobAdAcronymStopwords = {
-    'US', 'UK', 'EU', 'USA', 'UAE', 'HQ', 'OK', 'WE', 'OUR', 'YOU', 'THE',
-    'AND', 'FOR', 'ARE', 'CEO', 'CTO', 'CFO', 'COO', 'VP', 'PM', 'HR', 'IT',
+    'US',
+    'UK',
+    'EU',
+    'USA',
+    'UAE',
+    'HQ',
+    'OK',
+    'WE',
+    'OUR',
+    'YOU',
+    'THE',
+    'AND',
+    'FOR',
+    'ARE',
+    'CEO',
+    'CTO',
+    'CFO',
+    'COO',
+    'VP',
+    'PM',
+    'HR',
+    'IT',
   };
 
   /// Skill names that are also everyday words; matched only with exact case.
   static const Set<String> _jobAdExactCaseSkills = {
-    'Excel', 'Swift', 'Rust', 'Ruby', 'Dart', 'Elm', 'Go', 'Spring',
-    'Express', 'Flask', 'Chef', 'Puppet', 'Salt', 'Unity', 'Shell', 'Slack',
-    'Notion', 'Linear',
+    'Excel',
+    'Swift',
+    'Rust',
+    'Ruby',
+    'Dart',
+    'Elm',
+    'Go',
+    'Spring',
+    'Express',
+    'Flask',
+    'Chef',
+    'Puppet',
+    'Salt',
+    'Unity',
+    'Shell',
+    'Slack',
+    'Notion',
+    'Linear',
   };
 
   static final List<(RegExp, String)> _jobAdSkillPhrases = [
-    (RegExp(r'\ba/?b[- ]test(?:s|ing)?\b', caseSensitive: false), 'A/B Testing'),
+    (
+      RegExp(r'\ba/?b[- ]test(?:s|ing)?\b', caseSensitive: false),
+      'A/B Testing',
+    ),
     (RegExp(r'\bexperimentation\b', caseSensitive: false), 'Experimentation'),
-    (RegExp(r'\bfraud (?:prevention|detection)\b', caseSensitive: false), 'Fraud Prevention'),
+    (
+      RegExp(r'\bfraud (?:prevention|detection)\b', caseSensitive: false),
+      'Fraud Prevention',
+    ),
     (RegExp(r'\bcompliance\b', caseSensitive: false), 'Compliance'),
     (RegExp(r'\bproduct strategy\b', caseSensitive: false), 'Product Strategy'),
     (RegExp(r'\broadmapping\b', caseSensitive: false), 'Roadmapping'),
     (RegExp(r'\buser research\b', caseSensitive: false), 'User Research'),
-    (RegExp(r'\bstakeholder management\b', caseSensitive: false), 'Stakeholder Management'),
-    (RegExp(r'\bstakeholder communication\b', caseSensitive: false), 'Stakeholder Communication'),
+    (
+      RegExp(r'\bstakeholder management\b', caseSensitive: false),
+      'Stakeholder Management',
+    ),
+    (
+      RegExp(r'\bstakeholder communication\b', caseSensitive: false),
+      'Stakeholder Communication',
+    ),
     (RegExp(r'\bdata analysis\b', caseSensitive: false), 'Data Analysis'),
     (RegExp(r'\banalytics\b', caseSensitive: false), 'Analytics'),
     (RegExp(r'\bmachine learning\b', caseSensitive: false), 'Machine Learning'),
-    (RegExp(r'\bproject management\b', caseSensitive: false), 'Project Management'),
-    (RegExp(r'\bcross[- ]functional\b', caseSensitive: false), 'Cross-functional Collaboration'),
+    (
+      RegExp(r'\bproject management\b', caseSensitive: false),
+      'Project Management',
+    ),
+    (
+      RegExp(r'\bcross[- ]functional\b', caseSensitive: false),
+      'Cross-functional Collaboration',
+    ),
     (RegExp(r'\bREST\s*/?\s*APIs?\b', caseSensitive: false), 'REST APIs'),
     (RegExp(r'\bCI\s*/\s*CD\b', caseSensitive: false), 'CI/CD'),
     (RegExp(r'\bunit test(?:s|ing)?\b', caseSensitive: false), 'Unit Testing'),
     (RegExp(r'\bversion control\b', caseSensitive: false), 'Version Control'),
-    (RegExp(r'\bproblem[- ]solving\b', caseSensitive: false), 'Problem-Solving'),
+    (
+      RegExp(r'\bproblem[- ]solving\b', caseSensitive: false),
+      'Problem-Solving',
+    ),
     (RegExp(r'\btime management\b', caseSensitive: false), 'Time Management'),
     (RegExp(r'\brisk management\b', caseSensitive: false), 'Risk Management'),
-    (RegExp(r'\bgo[- ]to[- ]market\b', caseSensitive: false), 'Go-to-Market Strategy'),
+    (
+      RegExp(r'\bgo[- ]to[- ]market\b', caseSensitive: false),
+      'Go-to-Market Strategy',
+    ),
     (RegExp(r'\bmarket research\b', caseSensitive: false), 'Market Research'),
-    (RegExp(r'\bfinancial modell?ing\b', caseSensitive: false), 'Financial Modeling'),
+    (
+      RegExp(r'\bfinancial modell?ing\b', caseSensitive: false),
+      'Financial Modeling',
+    ),
     (RegExp(r'\bforecasting\b', caseSensitive: false), 'Forecasting'),
     (RegExp(r'\bbudgeting\b', caseSensitive: false), 'Budgeting'),
-    (RegExp(r'\b(?:people management|team leadership)\b', caseSensitive: false), 'Team Leadership'),
+    (
+      RegExp(
+        r'\b(?:people management|team leadership)\b',
+        caseSensitive: false,
+      ),
+      'Team Leadership',
+    ),
     (RegExp(r'\bscrum\b', caseSensitive: false), 'Scrum'),
   ];
 
   /// Skills that read as ordinary nouns mid-sentence ("experience in SQL and
   /// experimentation"), so summaries lowercase them.
   static const Set<String> _sentenceCaseSkills = {
-    'experimentation', 'compliance', 'fraud prevention', 'product strategy',
-    'roadmapping', 'user research', 'stakeholder management',
-    'stakeholder communication', 'data analysis', 'analytics',
-    'machine learning', 'project management', 'cross-functional collaboration',
-    'unit testing', 'version control', 'problem-solving', 'problem solving',
-    'time management', 'risk management', 'go-to-market strategy',
-    'market research', 'financial modeling', 'forecasting', 'budgeting',
-    'team leadership', 'communication', 'leadership',
+    'experimentation',
+    'compliance',
+    'fraud prevention',
+    'product strategy',
+    'roadmapping',
+    'user research',
+    'stakeholder management',
+    'stakeholder communication',
+    'data analysis',
+    'analytics',
+    'machine learning',
+    'project management',
+    'cross-functional collaboration',
+    'unit testing',
+    'version control',
+    'problem-solving',
+    'problem solving',
+    'time management',
+    'risk management',
+    'go-to-market strategy',
+    'market research',
+    'financial modeling',
+    'forecasting',
+    'budgeting',
+    'team leadership',
+    'communication',
+    'leadership',
   };
 
   /// Skills a job ad asks for, in the order they first appear.
@@ -8020,45 +8170,124 @@ class LocalAiResumeService {
     if (RegExp(r'^[A-Z]{2,}').hasMatch(word)) {
       return 'AEFHILMNORSX'.contains(word[0]);
     }
-    if (['uni', 'use', 'usu', 'uti', 'ura', 'eu', 'one', 'once', 'ubi']
-        .any(lower.startsWith)) {
+    if ([
+      'uni',
+      'use',
+      'usu',
+      'uti',
+      'ura',
+      'eu',
+      'one',
+      'once',
+      'ubi',
+    ].any(lower.startsWith)) {
       return false;
     }
     return 'aeiou'.contains(lower[0]);
   }
 
   static const Set<String> _irregularPastTenseVerbs = {
-    'cut', 'ran', 'won', 'grew', 'drove', 'led', 'built', 'set', 'made',
-    'took', 'wrote', 'sold', 'kept', 'held', 'began', 'brought', 'taught',
-    'found', 'rose', 'spent', 'oversaw', 'undertook', 'rebuilt', 'hit', 'put',
-    'sent', 'bought', 'chose', 'got', 'gave', 'shut', 'split',
+    'cut',
+    'ran',
+    'won',
+    'grew',
+    'drove',
+    'led',
+    'built',
+    'set',
+    'made',
+    'took',
+    'wrote',
+    'sold',
+    'kept',
+    'held',
+    'began',
+    'brought',
+    'taught',
+    'found',
+    'rose',
+    'spent',
+    'oversaw',
+    'undertook',
+    'rebuilt',
+    'hit',
+    'put',
+    'sent',
+    'bought',
+    'chose',
+    'got',
+    'gave',
+    'shut',
+    'split',
   };
 
   static const Map<String, String> _presentToPastVerbs = {
-    'build': 'built', 'lead': 'led', 'write': 'wrote', 'run': 'ran',
-    'drive': 'drove', 'grow': 'grew', 'design': 'designed',
-    'develop': 'developed', 'manage': 'managed', 'create': 'created',
-    'maintain': 'maintained', 'own': 'owned', 'ship': 'shipped',
-    'support': 'supported', 'implement': 'implemented',
-    'deliver': 'delivered', 'improve': 'improved', 'launch': 'launched',
-    'test': 'tested', 'fix': 'fixed', 'handle': 'handled',
-    'coordinate': 'coordinated', 'analyze': 'analyzed', 'analyse': 'analysed',
-    'optimize': 'optimized', 'integrate': 'integrated', 'deploy': 'deployed',
-    'mentor': 'mentored', 'collaborate': 'collaborated',
-    'partner': 'partnered', 'research': 'researched',
-    'prototype': 'prototyped', 'automate': 'automated', 'reduce': 'reduced',
-    'increase': 'increased', 'plan': 'planned', 'train': 'trained',
-    'review': 'reviewed', 'migrate': 'migrated', 'configure': 'configured',
-    'resolve': 'resolved', 'streamline': 'streamlined',
-    'establish': 'established', 'oversee': 'oversaw',
+    'build': 'built',
+    'lead': 'led',
+    'write': 'wrote',
+    'run': 'ran',
+    'drive': 'drove',
+    'grow': 'grew',
+    'design': 'designed',
+    'develop': 'developed',
+    'manage': 'managed',
+    'create': 'created',
+    'maintain': 'maintained',
+    'own': 'owned',
+    'ship': 'shipped',
+    'support': 'supported',
+    'implement': 'implemented',
+    'deliver': 'delivered',
+    'improve': 'improved',
+    'launch': 'launched',
+    'test': 'tested',
+    'fix': 'fixed',
+    'handle': 'handled',
+    'coordinate': 'coordinated',
+    'analyze': 'analyzed',
+    'analyse': 'analysed',
+    'optimize': 'optimized',
+    'integrate': 'integrated',
+    'deploy': 'deployed',
+    'mentor': 'mentored',
+    'collaborate': 'collaborated',
+    'partner': 'partnered',
+    'research': 'researched',
+    'prototype': 'prototyped',
+    'automate': 'automated',
+    'reduce': 'reduced',
+    'increase': 'increased',
+    'plan': 'planned',
+    'train': 'trained',
+    'review': 'reviewed',
+    'migrate': 'migrated',
+    'configure': 'configured',
+    'resolve': 'resolved',
+    'streamline': 'streamlined',
+    'establish': 'established',
+    'oversee': 'oversaw',
   };
 
   /// Bare forms that are just as often nouns ("Design system for…"), so they
   /// are only converted when clearly used as a verb ("Designs…").
   static const Set<String> _nounLikeVerbs = {
-    'design', 'test', 'research', 'review', 'plan', 'support', 'partner',
-    'prototype', 'mentor', 'run', 'drive', 'lead', 'own', 'ship', 'train',
-    'fix', 'build',
+    'design',
+    'test',
+    'research',
+    'review',
+    'plan',
+    'support',
+    'partner',
+    'prototype',
+    'mentor',
+    'run',
+    'drive',
+    'lead',
+    'own',
+    'ship',
+    'train',
+    'fix',
+    'build',
   };
 
   /// "builds" -> "built", "manage" -> "managed"; null when [lowerWord] is not a
@@ -8069,8 +8298,7 @@ class LocalAiResumeService {
       return _presentToPastVerbs[lowerWord];
     }
     for (final suffix in ['es', 's']) {
-      if (lowerWord.length > suffix.length &&
-          lowerWord.endsWith(suffix)) {
+      if (lowerWord.length > suffix.length && lowerWord.endsWith(suffix)) {
         final stem = lowerWord.substring(0, lowerWord.length - suffix.length);
         final past = _presentToPastVerbs[stem];
         if (past != null) {
@@ -8480,9 +8708,9 @@ class ResumePdfService {
       var removed = false;
       while (document.pages.count > 1) {
         final last = document.pages.count - 1;
-        final text = sfpdf.PdfTextExtractor(document)
-            .extractText(startPageIndex: last, endPageIndex: last)
-            .trim();
+        final text = sfpdf.PdfTextExtractor(
+          document,
+        ).extractText(startPageIndex: last, endPageIndex: last).trim();
         if (text.isNotEmpty) {
           break;
         }
@@ -8503,15 +8731,23 @@ class ResumePdfService {
 
   /// Builds the resume PDF, then drops any trailing page the layout left
   /// blank (see [_withoutBlankTrailingPages]).
-  Future<Uint8List> buildPdf(ResumeData resume) async =>
-      _withoutBlankTrailingPages(await _buildPdfPages(resume));
+  Future<Uint8List> buildPdf(
+    ResumeData resume, {
+    AppLocalizations? l10n,
+  }) async {
+    final resolved = l10n == null
+        ? resume
+        : ResumeBuilderSectionIds.resumeWithSectionListTitles(resume, l10n);
+    return _withoutBlankTrailingPages(await _buildPdfPages(resolved));
+  }
 
   Future<Uint8List> _buildPdfPages(ResumeData resume) async {
     final profileImagePath = await ProfileImageStorage.resolvePath(
       resume.profileImagePath,
       resume.id,
     );
-    final profileImage = await _loadProfileImage(profileImagePath) ??
+    final profileImage =
+        await _loadProfileImage(profileImagePath) ??
         (resume.isGallerySample ? await _sampleAvatarImage(resume) : null);
 
     if (resume.template == ResumeTemplate.creative) {
@@ -8607,11 +8843,7 @@ class ResumePdfService {
     if (resume.template == ResumeTemplate.atsProfessionalBlue) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
-      _addAtsProfessionalBlueTemplatePage(
-        document,
-        resume,
-        garamond: garamond,
-      );
+      _addAtsProfessionalBlueTemplatePage(document, resume, garamond: garamond);
       return document.save();
     }
 
@@ -8871,7 +9103,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath) ??
+        profileImage:
+            await _loadProfileImage(profileImagePath) ??
             (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
@@ -9021,8 +9254,9 @@ class ResumePdfService {
         resume.profileImagePath,
         resume.id,
       );
-      final profileImage = await _loadProfileImage(profileImagePath) ??
-        (resume.isGallerySample ? await _sampleAvatarImage(resume) : null);
+      final profileImage =
+          await _loadProfileImage(profileImagePath) ??
+          (resume.isGallerySample ? await _sampleAvatarImage(resume) : null);
       final document = pw.Document();
       _addHeaderSidebarTemplatePage(
         document,
@@ -9046,7 +9280,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath) ??
+        profileImage:
+            await _loadProfileImage(profileImagePath) ??
             (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
@@ -9065,7 +9300,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath) ??
+        profileImage:
+            await _loadProfileImage(profileImagePath) ??
             (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
@@ -9084,7 +9320,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath) ??
+        profileImage:
+            await _loadProfileImage(profileImagePath) ??
             (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
@@ -9103,7 +9340,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath) ??
+        profileImage:
+            await _loadProfileImage(profileImagePath) ??
             (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
@@ -9122,7 +9360,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath) ??
+        profileImage:
+            await _loadProfileImage(profileImagePath) ??
             (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
@@ -9154,7 +9393,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath) ??
+        profileImage:
+            await _loadProfileImage(profileImagePath) ??
             (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
@@ -9186,7 +9426,8 @@ class ResumePdfService {
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
-        profileImage: await _loadProfileImage(profileImagePath) ??
+        profileImage:
+            await _loadProfileImage(profileImagePath) ??
             (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
         highlightSummary: highlightSummary,
         highlightedSkills: highlightedSkills,
@@ -9588,9 +9829,7 @@ class ResumePdfService {
       return _materialIconFontCache;
     }
     try {
-      final data = await rootBundle.load(
-        'fonts/MaterialIcons-Regular.otf',
-      );
+      final data = await rootBundle.load('fonts/MaterialIcons-Regular.otf');
       return _materialIconFontCache = pw.Font.ttf(data);
     } catch (_) {
       _materialIconFontMissing = true;
@@ -11108,7 +11347,13 @@ class ResumePdfService {
   Future<void> shareResumeDocx(ResumeData resume) async {
     final file = await saveDocxToDevice(resume);
     await Share.shareXFiles(
-      [XFile(file.path, mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')],
+      [
+        XFile(
+          file.path,
+          mimeType:
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ),
+      ],
       subject: '${resume.title} resume',
       text: 'Shared from ResumeAI',
     );

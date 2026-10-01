@@ -107,7 +107,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
           color: accent,
           borderRadius: pw.BorderRadius.circular(12),
         ),
-        child: pw.Text(label.toUpperCase(), style: pillStyle),
+        child: pw.Text(label, style: pillStyle),
       ),
     );
 
@@ -140,7 +140,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
               shape: pw.BoxShape.circle,
             ),
           ),
-          pw.Text(label.toUpperCase(), style: sectionStyle),
+          pw.Text(label, style: sectionStyle),
         ],
       ),
     );
@@ -519,6 +519,55 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                 }
                 final item = resume.customSections[customIndex];
                 if (!mainCustomSections.contains(item)) return null;
+                if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                  return [
+                    mainWrap(
+                      timelineHeading(item.title.ifEmpty('Custom section')),
+                    ),
+                    for (final work in item.visibleEntries.map(
+                      (entry) => entry.toWorkExperience(),
+                    )) ...[
+                      mainWrap(
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(bottom: 2),
+                          child: pw.Row(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Expanded(
+                                child: pw.Text(
+                                  work.role.trim().ifEmpty('Role'),
+                                  style: entryTitleStyle,
+                                ),
+                              ),
+                              pw.SizedBox(width: 10),
+                              pw.Text(
+                                educationDateRangeLabel(
+                                  work.startDate,
+                                  work.endDate,
+                                ),
+                                style: entryTitleStyle,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (work.company.trim().isNotEmpty)
+                        mainWrap(
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.only(top: 2),
+                            child: pw.Text(
+                              work.company.trim(),
+                              style: bodyStyle,
+                            ),
+                          ),
+                        ),
+                      mainWrap(pw.SizedBox(height: 4)),
+                      for (final line in _workBulletLines(work))
+                        mainWrap(bulletLine(line, bodyStyle)),
+                      mainWrap(pw.SizedBox(height: 8)),
+                    ],
+                  ];
+                }
                 return [
                   mainWrap(
                     timelineHeading(item.title.ifEmpty('Custom section')),
@@ -537,7 +586,14 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                   // flattened into the plain list.
                   if (resume.showCategorisedSkills) {
                     return [
-                      mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'))),
+                      mainWrap(
+                        timelineHeading(
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.skills,
+                            'Skills',
+                          ),
+                        ),
+                      ),
                       ..._categorisedSkillsPdfWidgets(
                         resume,
                         bodyStyle: bodyStyle,
@@ -548,14 +604,28 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
-                    mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'))),
+                    mainWrap(
+                      timelineHeading(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
+                      ),
+                    ),
                     ...skillsBody(skills),
                   ];
                 case ResumeBuilderSectionIds.work:
                   final items = resume.visibleWorkExperiences;
                   if (items.isEmpty) return null;
                   return [
-                    mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience'))),
+                    mainWrap(
+                      timelineHeading(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Work Experience',
+                        ),
+                      ),
+                    ),
                     for (var i = 0; i < items.length; i++) ...[
                       mainWrap(
                         _headerSidebarMaybeHighlight(
@@ -606,7 +676,14 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                   final items = resume.visibleEducation;
                   if (items.isEmpty) return null;
                   return [
-                    mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'))),
+                    mainWrap(
+                      timelineHeading(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'Education',
+                        ),
+                      ),
+                    ),
                     for (final item in items)
                       mainWrap(
                         pw.Padding(
@@ -630,9 +707,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                                         item.degree.trim(),
                                         style: bodyStyle,
                                       ),
-                                    if (educationDetailLine(
-                                      item,
-                                    ).isNotEmpty)
+                                    if (educationDetailLine(item).isNotEmpty)
                                       pw.Text(
                                         educationDetailLine(item),
                                         style: bodyStyle,
@@ -657,7 +732,14 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                   final items = resume.visibleProjects;
                   if (items.isEmpty) return null;
                   return [
-                    mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'))),
+                    mainWrap(
+                      timelineHeading(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
+                      ),
+                    ),
                     for (final item in items) ...[
                       mainWrap(
                         pw.Text(

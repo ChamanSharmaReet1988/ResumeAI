@@ -61,7 +61,7 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
 
     pw.Widget sectionTitle(String title) => pw.Padding(
       padding: const pw.EdgeInsets.only(top: 18, bottom: 6),
-      child: pw.Text(title.toUpperCase(), style: sectionTitleStyle),
+      child: pw.Text(title, style: sectionTitleStyle),
     );
 
     pw.Widget bullet(String text, {bool highlight = false}) =>
@@ -114,11 +114,7 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
           if (bullets.isNotEmpty) bullets.first,
         ],
       );
-      return [
-        header,
-        ...bullets.skip(1),
-        pw.SizedBox(height: 10),
-      ];
+      return [header, ...bullets.skip(1), pw.SizedBox(height: 10)];
     }
 
     List<pw.Widget> twoColumnRows<T>(
@@ -214,6 +210,21 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
                     garamond: fonts,
                     bodyFontPt: textPt,
                     accentStripGaramondBody: true,
+                    experienceEntry: (items) => [
+                      for (final work in items)
+                        ...entry(
+                          title: work.role.trim().ifEmpty('Role'),
+                          dates: educationDateRangeLabel(
+                            work.startDate,
+                            work.endDate,
+                          ),
+                          subtitle: work.company.trim(),
+                          bullets: [
+                            for (final line in _workBulletLines(work))
+                              bullet(line),
+                          ],
+                        ),
+                    ],
                   ),
                 ];
               }
@@ -221,7 +232,12 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
                 case ResumeBuilderSectionIds.work:
                   if (experiences.isEmpty) return null;
                   return [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.work,
+                        'Work Experience',
+                      ),
+                    ),
                     for (var i = 0; i < experiences.length; i++)
                       ...entry(
                         title: experiences[i].role.trim().ifEmpty('Role'),
@@ -246,7 +262,12 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
                 case ResumeBuilderSectionIds.education:
                   if (education.isEmpty) return null;
                   return [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.education,
+                        'Education',
+                      ),
+                    ),
                     ...twoColumnRows(
                       education,
                       (item) => pw.Column(
@@ -286,7 +307,12 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
                     final groups = resume.skillGroupsForResume;
                     if (groups.isEmpty) return null;
                     return [
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
+                      ),
                       for (final group in groups) ...[
                         if (group.heading.trim().isNotEmpty)
                           pw.Padding(
@@ -311,13 +337,23 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.skills,
+                        'Skills',
+                      ),
+                    ),
                     ...twoColumnRows(skills, skillBullet, rowGap: 2),
                   ];
                 case ResumeBuilderSectionIds.projects:
                   if (projects.isEmpty) return null;
                   return [
-                    sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                    sectionTitle(
+                      resume.sectionHeading(
+                        ResumeBuilderSectionIds.projects,
+                        'Projects',
+                      ),
+                    ),
                     for (final item in projects)
                       ...entry(
                         title: item.title.trim().ifEmpty('Project'),

@@ -1452,7 +1452,7 @@ class _TemplateDetailPdfPreview extends StatelessWidget {
     return NativePdfPreview(
       documentKey: 'template-detail-${resume.id}-${resume.template.name}',
       viewerBackground: viewerBackground,
-      bytesFuture: pdfService.buildPdf(resume),
+      bytesFuture: pdfService.buildPdf(resume, l10n: context.l10n),
       pageMargin: 4,
       horizontalPadding: 0,
     );

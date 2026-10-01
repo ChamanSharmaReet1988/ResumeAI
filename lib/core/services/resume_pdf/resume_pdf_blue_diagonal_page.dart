@@ -8,12 +8,14 @@ const double _blueDiagonalColumnWidthPt = 250.0;
 const double _blueDiagonalColumnInsetPt = 30.0;
 const double _blueDiagonalMainLeftPt = 282.0;
 const double _blueDiagonalMainRightPt = 40.0;
+
 /// Extra left inset while the grey column is present so body text clears it.
 const double _blueDiagonalContentInsetPt =
     _blueDiagonalMainLeftPt - _blueDiagonalMainRightPt;
 const double _blueDiagonalTopPt = 34.0;
 const double _blueDiagonalBottomPt = 46.0;
 const double _blueDiagonalAvatarSizePt = 176.0;
+
 /// Space above the nameplate, clearing the top-right corner diagonals.
 const double _blueDiagonalHeaderHeightPt = 120.0;
 
@@ -39,17 +41,16 @@ class _BlueDiagonalSidebarSlice {
 pw.Widget _blueDiagonalMainPad(
   pw.Widget child, {
   required int sidebarPageCount,
-}) =>
-    pw.DelayedWidget(
-      build: (context) => pw.Padding(
-        padding: pw.EdgeInsets.only(
-          left: context.pageNumber <= sidebarPageCount
-              ? _blueDiagonalContentInsetPt
-              : 0,
-        ),
-        child: child,
-      ),
-    );
+}) => pw.DelayedWidget(
+  build: (context) => pw.Padding(
+    padding: pw.EdgeInsets.only(
+      left: context.pageNumber <= sidebarPageCount
+          ? _blueDiagonalContentInsetPt
+          : 0,
+    ),
+    child: child,
+  ),
+);
 
 extension _ResumePdfBlueDiagonalPage on ResumePdfService {
   void _addBlueDiagonalTemplatePage(
@@ -78,14 +79,13 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
       double size,
       PdfColor color, {
       double? lineSpacing,
-    }) =>
-        garamondPdfTextStyle(
-          fonts,
-          weight,
-          fontSize: size,
-          color: color,
-          lineSpacing: lineSpacing,
-        );
+    }) => garamondPdfTextStyle(
+      fonts,
+      weight,
+      fontSize: size,
+      color: color,
+      lineSpacing: lineSpacing,
+    );
 
     final sectionTitleStyle = style(ResumeFontWeight.w700, 17, titleColor);
     final entryDateStyle = style(ResumeFontWeight.w700, bodyPt, titleColor);
@@ -119,16 +119,16 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
         );
 
     pw.Widget sectionTitle(String title, _BlueDiagonalIcon kind) => pw.Padding(
-          padding: const pw.EdgeInsets.only(top: 20, bottom: 12),
-          child: pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
-            children: [
-              icon(kind, 19, titleColor),
-              pw.SizedBox(width: 10),
-              pw.Text(title, style: sectionTitleStyle),
-            ],
-          ),
-        );
+      padding: const pw.EdgeInsets.only(top: 20, bottom: 12),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          icon(kind, 19, titleColor),
+          pw.SizedBox(width: 10),
+          pw.Text(title, style: sectionTitleStyle),
+        ],
+      ),
+    );
 
     pw.Widget bullet(String text, {bool highlight = false}) =>
         _headerSidebarMaybeHighlight(
@@ -173,8 +173,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   child: i + 1 < skills.length
                       ? bullet(
                           skills[i + 1],
-                          highlight:
-                              highlightedSkills.contains(skills[i + 1]),
+                          highlight: highlightedSkills.contains(skills[i + 1]),
                         )
                       : pw.SizedBox(),
                 ),
@@ -191,13 +190,13 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
       required List<pw.Widget> details,
     }) {
       pw.Widget dot() => pw.Container(
-            width: 7,
-            height: 7,
-            decoration: pw.BoxDecoration(
-              color: titleColor,
-              shape: pw.BoxShape.circle,
-            ),
-          );
+        width: 7,
+        height: 7,
+        decoration: pw.BoxDecoration(
+          color: titleColor,
+          shape: pw.BoxShape.circle,
+        ),
+      );
       return [
         pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -282,7 +281,8 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
               ),
           ],
         ),
-        height: sectionHeadingHeight() +
+        height:
+            sectionHeadingHeight() +
             contacts.length * (detailPt * lineH + 7) +
             4,
       ));
@@ -298,19 +298,14 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
         height: sectionHeadingHeight(),
       ));
       for (final line in lines) {
-        leftBlocks.add((
-          widget: bullet(line),
-          height: detailPt * lineH + 4,
-        ));
+        leftBlocks.add((widget: bullet(line), height: detailPt * lineH + 4));
       }
     }
 
-    final firstEducationBlockIndex =
-        education.isEmpty ? -1 : leftBlocks.length;
+    final firstEducationBlockIndex = education.isEmpty ? -1 : leftBlocks.length;
 
     for (final item in education) {
-      final dateLabel =
-          educationDateRangeLabel(item.startDate, item.endDate);
+      final dateLabel = educationDateRangeLabel(item.startDate, item.endDate);
       final degree = item.degree.trim();
       final score = educationDetailLine(item);
       var h = 9.0;
@@ -339,40 +334,44 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
     }
 
     // Page 1 left budget clears the avatar; later pages use the full column.
-    final page1LeftBudget = PdfPageFormat.a4.height -
+    final page1LeftBudget =
+        PdfPageFormat.a4.height -
         56 -
         _blueDiagonalAvatarSizePt -
         14 -
         _blueDiagonalBottomPt;
-    final continuationLeftBudget = PdfPageFormat.a4.height -
-        _blueDiagonalTopPt -
-        _blueDiagonalBottomPt;
+    final continuationLeftBudget =
+        PdfPageFormat.a4.height - _blueDiagonalTopPt - _blueDiagonalBottomPt;
 
     final sidebarSlices = <_BlueDiagonalSidebarSlice>[];
     if (leftBlocks.isNotEmpty) {
       var index = 0;
       var isFirstSlice = true;
       while (index < leftBlocks.length) {
-        final budget =
-            isFirstSlice ? page1LeftBudget : continuationLeftBudget;
+        final budget = isFirstSlice ? page1LeftBudget : continuationLeftBudget;
         final chunk = <pw.Widget>[];
         var used = 0.0;
         var educationHeadingAdded = false;
 
         while (index < leftBlocks.length) {
           final block = leftBlocks[index];
-          final needsEduHeading = index == firstEducationBlockIndex &&
+          final needsEduHeading =
+              index == firstEducationBlockIndex &&
               firstEducationBlockIndex >= 0 &&
               !educationHeadingAdded;
-          final headingExtra =
-              needsEduHeading ? sectionHeadingHeight() : 0.0;
-          if (chunk.isNotEmpty &&
-              used + block.height + headingExtra > budget) {
+          final headingExtra = needsEduHeading ? sectionHeadingHeight() : 0.0;
+          if (chunk.isNotEmpty && used + block.height + headingExtra > budget) {
             break;
           }
           if (needsEduHeading) {
             chunk.add(
-              sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'), _BlueDiagonalIcon.education),
+              sectionTitle(
+                resume.sectionHeading(
+                  ResumeBuilderSectionIds.education,
+                  'Education',
+                ),
+                _BlueDiagonalIcon.education,
+              ),
             );
             used += headingExtra;
             educationHeadingAdded = true;
@@ -426,7 +425,8 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
             ),
             if (firstPage && showSidebar)
               pw.Positioned(
-                left: _blueDiagonalColumnWidthPt / 2 -
+                left:
+                    _blueDiagonalColumnWidthPt / 2 -
                     _blueDiagonalAvatarSizePt / 2,
                 top: 56,
                 child: pw.Container(
@@ -439,10 +439,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   padding: const pw.EdgeInsets.all(7),
                   child: profileImage != null
                       ? pw.ClipOval(
-                          child: pw.Image(
-                            profileImage,
-                            fit: pw.BoxFit.cover,
-                          ),
+                          child: pw.Image(profileImage, fit: pw.BoxFit.cover),
                         )
                       : pw.Container(
                           alignment: pw.Alignment.center,
@@ -452,11 +449,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                           ),
                           child: pw.Text(
                             _resumeInitials(resume),
-                            style: style(
-                              ResumeFontWeight.w700,
-                              42,
-                              titleColor,
-                            ),
+                            style: style(ResumeFontWeight.w700, 42, titleColor),
                           ),
                         ),
                 ),
@@ -469,7 +462,8 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                     : _blueDiagonalTopPt,
                 bottom: _blueDiagonalBottomPt,
                 child: pw.SizedBox(
-                  width: _blueDiagonalColumnWidthPt -
+                  width:
+                      _blueDiagonalColumnWidthPt -
                       _blueDiagonalColumnInsetPt * 2,
                   child: pw.ClipRect(
                     child: pw.Column(
@@ -496,8 +490,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
             _blueDiagonalMainRightPt,
             _blueDiagonalBottomPt,
           ),
-          buildBackground: (context) =>
-              sidebarBackground(context.pageNumber),
+          buildBackground: (context) => sidebarBackground(context.pageNumber),
         ),
         build: (context) => [
           mainWrap(
@@ -540,9 +533,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
           ],
           ..._pdfBodySectionsInBuilderOrder(
             resume,
-            exclude: {
-              ResumeBuilderSectionIds.education,
-            },
+            exclude: {ResumeBuilderSectionIds.education},
             buildSection: (id) {
               final customIndex = ResumeBuilderSectionIds.customIndex(id);
               if (customIndex != null) {
@@ -564,6 +555,21 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                     garamond: fonts,
                     bodyFontPt: detailPt,
                     accentStripGaramondBody: true,
+                    experienceEntry: (items) => [
+                      for (final work in items)
+                        ...timelineEntry(
+                          dates: educationDateRangeLabel(
+                            work.startDate,
+                            work.endDate,
+                          ),
+                          title: work.role.trim().ifEmpty('Role'),
+                          subtitle: work.company.trim(),
+                          details: [
+                            for (final line in _workBulletLines(work))
+                              bullet(line),
+                          ],
+                        ),
+                    ],
                   ).map(mainWrap),
                 ];
               }
@@ -574,7 +580,13 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   if (resume.showCategorisedSkills) {
                     return [
                       mainWrap(
-                        sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), _BlueDiagonalIcon.skills),
+                        sectionTitle(
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.skills,
+                            'Skills',
+                          ),
+                          _BlueDiagonalIcon.skills,
+                        ),
                       ),
                       ..._categorisedSkillsPdfWidgets(
                         resume,
@@ -587,7 +599,13 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   if (skills.isEmpty) return null;
                   return [
                     mainWrap(
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), _BlueDiagonalIcon.skills),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
+                        _BlueDiagonalIcon.skills,
+                      ),
                     ),
                     ...skillsTwoColumn(skills).map(mainWrap),
                   ];
@@ -595,7 +613,13 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   if (experiences.isEmpty) return null;
                   return [
                     mainWrap(
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), _BlueDiagonalIcon.work),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Experience',
+                        ),
+                        _BlueDiagonalIcon.work,
+                      ),
                     ),
                     for (var i = 0; i < experiences.length; i++)
                       ...timelineEntry(
@@ -606,12 +630,13 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                         title: experiences[i].role.trim().ifEmpty('Role'),
                         subtitle: experiences[i].company.trim(),
                         details: [
-                          for (final line
-                              in _workBulletLines(experiences[i]))
+                          for (final line in _workBulletLines(experiences[i]))
                             bullet(
                               line,
-                              highlight: highlightedBulletsByExperience[i]
-                                      ?.contains(line) ??
+                              highlight:
+                                  highlightedBulletsByExperience[i]?.contains(
+                                    line,
+                                  ) ??
                                   false,
                             ),
                         ],
@@ -621,7 +646,13 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   if (projects.isEmpty) return null;
                   return [
                     mainWrap(
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), _BlueDiagonalIcon.article),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
+                        _BlueDiagonalIcon.article,
+                      ),
                     ),
                     for (final item in projects)
                       ...timelineEntry(
@@ -686,52 +717,37 @@ void _paintBlueDiagonals(
   final w = size.x;
   final h = size.y;
   if (drawTop) {
-    polygon(
-      [
-        [0, h],
-        [_blueDiagonalColumnWidthPt, h],
-        [0, h - 150],
-      ],
-      accent,
-    );
-    polygon(
-      [
-        [w - 185, h],
-        [w, h],
-        [w, h - 185],
-      ],
-      accent,
-    );
-    polygon(
-      [
-        [w - 185, h],
-        [w - 125, h],
-        [w, h - 125],
-        [w, h - 185],
-      ],
-      accentDark,
-    );
+    polygon([
+      [0, h],
+      [_blueDiagonalColumnWidthPt, h],
+      [0, h - 150],
+    ], accent);
+    polygon([
+      [w - 185, h],
+      [w, h],
+      [w, h - 185],
+    ], accent);
+    polygon([
+      [w - 185, h],
+      [w - 125, h],
+      [w, h - 125],
+      [w, h - 185],
+    ], accentDark);
   }
   // Bottom band — pin to the page edge (PDF y=0) with a slight overdraw so
   // it sits flush with the card bottom without a hairline gap.
-  polygon(
-    [
-      [0, -1],
-      [w, -1],
-      [w, 62],
-      [0, 26],
-    ],
-    accent,
-  );
-  polygon(
-    [
-      [0, -1],
-      [w, -1],
-      [w, 26],
-      [0, 8],
-    ],
-    accentDark,
-  );
+  polygon([
+    [0, -1],
+    [w, -1],
+    [w, 62],
+    [0, 26],
+  ], accent);
+  polygon([
+    [0, -1],
+    [w, -1],
+    [w, 26],
+    [0, 8],
+  ], accentDark);
 }
 
 enum _BlueDiagonalIcon {

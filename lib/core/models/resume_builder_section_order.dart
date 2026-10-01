@@ -32,6 +32,35 @@ abstract final class ResumeBuilderSectionIds {
 
   static String custom(int index) => 'custom:$index';
 
+  /// Preview/PDF copy whose built-in headings and empty custom titles match
+  /// the section list in [l10n]. Personal information stays a header, not a
+  /// section title.
+  static ResumeData resumeWithSectionListTitles(
+    ResumeData resume,
+    AppLocalizations l10n,
+  ) {
+    final titles = Map<String, String>.from(resume.sectionTitles);
+    void fill(String id, String label) {
+      if ((titles[id]?.trim() ?? '').isEmpty) {
+        titles[id] = label;
+      }
+    }
+
+    fill(work, l10n.sectionWorkExperience);
+    fill(education, l10n.sectionEducation);
+    fill(skills, l10n.sectionSkills);
+    fill(projects, l10n.sectionProjects);
+    final sections = <CustomSectionItem>[
+      for (var i = 0; i < resume.customSections.length; i++)
+        resume.customSections[i].title.trim().isEmpty
+            ? resume.customSections[i].copyWith(
+                title: l10n.categoryNumber(i + 1),
+              )
+            : resume.customSections[i],
+    ];
+    return resume.copyWith(sectionTitles: titles, customSections: sections);
+  }
+
   static bool isCustom(String id) => id.startsWith('custom:');
 
   static int? customIndex(String id) {

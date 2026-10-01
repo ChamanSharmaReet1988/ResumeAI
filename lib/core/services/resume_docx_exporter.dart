@@ -308,7 +308,7 @@ class ResumeDocxExporter {
 
   String _sectionHeading(String title) {
     return _paragraph(
-      title.toUpperCase(),
+      title,
       bold: true,
       sizeHalfPoints: 22,
       after: 60,

@@ -6,10 +6,12 @@ part of 'package:resume_app/core/services/resume_services.dart';
 /// use the full page width with no rail.
 const double _slateSidebarRailWidthPt = 196.0;
 const double _slateSidebarRailInsetPt = 24.0;
+
 /// Gap between rail text and the white main column.
 const double _slateSidebarRailRightInsetPt = 32.0;
 const double _slateSidebarMainLeftPt = _slateSidebarRailWidthPt + 28.0;
 const double _slateSidebarMainRightPt = 34.0;
+
 /// Extra left inset while the rail is present so body text clears it.
 const double _slateSidebarRailContentInsetPt =
     _slateSidebarMainLeftPt - _slateSidebarMainRightPt;
@@ -118,8 +120,7 @@ List<_SlateSidebarPageSlice> _slateSidebarPageSlices({
   final contactBodyHeight = contactCount == 0
       ? detailPt * ResumeTypography.bodyTextLineHeight
       : contactCount * contactEntryHeight;
-  final identityHeight =
-      avatarBlock + headingBlock + contactBodyHeight + 28;
+  final identityHeight = avatarBlock + headingBlock + contactBodyHeight + 28;
 
   double skillHeight(String item) {
     final lines = _slateSidebarEstimatedSkillLines(
@@ -275,9 +276,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
       margin: const pw.EdgeInsets.only(top: 22, bottom: 12),
       padding: const pw.EdgeInsets.only(bottom: 6),
       decoration: pw.BoxDecoration(
-        border: pw.Border(
-          bottom: pw.BorderSide(color: titleColor, width: 0.8),
-        ),
+        border: pw.Border(bottom: pw.BorderSide(color: titleColor, width: 0.8)),
       ),
       child: pw.Text(title, style: sectionTitleStyle),
     );
@@ -400,9 +399,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
         margin: const pw.EdgeInsets.only(top: 22, bottom: 12),
         padding: const pw.EdgeInsets.only(bottom: 6),
         decoration: const pw.BoxDecoration(
-          border: pw.Border(
-            bottom: pw.BorderSide(color: onRail, width: 0.8),
-          ),
+          border: pw.Border(bottom: pw.BorderSide(color: onRail, width: 0.8)),
         ),
         child: pw.Text(title, style: railHeading),
       );
@@ -530,8 +527,9 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                     ResumeFontWeight.w400,
                     detailPt,
                     bodyInk,
-                    lineSpacing:
-                        ResumeTypography.bodyPdfLineSpacingFor(detailPt),
+                    lineSpacing: ResumeTypography.bodyPdfLineSpacingFor(
+                      detailPt,
+                    ),
                   ),
                 ),
               ),
@@ -555,6 +553,21 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                       garamond: fonts,
                       bodyFontPt: detailPt,
                       accentStripGaramondBody: true,
+                      experienceEntry: (items) => [
+                        for (final work in items)
+                          ...datedEntry(
+                            dates: educationDateRangeLabel(
+                              work.startDate,
+                              work.endDate,
+                            ),
+                            organisation: work.company.trim(),
+                            title: work.role.trim().ifEmpty('Role'),
+                            details: [
+                              for (final bullet in _workBulletLines(work))
+                                bulletLine(bullet),
+                            ],
+                          ),
+                      ],
                     ),
                   ];
                 }
@@ -562,7 +575,12 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                   case ResumeBuilderSectionIds.work:
                     if (experiences.isEmpty) return null;
                     return [
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience')),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Experience',
+                        ),
+                      ),
                       for (var i = 0; i < experiences.length; i++)
                         ...datedEntry(
                           dates: educationDateRangeLabel(
@@ -578,8 +596,9 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                               bulletLine(
                                 bullet,
                                 highlight:
-                                    highlightedBulletsByExperience[i]
-                                        ?.contains(bullet) ??
+                                    highlightedBulletsByExperience[i]?.contains(
+                                      bullet,
+                                    ) ??
                                     false,
                               ),
                           ],
@@ -588,7 +607,12 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                   case ResumeBuilderSectionIds.education:
                     if (education.isEmpty) return null;
                     return [
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'Education',
+                        ),
+                      ),
                       for (final item in education)
                         ...datedEntry(
                           dates: educationDateRangeLabel(
@@ -614,7 +638,12 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                   case ResumeBuilderSectionIds.projects:
                     if (projects.isEmpty) return null;
                     return [
-                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
+                      ),
                       for (final item in projects)
                         ...datedEntry(
                           dates: '',
@@ -634,10 +663,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
 
           return [
             for (final widget in body)
-              _slateSidebarMainPad(
-                widget,
-                sidebarPageCount: sidebarPageCount,
-              ),
+              _slateSidebarMainPad(widget, sidebarPageCount: sidebarPageCount),
           ];
         },
       ),

@@ -450,8 +450,10 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                       documentKey:
                                           '${viewModel.resume.id}-${viewModel.resume.effectiveBuilderSectionOrder.join(',')}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                                       viewerBackground: scaffoldBg,
-                                      bytesFuture: viewModel.pdfService
-                                          .buildPdf(viewModel.resume),
+                                      bytesFuture: viewModel.pdfService.buildPdf(
+                                        viewModel.resume,
+                                        l10n: context.l10n,
+                                      ),
                                     ),
                             ),
                           ),

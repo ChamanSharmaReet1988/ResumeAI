@@ -244,12 +244,8 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
             width: 9,
             height: 9,
             child: pw.CustomPaint(
-              painter: (canvas, size) => _paintMinimalProfileIcon(
-                canvas,
-                size,
-                icon,
-                PdfColors.white,
-              ),
+              painter: (canvas, size) =>
+                  _paintMinimalProfileIcon(canvas, size, icon, PdfColors.white),
             ),
           ),
         ),
@@ -305,10 +301,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
 
     final leftBlocks = <({pw.Widget widget, double height})>[];
     if (summary.isNotEmpty) {
-      leftBlocks.add((
-        widget: sectionHeading('About Me'),
-        height: 43.0,
-      ));
+      leftBlocks.add((widget: sectionHeading('About Me'), height: 43.0));
       final lines = wrappedLines(summary, sideInnerWidth);
       leftBlocks.add((
         widget: _headerSidebarMaybeHighlight(
@@ -320,7 +313,9 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
     }
     if (resume.visibleEducation.isNotEmpty) {
       leftBlocks.add((
-        widget: sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
+        widget: sectionHeading(
+          resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
+        ),
         height: 43.0,
       ));
       for (final item in resume.visibleEducation) {
@@ -329,12 +324,13 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
         final degreeLines = wrappedLines(degree, sideInnerWidth);
         h += degreeLines * (bodyPt * ResumeTypography.bodyTextLineHeight);
         if (item.institution.trim().isNotEmpty) {
-          final instLines =
-              wrappedLines(item.institution.trim(), sideInnerWidth);
+          final instLines = wrappedLines(
+            item.institution.trim(),
+            sideInnerWidth,
+          );
           h += instLines * lineHeight;
         }
-        final dateLabel =
-            educationDateRangeLabel(item.startDate, item.endDate);
+        final dateLabel = educationDateRangeLabel(item.startDate, item.endDate);
         if (dateLabel.isNotEmpty) {
           h += lineHeight;
         }
@@ -352,8 +348,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                 pw.Text(degree, style: entryTitleStyle),
                 if (item.institution.trim().isNotEmpty)
                   pw.Text(item.institution.trim(), style: bodyStyle),
-                if (dateLabel.isNotEmpty)
-                  pw.Text(dateLabel, style: bodyStyle),
+                if (dateLabel.isNotEmpty) pw.Text(dateLabel, style: bodyStyle),
                 if (scoreLabel.isNotEmpty)
                   pw.Text(scoreLabel, style: bodyStyle),
               ],
@@ -386,10 +381,12 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
       }
     }
 
-    final page1LeftBudget = PdfPageFormat.a4.height -
+    final page1LeftBudget =
+        PdfPageFormat.a4.height -
         _profileTimelinePageTopPt -
         _profileTimelinePageBottomPt;
-    final continuationLeftBudget = PdfPageFormat.a4.height -
+    final continuationLeftBudget =
+        PdfPageFormat.a4.height -
         _profileTimelineContinuationTopPt -
         _profileTimelinePageBottomPt;
 
@@ -479,7 +476,8 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                     );
               return pw.Padding(
                 padding: pw.EdgeInsets.only(
-                  left: (besideSidebar ? _profileTimelineContentInsetPt : 0) +
+                  left:
+                      (besideSidebar ? _profileTimelineContentInsetPt : 0) +
                       _profileTimelineGutterPt,
                 ),
                 child: pw.Inseparable(child: child),
@@ -550,18 +548,13 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                           ),
                           if (resume.jobTitle.trim().isNotEmpty) ...[
                             pw.SizedBox(height: 4),
-                            pw.Text(
-                              resume.jobTitle.trim(),
-                              style: jobStyle,
-                            ),
+                            pw.Text(resume.jobTitle.trim(), style: jobStyle),
                           ],
                           if (contacts.isNotEmpty) ...[
                             pw.SizedBox(height: 14),
                             for (var i = 0; i < contacts.length; i += 2)
                               pw.Padding(
-                                padding: const pw.EdgeInsets.only(
-                                  bottom: 6,
-                                ),
+                                padding: const pw.EdgeInsets.only(bottom: 6),
                                 child: pw.Row(
                                   crossAxisAlignment:
                                       pw.CrossAxisAlignment.start,
@@ -649,9 +642,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
           ),
           ..._pdfBodySectionsInBuilderOrder(
             resume,
-            exclude: {
-              ResumeBuilderSectionIds.education,
-            },
+            exclude: {ResumeBuilderSectionIds.education},
             buildSection: (id) {
               final customIndex = ResumeBuilderSectionIds.customIndex(id);
               if (customIndex != null) {
@@ -661,6 +652,39 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                 }
                 final item = resume.customSections[customIndex];
                 if (!mainCustomSections.contains(item)) return null;
+                if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                  final entries = item.visibleEntries
+                      .map((entry) => entry.toWorkExperience())
+                      .toList();
+                  final entryWidgets = <pw.Widget>[
+                    for (var i = 0; i < entries.length; i++)
+                      ...timelineEntry(
+                        title: entries[i].role.trim().ifEmpty('Role'),
+                        meta: [
+                          entries[i].company.trim(),
+                          resume.location.trim(),
+                        ].where((part) => part.isNotEmpty).join('  |  '),
+                        dates: educationDateRangeLabel(
+                          entries[i].startDate,
+                          entries[i].endDate,
+                        ),
+                        details: _workBulletLines(entries[i]),
+                        last: i == entries.length - 1,
+                      ),
+                  ];
+                  return [
+                    mainWrap(
+                      keepWithNext([
+                        sectionHeading(
+                          item.title.ifEmpty('Custom section'),
+                          indent: true,
+                        ),
+                        entryWidgets.first,
+                      ]),
+                    ),
+                    ...entryWidgets.skip(1).map(mainWrap),
+                  ];
+                }
                 return [
                   mainWrap(
                     sectionHeading(
@@ -688,7 +712,15 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                 case ResumeBuilderSectionIds.skills:
                   if (resume.showCategorisedSkills) {
                     return [
-                      mainWrap(sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), indent: true)),
+                      mainWrap(
+                        sectionHeading(
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.skills,
+                            'Skills',
+                          ),
+                          indent: true,
+                        ),
+                      ),
                       ..._categorisedSkillsPdfWidgets(
                         resume,
                         bodyStyle: bodyStyle,
@@ -710,7 +742,15 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   final skillRows = skillsBody(skills);
                   return [
                     keepWithNext([
-                      mainWrap(sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), indent: true)),
+                      mainWrap(
+                        sectionHeading(
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.skills,
+                            'Skills',
+                          ),
+                          indent: true,
+                        ),
+                      ),
                       if (skillRows.isNotEmpty) skillRows.first,
                     ]),
                     ...skillRows.skip(1),
@@ -737,7 +777,13 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   return [
                     mainWrap(
                       keepWithNext([
-                        sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), indent: true),
+                        sectionHeading(
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.work,
+                            'Experience',
+                          ),
+                          indent: true,
+                        ),
                         experienceWidgets.first,
                       ]),
                     ),
@@ -763,7 +809,13 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   return [
                     mainWrap(
                       keepWithNext([
-                        sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), indent: true),
+                        sectionHeading(
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.projects,
+                            'Projects',
+                          ),
+                          indent: true,
+                        ),
                         projectWidgets.first,
                       ]),
                     ),

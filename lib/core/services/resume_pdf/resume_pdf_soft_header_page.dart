@@ -11,6 +11,7 @@ const double _softHeaderLeftColumnWidthPt = 196.0;
 const double _softHeaderDividerXPt =
     _softHeaderSidePt + _softHeaderLeftColumnWidthPt + 18;
 const double _softHeaderMainLeftPt = _softHeaderDividerXPt + 24;
+
 /// Extra left inset while the left column is present so body text clears it.
 const double _softHeaderContentInsetPt =
     _softHeaderMainLeftPt - _softHeaderSidePt;
@@ -43,17 +44,16 @@ class _SoftHeaderSidebarSlice {
 pw.Widget _softHeaderMainPad(
   pw.Widget child, {
   required int sidebarPageCount,
-}) =>
-    pw.DelayedWidget(
-      build: (context) => pw.Padding(
-        padding: pw.EdgeInsets.only(
-          left: context.pageNumber <= sidebarPageCount
-              ? _softHeaderContentInsetPt
-              : 0,
-        ),
-        child: child,
-      ),
-    );
+}) => pw.DelayedWidget(
+  build: (context) => pw.Padding(
+    padding: pw.EdgeInsets.only(
+      left: context.pageNumber <= sidebarPageCount
+          ? _softHeaderContentInsetPt
+          : 0,
+    ),
+    child: child,
+  ),
+);
 
 extension _ResumePdfSoftHeaderPage on ResumePdfService {
   void _addSoftHeaderTemplatePage(
@@ -82,14 +82,13 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
       PdfColor color, {
       double? lineSpacing,
       double? letterSpacing,
-    }) =>
-        garamondPdfTextStyle(
-          fonts,
-          weight,
-          fontSize: size,
-          color: color,
-          lineSpacing: lineSpacing,
-        ).copyWith(letterSpacing: letterSpacing);
+    }) => garamondPdfTextStyle(
+      fonts,
+      weight,
+      fontSize: size,
+      color: color,
+      lineSpacing: lineSpacing,
+    ).copyWith(letterSpacing: letterSpacing);
 
     final sectionTitleStyle = style(
       ResumeFontWeight.w700,
@@ -118,96 +117,95 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
         .toList();
 
     pw.Widget sectionTitle(String title) => pw.Container(
-          margin: const pw.EdgeInsets.only(top: 18, bottom: 10),
-          child: pw.Stack(
-            alignment: pw.Alignment.centerLeft,
-            children: [
-              pw.Container(
-                width: 24,
-                height: 24,
-                margin: const pw.EdgeInsets.only(left: -4),
-                decoration: pw.BoxDecoration(
-                  color: bandColor,
-                  shape: pw.BoxShape.circle,
-                ),
-              ),
-              pw.Text(title.toUpperCase(), style: sectionTitleStyle),
-            ],
+      margin: const pw.EdgeInsets.only(top: 18, bottom: 10),
+      child: pw.Stack(
+        alignment: pw.Alignment.centerLeft,
+        children: [
+          pw.Container(
+            width: 24,
+            height: 24,
+            margin: const pw.EdgeInsets.only(left: -4),
+            decoration: pw.BoxDecoration(
+              color: bandColor,
+              shape: pw.BoxShape.circle,
+            ),
           ),
-        );
+          pw.Text(title, style: sectionTitleStyle),
+        ],
+      ),
+    );
 
     pw.Widget bullet(
       String text, {
       bool highlight = false,
       pw.TextStyle? textStyle,
-    }) =>
-        _headerSidebarMaybeHighlight(
-          highlight: highlight,
-          child: pw.Padding(
-            padding: const pw.EdgeInsets.only(bottom: 3),
-            child: pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Container(
-                  width: 3,
-                  height: 3,
-                  margin: const pw.EdgeInsets.only(top: 5, right: 8),
-                  decoration: pw.BoxDecoration(
-                    color: mutedColor,
-                    shape: pw.BoxShape.circle,
-                  ),
-                ),
-                pw.Expanded(
-                  child: pw.Text(
-                    text,
-                    style: textStyle ?? bodyStyle,
-                    textAlign: pw.TextAlign.left,
-                  ),
-                ),
-              ],
+    }) => _headerSidebarMaybeHighlight(
+      highlight: highlight,
+      child: pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 3),
+        child: pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Container(
+              width: 3,
+              height: 3,
+              margin: const pw.EdgeInsets.only(top: 5, right: 8),
+              decoration: pw.BoxDecoration(
+                color: mutedColor,
+                shape: pw.BoxShape.circle,
+              ),
             ),
-          ),
-        );
+            pw.Expanded(
+              child: pw.Text(
+                text,
+                style: textStyle ?? bodyStyle,
+                textAlign: pw.TextAlign.left,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
 
     List<pw.Widget> experienceEntry(WorkExperience item, int index) => [
-          pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Expanded(
-                child: pw.Text(
-                  item.company.trim().ifEmpty('Company'),
-                  style: entryTitleStyle,
-                ),
-              ),
-              if (educationDateRangeLabel(
+      pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Expanded(
+            child: pw.Text(
+              item.company.trim().ifEmpty('Company'),
+              style: entryTitleStyle,
+            ),
+          ),
+          if (educationDateRangeLabel(
+            item.startDate,
+            item.endDate,
+          ).isNotEmpty) ...[
+            pw.SizedBox(width: 10),
+            pw.Text(
+              educationDateRangeLabel(
                 item.startDate,
                 item.endDate,
-              ).isNotEmpty) ...[
-                pw.SizedBox(width: 10),
-                pw.Text(
-                  educationDateRangeLabel(
-                    item.startDate,
-                    item.endDate,
-                  ).toUpperCase(),
-                  style: metaStyle,
-                ),
-              ],
-            ],
-          ),
-          if (item.role.trim().isNotEmpty)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 1),
-              child: pw.Text(item.role.trim(), style: bodyStyle),
+              ).toUpperCase(),
+              style: metaStyle,
             ),
-          pw.SizedBox(height: 5),
-          for (final line in _workBulletLines(item))
-            bullet(
-              line,
-              highlight:
-                  highlightedBulletsByExperience[index]?.contains(line) ?? false,
-            ),
-          pw.SizedBox(height: 12),
-        ];
+          ],
+        ],
+      ),
+      if (item.role.trim().isNotEmpty)
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(top: 1),
+          child: pw.Text(item.role.trim(), style: bodyStyle),
+        ),
+      pw.SizedBox(height: 5),
+      for (final line in _workBulletLines(item))
+        bullet(
+          line,
+          highlight:
+              highlightedBulletsByExperience[index]?.contains(line) ?? false,
+        ),
+      pw.SizedBox(height: 12),
+    ];
 
     /// Skills as breakable two-column rows so MultiPage can paginate between them.
     List<pw.Widget> skillsTwoColumn(List<String> skills) {
@@ -255,19 +253,17 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
             for (final value in contacts) bullet(value, textStyle: metaStyle),
           ],
         ),
-        height: sectionHeadingHeight() +
+        height:
+            sectionHeadingHeight() +
             contacts.length * (detailPt * lineH + 3) +
             4,
       ));
     }
 
-    final firstEducationBlockIndex = education.isEmpty
-        ? -1
-        : leftBlocks.length;
+    final firstEducationBlockIndex = education.isEmpty ? -1 : leftBlocks.length;
 
     for (final item in education) {
-      final dateLabel =
-          educationDateRangeLabel(item.startDate, item.endDate);
+      final dateLabel = educationDateRangeLabel(item.startDate, item.endDate);
       final degree = item.degree.trim();
       final score = educationDetailLine(item);
       var h = 9.0;
@@ -303,20 +299,17 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
         height: sectionHeadingHeight(),
       ));
       for (final line in lines) {
-        leftBlocks.add((
-          widget: bullet(line),
-          height: detailPt * lineH + 3,
-        ));
+        leftBlocks.add((widget: bullet(line), height: detailPt * lineH + 3));
       }
     }
 
-    final page1LeftBudget = PdfPageFormat.a4.height -
+    final page1LeftBudget =
+        PdfPageFormat.a4.height -
         _softHeaderBandHeightPt -
         16 -
         _softHeaderBottomPt;
-    final continuationLeftBudget = PdfPageFormat.a4.height -
-        _softHeaderTopPt -
-        _softHeaderBottomPt;
+    final continuationLeftBudget =
+        PdfPageFormat.a4.height - _softHeaderTopPt - _softHeaderBottomPt;
 
     final sidebarSlices = <_SoftHeaderSidebarSlice>[];
     if (leftBlocks.isEmpty) {
@@ -332,17 +325,23 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
 
         while (index < leftBlocks.length) {
           final block = leftBlocks[index];
-          final needsEduHeading = index == firstEducationBlockIndex &&
+          final needsEduHeading =
+              index == firstEducationBlockIndex &&
               firstEducationBlockIndex >= 0 &&
               !educationHeadingAdded;
-          final headingExtra =
-              needsEduHeading ? sectionHeadingHeight() : 0.0;
-          if (chunk.isNotEmpty &&
-              used + block.height + headingExtra > budget) {
+          final headingExtra = needsEduHeading ? sectionHeadingHeight() : 0.0;
+          if (chunk.isNotEmpty && used + block.height + headingExtra > budget) {
             break;
           }
           if (needsEduHeading) {
-            chunk.add(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')));
+            chunk.add(
+              sectionTitle(
+                resume.sectionHeading(
+                  ResumeBuilderSectionIds.education,
+                  'Education',
+                ),
+              ),
+            );
             used += headingExtra;
             educationHeadingAdded = true;
           }
@@ -369,8 +368,9 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
       final firstPage = pageNumber == 1;
       final showSidebar =
           sidebarPageCount > 0 && pageNumber <= sidebarPageCount;
-      final columnsTop =
-          firstPage ? _softHeaderBandHeightPt + 16 : _softHeaderTopPt;
+      final columnsTop = firstPage
+          ? _softHeaderBandHeightPt + 16
+          : _softHeaderTopPt;
       return pw.FullPage(
         ignoreMargins: true,
         child: pw.Stack(
@@ -480,14 +480,11 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
             _softHeaderSidePt,
             _softHeaderBottomPt,
           ),
-          buildBackground: (context) =>
-              sidebarBackground(context.pageNumber),
+          buildBackground: (context) => sidebarBackground(context.pageNumber),
         ),
         build: (context) => [
           mainWrap(
-            pw.SizedBox(
-              height: _softHeaderBandHeightPt - _softHeaderTopPt + 4,
-            ),
+            pw.SizedBox(height: _softHeaderBandHeightPt - _softHeaderTopPt + 4),
           ),
           if (resume.summary.trim().isNotEmpty) ...[
             mainWrap(sectionTitle('Profile Summary')),
@@ -504,9 +501,7 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
           ],
           ..._pdfBodySectionsInBuilderOrder(
             resume,
-            exclude: {
-              ResumeBuilderSectionIds.education,
-            },
+            exclude: {ResumeBuilderSectionIds.education},
             buildSection: (id) {
               final customIndex = ResumeBuilderSectionIds.customIndex(id);
               if (customIndex != null) {
@@ -517,14 +512,16 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
                 final item = resume.customSections[customIndex];
                 if (!mainSections.contains(item)) return null;
                 return [
-                  mainWrap(
-                    sectionTitle(item.title.ifEmpty('Custom section')),
-                  ),
+                  mainWrap(sectionTitle(item.title.ifEmpty('Custom section'))),
                   ..._pwCustomSectionBodyWidgets(
                     item,
                     garamond: fonts,
                     bodyFontPt: detailPt,
                     accentStripGaramondBody: true,
+                    experienceEntry: (items) => [
+                      for (var i = 0; i < items.length; i++)
+                        ...experienceEntry(items[i], i),
+                    ],
                   ).map(mainWrap),
                 ];
               }
@@ -534,7 +531,14 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
                   // flattened into the two-column list.
                   if (resume.showCategorisedSkills) {
                     return [
-                      mainWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'))),
+                      mainWrap(
+                        sectionTitle(
+                          resume.sectionHeading(
+                            ResumeBuilderSectionIds.skills,
+                            'Skills',
+                          ),
+                        ),
+                      ),
                       ..._categorisedSkillsPdfWidgets(
                         resume,
                         bodyStyle: bodyStyle,
@@ -545,20 +549,41 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
-                    mainWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'))),
+                    mainWrap(
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
+                      ),
+                    ),
                     ...skillsTwoColumn(skills).map(mainWrap),
                   ];
                 case ResumeBuilderSectionIds.work:
                   if (experiences.isEmpty) return null;
                   return [
-                    mainWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience'))),
+                    mainWrap(
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Work Experience',
+                        ),
+                      ),
+                    ),
                     for (var i = 0; i < experiences.length; i++)
                       ...experienceEntry(experiences[i], i).map(mainWrap),
                   ];
                 case ResumeBuilderSectionIds.projects:
                   if (projects.isEmpty) return null;
                   return [
-                    mainWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'))),
+                    mainWrap(
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
+                      ),
+                    ),
                     for (final item in projects) ...[
                       mainWrap(
                         pw.Text(

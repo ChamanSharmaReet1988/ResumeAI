@@ -100,10 +100,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                                   ResumeTypography.darkHeaderContactWeight,
                                   fontSize: headerContactFontPt,
                                   color: headerOnColor,
-                                  lineSpacing: ResumeTypography
-                                      .darkHeaderContactPdfLineSpacingFor(
-                                    headerContactFontPt,
-                                  ),
+                                  lineSpacing:
+                                      ResumeTypography.darkHeaderContactPdfLineSpacingFor(
+                                        headerContactFontPt,
+                                      ),
                                 ),
                               ),
                             ),
@@ -207,7 +207,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
           0,
         ),
         child: _darkHeaderHeadingText(
-          title.toUpperCase(),
+          title,
           color: sectionTitleColor,
           garamond: garamond,
         ),
@@ -270,7 +270,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   ) {
     return [
       ..._darkHeaderSectionPrefixWidgets(
-        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
+        title: resume.sectionHeading(
+          ResumeBuilderSectionIds.education,
+          'Education',
+        ),
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
@@ -278,11 +281,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       for (final item in items)
         pw.Padding(
           padding: pw.EdgeInsets.fromLTRB(
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-        ),
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+          ),
           child: _buildCorporateEducation(
             item,
             garamond: garamond,
@@ -353,7 +356,10 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   ) {
     return [
       ..._darkHeaderSectionPrefixWidgets(
-        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
+        title: resume.sectionHeading(
+          ResumeBuilderSectionIds.projects,
+          'Projects',
+        ),
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
@@ -366,11 +372,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
         ).map(
           (widget) => pw.Padding(
             padding: pw.EdgeInsets.fromLTRB(
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-        ),
+              ResumeTypography.corporateBodyHorizontalInset,
+              0,
+              ResumeTypography.corporateBodyHorizontalInset,
+              0,
+            ),
             child: widget,
           ),
         ),
@@ -385,6 +391,20 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     GaramondPdfFonts garamond,
     double bodyPt,
   ) {
+    if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+      return _darkHeaderExperienceSectionWidgets(
+        ResumeData.empty(template: ResumeTemplate.corporate).copyWith(
+          sectionTitles: {
+            ResumeBuilderSectionIds.work: item.title.ifEmpty('Custom Section'),
+          },
+        ),
+        item.visibleEntries.map((entry) => entry.toWorkExperience()).toList(),
+        lineColor,
+        sectionTitleColor,
+        garamond,
+        bodyPt,
+      );
+    }
     return [
       ..._darkHeaderSectionPrefixWidgets(
         title: item.title.ifEmpty('Custom Section'),
@@ -399,11 +419,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       ))
         pw.Padding(
           padding: pw.EdgeInsets.fromLTRB(
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-        ),
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+          ),
           child: widget,
         ),
       ..._darkHeaderSectionSuffixWidgets(),
@@ -427,9 +447,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
           0,
         ),
         child: _darkHeaderHeadingText(
-          resume
-              .sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE')
-              .toUpperCase(),
+          resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE'),
           color: sectionTitleColor,
           garamond: garamond,
         ),
@@ -467,11 +485,11 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       widgets.add(
         pw.Padding(
           padding: pw.EdgeInsets.fromLTRB(
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-          ResumeTypography.corporateBodyHorizontalInset,
-          0,
-        ),
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+            ResumeTypography.corporateBodyHorizontalInset,
+            0,
+          ),
           child: pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -543,8 +561,8 @@ extension _ResumePdfTemplatePages on ResumePdfService {
       value,
       style: garamondPdfTextStyle(
         garamond,
-ResumeTypography.darkHeaderSubtitleWeight,
-      fontSize: ResumeTypography.darkHeaderSubtitlePt,
+        ResumeTypography.darkHeaderSubtitleWeight,
+        fontSize: ResumeTypography.darkHeaderSubtitlePt,
         color: const PdfColor.fromInt(0xFF141414),
       ),
     );
@@ -595,10 +613,12 @@ ResumeTypography.darkHeaderSubtitleWeight,
     final railColor = _creativeSidebarRailColorPdf(resume);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final namePt = resume.creativeScaledPt(ResumeTypography.creativeNamePt);
-    final subtitlePt =
-        resume.creativeScaledPt(ResumeTypography.creativeSubtitlePt);
-    final sectionTitlePt =
-        resume.creativeScaledPt(ResumeTypography.creativeSectionTitlePt);
+    final subtitlePt = resume.creativeScaledPt(
+      ResumeTypography.creativeSubtitlePt,
+    );
+    final sectionTitlePt = resume.creativeScaledPt(
+      ResumeTypography.creativeSectionTitlePt,
+    );
     final contactItems = _resumeContactItems(resume);
     final allSkills = _skillsForDisplay(resume);
     final template2Skills = allSkills.length > 2
@@ -688,9 +708,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   : pw.TextStyle(
                       fontSize: bodyPt,
                       color: bodyColor,
-                      lineSpacing: ResumeTypography.creativeBodyPdfLineSpacingFor(
-                        bodyPt,
-                      ),
+                      lineSpacing:
+                          ResumeTypography.creativeBodyPdfLineSpacingFor(
+                            bodyPt,
+                          ),
                     ),
               overflow: pw.TextOverflow.span,
             ),
@@ -722,6 +743,15 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     item,
                     garamond: garamond,
                     bodyFontPt: bodyPt,
+                    experienceEntry: (items) => [
+                      for (final work in items)
+                        _buildCreativeExperience(
+                          work,
+                          garamond: garamond,
+                          bodyPt: bodyPt,
+                          subtitlePt: subtitlePt,
+                        ),
+                    ],
                   ))
                     _creativeMainColumnChild(widget),
                 ];
@@ -733,7 +763,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Experience',
+                        ),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -757,7 +790,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'Education',
+                        ),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -787,7 +823,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Skills',
+                        ),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -803,10 +842,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                               bodyPt,
                               color: bodyColor,
                             )
-                          : pw.TextStyle(
-                              fontSize: bodyPt,
-                              color: bodyColor,
-                            ),
+                          : pw.TextStyle(fontSize: bodyPt, color: bodyColor),
                       categoryStyle: _skillCategorySubtitlePdfStyle(
                         garamond,
                         weight: ResumeTypography.creativeSubtitleWeight,
@@ -841,7 +877,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -882,10 +921,12 @@ ResumeTypography.darkHeaderSubtitleWeight,
     final dividerColor = _classicSidebarDividerColorPdf(resume);
     final borderColor = _classicSidebarSectionBorderPdf(resume);
     final bodyPt = resume.effectiveBodyFontPt.toDouble();
-    final namePt =
-        resume.classicSidebarScaledPt(ResumeTypography.classicSidebarNamePt);
-    final subtitlePt =
-        resume.classicSidebarScaledPt(ResumeTypography.classicSidebarSubtitlePt);
+    final namePt = resume.classicSidebarScaledPt(
+      ResumeTypography.classicSidebarNamePt,
+    );
+    final subtitlePt = resume.classicSidebarScaledPt(
+      ResumeTypography.classicSidebarSubtitlePt,
+    );
     final sectionTitlePt = resume.classicSidebarScaledPt(
       ResumeTypography.classicSidebarSectionTitlePt,
     );
@@ -948,14 +989,17 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 resume.summary.trim().ifEmpty(
                   'Add a short summary to position your experience and strengths.',
                 ),
-                style: _classicSidebarPdfTextStyle(
-                  garamond,
-                  ResumeTypography.classicSidebarBodyWeight,
-                  bodyPt,
-                  color: titleColor,
-                ).withResumeLineSpacing(
-          ResumeTypography.classicSidebarBodyPdfLineSpacingFor(bodyPt),
-        ),
+                style:
+                    _classicSidebarPdfTextStyle(
+                      garamond,
+                      ResumeTypography.classicSidebarBodyWeight,
+                      bodyPt,
+                      color: titleColor,
+                    ).withResumeLineSpacing(
+                      ResumeTypography.classicSidebarBodyPdfLineSpacingFor(
+                        bodyPt,
+                      ),
+                    ),
               ),
             ),
           ),
@@ -973,6 +1017,31 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 if (section.isBlank || !customSections.contains(section)) {
                   return null;
                 }
+                if (section.usesItemEntries &&
+                    section.visibleEntries.isNotEmpty) {
+                  return [
+                    sidebarWrap(
+                      _buildClassicSidebarSectionHeading(
+                        title: section.title.ifEmpty('Custom Section'),
+                        titleColor: titleColor,
+                        topDividerColor: borderColor,
+                        sectionTitlePt: sectionTitlePt,
+                        garamond: garamond,
+                      ),
+                    ),
+                    ..._classicSidebarPaginatedExperienceSidebarBlocks(
+                      experiences: section.visibleEntries
+                          .map((entry) => entry.toWorkExperience())
+                          .toList(),
+                      wrap: sidebarWrap,
+                      titleColor: titleColor,
+                      accentColor: accentColor,
+                      bodyPt: bodyPt,
+                      subtitlePt: subtitlePt,
+                      garamond: garamond,
+                    ),
+                  ];
+                }
                 final bullets = section.bullets
                     .where((bullet) => bullet.trim().isNotEmpty)
                     .toList();
@@ -987,9 +1056,11 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     ),
                   ),
                   if (section.layoutMode == CustomSectionLayoutMode.bullets)
-                    for (var bulletIndex = 0;
-                        bulletIndex < bullets.length;
-                        bulletIndex++)
+                    for (
+                      var bulletIndex = 0;
+                      bulletIndex < bullets.length;
+                      bulletIndex++
+                    )
                       sidebarWrap(
                         _classicSidebarSectionBodyBlock(
                           showBottomBorder: bulletIndex == bullets.length - 1,
@@ -1024,7 +1095,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     return [
                       sidebarWrap(
                         _buildClassicSidebarSection(
-                          title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
+                          title: resume.sectionHeading(
+                            ResumeBuilderSectionIds.work,
+                            'Experience',
+                          ),
                           titleColor: titleColor,
                           topDividerColor: borderColor,
                           sectionTitlePt: sectionTitlePt,
@@ -1045,7 +1119,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   return [
                     sidebarWrap(
                       _buildClassicSidebarSectionHeading(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Experience',
+                        ),
                         titleColor: titleColor,
                         topDividerColor: borderColor,
                         sectionTitlePt: sectionTitlePt,
@@ -1068,7 +1145,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     return [
                       sidebarWrap(
                         _buildClassicSidebarSection(
-                          title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
+                          title: resume.sectionHeading(
+                            ResumeBuilderSectionIds.education,
+                            'Education',
+                          ),
                           titleColor: titleColor,
                           topDividerColor: borderColor,
                           sectionTitlePt: sectionTitlePt,
@@ -1089,7 +1169,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   return [
                     sidebarWrap(
                       _buildClassicSidebarSectionHeading(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'Education',
+                        ),
                         titleColor: titleColor,
                         topDividerColor: borderColor,
                         sectionTitlePt: sectionTitlePt,
@@ -1114,7 +1197,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   return [
                     sidebarWrap(
                       _buildClassicSidebarSectionHeading(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
                         titleColor: titleColor,
                         topDividerColor: borderColor,
                         sectionTitlePt: sectionTitlePt,
@@ -1163,7 +1249,6 @@ ResumeTypography.darkHeaderSubtitleWeight,
         ),
       );
     }
-
   }
 
   pw.Widget _buildClassicSidebarHeader(
@@ -1288,7 +1373,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
           pw.SizedBox(height: _classicSidebarSectionDividerGapPt),
         ],
         pw.Text(
-          title.toUpperCase(),
+          title,
           style: _classicSidebarPdfTextStyle(
             garamond,
             ResumeTypography.classicSidebarSectionTitleWeight,
@@ -1328,7 +1413,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
             bottom: _classicSidebarHeadingGapPt,
           ),
           child: pw.Text(
-            title.toUpperCase(),
+            title,
             style: _classicSidebarPdfTextStyle(
               garamond,
               ResumeTypography.classicSidebarSectionTitleWeight,
@@ -1423,9 +1508,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
       final isLastBullet = index == bullets.length - 1;
       parts.add(
         pw.Padding(
-          padding: pw.EdgeInsets.only(
-            bottom: isLastBullet ? trailingGap : 0,
-          ),
+          padding: pw.EdgeInsets.only(bottom: isLastBullet ? trailingGap : 0),
           child: _classicBulletRow(
             text: bullet,
             bulletColor: accentColor,
@@ -1574,7 +1657,9 @@ ResumeTypography.darkHeaderSubtitleWeight,
     final trailingGap = addTrailingEntryGap ? 8.0 : 0.0;
     final parts = <pw.Widget>[
       pw.Padding(
-        padding: pw.EdgeInsets.only(bottom: bullets.isNotEmpty ? 4 : trailingGap),
+        padding: pw.EdgeInsets.only(
+          bottom: bullets.isNotEmpty ? 4 : trailingGap,
+        ),
         child: pw.Text(
           item.title.ifEmpty('Project'),
           style: _classicSidebarPdfTextStyle(
@@ -1725,14 +1810,15 @@ ResumeTypography.darkHeaderSubtitleWeight,
     }
     return pw.Text(
       item.content.trim(),
-      style: _classicSidebarPdfTextStyle(
-        garamond,
-        ResumeTypography.classicSidebarBodyWeight,
-        bodyPt,
-        color: mutedColor,
-      ).withResumeLineSpacing(
-          ResumeTypography.classicSidebarBodyPdfLineSpacingFor(bodyPt),
-        ),
+      style:
+          _classicSidebarPdfTextStyle(
+            garamond,
+            ResumeTypography.classicSidebarBodyWeight,
+            bodyPt,
+            color: mutedColor,
+          ).withResumeLineSpacing(
+            ResumeTypography.classicSidebarBodyPdfLineSpacingFor(bodyPt),
+          ),
     );
   }
 
@@ -1795,11 +1881,39 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 }
                 final item = resume.customSections[customIndex];
                 if (item.isBlank) return null;
+                if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+                  return [
+                    pw.SizedBox(height: _detailsSidebarSectionGapPt),
+                    _detailsSidebarMainColumnChild(
+                      _detailsSidebarHeadingRow(
+                        title: item.title.ifEmpty('CUSTOM SECTION'),
+                        titleColor: titleColor,
+                        dividerColor: dividerColor,
+                      ),
+                    ),
+                    pw.SizedBox(height: _detailsSidebarHeadingGapPt),
+                    for (final work in item.visibleEntries.map(
+                      (entry) => entry.toWorkExperience(),
+                    ))
+                      _detailsSidebarMainColumnChild(
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(bottom: 14),
+                          child: _buildDetailsSidebarExperience(
+                            work,
+                            titleColor: titleColor,
+                            mutedColor: mutedColor,
+                            accentColor: accentColor,
+                            bodyPt: bodyPt,
+                          ),
+                        ),
+                      ),
+                  ];
+                }
                 return [
                   pw.SizedBox(height: _detailsSidebarSectionGapPt),
                   _detailsSidebarMainColumnChild(
                     _detailsSidebarHeadingRow(
-                      title: item.title.ifEmpty('CUSTOM SECTION').toUpperCase(),
+                      title: item.title.ifEmpty('CUSTOM SECTION'),
                       titleColor: titleColor,
                       dividerColor: dividerColor,
                     ),
@@ -1824,7 +1938,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _detailsSidebarSectionGapPt),
                     _detailsSidebarMainColumnChild(
                       _detailsSidebarHeadingRow(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'EXPERIENCE',
+                        ),
                         titleColor: titleColor,
                         dividerColor: dividerColor,
                       ),
@@ -1862,7 +1979,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _detailsSidebarSectionGapPt),
                     _detailsSidebarMainColumnChild(
                       _detailsSidebarHeadingRow(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'EDUCATION',
+                        ),
                         titleColor: titleColor,
                         dividerColor: dividerColor,
                       ),
@@ -1901,7 +2021,10 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _detailsSidebarSectionGapPt),
                     _detailsSidebarMainColumnChild(
                       _detailsSidebarHeadingRow(
-                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(),
+                        title: resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'PROJECTS',
+                        ),
                         titleColor: titleColor,
                         dividerColor: dividerColor,
                       ),
@@ -2312,7 +2435,8 @@ ResumeTypography.darkHeaderSubtitleWeight,
     List<pw.Widget> projectWidgets(ProjectItem item) {
       final title = pw.Text(item.title.ifEmpty('Project'), style: jobLineStyle);
       final lines = [
-        for (final bullet in _projectBulletLinesPdf(item)) ...bulletLines(bullet),
+        for (final bullet in _projectBulletLinesPdf(item))
+          ...bulletLines(bullet),
       ];
       if (lines.isEmpty) {
         // No body: don't reserve the title-to-bullets gap, which would
@@ -2433,6 +2557,31 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     garamond: garamond,
                     bodyFontPt: bodyPt,
                     accentStripGaramondBody: true,
+                    experienceEntry: (items) => [
+                      for (final work in items) ...[
+                        pw.Text(
+                          _headerSidebarJobLine(work),
+                          style: jobLineStyle,
+                        ),
+                        if (_headerSidebarDateLabel(
+                          work.startDate,
+                          work.endDate,
+                        ).isNotEmpty) ...[
+                          pw.SizedBox(height: 3),
+                          pw.Text(
+                            _headerSidebarDateLabel(
+                              work.startDate,
+                              work.endDate,
+                            ),
+                            style: dateStyle,
+                          ),
+                        ],
+                        pw.SizedBox(height: 6),
+                        for (final bullet in _workBulletLines(work))
+                          bulletRow(bullet),
+                        pw.SizedBox(height: 12),
+                      ],
+                    ],
                   ))
                     railWrap(widget),
                 ];
@@ -2497,7 +2646,14 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 case ResumeBuilderSectionIds.education:
                   return [
                     railWrap(pw.SizedBox(height: 8)),
-                    railWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'))),
+                    railWrap(
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.education,
+                          'Education',
+                        ),
+                      ),
+                    ),
                     if (education.isEmpty)
                       railWrap(
                         pw.Text(
@@ -2542,7 +2698,14 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   if (projects.isEmpty) return null;
                   return [
                     railWrap(pw.SizedBox(height: 8)),
-                    railWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'))),
+                    railWrap(
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.projects,
+                          'Projects',
+                        ),
+                      ),
+                    ),
                     for (final item in projects) ...projectWidgets(item),
                   ];
                 default:
