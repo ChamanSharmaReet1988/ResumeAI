@@ -19,6 +19,33 @@ import 'core/services/icloud_resume_service.dart';
 import 'core/services/platform_monetization.dart';
 import 'core/services/resume_services.dart';
 
+/// Startup work that talks to a platform plugin can hang rather than throw —
+/// StoreKit and Firebase both can, and from Xcode on a simulator they often
+/// do. Nothing before [runApp] may block the first frame forever, so every
+/// such step runs through here and gives up after [timeout].
+Future<T?> _bootstrapStep<T>(
+  String label,
+  Future<T> Function() run, {
+  Duration timeout = const Duration(seconds: 6),
+}) async {
+  try {
+    return await run().timeout(timeout);
+  } on TimeoutException {
+    assert(() {
+      debugPrint('Startup step "$label" timed out after ${timeout.inSeconds}s; '
+          'continuing without it.');
+      return true;
+    }());
+    return null;
+  } catch (error, stackTrace) {
+    assert(() {
+      debugPrint('Startup step "$label" failed: $error\n$stackTrace');
+      return true;
+    }());
+    return null;
+  }
+}
+
 Future<void> main() async {
   await runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -34,19 +61,15 @@ Future<void> main() async {
       );
     }
     if (!kIsWeb) {
-      try {
-        await GoogleSignIn.instance.initialize(
+      await _bootstrapStep(
+        'GoogleSignIn.initialize',
+        () => GoogleSignIn.instance.initialize(
           clientId: defaultTargetPlatform == TargetPlatform.iOS
               ? GoogleSignInConfig.iosClientId
               : null,
           serverClientId: GoogleSignInConfig.androidServerClientId,
-        );
-      } catch (error, stackTrace) {
-        assert(() {
-          debugPrint('GoogleSignIn.initialize failed: $error\n$stackTrace');
-          return true;
-        }());
-      }
+        ),
+      );
     }
     final repository = await ResumeRepository.create();
     final appPreferences = await AppPreferences.open();
@@ -55,7 +78,10 @@ Future<void> main() async {
       // Ignore the deprecation here intentionally; this is a targeted fallback
       // for real-device product lookup failures coming from the StoreKit2 path.
       // ignore: deprecated_member_use
-      await InAppPurchaseStoreKitPlatform.enableStoreKit1();
+      await _bootstrapStep(
+        'StoreKit1 fallback',
+        InAppPurchaseStoreKitPlatform.enableStoreKit1,
+      );
       InAppPurchaseStoreKitPlatform.registerPlatform();
     }
     final premiumPurchaseService = PremiumPurchaseService(
@@ -77,12 +103,27 @@ Future<void> main() async {
           PlatformMonetization.isAndroidAdsModel ||
           premiumPurchaseService.isPremium,
     );
-    await premiumPurchaseService.initialize();
+    // Product lookup reaches the App Store; on a simulator or an unsigned
+    // device it can never answer, which used to leave the app on its splash.
+    await _bootstrapStep(
+      'PremiumPurchaseService.initialize',
+      premiumPurchaseService.initialize,
+      timeout: const Duration(seconds: 8),
+    );
     AndroidAdsService.isPremiumActive = () =>
         PlatformMonetization.isIapEnabled && premiumPurchaseService.isPremium;
-    await AndroidAdsService.initialize();
+    await _bootstrapStep(
+      'AndroidAdsService.initialize',
+      AndroidAdsService.initialize,
+    );
 
-    final firebaseServices = await FirebaseAppServices.initialize();
+    final firebaseServices =
+        await _bootstrapStep(
+          'FirebaseAppServices.initialize',
+          FirebaseAppServices.initialize,
+          timeout: const Duration(seconds: 8),
+        ) ??
+        FirebaseAppServices.disabled();
     if (!firebaseServices.isEnabled && kDebugMode) {
       debugPrint(
         'Firebase is disabled. Add google-services.json and '
@@ -91,7 +132,11 @@ Future<void> main() async {
       );
     }
     final deepLinkService = DeepLinkService(firebase: firebaseServices);
-    await deepLinkService.start();
+    await _bootstrapStep(
+      'DeepLinkService.start',
+      deepLinkService.start,
+      timeout: const Duration(seconds: 4),
+    );
     runApp(
       ResumeApp(
         repository: repository,

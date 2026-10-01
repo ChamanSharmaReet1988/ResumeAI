@@ -30,6 +30,11 @@ class FirebaseAppServices {
     'optimize_resume_enabled': true,
   };
 
+  /// Used when Firebase is unavailable or took too long to start, so the app
+  /// still launches with analytics and Remote Config switched off.
+  static FirebaseAppServices disabled() =>
+      FirebaseAppServices._(isEnabled: false);
+
   static Future<FirebaseAppServices> initialize() async {
     try {
       if (Firebase.apps.isEmpty) {

@@ -19,6 +19,10 @@ class CoverLetterContentScreen extends StatefulWidget {
 
 class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
   Timer? _saveTimer;
+
+  /// Set once the letter has been deleted. Popping this screen normally saves
+  /// a draft, which would write the deleted letter straight back.
+  bool _deleted = false;
   final _contentFocusNode = FocusNode();
 
   @override
@@ -29,6 +33,9 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
   }
 
   Future<void> _saveDraft(CoverLetterEditorViewModel viewModel) async {
+    if (_deleted) {
+      return;
+    }
     await viewModel.saveCoverLetter(showBusy: false);
   }
 
@@ -38,6 +45,55 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
       const Duration(milliseconds: 350),
       () => unawaited(_saveDraft(viewModel)),
     );
+  }
+
+  /// Deletes the letter and returns to the list. The cover letter cards no
+  /// longer offer a delete action, so this is the only way to remove one.
+  Future<void> _confirmDelete(
+    BuildContext context,
+    CoverLetterEditorViewModel viewModel,
+  ) async {
+    final navigator = Navigator.of(context);
+    final library = context.read<CoverLetterLibraryViewModel>();
+    final coverLetter = viewModel.coverLetter;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final dialogL10n = dialogContext.l10n;
+        return AlertDialog(
+          backgroundColor: Theme.of(dialogContext).cardColor,
+          title: Text(dialogL10n.deleteCoverLetterTitle),
+          content: Text(
+            dialogL10n.deleteCoverLetterMessage(coverLetter.displayTitle),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(dialogL10n.actionDelete),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    // Stops every save path — the debounce, and the save this screen runs
+    // when it pops — from writing the deleted letter back.
+    _saveTimer?.cancel();
+    _deleted = true;
+    await library.deleteCoverLetter(coverLetter.id);
+    if (navigator.mounted) {
+      // Leaves both this screen and the editor behind it.
+      navigator.popUntil((route) => route.isFirst);
+    }
   }
 
   Future<void> _openPreview(CoverLetterEditorViewModel viewModel) async {
@@ -99,6 +155,21 @@ class _CoverLetterContentScreenState extends State<CoverLetterContentScreen> {
                 viewModel.coverLetter.displayTitle,
                 style: titleStyle,
               ),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: IconButton(
+                    key: const Key('cover-letter-delete-button'),
+                    tooltip: context.l10n.actionDelete,
+                    onPressed: viewModel.isBusy
+                        ? null
+                        : () => _confirmDelete(context, viewModel),
+                    icon: const ImageIcon(
+                      AssetImage('assets/fonts/delete.png'),
+                    ),
+                  ),
+                ),
+              ],
             ),
             body: SafeArea(
               child: Stack(
