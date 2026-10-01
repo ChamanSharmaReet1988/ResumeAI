@@ -28,6 +28,7 @@ import '../cover_letters/cover_letter_preview_screen.dart';
 import '../home/home_screen.dart';
 import '../premium/premium_gate.dart';
 import '../settings/settings_screen.dart';
+import '../shared/upload_feedback_dialog.dart';
 import '../shared/view_models.dart';
 import '../templates/templates_screen.dart';
 import 'app_shell_scope.dart';
@@ -231,35 +232,98 @@ class _AppShellState extends State<AppShell> {
   /// saves it as a new resume, and opens the builder so the user can review.
   Future<void> _uploadResume() async {
     final importService = context.read<ResumeImportService>();
-    final aiService = context.read<LocalAiResumeService>();
     final library = context.read<ResumeLibraryViewModel>();
+    final repository = context.read<ResumeRepository>();
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context, rootNavigator: true);
     final failedMessage = context.l10n.uploadResumeFailed;
+    final processingMessage = context.l10n.uploadResumeProcessing;
     final draft = library.newDraft();
+
+    var loadingShown = false;
+    final loadingClock = Stopwatch();
+    // Long enough to be read, so a fast import does not just flicker.
+    const minimumLoadingTime = Duration(milliseconds: 700);
+
+    Future<void> hideLoading({bool holdForMinimum = false}) async {
+      if (!loadingShown) {
+        return;
+      }
+      if (holdForMinimum) {
+        final remaining = minimumLoadingTime - loadingClock.elapsed;
+        if (remaining > Duration.zero) {
+          await Future<void>.delayed(remaining);
+        }
+      }
+      if (navigator.mounted) {
+        navigator.pop();
+      }
+      loadingShown = false;
+    }
 
     final ResumeData uploaded;
     try {
-      final importedFile = await importService.pickResumeFile();
+      final importedFile = await importService.pickResumeFile(
+        // Reading and parsing a resume takes a moment; show that something is
+        // happening from the point the file is chosen.
+        onFilePicked: () async {
+          if (!mounted) {
+            return;
+          }
+          loadingShown = true;
+          loadingClock.start();
+          unawaited(
+            showDialog<void>(
+              context: context,
+              barrierDismissible: false,
+              useRootNavigator: true,
+              builder: (_) => PopScope(
+                canPop: false,
+                child: AlertDialog(
+                  backgroundColor: Theme.of(context).cardColor,
+                  content: Row(
+                    children: [
+                      const SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(strokeWidth: 3),
+                      ),
+                      const SizedBox(width: 20),
+                      Flexible(child: Text(processingMessage)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+          // Wait for the dialog to finish fading in, so it is actually on
+          // screen before the import starts.
+          await Future<void>.delayed(const Duration(milliseconds: 300));
+        },
+      );
       if (!mounted || importedFile == null) {
+        await hideLoading();
         return;
       }
-      uploaded = aiService
-          .parseImportedResumeText(
-            resumeText: importedFile.resumeText,
-            candidateResumeTexts: importedFile.candidateResumeTexts,
-            template: draft.template,
-            sourceTitle: importedFile.suggestedTitle,
-          )
-          .copyWith(corporateColorPresetIndex: draft.corporateColorPresetIndex);
+      final parsed = await importService.parseInBackground(
+        importedFile,
+        template: draft.template,
+      );
+      uploaded = parsed.copyWith(
+        corporateColorPresetIndex: draft.corporateColorPresetIndex,
+      );
+      await repository.upsertResume(uploaded);
     } on ResumeImportException catch (error) {
+      await hideLoading();
       messenger.showSnackBar(SnackBar(content: Text(error.message)));
       return;
     } catch (_) {
+      await hideLoading();
       messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
       return;
     }
 
-    await context.read<ResumeRepository>().upsertResume(uploaded);
+    await hideLoading(holdForMinimum: true);
     if (!mounted) {
       return;
     }
@@ -272,6 +336,27 @@ class _AppShellState extends State<AppShell> {
       },
     );
     await _openBuilder(seed: uploaded);
+    await _askUploadFeedback(uploaded);
+  }
+
+  /// Back on Home after reviewing an uploaded resume, ask how the upload went
+  /// and report the answer. Dismissing without answering logs nothing.
+  Future<void> _askUploadFeedback(ResumeData uploaded) async {
+    if (!mounted) {
+      return;
+    }
+    final good = await showUploadFeedbackDialog(context);
+    if (!mounted || good == null) {
+      return;
+    }
+    await logAnalyticsEvent(
+      context,
+      good ? AnalyticsEvents.resumeUploadGood : AnalyticsEvents.resumeUploadBad,
+      parameters: {
+        ...resumeTemplateAnalytics(uploaded.template.userFacingTemplate),
+        'source': 'home_upload',
+      },
+    );
   }
 
   Future<void> _createResumeFromTemplatesTab() async {

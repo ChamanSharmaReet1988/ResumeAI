@@ -22,7 +22,9 @@ class _FakeResumeImportService extends ResumeImportService {
   final ImportedResumeFile? file;
 
   @override
-  Future<ImportedResumeFile?> pickResumeFile() async => file;
+  Future<ImportedResumeFile?> pickResumeFile({
+    Future<void> Function()? onFilePicked,
+  }) async => file;
 }
 
 List<SingleChildWidget> _analyserProviders({

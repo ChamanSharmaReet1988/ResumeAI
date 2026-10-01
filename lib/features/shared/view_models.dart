@@ -280,7 +280,12 @@ class ResumeEditorViewModel extends ChangeNotifier {
     if (id == null) {
       return '';
     }
-    return ResumeBuilderSectionIds.titleFor(id, _resume.customSections, l10n);
+    return ResumeBuilderSectionIds.titleFor(
+      id,
+      _resume.customSections,
+      l10n,
+      sectionTitles: _resume.sectionTitles,
+    );
   }
 
   void setStep(int value) {
@@ -1260,8 +1265,21 @@ class ResumeEditorViewModel extends ChangeNotifier {
     );
   }
 
+  bool _isDeleted = false;
+
+  /// Called once the resume has been removed from storage. Every save path
+  /// checks this, so the debounced autosave and the save on dispose cannot
+  /// write the deleted resume straight back.
+  void markDeleted() {
+    _isDeleted = true;
+    _autoSaveTimer?.cancel();
+  }
+
   Future<void> saveResume() async {
     _autoSaveTimer?.cancel();
+    if (_isDeleted) {
+      return;
+    }
     if (_hasAutoSaveInFlight) {
       try {
         await _autoSaveInFlight;
@@ -1283,6 +1301,9 @@ class ResumeEditorViewModel extends ChangeNotifier {
   /// Writes the current resume without the busy spinner (chip reorder, dispose).
   Future<void> persistResumeSilently() async {
     _autoSaveTimer?.cancel();
+    if (_isDeleted) {
+      return;
+    }
     if (_hasAutoSaveInFlight) {
       try {
         await _autoSaveInFlight;
@@ -1306,6 +1327,9 @@ class ResumeEditorViewModel extends ChangeNotifier {
   void _scheduleAutoSave() {
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(_autoSaveDelay, () {
+      if (_isDeleted) {
+        return;
+      }
       final draftResume = _resume.copyWith(
         title: _normalizeResumeTitle(_resume.title),
         updatedAt: DateTime.now(),

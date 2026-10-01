@@ -27,11 +27,17 @@ abstract final class ResumeBuilderSectionIds {
     return int.tryParse(id.substring('custom:'.length));
   }
 
+  /// [sectionTitles] carries the user's renames, from [ResumeData.sectionTitles].
   static String titleFor(
     String id,
     List<CustomSectionItem> customSections,
-    AppLocalizations l10n,
-  ) {
+    AppLocalizations l10n, {
+    Map<String, String> sectionTitles = const <String, String>{},
+  }) {
+    final renamed = sectionTitles[id]?.trim() ?? '';
+    if (renamed.isNotEmpty) {
+      return renamed;
+    }
     switch (id) {
       case work:
         return l10n.sectionWorkExperience;

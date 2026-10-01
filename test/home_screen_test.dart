@@ -64,7 +64,7 @@ class _FakeHomeRepository implements ResumeRepository {
 }
 
 void main() {
-  testWidgets('resume card actions open the editor and drop Edit', (
+  testWidgets('resume card opens the editor on tap', (
     tester,
   ) async {
     final resume = ResumeData.empty(template: ResumeTemplate.corporate)
@@ -121,165 +121,16 @@ void main() {
     await tester.tap(find.text('Product Designer Resume'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Open'), findsOneWidget);
-    expect(find.text('Edit'), findsNothing);
-    expect(find.text('Rename'), findsOneWidget);
-    expect(find.text('Delete'), findsOneWidget);
-    expect(find.text('Duplicate'), findsOneWidget);
-
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
+    // No action sheet any more: the tap goes straight to the editor, where
+    // rename / duplicate / delete now live in the top-right menu.
+    expect(find.text('Open'), findsNothing);
+    expect(find.text('Rename'), findsNothing);
+    expect(find.text('Delete'), findsNothing);
+    expect(find.text('Duplicate'), findsNothing);
 
     expect(openedForEdit?.id, resume.id);
     expect(openedForPreview, isNull);
   });
-
-  testWidgets('resume card rename option updates the saved title', (
-    tester,
-  ) async {
-    final resume = ResumeData.empty(template: ResumeTemplate.corporate)
-        .copyWith(
-          id: 'resume-1',
-          title: 'Product Designer Resume',
-          fullName: 'Avery Lee',
-          jobTitle: 'Product Designer',
-        );
-    final repository = _FakeHomeRepository(resumes: [resume]);
-    final resumeLibrary = ResumeLibraryViewModel(repository: repository);
-    final coverLetterLibrary = CoverLetterLibraryViewModel(
-      repository: repository,
-    );
-    await resumeLibrary.loadResumes();
-    await coverLetterLibrary.loadCoverLetters();
-
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-            value: resumeLibrary,
-          ),
-          ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
-            value: coverLetterLibrary,
-          ),
-        ],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: HomeScreen(
-              currentSegment: HomeSegment.resumes,
-              onSegmentChanged: (_) {},
-              onOpenResume: (_) {},
-              onPreviewResume: (_) {},
-              onPreviewCoverLetter: (_) {},
-              onEditCoverLetter: (_) {},
-              onCreateResume: () {},
-              onUploadResume: () {},
-              onCreateCoverLetter: () {},
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Product Designer Resume'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Rename'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Rename resume'), findsOneWidget);
-
-    await tester.enterText(
-      find.byKey(const Key('rename-resume-title-field')),
-      'Senior Product Designer Resume',
-    );
-    await tester.tap(find.text('Rename'));
-    await tester.pumpAndSettle();
-
-    expect(
-      resumeLibrary.resumes.single.title,
-      'Senior Product Designer Resume',
-    );
-    expect(find.text('Senior Product Designer Resume'), findsOneWidget);
-    expect(find.text('Resume renamed.'), findsOneWidget);
-  });
-
-  testWidgets(
-    'resume card duplicate option asks for title and creates a copy',
-    (tester) async {
-      final resume = ResumeData.empty(template: ResumeTemplate.corporate)
-          .copyWith(
-            id: 'resume-1',
-            title: 'Product Designer Resume',
-            fullName: 'Avery Lee',
-            jobTitle: 'Product Designer',
-          );
-      final repository = _FakeHomeRepository(resumes: [resume]);
-      final resumeLibrary = ResumeLibraryViewModel(repository: repository);
-      final coverLetterLibrary = CoverLetterLibraryViewModel(
-        repository: repository,
-      );
-      await resumeLibrary.loadResumes();
-      await coverLetterLibrary.loadCoverLetters();
-
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider<ResumeLibraryViewModel>.value(
-              value: resumeLibrary,
-            ),
-            ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
-              value: coverLetterLibrary,
-            ),
-          ],
-          child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: HomeScreen(
-                currentSegment: HomeSegment.resumes,
-                onSegmentChanged: (_) {},
-                onOpenResume: (_) {},
-                onPreviewResume: (_) {},
-                onPreviewCoverLetter: (_) {},
-                onEditCoverLetter: (_) {},
-                onCreateResume: () {},
-                onUploadResume: () {},
-                onCreateCoverLetter: () {},
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Product Designer Resume'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Duplicate'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Duplicate resume'), findsOneWidget);
-
-      await tester.enterText(
-        find.byKey(const Key('duplicate-resume-title-field')),
-        'Senior Product Designer Resume Copy',
-      );
-      await tester.tap(find.text('Duplicate'));
-      await tester.pumpAndSettle();
-
-      expect(resumeLibrary.resumes, hasLength(2));
-      expect(
-        resumeLibrary.resumes.any(
-          (item) => item.title == 'Senior Product Designer Resume Copy',
-        ),
-        isTrue,
-      );
-      expect(find.text('Resume duplicated.'), findsOneWidget);
-    },
-  );
 
   testWidgets('cover letter card opens the editor on tap', (
     tester,
@@ -408,5 +259,71 @@ void main() {
 
     final cardSize = tester.getSize(find.byType(Card).first);
     expect(cardSize.width, 760);
+  });
+  testWidgets('long press shows rename, duplicate and delete without open', (
+    tester,
+  ) async {
+    final resume = ResumeData.empty(template: ResumeTemplate.corporate)
+        .copyWith(id: 'resume-1', title: 'Product Designer Resume');
+    final repository = _FakeHomeRepository(resumes: [resume]);
+    final resumeLibrary = ResumeLibraryViewModel(repository: repository);
+    final coverLetterLibrary = CoverLetterLibraryViewModel(
+      repository: repository,
+    );
+    await resumeLibrary.loadResumes();
+    await coverLetterLibrary.loadCoverLetters();
+
+    ResumeData? opened;
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ResumeLibraryViewModel>.value(
+            value: resumeLibrary,
+          ),
+          ChangeNotifierProvider<CoverLetterLibraryViewModel>.value(
+            value: coverLetterLibrary,
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: HomeScreen(
+              currentSegment: HomeSegment.resumes,
+              onSegmentChanged: (_) {},
+              onOpenResume: (value) => opened = value,
+              onPreviewResume: (_) {},
+              onPreviewCoverLetter: (_) {},
+              onEditCoverLetter: (_) {},
+              onCreateResume: () {},
+              onUploadResume: () {},
+              onCreateCoverLetter: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Product Designer Resume'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rename'), findsOneWidget);
+    expect(find.text('Duplicate'), findsOneWidget);
+    expect(find.text('Delete'), findsOneWidget);
+    expect(find.text('Open'), findsNothing);
+    expect(find.text('Edit'), findsNothing);
+    expect(opened, isNull, reason: 'long press must not open the editor');
+
+    await tester.tap(find.text('Rename'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('rename-resume-title-field')),
+      'Renamed Resume',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Rename'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Renamed Resume'), findsOneWidget);
   });
 }

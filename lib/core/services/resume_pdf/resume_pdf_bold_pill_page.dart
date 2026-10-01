@@ -537,7 +537,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                   // flattened into the plain list.
                   if (resume.showCategorisedSkills) {
                     return [
-                      mainWrap(timelineHeading('Skills')),
+                      mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'))),
                       ..._categorisedSkillsPdfWidgets(
                         resume,
                         bodyStyle: bodyStyle,
@@ -548,14 +548,14 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
-                    mainWrap(timelineHeading('Skills')),
+                    mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'))),
                     ...skillsBody(skills),
                   ];
                 case ResumeBuilderSectionIds.work:
                   final items = resume.visibleWorkExperiences;
                   if (items.isEmpty) return null;
                   return [
-                    mainWrap(timelineHeading('Work Experience')),
+                    mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience'))),
                     for (var i = 0; i < items.length; i++) ...[
                       mainWrap(
                         _headerSidebarMaybeHighlight(
@@ -606,7 +606,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                   final items = resume.visibleEducation;
                   if (items.isEmpty) return null;
                   return [
-                    mainWrap(timelineHeading('Education')),
+                    mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'))),
                     for (final item in items)
                       mainWrap(
                         pw.Padding(
@@ -657,7 +657,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
                   final items = resume.visibleProjects;
                   if (items.isEmpty) return null;
                   return [
-                    mainWrap(timelineHeading('Projects')),
+                    mainWrap(timelineHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'))),
                     for (final item in items) ...[
                       mainWrap(
                         pw.Text(

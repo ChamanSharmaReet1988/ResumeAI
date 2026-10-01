@@ -598,7 +598,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     return [
                       mainWrap(
                         sectionHeading(
-                          'Skills',
+                          resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
                           icon: _MinimalProfileIcon.puzzle,
                         ),
                       ),
@@ -614,7 +614,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                   return [
                     mainWrap(
                       sectionHeading(
-                        'Skills',
+                        resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
                         icon: _MinimalProfileIcon.puzzle,
                       ),
                     ),
@@ -643,7 +643,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     mainWrap(
                       keepWithNext([
                         sectionHeading(
-                          'Education',
+                          resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                           icon: _MinimalProfileIcon.school,
                         ),
                         educationWidgets.first,
@@ -671,7 +671,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     mainWrap(
                       keepWithNext([
                         sectionHeading(
-                          'Experience',
+                          resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
                           icon: _MinimalProfileIcon.work,
                         ),
                         experienceWidgets.first,
@@ -700,7 +700,7 @@ extension _ResumePdfBlueCornerPage on ResumePdfService {
                     mainWrap(
                       keepWithNext([
                         sectionHeading(
-                          'Projects',
+                          resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
                           icon: _MinimalProfileIcon.folder,
                         ),
                         projectWidgets.first,

@@ -360,6 +360,36 @@ abstract class AppLocalizations {
   /// **'Could not upload that resume. Please try again.'**
   String get uploadResumeFailed;
 
+  /// No description provided for @uploadResumeProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading your resume…'**
+  String get uploadResumeProcessing;
+
+  /// No description provided for @uploadFeedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How did the upload go?'**
+  String get uploadFeedbackTitle;
+
+  /// No description provided for @uploadFeedbackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Did we read your resume correctly?'**
+  String get uploadFeedbackBody;
+
+  /// No description provided for @uploadFeedbackGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get uploadFeedbackGood;
+
+  /// No description provided for @uploadFeedbackBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Bad'**
+  String get uploadFeedbackBad;
+
   /// No description provided for @actionOpen.
   ///
   /// In en, this message translates to:
@@ -2379,7 +2409,7 @@ abstract class AppLocalizations {
   /// No description provided for @addMoreOptional.
   ///
   /// In en, this message translates to:
-  /// **'Add more (optional)'**
+  /// **'Add more'**
   String get addMoreOptional;
 
   /// No description provided for @suggestSummary.
@@ -2879,6 +2909,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Issuer, employer or organiser'**
   String get customSectionSubtitleHint;
+
+  /// No description provided for @sectionTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Section title'**
+  String get sectionTitleLabel;
+
+  /// No description provided for @sectionTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename this section on your resume'**
+  String get sectionTitleHint;
+
+  /// No description provided for @addSectionEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {name}'**
+  String addSectionEntry(String name);
 
   /// No description provided for @customSectionSummaryHint.
   ///

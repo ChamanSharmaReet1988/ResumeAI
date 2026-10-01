@@ -342,7 +342,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeWorkInResume) return null;
                     out.add(
                       _atsGraySectionTitle(
-                        'Experience',
+                        resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
                         garamond,
                         accent,
                         band,
@@ -377,7 +377,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeEducationInResume) return null;
                     out.add(
                       _atsGraySectionTitle(
-                        'Education',
+                        resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                         garamond,
                         accent,
                         band,
@@ -447,7 +447,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   case ResumeBuilderSectionIds.skills:
                     if (!resume.includeSkillsInResume) return null;
                     out.add(
-                      _atsGraySectionTitle('Skills', garamond, accent, band),
+                      _atsGraySectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), garamond, accent, band),
                     );
                     out.add(pw.SizedBox(height: 6));
                     final skillsBodyStyle = atsStructuredBodyPdfTextStyle(
@@ -504,7 +504,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeProjectsInResume) return null;
                     out.add(
                       _atsGraySectionTitle(
-                        'Projects',
+                        resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
                         garamond,
                         accent,
                         band,
@@ -724,7 +724,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                 switch (id) {
                   case ResumeBuilderSectionIds.work:
                     if (!resume.includeWorkInResume) return null;
-                    out.addAll(sectionHead('Experience'));
+                    out.addAll(sectionHead(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience')));
                     final items = resume.visibleWorkExperiences;
                     if (items.isEmpty) {
                       out.add(
@@ -788,7 +788,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     return out;
                   case ResumeBuilderSectionIds.education:
                     if (!resume.includeEducationInResume) return null;
-                    out.addAll(sectionHead('Education'));
+                    out.addAll(sectionHead(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')));
                     final edu = resume.visibleEducation;
                     if (edu.isEmpty) {
                       out.add(
@@ -828,7 +828,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     return out;
                   case ResumeBuilderSectionIds.skills:
                     if (!resume.includeSkillsInResume) return null;
-                    out.addAll(sectionHead('Skills'));
+                    out.addAll(sectionHead(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')));
                     final skills = _skillsForDisplay(resume);
                     if (resume.showCategorisedSkills) {
                       out.addAll(
@@ -876,7 +876,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     return out;
                   case ResumeBuilderSectionIds.projects:
                     if (!resume.includeProjectsInResume) return null;
-                    out.addAll(sectionHead('Projects'));
+                    out.addAll(sectionHead(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')));
                     for (final p in resume.visibleProjects) {
                       out.addAll(
                         _buildCompactProjectWidgets(
@@ -1062,7 +1062,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   case ResumeBuilderSectionIds.work:
                     if (!resume.includeWorkInResume) return null;
                     out.add(modernFlowSectionDivider());
-                    out.add(pw.Text('Experience', style: sectionTitleStyle));
+                    out.add(pw.Text(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), style: sectionTitleStyle));
                     out.add(pw.SizedBox(height: 6));
                     final items = resume.visibleWorkExperiences;
                     if (items.isEmpty) {
@@ -1104,7 +1104,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   case ResumeBuilderSectionIds.education:
                     if (!resume.includeEducationInResume) return null;
                     out.add(modernFlowSectionDivider());
-                    out.add(pw.Text('Education', style: sectionTitleStyle));
+                    out.add(pw.Text(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'), style: sectionTitleStyle));
                     out.add(pw.SizedBox(height: 6));
                     final edu = resume.visibleEducation;
                     if (edu.isEmpty) {
@@ -1145,7 +1145,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   case ResumeBuilderSectionIds.skills:
                     if (!resume.includeSkillsInResume) return null;
                     out.add(modernFlowSectionDivider());
-                    out.add(pw.Text('Skills', style: sectionTitleStyle));
+                    out.add(pw.Text(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), style: sectionTitleStyle));
                     out.add(pw.SizedBox(height: 6));
                     if (resume.showCategorisedSkills) {
                       out.addAll(
@@ -1193,7 +1193,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeProjectsInResume) return null;
                     if (resume.visibleProjects.isEmpty) return null;
                     out.add(modernFlowSectionDivider());
-                    out.add(pw.Text('Projects', style: sectionTitleStyle));
+                    out.add(pw.Text(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), style: sectionTitleStyle));
                     out.add(pw.SizedBox(height: 6));
                     for (final p in resume.visibleProjects) {
                       out.addAll(
@@ -1568,7 +1568,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeWorkInResume) return null;
                     out.add(pw.SizedBox(height: 12));
                     out.add(
-                      _atsLatexSectionTitle('Experience', sectionTitleStyle),
+                      _atsLatexSectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), sectionTitleStyle),
                     );
                     out.addAll(
                       _atsLatexExperienceEntries(
@@ -1586,7 +1586,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeEducationInResume) return null;
                     out.add(pw.SizedBox(height: 14));
                     out.add(
-                      _atsLatexSectionTitle('Education', sectionTitleStyle),
+                      _atsLatexSectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'), sectionTitleStyle),
                     );
                     out.addAll(
                       _atsLatexEducationEntries(
@@ -1600,7 +1600,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   case ResumeBuilderSectionIds.skills:
                     if (!resume.includeSkillsInResume) return null;
                     out.add(pw.SizedBox(height: 12));
-                    out.add(_atsLatexSectionTitle('Skills', sectionTitleStyle));
+                    out.add(_atsLatexSectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), sectionTitleStyle));
                     out.add(
                       _atsLatexSkillsBlock(
                         _skillsForDisplay(resume),
@@ -1620,7 +1620,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     }
                     out.add(pw.SizedBox(height: 12));
                     out.add(
-                      _atsLatexSectionTitle('Projects', sectionTitleStyle),
+                      _atsLatexSectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), sectionTitleStyle),
                     );
                     out.addAll(
                       _atsLatexProjectEntries(
@@ -1797,7 +1797,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   case ResumeBuilderSectionIds.work:
                     if (!resume.includeWorkInResume) return null;
                     out.add(executiveSectionGap());
-                    out.add(pw.Text('EXPERIENCE', style: sectionTitleStyle));
+                    out.add(pw.Text(resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(), style: sectionTitleStyle));
                     out.add(pw.SizedBox(height: 6));
                     final items = resume.visibleWorkExperiences;
                     if (items.isEmpty) {
@@ -1825,7 +1825,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   case ResumeBuilderSectionIds.education:
                     if (!resume.includeEducationInResume) return null;
                     out.add(executiveSectionGap());
-                    out.add(pw.Text('EDUCATION', style: sectionTitleStyle));
+                    out.add(pw.Text(resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(), style: sectionTitleStyle));
                     out.add(pw.SizedBox(height: 6));
                     final edu = resume.visibleEducation;
                     if (edu.isEmpty) {
@@ -1861,7 +1861,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   case ResumeBuilderSectionIds.skills:
                     if (!resume.includeSkillsInResume) return null;
                     out.add(executiveSectionGap());
-                    out.add(pw.Text('SKILLS', style: sectionTitleStyle));
+                    out.add(pw.Text(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(), style: sectionTitleStyle));
                     out.add(pw.SizedBox(height: 6));
                     if (resume.showCategorisedSkills) {
                       out.addAll(
@@ -1913,7 +1913,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       return null;
                     }
                     out.add(executiveSectionGap());
-                    out.add(pw.Text('PROJECTS', style: sectionTitleStyle));
+                    out.add(pw.Text(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(), style: sectionTitleStyle));
                     out.add(pw.SizedBox(height: 6));
                     for (final p in resume.visibleProjects) {
                       out.addAll(
@@ -2174,7 +2174,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeWorkInResume) return null;
                     out.add(
                       _atsCenterClassicSectionTitle(
-                        'Experience',
+                        resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
                         sectionTitleStyle,
                       ),
                     );
@@ -2207,7 +2207,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeEducationInResume) return null;
                     out.add(
                       _atsCenterClassicSectionTitle(
-                        'Education',
+                        resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                         sectionTitleStyle,
                       ),
                     );
@@ -2250,7 +2250,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeSkillsInResume) return null;
                     out.add(
                       _atsCenterClassicSectionTitle(
-                        'Skills',
+                        resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
                         sectionTitleStyle,
                       ),
                     );
@@ -2283,7 +2283,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     }
                     out.add(
                       _atsCenterClassicSectionTitle(
-                        'Projects',
+                        resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
                         sectionTitleStyle,
                       ),
                     );
@@ -2510,7 +2510,10 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeWorkInResume) return null;
                     out.add(
                       _atsProfessionalBlueSectionTitle(
-                        'Professional Experience',
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Professional Experience',
+                        ),
                         sectionTitleStyle,
                         ruleColor: accent,
                       ),
@@ -2572,7 +2575,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeEducationInResume) return null;
                     out.add(
                       _atsProfessionalBlueSectionTitle(
-                        'Education',
+                        resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                         sectionTitleStyle,
                         ruleColor: accent,
                       ),
@@ -2611,7 +2614,10 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (!resume.includeSkillsInResume) return null;
                     out.add(
                       _atsProfessionalBlueSectionTitle(
-                        'Areas of Expertise',
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.skills,
+                          'Areas of Expertise',
+                        ),
                         sectionTitleStyle,
                         ruleColor: accent,
                       ),
@@ -2714,7 +2720,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     }
                     out.add(
                       _atsProfessionalBlueSectionTitle(
-                        'Projects',
+                        resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
                         sectionTitleStyle,
                         ruleColor: accent,
                       ),
@@ -2892,7 +2898,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     out.add(pw.SizedBox(height: 28));
                     out.add(
                       _accentStripSectionTitle(
-                        'EXPERIENCE',
+                        resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
                         garamond: garamond,
                         accent: accent,
                       ),
@@ -2970,7 +2976,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     out.add(pw.SizedBox(height: 22));
                     out.add(
                       _accentStripSectionTitle(
-                        'EDUCATION',
+                        resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
                         garamond: garamond,
                         accent: accent,
                       ),
@@ -3014,7 +3020,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     out.add(pw.SizedBox(height: 18));
                     out.add(
                       _accentStripSectionTitle(
-                        'SKILLS',
+                        resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(),
                         garamond: garamond,
                         accent: accent,
                       ),
@@ -3064,7 +3070,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     out.add(pw.SizedBox(height: 18));
                     out.add(
                       _accentStripSectionTitle(
-                        'PROJECTS',
+                        resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(),
                         garamond: garamond,
                         accent: accent,
                       ),
@@ -3416,7 +3422,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (items.isEmpty) {
                       out.add(
                         _classicCvLeftRail(
-                          left: 'EXPERIENCE',
+                          left: resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
                           leftStyle: labelStyle,
                           content: pw.Text(
                             'Add roles with measurable outcomes.',
@@ -3436,7 +3442,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       if (i > 0) out.add(pw.SizedBox(height: 8));
                       out.add(
                         _classicCvLeftRail(
-                          left: i == 0 ? 'EXPERIENCE' : dateStr,
+                          left: i == 0 ? resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase() : dateStr,
                           leftStyle: i == 0 ? labelStyle : bodyStyle,
                           content: _classicCvRoleLocationRow(
                             role: item.role.trim().ifEmpty('Role'),
@@ -3488,7 +3494,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (items.isEmpty) {
                       out.add(
                         _classicCvLeftRail(
-                          left: 'EDUCATION',
+                          left: resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
                           leftStyle: labelStyle,
                           content: pw.Text('Add education.', style: bodyStyle),
                         ),
@@ -3510,7 +3516,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       if (i > 0) out.add(pw.SizedBox(height: 8));
                       out.add(
                         _classicCvLeftRail(
-                          left: i == 0 ? 'EDUCATION' : range,
+                          left: i == 0 ? resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase() : range,
                           leftStyle: i == 0 ? labelStyle : bodyStyle,
                           content: pw.Row(
                             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -3628,7 +3634,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (skillLines.isEmpty) {
                       out.add(
                         _classicCvLeftRail(
-                          left: 'SKILLS',
+                          left: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase(),
                           leftStyle: labelStyle,
                           content: pw.Text(
                             'Add skills that mirror job postings.',
@@ -3641,7 +3647,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                         if (i > 0) out.add(pw.SizedBox(height: 2));
                         out.add(
                           _classicCvLeftRail(
-                            left: i == 0 ? 'SKILLS' : '',
+                            left: i == 0 ? resume.sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS').toUpperCase() : '',
                             leftStyle: labelStyle,
                             content: skillLines[i],
                           ),
@@ -3661,7 +3667,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       if (i > 0) out.add(pw.SizedBox(height: 6));
                       out.add(
                         _classicCvLeftRail(
-                          left: i == 0 ? 'PROJECTS' : '',
+                          left: i == 0 ? resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase() : '',
                           leftStyle: labelStyle,
                           content: pw.Text(
                             item.title.trim().ifEmpty('Project'),

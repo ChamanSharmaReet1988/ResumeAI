@@ -147,6 +147,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not upload that resume. Please try again.';
 
   @override
+  String get uploadResumeProcessing => 'Reading your resume…';
+
+  @override
+  String get uploadFeedbackTitle => 'How did the upload go?';
+
+  @override
+  String get uploadFeedbackBody => 'Did we read your resume correctly?';
+
+  @override
+  String get uploadFeedbackGood => 'Good';
+
+  @override
+  String get uploadFeedbackBad => 'Bad';
+
+  @override
   String get actionOpen => 'Open';
 
   @override
@@ -1344,7 +1359,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start with your name, email, phone, and city. Add LinkedIn, a website, or a photo if you want.';
 
   @override
-  String get addMoreOptional => 'Add more (optional)';
+  String get addMoreOptional => 'Add more';
 
   @override
   String get suggestSummary => 'Suggest summary';
@@ -1625,6 +1640,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customSectionSubtitleHint => 'Issuer, employer or organiser';
+
+  @override
+  String get sectionTitleLabel => 'Section title';
+
+  @override
+  String get sectionTitleHint => 'Rename this section on your resume';
+
+  @override
+  String addSectionEntry(String name) {
+    return 'Add $name';
+  }
 
   @override
   String get customSectionSummaryHint =>

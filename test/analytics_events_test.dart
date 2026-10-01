@@ -48,6 +48,8 @@ void main() {
       AnalyticsEvents.premiumRestoreSuccess,
       AnalyticsEvents.iCloudBackupSync,
       AnalyticsEvents.deepLinkOpen,
+      AnalyticsEvents.resumeUploadGood,
+      AnalyticsEvents.resumeUploadBad,
     ];
 
     for (final event in events) {

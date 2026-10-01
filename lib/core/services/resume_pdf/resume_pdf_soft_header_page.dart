@@ -342,7 +342,7 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
             break;
           }
           if (needsEduHeading) {
-            chunk.add(sectionTitle('Education'));
+            chunk.add(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')));
             used += headingExtra;
             educationHeadingAdded = true;
           }
@@ -534,7 +534,7 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
                   // flattened into the two-column list.
                   if (resume.showCategorisedSkills) {
                     return [
-                      mainWrap(sectionTitle('Skills')),
+                      mainWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'))),
                       ..._categorisedSkillsPdfWidgets(
                         resume,
                         bodyStyle: bodyStyle,
@@ -545,20 +545,20 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
                   final skills = resume.skillsLinesForDisplay;
                   if (skills.isEmpty) return null;
                   return [
-                    mainWrap(sectionTitle('Skills')),
+                    mainWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'))),
                     ...skillsTwoColumn(skills).map(mainWrap),
                   ];
                 case ResumeBuilderSectionIds.work:
                   if (experiences.isEmpty) return null;
                   return [
-                    mainWrap(sectionTitle('Work Experience')),
+                    mainWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience'))),
                     for (var i = 0; i < experiences.length; i++)
                       ...experienceEntry(experiences[i], i).map(mainWrap),
                   ];
                 case ResumeBuilderSectionIds.projects:
                   if (projects.isEmpty) return null;
                   return [
-                    mainWrap(sectionTitle('Projects')),
+                    mainWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'))),
                     for (final item in projects) ...[
                       mainWrap(
                         pw.Text(

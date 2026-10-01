@@ -147,6 +147,21 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível enviar esse currículo. Tente novamente.';
 
   @override
+  String get uploadResumeProcessing => 'Lendo seu currículo…';
+
+  @override
+  String get uploadFeedbackTitle => 'Como foi o envio?';
+
+  @override
+  String get uploadFeedbackBody => 'Lemos seu currículo corretamente?';
+
+  @override
+  String get uploadFeedbackGood => 'Bom';
+
+  @override
+  String get uploadFeedbackBad => 'Ruim';
+
+  @override
   String get actionOpen => 'Abrir';
 
   @override
@@ -1344,7 +1359,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Comece com seu nome, e-mail, telefone e cidade. Adicione LinkedIn, um site ou uma foto se quiser.';
 
   @override
-  String get addMoreOptional => 'Adicionar mais (opcional)';
+  String get addMoreOptional => 'Adicionar mais';
 
   @override
   String get suggestSummary => 'Sugerir resumo';
@@ -1626,6 +1641,17 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get customSectionSubtitleHint => 'Emissor, empregador ou organizador';
+
+  @override
+  String get sectionTitleLabel => 'Título da seção';
+
+  @override
+  String get sectionTitleHint => 'Renomeie esta seção no seu currículo';
+
+  @override
+  String addSectionEntry(String name) {
+    return 'Adicionar $name';
+  }
 
   @override
   String get customSectionSummaryHint =>

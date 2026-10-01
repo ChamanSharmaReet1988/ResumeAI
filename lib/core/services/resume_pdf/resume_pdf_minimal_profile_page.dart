@@ -195,7 +195,7 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
         final items = resume.visibleEducation;
         if (items.isEmpty) return null;
         return [
-          sectionHeading('Education'),
+          sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
           for (final item in items)
             datedEntry(
               dates: educationDateRangeLabel(item.startDate, item.endDate),
@@ -209,7 +209,7 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
         final items = resume.visibleWorkExperiences;
         if (items.isEmpty) return null;
         return [
-          sectionHeading('Experience'),
+          sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience')),
           for (var i = 0; i < items.length; i++)
             _headerSidebarMaybeHighlight(
               highlight:
@@ -236,7 +236,7 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
         // into the four-column grid.
         if (resume.showCategorisedSkills) {
           return [
-            sectionHeading('Skills'),
+            sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
             ..._categorisedSkillsPdfWidgets(
               resume,
               bodyStyle: bodyStyle,
@@ -246,13 +246,13 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
         }
         final skills = resume.skillsLinesForDisplay;
         if (skills.isEmpty) return null;
-        return [sectionHeading('Skills'), skillsGrid(skills)];
+        return [sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')), skillsGrid(skills)];
       }
       if (id == ResumeBuilderSectionIds.projects) {
         final items = resume.visibleProjects;
         if (items.isEmpty) return null;
         return [
-          sectionHeading('Projects'),
+          sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
           for (final item in items)
             datedEntry(
               dates: item.subtitle.trim(),

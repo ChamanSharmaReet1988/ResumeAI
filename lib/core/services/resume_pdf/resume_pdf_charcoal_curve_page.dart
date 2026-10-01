@@ -563,7 +563,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     final items = resume.visibleEducation;
                     if (items.isEmpty) return null;
                     return [
-                      sectionHeading('Education'),
+                      sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
                       for (final item in items)
                         splitRow(
                           meta: [
@@ -600,7 +600,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     final items = resume.visibleWorkExperiences;
                     if (items.isEmpty) return null;
                     return [
-                      sectionHeading('Work Experience'),
+                      sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
                       for (var i = 0; i < items.length; i++)
                         ...workEntry(
                           items[i],
@@ -614,7 +614,7 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     // are a flat-list presentation.
                     if (resume.showCategorisedSkills) {
                       return [
-                        sectionHeading('Skills'),
+                        sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
                         ..._categorisedSkillsPdfWidgets(
                           resume,
                           bodyStyle: bodyStyle,
@@ -624,14 +624,14 @@ extension _ResumePdfCharcoalCurvePage on ResumePdfService {
                     }
                     if (skills.isEmpty) return null;
                     return [
-                      sectionHeading('Skills'),
+                      sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills')),
                       ...skillsBody(),
                     ];
                   case ResumeBuilderSectionIds.projects:
                     final items = resume.visibleProjects;
                     if (items.isEmpty) return null;
                     return [
-                      sectionHeading('Projects'),
+                      sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
                       for (final item in items)
                         splitRow(
                           meta: [

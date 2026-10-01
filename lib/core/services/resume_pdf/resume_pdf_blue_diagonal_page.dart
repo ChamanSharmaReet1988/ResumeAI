@@ -372,7 +372,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
           }
           if (needsEduHeading) {
             chunk.add(
-              sectionTitle('Education', _BlueDiagonalIcon.education),
+              sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'), _BlueDiagonalIcon.education),
             );
             used += headingExtra;
             educationHeadingAdded = true;
@@ -574,7 +574,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   if (resume.showCategorisedSkills) {
                     return [
                       mainWrap(
-                        sectionTitle('Skills', _BlueDiagonalIcon.skills),
+                        sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), _BlueDiagonalIcon.skills),
                       ),
                       ..._categorisedSkillsPdfWidgets(
                         resume,
@@ -587,7 +587,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   if (skills.isEmpty) return null;
                   return [
                     mainWrap(
-                      sectionTitle('Skills', _BlueDiagonalIcon.skills),
+                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), _BlueDiagonalIcon.skills),
                     ),
                     ...skillsTwoColumn(skills).map(mainWrap),
                   ];
@@ -595,7 +595,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   if (experiences.isEmpty) return null;
                   return [
                     mainWrap(
-                      sectionTitle('Experience', _BlueDiagonalIcon.work),
+                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), _BlueDiagonalIcon.work),
                     ),
                     for (var i = 0; i < experiences.length; i++)
                       ...timelineEntry(
@@ -621,7 +621,7 @@ extension _ResumePdfBlueDiagonalPage on ResumePdfService {
                   if (projects.isEmpty) return null;
                   return [
                     mainWrap(
-                      sectionTitle('Projects', _BlueDiagonalIcon.article),
+                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), _BlueDiagonalIcon.article),
                     ),
                     for (final item in projects)
                       ...timelineEntry(

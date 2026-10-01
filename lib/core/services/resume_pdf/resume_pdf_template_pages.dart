@@ -146,6 +146,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                 case ResumeBuilderSectionIds.work:
                   if (!resume.includeWorkInResume) return null;
                   return _darkHeaderExperienceSectionWidgets(
+                    resume,
                     resume.visibleWorkExperiences,
                     lineColor,
                     sectionTitleColor,
@@ -155,6 +156,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                 case ResumeBuilderSectionIds.education:
                   if (!resume.includeEducationInResume) return null;
                   return _darkHeaderEducationSectionWidgets(
+                    resume,
                     resume.visibleEducation,
                     lineColor,
                     sectionTitleColor,
@@ -173,6 +175,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
                 case ResumeBuilderSectionIds.projects:
                   if (!resume.includeProjectsInResume) return null;
                   return _darkHeaderProjectsSectionWidgets(
+                    resume,
                     resume.visibleProjects,
                     lineColor,
                     sectionTitleColor,
@@ -258,6 +261,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   }
 
   List<pw.Widget> _darkHeaderEducationSectionWidgets(
+    ResumeData resume,
     List<EducationItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
@@ -266,7 +270,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   ) {
     return [
       ..._darkHeaderSectionPrefixWidgets(
-        title: 'Education',
+        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
@@ -320,7 +324,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
     );
     return [
       ..._darkHeaderSectionPrefixWidgets(
-        title: 'Skills',
+        title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
@@ -340,6 +344,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   }
 
   List<pw.Widget> _darkHeaderProjectsSectionWidgets(
+    ResumeData resume,
     List<ProjectItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
@@ -348,7 +353,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   ) {
     return [
       ..._darkHeaderSectionPrefixWidgets(
-        title: 'Projects',
+        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
         lineColor: lineColor,
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
@@ -406,6 +411,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
   }
 
   List<pw.Widget> _darkHeaderExperienceSectionWidgets(
+    ResumeData resume,
     List<WorkExperience> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
@@ -421,7 +427,9 @@ extension _ResumePdfTemplatePages on ResumePdfService {
           0,
         ),
         child: _darkHeaderHeadingText(
-          'EXPERIENCE',
+          resume
+              .sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE')
+              .toUpperCase(),
           color: sectionTitleColor,
           garamond: garamond,
         ),
@@ -725,7 +733,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: 'Experience',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -749,7 +757,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: 'Education',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -779,7 +787,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: 'Skills',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -833,7 +841,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: 'Projects',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -1016,7 +1024,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     return [
                       sidebarWrap(
                         _buildClassicSidebarSection(
-                          title: 'Experience',
+                          title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
                           titleColor: titleColor,
                           topDividerColor: borderColor,
                           sectionTitlePt: sectionTitlePt,
@@ -1037,7 +1045,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   return [
                     sidebarWrap(
                       _buildClassicSidebarSectionHeading(
-                        title: 'Experience',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
                         titleColor: titleColor,
                         topDividerColor: borderColor,
                         sectionTitlePt: sectionTitlePt,
@@ -1060,7 +1068,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     return [
                       sidebarWrap(
                         _buildClassicSidebarSection(
-                          title: 'Education',
+                          title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                           titleColor: titleColor,
                           topDividerColor: borderColor,
                           sectionTitlePt: sectionTitlePt,
@@ -1081,7 +1089,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   return [
                     sidebarWrap(
                       _buildClassicSidebarSectionHeading(
-                        title: 'Education',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                         titleColor: titleColor,
                         topDividerColor: borderColor,
                         sectionTitlePt: sectionTitlePt,
@@ -1106,7 +1114,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   return [
                     sidebarWrap(
                       _buildClassicSidebarSectionHeading(
-                        title: 'Projects',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
                         titleColor: titleColor,
                         topDividerColor: borderColor,
                         sectionTitlePt: sectionTitlePt,
@@ -1816,7 +1824,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _detailsSidebarSectionGapPt),
                     _detailsSidebarMainColumnChild(
                       _detailsSidebarHeadingRow(
-                        title: 'EXPERIENCE',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
                         titleColor: titleColor,
                         dividerColor: dividerColor,
                       ),
@@ -1854,7 +1862,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _detailsSidebarSectionGapPt),
                     _detailsSidebarMainColumnChild(
                       _detailsSidebarHeadingRow(
-                        title: 'EDUCATION',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
                         titleColor: titleColor,
                         dividerColor: dividerColor,
                       ),
@@ -1893,7 +1901,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                     pw.SizedBox(height: _detailsSidebarSectionGapPt),
                     _detailsSidebarMainColumnChild(
                       _detailsSidebarHeadingRow(
-                        title: 'PROJECTS',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(),
                         titleColor: titleColor,
                         dividerColor: dividerColor,
                       ),
@@ -2433,7 +2441,14 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 case ResumeBuilderSectionIds.work:
                   return [
                     railWrap(pw.SizedBox(height: 18)),
-                    railWrap(sectionTitle('Employment History')),
+                    railWrap(
+                      sectionTitle(
+                        resume.sectionHeading(
+                          ResumeBuilderSectionIds.work,
+                          'Employment History',
+                        ),
+                      ),
+                    ),
                     if (experiences.isEmpty)
                       railWrap(
                         pw.Text(
@@ -2482,7 +2497,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                 case ResumeBuilderSectionIds.education:
                   return [
                     railWrap(pw.SizedBox(height: 8)),
-                    railWrap(sectionTitle('Education')),
+                    railWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'))),
                     if (education.isEmpty)
                       railWrap(
                         pw.Text(
@@ -2527,7 +2542,7 @@ ResumeTypography.darkHeaderSubtitleWeight,
                   if (projects.isEmpty) return null;
                   return [
                     railWrap(pw.SizedBox(height: 8)),
-                    railWrap(sectionTitle('Projects')),
+                    railWrap(sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'))),
                     for (final item in projects) ...projectWidgets(item),
                   ];
                 default:

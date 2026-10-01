@@ -402,7 +402,10 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
             heading('Contact'),
             for (final value in contacts) item(value),
           ],
-          if (slice.showSkillsHeading) heading('Skills'),
+          if (slice.showSkillsHeading)
+            heading(
+              resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+            ),
           for (final skill in slice.skills) item(skill),
         ],
       );
@@ -599,7 +602,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                   case ResumeBuilderSectionIds.work:
                     if (experiences.isEmpty) return null;
                     return [
-                      sectionTitle('Work Experience'),
+                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Work Experience')),
                       for (var i = 0; i < experiences.length; i++)
                         ...entry(
                           title: experiences[i].company.trim().ifEmpty(
@@ -625,7 +628,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                   case ResumeBuilderSectionIds.education:
                     if (education.isEmpty) return null;
                     return [
-                      sectionTitle('Education'),
+                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
                       for (final item in education)
                         ...entry(
                           title: item.degree.trim().ifEmpty(
@@ -648,7 +651,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
                   case ResumeBuilderSectionIds.projects:
                     if (projects.isEmpty) return null;
                     return [
-                      sectionTitle('Projects'),
+                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
                       for (final item in projects)
                         ...entry(
                           title: item.title.trim().ifEmpty('Project'),

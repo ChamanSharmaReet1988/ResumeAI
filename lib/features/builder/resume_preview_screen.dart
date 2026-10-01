@@ -170,17 +170,6 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
     navigator.pop(step);
   }
 
-  /// Toolbar Edit: always returns a step so the shell can open the builder,
-  /// or the resume builder restores the step underneath preview.
-  void _openEditResume() {
-    final navigator = Navigator.of(context);
-    if (!navigator.canPop()) {
-      return;
-    }
-    final step = context.read<ResumeEditorViewModel>().currentStep;
-    navigator.pop(step);
-  }
-
   Future<void> _showResumeStyleSheet() async {
     final viewModel = context.read<ResumeEditorViewModel>();
     await showModalBottomSheet<void>(
@@ -431,16 +420,6 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                   : null,
               titleSpacing: 2,
               title: Text(currentTitle, style: titleStyle),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: IconButton(
-                    onPressed: _openEditResume,
-                    tooltip: context.l10n.actionEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                  ),
-                ),
-              ],
             ),
             body: Column(
               children: [

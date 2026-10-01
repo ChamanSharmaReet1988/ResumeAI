@@ -147,6 +147,22 @@ class AppLocalizationsId extends AppLocalizations {
       'Resume tidak dapat diunggah. Silakan coba lagi.';
 
   @override
+  String get uploadResumeProcessing => 'Membaca resume Anda…';
+
+  @override
+  String get uploadFeedbackTitle => 'Bagaimana proses unggahnya?';
+
+  @override
+  String get uploadFeedbackBody =>
+      'Apakah kami membaca resume Anda dengan benar?';
+
+  @override
+  String get uploadFeedbackGood => 'Bagus';
+
+  @override
+  String get uploadFeedbackBad => 'Buruk';
+
+  @override
   String get actionOpen => 'Buka';
 
   @override
@@ -1341,7 +1357,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Mulai dengan nama, email, telepon, dan kota Anda. Tambahkan LinkedIn, situs web, atau foto jika ingin.';
 
   @override
-  String get addMoreOptional => 'Tambah lainnya (opsional)';
+  String get addMoreOptional => 'Tambah lainnya';
 
   @override
   String get suggestSummary => 'Sarankan ringkasan';
@@ -1623,6 +1639,17 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get customSectionSubtitleHint =>
       'Penerbit, pemberi kerja, atau penyelenggara';
+
+  @override
+  String get sectionTitleLabel => 'Judul bagian';
+
+  @override
+  String get sectionTitleHint => 'Ubah nama bagian ini di resume Anda';
+
+  @override
+  String addSectionEntry(String name) {
+    return 'Tambah $name';
+  }
 
   @override
   String get customSectionSummaryHint =>

@@ -21,6 +21,7 @@ import 'resume_preview_screen.dart';
 import '../shared/post_share_backup_prompt.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/resume_share_format_sheet.dart';
+import '../shared/resume_title_dialog.dart';
 import '../shared/view_models.dart';
 
 class ResumeBuilderScreen extends StatefulWidget {
@@ -302,6 +303,121 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     super.dispose();
   }
 
+  Future<void> _onResumeMenuAction(
+    _ResumeMenuAction action,
+    ResumeEditorViewModel viewModel,
+  ) async {
+    switch (action) {
+      case _ResumeMenuAction.rename:
+        return _renameResume(viewModel);
+      case _ResumeMenuAction.duplicate:
+        return _duplicateResume(viewModel);
+      case _ResumeMenuAction.delete:
+        return _deleteResume(viewModel);
+    }
+  }
+
+  Future<void> _renameResume(ResumeEditorViewModel viewModel) async {
+    final l10n = context.l10n;
+    final current = viewModel.resume.title.trim();
+    final next = await showDialog<String>(
+      context: context,
+      builder: (_) => ResumeTitleDialog(
+        title: l10n.renameResumeTitle,
+        actionLabel: l10n.actionRename,
+        fieldKey: const Key('rename-resume-title-field'),
+        initialTitle: current == ResumeData.defaultTitle ? '' : current,
+      ),
+    );
+    if (!mounted || next == null) {
+      return;
+    }
+    viewModel.updateResume((resume) => resume.copyWith(title: next));
+    await viewModel.saveResume();
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.resumeRenamed)));
+  }
+
+  Future<void> _duplicateResume(ResumeEditorViewModel viewModel) async {
+    final l10n = context.l10n;
+    final library = context.read<ResumeLibraryViewModel>();
+    final current = viewModel.resume.title.trim();
+    final base = (current.isEmpty || current == ResumeData.defaultTitle)
+        ? l10n.untitledResume
+        : current;
+    final next = await showDialog<String>(
+      context: context,
+      builder: (_) => ResumeTitleDialog(
+        title: l10n.duplicateResumeTitle,
+        actionLabel: l10n.actionDuplicate,
+        fieldKey: const Key('duplicate-resume-title-field'),
+        initialTitle: l10n.titleWithCopySuffix(base),
+      ),
+    );
+    if (!mounted || next == null) {
+      return;
+    }
+    // Captured up front: the editor is about to close, and the app-level
+    // messenger is what keeps the confirmation on screen over Home.
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    // Copy what is on screen, not the last saved version.
+    await viewModel.saveResume();
+    await library.duplicateResume(viewModel.resume, title: next);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.resumeDuplicated)));
+    // Leave the editor for Home, where the new copy now appears.
+    if (navigator.mounted) {
+      navigator.pop();
+    }
+  }
+
+  Future<void> _deleteResume(ResumeEditorViewModel viewModel) async {
+    final navigator = Navigator.of(context);
+    final library = context.read<ResumeLibraryViewModel>();
+    final resume = viewModel.resume;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final dialogL10n = dialogContext.l10n;
+        final title = resume.title.trim();
+        return AlertDialog(
+          backgroundColor: Theme.of(dialogContext).cardColor,
+          title: Text(dialogL10n.deleteResumeTitle),
+          content: Text(
+            dialogL10n.deleteResumeMessage(
+              title.isEmpty || title == ResumeData.defaultTitle
+                  ? dialogL10n.untitledResume
+                  : title,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(dialogL10n.actionDelete),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) {
+      return;
+    }
+    // Stops autosave and the save-on-dispose from writing it back.
+    viewModel.markDeleted();
+    await library.deleteResume(resume.id);
+    if (navigator.mounted) {
+      navigator.pop();
+    }
+  }
+
   Future<void> _openPreview({bool backPopsToHome = true}) async {
     final viewModel = context.read<ResumeEditorViewModel>();
     await viewModel.saveResume();
@@ -322,10 +438,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       return;
     }
 
+    // Back from the preview just returns here, to the section list. It used
+    // to close this screen as well and drop the user on Home.
     if (targetStep == null) {
-      if (backPopsToHome && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
       return;
     }
 
@@ -1381,7 +1496,10 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           value: viewModel,
           child: _ResumeSectionEditorScreen(
             step: normalizedStep,
-            title: viewModel.titleForStep(normalizedStep, context.l10n),
+            // Read from the view model on every build, so the header follows
+            // the section title field as it is edited.
+            titleFor: (screenContext, editor) =>
+                editor.titleForStep(normalizedStep, screenContext.l10n),
             titleLeadingBuilder: (context, editor) =>
                 _sectionEditorTitleAction(editor, normalizedStep),
             chrome: _editorChrome,
@@ -1644,20 +1762,61 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             titleSpacing: 2,
             title: Text(currentTitle, style: titleStyle),
             actions: [
-              // Lines the label up with the right edge of the section cards,
-              // which sit 16px in from the screen edge.
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: TextButton(
-                  key: const Key('builder-edit-sections-button'),
-                  onPressed: () {
-                    setState(() => _isEditingSections = !_isEditingSections);
-                  },
-                  child: Text(
-                    _isEditingSections ? context.l10n.done : context.l10n.edit,
-                  ),
-                ),
+              PopupMenuButton<_ResumeMenuAction>(
+                key: const Key('builder-resume-menu-button'),
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+                enabled: !viewModel.isBusy,
+                onSelected: (action) => _onResumeMenuAction(action, viewModel),
+                itemBuilder: (menuContext) {
+                  final menuL10n = menuContext.l10n;
+                  final primary = Theme.of(menuContext).colorScheme.primary;
+                  // Same icons and labels the resume card's action sheet used
+                  // on Home, with the icon in the primary colour.
+                  PopupMenuItem<_ResumeMenuAction> item(
+                    _ResumeMenuAction value,
+                    Widget icon,
+                    String label,
+                  ) {
+                    return PopupMenuItem<_ResumeMenuAction>(
+                      value: value,
+                      child: Row(
+                        children: [
+                          IconTheme(
+                            data: IconThemeData(color: primary, size: 24),
+                            child: icon,
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            label,
+                            style: Theme.of(menuContext).textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w400),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return [
+                    item(
+                      _ResumeMenuAction.rename,
+                      const Icon(Icons.drive_file_rename_outline),
+                      menuL10n.actionRename,
+                    ),
+                    item(
+                      _ResumeMenuAction.duplicate,
+                      const Icon(Icons.copy_all_outlined),
+                      menuL10n.actionDuplicate,
+                    ),
+                    item(
+                      _ResumeMenuAction.delete,
+                      const ImageIcon(AssetImage('assets/fonts/delete.png')),
+                      menuL10n.actionDelete,
+                    ),
+                  ];
+                },
               ),
+              const SizedBox(width: 4),
             ],
           ),
           body: SafeArea(
@@ -1771,8 +1930,32 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           return Padding(
             key: const ValueKey('chip-add'),
             padding: const EdgeInsets.only(bottom: 12),
-            child: _BuilderAddSectionTile(
-              onTap: _showAddCustomCategoryDialog,
+            child: Row(
+              children: [
+                Expanded(
+                  child: _BuilderActionTile(
+                    key: const Key('builder-add-section-button'),
+                    icon: Icons.add_rounded,
+                    label: context.l10n.addSection,
+                    onTap: _showAddCustomCategoryDialog,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _BuilderActionTile(
+                    key: const Key('builder-edit-sections-button'),
+                    icon: _isEditingSections
+                        ? Icons.check_rounded
+                        : Icons.edit_outlined,
+                    label: _isEditingSections
+                        ? context.l10n.done
+                        : context.l10n.edit,
+                    onTap: () => setState(
+                      () => _isEditingSections = !_isEditingSections,
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         }
@@ -2112,6 +2295,61 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
+  /// The same rename field for a user-added section, which stores its name on
+  /// the section itself rather than in [ResumeData.sectionTitles].
+  Widget _buildCustomSectionTitleField(
+    ResumeEditorViewModel viewModel,
+    int index,
+    CustomSectionItem item,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 22),
+      child: _SyncTextField(
+        key: Key('section-title-custom-$index'),
+        label: context.l10n.sectionTitleLabel,
+        hintText: context.l10n.sectionTitleHint,
+        value: item.title,
+        textCapitalization: TextCapitalization.words,
+        fullWidth: true,
+        onChanged: (value) => viewModel.updateCustomSection(
+          index,
+          (current) => current.copyWith(title: value),
+        ),
+      ),
+    );
+  }
+
+  /// Lets the user rename a built-in section ("Work Experience" -> "Consulting").
+  /// Empty means the template keeps its own wording.
+  Widget _buildSectionTitleField(
+    ResumeEditorViewModel viewModel,
+    String sectionId,
+    String defaultTitle,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 22),
+      child: _SyncTextField(
+        key: Key('section-title-$sectionId'),
+        label: context.l10n.sectionTitleLabel,
+        hintText: defaultTitle,
+        // Starts on the name the section already shows, so renaming is an
+        // edit rather than typing a replacement from nothing.
+        value: viewModel.resume.sectionHeading(sectionId, defaultTitle),
+        textCapitalization: TextCapitalization.words,
+        fullWidth: true,
+        onChanged: (value) => viewModel.updateResume((resume) {
+          final next = Map<String, String>.from(resume.sectionTitles);
+          if (value.trim().isEmpty) {
+            next.remove(sectionId);
+          } else {
+            next[sectionId] = value;
+          }
+          return resume.copyWith(sectionTitles: next);
+        }),
+      ),
+    );
+  }
+
   Widget _buildWorkStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
       title: '',
@@ -2120,6 +2358,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
+          _buildSectionTitleField(
+            viewModel,
+            ResumeBuilderSectionIds.work,
+            context.l10n.sectionWorkExperience,
+          ),
           if (!_resumeOrderNudgeDismissed &&
               viewModel.resume.workExperiences.length > 1) ...[
             _HintBanner(
@@ -2318,7 +2561,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             child: FilledButton.icon(
               onPressed: viewModel.isBusy ? null : viewModel.addWorkExperience,
               icon: const Icon(Icons.add_rounded),
-              label: Text(context.l10n.addExperience),
+              label: Text(
+                context.l10n.addSectionEntry(
+                  viewModel.resume.sectionHeading(
+                    ResumeBuilderSectionIds.work,
+                    context.l10n.sectionWorkExperience,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -2439,6 +2689,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
+          _buildSectionTitleField(
+            viewModel,
+            ResumeBuilderSectionIds.education,
+            context.l10n.sectionEducation,
+          ),
           if (!_resumeOrderNudgeDismissed &&
               viewModel.resume.education.length > 1) ...[
             _HintBanner(
@@ -2526,21 +2781,21 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     _ResponsiveFieldGroup(
                       children: [
                         _SyncTextField(
-                          label: context.l10n.institution,
-                          value: item.institution,
-                          textCapitalization: TextCapitalization.sentences,
-                          onChanged: (value) => viewModel.updateEducation(
-                            index,
-                            (current) => current.copyWith(institution: value),
-                          ),
-                        ),
-                        _SyncTextField(
                           label: context.l10n.degree,
                           value: item.degree,
                           textCapitalization: TextCapitalization.sentences,
                           onChanged: (value) => viewModel.updateEducation(
                             index,
                             (current) => current.copyWith(degree: value),
+                          ),
+                        ),
+                        _SyncTextField(
+                          label: context.l10n.institution,
+                          value: item.institution,
+                          textCapitalization: TextCapitalization.sentences,
+                          onChanged: (value) => viewModel.updateEducation(
+                            index,
+                            (current) => current.copyWith(institution: value),
                           ),
                         ),
                         _PickerField(
@@ -2624,7 +2879,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             child: FilledButton.icon(
               onPressed: viewModel.isBusy ? null : viewModel.addEducation,
               icon: const Icon(Icons.add_rounded),
-              label: Text(context.l10n.addEducation),
+              label: Text(
+                context.l10n.addSectionEntry(
+                  viewModel.resume.sectionHeading(
+                    ResumeBuilderSectionIds.education,
+                    context.l10n.sectionEducation,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -2645,6 +2907,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 10),
+          _buildSectionTitleField(
+            viewModel,
+            ResumeBuilderSectionIds.skills,
+            context.l10n.sectionSkills,
+          ),
           Text(
             context.l10n.skillsCount(viewModel.resume.skills.length),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -3077,6 +3344,11 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
+          _buildSectionTitleField(
+            viewModel,
+            ResumeBuilderSectionIds.projects,
+            context.l10n.sectionProjects,
+          ),
           if (!_resumeOrderNudgeDismissed &&
               viewModel.resume.projects.length > 1) ...[
             _HintBanner(
@@ -3237,7 +3509,14 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             child: FilledButton.icon(
               onPressed: viewModel.isBusy ? null : viewModel.addProject,
               icon: const Icon(Icons.add_rounded),
-              label: Text(context.l10n.addProject),
+              label: Text(
+                context.l10n.addSectionEntry(
+                  viewModel.resume.sectionHeading(
+                    ResumeBuilderSectionIds.projects,
+                    context.l10n.sectionProjects,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -3260,6 +3539,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
+          _buildCustomSectionTitleField(viewModel, index, item),
           RadioGroup<CustomSectionLayoutMode>(
             groupValue: item.layoutMode,
             onChanged: (CustomSectionLayoutMode? value) {
@@ -3676,7 +3956,7 @@ class _NewCustomSectionDialogResult {
 class _ResumeSectionEditorScreen extends StatefulWidget {
   const _ResumeSectionEditorScreen({
     required this.step,
-    required this.title,
+    required this.titleFor,
     required this.chrome,
     required this.buildContent,
     required this.showPersonalKeyboardBar,
@@ -3690,7 +3970,8 @@ class _ResumeSectionEditorScreen extends StatefulWidget {
   });
 
   final int step;
-  final String title;
+  final String Function(BuildContext context, ResumeEditorViewModel viewModel)
+      titleFor;
   final ValueNotifier<int> chrome;
   final Widget Function(BuildContext context, ResumeEditorViewModel viewModel)
       buildContent;
@@ -3770,14 +4051,16 @@ class _ResumeSectionEditorScreenState extends State<_ResumeSectionEditorScreen>
             return Scaffold(
               resizeToAvoidBottomInset: false,
               appBar: AppBar(
-                leadingWidth: 56,
-                titleSpacing: 2,
-                title: Text(widget.title),
+                // Section screens close with the tick, which saves; there is
+                // no back button.
+                automaticallyImplyLeading: false,
+                titleSpacing: 20,
+                title: Text(widget.titleFor(context, viewModel)),
                 actions: leading == null
                     ? null
                     : [
                         Padding(
-                          padding: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.only(right: 13),
                           child: leading,
                         ),
                       ],
@@ -4011,9 +4294,18 @@ class _BuilderSectionTile extends StatelessWidget {
   }
 }
 
-class _BuilderAddSectionTile extends StatelessWidget {
-  const _BuilderAddSectionTile({required this.onTap});
+enum _ResumeMenuAction { rename, duplicate, delete }
 
+class _BuilderActionTile extends StatelessWidget {
+  const _BuilderActionTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
@@ -4032,14 +4324,19 @@ class _BuilderAddSectionTile extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add_rounded, color: scheme.primary),
-                const SizedBox(width: 10),
-                Text(
-                  context.l10n.addSection,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: scheme.primary,
+                Icon(icon, color: scheme.primary),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: scheme.primary,
+                    ),
                   ),
                 ),
               ],

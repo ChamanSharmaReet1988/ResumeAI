@@ -11,9 +11,13 @@ import '../../core/services/android_ads_service.dart';
 import '../../core/services/platform_monetization.dart';
 import '../../core/services/premium_purchase_service.dart';
 import '../shared/android_banner_ad.dart';
+import '../shared/resume_title_dialog.dart';
 import '../shared/view_models.dart';
 
 enum HomeSegment { resumes, coverLetters }
+
+/// Actions in the sheet a long press on a resume card opens.
+enum _ResumeCardAction { rename, duplicate, delete }
 
 extension HomeSegmentX on HomeSegment {
   String label(AppLocalizations l10n) => switch (this) {
@@ -21,8 +25,6 @@ extension HomeSegmentX on HomeSegment {
     HomeSegment.coverLetters => l10n.homeSegmentCoverLetter,
   };
 }
-
-enum _ResumeCardAction { open, rename, duplicate, delete }
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
@@ -377,6 +379,108 @@ class _ResumeSection extends StatelessWidget {
     return title;
   }
 
+  Future<void> _showResumeActions(
+    BuildContext context,
+    ResumeData resume,
+  ) async {
+    final l10n = context.l10n;
+    final action = await showModalBottomSheet<_ResumeCardAction>(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      builder: (context) {
+        final sheetL10n = context.l10n;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: BottomSheetInsets.topSpacing),
+                _ActionSheetTile(
+                  icon: Icons.drive_file_rename_outline,
+                  label: sheetL10n.actionRename,
+                  onTap: () =>
+                      Navigator.of(context).pop(_ResumeCardAction.rename),
+                ),
+                _ActionSheetTile(
+                  icon: Icons.copy_all_outlined,
+                  label: sheetL10n.actionDuplicate,
+                  onTap: () =>
+                      Navigator.of(context).pop(_ResumeCardAction.duplicate),
+                ),
+                _ActionSheetTile(
+                  leading: const ImageIcon(
+                    AssetImage('assets/fonts/delete.png'),
+                  ),
+                  label: sheetL10n.actionDelete,
+                  onTap: () =>
+                      Navigator.of(context).pop(_ResumeCardAction.delete),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!context.mounted || action == null) {
+      return;
+    }
+
+    switch (action) {
+      case _ResumeCardAction.rename:
+        final current = resume.title.trim();
+        final nextTitle = await showDialog<String>(
+          context: context,
+          builder: (_) => ResumeTitleDialog(
+            title: l10n.renameResumeTitle,
+            actionLabel: l10n.actionRename,
+            fieldKey: const Key('rename-resume-title-field'),
+            initialTitle: current == ResumeData.defaultTitle ? '' : current,
+          ),
+        );
+        if (!context.mounted || nextTitle == null) {
+          return;
+        }
+        await library.renameResume(resume, nextTitle);
+        if (!context.mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.resumeRenamed)));
+        return;
+      case _ResumeCardAction.duplicate:
+        final current = resume.title.trim();
+        final base = (current.isEmpty || current == ResumeData.defaultTitle)
+            ? l10n.untitledResume
+            : current;
+        final duplicateTitle = await showDialog<String>(
+          context: context,
+          builder: (_) => ResumeTitleDialog(
+            title: l10n.duplicateResumeTitle,
+            actionLabel: l10n.actionDuplicate,
+            fieldKey: const Key('duplicate-resume-title-field'),
+            initialTitle: l10n.titleWithCopySuffix(base),
+          ),
+        );
+        if (!context.mounted || duplicateTitle == null) {
+          return;
+        }
+        await library.duplicateResume(resume, title: duplicateTitle);
+        if (!context.mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.resumeDuplicated)));
+        return;
+      case _ResumeCardAction.delete:
+        await _confirmDeleteResume(context, resume);
+        return;
+    }
+  }
+
   Future<void> _confirmDeleteResume(
     BuildContext context,
     ResumeData resume,
@@ -412,144 +516,6 @@ class _ResumeSection extends StatelessWidget {
     }
   }
 
-  Future<void> _showResumeActions(
-    BuildContext context,
-    ResumeData resume,
-  ) async {
-    final l10n = context.l10n;
-    final action = await showModalBottomSheet<_ResumeCardAction>(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      builder: (context) {
-        final sheetL10n = context.l10n;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(left: BottomSheetInsets.leftPadding),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: BottomSheetInsets.topSpacing),
-                _ActionSheetTile(
-                  icon: Icons.open_in_new_rounded,
-                  label: sheetL10n.actionOpen,
-                  onTap: () =>
-                      Navigator.of(context).pop(_ResumeCardAction.open),
-                ),
-                _ActionSheetTile(
-                  icon: Icons.drive_file_rename_outline,
-                  label: sheetL10n.actionRename,
-                  onTap: () =>
-                      Navigator.of(context).pop(_ResumeCardAction.rename),
-                ),
-                _ActionSheetTile(
-                  icon: Icons.copy_all_outlined,
-                  label: sheetL10n.actionDuplicate,
-                  onTap: () =>
-                      Navigator.of(context).pop(_ResumeCardAction.duplicate),
-                ),
-                _ActionSheetTile(
-                  leading: const ImageIcon(
-                    AssetImage('assets/fonts/delete.png'),
-                  ),
-                  label: sheetL10n.actionDelete,
-                  onTap: () =>
-                      Navigator.of(context).pop(_ResumeCardAction.delete),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (!context.mounted || action == null) {
-      return;
-    }
-
-    switch (action) {
-      case _ResumeCardAction.open:
-        library.selectResume(resume.id);
-        onOpenResume(resume);
-        return;
-      case _ResumeCardAction.rename:
-        final nextTitle = await _showRenameResumeDialog(context, resume);
-        if (!context.mounted || nextTitle == null) {
-          return;
-        }
-        await library.renameResume(resume, nextTitle);
-        if (!context.mounted) {
-          return;
-        }
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.resumeRenamed)));
-        return;
-      case _ResumeCardAction.duplicate:
-        final duplicateTitle = await _showDuplicateResumeDialog(
-          context,
-          resume,
-        );
-        if (!context.mounted || duplicateTitle == null) {
-          return;
-        }
-        await library.duplicateResume(resume, title: duplicateTitle);
-        if (!context.mounted) {
-          return;
-        }
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.resumeDuplicated)));
-        return;
-      case _ResumeCardAction.delete:
-        await _confirmDeleteResume(context, resume);
-        return;
-    }
-  }
-
-  Future<String?> _showRenameResumeDialog(
-    BuildContext context,
-    ResumeData resume,
-  ) async {
-    final l10n = context.l10n;
-    final currentTitle = resume.title.trim();
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return _ResumeTitleDialog(
-          title: l10n.renameResumeTitle,
-          actionLabel: l10n.actionRename,
-          fieldKey: const Key('rename-resume-title-field'),
-          initialTitle: currentTitle == ResumeData.defaultTitle
-              ? ''
-              : currentTitle,
-        );
-      },
-    );
-  }
-
-  Future<String?> _showDuplicateResumeDialog(
-    BuildContext context,
-    ResumeData resume,
-  ) async {
-    final l10n = context.l10n;
-    final currentTitle = resume.title.trim();
-    final suggestedTitle =
-        (currentTitle.isEmpty || currentTitle == ResumeData.defaultTitle)
-        ? l10n.untitledResume
-        : currentTitle;
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return _ResumeTitleDialog(
-          title: l10n.duplicateResumeTitle,
-          actionLabel: l10n.actionDuplicate,
-          fieldKey: const Key('duplicate-resume-title-field'),
-          initialTitle: l10n.titleWithCopySuffix(suggestedTitle),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -579,7 +545,11 @@ class _ResumeSection extends StatelessWidget {
           child: Card(
             child: InkWell(
               borderRadius: BorderRadius.circular(24),
-              onTap: () => _showResumeActions(context, resume),
+              onTap: () {
+                library.selectResume(resume.id);
+                onOpenResume(resume);
+              },
+              onLongPress: () => _showResumeActions(context, resume),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(18, 13, 18, 14),
                 child: Row(
@@ -776,70 +746,6 @@ class _EmptySegmentState extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ResumeTitleDialog extends StatefulWidget {
-  const _ResumeTitleDialog({
-    required this.title,
-    required this.actionLabel,
-    required this.initialTitle,
-    required this.fieldKey,
-  });
-
-  final String title;
-  final String actionLabel;
-  final String initialTitle;
-  final Key fieldKey;
-
-  @override
-  State<_ResumeTitleDialog> createState() => _ResumeTitleDialogState();
-}
-
-class _ResumeTitleDialogState extends State<_ResumeTitleDialog> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialTitle);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    Navigator.of(context).pop(_controller.text);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AlertDialog(
-      backgroundColor: Theme.of(context).cardColor,
-      title: Text(widget.title),
-      content: TextField(
-        key: widget.fieldKey,
-        controller: _controller,
-        autofocus: true,
-        textInputAction: TextInputAction.done,
-        decoration: InputDecoration(
-          labelText: l10n.resumeTitle,
-          hintText: l10n.enterResumeTitle,
-        ),
-        onSubmitted: (_) => _submit(),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(onPressed: _submit, child: Text(widget.actionLabel)),
-      ],
     );
   }
 }

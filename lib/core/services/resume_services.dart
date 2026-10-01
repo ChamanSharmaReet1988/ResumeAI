@@ -1201,7 +1201,10 @@ pw.Widget _headerSidebarRailPanel({
         pw.SizedBox(height: 18),
       ],
       if (pageSlice.showSkillsHeading) ...[
-        pw.Text('Skills', style: headingStyle),
+        pw.Text(
+          resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
+          style: headingStyle,
+        ),
         pw.SizedBox(height: 10),
       ],
       ..._headerSidebarSkillBarWidgets(
@@ -1976,7 +1979,10 @@ pw.Widget _classicSidebarPanel({
               children: [
                 if (pageSlice.sections[index].showSectionTitle) ...[
                   pw.Text(
-                    'Skills',
+                    resume.sectionHeading(
+                      ResumeBuilderSectionIds.skills,
+                      'Skills',
+                    ),
                     style: garamond != null
                         ? garamondPdfTextStyle(
                             garamond,
@@ -2021,7 +2027,10 @@ pw.Widget _classicSidebarPanel({
               title:
                   pageSlice.sections[index].type ==
                       _ClassicSidebarSectionType.skills
-                  ? 'Skills'
+                  ? resume.sectionHeading(
+                      ResumeBuilderSectionIds.skills,
+                      'Skills',
+                    )
                   : 'Languages',
               items: pageSlice.sections[index].items,
               titleColor: titleColor,
@@ -2538,7 +2547,9 @@ pw.Widget _detailsSidebarPanel({
         ],
         if (pageSlice.showSkillsHeading) ...[
           _detailsSidebarSidebarHeading(
-            title: 'SKILLS',
+            title: resume
+                .sectionHeading(ResumeBuilderSectionIds.skills, 'SKILLS')
+                .toUpperCase(),
             titleColor: titleColor,
             dividerColor: dividerColor,
           ),

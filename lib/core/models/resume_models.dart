@@ -463,6 +463,7 @@ class ResumeData {
     required this.bodyFontPt,
     required this.corporateColorPresetIndex,
     this.builderSectionOrder = ResumeBuilderSectionIds.bodyDefaults,
+    this.sectionTitles = const <String, String>{},
   }) : createdAt = createdAt ?? updatedAt;
 
   factory ResumeData.empty({required ResumeTemplate template}) {
@@ -498,6 +499,7 @@ class ResumeData {
       bodyFontPt: kResumeBodyFontPtDefault,
       corporateColorPresetIndex: 0,
       builderSectionOrder: ResumeBuilderSectionIds.bodyDefaults,
+      sectionTitles: const <String, String>{},
     );
   }
 
@@ -584,6 +586,7 @@ class ResumeData {
             .toList(),
         (json['customSections'] as List<dynamic>? ?? []).length,
       ),
+      sectionTitles: sectionTitlesFromJson(json['sectionTitles']),
     );
   }
 
@@ -632,6 +635,10 @@ class ResumeData {
 
   /// Order of builder steps after Personal (work/education/skills/projects/custom:N).
   final List<String> builderSectionOrder;
+
+  /// Headings the user renamed, keyed by [ResumeBuilderSectionIds]. Absent or
+  /// blank means the template keeps its own wording.
+  final Map<String, String> sectionTitles;
 
   static const defaultSkillProficiency = 70;
 
@@ -682,6 +689,14 @@ class ResumeData {
       includeSkillsInResume ? skills : const <String>[];
 
   /// True when Skills should render as category subtitle + comma-separated skills.
+  /// Heading to print for a built-in section. [fallback] is the wording the
+  /// template would otherwise use, so each template keeps its own house style
+  /// ("Experience" vs "Work Experience") until the user renames the section.
+  String sectionHeading(String sectionId, String fallback) {
+    final custom = sectionTitles[sectionId]?.trim() ?? '';
+    return custom.isEmpty ? fallback : custom;
+  }
+
   bool get showCategorisedSkills =>
       includeSkillsInResume &&
       useSkillSubheadings &&
@@ -777,6 +792,7 @@ class ResumeData {
     int? bodyFontPt,
     int? corporateColorPresetIndex,
     List<String>? builderSectionOrder,
+    Map<String, String>? sectionTitles,
   }) {
     return ResumeData(
       id: id ?? this.id,
@@ -821,6 +837,7 @@ class ResumeData {
       corporateColorPresetIndex:
           corporateColorPresetIndex ?? this.corporateColorPresetIndex,
       builderSectionOrder: builderSectionOrder ?? this.builderSectionOrder,
+      sectionTitles: sectionTitles ?? this.sectionTitles,
     );
   }
 
@@ -858,8 +875,24 @@ class ResumeData {
       'bodyFontPt': bodyFontPt,
       'corporateColorPresetIndex': corporateColorPresetIndex,
       'builderSectionOrder': effectiveBuilderSectionOrder,
+      'sectionTitles': sectionTitles,
     };
   }
+}
+
+Map<String, String> sectionTitlesFromJson(dynamic raw) {
+  if (raw is! Map) {
+    return const <String, String>{};
+  }
+  final parsed = <String, String>{};
+  for (final entry in raw.entries) {
+    final value = entry.value?.toString().trim() ?? '';
+    if (value.isEmpty) {
+      continue;
+    }
+    parsed[entry.key.toString()] = value;
+  }
+  return parsed;
 }
 
 Map<String, int> skillProficiencyFromJson(dynamic raw) {

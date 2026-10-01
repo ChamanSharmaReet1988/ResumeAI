@@ -24,6 +24,11 @@ abstract final class AnalyticsEvents {
   static const String iCloudBackupSync = 'icloud_backup_sync';
   static const String deepLinkOpen = 'deep_link_open';
 
+  /// The user's verdict on how well an uploaded resume was read, asked once
+  /// when they come back to Home from editing it.
+  static const String resumeUploadGood = 'resume_upload_good';
+  static const String resumeUploadBad = 'resume_upload_bad';
+
   /// A bottom-navigation tab the user tapped; carries `tab` and `tab_index`.
   static const String tabSelected = 'tab_selected';
 }

@@ -320,7 +320,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
     }
     if (resume.visibleEducation.isNotEmpty) {
       leftBlocks.add((
-        widget: sectionHeading('Education'),
+        widget: sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
         height: 43.0,
       ));
       for (final item in resume.visibleEducation) {
@@ -688,7 +688,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                 case ResumeBuilderSectionIds.skills:
                   if (resume.showCategorisedSkills) {
                     return [
-                      mainWrap(sectionHeading('Skills', indent: true)),
+                      mainWrap(sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), indent: true)),
                       ..._categorisedSkillsPdfWidgets(
                         resume,
                         bodyStyle: bodyStyle,
@@ -710,7 +710,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   final skillRows = skillsBody(skills);
                   return [
                     keepWithNext([
-                      mainWrap(sectionHeading('Skills', indent: true)),
+                      mainWrap(sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'), indent: true)),
                       if (skillRows.isNotEmpty) skillRows.first,
                     ]),
                     ...skillRows.skip(1),
@@ -737,7 +737,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   return [
                     mainWrap(
                       keepWithNext([
-                        sectionHeading('Experience', indent: true),
+                        sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'), indent: true),
                         experienceWidgets.first,
                       ]),
                     ),
@@ -763,7 +763,7 @@ extension _ResumePdfProfileTimelinePage on ResumePdfService {
                   return [
                     mainWrap(
                       keepWithNext([
-                        sectionHeading('Projects', indent: true),
+                        sectionHeading(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'), indent: true),
                         projectWidgets.first,
                       ]),
                     ),

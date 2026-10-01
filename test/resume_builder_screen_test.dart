@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'package:resume_app/core/models/resume_builder_section_order.dart';
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
@@ -33,8 +34,12 @@ class _FakeResumeRepository implements ResumeRepository {
   @override
   Future<void> deleteCoverLetter(String id) async {}
 
+  final List<String> deletedResumeIds = [];
+
   @override
-  Future<void> deleteResume(String id) async {}
+  Future<void> deleteResume(String id) async {
+    deletedResumeIds.add(id);
+  }
 
   @override
   Future<List<CoverLetterData>> loadCoverLetters() async => const [];
@@ -115,6 +120,9 @@ void main() {
           Provider<AppPreferences>.value(
             value: preferences ?? AppPreferences.inMemory(),
           ),
+          ChangeNotifierProvider<ResumeLibraryViewModel>(
+            create: (_) => ResumeLibraryViewModel(repository: repository),
+          ),
         ],
         child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -123,6 +131,11 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> openResumeMenu(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('builder-resume-menu-button')));
     await tester.pumpAndSettle();
   }
 
@@ -606,7 +619,7 @@ void main() {
     expect(viewModel.resume.template, ResumeTemplate.creative);
   });
 
-  testWidgets('preview back returns to the home screen', (tester) async {
+  testWidgets('preview back returns to the editor', (tester) async {
     viewModel.setStep(5);
     addTearDown(viewModel.dispose);
 
@@ -655,9 +668,10 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    expect(find.text('Home screen'), findsOneWidget);
+    // Back lands on the editor's section list, not on Home.
     expect(find.byKey(const Key('resume-pdf-preview')), findsNothing);
-    expect(find.text('Preview'), findsNothing);
+    expect(find.text('Preview'), findsOneWidget);
+    expect(find.text('Home screen'), findsNothing);
   });
 
   testWidgets('tapping a section opens its fields on a new screen', (
@@ -714,7 +728,7 @@ void main() {
       expect(textFieldByLabel('Email'), findsOneWidget);
       expect(textFieldByLabel('Phone number'), findsOneWidget);
       expect(textFieldByLabel('City'), findsOneWidget);
-      expect(find.text('Add more (optional)'), findsOneWidget);
+      expect(find.text('Add more'), findsOneWidget);
       expect(textFieldByLabel('LinkedIn link'), findsNothing);
       expect(textFieldByLabel('Website or portfolio'), findsNothing);
       expect(find.text('Profile photo'), findsNothing);
@@ -944,5 +958,308 @@ void main() {
     await tester.pump();
 
     expect(viewModel.resume.proficiencyForSkill('Flutter'), 100);
+  });
+  testWidgets('edit button sits beside add section; menu replaces it', (
+    tester,
+  ) async {
+    viewModel.setStep(0);
+    await pumpBuilder(tester, size: const Size(520, 1400));
+
+    final add = find.byKey(const Key('builder-add-section-button'));
+    final edit = find.byKey(const Key('builder-edit-sections-button'));
+    expect(add, findsOneWidget);
+    expect(edit, findsOneWidget);
+    // Parallel: same row, edit to the right of add.
+    expect(tester.getCenter(add).dy, tester.getCenter(edit).dy);
+    expect(tester.getCenter(edit).dx, greaterThan(tester.getCenter(add).dx));
+
+    // The app bar no longer carries Edit; it has the menu instead.
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byKey(const Key('builder-edit-sections-button')),
+      ),
+      findsNothing,
+    );
+    final menu = find.byKey(const Key('builder-resume-menu-button'));
+    expect(menu, findsOneWidget);
+    expect(tester.getCenter(menu).dx, greaterThan(400));
+    expect(tester.getCenter(menu).dy, lessThan(100));
+
+    // Edit still toggles reorder mode.
+    await tester.tap(edit);
+    await tester.pumpAndSettle();
+    expect(find.text('Done'), findsOneWidget);
+  });
+
+  testWidgets('menu offers rename, duplicate and delete', (tester) async {
+    viewModel.setStep(0);
+    await pumpBuilder(tester, size: const Size(520, 1400));
+    await openResumeMenu(tester);
+    expect(find.text('Rename'), findsOneWidget);
+    expect(find.text('Duplicate'), findsOneWidget);
+    expect(find.text('Delete'), findsOneWidget);
+
+    // Option text is regular weight, not bold.
+    for (final label in ['Rename', 'Duplicate', 'Delete']) {
+      final weight = tester.widget<Text>(find.text(label)).style?.fontWeight;
+      expect(weight, FontWeight.w400, reason: '$label should not be bold');
+    }
+  });
+
+  testWidgets('menu rename changes the resume title', (tester) async {
+    viewModel.setStep(0);
+    await pumpBuilder(tester, size: const Size(520, 1400));
+    await openResumeMenu(tester);
+    await tester.tap(find.text('Rename'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('rename-resume-title-field')),
+      'Consulting CV',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Rename'));
+    await tester.pumpAndSettle();
+
+    expect(viewModel.resume.title, 'Consulting CV');
+    expect(repository.savedResumes.last.title, 'Consulting CV');
+  });
+
+  testWidgets('menu duplicate saves a copy under the typed title', (
+    tester,
+  ) async {
+    viewModel.setStep(0);
+    await pumpBuilder(tester, size: const Size(520, 1400));
+    final originalId = viewModel.resume.id;
+    await openResumeMenu(tester);
+    await tester.tap(find.text('Duplicate'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('duplicate-resume-title-field')),
+      'My Resume copy',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Duplicate'));
+    await tester.pump();
+    // Copying the profile photo does real file I/O, which the fake clock in
+    // widget tests never advances; give it real time to finish.
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await tester.pumpAndSettle();
+
+    final copy = repository.savedResumes.last;
+    expect(copy.title, 'My Resume copy');
+    expect(copy.id, isNot(originalId));
+  });
+
+  testWidgets('menu delete removes the resume and does not save it back', (
+    tester,
+  ) async {
+    viewModel.setStep(0);
+    await pumpBuilder(tester, size: const Size(520, 1400));
+    final id = viewModel.resume.id;
+    final savesBefore = repository.savedResumes.length;
+
+    await openResumeMenu(tester);
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deletedResumeIds, [id]);
+    // Autosave and the save on dispose must not resurrect it.
+    viewModel.updateResume((r) => r.copyWith(fullName: 'Edited after delete'));
+    await tester.pump(const Duration(seconds: 1));
+    expect(repository.savedResumes.length, savesBefore);
+  });
+  testWidgets('duplicate closes the editor and returns to home', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(520, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    viewModel.setStep(0);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ResumeEditorViewModel>.value(value: viewModel),
+          Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
+          ChangeNotifierProvider<ResumeLibraryViewModel>(
+            create: (_) => ResumeLibraryViewModel(repository: repository),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ResumeBuilderScreen(),
+                    ),
+                  ),
+                  child: const Text('Home screen'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Home screen'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('builder-resume-menu-button')), findsOneWidget);
+
+    await openResumeMenu(tester);
+    await tester.tap(find.text('Duplicate'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Duplicate'));
+    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('builder-resume-menu-button')), findsNothing);
+    expect(find.text('Home screen'), findsOneWidget);
+    // The confirmation stays on screen over Home.
+    expect(find.text('Resume duplicated.'), findsOneWidget);
+  });
+  testWidgets('section screens have a tick and no back button', (tester) async {
+    viewModel.setStep(0);
+    await pumpBuilder(tester, size: const Size(520, 1400));
+
+    // Every kind of section screen: personal, work, education, skills.
+    for (final step in [0, 1, 2, 3]) {
+      await openSection(tester, step);
+
+      expect(find.byType(BackButton), findsNothing, reason: 'step $step');
+      final appBar = tester.widget<AppBar>(find.byType(AppBar));
+      expect(appBar.automaticallyImplyLeading, isFalse, reason: 'step $step');
+      expect(appBar.leading, isNull, reason: 'step $step');
+
+      final tick = find.byKey(const Key('section-editor-save-button'));
+      expect(tick, findsOneWidget, reason: 'step $step');
+      // Right edge of the tick button sits 13px in from the screen edge.
+      expect(tester.getTopRight(tick).dx, 520 - 13, reason: 'step $step');
+
+      await tester.tap(tick);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('section-editor-save-button')),
+        findsNothing,
+        reason: 'the tick closes step $step',
+      );
+    }
+  });
+  testWidgets('the section header follows the section title field', (
+    tester,
+  ) async {
+    viewModel.setStep(1);
+    await pumpBuilder(tester, size: const Size(520, 1400));
+    await openSection(tester, 1);
+
+    // Only the app bar counts: the text field holds the same text, so a plain
+    // find.text would pass even if the header never changed.
+    Finder header(String text) =>
+        find.descendant(of: find.byType(AppBar), matching: find.text(text));
+    final field = find.descendant(
+      of: find.byKey(const Key('section-title-work')),
+      matching: find.byType(TextField),
+    );
+
+    expect(header('Work Experience'), findsOneWidget);
+
+    await tester.enterText(field, 'Consulting Engagements');
+    await tester.pump();
+    expect(header('Consulting Engagements'), findsOneWidget);
+    expect(header('Work Experience'), findsNothing);
+
+    // Clearing the field puts the default heading back.
+    await tester.enterText(field, '');
+    await tester.pump();
+    expect(header('Work Experience'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 300));
+  });
+
+  testWidgets('a custom section header follows its title field', (
+    tester,
+  ) async {
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        customSections: const [
+          CustomSectionItem(title: 'Certifications', content: ''),
+        ],
+      ),
+    );
+    final step = viewModel.stepForSectionId(ResumeBuilderSectionIds.custom(0));
+    viewModel.setStep(step);
+    await pumpBuilder(tester, size: const Size(520, 1400));
+    await openSection(tester, step);
+
+    Finder header(String text) =>
+        find.descendant(of: find.byType(AppBar), matching: find.text(text));
+    expect(header('Certifications'), findsOneWidget);
+
+    await tester.enterText(
+      find.descendant(
+        of: find.byKey(const Key('section-title-custom-0')),
+        matching: find.byType(TextField),
+      ),
+      'Licences',
+    );
+    await tester.pump();
+    expect(header('Licences'), findsOneWidget);
+    expect(header('Certifications'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 300));
+  });
+  testWidgets('education lists degree / diploma above institution', (
+    tester,
+  ) async {
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        education: const [
+          EducationItem(
+            institution: 'Borcelle University',
+            degree: 'Master of Business Management',
+            startDate: '2013',
+            endDate: '2015',
+          ),
+        ],
+      ),
+    );
+    viewModel.setStep(2);
+    await pumpBuilder(tester, size: const Size(520, 1600));
+    await openSection(tester, 2);
+
+    final degree = find.ancestor(
+      of: find.text('Degree / Diploma'),
+      matching: find.byType(TextField),
+    );
+    final institution = find.ancestor(
+      of: find.text('Institution'),
+      matching: find.byType(TextField),
+    );
+    expect(degree, findsOneWidget);
+    expect(institution, findsOneWidget);
+    expect(
+      tester.getTopLeft(degree).dy,
+      lessThan(tester.getTopLeft(institution).dy),
+      reason: 'degree / diploma must come first',
+    );
+
+    // Each field still edits its own value.
+    await tester.enterText(degree, 'MBA');
+    await tester.enterText(institution, 'Harvard');
+    await tester.pump(const Duration(milliseconds: 300));
+    final saved = viewModel.resume.education.first;
+    expect(saved.degree, 'MBA');
+    expect(saved.institution, 'Harvard');
+    await tester.pump(const Duration(milliseconds: 300));
   });
 }

@@ -424,7 +424,13 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                 pw.SizedBox(height: 9),
               ],
           ],
-          if (slice.showExpertiseHeading) heading('Expertise'),
+          if (slice.showExpertiseHeading)
+            heading(
+              resume.sectionHeading(
+                ResumeBuilderSectionIds.skills,
+                'Expertise',
+              ),
+            ),
           for (final skill in slice.skills)
             if (skill.startsWith(_slateSidebarCategoryMark))
               pw.Padding(
@@ -556,7 +562,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                   case ResumeBuilderSectionIds.work:
                     if (experiences.isEmpty) return null;
                     return [
-                      sectionTitle('Experience'),
+                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience')),
                       for (var i = 0; i < experiences.length; i++)
                         ...datedEntry(
                           dates: educationDateRangeLabel(
@@ -582,7 +588,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                   case ResumeBuilderSectionIds.education:
                     if (education.isEmpty) return null;
                     return [
-                      sectionTitle('Education'),
+                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education')),
                       for (final item in education)
                         ...datedEntry(
                           dates: educationDateRangeLabel(
@@ -608,7 +614,7 @@ extension _ResumePdfSlateSidebarPage on ResumePdfService {
                   case ResumeBuilderSectionIds.projects:
                     if (projects.isEmpty) return null;
                     return [
-                      sectionTitle('Projects'),
+                      sectionTitle(resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects')),
                       for (final item in projects)
                         ...datedEntry(
                           dates: '',

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:archive/archive.dart';
@@ -9,6 +10,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart' as sfpdf;
 import 'package:xml/xml.dart';
 
 import '../models/resume_models.dart';
+import 'resume_services.dart' show LocalAiResumeService;
 
 class ImportedResumeFile {
   const ImportedResumeFile({
@@ -71,7 +73,12 @@ class ResumeImportService {
   @visibleForTesting
   String sanitizePdfExtractedText(String text) => _sanitizePdfExtractedText(text);
 
-  Future<ImportedResumeFile?> pickResumeFile() async {
+  /// [onFilePicked] runs once the user has chosen a file, before it is read
+  /// and parsed — the moment to show a loading state, since the picker itself
+  /// should not be covered by one.
+  Future<ImportedResumeFile?> pickResumeFile({
+    Future<void> Function()? onFilePicked,
+  }) async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       withData: true,
@@ -82,6 +89,7 @@ class ResumeImportService {
       return null;
     }
 
+    await onFilePicked?.call();
     return importPlatformFile(result.files.single);
   }
 
@@ -89,14 +97,16 @@ class ResumeImportService {
   Future<ImportedResumeFile> importPlatformFile(PlatformFile file) async {
     final bytes = await _loadBytes(file);
     final extension = _extensionFor(file.name);
-    final textCandidates = switch (extension) {
-      'pdf' => _extractPdfTextCandidates(bytes),
-      'docx' => [_extractDocxText(bytes)],
-      'txt' => [_decodePlainText(bytes)],
-      _ => throw const ResumeImportException(
+    if (extension != 'pdf' && extension != 'docx' && extension != 'txt') {
+      throw const ResumeImportException(
         'Please upload a PDF, DOCX, or TXT resume.',
-      ),
-    };
+      );
+    }
+    // Reading a PDF tries several column strategies and is slow; run it off
+    // the UI thread so the loading indicator keeps moving while it works.
+    final textCandidates = await Isolate.run(
+      () => _extractTextCandidates(extension, bytes),
+    );
 
     final normalizedCandidates = textCandidates
         .map((item) => item.trim())
@@ -113,6 +123,33 @@ class ResumeImportService {
       fileName: file.name,
       resumeText: normalizedCandidates.first,
       candidateResumeTexts: normalizedCandidates.skip(1).toList(),
+    );
+  }
+
+  List<String> _extractTextCandidates(String extension, Uint8List bytes) =>
+      switch (extension) {
+        'pdf' => _extractPdfTextCandidates(bytes),
+        'docx' => [_extractDocxText(bytes)],
+        _ => [_decodePlainText(bytes)],
+      };
+
+  /// Turns an imported file into a resume, off the UI thread. Parsing runs a
+  /// lot of pattern matching over every candidate text, which is slow enough
+  /// on a phone to freeze the screen if done in place.
+  Future<ResumeData> parseInBackground(
+    ImportedResumeFile file, {
+    required ResumeTemplate template,
+  }) {
+    final resumeText = file.resumeText;
+    final candidates = file.candidateResumeTexts;
+    final title = file.suggestedTitle;
+    return Isolate.run(
+      () => LocalAiResumeService().parseImportedResumeText(
+        resumeText: resumeText,
+        candidateResumeTexts: candidates,
+        template: template,
+        sourceTitle: title,
+      ),
     );
   }
 

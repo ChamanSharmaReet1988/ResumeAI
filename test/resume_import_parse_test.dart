@@ -228,4 +228,33 @@ Flutter
       'Applied strong interpersonal skills.',
     ]);
   });
+  test('parseInBackground matches parsing in place', () async {
+    const file = ImportedResumeFile(
+      fileName: 'Priya Raman.txt',
+      resumeText:
+          'Priya Raman\nMarketing Manager\npriya@email.com\n+1 415 555 0142\n\n'
+          'EXPERIENCE\nMarketing Manager at Northstar Labs\n2019 - Present\n'
+          '- Grew qualified pipeline across three regions.\n\n'
+          'SKILLS\nCampaign strategy, Lifecycle marketing',
+    );
+    final inPlace = LocalAiResumeService().parseImportedResumeText(
+      resumeText: file.resumeText,
+      candidateResumeTexts: file.candidateResumeTexts,
+      template: ResumeTemplate.corporate,
+      sourceTitle: file.suggestedTitle,
+    );
+    final background = await const ResumeImportService().parseInBackground(
+      file,
+      template: ResumeTemplate.corporate,
+    );
+
+    expect(background.fullName, inPlace.fullName);
+    expect(background.email, inPlace.email);
+    expect(background.skills, inPlace.skills);
+    expect(
+      background.workExperiences.map((e) => e.role),
+      inPlace.workExperiences.map((e) => e.role),
+    );
+    expect(background.fullName, 'Priya Raman');
+  });
 }

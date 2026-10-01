@@ -136,6 +136,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 case ResumeBuilderSectionIds.work:
                   if (!resume.includeWorkInResume) return null;
                   return _highlightedCorporateExperienceSectionWidgets(
+                    resume,
                     resume.visibleWorkExperiences,
                     highlightedBulletsByExperience,
                     lineColor,
@@ -147,6 +148,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 case ResumeBuilderSectionIds.education:
                   if (!resume.includeEducationInResume) return null;
                   return _highlightedCorporateEducationSectionWidgets(
+                    resume,
                     resume.visibleEducation,
                     lineColor,
                     sectionTitleColor,
@@ -167,6 +169,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                 case ResumeBuilderSectionIds.projects:
                   if (!resume.includeProjectsInResume) return null;
                   return _highlightedCorporateProjectsSectionWidgets(
+                    resume,
                     resume.visibleProjects,
                     lineColor,
                     sectionTitleColor,
@@ -276,6 +279,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   }
 
   List<pw.Widget> _highlightedCorporateExperienceSectionWidgets(
+    ResumeData resume,
     List<WorkExperience> items,
     Map<int, Set<String>> highlightedBulletsByExperience,
     PdfColor lineColor,
@@ -286,7 +290,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
-        title: 'Experience',
+        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
       ),
@@ -311,6 +315,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   }
 
   List<pw.Widget> _highlightedCorporateEducationSectionWidgets(
+    ResumeData resume,
     List<EducationItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
@@ -319,7 +324,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
-        title: 'Education',
+        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
       ),
@@ -371,7 +376,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           );
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
-        title: 'Skills',
+        title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
       ),
@@ -390,6 +395,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   }
 
   List<pw.Widget> _highlightedCorporateProjectsSectionWidgets(
+    ResumeData resume,
     List<ProjectItem> items,
     PdfColor lineColor,
     PdfColor sectionTitleColor,
@@ -398,7 +404,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
   ) {
     return [
       ..._highlightedCorporateSectionPrefixWidgets(
-        title: 'Projects',
+        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
         sectionTitleColor: sectionTitleColor,
         garamond: garamond,
       ),
@@ -612,7 +618,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: 'Experience',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -643,7 +649,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: 'Education',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -672,7 +678,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: 'Skills',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.skills, 'Skills'),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -696,7 +702,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     pw.SizedBox(height: _creativeSectionGapPt),
                     _creativeMainColumnChild(
                       _creativeSectionHeadingRow(
-                        title: 'Projects',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
                         titleColor: textColor,
                         lineColor: lineColor,
                         garamond: garamond,
@@ -889,7 +895,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     return [
                       sidebarWrap(
                         _buildClassicSidebarSection(
-                          title: 'Experience',
+                          title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
                           titleColor: titleColor,
                           topDividerColor: borderColor,
                           sectionTitlePt: sectionTitlePt,
@@ -910,7 +916,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   return [
                     sidebarWrap(
                       _buildClassicSidebarSectionHeading(
-                        title: 'Experience',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'Experience'),
                         titleColor: titleColor,
                         topDividerColor: borderColor,
                         sectionTitlePt: sectionTitlePt,
@@ -936,7 +942,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     return [
                       sidebarWrap(
                         _buildClassicSidebarSection(
-                          title: 'Education',
+                          title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                           titleColor: titleColor,
                           topDividerColor: borderColor,
                           sectionTitlePt: sectionTitlePt,
@@ -957,7 +963,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   return [
                     sidebarWrap(
                       _buildClassicSidebarSectionHeading(
-                        title: 'Education',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'Education'),
                         titleColor: titleColor,
                         topDividerColor: borderColor,
                         sectionTitlePt: sectionTitlePt,
@@ -982,7 +988,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                   return [
                     sidebarWrap(
                       _buildClassicSidebarSectionHeading(
-                        title: 'Projects',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'Projects'),
                         titleColor: titleColor,
                         topDividerColor: borderColor,
                         sectionTitlePt: sectionTitlePt,
@@ -1114,7 +1120,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     pw.SizedBox(height: _detailsSidebarSectionGapPt),
                     _detailsSidebarMainColumnChild(
                       _detailsSidebarHeadingRow(
-                        title: 'EXPERIENCE',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE').toUpperCase(),
                         titleColor: titleColor,
                         dividerColor: dividerColor,
                       ),
@@ -1159,7 +1165,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     pw.SizedBox(height: _detailsSidebarSectionGapPt),
                     _detailsSidebarMainColumnChild(
                       _detailsSidebarHeadingRow(
-                        title: 'EDUCATION',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.education, 'EDUCATION').toUpperCase(),
                         titleColor: titleColor,
                         dividerColor: dividerColor,
                       ),
@@ -1198,7 +1204,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
                     pw.SizedBox(height: _detailsSidebarSectionGapPt),
                     _detailsSidebarMainColumnChild(
                       _detailsSidebarHeadingRow(
-                        title: 'PROJECTS',
+                        title: resume.sectionHeading(ResumeBuilderSectionIds.projects, 'PROJECTS').toUpperCase(),
                         titleColor: titleColor,
                         dividerColor: dividerColor,
                       ),
