@@ -982,11 +982,46 @@ Widget _corporateCustomSectionBody(
   return _corporateCustomSectionBodyInner(item, bodyStyle, titleStyle: titleStyle);
 }
 
+List<Widget> _advancedCustomEntryPreviewWidgets(
+  CustomSectionItem item,
+  TextStyle bodyStyle, {
+  bool showAllContent = false,
+}) {
+  return [
+    for (final entry in item.visibleEntries) ...[
+      if (entry.headline.isNotEmpty)
+        Text(
+          entry.headline,
+          style: bodyStyle.copyWith(fontWeight: FontWeight.w600),
+          maxLines: showAllContent ? null : 2,
+          overflow: showAllContent ? null : TextOverflow.ellipsis,
+        ),
+      if (entry.summary.trim().isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            entry.summary.trim(),
+            style: bodyStyle,
+            maxLines: showAllContent ? null : 5,
+            overflow: showAllContent ? null : TextOverflow.ellipsis,
+          ),
+        ),
+      const SizedBox(height: 6),
+    ],
+  ];
+}
+
 Widget _corporateCustomSectionBodyInner(
   CustomSectionItem item,
   TextStyle bodyStyle, {
   TextStyle? titleStyle,
 }) {
+  if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: _advancedCustomEntryPreviewWidgets(item, bodyStyle),
+    );
+  }
   if (item.layoutMode == CustomSectionLayoutMode.projects) {
     final entries = item.visibleProjectEntries;
     if (entries.isEmpty) {
@@ -1079,6 +1114,13 @@ List<Widget> _customSectionFlowPreviewBody(
   bool showAllContent = false,
   TextStyle? titleStyle,
 }) {
+  if (section.usesItemEntries && section.visibleEntries.isNotEmpty) {
+    return _advancedCustomEntryPreviewWidgets(
+      section,
+      bodyStyle,
+      showAllContent: showAllContent,
+    );
+  }
   if (section.layoutMode == CustomSectionLayoutMode.projects) {
     final entries = section.visibleProjectEntries;
     if (entries.isEmpty) {

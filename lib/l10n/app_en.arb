@@ -54,7 +54,7 @@
   "homeUploadResume": "Upload resume",
   "uploadResumeFailed": "Could not upload that resume. Please try again.",
   "uploadResumeProcessing": "Reading your resume…",
-  "uploadFeedbackTitle": "How did the upload go?",
+  "uploadFeedbackTitle": "How was the upload?",
   "uploadFeedbackBody": "Did we read your resume correctly?",
   "uploadFeedbackGood": "Good",
   "uploadFeedbackBad": "Bad",
@@ -612,6 +612,8 @@
   "sectionEducation": "Education",
   "sectionSkills": "Skills",
   "sectionProjects": "Projects",
+  "sectionObjective": "Objective",
+  "sectionReferences": "References",
   "personalInformationTitle": "Personal information",
   "workExperienceTitle": "Work experience",
   "categoryNumber": "Category {number}",
@@ -664,9 +666,9 @@
   "newSection": "New section",
   "newSectionTitleHint": "e.g. Certificate, Reference, Awards",
   "sectionTypeNormal": "Normal",
-  "sectionTypeNormalSubtitle": "Summary or bullet points",
-  "sectionTypeAdvance": "Advance",
-  "sectionTypeAdvanceSubtitle": "Project-style entries with title and bullets",
+  "sectionTypeNormalSubtitle": "A short description",
+  "sectionTypeAdvance": "Advanced",
+  "sectionTypeAdvanceSubtitle": "Organisation, dates, and a description",
   "removeSectionTitle": "Remove section?",
   "removeSectionMessage": "This section will be removed from your resume. You can add a new custom section with Add section anytime.",
   "unableToPickImage": "Unable to pick image right now.",
@@ -810,7 +812,7 @@
   "educationDescriptionHint": "Coursework, achievements or grades — one per line.",
   "projectDescriptionLabel": "Description",
   "projectDescriptionHint": "What you built and the impact — one line each.",
-  "customSectionSubtitleLabel": "Organisation (optional)",
+  "customSectionSubtitleLabel": "Organisation",
   "customSectionSubtitleHint": "Issuer, employer or organiser",
   "sectionTitleLabel": "Section title",
   "sectionTitleHint": "Rename this section on your resume",
@@ -818,6 +820,15 @@
   "@addSectionEntry": {"placeholders": {"name": {"type": "String"}}},
   "customSectionSummaryHint": "Write the section as a short paragraph for your resume.",
   "entryNumber": "Entry {number}",
+  "itemNumber": "Item {number}",
+  "@itemNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "entryName": "Name",
   "@entryNumber": {
     "placeholders": {
       "number": {

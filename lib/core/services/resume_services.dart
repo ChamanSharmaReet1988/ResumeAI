@@ -311,7 +311,41 @@ List<pw.Widget> _pwCompactProjectWidgets(
   ];
 }
 
+List<pw.Widget> _pwCustomSectionEntryWidgets(
+  CustomSectionItem item,
+  pw.TextStyle bodyStyle,
+) {
+  final entries = item.visibleEntries;
+  return [
+    for (var i = 0; i < entries.length; i++) ...[
+      if (entries[i].headline.isNotEmpty)
+        pw.Text(
+          entries[i].headline,
+          style: bodyStyle.copyWith(fontWeight: pw.FontWeight.bold),
+        ),
+      if (entries[i].summary.trim().isNotEmpty)
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(top: 2),
+          child: pw.Text(entries[i].summary.trim(), style: bodyStyle),
+        ),
+      if (i != entries.length - 1) pw.SizedBox(height: 8),
+    ],
+  ];
+}
+
 pw.Widget _pwCustomSectionBody(CustomSectionItem item) {
+  if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: _pwCustomSectionEntryWidgets(
+        item,
+        pw.TextStyle(
+          color: PdfColors.black,
+          fontSize: ResumeTypography.bodyPt,
+        ),
+      ),
+    );
+  }
   switch (item.layoutMode) {
     case CustomSectionLayoutMode.summary:
       return pw.Text(item.content.trim());
@@ -398,6 +432,9 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
             ),
           ),
         ];
+  if (item.usesItemEntries && item.visibleEntries.isNotEmpty) {
+    return _pwCustomSectionEntryWidgets(item, bodyStyle);
+  }
   switch (item.layoutMode) {
     case CustomSectionLayoutMode.summary:
       final content = item.content.trim();
@@ -5077,6 +5114,7 @@ class LocalAiResumeService {
       fallbackJobTitle: jobTitle,
     );
     final education = _extractImportedEducation(educationLines);
+    final importedProjects = _extractImportedProjects(projectLines);
 
     return ResumeData.empty(template: template.userFacingTemplate).copyWith(
       title: _normalizeImportedResumeTitle(
@@ -5114,7 +5152,13 @@ class LocalAiResumeService {
           headerLines: headerLines,
         ),
       ).take(50).toList(),
-      projects: _extractImportedProjects(projectLines),
+      projects: importedProjects,
+      // Projects start hidden on a new resume; an uploaded one that has them
+      // must show them.
+      includeProjectsInResume: importedProjects.any((item) => !item.isBlank),
+      builderSectionOrder: importedProjects.any((item) => !item.isBlank)
+          ? ResumeBuilderSectionIds.bodyDefaults
+          : ResumeBuilderSectionIds.newResumeDefaults,
       customSections: _extractImportedCustomSections(sections),
       githubLink: _extractImportedLink(contactText, 'github.com'),
       linkedinLink: _extractImportedLink(contactText, 'linkedin.com'),

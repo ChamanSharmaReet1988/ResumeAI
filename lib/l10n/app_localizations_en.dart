@@ -150,7 +150,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uploadResumeProcessing => 'Reading your resume…';
 
   @override
-  String get uploadFeedbackTitle => 'How did the upload go?';
+  String get uploadFeedbackTitle => 'How was the upload?';
 
   @override
   String get uploadFeedbackBody => 'Did we read your resume correctly?';
@@ -1209,6 +1209,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionProjects => 'Projects';
 
   @override
+  String get sectionObjective => 'Objective';
+
+  @override
+  String get sectionReferences => 'References';
+
+  @override
   String get personalInformationTitle => 'Personal information';
 
   @override
@@ -1290,14 +1296,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionTypeNormal => 'Normal';
 
   @override
-  String get sectionTypeNormalSubtitle => 'Summary or bullet points';
+  String get sectionTypeNormalSubtitle => 'A short description';
 
   @override
-  String get sectionTypeAdvance => 'Advance';
+  String get sectionTypeAdvance => 'Advanced';
 
   @override
   String get sectionTypeAdvanceSubtitle =>
-      'Project-style entries with title and bullets';
+      'Organisation, dates, and a description';
 
   @override
   String get removeSectionTitle => 'Remove section?';
@@ -1636,7 +1642,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'What you built and the impact — one line each.';
 
   @override
-  String get customSectionSubtitleLabel => 'Organisation (optional)';
+  String get customSectionSubtitleLabel => 'Organisation';
 
   @override
   String get customSectionSubtitleHint => 'Issuer, employer or organiser';
@@ -1660,6 +1666,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String entryNumber(int number) {
     return 'Entry $number';
   }
+
+  @override
+  String itemNumber(int number) {
+    return 'Item $number';
+  }
+
+  @override
+  String get entryName => 'Name';
 
   @override
   String get moveEntryUp => 'Move entry up';

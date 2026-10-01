@@ -201,9 +201,9 @@ const availableResumeTemplates = <ResumeTemplate>[
 extension ResumeTemplateX on ResumeTemplate {
   ResumeTemplate get userFacingTemplate => this;
 
-  /// Every template renders in Outfit unless the reader picks Garamond in the
-  /// preview's Color & Font sheet.
-  bool get defaultsToOutfitFont => true;
+  /// Resume previews use Garamond unless the reader picks Outfit in the
+  /// Color & Font sheet.
+  bool get defaultsToOutfitFont => false;
 
   /// ATS layouts keep black type on the template gallery; color is chosen in preview.
   bool get isAtsTemplate => switch (userFacingTemplate) {
@@ -381,9 +381,8 @@ extension ResumeTemplateX on ResumeTemplate {
 }
 
 extension ResumeFontChoiceX on ResumeData {
-  /// Whether the Garamond-family templates render in Outfit: the Color & Font
-  /// choice when one was made, otherwise the template's own default (Outfit
-  /// for Slate Sidebar and Clean Sans ATS, Garamond for the rest).
+  /// Whether the resume renders in Outfit. An explicit Outfit choice does;
+  /// Garamond, and any resume that has not chosen a font, render in Garamond.
   bool get usesOutfitResumeFont => switch (resumeTextFont) {
     ResumeTextFont.outfit => true,
     ResumeTextFont.garamond => false,
@@ -466,7 +465,11 @@ class ResumeData {
     this.sectionTitles = const <String, String>{},
   }) : createdAt = createdAt ?? updatedAt;
 
-  factory ResumeData.empty({required ResumeTemplate template}) {
+  factory ResumeData.empty({
+    required ResumeTemplate template,
+    String objectiveTitle = 'Objective',
+    String referencesTitle = 'References',
+  }) {
     return ResumeData(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       title: defaultTitle,
@@ -484,21 +487,26 @@ class ResumeData {
       useSkillSubheadings: false,
       skillGroups: const [],
       projects: const [ProjectItem.empty()],
-      customSections: const [],
+      customSections: [
+        CustomSectionItem(title: objectiveTitle, content: ''),
+        CustomSectionItem(title: referencesTitle, content: ''),
+      ],
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       lastSyncedAt: null,
       githubLink: '',
       linkedinLink: '',
       profileImagePath: '',
-      resumeTextFont: ResumeTextFont.inter,
+      resumeTextFont: ResumeTextFont.garamond,
       includeWorkInResume: true,
       includeEducationInResume: true,
       includeSkillsInResume: true,
-      includeProjectsInResume: true,
+      // New resumes omit the Projects section from the section list. It can be
+      // added later; resumes saved earlier keep whatever they stored.
+      includeProjectsInResume: false,
       bodyFontPt: kResumeBodyFontPtDefault,
       corporateColorPresetIndex: 0,
-      builderSectionOrder: ResumeBuilderSectionIds.bodyDefaults,
+      builderSectionOrder: ResumeBuilderSectionIds.starterSectionOrder,
       sectionTitles: const <String, String>{},
     );
   }
@@ -506,6 +514,38 @@ class ResumeData {
   factory ResumeData.fromJson(Map<String, dynamic> json) {
     final updatedAt =
         DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now();
+    final projects = (json['projects'] as List<dynamic>? ?? [])
+        .map(
+          (item) =>
+              ProjectItem.fromJson(Map<String, dynamic>.from(item as Map)),
+        )
+        .toList();
+    final customCount = (json['customSections'] as List<dynamic>? ?? []).length;
+    final normalizedOrder = normalizeBuilderSectionOrder(
+      (json['builderSectionOrder'] as List<dynamic>?)
+          ?.map((item) => item.toString())
+          .toList(),
+      customCount,
+    );
+    final storedIncludeProjects = json['includeProjectsInResume'] as bool?;
+    final listsProjects = normalizedOrder.contains(
+      ResumeBuilderSectionIds.projects,
+    );
+    final hasProjectContent = projects.any((item) => !item.isBlank);
+    // The section is already on this resume when the saved order lists it,
+    // or when it still has project entries and was not a new resume (those
+    // store includeProjectsInResume: false and omit the section).
+    final keepsProjectsSection =
+        listsProjects || (hasProjectContent && storedIncludeProjects != false);
+    final builderSectionOrder = orderWithExistingProjectsSection(
+      normalizedOrder,
+      keepProjects: keepsProjectsSection,
+    );
+    // Listed Projects stays fully included, so the row is not dimmed and the
+    // section still prints. A new resume never lists it.
+    final includeProjectsInResume = keepsProjectsSection
+        ? true
+        : storedIncludeProjects ?? true;
     return ResumeData(
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? defaultTitle,
@@ -548,12 +588,7 @@ class ResumeData {
             .toList(),
         skillProficiencyFromJson(json['skillProficiency']),
       ),
-      projects: (json['projects'] as List<dynamic>? ?? [])
-          .map(
-            (item) =>
-                ProjectItem.fromJson(Map<String, dynamic>.from(item as Map)),
-          )
-          .toList(),
+      projects: projects,
       customSections: (json['customSections'] as List<dynamic>? ?? [])
           .map(
             (item) => CustomSectionItem.fromJson(
@@ -575,17 +610,12 @@ class ResumeData {
       includeEducationInResume:
           json['includeEducationInResume'] as bool? ?? true,
       includeSkillsInResume: json['includeSkillsInResume'] as bool? ?? true,
-      includeProjectsInResume: json['includeProjectsInResume'] as bool? ?? true,
+      includeProjectsInResume: includeProjectsInResume,
       bodyFontPt:
           (json['bodyFontPt'] as num?)?.toInt() ?? kResumeBodyFontPtDefault,
       corporateColorPresetIndex:
           (json['corporateColorPresetIndex'] as num?)?.toInt() ?? 0,
-      builderSectionOrder: normalizeBuilderSectionOrder(
-        (json['builderSectionOrder'] as List<dynamic>?)
-            ?.map((item) => item.toString())
-            .toList(),
-        (json['customSections'] as List<dynamic>? ?? []).length,
-      ),
+      builderSectionOrder: builderSectionOrder,
       sectionTitles: sectionTitlesFromJson(json['sectionTitles']),
     );
   }
@@ -667,10 +697,8 @@ class ResumeData {
   }
 
   /// Normalized section order used by the builder chips and content pages.
-  List<String> get effectiveBuilderSectionOrder => normalizeBuilderSectionOrder(
-    builderSectionOrder,
-    customSections.length,
-  );
+  List<String> get effectiveBuilderSectionOrder =>
+      normalizeBuilderSectionOrder(builderSectionOrder, customSections.length);
 
   List<WorkExperience> get visibleWorkExperiences => includeWorkInResume
       ? workExperiences.where((item) => !item.isBlank).toList()
@@ -925,22 +953,19 @@ Map<String, int> syncedSkillProficiency(
     if (key.isEmpty) {
       continue;
     }
-    next[key] =
-        (current[key] ?? ResumeData.defaultSkillProficiency).clamp(0, 100);
+    next[key] = (current[key] ?? ResumeData.defaultSkillProficiency).clamp(
+      0,
+      100,
+    );
   }
   return next;
 }
 
 /// A labeled group of skills (e.g. "Languages", "Tools").
 class SkillGroup {
-  const SkillGroup({
-    required this.heading,
-    required this.skills,
-  });
+  const SkillGroup({required this.heading, required this.skills});
 
-  const SkillGroup.empty()
-      : heading = '',
-        skills = const [];
+  const SkillGroup.empty() : heading = '', skills = const [];
 
   factory SkillGroup.fromJson(Map<String, dynamic> json) {
     return SkillGroup(
@@ -959,10 +984,8 @@ class SkillGroup {
       heading.trim().isEmpty && skills.every((s) => s.trim().isEmpty);
 
   /// Comma-separated skills for resume body under the category subtitle.
-  String get skillsCommaSeparated => skills
-      .map((s) => s.trim())
-      .where((s) => s.isNotEmpty)
-      .join(', ');
+  String get skillsCommaSeparated =>
+      skills.map((s) => s.trim()).where((s) => s.isNotEmpty).join(', ');
 
   /// Legacy single-line form: `Heading: skill1, skill2`.
   String get displayLine {
@@ -974,10 +997,7 @@ class SkillGroup {
     return label.isEmpty ? joined : '$label: $joined';
   }
 
-  SkillGroup copyWith({
-    String? heading,
-    List<String>? skills,
-  }) {
+  SkillGroup copyWith({String? heading, List<String>? skills}) {
     return SkillGroup(
       heading: heading ?? this.heading,
       skills: skills ?? this.skills,
@@ -985,10 +1005,7 @@ class SkillGroup {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'heading': heading,
-      'skills': skills,
-    };
+    return {'heading': heading, 'skills': skills};
   }
 }
 
@@ -1409,7 +1426,11 @@ String educationDetailLine(EducationItem item) {
 
 /// `Issuer · 2021 - 2023` for a custom section, from whichever parts are set.
 /// Empty when the section has neither an organisation nor dates.
+/// Advanced sections print each item themselves, so this line stays empty.
 String customSectionMetaLine(CustomSectionItem item) {
+  if (item.usesItemEntries && item.entries.isNotEmpty) {
+    return '';
+  }
   final dates = educationDateRangeLabel(item.startDate, item.endDate);
   final issuer = item.subtitle.trim();
   if (issuer.isEmpty) return dates;
@@ -1515,6 +1536,94 @@ class ProjectItem {
 
 enum CustomSectionLayoutMode { summary, bullets, projects }
 
+/// One row in an Advanced custom section: name, company, dates, and summary.
+class CustomSectionEntry {
+  const CustomSectionEntry({
+    this.name = '',
+    this.company = '',
+    this.startDate = '',
+    this.endDate = '',
+    this.summary = '',
+  });
+
+  const CustomSectionEntry.empty() : this();
+
+  final String name;
+  final String company;
+  final String startDate;
+  final String endDate;
+  final String summary;
+
+  bool get isBlank =>
+      name.trim().isEmpty &&
+      company.trim().isEmpty &&
+      startDate.trim().isEmpty &&
+      endDate.trim().isEmpty &&
+      summary.trim().isEmpty;
+
+  /// `Name, Company  |  Jan 2020 - Present` from whichever parts are set.
+  String get headline {
+    final who = [
+      name.trim(),
+      company.trim(),
+    ].where((part) => part.isNotEmpty).join(', ');
+    final dates = educationDateRangeLabel(startDate, endDate);
+    if (who.isEmpty) return dates;
+    if (dates.isEmpty) return who;
+    return '$who  |  $dates';
+  }
+
+  CustomSectionEntry copyWith({
+    String? name,
+    String? company,
+    String? startDate,
+    String? endDate,
+    String? summary,
+  }) {
+    return CustomSectionEntry(
+      name: name ?? this.name,
+      company: company ?? this.company,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      summary: summary ?? this.summary,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'company': company,
+      'startDate': startDate,
+      'endDate': endDate,
+      'summary': summary,
+    };
+  }
+
+  factory CustomSectionEntry.fromJson(Map<String, dynamic> json) {
+    return CustomSectionEntry(
+      name: json['name'] as String? ?? '',
+      company: json['company'] as String? ?? '',
+      startDate: json['startDate'] as String? ?? '',
+      endDate: json['endDate'] as String? ?? '',
+      summary: json['summary'] as String? ?? '',
+    );
+  }
+}
+
+/// Plain text of Advanced items, for exporters that only read [CustomSectionItem.content].
+String customSectionEntriesPlainText(List<CustomSectionEntry> entries) {
+  return entries
+      .where((entry) => !entry.isBlank)
+      .map((entry) {
+        final head = entry.headline;
+        final body = entry.summary.trim();
+        if (head.isEmpty) return body;
+        if (body.isEmpty) return head;
+        return '$head\n$body';
+      })
+      .join('\n\n');
+}
+
 class CustomSectionItem {
   const CustomSectionItem({
     required this.title,
@@ -1523,8 +1632,10 @@ class CustomSectionItem {
     this.startDate = '',
     this.endDate = '',
     this.layoutMode = CustomSectionLayoutMode.summary,
+    this.showEntryDetails = false,
     this.bullets = const [],
     this.projectEntries = const [],
+    this.entries = const [],
   });
 
   const CustomSectionItem.empty()
@@ -1534,8 +1645,10 @@ class CustomSectionItem {
       startDate = '',
       endDate = '',
       layoutMode = CustomSectionLayoutMode.summary,
+      showEntryDetails = false,
       bullets = const [],
-      projectEntries = const [];
+      projectEntries = const [],
+      entries = const [];
 
   factory CustomSectionItem.fromJson(Map<String, dynamic> json) {
     final bulletsJson = json['bullets'] as List<dynamic>?;
@@ -1560,6 +1673,30 @@ class CustomSectionItem {
       'projects' => CustomSectionLayoutMode.projects,
       _ => CustomSectionLayoutMode.summary,
     };
+    final entriesJson = json['entries'] as List<dynamic>?;
+    var parsedEntries =
+        entriesJson
+            ?.map(
+              (item) => CustomSectionEntry.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
+            .toList() ??
+        <CustomSectionEntry>[];
+    // Sections saved before this flag always showed organisation and dates.
+    final showEntryDetails = json['showEntryDetails'] as bool? ?? true;
+    if (parsedEntries.isEmpty &&
+        showEntryDetails &&
+        layoutMode == CustomSectionLayoutMode.summary) {
+      parsedEntries = [
+        CustomSectionEntry(
+          company: json['subtitle'] as String? ?? '',
+          startDate: json['startDate'] as String? ?? '',
+          endDate: json['endDate'] as String? ?? '',
+          summary: json['content'] as String? ?? '',
+        ),
+      ];
+    }
 
     return CustomSectionItem(
       title: json['title'] as String? ?? '',
@@ -1568,8 +1705,10 @@ class CustomSectionItem {
       startDate: json['startDate'] as String? ?? '',
       endDate: json['endDate'] as String? ?? '',
       layoutMode: layoutMode,
+      showEntryDetails: showEntryDetails,
       bullets: parsedBullets,
       projectEntries: parsedProjects,
+      entries: parsedEntries,
     );
   }
 
@@ -1581,17 +1720,34 @@ class CustomSectionItem {
   final String startDate;
   final String endDate;
   final CustomSectionLayoutMode layoutMode;
+
+  /// When true, an Advanced section edits repeating items (name, company,
+  /// dates, summary). A Normal section is only a description.
+  final bool showEntryDetails;
   final List<String> bullets;
   final List<ProjectItem> projectEntries;
+  final List<CustomSectionEntry> entries;
 
   List<ProjectItem> get visibleProjectEntries =>
       projectEntries.where((item) => !item.isBlank).toList();
 
+  List<CustomSectionEntry> get visibleEntries =>
+      entries.where((entry) => !entry.isBlank).toList();
+
+  /// Advanced sections use the work-experience item list.
+  bool get usesItemEntries =>
+      showEntryDetails && layoutMode == CustomSectionLayoutMode.summary;
+
   bool get isBlank {
-    if (title.trim().isNotEmpty ||
-        subtitle.trim().isNotEmpty ||
+    if (subtitle.trim().isNotEmpty ||
         startDate.trim().isNotEmpty ||
         endDate.trim().isNotEmpty) {
+      return false;
+    }
+    // A title alone does not print a summary section. Objective and
+    // References start as empty normal sections and stay off the page
+    // until there is a description.
+    if (entries.any((entry) => !entry.isBlank)) {
       return false;
     }
     return switch (layoutMode) {
@@ -1619,6 +1775,13 @@ class CustomSectionItem {
             .map((item) => item.title.trim())
             .where((item) => item.isNotEmpty)
             .toList();
+      } else if (usesItemEntries && visibleEntries.isNotEmpty) {
+        return [
+          for (final entry in visibleEntries) ...[
+            if (entry.headline.isNotEmpty) entry.headline,
+            if (entry.summary.trim().isNotEmpty) entry.summary.trim(),
+          ],
+        ];
       }
       return content
           .split('\n')
@@ -1647,8 +1810,10 @@ class CustomSectionItem {
     String? startDate,
     String? endDate,
     CustomSectionLayoutMode? layoutMode,
+    bool? showEntryDetails,
     List<String>? bullets,
     List<ProjectItem>? projectEntries,
+    List<CustomSectionEntry>? entries,
   }) {
     return CustomSectionItem(
       title: title ?? this.title,
@@ -1657,8 +1822,10 @@ class CustomSectionItem {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       layoutMode: layoutMode ?? this.layoutMode,
+      showEntryDetails: showEntryDetails ?? this.showEntryDetails,
       bullets: bullets ?? this.bullets,
       projectEntries: projectEntries ?? this.projectEntries,
+      entries: entries ?? this.entries,
     );
   }
 
@@ -1670,8 +1837,10 @@ class CustomSectionItem {
       'startDate': startDate,
       'endDate': endDate,
       'layoutMode': layoutMode.name,
+      'showEntryDetails': showEntryDetails,
       'bullets': bullets,
       'projectEntries': projectEntries.map((item) => item.toJson()).toList(),
+      'entries': entries.map((item) => item.toJson()).toList(),
     };
   }
 }

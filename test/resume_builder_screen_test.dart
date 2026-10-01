@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:resume_app/core/models/resume_builder_section_order.dart';
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
@@ -34,12 +33,8 @@ class _FakeResumeRepository implements ResumeRepository {
   @override
   Future<void> deleteCoverLetter(String id) async {}
 
-  final List<String> deletedResumeIds = [];
-
   @override
-  Future<void> deleteResume(String id) async {
-    deletedResumeIds.add(id);
-  }
+  Future<void> deleteResume(String id) async {}
 
   @override
   Future<List<CoverLetterData>> loadCoverLetters() async => const [];
@@ -83,8 +78,17 @@ void main() {
         summary: 'A short summary for testing.',
       ),
     );
-    viewModel.setStep(1);
+    viewModel.setStep(2);
   });
+
+  void includeProjectsSection() {
+    viewModel.updateResume(
+      (resume) => resume.copyWith(
+        includeProjectsInResume: true,
+        builderSectionOrder: const ['work', 'education', 'skills', 'projects'],
+      ),
+    );
+  }
 
   test('skills can grow without hard cap', () async {
     for (var index = 0; index < 80; index++) {
@@ -120,9 +124,6 @@ void main() {
           Provider<AppPreferences>.value(
             value: preferences ?? AppPreferences.inMemory(),
           ),
-          ChangeNotifierProvider<ResumeLibraryViewModel>(
-            create: (_) => ResumeLibraryViewModel(repository: repository),
-          ),
         ],
         child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -131,11 +132,6 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
-  }
-
-  Future<void> openResumeMenu(WidgetTester tester) async {
-    await tester.tap(find.byKey(const Key('builder-resume-menu-button')));
     await tester.pumpAndSettle();
   }
 
@@ -174,27 +170,31 @@ void main() {
 
   testWidgets('work experience step shows role field', (tester) async {
     await pumpBuilder(tester);
-    await openSection(tester, 1);
+    await openSection(tester, 2);
 
     expect(textFieldByLabel('Role'), findsWidgets);
   });
 
-  testWidgets('builder shows every section in one vertical list', (tester) async {
+  testWidgets('builder shows every section in one vertical list', (
+    tester,
+  ) async {
     viewModel.setStep(0);
     await pumpBuilder(tester, size: const Size(800, 1100));
 
     expect(find.text('Personal Information'), findsWidgets);
+    expect(find.text('Objective'), findsWidgets);
     expect(find.text('Work Experience'), findsWidgets);
+    expect(find.text('References'), findsWidgets);
     expect(find.text('Education'), findsWidgets);
     expect(find.text('Skills'), findsWidgets);
-    expect(find.text('Projects'), findsWidgets);
+    expect(find.text('Projects'), findsNothing);
     expect(textFieldByLabel('Full name'), findsNothing);
     expect(textFieldByLabel('Role'), findsNothing);
 
     await tester.tap(find.text('Skills'));
     await tester.pumpAndSettle();
 
-    expect(viewModel.currentStep, 3);
+    expect(viewModel.currentStep, 5);
     expect(textFieldByLabel('Add a skill'), findsOneWidget);
     expect(find.text('Personal Information'), findsNothing);
   });
@@ -226,13 +226,10 @@ void main() {
     );
 
     await pumpBuilder(tester);
-    await openSection(tester, 1);
+    await openSection(tester, 2);
 
     expect(find.text('Appears first on your resume'), findsOneWidget);
-    expect(
-      find.text('Appears at position 2 on your resume'),
-      findsOneWidget,
-    );
+    expect(find.text('Appears at position 2 on your resume'), findsOneWidget);
 
     await tester.tap(find.byType(TextField).first);
     await tester.pump();
@@ -243,44 +240,72 @@ void main() {
     expect(find.text('Second role'), findsWidgets);
   });
 
-  testWidgets('edit mode can reorder, hide default sections, and delete custom sections', (
-    tester,
-  ) async {
-    viewModel.addCustomSectionWithTitle('Certifications');
+  testWidgets(
+    'edit mode can reorder and delete sections',
+    (tester) async {
+      viewModel.addCustomSectionWithTitle('Certifications');
 
-    await pumpBuilder(tester);
+      await pumpBuilder(tester);
 
-    expect(find.text('Edit'), findsOneWidget);
-    expect(find.text('Add section'), findsOneWidget);
-    expect(find.byIcon(Icons.drag_indicator_rounded), findsNothing);
-    expect(find.byKey(const Key('builder-section-hide-1')), findsNothing);
-    expect(find.byKey(const Key('builder-section-delete-5')), findsNothing);
+      expect(find.text('Edit'), findsOneWidget);
+      expect(find.text('Add section'), findsOneWidget);
+      expect(find.byIcon(Icons.drag_indicator_rounded), findsNothing);
+      expect(find.byIcon(Icons.visibility_outlined), findsNothing);
+      expect(find.byKey(const Key('builder-section-delete-5')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('builder-edit-sections-button')));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('builder-edit-sections-button')));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Done'), findsOneWidget);
-    expect(find.byIcon(Icons.drag_indicator_rounded), findsNWidgets(5));
-    expect(find.byKey(const Key('builder-section-hide-1')), findsOneWidget);
-    expect(find.byKey(const Key('builder-section-hide-0')), findsNothing);
-    expect(find.byKey(const Key('builder-section-delete-1')), findsNothing);
-    expect(find.byKey(const Key('builder-section-delete-5')), findsOneWidget);
+      expect(find.text('Done'), findsOneWidget);
+      expect(find.byIcon(Icons.drag_indicator_rounded), findsNWidgets(6));
+      expect(find.byIcon(Icons.visibility_outlined), findsNothing);
+      expect(find.byIcon(Icons.visibility_off_outlined), findsNothing);
+      expect(find.byKey(const Key('builder-section-delete-0')), findsNothing);
+      expect(find.byKey(const Key('builder-section-delete-1')), findsOneWidget);
+      expect(find.byKey(const Key('builder-section-delete-6')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('builder-section-hide-1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Hide'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('builder-section-delete-6')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Remove'));
+      await tester.pumpAndSettle();
 
-    expect(viewModel.resume.includeWorkInResume, isFalse);
+      expect(
+        viewModel.resume.customSections.map((item) => item.title),
+        ['Objective', 'References'],
+      );
+      expect(find.text('Certifications'), findsNothing);
+    },
+  );
 
-    await tester.tap(find.byKey(const Key('builder-section-delete-5')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Remove'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'edit mode can delete a built-in section but not personal information',
+    (tester) async {
+      await pumpBuilder(tester);
+      await tester.tap(find.byKey(const Key('builder-edit-sections-button')));
+      await tester.pumpAndSettle();
 
-    expect(viewModel.resume.customSections, isEmpty);
-    expect(find.text('Certifications'), findsNothing);
-  });
+      expect(find.byKey(const Key('builder-section-delete-0')), findsNothing);
+      expect(find.text('Education'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('builder-section-delete-4')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Remove'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Education'), findsNothing);
+      expect(
+        viewModel.resume.effectiveBuilderSectionOrder,
+        isNot(contains('education')),
+      );
+      expect(viewModel.resume.includeEducationInResume, isFalse);
+      expect(
+        ResumeData.fromJson(
+          viewModel.resume.toJson(),
+        ).effectiveBuilderSectionOrder,
+        isNot(contains('education')),
+      );
+    },
+  );
 
   testWidgets('end date picker supports Present preset', (tester) async {
     viewModel.updateResume(
@@ -299,7 +324,7 @@ void main() {
     );
 
     await pumpBuilder(tester);
-    await openSection(tester, 1);
+    await openSection(tester, 2);
 
     await tester.tap(find.byKey(const Key('work-end-date-0')));
     await tester.pumpAndSettle();
@@ -311,7 +336,7 @@ void main() {
   });
 
   testWidgets('education can be reordered from the builder', (tester) async {
-    viewModel.setStep(2);
+    viewModel.setStep(4);
     viewModel.updateResume(
       (resume) => resume.copyWith(
         education: const [
@@ -332,13 +357,10 @@ void main() {
     );
 
     await pumpBuilder(tester);
-    await openSection(tester, 2);
+    await openSection(tester, 4);
 
     expect(find.text('Appears first on your resume'), findsOneWidget);
-    expect(
-      find.text('Appears at position 2 on your resume'),
-      findsOneWidget,
-    );
+    expect(find.text('Appears at position 2 on your resume'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Move education down').first);
     await tester.pumpAndSettle();
@@ -350,6 +372,7 @@ void main() {
   testWidgets('projects show a title and one description field', (
     tester,
   ) async {
+    includeProjectsSection();
     viewModel.setStep(4);
 
     await pumpBuilder(tester);
@@ -391,7 +414,7 @@ void main() {
       );
 
       await pumpBuilder(tester);
-      await openSection(tester, 1);
+      await openSection(tester, 2);
 
       await tester.tap(find.byKey(const Key('work-start-date-0')));
       await tester.pumpAndSettle();
@@ -411,10 +434,10 @@ void main() {
   );
 
   testWidgets('education end year field opens year picker', (tester) async {
-    viewModel.setStep(2);
+    viewModel.setStep(4);
 
     await pumpBuilder(tester);
-    await openSection(tester, 2);
+    await openSection(tester, 4);
 
     await tester.tap(find.byKey(const Key('education-end-date-0')));
     await tester.pumpAndSettle();
@@ -433,7 +456,9 @@ void main() {
     expect(find.text('New section'), findsOneWidget);
     expect(find.text('Type'), findsOneWidget);
     expect(find.text('Normal'), findsOneWidget);
-    expect(find.text('Advance'), findsOneWidget);
+    expect(find.text('Advanced'), findsOneWidget);
+    expect(find.text('A short description'), findsNothing);
+    expect(find.text('Organisation, dates, and a description'), findsNothing);
     final okButton = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'OK'),
     );
@@ -443,10 +468,58 @@ void main() {
     await tester.pump();
 
     expect(
-      tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'OK')).onPressed,
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'OK'))
+          .onPressed,
       isNotNull,
     );
   });
+
+  testWidgets('Normal section is a description without organisation', (
+    tester,
+  ) async {
+    await pumpBuilder(tester);
+
+    await tester.tap(find.text('Add section'));
+    await tester.pumpAndSettle();
+    await tester.enterText(textFieldByLabel('Title'), 'Awards');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'OK'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('custom-section-content-2')), findsOneWidget);
+    expect(textFieldByLabel('Organisation'), findsNothing);
+    expect(find.text('Bullet points'), findsNothing);
+    expect(viewModel.resume.customSections.last.showEntryDetails, isFalse);
+  });
+
+  testWidgets(
+    'Advanced section matches work experience items',
+    (tester) async {
+      await pumpBuilder(tester);
+
+      await tester.tap(find.text('Add section'));
+      await tester.pumpAndSettle();
+      await tester.enterText(textFieldByLabel('Title'), 'Volunteering');
+      await tester.tap(find.text('Advanced'));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Item 1'), findsOneWidget);
+      expect(textFieldByLabel('Name'), findsOneWidget);
+      expect(textFieldByLabel('Company'), findsOneWidget);
+      expect(find.text('Start date'), findsOneWidget);
+      expect(find.text('End date'), findsOneWidget);
+      expect(textFieldByLabel('Summary'), findsOneWidget);
+      expect(find.byKey(const Key('custom-entry-start-2-0')), findsOneWidget);
+      expect(find.byKey(const Key('custom-entry-end-2-0')), findsOneWidget);
+      expect(textFieldByLabel('Organisation'), findsNothing);
+      expect(find.text('Bullet points'), findsNothing);
+      expect(viewModel.resume.customSections.last.showEntryDetails, isTrue);
+      expect(viewModel.resume.customSections.last.entries, hasLength(1));
+    },
+  );
 
   testWidgets('Advance custom section uses project-style entries', (
     tester,
@@ -455,29 +528,32 @@ void main() {
       'Case Studies',
       layoutMode: CustomSectionLayoutMode.projects,
     );
-    viewModel.setStep(5);
+    viewModel.setStep(6);
 
     await pumpBuilder(tester);
-    await openSection(tester, 5);
+    await openSection(tester, 6);
 
     expect(find.text('Case Studies'), findsWidgets);
     expect(find.text('Entry 1'), findsOneWidget);
     expect(find.text('Add entry'), findsOneWidget);
-    expect(find.byKey(const Key('custom-section-project-title-0-0')), findsOneWidget);
+    expect(
+      find.byKey(const Key('custom-section-project-title-2-0')),
+      findsOneWidget,
+    );
 
     await tester.enterText(
-      find.byKey(const Key('custom-section-project-title-0-0')),
+      find.byKey(const Key('custom-section-project-title-2-0')),
       'Mobile Banking App',
     );
     await tester.pumpAndSettle(const Duration(milliseconds: 300));
 
-    expect(viewModel.resume.customSections, hasLength(1));
+    expect(viewModel.resume.customSections, hasLength(3));
     expect(
-      viewModel.resume.customSections.first.layoutMode,
+      viewModel.resume.customSections.last.layoutMode,
       CustomSectionLayoutMode.projects,
     );
     expect(
-      viewModel.resume.customSections.first.projectEntries.first.title,
+      viewModel.resume.customSections.last.projectEntries.first.title,
       'Mobile Banking App',
     );
   });
@@ -486,23 +562,23 @@ void main() {
     tester,
   ) async {
     viewModel.addCustomSectionWithTitle('Certifications');
-    viewModel.setStep(5);
+    viewModel.setStep(6);
 
     await pumpBuilder(tester);
-    await openSection(tester, 5);
+    await openSection(tester, 6);
 
     expect(find.text('Resume Preview'), findsNothing);
 
     await tester.enterText(
-      find.byKey(const Key('custom-section-content-0')),
+      find.byKey(const Key('custom-section-content-2')),
       'Google UX Certificate, AWS Cloud Practitioner',
     );
     await tester.pumpAndSettle(const Duration(milliseconds: 300));
 
-    expect(viewModel.resume.customSections, hasLength(1));
-    expect(viewModel.resume.customSections.first.title, 'Certifications');
+    expect(viewModel.resume.customSections, hasLength(3));
+    expect(viewModel.resume.customSections.last.title, 'Certifications');
     expect(
-      viewModel.resume.customSections.first.content,
+      viewModel.resume.customSections.last.content,
       'Google UX Certificate, AWS Cloud Practitioner',
     );
   });
@@ -528,6 +604,7 @@ void main() {
   });
 
   testWidgets('projects can be reordered from the builder', (tester) async {
+    includeProjectsSection();
     viewModel.setStep(4);
     viewModel.updateResume(
       (resume) => resume.copyWith(
@@ -552,10 +629,7 @@ void main() {
     await openSection(tester, 4);
 
     expect(find.text('Appears first on your resume'), findsOneWidget);
-    expect(
-      find.text('Appears at position 2 on your resume'),
-      findsOneWidget,
-    );
+    expect(find.text('Appears at position 2 on your resume'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Move project down').first);
     await tester.pumpAndSettle();
@@ -564,26 +638,27 @@ void main() {
     expect(find.text('Second project'), findsWidgets);
   });
 
-  testWidgets('preview is available on the first step and returns to the builder', (
-    tester,
-  ) async {
-    viewModel.setStep(0);
+  testWidgets(
+    'preview is available on the first step and returns to the builder',
+    (tester) async {
+      viewModel.setStep(0);
 
-    await pumpBuilder(tester);
+      await pumpBuilder(tester);
 
-    await tester.tap(find.byKey(const Key('builder-preview-button')));
-    await tester.pump();
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.tap(find.byKey(const Key('builder-preview-button')));
+      await tester.pump();
+      await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    expect(find.byKey(const Key('resume-pdf-preview')), findsOneWidget);
+      expect(find.byKey(const Key('resume-pdf-preview')), findsOneWidget);
 
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('resume-pdf-preview')), findsNothing);
-    expect(find.byKey(const Key('builder-preview-button')), findsOneWidget);
-    expect(find.text('Continue'), findsNothing);
-  });
+      expect(find.byKey(const Key('resume-pdf-preview')), findsNothing);
+      expect(find.byKey(const Key('builder-preview-button')), findsOneWidget);
+      expect(find.text('Continue'), findsNothing);
+    },
+  );
 
   testWidgets('save opens the separate preview screen', (tester) async {
     viewModel.setStep(4);
@@ -619,7 +694,7 @@ void main() {
     expect(viewModel.resume.template, ResumeTemplate.creative);
   });
 
-  testWidgets('preview back returns to the editor', (tester) async {
+  testWidgets('preview back returns to the section list', (tester) async {
     viewModel.setStep(5);
     addTearDown(viewModel.dispose);
 
@@ -668,10 +743,9 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    // Back lands on the editor's section list, not on Home.
+    expect(find.text('Home screen'), findsNothing);
     expect(find.byKey(const Key('resume-pdf-preview')), findsNothing);
     expect(find.text('Preview'), findsOneWidget);
-    expect(find.text('Home screen'), findsNothing);
   });
 
   testWidgets('tapping a section opens its fields on a new screen', (
@@ -684,11 +758,11 @@ void main() {
     expect(textFieldByLabel('Full name'), findsNothing);
     expect(textFieldByLabel('Role'), findsNothing);
 
-    await openSection(tester, 1);
+    await openSection(tester, 2);
 
-    expect(viewModel.currentStep, 1);
+    expect(viewModel.currentStep, 2);
     expect(textFieldByLabel('Role'), findsWidgets);
-    expect(find.byKey(const Key('step-scroll-1')), findsOneWidget);
+    expect(find.byKey(const Key('step-scroll-2')), findsOneWidget);
   });
 
   testWidgets(
@@ -748,9 +822,7 @@ void main() {
   ) async {
     viewModel.setStep(0);
     viewModel.updateResume(
-      (resume) => resume.copyWith(
-        linkedinLink: 'linkedin.com/in/test-user',
-      ),
+      (resume) => resume.copyWith(linkedinLink: 'linkedin.com/in/test-user'),
     );
 
     await pumpBuilder(tester, size: const Size(800, 1100));
@@ -766,11 +838,7 @@ void main() {
   ) async {
     viewModel.setStep(0);
     viewModel.updateResume(
-      (resume) => resume.copyWith(
-        fullName: '',
-        jobTitle: '',
-        summary: '',
-      ),
+      (resume) => resume.copyWith(fullName: '', jobTitle: '', summary: ''),
     );
 
     await pumpBuilder(tester, size: const Size(800, 1100));
@@ -782,7 +850,10 @@ void main() {
     await tester.tap(find.byKey(const Key('generate-summary-ai-button')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('suggest-summary-missing-dialog')), findsOneWidget);
+    expect(
+      find.byKey(const Key('suggest-summary-missing-dialog')),
+      findsOneWidget,
+    );
     expect(
       find.text(
         'Enter your full name and target job title first, then try Suggest summary again.',
@@ -796,9 +867,7 @@ void main() {
     tester,
   ) async {
     viewModel.setStep(0);
-    viewModel.updateResume(
-      (resume) => resume.copyWith(summary: ''),
-    );
+    viewModel.updateResume((resume) => resume.copyWith(summary: ''));
 
     await pumpBuilder(tester, size: const Size(800, 1100));
     await openSection(tester, 0);
@@ -826,7 +895,9 @@ void main() {
       '5',
     );
     await tester.pump();
-    await tester.tap(find.byKey(const Key('suggest-summary-experience-confirm')));
+    await tester.tap(
+      find.byKey(const Key('suggest-summary-experience-confirm')),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
@@ -844,7 +915,7 @@ void main() {
     await pumpBuilder(tester, size: const Size(520, 700));
 
     expect(find.text('Work Experience'), findsWidgets);
-    expect(find.text('Projects'), findsWidgets);
+    expect(find.text('Projects'), findsNothing);
     expect(find.text('Preview'), findsOneWidget);
     expect(find.text('Add section'), findsOneWidget);
     expect(find.text('Edit'), findsOneWidget);
@@ -860,8 +931,8 @@ void main() {
     await tester.tap(find.text('Work Experience'));
     await tester.pumpAndSettle();
 
-    expect(viewModel.currentStep, 1);
-    expect(find.text('Work experience'), findsOneWidget);
+    expect(viewModel.currentStep, 2);
+    expect(find.byKey(const Key('section-title-work')), findsOneWidget);
   });
 
   testWidgets('continue saves the current draft before moving on', (
@@ -896,7 +967,7 @@ void main() {
   });
 
   testWidgets('education description replaces the score field', (tester) async {
-    viewModel.setStep(2);
+    viewModel.setStep(4);
     viewModel.updateResume(
       (resume) => resume.copyWith(
         education: const [
@@ -913,7 +984,7 @@ void main() {
     );
 
     await pumpBuilder(tester, size: const Size(520, 1400));
-    await openSection(tester, 2);
+    await openSection(tester, 4);
 
     // The marks/score input and its % toggle are gone.
     expect(find.text('Marks / score'), findsNothing);
@@ -940,15 +1011,18 @@ void main() {
   testWidgets('added skills show one row with an efficiency slider', (
     tester,
   ) async {
-    viewModel.setStep(3);
+    viewModel.setStep(5);
     await pumpBuilder(tester);
-    await openSection(tester, 3);
+    await openSection(tester, 5);
 
     await tester.enterText(textFieldByLabel('Add a skill'), 'Flutter');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
+    expect(find.text('Simple list'), findsNothing);
+    expect(find.text('Categorised'), findsNothing);
+    expect(find.byType(Radio<bool>), findsNothing);
     expect(find.text('Flutter'), findsWidgets);
     expect(find.byType(Slider), findsNothing);
     expect(find.byKey(const Key('skill-efficiency-Flutter-4')), findsOneWidget);
@@ -958,308 +1032,5 @@ void main() {
     await tester.pump();
 
     expect(viewModel.resume.proficiencyForSkill('Flutter'), 100);
-  });
-  testWidgets('edit button sits beside add section; menu replaces it', (
-    tester,
-  ) async {
-    viewModel.setStep(0);
-    await pumpBuilder(tester, size: const Size(520, 1400));
-
-    final add = find.byKey(const Key('builder-add-section-button'));
-    final edit = find.byKey(const Key('builder-edit-sections-button'));
-    expect(add, findsOneWidget);
-    expect(edit, findsOneWidget);
-    // Parallel: same row, edit to the right of add.
-    expect(tester.getCenter(add).dy, tester.getCenter(edit).dy);
-    expect(tester.getCenter(edit).dx, greaterThan(tester.getCenter(add).dx));
-
-    // The app bar no longer carries Edit; it has the menu instead.
-    expect(
-      find.descendant(
-        of: find.byType(AppBar),
-        matching: find.byKey(const Key('builder-edit-sections-button')),
-      ),
-      findsNothing,
-    );
-    final menu = find.byKey(const Key('builder-resume-menu-button'));
-    expect(menu, findsOneWidget);
-    expect(tester.getCenter(menu).dx, greaterThan(400));
-    expect(tester.getCenter(menu).dy, lessThan(100));
-
-    // Edit still toggles reorder mode.
-    await tester.tap(edit);
-    await tester.pumpAndSettle();
-    expect(find.text('Done'), findsOneWidget);
-  });
-
-  testWidgets('menu offers rename, duplicate and delete', (tester) async {
-    viewModel.setStep(0);
-    await pumpBuilder(tester, size: const Size(520, 1400));
-    await openResumeMenu(tester);
-    expect(find.text('Rename'), findsOneWidget);
-    expect(find.text('Duplicate'), findsOneWidget);
-    expect(find.text('Delete'), findsOneWidget);
-
-    // Option text is regular weight, not bold.
-    for (final label in ['Rename', 'Duplicate', 'Delete']) {
-      final weight = tester.widget<Text>(find.text(label)).style?.fontWeight;
-      expect(weight, FontWeight.w400, reason: '$label should not be bold');
-    }
-  });
-
-  testWidgets('menu rename changes the resume title', (tester) async {
-    viewModel.setStep(0);
-    await pumpBuilder(tester, size: const Size(520, 1400));
-    await openResumeMenu(tester);
-    await tester.tap(find.text('Rename'));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(
-      find.byKey(const Key('rename-resume-title-field')),
-      'Consulting CV',
-    );
-    await tester.tap(find.widgetWithText(FilledButton, 'Rename'));
-    await tester.pumpAndSettle();
-
-    expect(viewModel.resume.title, 'Consulting CV');
-    expect(repository.savedResumes.last.title, 'Consulting CV');
-  });
-
-  testWidgets('menu duplicate saves a copy under the typed title', (
-    tester,
-  ) async {
-    viewModel.setStep(0);
-    await pumpBuilder(tester, size: const Size(520, 1400));
-    final originalId = viewModel.resume.id;
-    await openResumeMenu(tester);
-    await tester.tap(find.text('Duplicate'));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(
-      find.byKey(const Key('duplicate-resume-title-field')),
-      'My Resume copy',
-    );
-    await tester.tap(find.widgetWithText(FilledButton, 'Duplicate'));
-    await tester.pump();
-    // Copying the profile photo does real file I/O, which the fake clock in
-    // widget tests never advances; give it real time to finish.
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 300)),
-    );
-    await tester.pumpAndSettle();
-
-    final copy = repository.savedResumes.last;
-    expect(copy.title, 'My Resume copy');
-    expect(copy.id, isNot(originalId));
-  });
-
-  testWidgets('menu delete removes the resume and does not save it back', (
-    tester,
-  ) async {
-    viewModel.setStep(0);
-    await pumpBuilder(tester, size: const Size(520, 1400));
-    final id = viewModel.resume.id;
-    final savesBefore = repository.savedResumes.length;
-
-    await openResumeMenu(tester);
-    await tester.tap(find.text('Delete'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
-    await tester.pumpAndSettle();
-
-    expect(repository.deletedResumeIds, [id]);
-    // Autosave and the save on dispose must not resurrect it.
-    viewModel.updateResume((r) => r.copyWith(fullName: 'Edited after delete'));
-    await tester.pump(const Duration(seconds: 1));
-    expect(repository.savedResumes.length, savesBefore);
-  });
-  testWidgets('duplicate closes the editor and returns to home', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(520, 1400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-    viewModel.setStep(0);
-
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<ResumeEditorViewModel>.value(value: viewModel),
-          Provider<AppPreferences>.value(value: AppPreferences.inMemory()),
-          ChangeNotifierProvider<ResumeLibraryViewModel>(
-            create: (_) => ResumeLibraryViewModel(repository: repository),
-          ),
-        ],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: Center(
-                child: FilledButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ResumeBuilderScreen(),
-                    ),
-                  ),
-                  child: const Text('Home screen'),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Home screen'));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('builder-resume-menu-button')), findsOneWidget);
-
-    await openResumeMenu(tester);
-    await tester.tap(find.text('Duplicate'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Duplicate'));
-    await tester.pump();
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 300)),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const Key('builder-resume-menu-button')), findsNothing);
-    expect(find.text('Home screen'), findsOneWidget);
-    // The confirmation stays on screen over Home.
-    expect(find.text('Resume duplicated.'), findsOneWidget);
-  });
-  testWidgets('section screens have a tick and no back button', (tester) async {
-    viewModel.setStep(0);
-    await pumpBuilder(tester, size: const Size(520, 1400));
-
-    // Every kind of section screen: personal, work, education, skills.
-    for (final step in [0, 1, 2, 3]) {
-      await openSection(tester, step);
-
-      expect(find.byType(BackButton), findsNothing, reason: 'step $step');
-      final appBar = tester.widget<AppBar>(find.byType(AppBar));
-      expect(appBar.automaticallyImplyLeading, isFalse, reason: 'step $step');
-      expect(appBar.leading, isNull, reason: 'step $step');
-
-      final tick = find.byKey(const Key('section-editor-save-button'));
-      expect(tick, findsOneWidget, reason: 'step $step');
-      // Right edge of the tick button sits 13px in from the screen edge.
-      expect(tester.getTopRight(tick).dx, 520 - 13, reason: 'step $step');
-
-      await tester.tap(tick);
-      await tester.pumpAndSettle();
-      expect(
-        find.byKey(const Key('section-editor-save-button')),
-        findsNothing,
-        reason: 'the tick closes step $step',
-      );
-    }
-  });
-  testWidgets('the section header follows the section title field', (
-    tester,
-  ) async {
-    viewModel.setStep(1);
-    await pumpBuilder(tester, size: const Size(520, 1400));
-    await openSection(tester, 1);
-
-    // Only the app bar counts: the text field holds the same text, so a plain
-    // find.text would pass even if the header never changed.
-    Finder header(String text) =>
-        find.descendant(of: find.byType(AppBar), matching: find.text(text));
-    final field = find.descendant(
-      of: find.byKey(const Key('section-title-work')),
-      matching: find.byType(TextField),
-    );
-
-    expect(header('Work Experience'), findsOneWidget);
-
-    await tester.enterText(field, 'Consulting Engagements');
-    await tester.pump();
-    expect(header('Consulting Engagements'), findsOneWidget);
-    expect(header('Work Experience'), findsNothing);
-
-    // Clearing the field puts the default heading back.
-    await tester.enterText(field, '');
-    await tester.pump();
-    expect(header('Work Experience'), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 300));
-  });
-
-  testWidgets('a custom section header follows its title field', (
-    tester,
-  ) async {
-    viewModel.updateResume(
-      (resume) => resume.copyWith(
-        customSections: const [
-          CustomSectionItem(title: 'Certifications', content: ''),
-        ],
-      ),
-    );
-    final step = viewModel.stepForSectionId(ResumeBuilderSectionIds.custom(0));
-    viewModel.setStep(step);
-    await pumpBuilder(tester, size: const Size(520, 1400));
-    await openSection(tester, step);
-
-    Finder header(String text) =>
-        find.descendant(of: find.byType(AppBar), matching: find.text(text));
-    expect(header('Certifications'), findsOneWidget);
-
-    await tester.enterText(
-      find.descendant(
-        of: find.byKey(const Key('section-title-custom-0')),
-        matching: find.byType(TextField),
-      ),
-      'Licences',
-    );
-    await tester.pump();
-    expect(header('Licences'), findsOneWidget);
-    expect(header('Certifications'), findsNothing);
-    await tester.pump(const Duration(milliseconds: 300));
-  });
-  testWidgets('education lists degree / diploma above institution', (
-    tester,
-  ) async {
-    viewModel.updateResume(
-      (resume) => resume.copyWith(
-        education: const [
-          EducationItem(
-            institution: 'Borcelle University',
-            degree: 'Master of Business Management',
-            startDate: '2013',
-            endDate: '2015',
-          ),
-        ],
-      ),
-    );
-    viewModel.setStep(2);
-    await pumpBuilder(tester, size: const Size(520, 1600));
-    await openSection(tester, 2);
-
-    final degree = find.ancestor(
-      of: find.text('Degree / Diploma'),
-      matching: find.byType(TextField),
-    );
-    final institution = find.ancestor(
-      of: find.text('Institution'),
-      matching: find.byType(TextField),
-    );
-    expect(degree, findsOneWidget);
-    expect(institution, findsOneWidget);
-    expect(
-      tester.getTopLeft(degree).dy,
-      lessThan(tester.getTopLeft(institution).dy),
-      reason: 'degree / diploma must come first',
-    );
-
-    // Each field still edits its own value.
-    await tester.enterText(degree, 'MBA');
-    await tester.enterText(institution, 'Harvard');
-    await tester.pump(const Duration(milliseconds: 300));
-    final saved = viewModel.resume.education.first;
-    expect(saved.degree, 'MBA');
-    expect(saved.institution, 'Harvard');
-    await tester.pump(const Duration(milliseconds: 300));
   });
 }

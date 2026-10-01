@@ -257,4 +257,33 @@ Flutter
     );
     expect(background.fullName, 'Priya Raman');
   });
+  group('imported projects', () {
+    const withProjects =
+        'Priya Raman\nMarketing Manager\npriya@email.com\n\n'
+        'EXPERIENCE\nMarketing Manager at Northstar Labs\n2019 - Present\n\n'
+        'PROJECTS\nResume Platform\n- Shipped the editor.\n- Cut export time in half.';
+    const withoutProjects =
+        'Priya Raman\nMarketing Manager\npriya@email.com\n\n'
+        'EXPERIENCE\nMarketing Manager at Northstar Labs\n2019 - Present';
+
+    ResumeData parse(String text) => LocalAiResumeService().parseImportedResumeText(
+      resumeText: text,
+      candidateResumeTexts: const [],
+      template: ResumeTemplate.corporate,
+      sourceTitle: 'Priya',
+    );
+
+    test('an uploaded resume that has projects shows them', () {
+      final resume = parse(withProjects);
+      expect(resume.projects.where((p) => !p.isBlank), isNotEmpty);
+      expect(resume.includeProjectsInResume, isTrue);
+      expect(resume.effectiveBuilderSectionOrder, contains('projects'));
+    });
+
+    test('an uploaded resume without projects leaves the section off', () {
+      final resume = parse(withoutProjects);
+      expect(resume.includeProjectsInResume, isFalse);
+      expect(resume.effectiveBuilderSectionOrder, isNot(contains('projects')));
+    });
+  });
 }

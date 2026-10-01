@@ -369,7 +369,7 @@ abstract class AppLocalizations {
   /// No description provided for @uploadFeedbackTitle.
   ///
   /// In en, this message translates to:
-  /// **'How did the upload go?'**
+  /// **'How was the upload?'**
   String get uploadFeedbackTitle;
 
   /// No description provided for @uploadFeedbackBody.
@@ -2130,6 +2130,18 @@ abstract class AppLocalizations {
   /// **'Projects'**
   String get sectionProjects;
 
+  /// No description provided for @sectionObjective.
+  ///
+  /// In en, this message translates to:
+  /// **'Objective'**
+  String get sectionObjective;
+
+  /// No description provided for @sectionReferences.
+  ///
+  /// In en, this message translates to:
+  /// **'References'**
+  String get sectionReferences;
+
   /// No description provided for @personalInformationTitle.
   ///
   /// In en, this message translates to:
@@ -2277,19 +2289,19 @@ abstract class AppLocalizations {
   /// No description provided for @sectionTypeNormalSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Summary or bullet points'**
+  /// **'A short description'**
   String get sectionTypeNormalSubtitle;
 
   /// No description provided for @sectionTypeAdvance.
   ///
   /// In en, this message translates to:
-  /// **'Advance'**
+  /// **'Advanced'**
   String get sectionTypeAdvance;
 
   /// No description provided for @sectionTypeAdvanceSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Project-style entries with title and bullets'**
+  /// **'Organisation, dates, and a description'**
   String get sectionTypeAdvanceSubtitle;
 
   /// No description provided for @removeSectionTitle.
@@ -2901,7 +2913,7 @@ abstract class AppLocalizations {
   /// No description provided for @customSectionSubtitleLabel.
   ///
   /// In en, this message translates to:
-  /// **'Organisation (optional)'**
+  /// **'Organisation'**
   String get customSectionSubtitleLabel;
 
   /// No description provided for @customSectionSubtitleHint.
@@ -2939,6 +2951,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Entry {number}'**
   String entryNumber(int number);
+
+  /// No description provided for @itemNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Item {number}'**
+  String itemNumber(int number);
+
+  /// No description provided for @entryName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get entryName;
 
   /// No description provided for @moveEntryUp.
   ///

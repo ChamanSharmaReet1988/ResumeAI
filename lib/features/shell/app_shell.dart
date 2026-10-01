@@ -175,7 +175,7 @@ class _AppShellState extends State<AppShell> {
       aiService: aiService,
       pdfService: pdfService,
       androidAi: context.read<AndroidGenAiService>(),
-      seedResume: seed ?? library.newDraft(),
+      seedResume: seed ?? library.newDraft(l10n: context.l10n),
     );
 
     await Navigator.of(context).push(
@@ -207,7 +207,7 @@ class _AppShellState extends State<AppShell> {
     }
 
     final normalizedTitle = enteredTitle.trim();
-    final draft = library.newDraft().copyWith(
+    final draft = library.newDraft(l10n: context.l10n).copyWith(
       title: normalizedTitle.isEmpty
           ? ResumeData.defaultTitle
           : normalizedTitle,
@@ -238,7 +238,7 @@ class _AppShellState extends State<AppShell> {
     final navigator = Navigator.of(context, rootNavigator: true);
     final failedMessage = context.l10n.uploadResumeFailed;
     final processingMessage = context.l10n.uploadResumeProcessing;
-    final draft = library.newDraft();
+    final draft = library.newDraft(l10n: context.l10n);
 
     var loadingShown = false;
     final loadingClock = Stopwatch();
@@ -361,7 +361,7 @@ class _AppShellState extends State<AppShell> {
 
   Future<void> _createResumeFromTemplatesTab() async {
     final library = context.read<ResumeLibraryViewModel>();
-    final draft = library.newDraft();
+    final draft = library.newDraft(l10n: context.l10n);
     await logAnalyticsEvent(
       context,
       AnalyticsEvents.resumeCreated,

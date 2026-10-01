@@ -602,6 +602,8 @@
   "sectionEducation": "Educación",
   "sectionSkills": "Habilidades",
   "sectionProjects": "Proyectos",
+  "sectionObjective": "Objetivo",
+  "sectionReferences": "Referencias",
   "personalInformationTitle": "Información personal",
   "workExperienceTitle": "Experiencia laboral",
   "categoryNumber": "Categoría {number}",
@@ -626,9 +628,9 @@
   "newSection": "Nueva sección",
   "newSectionTitleHint": "p. ej. Certificado, Referencias, Premios",
   "sectionTypeNormal": "Normal",
-  "sectionTypeNormalSubtitle": "Resumen o viñetas",
+  "sectionTypeNormalSubtitle": "Una descripción breve",
   "sectionTypeAdvance": "Avanzado",
-  "sectionTypeAdvanceSubtitle": "Entradas estilo proyecto con título y viñetas",
+  "sectionTypeAdvanceSubtitle": "Organización, fechas y una descripción",
   "removeSectionTitle": "¿Eliminar sección?",
   "removeSectionMessage": "Esta sección se eliminará de tu currículum. Puedes añadir una nueva sección personalizada con Añadir sección en cualquier momento.",
   "unableToPickImage": "No se pudo elegir una imagen ahora.",
@@ -730,13 +732,22 @@
   "educationDescriptionHint": "Asignaturas, logros o notas: uno por línea.",
   "projectDescriptionLabel": "Descripción",
   "projectDescriptionHint": "Lo que construiste y su impacto: una línea para cada uno.",
-  "customSectionSubtitleLabel": "Organización (opcional)",
+  "customSectionSubtitleLabel": "Organización",
   "customSectionSubtitleHint": "Emisor, empleador u organizador",
   "sectionTitleLabel": "Título de la sección",
   "sectionTitleHint": "Cambia el nombre de esta sección en tu currículum",
   "addSectionEntry": "Añadir {name}",
   "customSectionSummaryHint": "Escribe la sección como un párrafo corto para tu currículum.",
   "entryNumber": "Entrada {number}",
+  "itemNumber": "Elemento {number}",
+  "@itemNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "entryName": "Nombre",
   "moveEntryUp": "Subir entrada",
   "moveEntryDown": "Bajar entrada",
   "deleteEntry": "Eliminar entrada",

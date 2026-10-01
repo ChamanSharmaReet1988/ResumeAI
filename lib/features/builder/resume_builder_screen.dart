@@ -39,9 +39,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   final _skillFocusNode = FocusNode();
   final _skillInputKey = GlobalKey();
   static const double _skillSuggestionMaxHeight = 280;
-  final Map<int, TextEditingController> _groupSkillControllers = {};
-  final Map<int, FocusNode> _groupSkillFocusNodes = {};
-  final Map<int, GlobalKey> _groupSkillInputKeys = {};
   final _imagePicker = ImagePicker();
   final _personalFieldFocusNodes = List<FocusNode>.generate(
     7,
@@ -171,48 +168,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     }
   }
 
-  FocusNode _groupSkillFocusNode(int index) {
-    return _groupSkillFocusNodes.putIfAbsent(index, () {
-      final node = FocusNode();
-      node.addListener(() {
-        if (!mounted) {
-          return;
-        }
-        final currentIndex = _groupSkillFocusNodes.entries
-            .where((entry) => identical(entry.value, node))
-            .map((entry) => entry.key)
-            .firstOrNull;
-        if (currentIndex != null) {
-          _handleGroupSkillFocusChange(currentIndex);
-        }
-      });
-      return node;
-    });
-  }
-
-  GlobalKey _groupSkillInputKey(int index) {
-    return _groupSkillInputKeys.putIfAbsent(index, GlobalKey.new);
-  }
-
-  void _handleGroupSkillFocusChange(int index) {
-    if (!mounted) {
-      return;
-    }
-    _refreshEditorUi();
-    final node = _groupSkillFocusNodes[index];
-    if (node == null || !node.hasFocus) {
-      return;
-    }
-    final fieldContext = _groupSkillInputKeys[index]?.currentContext;
-    if (fieldContext != null) {
-      _scheduleEnsureVisible(
-        fieldContext,
-        extraVisibleHeight: _skillSuggestionMaxHeight,
-        alignNearTop: true,
-      );
-    }
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -280,14 +235,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       ..removeListener(_handleSkillFocusChange)
       ..dispose();
     _skillController.dispose();
-    for (final controller in _groupSkillControllers.values) {
-      controller.dispose();
-    }
-    for (final node in _groupSkillFocusNodes.values) {
-      node.dispose();
-    }
-    _groupSkillFocusNodes.clear();
-    _groupSkillInputKeys.clear();
     _editorChrome.dispose();
     for (final node in _personalFieldFocusNodes) {
       node.dispose();
@@ -458,7 +405,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       context,
       AnalyticsEvents.resumeExportedPdf,
       parameters: {
-        ...resumeTemplateAnalytics(viewModel.resume.template.userFacingTemplate),
+        ...resumeTemplateAnalytics(
+          viewModel.resume.template.userFacingTemplate,
+        ),
         'source': 'resume_builder',
       },
     );
@@ -496,7 +445,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ? AnalyticsEvents.resumeSharedPdf
           : AnalyticsEvents.resumeSharedDocx,
       parameters: {
-        ...resumeTemplateAnalytics(viewModel.resume.template.userFacingTemplate),
+        ...resumeTemplateAnalytics(
+          viewModel.resume.template.userFacingTemplate,
+        ),
         'source': 'resume_builder',
         'format': format.name,
       },
@@ -539,8 +490,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       return;
     }
 
-    final summary =
-        context.read<ResumeEditorViewModel>().resume.summary.trim();
+    final summary = context.read<ResumeEditorViewModel>().resume.summary.trim();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -610,9 +560,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                     controller: controller,
                     autofocus: true,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
                       labelText: context.l10n.suggestSummaryExperienceLabel,
@@ -670,61 +618,13 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     }
   }
 
-  TextEditingController _groupSkillController(int index) {
-    return _groupSkillControllers.putIfAbsent(
-      index,
-      TextEditingController.new,
-    );
-  }
-
-  void _addSkillToGroupFromInput(int index) {
-    if (!mounted) {
-      return;
-    }
-    final viewModel = context.read<ResumeEditorViewModel>();
-    final controller = _groupSkillController(index);
-    final trimmed = controller.text.trim();
-    if (trimmed.isEmpty) {
-      return;
-    }
-    final added = viewModel.addSkillToGroup(index, trimmed);
-    if (added) {
-      controller.clear();
-      _refreshEditorUi();
-    } else {
-      _showDuplicateSkillMessage();
-    }
-  }
-
-  void _reindexGroupSkillControllersAfterRemove(int removedIndex) {
-    final nextControllers = <int, TextEditingController>{};
-    for (final entry in _groupSkillControllers.entries) {
-      if (entry.key == removedIndex) {
-        entry.value.dispose();
-        continue;
-      }
-      final newKey = entry.key > removedIndex ? entry.key - 1 : entry.key;
-      nextControllers[newKey] = entry.value;
-    }
-    _groupSkillControllers
-      ..clear()
-      ..addAll(nextControllers);
-
-    // Recreate focus/key maps so listener indexes stay correct.
-    for (final node in _groupSkillFocusNodes.values) {
-      node.dispose();
-    }
-    _groupSkillFocusNodes.clear();
-    _groupSkillInputKeys.clear();
-  }
-
   void _showDuplicateSkillMessage() {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.skillAlreadyInList)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.skillAlreadyInList)));
   }
 
   Future<void> _confirmRemoval({
@@ -754,14 +654,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (result == true && mounted) {
       onConfirm();
     }
-  }
-
-  ButtonStyle _mediumTonalButtonStyle(BuildContext context) {
-    return FilledButton.styleFrom(
-      textStyle: Theme.of(
-        context,
-      ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
-    );
   }
 
   ButtonStyle _secondaryActionButtonStyle(BuildContext context) {
@@ -803,44 +695,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       return l10n.appearsFirstOnYourResume;
     }
     return l10n.appearsOnYourResumeAt(index + 1);
-  }
-
-  Future<void> _toggleResumeSectionVisibility({
-    required bool isIncluded,
-    required String sectionName,
-    required void Function(bool) setIncluded,
-  }) async {
-    if (!isIncluded) {
-      setIncluded(true);
-      return;
-    }
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).cardColor,
-          surfaceTintColor: Colors.transparent,
-          title: Text(context.l10n.hideFromResumeTitle),
-          content: Text(
-            context.l10n.hideFromResumeMessage(sectionName),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(context.l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(context.l10n.hide),
-            ),
-          ],
-        );
-      },
-    );
-    if (!mounted || confirmed != true) {
-      return;
-    }
-    setIncluded(false);
   }
 
   TextStyle? _resumeOrderHintStyle(BuildContext context) {
@@ -951,7 +805,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }) async {
     _unfocusActiveField();
     final selectedYear = await _showYearPickerDialog(
-      title: isEndDate ? context.l10n.selectEndYear : context.l10n.selectStartYear,
+      title: isEndDate
+          ? context.l10n.selectEndYear
+          : context.l10n.selectStartYear,
       initialValue: currentValue,
     );
 
@@ -990,6 +846,126 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       (current) => current.copyWith(
         startDate: isEndDate ? current.startDate : selectedYear,
         endDate: isEndDate ? selectedYear : current.endDate,
+      ),
+    );
+  }
+
+  Future<void> _pickCustomEntryDate({
+    required int sectionIndex,
+    required int entryIndex,
+    required bool isEndDate,
+    required String currentValue,
+  }) async {
+    _unfocusActiveField();
+
+    if (isEndDate) {
+      final selection = await showModalBottomSheet<_EndDateSelection>(
+        context: context,
+        backgroundColor: Theme.of(context).cardColor,
+        builder: (context) {
+          final primaryColor = Theme.of(context).colorScheme.primary;
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: BottomSheetInsets.leftPadding,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: BottomSheetInsets.topSpacing),
+                  ListTile(
+                    leading: IconTheme(
+                      data: IconThemeData(color: primaryColor),
+                      child: const _ThinCalendarIcon(
+                        strokeWidth:
+                            _ResumeBuilderScreenState._calendarIconStroke,
+                      ),
+                    ),
+                    title: Text(context.l10n.chooseMonthAndYear),
+                    onTap: () =>
+                        Navigator.of(context).pop(_EndDateSelection.chooseDate),
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.work_history_outlined,
+                      color: primaryColor,
+                    ),
+                    title: Text(context.l10n.present),
+                    onTap: () =>
+                        Navigator.of(context).pop(_EndDateSelection.present),
+                  ),
+                  if (currentValue.trim().isNotEmpty)
+                    ListTile(
+                      leading: Icon(Icons.clear_rounded, color: primaryColor),
+                      title: Text(context.l10n.clearDate),
+                      onTap: () =>
+                          Navigator.of(context).pop(_EndDateSelection.clear),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+
+      if (!mounted || selection == null) {
+        return;
+      }
+
+      switch (selection) {
+        case _EndDateSelection.present:
+          _updateCustomEntryDate(
+            sectionIndex: sectionIndex,
+            entryIndex: entryIndex,
+            isEndDate: true,
+            value: 'Present',
+          );
+          return;
+        case _EndDateSelection.clear:
+          _updateCustomEntryDate(
+            sectionIndex: sectionIndex,
+            entryIndex: entryIndex,
+            isEndDate: true,
+            value: '',
+          );
+          return;
+        case _EndDateSelection.chooseDate:
+          break;
+      }
+    }
+
+    final selectedDate = await _showMonthYearPicker(
+      title: isEndDate
+          ? context.l10n.selectEndMonthAndYear
+          : context.l10n.selectStartMonthAndYear,
+      initialDate: _initialWorkPickerDate(currentValue),
+    );
+
+    if (!mounted || selectedDate == null) {
+      return;
+    }
+
+    _updateCustomEntryDate(
+      sectionIndex: sectionIndex,
+      entryIndex: entryIndex,
+      isEndDate: isEndDate,
+      value: DateFormat('MMM yyyy').format(selectedDate),
+    );
+  }
+
+  void _updateCustomEntryDate({
+    required int sectionIndex,
+    required int entryIndex,
+    required bool isEndDate,
+    required String value,
+  }) {
+    context.read<ResumeEditorViewModel>().updateCustomSectionEntry(
+      sectionIndex,
+      entryIndex,
+      (current) => current.copyWith(
+        startDate: isEndDate ? current.startDate : value,
+        endDate: isEndDate ? value : current.endDate,
       ),
     );
   }
@@ -1205,6 +1181,26 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
+  void _moveCustomSectionEntry({
+    required int sectionIndex,
+    required int entryIndex,
+    required bool moveUp,
+  }) {
+    _unfocusActiveField();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      final viewModel = context.read<ResumeEditorViewModel>();
+      if (moveUp) {
+        viewModel.moveCustomSectionEntryUp(sectionIndex, entryIndex);
+      } else {
+        viewModel.moveCustomSectionEntryDown(sectionIndex, entryIndex);
+      }
+    });
+  }
+
   void _moveWorkExperience({required int index, required bool moveUp}) {
     _unfocusActiveField();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1253,50 +1249,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
-  void _moveSkillGroup({required int index, required bool moveUp}) {
-    _unfocusActiveField();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-
-      final viewModel = context.read<ResumeEditorViewModel>();
-      if (moveUp) {
-        viewModel.moveSkillGroupUp(index);
-        _swapGroupSkillInputState(index, index - 1);
-      } else {
-        viewModel.moveSkillGroupDown(index);
-        _swapGroupSkillInputState(index, index + 1);
-      }
-      _refreshEditorUi();
-    });
-  }
-
-  void _swapGroupSkillInputState(int a, int b) {
-    void swapMap<T>(Map<int, T> map) {
-      final va = map[a];
-      final vb = map[b];
-      if (va != null) {
-        map[b] = va;
-      } else {
-        map.remove(b);
-      }
-      if (vb != null) {
-        map[a] = vb;
-      } else {
-        map.remove(a);
-      }
-    }
-
-    swapMap(_groupSkillControllers);
-    swapMap(_groupSkillFocusNodes);
-    swapMap(_groupSkillInputKeys);
-  }
-
   GlobalKey _sectionTileKey(int step) {
     return _sectionTileKeys.putIfAbsent(step, GlobalKey.new);
   }
-
 
   Future<void> _showAddCustomCategoryDialog() async {
     final controller = TextEditingController();
@@ -1306,10 +1261,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final typeOptionTitleStyle =
-                Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.normal,
-                    );
+            final typeOptionTitleStyle = Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.normal);
             return AlertDialog(
               backgroundColor: Theme.of(context).cardColor,
               surfaceTintColor: Colors.transparent,
@@ -1366,9 +1320,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             context.l10n.sectionTypeNormal,
                             style: typeOptionTitleStyle,
                           ),
-                          subtitle: Text(
-                            context.l10n.sectionTypeNormalSubtitle,
-                          ),
                         ),
                         RadioListTile<_CustomSectionCreationType>(
                           value: _CustomSectionCreationType.advance,
@@ -1378,9 +1329,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           title: Text(
                             context.l10n.sectionTypeAdvance,
                             style: typeOptionTitleStyle,
-                          ),
-                          subtitle: Text(
-                            context.l10n.sectionTypeAdvanceSubtitle,
                           ),
                         ),
                       ],
@@ -1424,9 +1372,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     final viewModel = context.read<ResumeEditorViewModel>();
     viewModel.addCustomSectionWithTitle(
       result.title.trim(),
-      layoutMode: result.type == _CustomSectionCreationType.advance
-          ? CustomSectionLayoutMode.projects
-          : CustomSectionLayoutMode.summary,
+      // Advanced keeps the organisation, dates, and description form. Normal
+      // is only a short description.
+      showEntryDetails: result.type == _CustomSectionCreationType.advance,
     );
     final newIndex = viewModel.resume.customSections.length - 1;
     final targetStep = viewModel.stepForSectionId(
@@ -1440,10 +1388,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     });
   }
 
-  Future<void> _confirmRemoveCustomSection(
-    int index, {
-    bool popToSectionList = false,
-  }) async {
+  Future<void> _confirmRemoveSection(int step) async {
+    final viewModel = context.read<ResumeEditorViewModel>();
+    final sectionId = viewModel.sectionIdAtStep(step);
+    if (sectionId == null) {
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -1468,14 +1418,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     if (!mounted || confirmed != true) {
       return;
     }
-    context.read<ResumeEditorViewModel>().removeCustomSection(index);
-    if (!popToSectionList || !mounted) {
+    final customIndex = ResumeBuilderSectionIds.customIndex(sectionId);
+    if (customIndex != null) {
+      viewModel.removeCustomSection(customIndex);
       return;
     }
-    final navigator = Navigator.of(context);
-    if (navigator.canPop()) {
-      navigator.pop();
-    }
+    viewModel.removeBodySection(sectionId);
   }
 
   Future<void> _openSection(int step) async {
@@ -1517,8 +1465,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 _isWorkKeyboardHideFieldFocused,
             showEducationKeyboardHideButton: () =>
                 viewModel.isSectionStep(ResumeBuilderSectionIds.education),
-            onFocusPrevious: () =>
-                _focusPreviousKeyboardField(normalizedStep),
+            onFocusPrevious: () => _focusPreviousKeyboardField(normalizedStep),
             onFocusNext: () => _focusNextKeyboardField(normalizedStep),
           ),
         ),
@@ -1526,10 +1473,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-  Widget? _sectionEditorTitleAction(
-    ResumeEditorViewModel viewModel,
-    int step,
-  ) {
+  Widget? _sectionEditorTitleAction(ResumeEditorViewModel viewModel, int step) {
     final scheme = Theme.of(context).colorScheme;
     return IconButton(
       key: const Key('section-editor-save-button'),
@@ -1552,11 +1496,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           color: scheme.primary,
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          Icons.check_rounded,
-          size: 20,
-          color: scheme.onPrimary,
-        ),
+        child: Icon(Icons.check_rounded, size: 20, color: scheme.onPrimary),
       ),
     );
   }
@@ -1615,9 +1555,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.unableToPickImage)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.unableToPickImage)));
     }
   }
 
@@ -1833,8 +1773,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             child: _buildSectionList(viewModel: viewModel),
                           ),
                           _BuilderPreviewBar(
-                            onPreview: () =>
-                                _openPreview(backPopsToHome: true),
+                            onPreview: () => _openPreview(backPopsToHome: true),
                           ),
                         ],
                       );
@@ -1847,17 +1786,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         children: [
                           Expanded(flex: 6, child: main),
                           SizedBox(
-                            width: math.min(
-                              420,
-                              constraints.maxWidth * 0.34,
-                            ),
+                            width: math.min(420, constraints.maxWidth * 0.34),
                             child: SingleChildScrollView(
-                              padding: const EdgeInsets.fromLTRB(
-                                0,
-                                20,
-                                20,
-                                24,
-                              ),
+                              padding: const EdgeInsets.fromLTRB(0, 20, 20, 24),
                               child: _LivePreviewPanel(
                                 resume: viewModel.resume,
                                 analysis: viewModel.analysis,
@@ -1893,23 +1824,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     };
   }
 
-  void Function(bool)? _defaultSectionIncludeSetter(
-    ResumeEditorViewModel viewModel,
-    int step,
-  ) {
-    final id = viewModel.sectionIdAtStep(step);
-    return switch (id) {
-      ResumeBuilderSectionIds.work => viewModel.setIncludeWorkInResume,
-      ResumeBuilderSectionIds.education => viewModel.setIncludeEducationInResume,
-      ResumeBuilderSectionIds.skills => viewModel.setIncludeSkillsInResume,
-      ResumeBuilderSectionIds.projects => viewModel.setIncludeProjectsInResume,
-      _ => null,
-    };
-  }
-
-  Widget _buildSectionList({
-    required ResumeEditorViewModel viewModel,
-  }) {
+  Widget _buildSectionList({required ResumeEditorViewModel viewModel}) {
     final itemCount = viewModel.totalStepCount + 1;
     return ReorderableListView.builder(
       key: const Key('resume-step-pages'),
@@ -1962,7 +1877,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
 
         final customIndex = viewModel.customIndexAtStep(index);
         final included = _defaultSectionIncluded(viewModel, index);
-        final includeSetter = _defaultSectionIncludeSetter(viewModel, index);
         final title = viewModel.titleForStep(index, context.l10n);
         final tile = _BuilderSectionTile(
           sectionKey: _sectionTileKey(index),
@@ -1975,18 +1889,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           onTap: _isEditingSections
               ? null
               : () => unawaited(_openSection(index)),
-          onToggleVisibility: includeSetter == null
+          onDelete: index == 0
               ? null
-              : () => unawaited(
-                    _toggleResumeSectionVisibility(
-                      isIncluded: included ?? true,
-                      sectionName: title,
-                      setIncluded: includeSetter,
-                    ),
-                  ),
-          onDelete: customIndex == null
-              ? null
-              : () => unawaited(_confirmRemoveCustomSection(customIndex)),
+              : () => unawaited(_confirmRemoveSection(index)),
         );
 
         if (index == 0 || !_isEditingSections) {
@@ -2061,26 +1966,29 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     return switch (sectionId) {
       ResumeBuilderSectionIds.work =>
         resume.visibleWorkExperiences
-            .map((item) => item.role.trim().ifBlank(item.company.trim()))
-            .where((item) => item.isNotEmpty)
-            .firstOrNull ??
-        '',
+                .map((item) => item.role.trim().ifBlank(item.company.trim()))
+                .where((item) => item.isNotEmpty)
+                .firstOrNull ??
+            '',
       ResumeBuilderSectionIds.education =>
         resume.visibleEducation
-            .map((item) => item.institution.trim().ifBlank(item.degree.trim()))
-            .where((item) => item.isNotEmpty)
-            .firstOrNull ??
-        '',
-      ResumeBuilderSectionIds.skills => resume.skills
-          .where((item) => item.trim().isNotEmpty)
-          .take(2)
-          .join(' · '),
+                .map(
+                  (item) => item.institution.trim().ifBlank(item.degree.trim()),
+                )
+                .where((item) => item.isNotEmpty)
+                .firstOrNull ??
+            '',
+      ResumeBuilderSectionIds.skills =>
+        resume.skills
+            .where((item) => item.trim().isNotEmpty)
+            .take(2)
+            .join(' · '),
       ResumeBuilderSectionIds.projects =>
         resume.visibleProjects
-            .map((item) => item.title.trim())
-            .where((item) => item.isNotEmpty)
-            .firstOrNull ??
-        '',
+                .map((item) => item.title.trim())
+                .where((item) => item.isNotEmpty)
+                .firstOrNull ??
+            '',
       _ => '',
     };
   }
@@ -2231,10 +2139,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.add_rounded,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(Icons.add_rounded, color: theme.colorScheme.primary),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -2367,8 +2272,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               viewModel.resume.workExperiences.length > 1) ...[
             _HintBanner(
               title: context.l10n.resumeOrder,
-              body:
-                  context.l10n.resumeOrderBody,
+              body: context.l10n.resumeOrderBody,
               compact: true,
               onDismiss: _onDismissResumeOrderNudge,
             ),
@@ -2377,8 +2281,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ...viewModel.resume.workExperiences.asMap().entries.expand((entry) {
             final index = entry.key;
             final item = entry.value;
-            final isLast =
-                index == viewModel.resume.workExperiences.length - 1;
+            final isLast = index == viewModel.resume.workExperiences.length - 1;
             final experienceWidgets = <Widget>[
               Padding(
                 padding: EdgeInsets.only(bottom: isLast ? 20 : 0),
@@ -2434,9 +2337,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                 ? null
                                 : () {
                                     _confirmRemoval(
-                                      title: context.l10n.deleteWorkExperienceTitle,
-                                      message:
-                                          context.l10n.deleteWorkExperienceMessage,
+                                      title: context
+                                          .l10n
+                                          .deleteWorkExperienceTitle,
+                                      message: context
+                                          .l10n
+                                          .deleteWorkExperienceMessage,
                                       onConfirm: () =>
                                           viewModel.removeWorkExperience(index),
                                     );
@@ -2535,10 +2441,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               ),
             ];
             if (!isLast) {
-              final dividerColor = Theme.of(context)
-                  .colorScheme
-                  .outlineVariant
-                  .withValues(alpha: 0.28);
+              final dividerColor = Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.28);
               experienceWidgets.addAll([
                 const SizedBox(height: 24),
                 Padding(
@@ -2632,6 +2537,22 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
           ),
       ];
     }
+    if (item.usesItemEntries) {
+      final count = item.entries.isEmpty ? 1 : item.entries.length;
+      return [
+        for (var i = 0; i < count; i++) ...[
+          _focusNodeForExtendedKeyboardField(
+            'custom-entry-name-$customIndex-$i',
+          ),
+          _focusNodeForExtendedKeyboardField(
+            'custom-entry-company-$customIndex-$i',
+          ),
+          _focusNodeForExtendedKeyboardField(
+            'custom-entry-summary-$customIndex-$i',
+          ),
+        ],
+      ];
+    }
     if (item.layoutMode == CustomSectionLayoutMode.summary) {
       return [
         _focusNodeForExtendedKeyboardField(
@@ -2698,8 +2619,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               viewModel.resume.education.length > 1) ...[
             _HintBanner(
               title: context.l10n.resumeOrder,
-              body:
-                  context.l10n.resumeOrderBody,
+              body: context.l10n.resumeOrderBody,
               compact: true,
               onDismiss: _onDismissResumeOrderNudge,
             ),
@@ -2763,9 +2683,12 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                                 ? null
                                 : () {
                                     _confirmRemoval(
-                                      title: context.l10n.deleteEducationEntryTitle,
-                                      message:
-                                          context.l10n.deleteEducationEntryMessage,
+                                      title: context
+                                          .l10n
+                                          .deleteEducationEntryTitle,
+                                      message: context
+                                          .l10n
+                                          .deleteEducationEntryMessage,
                                       onConfirm: () =>
                                           viewModel.removeEducation(index),
                                     );
@@ -2840,10 +2763,8 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                             index,
                             // Folded into the description, so the legacy score
                             // must not render a second time.
-                            (current) => current.copyWith(
-                              description: value,
-                              score: '',
-                            ),
+                            (current) =>
+                                current.copyWith(description: value, score: ''),
                           ),
                         ),
                       ],
@@ -2853,10 +2774,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               ),
             ];
             if (!isLast) {
-              final dividerColor = Theme.of(context)
-                  .colorScheme
-                  .outlineVariant
-                  .withValues(alpha: 0.28);
+              final dividerColor = Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.28);
               educationWidgets.addAll([
                 const SizedBox(height: 24),
                 Padding(
@@ -2895,10 +2815,17 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
   }
 
   Widget _buildSkillsStep(ResumeEditorViewModel viewModel) {
-    final useSubheadings = viewModel.resume.useSkillSubheadings;
-    final chipLabelStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
-      fontWeight: FontWeight.w400,
-    );
+    if (viewModel.resume.useSkillSubheadings) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        context.read<ResumeEditorViewModel>().setUseSkillSubheadings(false);
+      });
+    }
+    final chipLabelStyle = Theme.of(
+      context,
+    ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w400);
 
     return _StepSurface(
       title: '',
@@ -2919,365 +2846,97 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          RadioGroup<bool>(
-            groupValue: useSubheadings,
-            onChanged: (bool? value) {
-              if (value == null || viewModel.isBusy) {
-                return;
-              }
-              viewModel.setUseSkillSubheadings(value);
-              _refreshEditorUi();
-            },
-            child: Row(
-              children: [
-                Expanded(
-                  child: _SkillsModeRadioOption(
-                    value: false,
-                    label: context.l10n.simpleList,
-                    enabled: !viewModel.isBusy,
-                  ),
-                ),
-                Expanded(
-                  child: _SkillsModeRadioOption(
-                    value: true,
-                    label: context.l10n.categorised,
-                    enabled: !viewModel.isBusy,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (!useSubheadings) ...[
-            Builder(
-              builder: (context) {
-                final inset = MediaQuery.viewInsetsOf(context).bottom;
-                final skillSuggestions = skillSuggestionsForQuery(
-                  _skillController.text,
-                  excludeLowercase: viewModel.resume.skills
-                      .map((s) => s.toLowerCase())
-                      .toSet(),
-                ).toList();
-                final theme = Theme.of(context);
-                return KeyedSubtree(
-                  key: _skillInputKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: _skillController,
-                        focusNode: _skillFocusNode,
-                        textCapitalization: TextCapitalization.words,
-                        textInputAction: TextInputAction.done,
-                        onChanged: (_) {
-                          _refreshEditorUi();
-                          if (_skillFocusNode.hasFocus) {
-                            final fieldContext = _skillInputKey.currentContext;
-                            if (fieldContext != null) {
-                              _scheduleEnsureVisible(
-                                fieldContext,
-                                extraVisibleHeight: _skillSuggestionMaxHeight,
-                                alignNearTop: true,
-                              );
-                            }
-                          }
-                        },
-                        onSubmitted: (_) => _addSkillFromInput(),
-                        scrollPadding: EdgeInsets.only(
-                          left: 20,
-                          top: 20,
-                          right: 20,
-                          bottom: inset + _skillSuggestionMaxHeight + 48,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: context.l10n.addASkill,
-                          helperText: context.l10n.addSkillHelper,
-                          helperStyle: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                fontSize: 11,
-                                height: 1.35,
-                              ),
-                          suffixIcon: IconButton(
-                            onPressed: _addSkillFromInput,
-                            icon: const Icon(Icons.add_rounded),
-                          ),
-                        ),
-                      ),
-                      if (_skillFocusNode.hasFocus &&
-                          skillSuggestions.isNotEmpty)
-                        _buildSkillSuggestionPanel(
-                          theme: theme,
-                          suggestions: skillSuggestions,
-                          onSelect: (option) {
-                            final added = viewModel.addSkill(option);
-                            if (added) {
-                              _skillController.clear();
-                              _refreshEditorUi();
-                            } else {
-                              _showDuplicateSkillMessage();
-                            }
-                          },
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 18),
-            if (viewModel.resume.skills.isNotEmpty)
-              Column(
-                children: viewModel.resume.skills.map((skill) {
-                  return _SkillEfficiencyRow(
-                    skill: skill,
-                    proficiency: viewModel.resume.proficiencyForSkill(skill),
-                    nameStyle: chipLabelStyle,
-                    enabled: !viewModel.isBusy,
-                    onProficiencyChanged: (value) =>
-                        viewModel.setSkillProficiency(skill, value),
-                    onDeleted: () => viewModel.removeSkill(skill),
-                  );
-                }).toList(),
-              ),
-          ] else ...[
-            const SizedBox(height: 8),
-            ...viewModel.resume.skillGroups.asMap().entries.map((entry) {
-              final index = entry.key;
-              final group = entry.value;
-              final groupController = _groupSkillController(index);
-              final groupFocus = _groupSkillFocusNode(index);
-              final groupInputKey = _groupSkillInputKey(index);
+          Builder(
+            builder: (context) {
               final inset = MediaQuery.viewInsetsOf(context).bottom;
-              final groupSuggestions = skillSuggestionsForQuery(
-                groupController.text,
-                excludeLowercase: {
-                  ...viewModel.resume.skills.map((s) => s.toLowerCase()),
-                  ...group.skills.map((s) => s.toLowerCase()),
-                },
+              final skillSuggestions = skillSuggestionsForQuery(
+                _skillController.text,
+                excludeLowercase: viewModel.resume.skills
+                    .map((s) => s.toLowerCase())
+                    .toSet(),
               ).toList();
               final theme = Theme.of(context);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 16, 8, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: _SyncTextField(
-                                key: Key('skill-group-heading-$index'),
-                                label: context.l10n.category,
-                                value: group.heading,
-                                hintText:
-                                    context.l10n.categoryHint,
-                                textCapitalization:
-                                    TextCapitalization.words,
-                                onChanged: (value) => viewModel
-                                    .updateSkillGroupHeading(index, value),
-                              ),
+              return KeyedSubtree(
+                key: _skillInputKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _skillController,
+                      focusNode: _skillFocusNode,
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.done,
+                      onChanged: (_) {
+                        _refreshEditorUi();
+                        if (_skillFocusNode.hasFocus) {
+                          final fieldContext = _skillInputKey.currentContext;
+                          if (fieldContext != null) {
+                            _scheduleEnsureVisible(
+                              fieldContext,
+                              extraVisibleHeight: _skillSuggestionMaxHeight,
+                              alignNearTop: true,
+                            );
+                          }
+                        }
+                      },
+                      onSubmitted: (_) => _addSkillFromInput(),
+                      scrollPadding: EdgeInsets.only(
+                        left: 20,
+                        top: 20,
+                        right: 20,
+                        bottom: inset + _skillSuggestionMaxHeight + 48,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: context.l10n.addASkill,
+                        helperText: context.l10n.addSkillHelper,
+                        helperStyle: Theme.of(context).textTheme.labelSmall
+                            ?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                              height: 1.35,
                             ),
-                            if (viewModel.resume.skillGroups.length > 1) ...[
-                              IconButton(
-                                tooltip: context.l10n.moveCategoryUp,
-                                style: IconButton.styleFrom(
-                                  padding: const EdgeInsetsDirectional.only(
-                                    start: 4,
-                                    end: 0,
-                                  ),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                onPressed: viewModel.isBusy || index == 0
-                                    ? null
-                                    : () => _moveSkillGroup(
-                                          index: index,
-                                          moveUp: true,
-                                        ),
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_up_rounded,
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: context.l10n.moveCategoryDown,
-                                style: IconButton.styleFrom(
-                                  padding: const EdgeInsetsDirectional.only(
-                                    start: 0,
-                                    end: 2,
-                                  ),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                onPressed:
-                                    viewModel.isBusy ||
-                                        index ==
-                                            viewModel
-                                                    .resume
-                                                    .skillGroups
-                                                    .length -
-                                                1
-                                    ? null
-                                    : () => _moveSkillGroup(
-                                          index: index,
-                                          moveUp: false,
-                                        ),
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                ),
-                              ),
-                            ],
-                            IconButton(
-                              tooltip: context.l10n.removeCategory,
-                              style: IconButton.styleFrom(
-                                padding: const EdgeInsetsDirectional.only(
-                                  start: 6,
-                                  end: 2,
-                                ),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: viewModel.isBusy
-                                  ? null
-                                  : () {
-                                      _confirmRemoval(
-                                        title: context.l10n.deleteCategoryTitle,
-                                        message:
-                                            context.l10n.deleteCategoryMessage,
-                                        onConfirm: () {
-                                          viewModel.removeSkillGroup(index);
-                                          _reindexGroupSkillControllersAfterRemove(
-                                            index,
-                                          );
-                                          _refreshEditorUi();
-                                        },
-                                      );
-                                    },
-                              icon: const ImageIcon(
-                                AssetImage('assets/fonts/delete.png'),
-                              ),
-                            ),
-                          ],
+                        suffixIcon: IconButton(
+                          onPressed: _addSkillFromInput,
+                          icon: const Icon(Icons.add_rounded),
                         ),
-                        const SizedBox(height: 8),
-                        KeyedSubtree(
-                          key: groupInputKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextField(
-                                controller: groupController,
-                                focusNode: groupFocus,
-                                textCapitalization: TextCapitalization.words,
-                                textInputAction: TextInputAction.done,
-                                onChanged: (_) {
-                                  _refreshEditorUi();
-                                  if (groupFocus.hasFocus) {
-                                    final fieldContext =
-                                        groupInputKey.currentContext;
-                                    if (fieldContext != null) {
-                                      _scheduleEnsureVisible(
-                                        fieldContext,
-                                        extraVisibleHeight:
-                                            _skillSuggestionMaxHeight,
-                                        alignNearTop: true,
-                                      );
-                                    }
-                                  }
-                                },
-                                onSubmitted: (_) =>
-                                    _addSkillToGroupFromInput(index),
-                                scrollPadding: EdgeInsets.only(
-                                  left: 20,
-                                  top: 20,
-                                  right: 20,
-                                  bottom:
-                                      inset + _skillSuggestionMaxHeight + 48,
-                                ),
-                                decoration: InputDecoration(
-                                  labelText: context.l10n.addASkill,
-                                  isDense: true,
-                                  suffixIcon: IconButton(
-                                    onPressed: () =>
-                                        _addSkillToGroupFromInput(index),
-                                    icon: const Icon(Icons.add_rounded),
-                                  ),
-                                ),
-                              ),
-                              if (groupFocus.hasFocus &&
-                                  groupSuggestions.isNotEmpty)
-                                _buildSkillSuggestionPanel(
-                                  theme: theme,
-                                  suggestions: groupSuggestions,
-                                  onSelect: (option) {
-                                    final added = viewModel.addSkillToGroup(
-                                      index,
-                                      option,
-                                    );
-                                    if (added) {
-                                      groupController.clear();
-                                      _refreshEditorUi();
-                                    } else {
-                                      _showDuplicateSkillMessage();
-                                    }
-                                  },
-                                ),
-                            ],
-                          ),
-                        ),
-                        if (group.skills.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Column(
-                            children: group.skills.map((skill) {
-                              return _SkillEfficiencyRow(
-                                skill: skill,
-                                proficiency: viewModel.resume
-                                    .proficiencyForSkill(skill),
-                                nameStyle: chipLabelStyle,
-                                enabled: !viewModel.isBusy,
-                                onProficiencyChanged: (value) => viewModel
-                                    .setSkillProficiency(skill, value),
-                                onDeleted: () => viewModel
-                                    .removeSkillFromGroup(index, skill),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ],
+                      ),
                     ),
-                  ),
+                    if (_skillFocusNode.hasFocus && skillSuggestions.isNotEmpty)
+                      _buildSkillSuggestionPanel(
+                        theme: theme,
+                        suggestions: skillSuggestions,
+                        onSelect: (option) {
+                          final added = viewModel.addSkill(option);
+                          if (added) {
+                            _skillController.clear();
+                            _refreshEditorUi();
+                          } else {
+                            _showDuplicateSkillMessage();
+                          }
+                        },
+                      ),
+                  ],
                 ),
               );
-            }),
-            FilledButton.tonalIcon(
-              onPressed: viewModel.isBusy
-                  ? null
-                  : () {
-                      viewModel.addSkillGroup();
-                      _refreshEditorUi();
-                    },
-              style: _mediumTonalButtonStyle(context),
-              icon: const Icon(Icons.add_rounded),
-              label: Text(context.l10n.addCategory),
+            },
+          ),
+          const SizedBox(height: 18),
+          if (viewModel.resume.skills.isNotEmpty)
+            Column(
+              children: viewModel.resume.skills.map((skill) {
+                return _SkillEfficiencyRow(
+                  skill: skill,
+                  proficiency: viewModel.resume.proficiencyForSkill(skill),
+                  nameStyle: chipLabelStyle,
+                  enabled: !viewModel.isBusy,
+                  onProficiencyChanged: (value) =>
+                      viewModel.setSkillProficiency(skill, value),
+                  onDeleted: () => viewModel.removeSkill(skill),
+                );
+              }).toList(),
             ),
-          ],
         ],
       ),
     );
@@ -3307,8 +2966,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             shrinkWrap: true,
             padding: EdgeInsets.zero,
             itemCount: suggestions.length,
-            separatorBuilder: (_, _) =>
-                Divider(height: 1, color: dividerColor),
+            separatorBuilder: (_, _) => Divider(height: 1, color: dividerColor),
             itemBuilder: (context, index) {
               final option = suggestions[index];
               return InkWell(
@@ -3334,8 +2992,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
-
-
   Widget _buildProjectsStep(ResumeEditorViewModel viewModel) {
     return _StepSurface(
       title: '',
@@ -3353,8 +3009,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               viewModel.resume.projects.length > 1) ...[
             _HintBanner(
               title: context.l10n.resumeOrder,
-              body:
-                  context.l10n.resumeOrderBody,
+              body: context.l10n.resumeOrderBody,
               compact: true,
               onDismiss: _onDismissResumeOrderNudge,
             ),
@@ -3483,10 +3138,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               ),
             ];
             if (!isLast) {
-              final dividerColor = Theme.of(context)
-                  .colorScheme
-                  .outlineVariant
-                  .withValues(alpha: 0.28);
+              final dividerColor = Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.28);
               projectWidgets.addAll([
                 const SizedBox(height: 24),
                 Padding(
@@ -3536,181 +3190,345 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       child: item.layoutMode == CustomSectionLayoutMode.projects
           ? _buildCustomSectionProjectsEditor(viewModel, index, item)
           : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 12),
-          _buildCustomSectionTitleField(viewModel, index, item),
-          RadioGroup<CustomSectionLayoutMode>(
-            groupValue: item.layoutMode,
-            onChanged: (CustomSectionLayoutMode? value) {
-              if (value == null || viewModel.isBusy) {
-                return;
-              }
-              viewModel.updateCustomSection(index, (c) {
-                if (value == CustomSectionLayoutMode.bullets &&
-                    c.bullets.isEmpty) {
-                  return c.copyWith(layoutMode: value, bullets: ['']);
-                }
-                return c.copyWith(layoutMode: value);
-              });
-            },
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: RadioListTile<CustomSectionLayoutMode>(
-                    value: CustomSectionLayoutMode.summary,
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                    visualDensity: VisualDensity.compact,
-                    horizontalTitleGap: 4,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    title: Text(
-                      context.l10n.summary,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w400,
+                const SizedBox(height: 12),
+                _buildCustomSectionTitleField(viewModel, index, item),
+                const SizedBox(height: 16),
+                if (item.usesItemEntries)
+                  _buildCustomSectionItemsEditor(viewModel, index, item)
+                else ...[
+                  if (item.showEntryDetails) ...[
+                    _ResponsiveFieldGroup(
+                      children: [
+                        _SyncTextField(
+                          key: Key('custom-section-subtitle-$index'),
+                          label: context.l10n.customSectionSubtitleLabel,
+                          hintText: context.l10n.customSectionSubtitleHint,
+                          value: item.subtitle,
+                          textCapitalization: TextCapitalization.sentences,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'custom-section-subtitle-$index',
+                          ),
+                          onChanged: (value) => viewModel.updateCustomSection(
+                            index,
+                            (current) => current.copyWith(subtitle: value),
+                          ),
+                        ),
+                        _PickerField(
+                          key: Key('custom-section-start-date-$index'),
+                          label: context.l10n.startYear,
+                          value: item.startDate,
+                          hintText: context.l10n.selectYear,
+                          onTap: () => _pickCustomSectionDate(
+                            index: index,
+                            isEndDate: false,
+                            currentValue: item.startDate,
+                          ),
+                        ),
+                        _PickerField(
+                          key: Key('custom-section-end-date-$index'),
+                          label: context.l10n.endYear,
+                          value: item.endDate,
+                          hintText: context.l10n.selectYear,
+                          onTap: () => _pickCustomSectionDate(
+                            index: index,
+                            isEndDate: true,
+                            currentValue: item.endDate,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (item.layoutMode == CustomSectionLayoutMode.summary)
+                    _ResponsiveFieldGroup(
+                      children: [
+                        _SyncTextField(
+                          key: Key('custom-section-content-$index'),
+                          label: context.l10n.summary,
+                          value: item.content,
+                          textCapitalization: TextCapitalization.sentences,
+                          hintText: context.l10n.customSectionSummaryHint,
+                          minLines: 5,
+                          maxLines: null,
+                          fullWidth: true,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'custom-section-content-$index',
+                          ),
+                          onChanged: (value) => viewModel.updateCustomSection(
+                            index,
+                            (current) => current.copyWith(content: value),
+                          ),
+                        ),
+                      ],
+                    )
+                  else ...[
+                    ...item.bullets.asMap().entries.map((entry) {
+                      final bi = entry.key;
+                      final text = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _BulletField(
+                          fieldKey: Key('custom-section-bullet-$index-$bi'),
+                          label: context.l10n.bulletNumber(bi + 1),
+                          value: text,
+                          hintText: context.l10n.enterBulletPoint,
+                          deleteEnabled: !viewModel.isBusy,
+                          focusNode: _focusNodeForExtendedKeyboardField(
+                            'custom-section-bullet-$index-$bi',
+                          ),
+                          onChanged: (value) =>
+                              viewModel.updateCustomSection(index, (c) {
+                                final next = List<String>.from(c.bullets);
+                                if (bi < next.length) {
+                                  next[bi] = value;
+                                }
+                                return c.copyWith(bullets: next);
+                              }),
+                          onDelete: () {
+                            viewModel.updateCustomSection(index, (c) {
+                              final next = List<String>.from(c.bullets)
+                                ..removeAt(bi);
+                              return c.copyWith(bullets: next);
+                            });
+                          },
+                        ),
+                      );
+                    }),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: _buildAddBulletPointButton(
+                        onPressed: viewModel.isBusy
+                            ? null
+                            : () {
+                                viewModel.updateCustomSection(
+                                  index,
+                                  (c) =>
+                                      c.copyWith(bullets: [...c.bullets, '']),
+                                );
+                              },
                       ),
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: RadioListTile<CustomSectionLayoutMode>(
-                    value: CustomSectionLayoutMode.bullets,
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                    visualDensity: VisualDensity.compact,
-                    horizontalTitleGap: 4,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    title: Text(
-                      context.l10n.bulletPoints,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w400,
+                  ],
+                ],
+              ],
+            ),
+    );
+  }
+
+  Widget _buildCustomSectionItemsEditor(
+    ResumeEditorViewModel viewModel,
+    int sectionIndex,
+    CustomSectionItem item,
+  ) {
+    final entries = item.entries.isEmpty
+        ? const [CustomSectionEntry.empty()]
+        : item.entries;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...entries.asMap().entries.expand((entry) {
+          final entryIndex = entry.key;
+          final row = entry.value;
+          final isLast = entryIndex == entries.length - 1;
+          final rowWidgets = <Widget>[
+            Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 20 : 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.itemNumber(entryIndex + 1),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _resumeOrderLabel(entryIndex),
+                              style: _resumeOrderHintStyle(context),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      if (entries.length > 1) ...[
+                        IconButton.filledTonal(
+                          tooltip: context.l10n.moveUp,
+                          onPressed: entryIndex == 0
+                              ? null
+                              : () => _moveCustomSectionEntry(
+                                  sectionIndex: sectionIndex,
+                                  entryIndex: entryIndex,
+                                  moveUp: true,
+                                ),
+                          icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                        ),
+                        IconButton.filledTonal(
+                          tooltip: context.l10n.moveDown,
+                          onPressed: entryIndex == entries.length - 1
+                              ? null
+                              : () => _moveCustomSectionEntry(
+                                  sectionIndex: sectionIndex,
+                                  entryIndex: entryIndex,
+                                  moveUp: false,
+                                ),
+                          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                        ),
+                        IconButton(
+                          tooltip: context.l10n.deleteEntry,
+                          onPressed: viewModel.isBusy
+                              ? null
+                              : () {
+                                  _confirmRemoval(
+                                    title: context.l10n.deleteEntryTitle,
+                                    message: context.l10n.deleteEntryMessage,
+                                    onConfirm: () =>
+                                        viewModel.removeCustomSectionEntry(
+                                          sectionIndex,
+                                          entryIndex,
+                                        ),
+                                  );
+                                },
+                          icon: const ImageIcon(
+                            AssetImage('assets/fonts/delete.png'),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
+                  const SizedBox(height: 28),
+                  _ResponsiveFieldGroup(
+                    children: [
+                      _SyncTextField(
+                        key: Key('custom-entry-name-$sectionIndex-$entryIndex'),
+                        label: context.l10n.entryName,
+                        value: row.name,
+                        textCapitalization: TextCapitalization.sentences,
+                        focusNode: _focusNodeForExtendedKeyboardField(
+                          'custom-entry-name-$sectionIndex-$entryIndex',
+                        ),
+                        onChanged: (value) =>
+                            viewModel.updateCustomSectionEntry(
+                              sectionIndex,
+                              entryIndex,
+                              (current) => current.copyWith(name: value),
+                            ),
+                      ),
+                      _SyncTextField(
+                        key: Key(
+                          'custom-entry-company-$sectionIndex-$entryIndex',
+                        ),
+                        label: context.l10n.company,
+                        value: row.company,
+                        textCapitalization: TextCapitalization.sentences,
+                        focusNode: _focusNodeForExtendedKeyboardField(
+                          'custom-entry-company-$sectionIndex-$entryIndex',
+                        ),
+                        onChanged: (value) =>
+                            viewModel.updateCustomSectionEntry(
+                              sectionIndex,
+                              entryIndex,
+                              (current) => current.copyWith(company: value),
+                            ),
+                      ),
+                      _PickerField(
+                        key: Key(
+                          'custom-entry-start-$sectionIndex-$entryIndex',
+                        ),
+                        label: context.l10n.startDate,
+                        value: row.startDate,
+                        hintText: context.l10n.monthYearHint,
+                        onTap: () => _pickCustomEntryDate(
+                          sectionIndex: sectionIndex,
+                          entryIndex: entryIndex,
+                          isEndDate: false,
+                          currentValue: row.startDate,
+                        ),
+                      ),
+                      _PickerField(
+                        key: Key('custom-entry-end-$sectionIndex-$entryIndex'),
+                        label: context.l10n.endDate,
+                        value: row.endDate,
+                        hintText: context.l10n.monthYearHint,
+                        onTap: () => _pickCustomEntryDate(
+                          sectionIndex: sectionIndex,
+                          entryIndex: entryIndex,
+                          isEndDate: true,
+                          currentValue: row.endDate,
+                        ),
+                      ),
+                      _SyncTextField(
+                        key: Key(
+                          'custom-entry-summary-$sectionIndex-$entryIndex',
+                        ),
+                        label: context.l10n.summary,
+                        value: row.summary,
+                        textCapitalization: TextCapitalization.sentences,
+                        hintText: context.l10n.customSectionSummaryHint,
+                        minLines: 5,
+                        maxLines: null,
+                        fullWidth: true,
+                        focusNode: _focusNodeForExtendedKeyboardField(
+                          'custom-entry-summary-$sectionIndex-$entryIndex',
+                        ),
+                        onChanged: (value) =>
+                            viewModel.updateCustomSectionEntry(
+                              sectionIndex,
+                              entryIndex,
+                              (current) => current.copyWith(summary: value),
+                            ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ];
+          if (!isLast) {
+            final dividerColor = Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.28);
+            rowWidgets.addAll([
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: _entryDividerHorizontalPadding,
                 ),
-              ],
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 1,
+                  child: ColoredBox(color: dividerColor),
+                ),
+              ),
+              const SizedBox(height: 18),
+            ]);
+          }
+          return rowWidgets;
+        }),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.icon(
+            onPressed: viewModel.isBusy
+                ? null
+                : () => viewModel.addCustomSectionEntry(sectionIndex),
+            icon: const Icon(Icons.add_rounded),
+            label: Text(
+              context.l10n.addSectionEntry(
+                item.title.trim().isEmpty
+                    ? context.l10n.sectionTitleLabel
+                    : item.title.trim(),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          // Optional entry details, so dated things like a certificate or a
-          // stint of volunteering read like an entry rather than loose text.
-          _ResponsiveFieldGroup(
-            children: [
-              _SyncTextField(
-                key: Key('custom-section-subtitle-$index'),
-                label: context.l10n.customSectionSubtitleLabel,
-                hintText: context.l10n.customSectionSubtitleHint,
-                value: item.subtitle,
-                textCapitalization: TextCapitalization.sentences,
-                focusNode: _focusNodeForExtendedKeyboardField(
-                  'custom-section-subtitle-$index',
-                ),
-                onChanged: (value) => viewModel.updateCustomSection(
-                  index,
-                  (current) => current.copyWith(subtitle: value),
-                ),
-              ),
-              _PickerField(
-                key: Key('custom-section-start-date-$index'),
-                label: context.l10n.startYear,
-                value: item.startDate,
-                hintText: context.l10n.selectYear,
-                onTap: () => _pickCustomSectionDate(
-                  index: index,
-                  isEndDate: false,
-                  currentValue: item.startDate,
-                ),
-              ),
-              _PickerField(
-                key: Key('custom-section-end-date-$index'),
-                label: context.l10n.endYear,
-                value: item.endDate,
-                hintText: context.l10n.selectYear,
-                onTap: () => _pickCustomSectionDate(
-                  index: index,
-                  isEndDate: true,
-                  currentValue: item.endDate,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (item.layoutMode == CustomSectionLayoutMode.summary)
-            _ResponsiveFieldGroup(
-              children: [
-                _SyncTextField(
-                  key: Key('custom-section-content-$index'),
-                  label: context.l10n.summary,
-                  value: item.content,
-                  textCapitalization: TextCapitalization.sentences,
-                  hintText:
-                      context.l10n.customSectionSummaryHint,
-                  minLines: 5,
-                  maxLines: null,
-                  fullWidth: true,
-                  focusNode: _focusNodeForExtendedKeyboardField(
-                    'custom-section-content-$index',
-                  ),
-                  onChanged: (value) => viewModel.updateCustomSection(
-                    index,
-                    (current) => current.copyWith(content: value),
-                  ),
-                ),
-              ],
-            )
-          else ...[
-            ...item.bullets.asMap().entries.map((entry) {
-              final bi = entry.key;
-              final text = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _BulletField(
-                  fieldKey: Key('custom-section-bullet-$index-$bi'),
-                  label: context.l10n.bulletNumber(bi + 1),
-                  value: text,
-                  hintText: context.l10n.enterBulletPoint,
-                  deleteEnabled: !viewModel.isBusy,
-                  focusNode: _focusNodeForExtendedKeyboardField(
-                    'custom-section-bullet-$index-$bi',
-                  ),
-                  onChanged: (value) =>
-                      viewModel.updateCustomSection(index, (c) {
-                        final next = List<String>.from(c.bullets);
-                        if (bi < next.length) {
-                          next[bi] = value;
-                        }
-                        return c.copyWith(bullets: next);
-                      }),
-                  onDelete: () {
-                    viewModel.updateCustomSection(index, (c) {
-                      final next = List<String>.from(c.bullets)..removeAt(bi);
-                      return c.copyWith(bullets: next);
-                    });
-                  },
-                ),
-              );
-            }),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: _buildAddBulletPointButton(
-                onPressed: viewModel.isBusy
-                    ? null
-                    : () {
-                        viewModel.updateCustomSection(
-                          index,
-                          (c) => c.copyWith(bullets: [...c.bullets, '']),
-                        );
-                      },
-              ),
-            ),
-          ],
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -3726,8 +3544,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         if (!_resumeOrderNudgeDismissed && item.projectEntries.length > 1) ...[
           _HintBanner(
             title: context.l10n.resumeOrder,
-            body:
-                context.l10n.resumeOrderBody,
+            body: context.l10n.resumeOrderBody,
             compact: true,
             onDismiss: _onDismissResumeOrderNudge,
           ),
@@ -3769,9 +3586,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           onPressed: index == 0
                               ? null
                               : () => viewModel.moveCustomSectionProjectUp(
-                                    sectionIndex,
-                                    index,
-                                  ),
+                                  sectionIndex,
+                                  index,
+                                ),
                           icon: const Icon(Icons.keyboard_arrow_up_rounded),
                         ),
                         IconButton.filledTonal(
@@ -3779,9 +3596,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                           onPressed: index == item.projectEntries.length - 1
                               ? null
                               : () => viewModel.moveCustomSectionProjectDown(
-                                    sectionIndex,
-                                    index,
-                                  ),
+                                  sectionIndex,
+                                  index,
+                                ),
                           icon: const Icon(Icons.keyboard_arrow_down_rounded),
                         ),
                         IconButton(
@@ -3791,10 +3608,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                               : () {
                                   _confirmRemoval(
                                     title: context.l10n.deleteEntryTitle,
-                                    message:
-                                        context.l10n.deleteEntryMessage,
-                                    onConfirm: () => viewModel
-                                        .removeCustomSectionProject(
+                                    message: context.l10n.deleteEntryMessage,
+                                    onConfirm: () =>
+                                        viewModel.removeCustomSectionProject(
                                           sectionIndex,
                                           index,
                                         ),
@@ -3861,8 +3677,7 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                         onDelete: () {
                           _confirmRemoval(
                             title: context.l10n.removeBulletTitle,
-                            message:
-                                context.l10n.removeBulletFromEntry,
+                            message: context.l10n.removeBulletFromEntry,
                             onConfirm: () {
                               viewModel.updateCustomSectionProject(
                                 sectionIndex,
@@ -3905,10 +3720,9 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
             ),
           ];
           if (!isLast) {
-            final dividerColor = Theme.of(context)
-                .colorScheme
-                .outlineVariant
-                .withValues(alpha: 0.28);
+            final dividerColor = Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.28);
             projectWidgets.addAll([
               const SizedBox(height: 24),
               Padding(
@@ -3971,10 +3785,10 @@ class _ResumeSectionEditorScreen extends StatefulWidget {
 
   final int step;
   final String Function(BuildContext context, ResumeEditorViewModel viewModel)
-      titleFor;
+  titleFor;
   final ValueNotifier<int> chrome;
   final Widget Function(BuildContext context, ResumeEditorViewModel viewModel)
-      buildContent;
+  buildContent;
   final bool Function() showPersonalKeyboardBar;
   final bool Function() showProjectKeyboardBar;
   final bool Function() showCustomKeyboardBar;
@@ -3983,7 +3797,7 @@ class _ResumeSectionEditorScreen extends StatefulWidget {
   final VoidCallback onFocusPrevious;
   final VoidCallback onFocusNext;
   final Widget? Function(BuildContext context, ResumeEditorViewModel viewModel)?
-      titleLeadingBuilder;
+  titleLeadingBuilder;
 
   @override
   State<_ResumeSectionEditorScreen> createState() =>
@@ -4036,16 +3850,19 @@ class _ResumeSectionEditorScreenState extends State<_ResumeSectionEditorScreen>
             final showEducationHide =
                 keyboardInset > 0 && widget.showEducationKeyboardHideButton();
             final showNavBar = showPersonalBar || showProjectBar;
-            final showHideButton = showNavBar ||
+            final showHideButton =
+                showNavBar ||
                 showCustomBar ||
                 showWorkHide ||
                 showEducationHide;
-            final isIosPersonal = Theme.of(context).platform ==
-                    TargetPlatform.iOS &&
+            final isIosPersonal =
+                Theme.of(context).platform == TargetPlatform.iOS &&
                 widget.step == 0;
             final keyboardToolbarPadding = isIosPersonal ? 72.0 : 0.0;
-            final leading =
-                widget.titleLeadingBuilder?.call(context, viewModel);
+            final leading = widget.titleLeadingBuilder?.call(
+              context,
+              viewModel,
+            );
             final bottomSafe = MediaQuery.paddingOf(context).bottom;
 
             return Scaffold(
@@ -4188,7 +4005,6 @@ class _BuilderSectionTile extends StatelessWidget {
     required this.isEditing,
     required this.onTap,
     this.included,
-    this.onToggleVisibility,
     this.onDelete,
   });
 
@@ -4200,7 +4016,6 @@ class _BuilderSectionTile extends StatelessWidget {
   final bool isEditing;
   final VoidCallback? onTap;
   final bool? included;
-  final VoidCallback? onToggleVisibility;
   final VoidCallback? onDelete;
 
   @override
@@ -4220,73 +4035,60 @@ class _BuilderSectionTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-            key: Key('builder-section-$reorderIndex'),
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(14),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-              child: Row(
-                children: [
-                  if (canReorder)
-                    ReorderableDragStartListener(
-                      index: reorderIndex,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 2),
-                        child: Icon(
-                          Icons.drag_indicator_rounded,
-                          size: 20,
-                          color: scheme.onSurfaceVariant,
+              key: Key('builder-section-$reorderIndex'),
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                child: Row(
+                  children: [
+                    if (canReorder)
+                      ReorderableDragStartListener(
+                        index: reorderIndex,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 2),
+                          child: Icon(
+                            Icons.drag_indicator_rounded,
+                            size: 20,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    Icon(
+                      filled
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      size: 18,
+                      color: filled ? scheme.primary : scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ),
-                  Icon(
-                    filled
-                        ? Icons.check_circle_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    size: 18,
-                    color: filled ? scheme.primary : scheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w400),
-                    ),
-                  ),
-                  if (isEditing && onDelete != null)
-                    IconButton(
-                      key: Key('builder-section-delete-$reorderIndex'),
-                      tooltip: context.l10n.removeSection,
-                      onPressed: onDelete,
-                      visualDensity: VisualDensity.compact,
-                      icon: const ImageIcon(
-                        AssetImage('assets/fonts/delete.png'),
+                    if (isEditing && onDelete != null)
+                      IconButton(
+                        key: Key('builder-section-delete-$reorderIndex'),
+                        tooltip: context.l10n.removeSection,
+                        onPressed: onDelete,
+                        visualDensity: VisualDensity.compact,
+                        icon: const ImageIcon(
+                          AssetImage('assets/fonts/delete.png'),
+                        ),
+                      )
+                    else if (!isEditing)
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: scheme.onSurfaceVariant,
                       ),
-                    )
-                  else if (isEditing && onToggleVisibility != null)
-                    IconButton(
-                      key: Key('builder-section-hide-$reorderIndex'),
-                      tooltip: included == true
-                          ? context.l10n.hideFromResume
-                          : context.l10n.showOnResume,
-                      onPressed: onToggleVisibility,
-                      visualDensity: VisualDensity.compact,
-                      icon: Icon(
-                        included == true
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                    )
-                  else if (!isEditing)
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
           ),
         ),
       ),
@@ -4399,22 +4201,14 @@ class _SkillEfficiencyRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final level = ResumeData.efficiencyLevelForProficiency(proficiency);
-    final inputPadding =
-        Theme.of(context).inputDecorationTheme.contentPadding;
-    final leftPadding = inputPadding is EdgeInsets
-        ? inputPadding.left
-        : 16.0;
+    final inputPadding = Theme.of(context).inputDecorationTheme.contentPadding;
+    final leftPadding = inputPadding is EdgeInsets ? inputPadding.left : 16.0;
     return Padding(
       padding: EdgeInsets.fromLTRB(leftPadding, 2, 0, 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Text(
-              skill,
-              style: nameStyle,
-            ),
-          ),
+          Expanded(child: Text(skill, style: nameStyle)),
           const SizedBox(width: 8),
           for (var i = 1; i <= 5; i++)
             _SkillEfficiencyDot(
@@ -4505,9 +4299,9 @@ class _StepSurface extends StatelessWidget {
             if (titleTrailing == null)
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               )
             else
               IntrinsicHeight(
@@ -4749,60 +4543,6 @@ class _ThinCalendarIcon extends StatelessWidget {
   }
 }
 
-/// Larger radio + label for Skills layout mode (Simple list / Categorised).
-class _SkillsModeRadioOption extends StatelessWidget {
-  const _SkillsModeRadioOption({
-    required this.value,
-    required this.label,
-    required this.enabled,
-  });
-
-  final bool value;
-  final String label;
-  final bool enabled;
-
-  static const double _radioScale = 1.45;
-
-  @override
-  Widget build(BuildContext context) {
-    final labelStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
-      fontWeight: FontWeight.w500,
-      fontSize: (Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16) + 1,
-    );
-
-    return InkWell(
-      onTap: enabled
-          ? () => RadioGroup.maybeOf<bool>(context)?.onChanged(value)
-          : null,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Transform.scale(
-              scale: _radioScale,
-              child: Radio<bool>(
-                value: value,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: labelStyle,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ThinCalendarIconPainter extends CustomPainter {
   const _ThinCalendarIconPainter({
     required this.color,
@@ -4868,6 +4608,7 @@ class _BulletField extends StatelessWidget {
 
   static const double _deleteButtonSize = 28;
   static const double _deleteButtonHalf = _deleteButtonSize / 2;
+
   /// Outlined field border top sits below the widget top (floating label gap).
   static const double _deleteButtonBorderInset = 4;
 
@@ -4920,11 +4661,7 @@ class _BulletField extends StatelessWidget {
                     child: SizedBox(
                       width: _deleteButtonSize,
                       height: _deleteButtonSize,
-                      child: Icon(
-                        Icons.close,
-                        size: 16,
-                        color: Colors.white,
-                      ),
+                      child: Icon(Icons.close, size: 16, color: Colors.white),
                     ),
                   ),
                 ),
@@ -5696,7 +5433,10 @@ class _LivePreviewPanel extends StatelessWidget {
                   child: Text(context.l10n.shareResume),
                 ),
                 const SizedBox(height: 10),
-                OutlinedButton(onPressed: onPrint, child: Text(context.l10n.print)),
+                OutlinedButton(
+                  onPressed: onPrint,
+                  child: Text(context.l10n.print),
+                ),
               ],
             ),
           ),

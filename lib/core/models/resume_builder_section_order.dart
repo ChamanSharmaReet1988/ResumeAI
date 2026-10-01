@@ -9,12 +9,26 @@ abstract final class ResumeBuilderSectionIds {
   static const skills = 'skills';
   static const projects = 'projects';
 
-  static const bodyDefaults = <String>[
+  static const bodyDefaults = <String>[work, education, skills, projects];
+
+  /// Built-in sections a brand-new resume starts with. Projects is left out.
+  /// Objective and References are added as normal custom sections around Work.
+  static const newResumeDefaults = <String>[work, education, skills];
+
+  /// Section list for a brand-new resume: Objective, Work Experience,
+  /// References, Education, Skills.
+  static List<String> get starterSectionOrder => <String>[
+    custom(0),
     work,
+    custom(1),
     education,
     skills,
-    projects,
   ];
+
+  /// Built-in sections that stay out of the list once a resume has stored
+  /// an order without them. Personal Information is not in this list; the
+  /// user can remove any other section and it stays removed.
+  static const optionalSections = <String>{work, education, skills, projects};
 
   static String custom(int index) => 'custom:$index';
 
@@ -49,9 +63,7 @@ abstract final class ResumeBuilderSectionIds {
         return l10n.sectionProjects;
       default:
         final index = customIndex(id);
-        if (index == null ||
-            index < 0 ||
-            index >= customSections.length) {
+        if (index == null || index < 0 || index >= customSections.length) {
           return l10n.category;
         }
         final title = customSections[index].title.trim();
@@ -90,7 +102,14 @@ List<String> normalizeBuilderSectionOrder(
     }
   }
 
+  // A missing order (very old saves) gets every section. A saved order is
+  // kept as stored, including when the user has removed a section.
+  final hasStoredOrder = stored != null;
   for (final id in ResumeBuilderSectionIds.bodyDefaults) {
+    if (hasStoredOrder &&
+        ResumeBuilderSectionIds.optionalSections.contains(id)) {
+      continue;
+    }
     if (bodySeen.add(id)) {
       result.add(id);
     }
@@ -99,6 +118,30 @@ List<String> normalizeBuilderSectionOrder(
     result.add(ResumeBuilderSectionIds.custom(nextCustom++));
   }
   return result;
+}
+
+/// Puts Projects into [order] when this resume already has that section.
+///
+/// A brand-new resume stores an order without Projects. An older resume that
+/// lists it, or that already has project entries, keeps the section in its
+/// usual place (after Skills, before any custom sections).
+List<String> orderWithExistingProjectsSection(
+  List<String> order, {
+  required bool keepProjects,
+}) {
+  if (!keepProjects || order.contains(ResumeBuilderSectionIds.projects)) {
+    return order;
+  }
+  final updated = [...order];
+  final skillsIndex = updated.indexOf(ResumeBuilderSectionIds.skills);
+  if (skillsIndex >= 0) {
+    updated.insert(skillsIndex + 1, ResumeBuilderSectionIds.projects);
+    return updated;
+  }
+  final customIndex = updated.indexWhere(ResumeBuilderSectionIds.isCustom);
+  final index = customIndex >= 0 ? customIndex : updated.length;
+  updated.insert(index, ResumeBuilderSectionIds.projects);
+  return updated;
 }
 
 /// After a drag reorder, remap `custom:N` tokens to a dense sequence and
@@ -124,13 +167,15 @@ canonicalizeBuilderSectionOrder(
       }
       continue;
     }
-    if (ResumeBuilderSectionIds.bodyDefaults.contains(id) &&
-        bodySeen.add(id)) {
+    if (ResumeBuilderSectionIds.bodyDefaults.contains(id) && bodySeen.add(id)) {
       result.add(id);
     }
   }
 
   for (final id in ResumeBuilderSectionIds.bodyDefaults) {
+    if (ResumeBuilderSectionIds.optionalSections.contains(id)) {
+      continue;
+    }
     if (bodySeen.add(id)) {
       result.add(id);
     }

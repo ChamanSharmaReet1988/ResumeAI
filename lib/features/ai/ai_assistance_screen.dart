@@ -276,7 +276,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     final library = context.read<ResumeLibraryViewModel>();
     final messenger = ScaffoldMessenger.of(context);
     final failedMessage = context.l10n.uploadResumeFailed;
-    final draft = library.newDraft();
+    final draft = library.newDraft(l10n: context.l10n);
 
     try {
       final importedFile = await importService.pickResumeFile();

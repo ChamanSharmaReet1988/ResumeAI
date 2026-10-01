@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:resume_app/core/corporate_resume_style.dart';
+import 'package:resume_app/core/models/resume_builder_section_order.dart';
 import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sfpdf;
@@ -1122,5 +1123,65 @@ void main() {
     expect(pageTwoText, isNot(contains('LANGUAGES')));
     expect(pageTwoText, isNot(contains('ABOUT ME')));
   });
-}
+  group('projects section default', () {
+    test('a new resume starts without the projects section', () {
+      final resume = ResumeData.empty(template: ResumeTemplate.corporate);
+      expect(resume.includeProjectsInResume, isFalse);
+    });
 
+    test('a saved resume keeps what it stored', () {
+      // Older saves have no key at all: they were created when Projects was
+      // on, so they must stay on.
+      final legacy = ResumeData.fromJson(
+        ResumeData.empty(template: ResumeTemplate.corporate).toJson()
+          ..remove('includeProjectsInResume'),
+      );
+      expect(legacy.includeProjectsInResume, isTrue);
+
+      final shown = ResumeData.fromJson(
+        ResumeData.empty(template: ResumeTemplate.corporate)
+            .copyWith(includeProjectsInResume: true)
+            .toJson(),
+      );
+      expect(shown.includeProjectsInResume, isTrue);
+
+      final hidden = ResumeData.fromJson(
+        ResumeData.empty(template: ResumeTemplate.corporate).toJson(),
+      );
+      expect(hidden.includeProjectsInResume, isFalse);
+    });
+
+    test('hidden projects stay off the exported resume until switched on', () async {
+      // A template whose text extracts cleanly; the check is about the section,
+      // not the layout.
+      final base = ResumeData.empty(template: ResumeTemplate.atsStructured).copyWith(
+        fullName: 'Priya Raman',
+        jobTitle: 'Marketing Manager',
+        email: 'priya@email.com',
+        projects: const [
+          ProjectItem(title: 'Resume Platform Alpha', bullets: ['Shipped it.']),
+        ],
+      );
+      Future<String> textOf(ResumeData resume) async {
+        final bytes = await ResumePdfService().buildPdf(resume);
+        final doc = sfpdf.PdfDocument(inputBytes: bytes);
+        final text = sfpdf.PdfTextExtractor(doc)
+            .extractText()
+            .replaceAll(RegExp(r'\s+'), ' ');
+        doc.dispose();
+        return text;
+      }
+
+      expect(await textOf(base), isNot(contains('Resume Platform Alpha')));
+      expect(
+        await textOf(
+          base.copyWith(
+            includeProjectsInResume: true,
+            builderSectionOrder: ResumeBuilderSectionIds.bodyDefaults,
+          ),
+        ),
+        contains('Resume Platform Alpha'),
+      );
+    });
+  });
+}

@@ -1210,6 +1210,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sectionProjects => 'Proyectos';
 
   @override
+  String get sectionObjective => 'Objetivo';
+
+  @override
+  String get sectionReferences => 'Referencias';
+
+  @override
   String get personalInformationTitle => 'Información personal';
 
   @override
@@ -1291,14 +1297,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sectionTypeNormal => 'Normal';
 
   @override
-  String get sectionTypeNormalSubtitle => 'Resumen o viñetas';
+  String get sectionTypeNormalSubtitle => 'Una descripción breve';
 
   @override
   String get sectionTypeAdvance => 'Avanzado';
 
   @override
   String get sectionTypeAdvanceSubtitle =>
-      'Entradas estilo proyecto con título y viñetas';
+      'Organización, fechas y una descripción';
 
   @override
   String get removeSectionTitle => '¿Eliminar sección?';
@@ -1638,7 +1644,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Lo que construiste y su impacto: una línea para cada uno.';
 
   @override
-  String get customSectionSubtitleLabel => 'Organización (opcional)';
+  String get customSectionSubtitleLabel => 'Organización';
 
   @override
   String get customSectionSubtitleHint => 'Emisor, empleador u organizador';
@@ -1663,6 +1669,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String entryNumber(int number) {
     return 'Entrada $number';
   }
+
+  @override
+  String itemNumber(int number) {
+    return 'Elemento $number';
+  }
+
+  @override
+  String get entryName => 'Nombre';
 
   @override
   String get moveEntryUp => 'Subir entrada';

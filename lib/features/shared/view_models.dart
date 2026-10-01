@@ -62,7 +62,7 @@ class ResumeLibraryViewModel extends ChangeNotifier {
   bool _isLoading = false;
   List<ResumeData> _resumes = const [];
   String? _selectedResumeId;
-  ResumeTemplate _defaultTemplate = ResumeTemplate.corporate;
+  ResumeTemplate _defaultTemplate = ResumeTemplate.atsLatexClassic;
 
   bool get isLoading => _isLoading;
   List<ResumeData> get resumes => _resumes;
@@ -85,7 +85,6 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     _resumes = await repository.loadResumes();
     if (_resumes.isNotEmpty) {
       _selectedResumeId ??= _resumes.first.id;
-      _defaultTemplate = _resumes.first.template.userFacingTemplate;
     }
     _isLoading = false;
     notifyListeners();
@@ -150,8 +149,12 @@ class ResumeLibraryViewModel extends ChangeNotifier {
     return renamed;
   }
 
-  ResumeData newDraft() =>
-      ResumeData.empty(template: _defaultTemplate).copyWith(
+  ResumeData newDraft({AppLocalizations? l10n}) =>
+      ResumeData.empty(
+        template: _defaultTemplate,
+        objectiveTitle: l10n?.sectionObjective ?? 'Objective',
+        referencesTitle: l10n?.sectionReferences ?? 'References',
+      ).copyWith(
         corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
           _defaultTemplate,
         ),
@@ -547,6 +550,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
   void addCustomSectionWithTitle(
     String title, {
     CustomSectionLayoutMode layoutMode = CustomSectionLayoutMode.summary,
+    bool showEntryDetails = false,
   }) {
     final trimmed = title.trim();
     final section = layoutMode == CustomSectionLayoutMode.projects
@@ -556,21 +560,101 @@ class ResumeEditorViewModel extends ChangeNotifier {
             layoutMode: layoutMode,
             projectEntries: const [ProjectItem.empty()],
           )
-        : CustomSectionItem(title: trimmed, content: '');
-    updateResume(
-      (resume) {
-        final order = normalizeBuilderSectionOrder(
-          resume.builderSectionOrder,
-          resume.customSections.length,
-        )..add(
-            ResumeBuilderSectionIds.custom(resume.customSections.length),
+        : CustomSectionItem(
+            title: trimmed,
+            content: '',
+            layoutMode: layoutMode,
+            showEntryDetails: showEntryDetails,
+            entries: showEntryDetails
+                ? const [CustomSectionEntry.empty()]
+                : const [],
           );
-        return resume.copyWith(
-          customSections: [...resume.customSections, section],
-          builderSectionOrder: order,
-        );
-      },
+    updateResume((resume) {
+      final order = normalizeBuilderSectionOrder(
+        resume.builderSectionOrder,
+        resume.customSections.length,
+      )..add(ResumeBuilderSectionIds.custom(resume.customSections.length));
+      return resume.copyWith(
+        customSections: [...resume.customSections, section],
+        builderSectionOrder: order,
+      );
+    });
+  }
+
+  void updateCustomSectionEntry(
+    int sectionIndex,
+    int entryIndex,
+    CustomSectionEntry Function(CustomSectionEntry current) update,
+  ) {
+    updateCustomSection(sectionIndex, (section) {
+      final items = section.entries.isEmpty
+          ? <CustomSectionEntry>[const CustomSectionEntry.empty()]
+          : [...section.entries];
+      if (entryIndex < 0 || entryIndex >= items.length) {
+        return section;
+      }
+      items[entryIndex] = update(items[entryIndex]);
+      return section.copyWith(
+        entries: items,
+        content: customSectionEntriesPlainText(items),
+        subtitle: '',
+        startDate: '',
+        endDate: '',
+      );
+    });
+  }
+
+  void addCustomSectionEntry(int sectionIndex) {
+    updateCustomSection(
+      sectionIndex,
+      (section) => section.copyWith(
+        entries: [...section.entries, const CustomSectionEntry.empty()],
+      ),
     );
+  }
+
+  void removeCustomSectionEntry(int sectionIndex, int entryIndex) {
+    updateCustomSection(sectionIndex, (section) {
+      final items = [...section.entries]..removeAt(entryIndex);
+      final next = items.isEmpty ? const [CustomSectionEntry.empty()] : items;
+      return section.copyWith(
+        entries: next,
+        content: customSectionEntriesPlainText(next),
+      );
+    });
+  }
+
+  void moveCustomSectionEntryUp(int sectionIndex, int entryIndex) {
+    if (entryIndex <= 0) {
+      return;
+    }
+    updateCustomSection(sectionIndex, (section) {
+      final items = [...section.entries];
+      if (entryIndex >= items.length) {
+        return section;
+      }
+      final item = items.removeAt(entryIndex);
+      items.insert(entryIndex - 1, item);
+      return section.copyWith(
+        entries: items,
+        content: customSectionEntriesPlainText(items),
+      );
+    });
+  }
+
+  void moveCustomSectionEntryDown(int sectionIndex, int entryIndex) {
+    updateCustomSection(sectionIndex, (section) {
+      final items = [...section.entries];
+      if (entryIndex < 0 || entryIndex >= items.length - 1) {
+        return section;
+      }
+      final item = items.removeAt(entryIndex);
+      items.insert(entryIndex + 1, item);
+      return section.copyWith(
+        entries: items,
+        content: customSectionEntriesPlainText(items),
+      );
+    });
   }
 
   void updateCustomSectionProject(
@@ -601,9 +685,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
     updateCustomSection(sectionIndex, (section) {
       final items = [...section.projectEntries]..removeAt(projectIndex);
       return section.copyWith(
-        projectEntries: items.isEmpty
-            ? const [ProjectItem.empty()]
-            : items,
+        projectEntries: items.isEmpty ? const [ProjectItem.empty()] : items,
       );
     });
   }
@@ -666,6 +748,35 @@ class ResumeEditorViewModel extends ChangeNotifier {
       (resume) => resume.copyWith(
         customSections: items,
         builderSectionOrder: normalizeBuilderSectionOrder(newOrder, newCount),
+      ),
+    );
+  }
+
+  /// Removes a built-in section from the list. Personal Information cannot
+  /// be removed. The section stays off the resume after save and reload.
+  void removeBodySection(String sectionId) {
+    if (!ResumeBuilderSectionIds.optionalSections.contains(sectionId)) {
+      return;
+    }
+    final order = [
+      for (final id in orderedSectionIds)
+        if (id != sectionId) id,
+    ];
+    updateResume(
+      (resume) => resume.copyWith(
+        builderSectionOrder: order,
+        includeWorkInResume: sectionId == ResumeBuilderSectionIds.work
+            ? false
+            : resume.includeWorkInResume,
+        includeEducationInResume: sectionId == ResumeBuilderSectionIds.education
+            ? false
+            : resume.includeEducationInResume,
+        includeSkillsInResume: sectionId == ResumeBuilderSectionIds.skills
+            ? false
+            : resume.includeSkillsInResume,
+        includeProjectsInResume: sectionId == ResumeBuilderSectionIds.projects
+            ? false
+            : resume.includeProjectsInResume,
       ),
     );
   }
@@ -888,9 +999,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
     }
     final groups = [..._resume.skillGroups];
     final current = groups[index];
-    groups[index] = current.copyWith(
-      skills: [...current.skills, value],
-    );
+    groups[index] = current.copyWith(skills: [...current.skills, value]);
     updateResume(
       (resume) => resume.copyWith(
         skillGroups: groups,
@@ -931,9 +1040,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
         }
       }
     }
-    items.sort(
-      (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
-    );
+    items.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return items;
   }
 
@@ -999,9 +1106,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
     if (_resume.useSkillSubheadings) {
       final groups = _resume.skillGroups
           .map(
-            (group) => group.copyWith(
-              skills: [...group.skills]..remove(skill),
-            ),
+            (group) => group.copyWith(skills: [...group.skills]..remove(skill)),
           )
           .toList();
       updateResume(
@@ -1027,10 +1132,7 @@ class ResumeEditorViewModel extends ChangeNotifier {
     }
     updateResume(
       (resume) => resume.copyWith(
-        skillProficiency: {
-          ...resume.skillProficiency,
-          key: clamped,
-        },
+        skillProficiency: {...resume.skillProficiency, key: clamped},
       ),
     );
   }

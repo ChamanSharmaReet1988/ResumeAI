@@ -602,6 +602,8 @@
   "sectionEducation": "Pendidikan",
   "sectionSkills": "Keterampilan",
   "sectionProjects": "Proyek",
+  "sectionObjective": "Tujuan",
+  "sectionReferences": "Referensi",
   "personalInformationTitle": "Informasi pribadi",
   "workExperienceTitle": "Pengalaman kerja",
   "categoryNumber": "Kategori {number}",
@@ -626,9 +628,9 @@
   "newSection": "Bagian baru",
   "newSectionTitleHint": "mis. Sertifikat, Referensi, Penghargaan",
   "sectionTypeNormal": "Normal",
-  "sectionTypeNormalSubtitle": "Ringkasan atau poin",
+  "sectionTypeNormalSubtitle": "Deskripsi singkat",
   "sectionTypeAdvance": "Lanjutan",
-  "sectionTypeAdvanceSubtitle": "Entri gaya proyek dengan judul dan poin",
+  "sectionTypeAdvanceSubtitle": "Organisasi, tanggal, dan deskripsi",
   "removeSectionTitle": "Hapus bagian?",
   "removeSectionMessage": "Bagian ini akan dihapus dari resume Anda. Anda dapat menambahkan bagian khusus baru dengan Tambah bagian kapan saja.",
   "unableToPickImage": "Tidak dapat memilih gambar saat ini.",
@@ -730,13 +732,22 @@
   "educationDescriptionHint": "Mata kuliah, pencapaian, atau nilai — satu per baris.",
   "projectDescriptionLabel": "Deskripsi",
   "projectDescriptionHint": "Apa yang Anda bangun dan dampaknya — satu baris masing-masing.",
-  "customSectionSubtitleLabel": "Organisasi (opsional)",
+  "customSectionSubtitleLabel": "Organisasi",
   "customSectionSubtitleHint": "Penerbit, pemberi kerja, atau penyelenggara",
   "sectionTitleLabel": "Judul bagian",
   "sectionTitleHint": "Ubah nama bagian ini di resume Anda",
   "addSectionEntry": "Tambah {name}",
   "customSectionSummaryHint": "Tulis bagian ini sebagai paragraf singkat untuk resume Anda.",
   "entryNumber": "Entri {number}",
+  "itemNumber": "Item {number}",
+  "@itemNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "entryName": "Nama",
   "moveEntryUp": "Pindahkan entri ke atas",
   "moveEntryDown": "Pindahkan entri ke bawah",
   "deleteEntry": "Hapus entri",

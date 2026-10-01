@@ -1207,6 +1207,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get sectionProjects => 'Proyek';
 
   @override
+  String get sectionObjective => 'Tujuan';
+
+  @override
+  String get sectionReferences => 'Referensi';
+
+  @override
   String get personalInformationTitle => 'Informasi pribadi';
 
   @override
@@ -1288,14 +1294,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get sectionTypeNormal => 'Normal';
 
   @override
-  String get sectionTypeNormalSubtitle => 'Ringkasan atau poin';
+  String get sectionTypeNormalSubtitle => 'Deskripsi singkat';
 
   @override
   String get sectionTypeAdvance => 'Lanjutan';
 
   @override
-  String get sectionTypeAdvanceSubtitle =>
-      'Entri gaya proyek dengan judul dan poin';
+  String get sectionTypeAdvanceSubtitle => 'Organisasi, tanggal, dan deskripsi';
 
   @override
   String get removeSectionTitle => 'Hapus bagian?';
@@ -1634,7 +1639,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Apa yang Anda bangun dan dampaknya — satu baris masing-masing.';
 
   @override
-  String get customSectionSubtitleLabel => 'Organisasi (opsional)';
+  String get customSectionSubtitleLabel => 'Organisasi';
 
   @override
   String get customSectionSubtitleHint =>
@@ -1659,6 +1664,14 @@ class AppLocalizationsId extends AppLocalizations {
   String entryNumber(int number) {
     return 'Entri $number';
   }
+
+  @override
+  String itemNumber(int number) {
+    return 'Item $number';
+  }
+
+  @override
+  String get entryName => 'Nama';
 
   @override
   String get moveEntryUp => 'Pindahkan entri ke atas';

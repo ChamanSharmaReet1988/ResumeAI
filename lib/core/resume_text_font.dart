@@ -5,7 +5,7 @@ import 'package:flutter/painting.dart' show FontStyle, TextStyle;
 import 'resume_font_weight.dart';
 
 /// Default type scale for resume content (preview + PDF). Font family defaults to
-/// [ResumeTextFont.inter] on [ResumeData.resumeTextFont].
+/// [ResumeTextFont.garamond] on [ResumeData.resumeTextFont].
 abstract final class ResumeTypography {
   static const double bodyPt = 12;
   static const double headingPt = 14;
@@ -409,7 +409,7 @@ ResumeTextFont coverLetterTextFontFromStorage(String? raw) =>
 
 ResumeTextFont resumeTextFontFromStorage(String? raw) {
   if (raw == null || raw.isEmpty) {
-    return ResumeTextFont.inter;
+    return ResumeTextFont.garamond;
   }
   if (raw == 'helvetica') {
     return ResumeTextFont.inter;
@@ -419,5 +419,5 @@ ResumeTextFont resumeTextFontFromStorage(String? raw) {
       return value;
     }
   }
-  return ResumeTextFont.inter;
+  return ResumeTextFont.garamond;
 }
