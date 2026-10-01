@@ -157,6 +157,50 @@ class CoverLetterEditorScreen extends StatelessWidget {
 
   final bool backPopsToHome;
 
+  /// Deletes the letter and leaves the editor. The list no longer offers a
+  /// delete action, so this is the only way to remove one.
+  Future<void> _confirmDelete(
+    BuildContext context,
+    CoverLetterEditorViewModel viewModel,
+  ) async {
+    final navigator = Navigator.of(context);
+    final library = context.read<CoverLetterLibraryViewModel>();
+    final coverLetter = viewModel.coverLetter;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final dialogL10n = dialogContext.l10n;
+        return AlertDialog(
+          backgroundColor: Theme.of(dialogContext).cardColor,
+          title: Text(dialogL10n.deleteCoverLetterTitle),
+          content: Text(
+            dialogL10n.deleteCoverLetterMessage(coverLetter.displayTitle),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(dialogL10n.actionDelete),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await library.deleteCoverLetter(coverLetter.id);
+    if (navigator.mounted) {
+      navigator.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<CoverLetterEditorViewModel>(
@@ -176,6 +220,21 @@ class CoverLetterEditorScreen extends StatelessWidget {
             leadingWidth: 56,
             titleSpacing: 2,
             title: Text(viewModel.coverLetter.displayTitle, style: titleStyle),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: IconButton(
+                  key: const Key('cover-letter-delete-button'),
+                  tooltip: context.l10n.actionDelete,
+                  onPressed: viewModel.isBusy
+                      ? null
+                      : () => _confirmDelete(context, viewModel),
+                  icon: const ImageIcon(
+                    AssetImage('assets/fonts/delete.png'),
+                  ),
+                ),
+              ),
+            ],
           ),
           body: SafeArea(
             child: SingleChildScrollView(
@@ -219,16 +278,20 @@ class CoverLetterEditorScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 16),
                           _SyncTextField(
+                            key: const Key('cover-letter-sender-email'),
                             label: context.l10n.email,
                             value: viewModel.coverLetter.senderEmail,
+                            keyboardType: TextInputType.emailAddress,
                             onChanged: (value) => viewModel.updateCoverLetter(
                               (current) => current.copyWith(senderEmail: value),
                             ),
                           ),
                           const SizedBox(height: 16),
                           _SyncTextField(
+                            key: const Key('cover-letter-sender-phone'),
                             label: context.l10n.phoneNumber,
                             value: viewModel.coverLetter.senderPhone,
+                            keyboardType: TextInputType.phone,
                             onChanged: (value) => viewModel.updateCoverLetter(
                               (current) => current.copyWith(senderPhone: value),
                             ),
@@ -377,16 +440,19 @@ class CoverLetterEditorScreen extends StatelessWidget {
 
 class _SyncTextField extends StatefulWidget {
   const _SyncTextField({
+    super.key,
     required this.label,
     required this.value,
     required this.onChanged,
     this.textCapitalization = TextCapitalization.none,
+    this.keyboardType,
   });
 
   final String label;
   final String value;
   final ValueChanged<String> onChanged;
   final TextCapitalization textCapitalization;
+  final TextInputType? keyboardType;
 
   @override
   State<_SyncTextField> createState() => _SyncTextFieldState();
@@ -432,6 +498,7 @@ class _SyncTextFieldState extends State<_SyncTextField> {
       controller: _controller,
       focusNode: _focusNode,
       textCapitalization: widget.textCapitalization,
+      keyboardType: widget.keyboardType,
       onChanged: widget.onChanged,
       decoration: InputDecoration(labelText: widget.label),
     );

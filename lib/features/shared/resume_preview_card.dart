@@ -949,7 +949,40 @@ class _CorporateProjectBlock extends StatelessWidget {
   }
 }
 
+/// The organisation/date line a custom section carries, drawn above its body.
+Widget? _customSectionMetaPreview(CustomSectionItem item, TextStyle bodyStyle) {
+  final meta = customSectionMetaLine(item);
+  if (meta.isEmpty) {
+    return null;
+  }
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 3),
+    child: Text(
+      meta,
+      style: bodyStyle.copyWith(fontWeight: FontWeight.w600),
+    ),
+  );
+}
+
 Widget _corporateCustomSectionBody(
+  CustomSectionItem item,
+  TextStyle bodyStyle, {
+  TextStyle? titleStyle,
+}) {
+  final meta = _customSectionMetaPreview(item, bodyStyle);
+  if (meta != null) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        meta,
+        _corporateCustomSectionBodyInner(item, bodyStyle, titleStyle: titleStyle),
+      ],
+    );
+  }
+  return _corporateCustomSectionBodyInner(item, bodyStyle, titleStyle: titleStyle);
+}
+
+Widget _corporateCustomSectionBodyInner(
   CustomSectionItem item,
   TextStyle bodyStyle, {
   TextStyle? titleStyle,
@@ -1015,6 +1048,32 @@ Widget _corporateCustomSectionBody(
 }
 
 List<Widget> _customSectionFlowPreviewWidgets(
+  CustomSectionItem section,
+  TextStyle bodyStyle, {
+  bool showAllContent = false,
+  TextStyle? titleStyle,
+}) {
+  final meta = _customSectionMetaPreview(section, bodyStyle);
+  if (meta != null) {
+    return [
+      meta,
+      ..._customSectionFlowPreviewBody(
+        section,
+        bodyStyle,
+        showAllContent: showAllContent,
+        titleStyle: titleStyle,
+      ),
+    ];
+  }
+  return _customSectionFlowPreviewBody(
+    section,
+    bodyStyle,
+    showAllContent: showAllContent,
+    titleStyle: titleStyle,
+  );
+}
+
+List<Widget> _customSectionFlowPreviewBody(
   CustomSectionItem section,
   TextStyle bodyStyle, {
   bool showAllContent = false,

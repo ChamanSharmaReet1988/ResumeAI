@@ -1637,6 +1637,49 @@ ResumeTypography.darkHeaderSubtitleWeight,
     required double bodyPt,
     GaramondPdfFonts? garamond,
   }) {
+    final meta = customSectionMetaLine(item);
+    if (meta.isNotEmpty) {
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 3),
+            child: pw.Text(
+              meta,
+              style: _classicSidebarPdfTextStyle(
+                garamond,
+                ResumeTypography.classicSidebarSubtitleWeight,
+                bodyPt,
+                color: mutedColor,
+              ),
+            ),
+          ),
+          _buildClassicSidebarCustomSectionBody(
+            item,
+            mutedColor: mutedColor,
+            accentColor: accentColor,
+            bodyPt: bodyPt,
+            garamond: garamond,
+          ),
+        ],
+      );
+    }
+    return _buildClassicSidebarCustomSectionBody(
+      item,
+      mutedColor: mutedColor,
+      accentColor: accentColor,
+      bodyPt: bodyPt,
+      garamond: garamond,
+    );
+  }
+
+  pw.Widget _buildClassicSidebarCustomSectionBody(
+    CustomSectionItem item, {
+    required PdfColor mutedColor,
+    required PdfColor accentColor,
+    required double bodyPt,
+    GaramondPdfFonts? garamond,
+  }) {
     if (item.layoutMode == CustomSectionLayoutMode.projects) {
       final entries = item.visibleProjectEntries;
       if (entries.isEmpty) {
@@ -2028,6 +2071,45 @@ ResumeTypography.darkHeaderSubtitleWeight,
   }
 
   pw.Widget _buildDetailsSidebarCustomSection(
+    CustomSectionItem item, {
+    required PdfColor mutedColor,
+    required PdfColor accentColor,
+    required double bodyPt,
+  }) {
+    final meta = customSectionMetaLine(item);
+    if (meta.isNotEmpty) {
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 3),
+            child: pw.Text(
+              meta,
+              style: pw.TextStyle(
+                fontSize: bodyPt,
+                fontWeight: pw.FontWeight.bold,
+                color: mutedColor,
+              ),
+            ),
+          ),
+          _buildDetailsSidebarCustomSectionBody(
+            item,
+            mutedColor: mutedColor,
+            accentColor: accentColor,
+            bodyPt: bodyPt,
+          ),
+        ],
+      );
+    }
+    return _buildDetailsSidebarCustomSectionBody(
+      item,
+      mutedColor: mutedColor,
+      accentColor: accentColor,
+      bodyPt: bodyPt,
+    );
+  }
+
+  pw.Widget _buildDetailsSidebarCustomSectionBody(
     CustomSectionItem item, {
     required PdfColor mutedColor,
     required PdfColor accentColor,

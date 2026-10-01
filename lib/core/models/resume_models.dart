@@ -1374,6 +1374,16 @@ String educationDetailLine(EducationItem item) {
   return educationScoreDisplayLabel(item);
 }
 
+/// `Issuer · 2021 - 2023` for a custom section, from whichever parts are set.
+/// Empty when the section has neither an organisation nor dates.
+String customSectionMetaLine(CustomSectionItem item) {
+  final dates = educationDateRangeLabel(item.startDate, item.endDate);
+  final issuer = item.subtitle.trim();
+  if (issuer.isEmpty) return dates;
+  if (dates.isEmpty) return issuer;
+  return '$issuer \u00B7 $dates';
+}
+
 /// `2014 - 2018`, or a single year if only one side is set (matches template card).
 String educationDateRangeLabel(String startDate, String endDate) {
   final a = startDate.trim();
@@ -1476,6 +1486,9 @@ class CustomSectionItem {
   const CustomSectionItem({
     required this.title,
     required this.content,
+    this.subtitle = '',
+    this.startDate = '',
+    this.endDate = '',
     this.layoutMode = CustomSectionLayoutMode.summary,
     this.bullets = const [],
     this.projectEntries = const [],
@@ -1484,6 +1497,9 @@ class CustomSectionItem {
   const CustomSectionItem.empty()
     : title = '',
       content = '',
+      subtitle = '',
+      startDate = '',
+      endDate = '',
       layoutMode = CustomSectionLayoutMode.summary,
       bullets = const [],
       projectEntries = const [];
@@ -1515,6 +1531,9 @@ class CustomSectionItem {
     return CustomSectionItem(
       title: json['title'] as String? ?? '',
       content: json['content'] as String? ?? '',
+      subtitle: json['subtitle'] as String? ?? '',
+      startDate: json['startDate'] as String? ?? '',
+      endDate: json['endDate'] as String? ?? '',
       layoutMode: layoutMode,
       bullets: parsedBullets,
       projectEntries: parsedProjects,
@@ -1523,6 +1542,11 @@ class CustomSectionItem {
 
   final String title;
   final String content;
+
+  /// Who issued or ran it — the certifying body, employer or organiser.
+  final String subtitle;
+  final String startDate;
+  final String endDate;
   final CustomSectionLayoutMode layoutMode;
   final List<String> bullets;
   final List<ProjectItem> projectEntries;
@@ -1531,7 +1555,10 @@ class CustomSectionItem {
       projectEntries.where((item) => !item.isBlank).toList();
 
   bool get isBlank {
-    if (title.trim().isNotEmpty) {
+    if (title.trim().isNotEmpty ||
+        subtitle.trim().isNotEmpty ||
+        startDate.trim().isNotEmpty ||
+        endDate.trim().isNotEmpty) {
       return false;
     }
     return switch (layoutMode) {
@@ -1583,6 +1610,9 @@ class CustomSectionItem {
   CustomSectionItem copyWith({
     String? title,
     String? content,
+    String? subtitle,
+    String? startDate,
+    String? endDate,
     CustomSectionLayoutMode? layoutMode,
     List<String>? bullets,
     List<ProjectItem>? projectEntries,
@@ -1590,6 +1620,9 @@ class CustomSectionItem {
     return CustomSectionItem(
       title: title ?? this.title,
       content: content ?? this.content,
+      subtitle: subtitle ?? this.subtitle,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
       layoutMode: layoutMode ?? this.layoutMode,
       bullets: bullets ?? this.bullets,
       projectEntries: projectEntries ?? this.projectEntries,
@@ -1600,6 +1633,9 @@ class CustomSectionItem {
     return {
       'title': title,
       'content': content,
+      'subtitle': subtitle,
+      'startDate': startDate,
+      'endDate': endDate,
       'layoutMode': layoutMode.name,
       'bullets': bullets,
       'projectEntries': projectEntries.map((item) => item.toJson()).toList(),

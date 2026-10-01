@@ -304,8 +304,14 @@ extension _ResumePdfMinimalProfilePage on ResumePdfService {
       final lines = section.layoutMode == CustomSectionLayoutMode.bullets
           ? section.bullets
           : section.content.split('\n');
+      final meta = customSectionMetaLine(section);
       return [
         sectionHeading(title),
+        if (meta.isNotEmpty)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 3),
+            child: pw.Text(meta, style: entryTitleStyle),
+          ),
         for (final line in lines.map((item) => item.trim()).where((item) => item.isNotEmpty))
           pw.Padding(
             padding: const pw.EdgeInsets.only(bottom: 3),

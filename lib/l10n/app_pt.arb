@@ -725,6 +725,8 @@
   "educationDescriptionHint": "Disciplinas, conquistas ou notas — uma por linha.",
   "projectDescriptionLabel": "Descrição",
   "projectDescriptionHint": "O que você construiu e o impacto — uma linha para cada.",
+  "customSectionSubtitleLabel": "Organização (opcional)",
+  "customSectionSubtitleHint": "Emissor, empregador ou organizador",
   "customSectionSummaryHint": "Escreva a seção como um parágrafo curto para o seu currículo.",
   "entryNumber": "Entrada {number}",
   "moveEntryUp": "Mover entrada para cima",

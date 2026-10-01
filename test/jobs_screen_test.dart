@@ -20,6 +20,7 @@ class _FakeJobsRepository implements ResumeRepository {
   void configureGoogleDriveAutoSync({
     required AppPreferences appPreferences,
     required GoogleDriveResumeService service,
+    bool Function()? hasPremium,
   }) {}
 
   @override

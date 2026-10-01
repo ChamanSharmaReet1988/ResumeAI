@@ -1618,6 +1618,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Apa yang Anda bangun dan dampaknya — satu baris masing-masing.';
 
   @override
+  String get customSectionSubtitleLabel => 'Organisasi (opsional)';
+
+  @override
+  String get customSectionSubtitleHint =>
+      'Penerbit, pemberi kerja, atau penyelenggara';
+
+  @override
   String get customSectionSummaryHint =>
       'Tulis bagian ini sebagai paragraf singkat untuk resume Anda.';
 

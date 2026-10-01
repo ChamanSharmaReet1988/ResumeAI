@@ -805,6 +805,8 @@
   "educationDescriptionHint": "Coursework, achievements or grades — one per line.",
   "projectDescriptionLabel": "Description",
   "projectDescriptionHint": "What you built and the impact — one line each.",
+  "customSectionSubtitleLabel": "Organisation (optional)",
+  "customSectionSubtitleHint": "Issuer, employer or organiser",
   "customSectionSummaryHint": "Write the section as a short paragraph for your resume.",
   "entryNumber": "Entry {number}",
   "@entryNumber": {

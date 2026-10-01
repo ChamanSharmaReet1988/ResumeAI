@@ -853,6 +853,32 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
     );
   }
 
+  Future<void> _pickCustomSectionDate({
+    required int index,
+    required bool isEndDate,
+    required String currentValue,
+  }) async {
+    _unfocusActiveField();
+    final selectedYear = await _showYearPickerDialog(
+      title: isEndDate
+          ? context.l10n.selectEndYear
+          : context.l10n.selectStartYear,
+      initialValue: currentValue,
+    );
+
+    if (!mounted || selectedYear == null) {
+      return;
+    }
+
+    context.read<ResumeEditorViewModel>().updateCustomSection(
+      index,
+      (current) => current.copyWith(
+        startDate: isEndDate ? current.startDate : selectedYear,
+        endDate: isEndDate ? selectedYear : current.endDate,
+      ),
+    );
+  }
+
   DateTime _initialWorkPickerDate(String currentValue) {
     final trimmed = currentValue.trim();
     if (trimmed.isNotEmpty && trimmed.toLowerCase() != 'present') {
@@ -3289,6 +3315,49 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+          // Optional entry details, so dated things like a certificate or a
+          // stint of volunteering read like an entry rather than loose text.
+          _ResponsiveFieldGroup(
+            children: [
+              _SyncTextField(
+                key: Key('custom-section-subtitle-$index'),
+                label: context.l10n.customSectionSubtitleLabel,
+                hintText: context.l10n.customSectionSubtitleHint,
+                value: item.subtitle,
+                textCapitalization: TextCapitalization.sentences,
+                focusNode: _focusNodeForExtendedKeyboardField(
+                  'custom-section-subtitle-$index',
+                ),
+                onChanged: (value) => viewModel.updateCustomSection(
+                  index,
+                  (current) => current.copyWith(subtitle: value),
+                ),
+              ),
+              _PickerField(
+                key: Key('custom-section-start-date-$index'),
+                label: context.l10n.startYear,
+                value: item.startDate,
+                hintText: context.l10n.selectYear,
+                onTap: () => _pickCustomSectionDate(
+                  index: index,
+                  isEndDate: false,
+                  currentValue: item.startDate,
+                ),
+              ),
+              _PickerField(
+                key: Key('custom-section-end-date-$index'),
+                label: context.l10n.endYear,
+                value: item.endDate,
+                hintText: context.l10n.selectYear,
+                onTap: () => _pickCustomSectionDate(
+                  index: index,
+                  isEndDate: true,
+                  currentValue: item.endDate,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           if (item.layoutMode == CustomSectionLayoutMode.summary)

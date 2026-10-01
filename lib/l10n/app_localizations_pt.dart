@@ -1622,6 +1622,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'O que você construiu e o impacto — uma linha para cada.';
 
   @override
+  String get customSectionSubtitleLabel => 'Organização (opcional)';
+
+  @override
+  String get customSectionSubtitleHint => 'Emissor, empregador ou organizador';
+
+  @override
   String get customSectionSummaryHint =>
       'Escreva a seção como um parágrafo curto para o seu currículo.';
 

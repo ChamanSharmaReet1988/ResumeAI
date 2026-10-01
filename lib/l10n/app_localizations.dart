@@ -2868,6 +2868,18 @@ abstract class AppLocalizations {
   /// **'What you built and the impact — one line each.'**
   String get projectDescriptionHint;
 
+  /// No description provided for @customSectionSubtitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Organisation (optional)'**
+  String get customSectionSubtitleLabel;
+
+  /// No description provided for @customSectionSubtitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Issuer, employer or organiser'**
+  String get customSectionSubtitleHint;
+
   /// No description provided for @customSectionSummaryHint.
   ///
   /// In en, this message translates to:

@@ -64,7 +64,7 @@ class _FakeHomeRepository implements ResumeRepository {
 }
 
 void main() {
-  testWidgets('resume card opens actions and preview uses the open option', (
+  testWidgets('resume card actions open the editor and drop Edit', (
     tester,
   ) async {
     final resume = ResumeData.empty(template: ResumeTemplate.corporate)
@@ -122,7 +122,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Open'), findsOneWidget);
-    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Edit'), findsNothing);
     expect(find.text('Rename'), findsOneWidget);
     expect(find.text('Delete'), findsOneWidget);
     expect(find.text('Duplicate'), findsOneWidget);
@@ -130,8 +130,8 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(openedForPreview?.id, resume.id);
-    expect(openedForEdit, isNull);
+    expect(openedForEdit?.id, resume.id);
+    expect(openedForPreview, isNull);
   });
 
   testWidgets('resume card rename option updates the saved title', (
@@ -281,7 +281,7 @@ void main() {
     },
   );
 
-  testWidgets('cover letter card routes open to preview and edit to content', (
+  testWidgets('cover letter card opens the editor on tap', (
     tester,
   ) async {
     final coverLetter = CoverLetterData.empty().copyWith(
@@ -344,23 +344,13 @@ void main() {
     await tester.tap(find.text('Retail Sales Application'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Open'), findsOneWidget);
-    expect(find.text('Edit'), findsOneWidget);
-    expect(find.text('Delete'), findsOneWidget);
-
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
-
-    expect(previewedCoverLetter?.id, coverLetter.id);
-    expect(editedCoverLetter, isNull);
-
-    await tester.tap(find.text('Retail Sales Application'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Edit'));
-    await tester.pumpAndSettle();
+    // No action sheet any more — the tap goes straight to the editor.
+    expect(find.text('Open'), findsNothing);
+    expect(find.text('Edit'), findsNothing);
+    expect(find.text('Delete'), findsNothing);
 
     expect(editedCoverLetter?.id, coverLetter.id);
+    expect(previewedCoverLetter, isNull);
   });
 
   testWidgets('resume cards stretch to the available screen width', (

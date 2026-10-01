@@ -725,6 +725,8 @@
   "educationDescriptionHint": "Mata kuliah, pencapaian, atau nilai — satu per baris.",
   "projectDescriptionLabel": "Deskripsi",
   "projectDescriptionHint": "Apa yang Anda bangun dan dampaknya — satu baris masing-masing.",
+  "customSectionSubtitleLabel": "Organisasi (opsional)",
+  "customSectionSubtitleHint": "Penerbit, pemberi kerja, atau penyelenggara",
   "customSectionSummaryHint": "Tulis bagian ini sebagai paragraf singkat untuk resume Anda.",
   "entryNumber": "Entri {number}",
   "moveEntryUp": "Pindahkan entri ke atas",

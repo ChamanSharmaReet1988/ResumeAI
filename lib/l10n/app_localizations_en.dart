@@ -1621,6 +1621,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'What you built and the impact — one line each.';
 
   @override
+  String get customSectionSubtitleLabel => 'Organisation (optional)';
+
+  @override
+  String get customSectionSubtitleHint => 'Issuer, employer or organiser';
+
+  @override
   String get customSectionSummaryHint =>
       'Write the section as a short paragraph for your resume.';
 

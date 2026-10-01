@@ -466,8 +466,8 @@ class _AppShellState extends State<AppShell> {
       HomeScreen(
         currentSegment: _homeSegment,
         onSegmentChanged: (value) => setState(() => _homeSegment = value),
-        onOpenResume: (resume) => _openBuilder(seed: resume),
         onPreviewResume: (resume) => _openPreview(seed: resume),
+        onOpenResume: (resume) => _openBuilder(seed: resume),
         onPreviewCoverLetter: (coverLetter) =>
             _openCoverLetterPreview(seed: coverLetter),
         onEditCoverLetter: (coverLetter) => _openCoverLetterContent(

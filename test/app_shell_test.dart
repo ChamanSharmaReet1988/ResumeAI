@@ -604,10 +604,8 @@ void main() {
       await tester.tap(find.text('Cover Letter').first);
       await tester.pumpAndSettle();
 
+      // Tapping the card now opens the editor directly.
       await tester.tap(find.text('Retail Sales Application'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
       expect(

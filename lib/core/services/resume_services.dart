@@ -382,19 +382,36 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
           color: PdfColors.black,
           fontSize: bodyFontPt ?? ResumeTypography.bodyPt,
         );
+  // Organisation and dates sit above the body, so a certificate or a stint of
+  // volunteering reads like an entry instead of a wall of text.
+  final meta = customSectionMetaLine(item);
+  final metaWidgets = meta.isEmpty
+      ? const <pw.Widget>[]
+      : <pw.Widget>[
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 3),
+            child: pw.Text(
+              meta,
+              style: bodyStyle.copyWith(
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+          ),
+        ];
   switch (item.layoutMode) {
     case CustomSectionLayoutMode.summary:
       final content = item.content.trim();
       if (content.isEmpty) {
-        return const <pw.Widget>[];
+        return metaWidgets;
       }
-      return [pw.Text(content, style: bodyStyle)];
+      return [...metaWidgets, pw.Text(content, style: bodyStyle)];
     case CustomSectionLayoutMode.bullets:
       final lines = item.bullets.where((b) => b.trim().isNotEmpty).toList();
       if (lines.isEmpty) {
-        return const <pw.Widget>[];
+        return metaWidgets;
       }
       return [
+        ...metaWidgets,
         for (var i = 0; i < lines.length; i++)
           pw.Padding(
             padding: pw.EdgeInsets.only(top: i == 0 ? 2 : 3),
@@ -404,9 +421,10 @@ List<pw.Widget> _pwCustomSectionBodyWidgets(
     case CustomSectionLayoutMode.projects:
       final entries = item.visibleProjectEntries;
       if (entries.isEmpty) {
-        return const <pw.Widget>[];
+        return metaWidgets;
       }
       return [
+        ...metaWidgets,
         for (final entry in entries)
           ..._pwCompactProjectWidgets(
             entry,
