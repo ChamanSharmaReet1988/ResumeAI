@@ -216,7 +216,7 @@ extension _ResumePdfHighlightedTemplatePages on ResumePdfService {
           0,
         ),
         child: _corporateHeadingText(
-          title,
+          title.toUpperCase(),
           color: sectionTitleColor,
           garamond: garamond,
         ),

@@ -904,16 +904,16 @@ void main() {
     final text = sfpdf.PdfTextExtractor(
       document,
     ).extractText().replaceAll(RegExp(r'\s+'), ' ');
-    expect(text, contains('Contact'));
-    expect(text, contains('Languages'));
+    expect(text, contains('CONTACT'));
+    expect(text, contains('LANGUAGES'));
     expect(text, contains('Language 1'));
     expect(text, contains('Language 28'));
-    expect(text, contains('Skills'));
+    expect(text, contains('SKILLS'));
     expect(text, contains('Skill number 1'));
     expect(text, contains('Skill number 40'));
-    expect(text, contains('Awards'));
-    expect(text, contains('Work Experience'));
-    expect(text, contains('Education'));
+    expect(text, contains('AWARDS'));
+    expect(text, contains('WORK EXPERIENCE'));
+    expect(text, contains('EDUCATION'));
 
     final shortSidebar = resume.copyWith(
       customSections: const [

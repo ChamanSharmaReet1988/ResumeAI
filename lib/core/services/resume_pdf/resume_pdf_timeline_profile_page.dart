@@ -262,7 +262,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(title, style: sectionTitleStyle),
+                pw.Text(title.toUpperCase(), style: sectionTitleStyle),
                 pw.SizedBox(height: 4),
                 pw.Container(height: 1, color: ruleColor),
               ],
@@ -368,7 +368,7 @@ extension _ResumePdfTimelineProfilePage on ResumePdfService {
         child: pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text(title, style: headingStyle),
+            pw.Text(title.toUpperCase(), style: headingStyle),
             pw.SizedBox(height: 4),
             pw.Container(height: 1, color: ruleColor),
           ],

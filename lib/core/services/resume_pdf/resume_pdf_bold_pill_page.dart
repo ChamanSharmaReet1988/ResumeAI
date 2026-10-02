@@ -107,7 +107,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
           color: accent,
           borderRadius: pw.BorderRadius.circular(12),
         ),
-        child: pw.Text(label, style: pillStyle),
+        child: pw.Text(label.toUpperCase(), style: pillStyle),
       ),
     );
 
@@ -140,7 +140,7 @@ extension _ResumePdfBoldPillPage on ResumePdfService {
               shape: pw.BoxShape.circle,
             ),
           ),
-          pw.Text(label, style: sectionStyle),
+          pw.Text(label.toUpperCase(), style: sectionStyle),
         ],
       ),
     );

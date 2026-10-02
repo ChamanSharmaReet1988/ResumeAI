@@ -97,10 +97,7 @@ class ResumePreviewCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = Localizations.of<AppLocalizations>(
-      context,
-      AppLocalizations,
-    );
+    final l10n = Localizations.of<AppLocalizations>(context, AppLocalizations);
     final resume = l10n == null
         ? this.resume
         : ResumeBuilderSectionIds.resumeWithSectionListTitles(
@@ -737,7 +734,7 @@ class _CorporatePdfLikeSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
+            title.toUpperCase(),
             style: ResumeTypography.garamondPreviewStyle(
               weight: ResumeTypography.darkHeaderSectionTitleWeight,
               fontSize: ResumeTypography.darkHeaderSectionTitlePt,
@@ -3359,7 +3356,7 @@ class _AtsStructuredPreview extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       color: band,
       child: Text(
-        title,
+        title.toUpperCase(),
         textAlign: TextAlign.center,
         style: ResumeTypography.garamondPreviewStyle(
           weight: ResumeTypography.atsStructuredTitleWeight,
@@ -3832,7 +3829,7 @@ Widget _latexPreviewSection(String title, TextStyle style, Color ink) {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(title, style: style),
+        Text(title.toUpperCase(), style: style),
         Container(height: 0.8, color: ink.withValues(alpha: 0.75)),
       ],
     ),
@@ -4252,7 +4249,7 @@ class _AccentStripSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title, style: style);
+    return Text(title.toUpperCase(), style: style);
   }
 }
 
@@ -5327,7 +5324,10 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                       children: [
                         sectionRule(),
                         Text(
-                          section.title.trim().ifBlank('ADDITIONAL'),
+                          section.title
+                              .trim()
+                              .ifBlank('ADDITIONAL')
+                              .toUpperCase(),
                           style: sectionTitleStyle,
                         ),
                         const SizedBox(height: 6),
@@ -5347,10 +5347,12 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                         children: [
                           sectionRule(),
                           Text(
-                            resume.sectionHeading(
-                              ResumeBuilderSectionIds.work,
-                              'EXPERIENCE',
-                            ),
+                            resume
+                                .sectionHeading(
+                                  ResumeBuilderSectionIds.work,
+                                  'EXPERIENCE',
+                                )
+                                .toUpperCase(),
                             style: sectionTitleStyle,
                           ),
                           const SizedBox(height: 6),
@@ -5364,10 +5366,12 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                         children: [
                           sectionRule(),
                           Text(
-                            resume.sectionHeading(
-                              ResumeBuilderSectionIds.education,
-                              'EDUCATION',
-                            ),
+                            resume
+                                .sectionHeading(
+                                  ResumeBuilderSectionIds.education,
+                                  'EDUCATION',
+                                )
+                                .toUpperCase(),
                             style: sectionTitleStyle,
                           ),
                           const SizedBox(height: 6),
@@ -5405,10 +5409,12 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                         children: [
                           sectionRule(),
                           Text(
-                            resume.sectionHeading(
-                              ResumeBuilderSectionIds.skills,
-                              'SKILLS',
-                            ),
+                            resume
+                                .sectionHeading(
+                                  ResumeBuilderSectionIds.skills,
+                                  'SKILLS',
+                                )
+                                .toUpperCase(),
                             style: sectionTitleStyle,
                           ),
                           const SizedBox(height: 6),
@@ -5438,10 +5444,12 @@ class _AtsCenterClassicPreview extends StatelessWidget {
                         children: [
                           sectionRule(),
                           Text(
-                            resume.sectionHeading(
-                              ResumeBuilderSectionIds.projects,
-                              'PROJECTS',
-                            ),
+                            resume
+                                .sectionHeading(
+                                  ResumeBuilderSectionIds.projects,
+                                  'PROJECTS',
+                                )
+                                .toUpperCase(),
                             style: sectionTitleStyle,
                           ),
                           const SizedBox(height: 6),
@@ -6101,7 +6109,10 @@ class _AtsClassicCvPreview extends StatelessWidget {
                             if (i > 0) const SizedBox(height: 8),
                             rail(
                               left: i == 0
-                                  ? section.title.trim().ifBlank('Additional')
+                                  ? section.title
+                                        .trim()
+                                        .ifBlank('Additional')
+                                        .toUpperCase()
                                   : dateRange(
                                       entries[i].startDate,
                                       entries[i].endDate,
@@ -6177,7 +6188,10 @@ class _AtsClassicCvPreview extends StatelessWidget {
                       children: [
                         rule(),
                         rail(
-                          left: section.title.trim().ifBlank('Additional'),
+                          left: section.title
+                              .trim()
+                              .ifBlank('Additional')
+                              .toUpperCase(),
                           content: Text(
                             section.content.trim().isNotEmpty
                                 ? section.content.trim()
@@ -6391,10 +6405,12 @@ class _AtsClassicCvPreview extends StatelessWidget {
                         children: [
                           rule(),
                           rail(
-                            left: resume.sectionHeading(
-                              ResumeBuilderSectionIds.skills,
-                              'SKILLS',
-                            ),
+                            left: resume
+                                .sectionHeading(
+                                  ResumeBuilderSectionIds.skills,
+                                  'SKILLS',
+                                )
+                                .toUpperCase(),
                             content: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: skillWidgets,
@@ -6575,7 +6591,7 @@ class _AtsExecutivePreview extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: _sectionGap),
-          Text(title, style: sectionTitleStyle),
+          Text(title.toUpperCase(), style: sectionTitleStyle),
           const SizedBox(height: 6),
           ...children,
         ],
@@ -6861,7 +6877,7 @@ class _ClassicSidebarListSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: titleStyle),
+        Text(title.toUpperCase(), style: titleStyle),
         SizedBox(height: headingGap),
         if (visibleItems.isEmpty)
           Text('Add items', style: textStyle)
@@ -6922,7 +6938,7 @@ class _ClassicContentSection extends StatelessWidget {
             Container(height: 1, color: topDividerColor),
             const SizedBox(height: _ClassicSidebarPreview._sectionDividerGap),
           ],
-          Text(title, style: titleStyle),
+          Text(title.toUpperCase(), style: titleStyle),
           const SizedBox(height: _ClassicSidebarPreview._sectionHeadingGap),
           child,
           const SizedBox(height: _ClassicSidebarPreview._sectionDividerGap),
@@ -7179,7 +7195,7 @@ class _DetailsSidebarRailSectionHeading extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.toUpperCase(),
           style: TextStyle(
             color: titleColor,
             fontSize: 12,
@@ -7218,7 +7234,7 @@ class _DetailsSidebarContentSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                title,
+                title.toUpperCase(),
                 style: TextStyle(
                   color: titleColor,
                   fontSize: 12,
@@ -7594,7 +7610,7 @@ class _CreativeSidebarHeading extends StatelessWidget {
       children: [
         Flexible(
           child: Text(
-            title,
+            title.toUpperCase(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: ResumeTypography.garamondPreviewStyle(
@@ -8489,7 +8505,10 @@ class _AtsCleanSansPreview extends StatelessWidget {
 
     Widget sectionTitle(String title) => Padding(
       padding: const EdgeInsets.only(top: 18, bottom: 6),
-      child: Text(title, style: style(FontWeight.w600, 14, color: accent)),
+      child: Text(
+        title.toUpperCase(),
+        style: style(FontWeight.w600, 14, color: accent),
+      ),
     );
 
     Widget bulletRow(String text, {bool indent = true}) => Padding(
@@ -8851,7 +8870,7 @@ class _TimelineProfilePreview extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.toUpperCase(),
           style: style(FontWeight.w700, size, titleColor, letterSpacing: 1.1),
         ),
         const SizedBox(height: 4),
@@ -9363,7 +9382,7 @@ class _SoftHeaderPreview extends StatelessWidget {
             ),
           ),
           Text(
-            title,
+            title.toUpperCase(),
             style: style(FontWeight.w700, 15, titleColor, letterSpacing: 2.2),
           ),
         ],
@@ -10458,7 +10477,7 @@ class _MinimalProfilePreview extends StatelessWidget {
     final initialsStyle = style(FontWeight.w700, 22, accent);
 
     Widget sectionHeading(String label, {bool showRule = true}) {
-      final heading = Text(label, style: sectionStyle);
+      final heading = Text(label.toUpperCase(), style: sectionStyle);
       if (!showRule) {
         return Padding(
           padding: const EdgeInsets.only(top: 22, bottom: 10),
@@ -11657,7 +11676,7 @@ class _BoldPillPreview extends StatelessWidget
           color: accent,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(label, style: pillStyle),
+        child: Text(label.toUpperCase(), style: pillStyle),
       ),
     );
 
@@ -11679,7 +11698,7 @@ class _BoldPillPreview extends StatelessWidget
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Text(label, style: sectionStyle),
+          Text(label.toUpperCase(), style: sectionStyle),
           Positioned(
             left: -_timelineGap - _dot / 2 - 0.75,
             top: 4,

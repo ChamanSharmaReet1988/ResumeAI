@@ -130,7 +130,7 @@ extension _ResumePdfSoftHeaderPage on ResumePdfService {
               shape: pw.BoxShape.circle,
             ),
           ),
-          pw.Text(title, style: sectionTitleStyle),
+          pw.Text(title.toUpperCase(), style: sectionTitleStyle),
         ],
       ),
     );

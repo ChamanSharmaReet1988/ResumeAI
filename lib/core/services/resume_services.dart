@@ -1337,7 +1337,7 @@ pw.Widget _creativeSectionHeadingRow({
   return pw.Row(
     crossAxisAlignment: pw.CrossAxisAlignment.center,
     children: [
-      pw.Text(title, style: headingStyle),
+      pw.Text(title.toUpperCase(), style: headingStyle),
       pw.SizedBox(width: 8),
       pw.Expanded(child: pw.Container(height: 1.2, color: lineColor)),
     ],
@@ -2136,7 +2136,7 @@ pw.Widget _classicSidebarListSection({
     children: [
       if (showTitle)
         pw.Text(
-          title,
+          title.toUpperCase(),
           style: _classicSidebarPdfTextStyle(
             garamond,
             ResumeTypography.classicSidebarSectionTitleWeight,
@@ -2659,7 +2659,7 @@ pw.Widget _detailsSidebarSidebarHeading({
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
       pw.Text(
-        title,
+        title.toUpperCase(),
         style: pw.TextStyle(
           color: titleColor,
           fontSize: ResumeTypography.darkHeaderSectionTitlePt,
@@ -2748,7 +2748,7 @@ pw.Widget _detailsSidebarHeadingRow({
     crossAxisAlignment: pw.CrossAxisAlignment.center,
     children: [
       pw.Text(
-        title,
+        title.toUpperCase(),
         style: pw.TextStyle(
           color: titleColor,
           fontSize: ResumeTypography.darkHeaderSectionTitlePt,
@@ -10711,7 +10711,7 @@ class ResumePdfService {
             fontWeight: pw.FontWeight.bold,
             color: resolvedColor,
           );
-    return pw.Text(value, style: style);
+    return pw.Text(value.toUpperCase(), style: style);
   }
 
   List<pw.Widget> _twoColumnBulletRows(

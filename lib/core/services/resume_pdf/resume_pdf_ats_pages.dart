@@ -86,7 +86,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
       padding: const pw.EdgeInsets.symmetric(vertical: 12, horizontal: 6),
       child: pw.Center(
         child: pw.Text(
-          title,
+          title.toUpperCase(),
           style: garamondPdfTextStyle(
             garamond,
             ResumeTypography.atsStructuredTitleWeight,
@@ -1379,7 +1379,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.stretch,
       children: [
-        pw.Text(title, style: style),
+        pw.Text(title.toUpperCase(), style: style),
         pw.SizedBox(height: 2),
         _atsSolidRule(color: PdfColor.fromHex('#666666')),
         pw.SizedBox(height: 7),
@@ -1966,7 +1966,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   out.add(executiveSectionGap());
                   out.add(
                     pw.Text(
-                      section.title.ifEmpty('Additional'),
+                      section.title.ifEmpty('Additional').toUpperCase(),
                       style: sectionTitleStyle,
                     ),
                   );
@@ -1997,10 +1997,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     out.add(executiveSectionGap());
                     out.add(
                       pw.Text(
-                        resume.sectionHeading(
-                          ResumeBuilderSectionIds.work,
-                          'EXPERIENCE',
-                        ),
+                        resume
+                            .sectionHeading(
+                              ResumeBuilderSectionIds.work,
+                              'EXPERIENCE',
+                            )
+                            .toUpperCase(),
                         style: sectionTitleStyle,
                       ),
                     );
@@ -2033,10 +2035,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     out.add(executiveSectionGap());
                     out.add(
                       pw.Text(
-                        resume.sectionHeading(
-                          ResumeBuilderSectionIds.education,
-                          'EDUCATION',
-                        ),
+                        resume
+                            .sectionHeading(
+                              ResumeBuilderSectionIds.education,
+                              'EDUCATION',
+                            )
+                            .toUpperCase(),
                         style: sectionTitleStyle,
                       ),
                     );
@@ -2077,10 +2081,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     out.add(executiveSectionGap());
                     out.add(
                       pw.Text(
-                        resume.sectionHeading(
-                          ResumeBuilderSectionIds.skills,
-                          'SKILLS',
-                        ),
+                        resume
+                            .sectionHeading(
+                              ResumeBuilderSectionIds.skills,
+                              'SKILLS',
+                            )
+                            .toUpperCase(),
                         style: sectionTitleStyle,
                       ),
                     );
@@ -2136,10 +2142,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     out.add(executiveSectionGap());
                     out.add(
                       pw.Text(
-                        resume.sectionHeading(
-                          ResumeBuilderSectionIds.projects,
-                          'PROJECTS',
-                        ),
+                        resume
+                            .sectionHeading(
+                              ResumeBuilderSectionIds.projects,
+                              'PROJECTS',
+                            )
+                            .toUpperCase(),
                         style: sectionTitleStyle,
                       ),
                     );
@@ -2195,7 +2203,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
       children: [
         _atsSolidRule(color: PdfColor.fromHex('#CCCCCC')),
         pw.SizedBox(height: 10),
-        pw.Text(title, style: sectionTitleStyle),
+        pw.Text(title.toUpperCase(), style: sectionTitleStyle),
         pw.SizedBox(height: 6),
       ],
     );
@@ -3072,7 +3080,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 8),
       child: pw.Text(
-        title,
+        title.toUpperCase(),
         style: garamondPdfTextStyle(
           garamond,
           ResumeTypography.accentStripTitleWeight,
@@ -3793,7 +3801,9 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       out.add(
                         _classicCvLeftRail(
                           left: i == 0
-                              ? section.title.ifEmpty('Additional')
+                              ? section.title
+                                    .ifEmpty('Additional')
+                                    .toUpperCase()
                               : dateStr,
                           leftStyle: i == 0 ? labelStyle : bodyStyle,
                           content: _classicCvRoleLocationRow(
@@ -3836,7 +3846,7 @@ extension _ResumePdfAtsPages on ResumePdfService {
                   }
                   out.add(
                     _classicCvLeftRail(
-                      left: section.title.ifEmpty('Additional'),
+                      left: section.title.ifEmpty('Additional').toUpperCase(),
                       leftStyle: labelStyle,
                       content: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -3860,10 +3870,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (items.isEmpty) {
                       out.add(
                         _classicCvLeftRail(
-                          left: resume.sectionHeading(
-                            ResumeBuilderSectionIds.work,
-                            'EXPERIENCE',
-                          ),
+                          left: resume
+                              .sectionHeading(
+                                ResumeBuilderSectionIds.work,
+                                'EXPERIENCE',
+                              )
+                              .toUpperCase(),
                           leftStyle: labelStyle,
                           content: pw.Text(
                             'Add roles with measurable outcomes.',
@@ -3884,10 +3896,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       out.add(
                         _classicCvLeftRail(
                           left: i == 0
-                              ? resume.sectionHeading(
-                                  ResumeBuilderSectionIds.work,
-                                  'EXPERIENCE',
-                                )
+                              ? resume
+                                    .sectionHeading(
+                                      ResumeBuilderSectionIds.work,
+                                      'EXPERIENCE',
+                                    )
+                                    .toUpperCase()
                               : dateStr,
                           leftStyle: i == 0 ? labelStyle : bodyStyle,
                           content: _classicCvRoleLocationRow(
@@ -3938,10 +3952,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (items.isEmpty) {
                       out.add(
                         _classicCvLeftRail(
-                          left: resume.sectionHeading(
-                            ResumeBuilderSectionIds.education,
-                            'EDUCATION',
-                          ),
+                          left: resume
+                              .sectionHeading(
+                                ResumeBuilderSectionIds.education,
+                                'EDUCATION',
+                              )
+                              .toUpperCase(),
                           leftStyle: labelStyle,
                           content: pw.Text('Add education.', style: bodyStyle),
                         ),
@@ -3964,10 +3980,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       out.add(
                         _classicCvLeftRail(
                           left: i == 0
-                              ? resume.sectionHeading(
-                                  ResumeBuilderSectionIds.education,
-                                  'EDUCATION',
-                                )
+                              ? resume
+                                    .sectionHeading(
+                                      ResumeBuilderSectionIds.education,
+                                      'EDUCATION',
+                                    )
+                                    .toUpperCase()
                               : range,
                           leftStyle: i == 0 ? labelStyle : bodyStyle,
                           content: pw.Row(
@@ -4084,10 +4102,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                     if (skillLines.isEmpty) {
                       out.add(
                         _classicCvLeftRail(
-                          left: resume.sectionHeading(
-                            ResumeBuilderSectionIds.skills,
-                            'SKILLS',
-                          ),
+                          left: resume
+                              .sectionHeading(
+                                ResumeBuilderSectionIds.skills,
+                                'SKILLS',
+                              )
+                              .toUpperCase(),
                           leftStyle: labelStyle,
                           content: pw.Text(
                             'Add skills that mirror job postings.',
@@ -4101,10 +4121,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                         out.add(
                           _classicCvLeftRail(
                             left: i == 0
-                                ? resume.sectionHeading(
-                                    ResumeBuilderSectionIds.skills,
-                                    'SKILLS',
-                                  )
+                                ? resume
+                                      .sectionHeading(
+                                        ResumeBuilderSectionIds.skills,
+                                        'SKILLS',
+                                      )
+                                      .toUpperCase()
                                 : '',
                             leftStyle: labelStyle,
                             content: skillLines[i],
@@ -4126,10 +4148,12 @@ extension _ResumePdfAtsPages on ResumePdfService {
                       out.add(
                         _classicCvLeftRail(
                           left: i == 0
-                              ? resume.sectionHeading(
-                                  ResumeBuilderSectionIds.projects,
-                                  'PROJECTS',
-                                )
+                              ? resume
+                                    .sectionHeading(
+                                      ResumeBuilderSectionIds.projects,
+                                      'PROJECTS',
+                                    )
+                                    .toUpperCase()
                               : '',
                           leftStyle: labelStyle,
                           content: pw.Text(

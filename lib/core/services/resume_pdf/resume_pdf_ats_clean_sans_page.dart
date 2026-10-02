@@ -61,7 +61,7 @@ extension _ResumePdfAtsCleanSansPage on ResumePdfService {
 
     pw.Widget sectionTitle(String title) => pw.Padding(
       padding: const pw.EdgeInsets.only(top: 18, bottom: 6),
-      child: pw.Text(title, style: sectionTitleStyle),
+      child: pw.Text(title.toUpperCase(), style: sectionTitleStyle),
     );
 
     pw.Widget bullet(String text, {bool highlight = false}) =>

@@ -207,7 +207,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
           0,
         ),
         child: _darkHeaderHeadingText(
-          title,
+          title.toUpperCase(),
           color: sectionTitleColor,
           garamond: garamond,
         ),
@@ -447,7 +447,9 @@ extension _ResumePdfTemplatePages on ResumePdfService {
           0,
         ),
         child: _darkHeaderHeadingText(
-          resume.sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE'),
+          resume
+              .sectionHeading(ResumeBuilderSectionIds.work, 'EXPERIENCE')
+              .toUpperCase(),
           color: sectionTitleColor,
           garamond: garamond,
         ),
@@ -1373,7 +1375,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
           pw.SizedBox(height: _classicSidebarSectionDividerGapPt),
         ],
         pw.Text(
-          title,
+          title.toUpperCase(),
           style: _classicSidebarPdfTextStyle(
             garamond,
             ResumeTypography.classicSidebarSectionTitleWeight,
@@ -1413,7 +1415,7 @@ extension _ResumePdfTemplatePages on ResumePdfService {
             bottom: _classicSidebarHeadingGapPt,
           ),
           child: pw.Text(
-            title,
+            title.toUpperCase(),
             style: _classicSidebarPdfTextStyle(
               garamond,
               ResumeTypography.classicSidebarSectionTitleWeight,
