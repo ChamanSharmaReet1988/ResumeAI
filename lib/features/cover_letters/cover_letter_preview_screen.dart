@@ -8,6 +8,7 @@ import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/android_ads_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/resume_services.dart';
 import '../shared/native_pdf_preview.dart';
@@ -36,7 +37,7 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
         return;
       }
       final box = context.findRenderObject() as RenderBox?;
-      await Share.shareXFiles(
+      final result = await Share.shareXFiles(
         [XFile(file.path)],
         subject: '${viewModel.coverLetter.displayTitle} cover letter',
         text: context.l10n.sharedFromResumeAi,
@@ -44,6 +45,16 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
             ? null
             : box.localToGlobal(Offset.zero) & box.size,
       );
+      if (!mounted) {
+        return;
+      }
+      if (result.status == ShareResultStatus.success) {
+        await AndroidAdsService.showShareInterstitial();
+        if (!mounted) {
+          return;
+        }
+        await context.read<InAppReviewPromptService>().promptAfterShare();
+      }
       if (!mounted) {
         return;
       }
@@ -55,10 +66,6 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
           'source': 'cover_letter_preview',
         },
       );
-      if (!mounted) {
-        return;
-      }
-      await context.read<InAppReviewPromptService>().promptAfterShare();
       if (!mounted) {
         return;
       }
@@ -105,9 +112,8 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
       (letter) => letter.copyWith(
         template: selectedTemplate,
         bodyFontPt: kResumeBodyFontPtDefault,
-        corporateColorPresetIndex: defaultColorPresetIndexForCoverLetterTemplate(
-          selectedTemplate,
-        ),
+        corporateColorPresetIndex:
+            defaultColorPresetIndexForCoverLetterTemplate(selectedTemplate),
       ),
     );
     await viewModel.saveCoverLetter(showBusy: false);
@@ -227,7 +233,8 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
                                         .toDouble(),
                                     min: kResumeBodyFontPtMin.toDouble(),
                                     max: kResumeBodyFontPtMax.toDouble(),
-                                    divisions: kResumeBodyFontPtMax -
+                                    divisions:
+                                        kResumeBodyFontPtMax -
                                         kResumeBodyFontPtMin,
                                     label: '${letter.effectiveBodyFontPt}',
                                     onChanged: (v) {
@@ -374,54 +381,53 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
               titleSpacing: 2,
               title: Text(letter.displayTitle, style: baseTitleStyle),
             ),
-          body: Column(
-            children: [
-              Expanded(
-                child: SafeArea(
-                  bottom: false,
-                  child: Container(
-                    color: scaffoldBg,
-                    child: Column(
-                      children: [
-                        if (viewModel.isBusy) const LinearProgressIndicator(),
-                        Expanded(
-                          child: Container(
-                            key: const Key('cover-letter-preview-screen'),
-                            width: double.infinity,
-                            color: scaffoldBg,
-                            child: isTestBinding
-                                ? Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: SingleChildScrollView(
-                                      child: Text(letter.content),
+            body: Column(
+              children: [
+                Expanded(
+                  child: SafeArea(
+                    bottom: false,
+                    child: Container(
+                      color: scaffoldBg,
+                      child: Column(
+                        children: [
+                          if (viewModel.isBusy) const LinearProgressIndicator(),
+                          Expanded(
+                            child: Container(
+                              key: const Key('cover-letter-preview-screen'),
+                              width: double.infinity,
+                              color: scaffoldBg,
+                              child: isTestBinding
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: SingleChildScrollView(
+                                        child: Text(letter.content),
+                                      ),
+                                    )
+                                  : NativePdfPreview(
+                                      key: ValueKey(
+                                        '${letter.template.name}-${letter.textFont.name}-${letter.bodyFontPt}-${letter.corporateColorPresetIndex}-${letter.updatedAt.microsecondsSinceEpoch}',
+                                      ),
+                                      documentKey:
+                                          '${letter.id}-${letter.updatedAt.microsecondsSinceEpoch}',
+                                      viewerBackground: scaffoldBg,
+                                      bytesFuture: pdfService
+                                          .buildCoverLetterPdf(letter),
                                     ),
-                                  )
-                                : NativePdfPreview(
-                                    key: ValueKey(
-                                      '${letter.template.name}-${letter.textFont.name}-${letter.bodyFontPt}-${letter.corporateColorPresetIndex}-${letter.updatedAt.microsecondsSinceEpoch}',
-                                    ),
-                                    documentKey:
-                                        '${letter.id}-${letter.updatedAt.microsecondsSinceEpoch}',
-                                    viewerBackground: scaffoldBg,
-                                    bytesFuture: pdfService.buildCoverLetterPdf(
-                                      letter,
-                                    ),
-                                  ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              _CoverLetterPreviewBottomBar(
-                backgroundColor: barBg,
-                onTemplate: _chooseTemplate,
-                onShare: _sharePdf,
-                onStyle: _showCoverLetterStyleSheet,
-              ),
-            ],
-          ),
+                _CoverLetterPreviewBottomBar(
+                  backgroundColor: barBg,
+                  onTemplate: _chooseTemplate,
+                  onShare: _sharePdf,
+                  onStyle: _showCoverLetterStyleSheet,
+                ),
+              ],
+            ),
           ),
         );
       },

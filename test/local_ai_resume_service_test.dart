@@ -458,7 +458,7 @@ Oxford Software Institute
           endDate: 'Present',
           description:
               'Led cross-functional design work for web and mobile products.',
-          bullets: const [
+          bullets: [
             'Partnered with engineers to improve onboarding flows.',
           ],
         ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -8,8 +10,7 @@ abstract final class AndroidAdsConfig {
   static const androidAppId = 'ca-app-pub-4326780099537551~1798944583';
   static const iosAppId = 'ca-app-pub-4326780099537551~5871431827';
 
-  static const _debugInterstitial =
-      'ca-app-pub-3940256099942544/1033173712';
+  static const _debugInterstitial = 'ca-app-pub-3940256099942544/1033173712';
   static const _debugBanner = 'ca-app-pub-3940256099942544/6300978111';
 
   /// Temporary: use real AdMob units in debug so ads can be verified on device.
@@ -25,9 +26,11 @@ abstract final class AndroidAdsConfig {
       'ca-app-pub-4326780099537551/6374346359';
   static const androidSettingsBannerAdUnitId =
       'ca-app-pub-4326780099537551/7581767617';
+
   /// Android Home banner.
   static const androidHomeBannerAdUnitId =
       'ca-app-pub-4326780099537551/1505163054';
+
   /// Android AI Resume banner.
   static const androidAiResumeBannerAdUnitId =
       'ca-app-pub-4326780099537551/8215709938';
@@ -37,18 +40,18 @@ abstract final class AndroidAdsConfig {
       'ca-app-pub-4326780099537551/1652347183';
   static const iosTemplatesInterstitialAdUnitId =
       'ca-app-pub-4326780099537551/3712523993';
-  static const iosHomeBannerAdUnitId =
-      'ca-app-pub-4326780099537551/5755243724';
+  static const iosHomeBannerAdUnitId = 'ca-app-pub-4326780099537551/5755243724';
   static const iosTemplatesBannerAdUnitId =
       'ca-app-pub-4326780099537551/7998263686';
   static const iosSettingsBannerAdUnitId =
       'ca-app-pub-4326780099537551/1695016111';
 
-  /// Preview resume: full-screen ad on every 4th open.
+  /// Kept for the preview placement counter. Successful resume and cover
+  /// letter shares show this unit every time via [AndroidAdsService.showShareInterstitial].
   static const previewInterstitialEveryNthOpen = 4;
 
-  /// Use template: full-screen ad on every 3rd use.
-  static const templatesInterstitialEveryNthOpen = 3;
+  /// Templates tab: full-screen ad on every 2nd visit.
+  static const templatesInterstitialEveryNthOpen = 2;
 
   static int interstitialEveryNthOpenFor(AndroidAdPlacement placement) {
     return switch (placement) {
@@ -102,23 +105,16 @@ abstract final class AndroidAdsConfig {
 }
 
 /// Where an interstitial may be requested from.
-enum AndroidAdPlacement {
-  templates,
-  preview,
-}
+enum AndroidAdPlacement { templates, preview }
 
 /// Banner placements.
-enum AndroidBannerPlacement {
-  home,
-  templates,
-  settings,
-  aiResume,
-}
+enum AndroidBannerPlacement { home, templates, settings, aiResume }
 
 class AndroidAdsService {
   AndroidAdsService._();
 
   static bool _initialized = false;
+
   /// When true (iOS Pro), banners and interstitials are suppressed.
   static bool Function()? isPremiumActive;
   static final Map<AndroidAdPlacement, InterstitialAd?> _interstitials = {
@@ -214,7 +210,7 @@ class AndroidAdsService {
   }
 
   /// Records an open for [placement] and shows an interstitial on every Nth
-  /// open (preview: 4th, templates: 3rd).
+  /// open (templates tab: 2nd).
   static Future<void> showInterstitialIfReady({
     required AndroidAdPlacement placement,
   }) async {
@@ -240,5 +236,48 @@ class AndroidAdsService {
     }
     _interstitials[placement] = null;
     await ad.show();
+  }
+
+  /// Shows the preview full-screen ad immediately. Used after a successful
+  /// resume or cover letter PDF/DOCX share. Waits until the ad is dismissed.
+  static Future<void> showShareInterstitial() async {
+    if (!PlatformMonetization.showsAds ||
+        !_initialized ||
+        _adsSuppressedByPremium) {
+      return;
+    }
+
+    const placement = AndroidAdPlacement.preview;
+    final ad = _interstitials[placement];
+    if (ad == null) {
+      unawaitedLoadInterstitial(placement);
+      return;
+    }
+    _interstitials[placement] = null;
+    final dismissed = Completer<void>();
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        unawaitedLoadInterstitial(placement);
+        if (!dismissed.isCompleted) {
+          dismissed.complete();
+        }
+      },
+      onAdFailedToShowFullScreenContent: (ad, _) {
+        ad.dispose();
+        unawaitedLoadInterstitial(placement);
+        if (!dismissed.isCompleted) {
+          dismissed.complete();
+        }
+      },
+    );
+    try {
+      await ad.show();
+    } catch (_) {
+      ad.dispose();
+      unawaitedLoadInterstitial(placement);
+      return;
+    }
+    await dismissed.future;
   }
 }

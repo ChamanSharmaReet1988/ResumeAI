@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:resume_app/l10n/app_localizations.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/app_locale_option.dart';
 import '../../core/corporate_resume_style.dart';
@@ -1523,12 +1524,20 @@ class ResumeEditorViewModel extends ChangeNotifier {
     return savedPath;
   }
 
-  Future<void> sharePdf() async {
-    await _runBusy(() => pdfService.shareResume(_resume));
+  Future<ShareResult> sharePdf() async {
+    late ShareResult result;
+    await _runBusy(() async {
+      result = await pdfService.shareResume(_resume);
+    });
+    return result;
   }
 
-  Future<void> shareDocx() async {
-    await _runBusy(() => pdfService.shareResumeDocx(_resume));
+  Future<ShareResult> shareDocx() async {
+    late ShareResult result;
+    await _runBusy(() async {
+      result = await pdfService.shareResumeDocx(_resume);
+    });
+    return result;
   }
 
   Future<void> printPdf() async {

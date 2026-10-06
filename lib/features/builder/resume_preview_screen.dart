@@ -8,6 +8,7 @@ import '../../core/corporate_resume_style.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/android_ads_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/post_share_backup_prompt.dart';
@@ -58,7 +59,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
         return;
       }
       final box = context.findRenderObject() as RenderBox?;
-      await Share.shareXFiles(
+      final result = await Share.shareXFiles(
         [
           XFile(
             file.path,
@@ -76,6 +77,16 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
       if (!mounted) {
         return;
       }
+      if (result.status == ShareResultStatus.success) {
+        await AndroidAdsService.showShareInterstitial();
+        if (!mounted) {
+          return;
+        }
+        await context.read<InAppReviewPromptService>().promptAfterShare();
+      }
+      if (!mounted) {
+        return;
+      }
       await logAnalyticsEvent(
         context,
         format == ResumeShareFormat.pdf
@@ -89,10 +100,6 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
           'format': format.name,
         },
       );
-      if (!mounted) {
-        return;
-      }
-      await context.read<InAppReviewPromptService>().promptAfterShare();
       if (!mounted) {
         return;
       }
@@ -237,12 +244,9 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                       selected:
                                           resume.usesOutfitResumeFont ==
                                           (font == ResumeTextFont.outfit),
-                                      onSelected: (_) =>
-                                          viewModel.updateResume(
-                                            (r) => r.copyWith(
-                                              resumeTextFont: font,
-                                            ),
-                                          ),
+                                      onSelected: (_) => viewModel.updateResume(
+                                        (r) => r.copyWith(resumeTextFont: font),
+                                      ),
                                     ),
                                 ],
                               ),
@@ -277,7 +281,8 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                         .toDouble(),
                                     min: kResumeBodyFontPtMin.toDouble(),
                                     max: kResumeBodyFontPtMax.toDouble(),
-                                    divisions: kResumeBodyFontPtMax -
+                                    divisions:
+                                        kResumeBodyFontPtMax -
                                         kResumeBodyFontPtMin,
                                     label: '${resume.effectiveBodyFontPt}',
                                     onChanged: (v) {
@@ -383,7 +388,9 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
   Widget build(BuildContext context) {
     return Consumer<ResumeEditorViewModel>(
       builder: (context, viewModel, _) {
-        final currentTitle = viewModel.resume.title.ifBlank(context.l10n.resumePreview);
+        final currentTitle = viewModel.resume.title.ifBlank(
+          context.l10n.resumePreview,
+        );
         final isTestBinding = WidgetsBinding.instance.runtimeType
             .toString()
             .contains('TestWidgetsFlutterBinding');
@@ -450,10 +457,11 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                                       documentKey:
                                           '${viewModel.resume.id}-${viewModel.resume.effectiveBuilderSectionOrder.join(',')}-${viewModel.resume.updatedAt.microsecondsSinceEpoch}',
                                       viewerBackground: scaffoldBg,
-                                      bytesFuture: viewModel.pdfService.buildPdf(
-                                        viewModel.resume,
-                                        l10n: context.l10n,
-                                      ),
+                                      bytesFuture: viewModel.pdfService
+                                          .buildPdf(
+                                            viewModel.resume,
+                                            l10n: context.l10n,
+                                          ),
                                     ),
                             ),
                           ),

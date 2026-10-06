@@ -30,6 +30,7 @@ List<SingleChildWidget> _appShellProviders({
   required PremiumPurchaseService premiumPurchaseService,
   ResumeImportService? importService,
   FirebaseAppServices? firebase,
+  InAppReviewPromptService? reviewPrompt,
 }) {
   final localAi = LocalAiResumeService();
   final keyStore = AiApiKeyStore.inMemory();
@@ -56,15 +57,17 @@ List<SingleChildWidget> _appShellProviders({
       ),
     ),
     Provider<InAppReviewPromptService>.value(
-      value: InAppReviewPromptService(
-        readRatingCompleted: () async => true,
-        writeRatingCompleted: () async {},
-        readHasShared: () async => false,
-        writeHasShared: () async {},
-        openStoreListing: () async {},
-        readHomeVisitCount: () async => 0,
-        writeHomeVisitCount: (_) async {},
-      ),
+      value:
+          reviewPrompt ??
+          InAppReviewPromptService(
+            readRatingCompleted: () async => true,
+            writeRatingCompleted: () async {},
+            readHasShared: () async => false,
+            writeHasShared: () async {},
+            openStoreListing: () async {},
+            readHomeVisitCount: () async => 0,
+            writeHomeVisitCount: (_) async {},
+          ),
     ),
     Provider<ResumePdfService>.value(value: ResumePdfService()),
     ChangeNotifierProvider<ResumeLibraryViewModel>.value(
@@ -242,6 +245,74 @@ void main() {
         expect(icon.size ?? 24, greaterThan(0));
         expect(icon.icon, isNotNull);
       }
+    },
+  );
+
+  testWidgets(
+    'rate prompt shows each time Home is opened after a resume was shared',
+    (tester) async {
+      _ignoreRenderOverflowErrors();
+      final repository = _FakeAppShellRepository();
+      await repository.upsertResume(
+        ResumeData.empty(template: ResumeTemplate.accentStrip),
+      );
+      final resumeLibrary = ResumeLibraryViewModel(repository: repository);
+      final coverLetterLibrary = CoverLetterLibraryViewModel(
+        repository: repository,
+      );
+      await resumeLibrary.loadResumes();
+      await coverLetterLibrary.loadCoverLetters();
+      final appPreferences = AppPreferences.inMemory();
+      final premiumPurchaseService = PremiumPurchaseService.inMemory(
+        appPreferences: appPreferences,
+      );
+      var nativeReviewRequests = 0;
+      final reviewPrompt = InAppReviewPromptService(
+        readRatingCompleted: () async => false,
+        writeRatingCompleted: () async {},
+        readHasShared: () async => true,
+        writeHasShared: () async {},
+        openStoreListing: () async {},
+        requestNativeReview: () async {
+          nativeReviewRequests += 1;
+        },
+        readHomeVisitCount: () async => 0,
+        writeHomeVisitCount: (_) async {},
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: _appShellProviders(
+            repository: repository,
+            resumeLibrary: resumeLibrary,
+            coverLetterLibrary: coverLetterLibrary,
+            appPreferences: appPreferences,
+            premiumPurchaseService: premiumPurchaseService,
+            reviewPrompt: reviewPrompt,
+          ),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AppShell(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(nativeReviewRequests, 0);
+
+      await tester.tap(find.text('Templates'));
+      await tester.pumpAndSettle();
+      expect(nativeReviewRequests, 0);
+
+      await tester.tap(find.text('Home'));
+      await tester.pumpAndSettle();
+      expect(nativeReviewRequests, 1);
+
+      await tester.tap(find.text('Templates'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Home'));
+      await tester.pumpAndSettle();
+      expect(nativeReviewRequests, 2);
     },
   );
 

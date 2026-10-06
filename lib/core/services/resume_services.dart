@@ -11331,9 +11331,9 @@ class ResumePdfService {
     return file;
   }
 
-  Future<void> shareResume(ResumeData resume) async {
+  Future<ShareResult> shareResume(ResumeData resume) async {
     final file = await savePdfToDevice(resume);
-    await Share.shareXFiles(
+    return Share.shareXFiles(
       [XFile(file.path)],
       subject: '${resume.title} resume',
       text: 'Shared from ResumeAI',
@@ -11344,9 +11344,9 @@ class ResumePdfService {
     return const ResumeDocxExporter().saveToDevice(resume);
   }
 
-  Future<void> shareResumeDocx(ResumeData resume) async {
+  Future<ShareResult> shareResumeDocx(ResumeData resume) async {
     final file = await saveDocxToDevice(resume);
-    await Share.shareXFiles(
+    return Share.shareXFiles(
       [
         XFile(
           file.path,

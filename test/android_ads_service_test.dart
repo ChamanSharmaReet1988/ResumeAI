@@ -20,16 +20,16 @@ void main() {
     }
   });
 
-  test('templates interstitial every 3rd open', () {
-    expect(AndroidAdsConfig.templatesInterstitialEveryNthOpen, 3);
+  test('templates interstitial every 2nd open', () {
+    expect(AndroidAdsConfig.templatesInterstitialEveryNthOpen, 2);
     expect(
       AndroidAdsConfig.interstitialEveryNthOpenFor(
         AndroidAdPlacement.templates,
       ),
-      3,
+      2,
     );
-    for (var open = 1; open <= 9; open++) {
-      final shouldShow = open % 3 == 0;
+    for (var open = 1; open <= 8; open++) {
+      final shouldShow = open % 2 == 0;
       expect(
         open % AndroidAdsConfig.templatesInterstitialEveryNthOpen == 0,
         shouldShow,
@@ -54,9 +54,9 @@ void main() {
     }
 
     expect(bump(AndroidAdPlacement.templates), isFalse); // 1
-    expect(bump(AndroidAdPlacement.templates), isFalse); // 2
+    expect(bump(AndroidAdPlacement.templates), isTrue); // 2
     expect(bump(AndroidAdPlacement.preview), isFalse); // preview 1
-    expect(bump(AndroidAdPlacement.templates), isTrue); // templates 3
+    expect(bump(AndroidAdPlacement.templates), isFalse); // templates 3
     expect(bump(AndroidAdPlacement.preview), isFalse); // preview 2
     expect(bump(AndroidAdPlacement.preview), isFalse); // preview 3
     expect(bump(AndroidAdPlacement.preview), isTrue); // preview 4

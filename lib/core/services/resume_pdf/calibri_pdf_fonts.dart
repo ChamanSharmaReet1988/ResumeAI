@@ -16,7 +16,7 @@ class CalibriPdfFonts {
     required pw.Font nunitoBodyRegular,
   }) : _upright = upright,
        italic = italic,
-       this.nunitoBodyRegular = nunitoBodyRegular;
+       nunitoBodyRegular = nunitoBodyRegular;
 
   final Map<int, pw.Font> _upright;
   final pw.Font italic;

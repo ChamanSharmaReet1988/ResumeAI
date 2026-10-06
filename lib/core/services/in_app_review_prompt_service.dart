@@ -159,6 +159,13 @@ class InAppReviewPromptService {
 
   static Future<void> _defaultRequestNativeReview() async {
     final review = InAppReview.instance;
+    // A debug install is not from the store, so Play's in-app sheet never
+    // appears and the App Store sheet is unreliable. Open the store page
+    // instead so the rating flow can be checked while developing.
+    if (kDebugMode) {
+      await _defaultOpenStoreListing();
+      return;
+    }
     if (await review.isAvailable()) {
       await review.requestReview();
       return;

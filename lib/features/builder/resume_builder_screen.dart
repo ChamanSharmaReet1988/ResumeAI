@@ -9,10 +9,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:resume_app/l10n/l10n_ext.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_builder_section_order.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/android_ads_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/profile_image_storage.dart';
 import '../../core/models/resume_models.dart';
@@ -432,10 +434,18 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       return;
     }
 
-    if (format == ResumeShareFormat.pdf) {
-      await viewModel.sharePdf();
-    } else {
-      await viewModel.shareDocx();
+    final result = format == ResumeShareFormat.pdf
+        ? await viewModel.sharePdf()
+        : await viewModel.shareDocx();
+    if (!mounted) {
+      return;
+    }
+    if (result.status == ShareResultStatus.success) {
+      await AndroidAdsService.showShareInterstitial();
+      if (!mounted) {
+        return;
+      }
+      await context.read<InAppReviewPromptService>().promptAfterShare();
     }
     if (!mounted) {
       return;
@@ -453,10 +463,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         'format': format.name,
       },
     );
-    if (!mounted) {
-      return;
-    }
-    await context.read<InAppReviewPromptService>().promptAfterShare();
     if (!mounted) {
       return;
     }
@@ -3293,17 +3299,16 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
               focusNode: _focusNodeForExtendedKeyboardField(
                 'custom-section-content-$index',
               ),
-              onChanged: (value) => viewModel.updateCustomSection(index, (
-                current,
-              ) {
-                if (current.layoutMode != CustomSectionLayoutMode.bullets) {
-                  return current.copyWith(content: value);
-                }
-                return current.copyWith(
-                  content: value,
-                  bullets: _bulletLinesFromContent(value),
-                );
-              }),
+              onChanged: (value) =>
+                  viewModel.updateCustomSection(index, (current) {
+                    if (current.layoutMode != CustomSectionLayoutMode.bullets) {
+                      return current.copyWith(content: value);
+                    }
+                    return current.copyWith(
+                      content: value,
+                      bullets: _bulletLinesFromContent(value),
+                    );
+                  }),
             ),
           ],
         ),
@@ -4153,7 +4158,10 @@ class _TrimBottom extends SingleChildRenderObjectWidget {
   }
 
   @override
-  void updateRenderObject(BuildContext context, _RenderTrimBottom renderObject) {
+  void updateRenderObject(
+    BuildContext context,
+    _RenderTrimBottom renderObject,
+  ) {
     renderObject.trim = trim;
   }
 }
@@ -4185,14 +4193,12 @@ class _RenderTrimBottom extends RenderProxyBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    context.pushClipRect(
-      needsCompositing,
-      offset,
-      Offset.zero & size,
-      (PaintingContext context, Offset offset) {
-        super.paint(context, offset);
-      },
-    );
+    context.pushClipRect(needsCompositing, offset, Offset.zero & size, (
+      PaintingContext context,
+      Offset offset,
+    ) {
+      super.paint(context, offset);
+    });
   }
 }
 

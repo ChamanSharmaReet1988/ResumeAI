@@ -46,6 +46,7 @@ class _AppShellState extends State<AppShell> {
   StreamSubscription<DeepLinkDestination>? _deepLinkSubscription;
   bool _deepLinkListenerAttached = false;
   bool _recordedLaunchHomeVisit = false;
+  bool _ratePromptVisible = false;
 
   bool get _isCupertino =>
       Platform.isIOS || Theme.of(context).platform == TargetPlatform.iOS;
@@ -99,6 +100,27 @@ class _AppShellState extends State<AppShell> {
     super.dispose();
   }
 
+  /// After the user has shared one resume or one cover letter, show the rate
+  /// dialog each time they arrive on Home from another screen.
+  Future<void> _showRatePromptOnReturnHome() async {
+    if (!mounted || _ratePromptVisible || _currentIndex != 0) {
+      return;
+    }
+    _ratePromptVisible = true;
+    final review = context.read<InAppReviewPromptService>();
+    try {
+      if (!await review.hasSharedOnce()) {
+        return;
+      }
+      if (!mounted || _currentIndex != 0) {
+        return;
+      }
+      await review.requestNativeReview();
+    } finally {
+      _ratePromptVisible = false;
+    }
+  }
+
   Future<void> _onHomeBecameVisible({required bool countVisit}) async {
     if (!mounted) {
       return;
@@ -134,25 +156,43 @@ class _AppShellState extends State<AppShell> {
 
     setState(() => _currentIndex = index);
 
+    if (index == AppShellScope.templatesTabIndex) {
+      await AndroidAdsService.showInterstitialIfReady(
+        placement: AndroidAdPlacement.templates,
+      );
+      if (!mounted) {
+        return;
+      }
+    }
+
     if (index == 0) {
       unawaited(_onHomeBecameVisible(countVisit: true));
+      unawaited(_showRatePromptOnReturnHome());
     }
   }
 
   void _goToHomeResumeTab() {
+    final arrivedFromAnotherTab = _currentIndex != 0;
     setState(() {
       _currentIndex = 0;
       _homeSegment = HomeSegment.resumes;
     });
     context.read<InAppReviewPromptService>().onArrivedAtHome();
+    if (arrivedFromAnotherTab) {
+      unawaited(_showRatePromptOnReturnHome());
+    }
   }
 
   void _goToHomeCoverLetterTab() {
+    final arrivedFromAnotherTab = _currentIndex != 0;
     setState(() {
       _currentIndex = 0;
       _homeSegment = HomeSegment.coverLetters;
     });
     context.read<InAppReviewPromptService>().onArrivedAtHome();
+    if (arrivedFromAnotherTab) {
+      unawaited(_showRatePromptOnReturnHome());
+    }
   }
 
   String _activeHeaderTitle(AppLocalizations l10n) {
@@ -194,6 +234,9 @@ class _AppShellState extends State<AppShell> {
     if (backPopsToHome) {
       _goToHomeResumeTab();
     }
+    if (_currentIndex == 0) {
+      unawaited(_showRatePromptOnReturnHome());
+    }
 
     await library.loadResumes();
   }
@@ -207,11 +250,13 @@ class _AppShellState extends State<AppShell> {
     }
 
     final normalizedTitle = enteredTitle.trim();
-    final draft = library.newDraft(l10n: context.l10n).copyWith(
-      title: normalizedTitle.isEmpty
-          ? ResumeData.defaultTitle
-          : normalizedTitle,
-    );
+    final draft = library
+        .newDraft(l10n: context.l10n)
+        .copyWith(
+          title: normalizedTitle.isEmpty
+              ? ResumeData.defaultTitle
+              : normalizedTitle,
+        );
 
     await context.read<ResumeRepository>().upsertResume(draft);
     if (!mounted) {
@@ -400,12 +445,6 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _openPreview({required ResumeData seed}) async {
-    await AndroidAdsService.showInterstitialIfReady(
-      placement: AndroidAdPlacement.preview,
-    );
-    if (!mounted) {
-      return;
-    }
     final repository = context.read<ResumeRepository>();
     final aiService = context.read<LocalAiResumeService>();
     final pdfService = context.read<ResumePdfService>();
@@ -448,6 +487,9 @@ class _AppShellState extends State<AppShell> {
     }
 
     await library.loadResumes();
+    if (_currentIndex == 0) {
+      unawaited(_showRatePromptOnReturnHome());
+    }
   }
 
   Future<void> _openCoverLetterEditor({
@@ -475,6 +517,9 @@ class _AppShellState extends State<AppShell> {
 
     if (backPopsToHome) {
       _goToHomeCoverLetterTab();
+    }
+    if (_currentIndex == 0) {
+      unawaited(_showRatePromptOnReturnHome());
     }
 
     await library.loadCoverLetters();
@@ -504,6 +549,9 @@ class _AppShellState extends State<AppShell> {
     if (backPopsToHome) {
       _goToHomeCoverLetterTab();
     }
+    if (_currentIndex == 0) {
+      unawaited(_showRatePromptOnReturnHome());
+    }
 
     await library.loadCoverLetters();
   }
@@ -527,6 +575,9 @@ class _AppShellState extends State<AppShell> {
     }
 
     await library.loadCoverLetters();
+    if (_currentIndex == 0) {
+      unawaited(_showRatePromptOnReturnHome());
+    }
   }
 
   CoverLetterEditorViewModel _buildCoverLetterViewModel({
@@ -555,10 +606,8 @@ class _AppShellState extends State<AppShell> {
         onOpenResume: (resume) => _openBuilder(seed: resume),
         onPreviewCoverLetter: (coverLetter) =>
             _openCoverLetterPreview(seed: coverLetter),
-        onEditCoverLetter: (coverLetter) => _openCoverLetterContent(
-          seed: coverLetter,
-          backPopsToHome: true,
-        ),
+        onEditCoverLetter: (coverLetter) =>
+            _openCoverLetterContent(seed: coverLetter, backPopsToHome: true),
         onCreateResume: _createResumeFromAddButton,
         onUploadResume: _uploadResume,
         onCreateCoverLetter: _createCoverLetterFromAddButton,
@@ -580,142 +629,142 @@ class _AppShellState extends State<AppShell> {
 
           if (isWide) {
             return Scaffold(
-            body: SafeArea(
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
-                    child: Card(
-                      clipBehavior: Clip.antiAlias,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 4,
-                        ),
-                        child: NavigationRail(
-                          selectedIndex: _currentIndex,
-                          useIndicator: true,
-                          onDestinationSelected: _selectTab,
-                          labelType: NavigationRailLabelType.all,
-                          destinations: destinations
-                              .map(
-                                (item) => NavigationRailDestination(
-                                  icon: Icon(item.icon),
-                                  selectedIcon: Icon(item.selectedIcon),
-                                  label: Text(item.label),
-                                ),
-                              )
-                              .toList(),
+              body: SafeArea(
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+                      child: Card(
+                        clipBehavior: Clip.antiAlias,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 4,
+                          ),
+                          child: NavigationRail(
+                            selectedIndex: _currentIndex,
+                            useIndicator: true,
+                            onDestinationSelected: _selectTab,
+                            labelType: NavigationRailLabelType.all,
+                            destinations: destinations
+                                .map(
+                                  (item) => NavigationRailDestination(
+                                    icon: Icon(item.icon),
+                                    selectedIcon: Icon(item.selectedIcon),
+                                    label: Text(item.label),
+                                  ),
+                                )
+                                .toList(),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Expanded(child: content),
-                ],
+                    Expanded(child: content),
+                  ],
+                ),
               ),
-            ),
-          );
-        }
+            );
+          }
 
-        final premiumHidesAds = PlatformMonetization.isIapEnabled &&
-            context.watch<PremiumPurchaseService>().isPremium;
-        final hideNavForBanner = !premiumHidesAds &&
-            ((_currentIndex == 0 && PlatformMonetization.showsHomeBanner) ||
-                (_currentIndex == AppShellScope.templatesTabIndex &&
-                    PlatformMonetization.showsAds) ||
-                (_currentIndex == AppShellScope.settingsTabIndex &&
-                    PlatformMonetization.showsSettingsBanner));
+          final premiumHidesAds =
+              PlatformMonetization.isIapEnabled &&
+              context.watch<PremiumPurchaseService>().isPremium;
+          final hideNavForBanner =
+              !premiumHidesAds &&
+              ((_currentIndex == 0 && PlatformMonetization.showsHomeBanner) ||
+                  (_currentIndex == AppShellScope.templatesTabIndex &&
+                      PlatformMonetization.showsAds) ||
+                  (_currentIndex == AppShellScope.settingsTabIndex &&
+                      PlatformMonetization.showsSettingsBanner));
 
-        return Scaffold(
-          body: _isCupertino
-              ? CupertinoPageScaffold(
-                  navigationBar: hideNavForBanner
-                      ? null
-                      : CupertinoNavigationBar(
-                          middle: Text(_activeHeaderTitle(l10n)),
-                          transitionBetweenRoutes: false,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).cupertinoOverrideTheme?.barBackgroundColor,
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.outlineVariant.withValues(
-                                alpha: 0.18,
+          return Scaffold(
+            body: _isCupertino
+                ? CupertinoPageScaffold(
+                    navigationBar: hideNavForBanner
+                        ? null
+                        : CupertinoNavigationBar(
+                            middle: Text(_activeHeaderTitle(l10n)),
+                            transitionBetweenRoutes: false,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).cupertinoOverrideTheme?.barBackgroundColor,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant
+                                    .withValues(alpha: 0.18),
                               ),
                             ),
                           ),
-                        ),
-                  child: content,
-                )
-              : SafeArea(bottom: false, child: content),
-          bottomNavigationBar: DecoratedBox(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 16,
-                  offset: const Offset(0, -3),
-                ),
-              ],
-            ),
-            child: _isCupertino
-                ? CupertinoTheme(
-                    data: CupertinoTheme.of(context).copyWith(
-                      textTheme: CupertinoTheme.of(context).textTheme.copyWith(
-                        tabLabelTextStyle: CupertinoTheme.of(context)
-                            .textTheme
-                            .tabLabelTextStyle
+                    child: content,
+                  )
+                : SafeArea(bottom: false, child: content),
+            bottomNavigationBar: DecoratedBox(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 16,
+                    offset: const Offset(0, -3),
+                  ),
+                ],
+              ),
+              child: _isCupertino
+                  ? CupertinoTheme(
+                      data: CupertinoTheme.of(context).copyWith(
+                        textTheme: CupertinoTheme.of(context).textTheme
                             .copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                              tabLabelTextStyle: CupertinoTheme.of(context)
+                                  .textTheme
+                                  .tabLabelTextStyle
+                                  .copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                             ),
                       ),
-                    ),
-                    child: CupertinoTabBar(
-                      height: 64,
-                      iconSize: 24,
-                      currentIndex: _currentIndex,
-                      onTap: _selectTab,
-                      activeColor: Theme.of(context).colorScheme.primary,
-                      inactiveColor: CupertinoColors.systemGrey,
-                      backgroundColor: Theme.of(
-                        context,
-                      ).cardColor.withValues(alpha: 0.96),
-                      border: Border(
-                        top: BorderSide(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outlineVariant
-                              .withValues(alpha: 0.18),
+                      child: CupertinoTabBar(
+                        height: 64,
+                        iconSize: 24,
+                        currentIndex: _currentIndex,
+                        onTap: _selectTab,
+                        activeColor: Theme.of(context).colorScheme.primary,
+                        inactiveColor: CupertinoColors.systemGrey,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).cardColor.withValues(alpha: 0.96),
+                        border: Border(
+                          top: BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant
+                                .withValues(alpha: 0.18),
+                          ),
                         ),
+                        items: destinations
+                            .map(
+                              (item) => BottomNavigationBarItem(
+                                icon: Icon(item.icon),
+                                activeIcon: Icon(item.selectedIcon),
+                                label: item.label,
+                              ),
+                            )
+                            .toList(),
                       ),
-                      items: destinations
+                    )
+                  : NavigationBar(
+                      selectedIndex: _currentIndex,
+                      destinations: destinations
                           .map(
-                            (item) => BottomNavigationBarItem(
+                            (item) => NavigationDestination(
                               icon: Icon(item.icon),
-                              activeIcon: Icon(item.selectedIcon),
+                              selectedIcon: Icon(item.selectedIcon),
                               label: item.label,
                             ),
                           )
                           .toList(),
+                      onDestinationSelected: _selectTab,
                     ),
-                  )
-                : NavigationBar(
-                    selectedIndex: _currentIndex,
-                    destinations: destinations
-                        .map(
-                          (item) => NavigationDestination(
-                            icon: Icon(item.icon),
-                            selectedIcon: Icon(item.selectedIcon),
-                            label: item.label,
-                          ),
-                        )
-                        .toList(),
-                    onDestinationSelected: _selectTab,
-                  ),
-          ),
+            ),
           );
         },
       ),
@@ -759,11 +808,11 @@ class _AppShellState extends State<AppShell> {
         icon: Icons.dashboard_customize_outlined,
         selectedIcon: Icons.dashboard_customize_rounded,
       ),
-        _ShellDestination(
-          label: l10n.tabAiResume,
-          icon: Icons.auto_awesome_outlined,
-          selectedIcon: Icons.auto_awesome_rounded,
-        ),
+      _ShellDestination(
+        label: l10n.tabAiResume,
+        icon: Icons.auto_awesome_outlined,
+        selectedIcon: Icons.auto_awesome_rounded,
+      ),
       _ShellDestination(
         label: l10n.tabSettings,
         icon: Icons.settings_outlined,

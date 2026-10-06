@@ -828,7 +828,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 class _SettingsVersionFooter extends StatefulWidget {
-  const _SettingsVersionFooter({this.onTap});
+  const _SettingsVersionFooter();
 
   final VoidCallback? onTap;
 
