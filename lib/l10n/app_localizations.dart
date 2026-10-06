@@ -327,7 +327,7 @@ abstract class AppLocalizations {
   /// No description provided for @noResumesYetBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap Create new to start from scratch, or Upload resume to fill in your details from an existing file.'**
+  /// **'Tap Create new to start your first resume.'**
   String get noResumesYetBody;
 
   /// No description provided for @noCoverLettersYet.

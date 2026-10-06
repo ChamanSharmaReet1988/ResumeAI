@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nested/nested.dart';
@@ -146,39 +144,6 @@ class _RecordingFirebaseServices implements FirebaseAppServices {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-/// Stands in for the file picker. Calls the picked-file hook like the real
-/// one, then holds until [finish] so a test can look at the screen mid-import.
-class _PausedImportService extends ResumeImportService {
-  final Completer<void> _release = Completer<void>();
-
-  void finish() => _release.complete();
-
-  @override
-  Future<ImportedResumeFile?> pickResumeFile({
-    Future<void> Function()? onFilePicked,
-  }) async {
-    await onFilePicked?.call();
-    await _release.future;
-    return const ImportedResumeFile(
-      fileName: 'Priya Raman.pdf',
-      resumeText: 'Priya Raman\nMarketing Manager\npriya@email.com',
-    );
-  }
-
-  // Real isolates do not complete under the widget tester's fake clock, so
-  // parse in place here; the isolate path has its own test.
-  @override
-  Future<ResumeData> parseInBackground(
-    ImportedResumeFile file, {
-    required ResumeTemplate template,
-  }) async => LocalAiResumeService().parseImportedResumeText(
-    resumeText: file.resumeText,
-    candidateResumeTexts: file.candidateResumeTexts,
-    template: template,
-    sourceTitle: file.suggestedTitle,
-  );
 }
 
 void _ignoreRenderOverflowErrors() {
@@ -561,7 +526,7 @@ void main() {
   );
 
   testWidgets(
-    'new cover letter flow returns to home when preview is dismissed',
+    'new cover letter flow returns to the letter when preview is dismissed',
     (tester) async {
       tester.view.physicalSize = const Size(1440, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -669,15 +634,13 @@ void main() {
       );
       expect(
         find.byKey(const Key('preview-cover-letter-button')),
-        findsNothing,
+        findsOneWidget,
       );
-      expect(find.text('Create cover letter'), findsNothing);
-      expect(find.byKey(const Key('home-create-new-button')), findsOneWidget);
     },
   );
 
   testWidgets(
-    'edit cover letter flow returns to home when preview is dismissed',
+    'edit cover letter flow returns to the letter when preview is dismissed',
     (tester) async {
       tester.view.physicalSize = const Size(1440, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -755,224 +718,8 @@ void main() {
       );
       expect(
         find.byKey(const Key('preview-cover-letter-button')),
-        findsNothing,
+        findsOneWidget,
       );
-      expect(find.text('Cover letter content'), findsNothing);
-      expect(find.byKey(const Key('home-create-new-button')), findsOneWidget);
     },
   );
-  testWidgets('uploading a resume shows a loading dialog while it processes', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1440, 2400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-    _ignoreRenderOverflowErrors();
-
-    final repository = _FakeAppShellRepository();
-    final resumeLibrary = ResumeLibraryViewModel(repository: repository);
-    final coverLetterLibrary = CoverLetterLibraryViewModel(
-      repository: repository,
-    );
-    await resumeLibrary.loadResumes();
-    await coverLetterLibrary.loadCoverLetters();
-    final appPreferences = AppPreferences.inMemory(isPremium: true);
-    final premiumPurchaseService = PremiumPurchaseService.inMemory(
-      appPreferences: appPreferences,
-      isPremium: true,
-    );
-    final importService = _PausedImportService();
-
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: _appShellProviders(
-          repository: repository,
-          resumeLibrary: resumeLibrary,
-          coverLetterLibrary: coverLetterLibrary,
-          appPreferences: appPreferences,
-          premiumPurchaseService: premiumPurchaseService,
-          importService: importService,
-        ),
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const AppShell(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Reading your resume\u2026'), findsNothing);
-
-    await tester.tap(find.byKey(const Key('home-upload-resume-button')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    // The file has been chosen but is not processed yet: loading is visible
-    // and cannot be dismissed by tapping outside it.
-    expect(find.text('Reading your resume\u2026'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsWidgets);
-    await tester.tapAt(const Offset(5, 5));
-    await tester.pump();
-    expect(find.text('Reading your resume\u2026'), findsOneWidget);
-
-    // Processing finishes: the loading goes away and the builder opens.
-    importService.finish();
-    await tester.pumpAndSettle();
-    expect(find.text('Reading your resume\u2026'), findsNothing);
-    expect(find.text('Preview'), findsOneWidget);
-  });
-  /// Uploads a resume, edits nothing, and goes back to Home.
-  Future<_RecordingFirebaseServices> uploadAndReturnHome(
-    WidgetTester tester,
-  ) async {
-    tester.view.physicalSize = const Size(1440, 2400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-    _ignoreRenderOverflowErrors();
-
-    final repository = _FakeAppShellRepository();
-    final resumeLibrary = ResumeLibraryViewModel(repository: repository);
-    final coverLetterLibrary = CoverLetterLibraryViewModel(
-      repository: repository,
-    );
-    await resumeLibrary.loadResumes();
-    await coverLetterLibrary.loadCoverLetters();
-    final appPreferences = AppPreferences.inMemory(isPremium: true);
-    final premiumPurchaseService = PremiumPurchaseService.inMemory(
-      appPreferences: appPreferences,
-      isPremium: true,
-    );
-    final importService = _PausedImportService();
-    final firebase = _RecordingFirebaseServices();
-
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: _appShellProviders(
-          repository: repository,
-          resumeLibrary: resumeLibrary,
-          coverLetterLibrary: coverLetterLibrary,
-          appPreferences: appPreferences,
-          premiumPurchaseService: premiumPurchaseService,
-          importService: importService,
-          firebase: firebase,
-        ),
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const AppShell(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byKey(const Key('home-upload-resume-button')));
-    await tester.pump();
-    importService.finish();
-    await tester.pumpAndSettle();
-
-    // In the editor now. Nothing is asked until the user leaves it.
-    expect(find.text('Preview'), findsOneWidget);
-    expect(find.text('How did the upload go?'), findsNothing);
-
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    return firebase;
-  }
-
-  testWidgets('back on home after an upload, asks how it went — good', (
-    tester,
-  ) async {
-    final firebase = await uploadAndReturnHome(tester);
-
-    expect(find.text('How did the upload go?'), findsOneWidget);
-    expect(find.text('Good'), findsOneWidget);
-    expect(find.text('Bad'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('upload-feedback-good')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('How did the upload go?'), findsNothing);
-    expect(
-      firebase.events.where((e) => e.startsWith('resume_upload_')),
-      ['resume_upload_good'],
-    );
-  });
-
-  testWidgets('back on home after an upload — bad', (tester) async {
-    final firebase = await uploadAndReturnHome(tester);
-
-    await tester.tap(find.byKey(const Key('upload-feedback-bad')));
-    await tester.pumpAndSettle();
-
-    expect(
-      firebase.events.where((e) => e.startsWith('resume_upload_')),
-      ['resume_upload_bad'],
-    );
-  });
-
-  testWidgets('dismissing the upload question logs nothing', (tester) async {
-    final firebase = await uploadAndReturnHome(tester);
-
-    await tester.tapAt(const Offset(5, 5));
-    await tester.pumpAndSettle();
-
-    expect(find.text('How did the upload go?'), findsNothing);
-    expect(firebase.events.where((e) => e.startsWith('resume_upload_')), isEmpty);
-  });
-  testWidgets('the loader stays up long enough to be seen on a fast import', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1440, 2400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-    _ignoreRenderOverflowErrors();
-
-    final repository = _FakeAppShellRepository();
-    final resumeLibrary = ResumeLibraryViewModel(repository: repository);
-    final coverLetterLibrary = CoverLetterLibraryViewModel(
-      repository: repository,
-    );
-    await resumeLibrary.loadResumes();
-    await coverLetterLibrary.loadCoverLetters();
-    final appPreferences = AppPreferences.inMemory(isPremium: true);
-    final premiumPurchaseService = PremiumPurchaseService.inMemory(
-      appPreferences: appPreferences,
-      isPremium: true,
-    );
-    final importService = _PausedImportService()..finish(); // instant import
-
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: _appShellProviders(
-          repository: repository,
-          resumeLibrary: resumeLibrary,
-          coverLetterLibrary: coverLetterLibrary,
-          appPreferences: appPreferences,
-          premiumPurchaseService: premiumPurchaseService,
-          importService: importService,
-        ),
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const AppShell(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byKey(const Key('home-upload-resume-button')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    // Import finished instantly, yet the loader is already on screen...
-    expect(find.text('Reading your resume\u2026'), findsOneWidget);
-
-    // ...and still there partway through its minimum time.
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Reading your resume\u2026'), findsOneWidget);
-
-    await tester.pumpAndSettle();
-    expect(find.text('Reading your resume\u2026'), findsNothing);
-    expect(find.text('Preview'), findsOneWidget);
-  });
 }

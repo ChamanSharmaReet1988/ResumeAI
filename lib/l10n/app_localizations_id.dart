@@ -127,7 +127,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get noResumesYetBody =>
-      'Ketuk Buat baru untuk mulai dari awal, atau Unggah resume untuk mengisi data dari file yang ada.';
+      'Ketuk Buat baru untuk membuat resume pertama Anda.';
 
   @override
   String get noCoverLettersYet => 'Belum ada surat lamaran';

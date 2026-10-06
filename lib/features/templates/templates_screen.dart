@@ -1536,6 +1536,7 @@ class _TemplateHairline extends StatelessWidget {
 class _LargeTemplateArtPreview extends StatelessWidget {
   const _LargeTemplateArtPreview({
     required this.child,
+    this.showPremiumBadge = false,
   });
 
   final Widget child;
@@ -4277,6 +4278,7 @@ String _profileSidebarCreativeDateRange(String startDate, String endDate) {
 class _AtsStructuredTemplateArt extends StatelessWidget {
   const _AtsStructuredTemplateArt({
     required this.resume,
+    this.detailed = false,
   });
 
   final ResumeData resume;
@@ -4654,6 +4656,7 @@ class _AtsStructuredTemplateArt extends StatelessWidget {
 class _AtsSerifRulesTemplateArt extends StatelessWidget {
   const _AtsSerifRulesTemplateArt({
     required this.resume,
+    this.detailed = false,
   });
 
   final ResumeData resume;
@@ -5305,7 +5308,10 @@ class _AtsModernFlowTemplateArt extends StatelessWidget {
 }
 
 class _AtsExecutiveTemplateArt extends StatelessWidget {
-  const _AtsExecutiveTemplateArt({required this.resume});
+  const _AtsExecutiveTemplateArt({
+    required this.resume,
+    this.detailed = false,
+  });
 
   final ResumeData resume;
   final bool detailed;
@@ -5620,6 +5626,7 @@ class _AtsExecutiveTemplateArt extends StatelessWidget {
 class _AtsCenterClassicTemplateArt extends StatelessWidget {
   const _AtsCenterClassicTemplateArt({
     required this.resume,
+    this.detailed = false,
   });
 
   final ResumeData resume;
@@ -5900,6 +5907,7 @@ class _AtsCenterClassicTemplateArt extends StatelessWidget {
 class _AtsProfessionalBlueTemplateArt extends StatelessWidget {
   const _AtsProfessionalBlueTemplateArt({
     required this.resume,
+    this.detailed = false,
   });
 
   final ResumeData resume;
@@ -6258,6 +6266,7 @@ abstract final class _ClassicSidebarPreviewSkillsSpacing {
 class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
   const _ClassicSidebarTemplateArtCompact({
     required this.resume,
+    this.detailed = false,
   });
 
   final ResumeData resume;
@@ -6659,6 +6668,7 @@ class _ClassicSidebarTemplateArtCompact extends StatelessWidget {
 class _DetailsSidebarTemplateArtCompact extends StatelessWidget {
   const _DetailsSidebarTemplateArtCompact({
     required this.resume,
+    this.detailed = false,
   });
 
   final ResumeData resume;

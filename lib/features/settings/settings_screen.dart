@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +19,7 @@ import '../premium/premium_gate.dart';
 import '../shared/android_banner_ad.dart';
 import '../shared/view_models.dart';
 import '../../core/app_locale_option.dart';
+import '../../core/services/analytics_events.dart';
 import '../../core/services/android_ads_service.dart';
 import '../../core/services/firebase_app_services.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
@@ -56,6 +59,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _openFeedbackComposer(BuildContext context) async {
+    unawaited(
+      logAnalyticsEvent(context, AnalyticsEvents.settingsFeedback),
+    );
     final l10n = context.l10n;
     final mailUri = _buildFeedbackMailtoUri(context);
     final canLaunch = await canLaunchUrl(mailUri);
@@ -81,6 +87,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _rateApp(BuildContext context) async {
+    unawaited(
+      logAnalyticsEvent(context, AnalyticsEvents.settingsRate),
+    );
     final prompt = context.read<InAppReviewPromptService>();
     await prompt.markRatingCompleted();
     final review = InAppReview.instance;
@@ -122,6 +131,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _shareApp(BuildContext context) async {
+    unawaited(
+      logAnalyticsEvent(context, AnalyticsEvents.settingsShare),
+    );
     final l10n = context.l10n;
     final padding = MediaQuery.paddingOf(context);
     final size = MediaQuery.sizeOf(context);
@@ -145,6 +157,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_isCheckingPremiumStatus) {
       return;
     }
+    unawaited(
+      logAnalyticsEvent(context, AnalyticsEvents.settingsPremium),
+    );
     final premium = context.read<PremiumPurchaseService>();
     setState(() => _isCheckingPremiumStatus = true);
     try {
@@ -261,6 +276,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!context.mounted) {
       return;
     }
+    unawaited(
+      logAnalyticsEvent(
+        context,
+        AnalyticsEvents.settingsBackup,
+        parameters: {
+          'target': defaultTargetPlatform == TargetPlatform.iOS
+              ? 'icloud'
+              : 'google_drive',
+        },
+      ),
+    );
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       final allowed = await ensurePremiumForICloudBackup(context);
       if (!allowed || !context.mounted) {
@@ -285,6 +311,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required Uri uri,
   }) async {
+    final event = uri == _privacyPolicyUri
+        ? AnalyticsEvents.settingsPrivacy
+        : AnalyticsEvents.settingsTerms;
+    unawaited(logAnalyticsEvent(context, event));
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => LegalWebViewScreen(title: title, url: uri.toString()),
@@ -392,9 +422,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                               fontWeight: FontWeight.w400,
                                             ),
                                         onChanged: (value) {
-                                          if (value != null) {
-                                            settings.updateThemeMode(value);
+                                          if (value == null) {
+                                            return;
                                           }
+                                          settings.updateThemeMode(value);
+                                          unawaited(
+                                            logAnalyticsEvent(
+                                              context,
+                                              AnalyticsEvents.settingsTheme,
+                                              parameters: {
+                                                'theme': switch (value) {
+                                                  ThemeMode.system => 'system',
+                                                  ThemeMode.light => 'light',
+                                                  ThemeMode.dark => 'dark',
+                                                },
+                                              },
+                                            ),
+                                          );
                                         },
                                         items: [
                                           DropdownMenuItem(
@@ -464,9 +508,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                               fontWeight: FontWeight.w400,
                                             ),
                                         onChanged: (value) {
-                                          if (value != null) {
-                                            settings.updateAppLocaleCode(value);
+                                          if (value == null) {
+                                            return;
                                           }
+                                          settings.updateAppLocaleCode(value);
+                                          unawaited(
+                                            logAnalyticsEvent(
+                                              context,
+                                              AnalyticsEvents.settingsLanguage,
+                                              parameters: {'language': value},
+                                            ),
+                                          );
                                         },
                                         selectedItemBuilder: (context) {
                                           return [
@@ -828,7 +880,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 class _SettingsVersionFooter extends StatefulWidget {
-  const _SettingsVersionFooter();
+  const _SettingsVersionFooter({this.onTap});
 
   final VoidCallback? onTap;
 

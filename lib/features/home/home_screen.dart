@@ -36,7 +36,6 @@ class HomeScreen extends StatelessWidget {
     required this.onPreviewCoverLetter,
     required this.onEditCoverLetter,
     required this.onCreateResume,
-    required this.onUploadResume,
     required this.onCreateCoverLetter,
   });
 
@@ -50,7 +49,6 @@ class HomeScreen extends StatelessWidget {
   final ValueChanged<CoverLetterData> onPreviewCoverLetter;
   final ValueChanged<CoverLetterData> onEditCoverLetter;
   final VoidCallback onCreateResume;
-  final VoidCallback onUploadResume;
   final VoidCallback onCreateCoverLetter;
 
   @override
@@ -237,11 +235,9 @@ class HomeScreen extends StatelessWidget {
                     right: 0,
                     bottom: 0,
                     child: _HomeCreateActions(
-                      showUpload: currentSegment == HomeSegment.resumes,
                       onCreateNew: currentSegment == HomeSegment.resumes
                           ? onCreateResume
                           : onCreateCoverLetter,
-                      onUpload: onUploadResume,
                     ),
                   ),
                 ],
@@ -256,20 +252,11 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// "Create new" and "Upload resume" as a segmented bar pinned to the bottom
-/// of Home.
-///
-/// Cover letters have no upload path, so that segment only shows Create new.
+/// "Create new" pinned to the bottom of Home.
 class _HomeCreateActions extends StatelessWidget {
-  const _HomeCreateActions({
-    required this.showUpload,
-    required this.onCreateNew,
-    required this.onUpload,
-  });
+  const _HomeCreateActions({required this.onCreateNew});
 
-  final bool showUpload;
   final VoidCallback onCreateNew;
-  final VoidCallback onUpload;
 
   @override
   Widget build(BuildContext context) {
@@ -277,27 +264,12 @@ class _HomeCreateActions extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (showUpload) ...[
-            _HomeActionSegment(
-              key: const Key('home-upload-resume-button'),
-              icon: Icons.upload_file_rounded,
-              label: l10n.homeUploadResume,
-              highlighted: false,
-              onTap: onUpload,
-            ),
-            const SizedBox(width: 12),
-          ],
-          _HomeActionSegment(
-            key: const Key('home-create-new-button'),
-            icon: Icons.add_rounded,
-            label: l10n.homeCreateNew,
-            highlighted: true,
-            onTap: onCreateNew,
-          ),
-        ],
+      child: _HomeActionSegment(
+        key: const Key('home-create-new-button'),
+        icon: Icons.add_rounded,
+        label: l10n.homeCreateNew,
+        highlighted: true,
+        onTap: onCreateNew,
       ),
     );
   }

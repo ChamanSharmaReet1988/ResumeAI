@@ -127,7 +127,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noResumesYetBody =>
-      'Toca Crear nuevo para empezar desde cero o Subir currículum para completar tus datos desde un archivo.';
+      'Toca Crear nuevo para empezar tu primer currículum.';
 
   @override
   String get noCoverLettersYet => 'Aún no hay cartas de presentación';

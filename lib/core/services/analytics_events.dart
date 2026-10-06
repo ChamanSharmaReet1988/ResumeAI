@@ -31,6 +31,26 @@ abstract final class AnalyticsEvents {
 
   /// A bottom-navigation tab the user tapped; carries `tab` and `tab_index`.
   static const String tabSelected = 'tab_selected';
+
+  /// Resume AI tab. `mode` is `check_ats` or `enhance`.
+  static const String aiModeSelected = 'ai_mode_selected';
+  static const String aiResumeUploaded = 'ai_resume_uploaded';
+  static const String aiResumeSelected = 'ai_resume_selected';
+  static const String aiAtsChecked = 'ai_ats_checked';
+  static const String aiResumeOptimized = 'ai_resume_optimized';
+  static const String aiResumeShown = 'ai_resume_shown';
+  static const String aiResumeSaved = 'ai_resume_saved';
+
+  /// Settings tab.
+  static const String settingsTheme = 'settings_theme';
+  static const String settingsLanguage = 'settings_language';
+  static const String settingsBackup = 'settings_backup';
+  static const String settingsPremium = 'settings_premium';
+  static const String settingsFeedback = 'settings_feedback';
+  static const String settingsRate = 'settings_rate';
+  static const String settingsPrivacy = 'settings_privacy';
+  static const String settingsTerms = 'settings_terms';
+  static const String settingsShare = 'settings_share';
 }
 
 /// Prefixes event names for Analytics: `resumeapp_ios_*` / `resumeapp_android_*`.

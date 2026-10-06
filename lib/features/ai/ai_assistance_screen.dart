@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,7 @@ import 'package:resume_app/l10n/l10n_ext.dart';
 
 import '../../core/models/resume_models.dart';
 import '../../core/services/ai_api_key_store.dart';
+import '../../core/services/analytics_events.dart';
 import '../../core/services/ai_resume_coordinator.dart';
 import '../../core/services/android_ads_service.dart';
 import '../../core/services/platform_monetization.dart';
@@ -238,6 +241,9 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
       _clearImportedResume();
       _resetAtsCreateProgress();
     });
+    unawaited(
+      logAnalyticsEvent(context, AnalyticsEvents.aiResumeSelected),
+    );
   }
 
   Future<void> _runTask(Future<void> Function() task) async {
@@ -300,6 +306,13 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
         _libraryResumeId = null;
         _resetAtsCreateProgress();
       });
+      await logAnalyticsEvent(
+        context,
+        AnalyticsEvents.aiResumeUploaded,
+        parameters: {
+          'mode': analyzeAfter ? 'check_ats' : 'enhance',
+        },
+      );
 
       if (analyzeAfter) {
         await _checkAts(
@@ -340,6 +353,13 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
         return;
       }
       setState(() => _atsAnalysis = analysis);
+      await logAnalyticsEvent(
+        context,
+        AnalyticsEvents.aiAtsChecked,
+        parameters: {
+          'source': _importedResume != null ? 'upload' : 'library',
+        },
+      );
     });
   }
 
@@ -405,6 +425,15 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
           afterResume: created,
         );
       });
+      await logAnalyticsEvent(
+        context,
+        AnalyticsEvents.aiResumeOptimized,
+        parameters: {
+          'attempt': attemptIndex + 1,
+          'has_job_description': jobDescription.isNotEmpty,
+          'source': _importedResume != null ? 'upload' : 'library',
+        },
+      );
     });
   }
 
@@ -414,6 +443,10 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     if (previewData == null || created == null) {
       return;
     }
+
+    unawaited(
+      logAnalyticsEvent(context, AnalyticsEvents.aiResumeShown),
+    );
 
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
@@ -713,7 +746,21 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                 child: _AiResumeSegmentControl(
                   selected: _selectedSegment,
                   onChanged: (value) {
+                    if (value == _selectedSegment) {
+                      return;
+                    }
                     setState(() => _selectedSegment = value);
+                    unawaited(
+                      logAnalyticsEvent(
+                        context,
+                        AnalyticsEvents.aiModeSelected,
+                        parameters: {
+                          'mode': value == _AiResumeSegment.checkAts
+                              ? 'check_ats'
+                              : 'enhance',
+                        },
+                      ),
+                    );
                   },
                 ),
               ),
@@ -1125,6 +1172,7 @@ class _OptimizedResumePreviewScreenState
       await repository.upsertResume(savedResume);
       await library.loadResumes();
       library.selectResume(savedResume.id);
+      await logAnalyticsEvent(context, AnalyticsEvents.aiResumeSaved);
 
       if (!mounted) {
         return;

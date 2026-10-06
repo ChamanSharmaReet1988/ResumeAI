@@ -126,8 +126,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noResumesYet => 'No resumes yet';
 
   @override
-  String get noResumesYetBody =>
-      'Tap Create new to start from scratch, or Upload resume to fill in your details from an existing file.';
+  String get noResumesYetBody => 'Tap Create new to start your first resume.';
 
   @override
   String get noCoverLettersYet => 'No cover letters yet';

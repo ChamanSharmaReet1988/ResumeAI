@@ -50,6 +50,23 @@ void main() {
       AnalyticsEvents.deepLinkOpen,
       AnalyticsEvents.resumeUploadGood,
       AnalyticsEvents.resumeUploadBad,
+      AnalyticsEvents.tabSelected,
+      AnalyticsEvents.aiModeSelected,
+      AnalyticsEvents.aiResumeUploaded,
+      AnalyticsEvents.aiResumeSelected,
+      AnalyticsEvents.aiAtsChecked,
+      AnalyticsEvents.aiResumeOptimized,
+      AnalyticsEvents.aiResumeShown,
+      AnalyticsEvents.aiResumeSaved,
+      AnalyticsEvents.settingsTheme,
+      AnalyticsEvents.settingsLanguage,
+      AnalyticsEvents.settingsBackup,
+      AnalyticsEvents.settingsPremium,
+      AnalyticsEvents.settingsFeedback,
+      AnalyticsEvents.settingsRate,
+      AnalyticsEvents.settingsPrivacy,
+      AnalyticsEvents.settingsTerms,
+      AnalyticsEvents.settingsShare,
     ];
 
     for (final event in events) {

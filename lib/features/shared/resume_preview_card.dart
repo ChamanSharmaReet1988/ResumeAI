@@ -10366,6 +10366,7 @@ class _BlueDiagonalCornersPainter extends CustomPainter {
     required this.accent,
     required this.accentDark,
     required this.columnWidth,
+    this.drawTop = true,
   });
 
   final Color accent;
