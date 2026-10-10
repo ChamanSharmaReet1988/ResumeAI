@@ -5,8 +5,8 @@ import 'package:in_app_review/in_app_review.dart';
 
 /// System in-app review (Apple stars sheet / Play In-App Review).
 ///
-/// Flow: after the user shares once, show the rate popup the next time they
-/// land on Home for the 2nd visit (not immediately after create or share).
+/// Flow: after the user shares or saves a PDF once, request the rating the
+/// next time they land on Home (not immediately after create, share or save).
 /// The OS may still suppress the sheet based on its own quota.
 class InAppReviewPromptService {
   InAppReviewPromptService({
@@ -254,10 +254,12 @@ class InAppReviewPromptService {
     await markSharedOnce();
   }
 
-  /// PDF download no longer shows the rate UI; share + 2nd Home does.
-  /// Kept so existing call sites stay safe / no-op for prompting.
+  /// Call after a PDF is saved to the device. Saving a finished resume is as
+  /// good a moment as sharing one, and most people only save, so it unlocks
+  /// the rating request in the same way. Like [promptAfterShare], it does not
+  /// show anything immediately: the request happens when they are back on Home.
   Future<void> promptAfterValueMoment() async {
-    // Intentionally no immediate prompt. Rate shows on 2nd Home after share.
+    await markSharedOnce();
   }
 
   void endPromptOffer() {

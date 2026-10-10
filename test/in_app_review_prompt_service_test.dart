@@ -127,11 +127,31 @@ void main() {
     expect(requestNativeReviewCalls, 0);
   });
 
-  test('promptAfterValueMoment does not request review immediately', () async {
+  test('saving a PDF unlocks the rating but does not show it yet', () async {
     final service = buildService();
 
     await service.promptAfterValueMoment();
-    expect(requestNativeReviewCalls, 0);
+    expect(hasShared, isTrue, reason: 'a saved PDF counts like a share');
+    expect(requestNativeReviewCalls, 0, reason: 'nothing is shown immediately');
+    expect(await service.hasSharedOnce(), isTrue);
+  });
+
+  test('a user who only saves is asked on a later home visit', () async {
+    final service = buildService();
+
+    await service.promptAfterValueMoment();
+    await service.recordHomeVisit();
+    await service.recordHomeVisit();
+    expect(await service.claimHomePrompt(resumeCount: 1), isTrue);
+  });
+
+  test('a user who has done nothing is not asked', () async {
+    final service = buildService();
+
+    await service.recordHomeVisit();
+    await service.recordHomeVisit();
+    expect(await service.hasSharedOnce(), isFalse);
+    expect(await service.claimHomePrompt(resumeCount: 1), isFalse);
   });
 
   test('requestNativeReview uses the injected requester', () async {
