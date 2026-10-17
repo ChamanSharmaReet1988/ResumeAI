@@ -86,22 +86,17 @@ Future<void> main() async {
     }
     final premiumPurchaseService = PremiumPurchaseService(
       appPreferences: appPreferences,
-      // Android is ads + free; IAP only on iOS.
       enableStore: PlatformMonetization.isIapEnabled,
     );
     repository.configureGoogleDriveAutoSync(
       appPreferences: appPreferences,
       service: googleDriveResumeService,
-      hasPremium: () =>
-          PlatformMonetization.isAndroidAdsModel ||
-          premiumPurchaseService.isPremium,
+      hasPremium: () => premiumPurchaseService.isPremium,
     );
     repository.configureICloudAutoSync(
       appPreferences: appPreferences,
       service: const MethodChannelICloudResumeService(),
-      hasPremium: () =>
-          PlatformMonetization.isAndroidAdsModel ||
-          premiumPurchaseService.isPremium,
+      hasPremium: () => premiumPurchaseService.isPremium,
     );
     // Product lookup reaches the App Store; on a simulator or an unsigned
     // device it can never answer, which used to leave the app on its splash.
@@ -111,7 +106,7 @@ Future<void> main() async {
       timeout: const Duration(seconds: 8),
     );
     AndroidAdsService.isPremiumActive = () =>
-        PlatformMonetization.isIapEnabled && premiumPurchaseService.isPremium;
+        premiumPurchaseService.isPremium;
     await _bootstrapStep(
       'AndroidAdsService.initialize',
       AndroidAdsService.initialize,

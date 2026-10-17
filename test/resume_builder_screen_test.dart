@@ -6,6 +6,7 @@ import 'package:resume_app/core/models/resume_models.dart';
 import 'package:resume_app/core/services/app_preferences.dart';
 import 'package:resume_app/core/services/google_drive_resume_service.dart';
 import 'package:resume_app/core/services/icloud_resume_service.dart';
+import 'package:resume_app/core/services/premium_purchase_service.dart';
 import 'package:resume_app/core/services/resume_services.dart';
 import 'package:resume_app/features/builder/resume_builder_screen.dart';
 import 'package:resume_app/features/builder/resume_preview_screen.dart';
@@ -178,8 +179,17 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      ChangeNotifierProvider<ResumeEditorViewModel>(
-        create: (_) => viewModel,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ResumeEditorViewModel>(
+            create: (_) => viewModel,
+          ),
+          ChangeNotifierProvider<PremiumPurchaseService>(
+            create: (_) => PremiumPurchaseService.inMemory(
+              appPreferences: AppPreferences.inMemory(),
+            ),
+          ),
+        ],
         child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -743,11 +753,11 @@ void main() {
     expect(find.byKey(const Key('template-grid')), findsOneWidget);
     expect(find.text('Choose template'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('template-image-profile-sidebar')));
+    await tester.tap(find.byKey(const Key('template-image-dark-header')));
     await tester.pump();
     await tester.pumpAndSettle(const Duration(milliseconds: 600));
 
-    expect(viewModel.resume.template, ResumeTemplate.creative);
+    expect(viewModel.resume.template, ResumeTemplate.corporate);
   });
 
   testWidgets('preview back returns to the section list', (tester) async {

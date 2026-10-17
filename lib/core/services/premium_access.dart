@@ -3,9 +3,9 @@ import 'platform_monetization.dart';
 
 /// What requires [PremiumPurchaseService.isPremium] vs what stays free.
 ///
-/// All resume and cover letter templates are free on every platform.
-/// On iOS, Pro (one-time) unlocks: no ads, AI Resume, and iCloud backup.
-/// On Android, everything is free (ads monetization; IAP off).
+/// In Professional, ATS, and Best Pick, the first two templates stay free.
+/// The rest need the $1.99 one-time Pro unlock, which also removes ads.
+/// Cover letters stay free. AI Resume stays free on Android.
 abstract final class PremiumAccess {
   static const Set<String> coverLetterTemplateTileIds = {
     'executive-note',
@@ -16,16 +16,41 @@ abstract final class PremiumAccess {
     'ruled-letterhead',
   };
 
+  static const Set<String> freeResumeTileIds = {
+    'dark-header',
+    'accent-strip',
+    'ats-structured',
+    'ats-latex-classic',
+    'modern-line',
+    'split-contact',
+  };
+
+  static const Set<ResumeTemplate> freeResumeTemplates = {
+    ResumeTemplate.corporate,
+    ResumeTemplate.accentStrip,
+    ResumeTemplate.atsStructured,
+    ResumeTemplate.atsLatexClassic,
+    ResumeTemplate.modernLine,
+    ResumeTemplate.splitContact,
+  };
+
   /// AI Resume tab (and Create ATS) requires Pro on iOS only.
-  static bool get atsAiCreateRequiresPremium =>
-      PlatformMonetization.isIapEnabled;
+  static bool get atsAiCreateRequiresPremium => PlatformMonetization.isIos;
 
   static bool templateTileRequiresPremium(String tileId) {
-    return false;
+    if (freeResumeTileIds.contains(tileId)) {
+      return false;
+    }
+    if (coverLetterTemplateTileIds.contains(tileId) ||
+        tileId.endsWith('-letter') ||
+        tileId.contains('letter')) {
+      return false;
+    }
+    return true;
   }
 
   static bool resumeTemplateRequiresPremium(ResumeTemplate template) {
-    return false;
+    return !freeResumeTemplates.contains(template.userFacingTemplate);
   }
 
   static bool coverLetterTemplateRequiresPremium(CoverLetterTemplate template) {

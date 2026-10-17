@@ -23,7 +23,6 @@ import '../sample_avatar.dart';
 import '../skill_autocomplete_suggestions.dart';
 import 'google_drive_resume_service.dart';
 import 'icloud_resume_service.dart';
-import 'platform_monetization.dart';
 import 'profile_image_storage.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sfpdf;
 
@@ -2931,14 +2930,12 @@ class ResumeRepository {
   }
 
   bool get _canUseICloudBackup =>
-      PlatformMonetization.isAndroidAdsModel ||
-      ((_hasPremiumAccess?.call() ?? false) &&
-          (_appPreferences?.isPremium ?? false));
+      (_hasPremiumAccess?.call() ?? false) &&
+      (_appPreferences?.isPremium ?? false);
 
   bool get _canUseGoogleDriveBackup =>
-      PlatformMonetization.isAndroidAdsModel ||
-      ((_hasPremiumAccess?.call() ?? false) &&
-          (_appPreferences?.isPremium ?? false));
+      (_hasPremiumAccess?.call() ?? false) &&
+      (_appPreferences?.isPremium ?? false);
 
   void configureGoogleDriveAutoSync({
     required AppPreferences appPreferences,

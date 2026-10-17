@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 /// Platform monetization:
-/// - Android: free + ads (no IAP)
-/// - iOS: Pro subscription (IAP) + ads
+/// - Android: ads by default; $1.99 one-time Pro removes ads and unlocks
+///   paid templates
+/// - iOS: one-time Pro (IAP) + ads for free users
 abstract final class PlatformMonetization {
   static bool get isAndroidAdsModel {
     if (kIsWeb) {
@@ -18,7 +19,14 @@ abstract final class PlatformMonetization {
     return defaultTargetPlatform == TargetPlatform.iOS;
   }
 
-  static bool get isIapEnabled => !isAndroidAdsModel;
+  /// One-time Pro is offered on Android and iOS.
+  static bool get isIapEnabled {
+    if (kIsWeb) {
+      return false;
+    }
+    return defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+  }
 
   /// Banners + interstitials on Android and iOS. Disabled in debug builds.
   static bool get showsAds {

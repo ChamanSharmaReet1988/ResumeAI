@@ -260,6 +260,61 @@ void main() {
       expect(rect.bottom, greaterThan(0));
     },
   );
+
+  testWidgets(
+    'paid resume tiles lock and open Go Premium for free users',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final library = ResumeLibraryViewModel(
+        repository: _FakeTemplatesRepository(),
+      );
+      final appPreferences = AppPreferences.inMemory();
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ResumeLibraryViewModel>.value(value: library),
+            Provider<ResumePdfService>(create: (_) => ResumePdfService()),
+            ChangeNotifierProvider<PremiumPurchaseService>(
+              create: (_) => PremiumPurchaseService.inMemory(
+                appPreferences: appPreferences,
+              ),
+            ),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: TemplatesScreen(onCreateResume: _noop)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.lock_rounded), findsWidgets);
+
+      await tester.tap(find.byKey(const Key('template-category-bestPick')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('template-tile-modern-line')));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.text('Modern Line'), findsOneWidget);
+      expect(find.text('Go Premium'), findsNothing);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      final harborTile = find.byKey(const Key('template-tile-harbor'));
+      await tester.ensureVisible(harborTile);
+      await tester.tap(harborTile);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Go Premium'), findsOneWidget);
+    },
+  );
 }
 
 void _noop() {}

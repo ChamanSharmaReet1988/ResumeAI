@@ -13,6 +13,7 @@ import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/services/analytics_events.dart';
+import '../../core/services/premium_access.dart';
 import '../../core/services/resume_services.dart';
 import '../premium/premium_gate.dart';
 import '../shared/native_pdf_preview.dart';
@@ -714,6 +715,14 @@ const _professionalResumeCards = <_TemplateTileData>[
     isPremium: false,
   ),
   _TemplateTileData(
+    id: 'accent-strip',
+    resumeTemplate: ResumeTemplate.accentStrip,
+    previewKind: _TemplatePreviewKind.accentStripResume,
+    headline: 'Accent Strip',
+    caption: 'Bold left stripe with an oversized nameplate and clean sections.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
     id: 'profile-sidebar',
     resumeTemplate: ResumeTemplate.creative,
     previewKind: _TemplatePreviewKind.profileSidebarResume,
@@ -727,14 +736,6 @@ const _professionalResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.classicSidebarResume,
     headline: 'Classic Sidebar',
     caption: 'Soft left rail with photo-led identity and structured sections.',
-    isPremium: false,
-  ),
-  _TemplateTileData(
-    id: 'accent-strip',
-    resumeTemplate: ResumeTemplate.accentStrip,
-    previewKind: _TemplatePreviewKind.accentStripResume,
-    headline: 'Accent Strip',
-    caption: 'Bold left stripe with an oversized nameplate and clean sections.',
     isPremium: false,
   ),
   _TemplateTileData(
@@ -1494,7 +1495,7 @@ class _TemplatePreviewArt extends StatelessWidget {
                       ),
                     ),
                     if ((showPremiumBadgeOnTile || showPremiumBadgeOnPage) &&
-                        item.isPremium &&
+                        PremiumAccess.templateTileRequiresPremium(item.id) &&
                         !hasPremiumAccess)
                       Positioned(
                         right: badgeRightPadding,
