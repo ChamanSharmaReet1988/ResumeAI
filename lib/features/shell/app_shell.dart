@@ -216,6 +216,11 @@ class _AppShellState extends State<AppShell> {
       seedResume: seed ?? library.newDraft(l10n: context.l10n),
     );
 
+    await AndroidAdsService.showCreateResumeInterstitial();
+    if (!mounted) {
+      return;
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => ChangeNotifierProvider<ResumeEditorViewModel>.value(
@@ -339,6 +344,10 @@ class _AppShellState extends State<AppShell> {
 
     if (targetStep != null) {
       viewModel.setStep(targetStep);
+      await AndroidAdsService.showCreateResumeInterstitial();
+      if (!mounted) {
+        return;
+      }
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ChangeNotifierProvider<ResumeEditorViewModel>.value(

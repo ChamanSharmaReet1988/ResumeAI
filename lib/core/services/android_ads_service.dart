@@ -57,6 +57,7 @@ abstract final class AndroidAdsConfig {
     return switch (placement) {
       AndroidAdPlacement.preview => previewInterstitialEveryNthOpen,
       AndroidAdPlacement.templates => templatesInterstitialEveryNthOpen,
+      AndroidAdPlacement.createResume => 1,
     };
   }
 
@@ -95,17 +96,25 @@ abstract final class AndroidAdsConfig {
       return switch (placement) {
         AndroidAdPlacement.templates => iosTemplatesInterstitialAdUnitId,
         AndroidAdPlacement.preview => iosPreviewInterstitialAdUnitId,
+        // No third production unit; reuse the share / preview interstitial.
+        AndroidAdPlacement.createResume => iosPreviewInterstitialAdUnitId,
       };
     }
     return switch (placement) {
       AndroidAdPlacement.templates => androidTemplatesInterstitialAdUnitId,
       AndroidAdPlacement.preview => androidPreviewInterstitialAdUnitId,
+      AndroidAdPlacement.createResume => androidPreviewInterstitialAdUnitId,
     };
   }
+
+  /// First visit to the resume create screen is free; every visit after that
+  /// shows a full-screen ad.
+  static bool shouldShowCreateResumeInterstitial(int openCount) =>
+      openCount >= 2;
 }
 
 /// Where an interstitial may be requested from.
-enum AndroidAdPlacement { templates, preview }
+enum AndroidAdPlacement { templates, preview, createResume }
 
 /// Banner placements.
 enum AndroidBannerPlacement { home, templates, settings, aiResume }
@@ -248,6 +257,56 @@ class AndroidAdsService {
     }
 
     const placement = AndroidAdPlacement.preview;
+    final ad = _interstitials[placement];
+    if (ad == null) {
+      unawaitedLoadInterstitial(placement);
+      return;
+    }
+    _interstitials[placement] = null;
+    final dismissed = Completer<void>();
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        unawaitedLoadInterstitial(placement);
+        if (!dismissed.isCompleted) {
+          dismissed.complete();
+        }
+      },
+      onAdFailedToShowFullScreenContent: (ad, _) {
+        ad.dispose();
+        unawaitedLoadInterstitial(placement);
+        if (!dismissed.isCompleted) {
+          dismissed.complete();
+        }
+      },
+    );
+    try {
+      await ad.show();
+    } catch (_) {
+      ad.dispose();
+      unawaitedLoadInterstitial(placement);
+      return;
+    }
+    await dismissed.future;
+  }
+
+  /// Resume create screen: skip the first visit, then show a full-screen ad
+  /// on every later visit. Waits until the ad is dismissed.
+  static Future<void> showCreateResumeInterstitial() async {
+    if (!PlatformMonetization.showsAds ||
+        !_initialized ||
+        _adsSuppressedByPremium) {
+      return;
+    }
+
+    const placement = AndroidAdPlacement.createResume;
+    final nextCount = (_openCounts[placement] ?? 0) + 1;
+    _openCounts[placement] = nextCount;
+    if (!AndroidAdsConfig.shouldShowCreateResumeInterstitial(nextCount)) {
+      unawaitedLoadInterstitial(placement);
+      return;
+    }
+
     final ad = _interstitials[placement];
     if (ad == null) {
       unawaitedLoadInterstitial(placement);

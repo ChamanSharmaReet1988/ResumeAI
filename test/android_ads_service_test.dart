@@ -65,6 +65,14 @@ void main() {
   test('open counts start at zero after reset', () {
     expect(AndroidAdsService.openCountFor(AndroidAdPlacement.templates), 0);
     expect(AndroidAdsService.openCountFor(AndroidAdPlacement.preview), 0);
+    expect(AndroidAdsService.openCountFor(AndroidAdPlacement.createResume), 0);
+  });
+
+  test('create resume interstitial skips the first visit then always shows', () {
+    expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(1), isFalse);
+    expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(2), isTrue);
+    expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(3), isTrue);
+    expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(8), isTrue);
   });
 
   test('templates interstitial unit ids are configured', () {
