@@ -585,6 +585,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get atsResumes => 'ATS Resumes';
 
   @override
+  String get topPickTemplates => 'Best Pick';
+
+  @override
+  String get topPickTemplatesSubtitle =>
+      'Creative, modern, ATS-friendly layouts';
+
+  @override
   String get allCoverLetters => 'All';
 
   @override
@@ -749,6 +756,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get templateCleanSansAtsCaption =>
       'Bold uppercase name, right-aligned contact, and two-column skills.';
+
+  @override
+  String get templateModernLine => 'Modern Line';
+
+  @override
+  String get templateModernLineCaption =>
+      'Short accent marks under each heading with a clean single-column ATS layout.';
+
+  @override
+  String get templateSplitContact => 'Split Contact';
+
+  @override
+  String get templateSplitContactCaption =>
+      'Name on the left, contact on the right, and a structured single-column body.';
+
+  @override
+  String get templateHarbor => 'Harbor';
+
+  @override
+  String get templateHarborCaption =>
+      'Centered nameplate, middot contact, and ruled modern section titles.';
+
+  @override
+  String get templateTypeplate => 'Typeplate';
+
+  @override
+  String get templateTypeplateCaption =>
+      'Editorial type-first header with a left accent mark on each section.';
 
   @override
   String get templateExecutiveNote => 'Executive Note';

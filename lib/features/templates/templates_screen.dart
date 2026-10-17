@@ -41,7 +41,7 @@ class TemplatesScreen extends StatefulWidget {
   State<TemplatesScreen> createState() => _TemplatesScreenState();
 }
 
-enum _ResumeCategory { all, professional, ats }
+enum _ResumeCategory { all, professional, ats, bestPick }
 
 enum _CoverLetterCategory { all, professional, creative }
 
@@ -77,7 +77,11 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   _TemplateTileData? _tileForPickerSelection() {
     final resumeTemplate = widget.selectedTemplate?.userFacingTemplate;
     if (resumeTemplate != null) {
-      for (final item in [..._professionalResumeCards, ..._atsResumeCards]) {
+      for (final item in [
+        ..._topPickResumeCards,
+        ..._professionalResumeCards,
+        ..._atsResumeCards,
+      ]) {
         if (item.resumeTemplate == resumeTemplate) {
           return item;
         }
@@ -207,15 +211,24 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         ?.userFacingTemplate;
     final activeCoverLetterTemplate = widget.selectedCoverLetterTemplate;
     final resumeCards = switch (_selectedCategory) {
-      _ResumeCategory.all => const [..._resumeTemplateCards, ..._atsResumeCards],
+      _ResumeCategory.all => const [
+        ..._topPickResumeCards,
+        ..._resumeTemplateCards,
+        ..._atsResumeCards,
+      ],
       _ResumeCategory.professional => _resumeTemplateCards,
       _ResumeCategory.ats => _atsResumeCards,
+      _ResumeCategory.bestPick => _topPickResumeCards,
     };
     final coverLetterCards = switch (_selectedCoverLetterCategory) {
       _CoverLetterCategory.all => _coverLetterTemplateCards,
       _CoverLetterCategory.professional => _professionalCoverLetterCards,
       _CoverLetterCategory.creative => _creativeCoverLetterCards,
     };
+    final showResumeTemplatesSection =
+        isResumeTemplatePicker ||
+        (!isCoverLetterTemplatePicker &&
+            _selectedSegment == _TemplateSegment.resume);
     final visibleItems = isCoverLetterTemplatePicker
         ? coverLetterCards
         : isResumeTemplatePicker
@@ -223,10 +236,6 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         : _selectedSegment == _TemplateSegment.resume
         ? resumeCards
         : coverLetterCards;
-    final showResumeTemplatesSection =
-        isResumeTemplatePicker ||
-        (!isCoverLetterTemplatePicker &&
-            _selectedSegment == _TemplateSegment.resume);
     final showCoverLetterTemplatesSection =
         isCoverLetterTemplatePicker ||
         (!isResumeTemplatePicker &&
@@ -376,6 +385,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                         _ResumeCategory.all => l10n.allResumes,
                         _ResumeCategory.professional => l10n.professionalResumes,
                         _ResumeCategory.ats => l10n.atsResumes,
+                        _ResumeCategory.bestPick => l10n.topPickTemplates,
                       }),
                       selected: _selectedCategory == category,
                       onSelected: (_) =>
@@ -658,6 +668,41 @@ class _TemplateTile extends StatelessWidget {
     );
   }
 }
+
+const _topPickResumeCards = <_TemplateTileData>[
+  _TemplateTileData(
+    id: 'modern-line',
+    resumeTemplate: ResumeTemplate.modernLine,
+    previewKind: _TemplatePreviewKind.modernLineResume,
+    headline: 'Modern Line',
+    caption: 'Short accent marks under each heading with a clean single-column ATS layout.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'split-contact',
+    resumeTemplate: ResumeTemplate.splitContact,
+    previewKind: _TemplatePreviewKind.splitContactResume,
+    headline: 'Split Contact',
+    caption: 'Name on the left, contact on the right, and a structured single-column body.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'harbor',
+    resumeTemplate: ResumeTemplate.harbor,
+    previewKind: _TemplatePreviewKind.harborResume,
+    headline: 'Harbor',
+    caption: 'Centered nameplate, middot contact, and ruled modern section titles.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'typeplate',
+    resumeTemplate: ResumeTemplate.typeplate,
+    previewKind: _TemplatePreviewKind.typeplateResume,
+    headline: 'Typeplate',
+    caption: 'Editorial type-first header with a left accent mark on each section.',
+    isPremium: false,
+  ),
+];
 
 const _professionalResumeCards = <_TemplateTileData>[
   _TemplateTileData(
@@ -1014,6 +1059,10 @@ class _TemplateTileData {
       'ats-professional-blue' => l10n.templateProfessionalBlueAts,
       'ats-classic-cv' => l10n.templateClassicCvAts,
       'ats-clean-sans' => l10n.templateCleanSansAts,
+      'modern-line' => l10n.templateModernLine,
+      'split-contact' => l10n.templateSplitContact,
+      'harbor' => l10n.templateHarbor,
+      'typeplate' => l10n.templateTypeplate,
       'executive-note' => l10n.templateExecutiveNote,
       'minimal-letter' => l10n.templateMinimalLetter,
       'sidebar-letter' => l10n.templateMintLetter,
@@ -1056,6 +1105,10 @@ class _TemplateTileData {
       'ats-professional-blue' => l10n.templateProfessionalBlueAtsCaption,
       'ats-classic-cv' => l10n.templateClassicCvAtsCaption,
       'ats-clean-sans' => l10n.templateCleanSansAtsCaption,
+      'modern-line' => l10n.templateModernLineCaption,
+      'split-contact' => l10n.templateSplitContactCaption,
+      'harbor' => l10n.templateHarborCaption,
+      'typeplate' => l10n.templateTypeplateCaption,
       'executive-note' => l10n.templateExecutiveNoteCaption,
       'minimal-letter' => l10n.templateMinimalLetterCaption,
       'sidebar-letter' => l10n.templateMintLetterCaption,
@@ -1100,6 +1153,10 @@ enum _TemplatePreviewKind {
   atsClassicCvResume,
   atsCleanSansResume,
   atsLatexClassicResume,
+  modernLineResume,
+  splitContactResume,
+  harborResume,
+  typeplateResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
   sidebarCoverLetter,
@@ -1321,6 +1378,30 @@ class _TemplatePreviewArt extends StatelessWidget {
         ),
         fit: _ResumeTemplatePreviewFit.tile,
       ),
+      _TemplatePreviewKind.modernLineResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.modernLine),
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.splitContactResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.splitContact),
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.harborResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.harbor),
+          paletteSeed,
+        ),
+      ),
+      _TemplatePreviewKind.typeplateResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(ResumeTemplate.typeplate),
+          paletteSeed,
+        ),
+      ),
       _TemplatePreviewKind.executiveNoteCoverLetter =>
         const _ExecutiveNoteCoverLetterArt(),
       _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
@@ -1483,7 +1564,11 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.atsExecutive ||
       ResumeTemplate.atsCenterClassic ||
       ResumeTemplate.atsLatexClassic ||
-      ResumeTemplate.atsCleanSans =>
+      ResumeTemplate.atsCleanSans ||
+      ResumeTemplate.modernLine ||
+      ResumeTemplate.splitContact ||
+      ResumeTemplate.harbor ||
+      ResumeTemplate.typeplate =>
         _atsSampleFor(template),
     };
     return _applyTemplatePreviewPalette(sample, paletteSeed);
@@ -7913,7 +7998,11 @@ ResumeData galleryDetailSampleForTest(ResumeTemplate template) =>
       ResumeTemplate.atsExecutive ||
       ResumeTemplate.atsCenterClassic ||
       ResumeTemplate.atsLatexClassic ||
-      ResumeTemplate.atsCleanSans =>
+      ResumeTemplate.atsCleanSans ||
+      ResumeTemplate.modernLine ||
+      ResumeTemplate.splitContact ||
+      ResumeTemplate.harbor ||
+      ResumeTemplate.typeplate =>
         _atsSampleFor(template),
     };
 
@@ -8239,7 +8328,11 @@ class _AccentCoverLetterArt extends StatelessWidget {
 /// Gallery tile art for a resume template; used by tests that render tiles.
 @visibleForTesting
 Widget resumeTileArtForTest(ResumeTemplate template) {
-  final item = [..._professionalResumeCards, ..._atsResumeCards].firstWhere(
+  final item = [
+    ..._topPickResumeCards,
+    ..._professionalResumeCards,
+    ..._atsResumeCards,
+  ].firstWhere(
     (card) => card.resumeTemplate == template,
   );
   return _TemplatePreviewArt(item: item);

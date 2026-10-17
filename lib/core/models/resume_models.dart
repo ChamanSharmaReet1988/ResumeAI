@@ -55,6 +55,14 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.blueCorner;
     case 'profileTimeline':
       return ResumeTemplate.profileTimeline;
+    case 'modernLine':
+      return ResumeTemplate.modernLine;
+    case 'splitContact':
+      return ResumeTemplate.splitContact;
+    case 'harbor':
+      return ResumeTemplate.harbor;
+    case 'typeplate':
+      return ResumeTemplate.typeplate;
     default:
       return ResumeTemplate.corporate;
   }
@@ -132,6 +140,18 @@ enum ResumeTemplate {
   /// Centred photo header with a contact grid, then a two-column body with
   /// rated skills and date-chip experience entries.
   profileTimeline,
+
+  /// Left-aligned name, accent job title, short underline under each heading.
+  modernLine,
+
+  /// Name on the left, stacked contact on the right, accent bar under the header.
+  splitContact,
+
+  /// Centered nameplate, middot contact, and ruled mixed-case section titles.
+  harbor,
+
+  /// Oversized type-first name with a left accent mark on each section heading.
+  typeplate,
 }
 
 enum CoverLetterTemplate {
@@ -196,6 +216,10 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.atsProfessionalBlue,
   ResumeTemplate.atsClassicCv,
   ResumeTemplate.atsCleanSans,
+  ResumeTemplate.modernLine,
+  ResumeTemplate.splitContact,
+  ResumeTemplate.harbor,
+  ResumeTemplate.typeplate,
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
@@ -215,7 +239,11 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.atsProfessionalBlue ||
     ResumeTemplate.atsLatexClassic ||
     ResumeTemplate.atsClassicCv ||
-    ResumeTemplate.atsCleanSans => true,
+    ResumeTemplate.atsCleanSans ||
+    ResumeTemplate.modernLine ||
+    ResumeTemplate.splitContact ||
+    ResumeTemplate.harbor ||
+    ResumeTemplate.typeplate => true,
     _ => false,
   };
 
@@ -244,6 +272,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.boldPill => 'Bold Pill',
     ResumeTemplate.blueCorner => 'Blue Corner',
     ResumeTemplate.profileTimeline => 'Profile Timeline',
+    ResumeTemplate.modernLine => 'Modern Line',
+    ResumeTemplate.splitContact => 'Split Contact',
+    ResumeTemplate.harbor => 'Harbor',
+    ResumeTemplate.typeplate => 'Typeplate',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -295,6 +327,14 @@ extension ResumeTemplateX on ResumeTemplate {
       'Blue corner wedge, contact sidebar, and timeline education and experience.',
     ResumeTemplate.profileTimeline =>
       'Centred photo header with a contact grid, rated skills, and date chips.',
+    ResumeTemplate.modernLine =>
+      'Left-aligned name, accent title, and short underlined ATS headings.',
+    ResumeTemplate.splitContact =>
+      'Split name and contact header with a structured single-column body.',
+    ResumeTemplate.harbor =>
+      'Centered nameplate, middot contact, and ruled modern section titles.',
+    ResumeTemplate.typeplate =>
+      'Editorial type-first header with a left accent mark on each section.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -322,6 +362,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.blueCorner => const Color(0xFF5B8ED6),
     ResumeTemplate.profileTimeline => const Color(0xFF4A4F55),
     ResumeTemplate.minimalProfile => const Color(0xFF111111),
+    ResumeTemplate.modernLine => const Color(0xFF0F766E),
+    ResumeTemplate.splitContact => const Color(0xFF1E3A5F),
+    ResumeTemplate.harbor => const Color(0xFF1D4ED8),
+    ResumeTemplate.typeplate => const Color(0xFFB45309),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -349,6 +393,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.blueCorner => const Color(0xFFE1EAF8),
     ResumeTemplate.profileTimeline => const Color(0xFFE8E9EB),
     ResumeTemplate.minimalProfile => const Color(0xFFF4F4F5),
+    ResumeTemplate.modernLine => const Color(0xFFD1FAE5),
+    ResumeTemplate.splitContact => const Color(0xFFE8EEF6),
+    ResumeTemplate.harbor => const Color(0xFFDBEAFE),
+    ResumeTemplate.typeplate => const Color(0xFFFDE68A),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -377,6 +425,10 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.blueCorner => 'Outfit · blue corner',
     ResumeTemplate.profileTimeline => 'Outfit · profile timeline',
     ResumeTemplate.minimalProfile => 'Outfit · minimal profile',
+    ResumeTemplate.modernLine => 'Outfit · modern line',
+    ResumeTemplate.splitContact => 'Outfit · split contact',
+    ResumeTemplate.harbor => 'Outfit · harbor',
+    ResumeTemplate.typeplate => 'Outfit · typeplate',
   };
 }
 

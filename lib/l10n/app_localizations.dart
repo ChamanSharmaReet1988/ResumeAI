@@ -1128,6 +1128,18 @@ abstract class AppLocalizations {
   /// **'ATS Resumes'**
   String get atsResumes;
 
+  /// No description provided for @topPickTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Pick'**
+  String get topPickTemplates;
+
+  /// No description provided for @topPickTemplatesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Creative, modern, ATS-friendly layouts'**
+  String get topPickTemplatesSubtitle;
+
   /// No description provided for @allCoverLetters.
   ///
   /// In en, this message translates to:
@@ -1415,6 +1427,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bold uppercase name, right-aligned contact, and two-column skills.'**
   String get templateCleanSansAtsCaption;
+
+  /// No description provided for @templateModernLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Modern Line'**
+  String get templateModernLine;
+
+  /// No description provided for @templateModernLineCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Short accent marks under each heading with a clean single-column ATS layout.'**
+  String get templateModernLineCaption;
+
+  /// No description provided for @templateSplitContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Contact'**
+  String get templateSplitContact;
+
+  /// No description provided for @templateSplitContactCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on the left, contact on the right, and a structured single-column body.'**
+  String get templateSplitContactCaption;
+
+  /// No description provided for @templateHarbor.
+  ///
+  /// In en, this message translates to:
+  /// **'Harbor'**
+  String get templateHarbor;
+
+  /// No description provided for @templateHarborCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Centered nameplate, middot contact, and ruled modern section titles.'**
+  String get templateHarborCaption;
+
+  /// No description provided for @templateTypeplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Typeplate'**
+  String get templateTypeplate;
+
+  /// No description provided for @templateTypeplateCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Editorial type-first header with a left accent mark on each section.'**
+  String get templateTypeplateCaption;
 
   /// No description provided for @templateExecutiveNote.
   ///

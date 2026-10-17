@@ -91,7 +91,29 @@ void main() {
           gridView.childrenDelegate as SliverChildBuilderDelegate;
 
       expect(delegate.crossAxisCount, 2);
-      expect(childrenDelegate.childCount, 22);
+      expect(childrenDelegate.childCount, 26);
+      expect(find.byKey(const Key('template-category-bestPick')), findsOneWidget);
+      expect(find.text('Best Pick'), findsOneWidget);
+      expect(find.byKey(const Key('template-tile-modern-line')), findsOneWidget);
+      expect(
+        find.byKey(const Key('template-tile-split-contact')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('template-tile-harbor')), findsOneWidget);
+      expect(find.byKey(const Key('template-tile-typeplate')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('template-category-bestPick')));
+      await tester.pumpAndSettle();
+      final bestPickGrid = tester.widget<GridView>(
+        find.byKey(const Key('template-grid')),
+      );
+      expect(
+        (bestPickGrid.childrenDelegate as SliverChildBuilderDelegate).childCount,
+        4,
+      );
+      await tester.tap(find.byKey(const Key('template-category-all')));
+      await tester.pumpAndSettle();
+
       expect(
         find.byKey(const Key('template-segmented-button')),
         findsOneWidget,

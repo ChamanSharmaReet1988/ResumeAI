@@ -587,6 +587,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get atsResumes => 'Currículums ATS';
 
   @override
+  String get topPickTemplates => 'Mejor elección';
+
+  @override
+  String get topPickTemplatesSubtitle =>
+      'Nuevos diseños creativos, modernos y compatibles con ATS';
+
+  @override
   String get allCoverLetters => 'Todas';
 
   @override
@@ -751,6 +758,34 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get templateCleanSansAtsCaption =>
       'Nombre en mayúsculas, contacto alineado a la derecha y habilidades en dos columnas.';
+
+  @override
+  String get templateModernLine => 'Línea moderna';
+
+  @override
+  String get templateModernLineCaption =>
+      'Marcas de acento bajo cada título y un cuerpo ATS de una columna.';
+
+  @override
+  String get templateSplitContact => 'Contacto dividido';
+
+  @override
+  String get templateSplitContactCaption =>
+      'Nombre a la izquierda, contacto a la derecha y un cuerpo estructurado de una columna.';
+
+  @override
+  String get templateHarbor => 'Harbor';
+
+  @override
+  String get templateHarborCaption =>
+      'Nombre centrado, contacto con puntos y títulos de sección con regla.';
+
+  @override
+  String get templateTypeplate => 'Typeplate';
+
+  @override
+  String get templateTypeplateCaption =>
+      'Encabezado tipográfico con una marca de acento a la izquierda de cada sección.';
 
   @override
   String get templateExecutiveNote => 'Nota ejecutiva';

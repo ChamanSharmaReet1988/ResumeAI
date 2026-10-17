@@ -47,6 +47,7 @@ part 'resume_pdf/resume_pdf_charcoal_curve_page.dart';
 part 'resume_pdf/resume_pdf_bold_pill_page.dart';
 part 'resume_pdf/resume_pdf_blue_corner_page.dart';
 part 'resume_pdf/resume_pdf_profile_timeline_page.dart';
+part 'resume_pdf/resume_pdf_top_pick_pages.dart';
 
 /// Emits PDF body sections (after Summary/header) in the user's saved builder
 /// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
@@ -8956,6 +8957,19 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.modernLine ||
+        resume.template == ResumeTemplate.splitContact ||
+        resume.template == ResumeTemplate.harbor ||
+        resume.template == ResumeTemplate.typeplate) {
+      final document = pw.Document();
+      _addTopPickAtsTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.slateSidebar) {
       final document = pw.Document();
       _addSlateSidebarTemplatePage(
@@ -9038,6 +9052,11 @@ class ResumePdfService {
       case ResumeTemplate.blueCorner:
         break;
       case ResumeTemplate.profileTimeline:
+        break;
+      case ResumeTemplate.modernLine:
+      case ResumeTemplate.splitContact:
+      case ResumeTemplate.harbor:
+      case ResumeTemplate.typeplate:
         break;
     }
 
@@ -9416,6 +9435,22 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.modernLine ||
+        resume.template == ResumeTemplate.splitContact ||
+        resume.template == ResumeTemplate.harbor ||
+        resume.template == ResumeTemplate.typeplate) {
+      final document = pw.Document();
+      _addTopPickAtsTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.slateSidebar) {
       final profileImagePath = await ProfileImageStorage.resolvePath(
         resume.profileImagePath,
@@ -9514,6 +9549,11 @@ class ResumePdfService {
       case ResumeTemplate.blueCorner:
         break;
       case ResumeTemplate.profileTimeline:
+        break;
+      case ResumeTemplate.modernLine:
+      case ResumeTemplate.splitContact:
+      case ResumeTemplate.harbor:
+      case ResumeTemplate.typeplate:
         break;
     }
 

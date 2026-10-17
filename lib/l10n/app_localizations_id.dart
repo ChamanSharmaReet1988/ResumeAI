@@ -587,6 +587,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get atsResumes => 'Resume ATS';
 
   @override
+  String get topPickTemplates => 'Pilihan Terbaik';
+
+  @override
+  String get topPickTemplatesSubtitle =>
+      'Tata letak baru yang kreatif, modern, dan ramah ATS';
+
+  @override
   String get allCoverLetters => 'Semua';
 
   @override
@@ -751,6 +758,34 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get templateCleanSansAtsCaption =>
       'Nama huruf kapital tebal, kontak rata kanan, dan keahlian dua kolom.';
+
+  @override
+  String get templateModernLine => 'Garis Modern';
+
+  @override
+  String get templateModernLineCaption =>
+      'Tanda aksen di bawah setiap judul dengan isi ATS satu kolom.';
+
+  @override
+  String get templateSplitContact => 'Kontak Terpisah';
+
+  @override
+  String get templateSplitContactCaption =>
+      'Nama di kiri, kontak di kanan, dan isi terstruktur satu kolom.';
+
+  @override
+  String get templateHarbor => 'Harbor';
+
+  @override
+  String get templateHarborCaption =>
+      'Nama terpusat, kontak bertitik tengah, dan judul bagian bergaris.';
+
+  @override
+  String get templateTypeplate => 'Typeplate';
+
+  @override
+  String get templateTypeplateCaption =>
+      'Header tipografi dengan tanda aksen di kiri setiap bagian.';
 
   @override
   String get templateExecutiveNote => 'Catatan eksekutif';
