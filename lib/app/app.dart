@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:resume_app/l10n/app_localizations.dart';
 
@@ -137,6 +138,14 @@ class ResumeApp extends StatelessWidget {
                 }
               }
               return const Locale('en');
+            },
+            builder: (context, child) {
+              return AnnotatedRegion<SystemUiOverlayStyle>(
+                value: AppTheme.overlayStyleFor(
+                  Theme.of(context).brightness,
+                ),
+                child: child ?? const SizedBox.shrink(),
+              );
             },
             home: const PremiumSubscriptionWatcher(
               child: AppShell(),

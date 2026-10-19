@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 
 import 'app/app.dart';
+import 'app/app_theme.dart';
 import 'core/config/google_sign_in_config.dart';
 import 'core/services/android_ads_service.dart';
 import 'core/services/app_preferences.dart';
@@ -52,12 +53,7 @@ Future<void> main() async {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(
-          statusBarColor: Color(0x00000000),
-          systemNavigationBarColor: Color(0x00000000),
-          systemNavigationBarDividerColor: Color(0x00000000),
-          systemNavigationBarContrastEnforced: false,
-        ),
+        AppTheme.overlayStyleFor(Brightness.light),
       );
     }
     if (!kIsWeb) {

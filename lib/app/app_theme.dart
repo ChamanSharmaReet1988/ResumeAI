@@ -6,6 +6,20 @@ class AppTheme {
   static const _brandColor = Color(0xFFFE913E);
   static const _fontSizeIncrease = 4.0;
 
+  /// Dark icons on light screens so Android's back/home/recents stay visible.
+  static SystemUiOverlayStyle overlayStyleFor(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarContrastEnforced: false,
+    );
+  }
+
   static ThemeData lightTheme(TargetPlatform platform) {
     final scheme = ColorScheme.fromSeed(
       seedColor: _brandColor,
@@ -105,16 +119,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
-          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-          systemNavigationBarColor: Colors.transparent,
-          systemNavigationBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
-          systemNavigationBarContrastEnforced: false,
-        ),
+        systemOverlayStyle: overlayStyleFor(scheme.brightness),
         iconTheme: IconThemeData(color: iconColor),
         actionsIconTheme: IconThemeData(color: iconColor),
         titleTextStyle: textTheme.titleLarge?.copyWith(
@@ -139,14 +144,23 @@ class AppTheme {
         elevation: 8,
         shadowColor: Colors.black.withValues(alpha: 0.16),
         iconTheme: WidgetStateProperty.resolveWith((states) {
-          return IconThemeData(color: iconColor);
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected
+                ? iconColor
+                : scheme.onSurface.withValues(alpha: 0.74),
+          );
         }),
-        labelTextStyle: WidgetStateProperty.all(
-          textTheme.labelMedium?.copyWith(
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return textTheme.labelMedium?.copyWith(
             fontSize: (textTheme.labelMedium?.fontSize ?? 16) - 2,
             fontWeight: FontWeight.w500,
-          ),
-        ),
+            color: selected
+                ? iconColor
+                : scheme.onSurface.withValues(alpha: 0.74),
+          );
+        }),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: cardColor,
