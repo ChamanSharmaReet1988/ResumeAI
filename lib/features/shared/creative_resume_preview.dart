@@ -183,7 +183,7 @@ class CreativeResumePreview extends StatelessWidget {
       );
       final column = Column(
         crossAxisAlignment: kind == ResumeTemplate.sageFrame
-            ? CrossAxisAlignment.center
+            ? CrossAxisAlignment.stretch
             : CrossAxisAlignment.start,
         children: [
           Text(
@@ -233,7 +233,10 @@ class CreativeResumePreview extends StatelessWidget {
                   color: highlight,
                 ),
               ),
-              column,
+              Padding(
+                padding: const EdgeInsets.only(right: 40),
+                child: column,
+              ),
             ],
           ),
         );
@@ -367,14 +370,18 @@ class CreativeResumePreview extends StatelessWidget {
     }
 
     final summary = resume.summary.trim();
-    final pad = switch (kind) {
-      ResumeTemplate.sunset || ResumeTemplate.studio =>
-        const EdgeInsets.fromLTRB(40, 18, 40, 28),
-      ResumeTemplate.inkPanel => const EdgeInsets.fromLTRB(36, 28, 32, 28),
-      ResumeTemplate.sageFrame => const EdgeInsets.fromLTRB(36, 32, 36, 28),
-      ResumeTemplate.arc => const EdgeInsets.fromLTRB(40, 32, 52, 36),
-      _ => const EdgeInsets.fromLTRB(40, 32, 36, 28),
+    // One inset for the name and the sections, so the grid cards line up
+    // inside the page instead of sitting on the edge.
+    final pageInset = switch (kind) {
+      ResumeTemplate.sunset || ResumeTemplate.studio => EdgeInsets.zero,
+      ResumeTemplate.inkPanel => const EdgeInsets.fromLTRB(36, 28, 36, 32),
+      ResumeTemplate.sageFrame => const EdgeInsets.fromLTRB(32, 28, 32, 32),
+      ResumeTemplate.arc => const EdgeInsets.fromLTRB(40, 28, 64, 40),
+      _ => const EdgeInsets.fromLTRB(40, 28, 40, 32),
     };
+    final bodyInset = onBand
+        ? const EdgeInsets.fromLTRB(40, 16, 40, 48)
+        : const EdgeInsets.only(top: 12);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -401,25 +408,29 @@ class CreativeResumePreview extends StatelessWidget {
                         highlight: highlight,
                       ),
                     ),
-                    SingleChildScrollView(
-                      physics: const NeverScrollableScrollPhysics(),
+                    Padding(
+                      padding: pageInset,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           header(),
-                          Padding(
-                            padding: pad,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (summary.isNotEmpty) ...[
-                                  if (kind != ResumeTemplate.sunset &&
-                                      kind != ResumeTemplate.studio)
-                                    const SizedBox(height: 14),
-                                  Text(summary, style: body),
-                                ],
-                                ...sections(),
-                              ],
+                          Expanded(
+                            child: Padding(
+                              padding: bodyInset,
+                              child: ClipRect(
+                                child: SingleChildScrollView(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      if (summary.isNotEmpty)
+                                        Text(summary, style: body),
+                                      ...sections(),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -465,9 +476,9 @@ class _CreativePagePaint extends StatelessWidget {
       ResumeTemplate.aurora => const Stack(
         children: [
           Positioned.fill(child: ColoredBox(color: Color(0xFFFFF4EC))),
-          Positioned(right: -70, top: -80, child: _Blob(size: 230, color: Color(0xFFF6C7A4))),
-          Positioned(left: -80, bottom: 40, child: _Blob(size: 190, color: Color(0xFFE5D4F8))),
-          Positioned(right: 36, bottom: 90, child: _Blob(size: 64, color: Color(0xFFF3D2BE))),
+          Positioned(right: -160, top: -170, child: _Blob(size: 200, color: Color(0xFFF6C7A4))),
+          Positioned(left: -140, bottom: -50, child: _Blob(size: 180, color: Color(0xFFE5D4F8))),
+          Positioned(right: -16, bottom: -8, child: _Blob(size: 52, color: Color(0xFFF3D2BE))),
         ],
       ),
       ResumeTemplate.inkPanel => Stack(
@@ -487,14 +498,14 @@ class _CreativePagePaint extends StatelessWidget {
             height: 8,
             child: ColoredBox(color: accent),
           ),
-          const Positioned(right: -30, bottom: -20, child: _Blob(size: 120, color: Color(0xFFE7D3C4))),
+          const Positioned(right: -70, bottom: -30, child: _Blob(size: 110, color: Color(0xFFE7D3C4))),
         ],
       ),
       ResumeTemplate.sunset => const Stack(
         children: [
           Positioned.fill(child: ColoredBox(color: Color(0xFFFFF8F4))),
-          Positioned(right: -20, top: 120, child: _Blob(size: 90, color: Color(0xFFF6D3B0))),
-          Positioned(left: -24, bottom: 30, child: _Blob(size: 110, color: Color(0xFFF8CDB8))),
+          Positioned(right: -36, top: 168, child: _Blob(size: 72, color: Color(0xFFF6D3B0))),
+          Positioned(left: -40, bottom: -16, child: _Blob(size: 80, color: Color(0xFFF8CDB8))),
         ],
       ),
       ResumeTemplate.sageFrame => Stack(
@@ -537,13 +548,13 @@ class _CreativePagePaint extends StatelessWidget {
             height: 22,
             child: ColoredBox(color: accent),
           ),
-          Positioned(left: 28, bottom: 48, child: _Blob(size: 46, color: highlight)),
+          Positioned(left: 16, bottom: 30, child: _Blob(size: 22, color: highlight)),
         ],
       ),
       ResumeTemplate.arc => Stack(
         children: [
           const Positioned.fill(child: ColoredBox(color: Color(0xFFF4FBFA))),
-          Positioned(right: -90, top: -90, child: _Blob(size: 240, color: accent)),
+          Positioned(right: -130, top: -130, child: _Blob(size: 180, color: accent)),
           Positioned(
             left: 0,
             right: 0,
@@ -551,7 +562,7 @@ class _CreativePagePaint extends StatelessWidget {
             height: 18,
             child: ColoredBox(color: accent),
           ),
-          const Positioned(left: 24, bottom: 48, child: _Blob(size: 36, color: Color(0xFFB7E0DC))),
+          const Positioned(left: 18, bottom: 28, child: _Blob(size: 22, color: Color(0xFFB7E0DC))),
         ],
       ),
       _ => const ColoredBox(color: Colors.white),

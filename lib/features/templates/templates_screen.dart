@@ -3864,6 +3864,13 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
 
         final isBlueDiagonal = resume.template.userFacingTemplate ==
             ResumeTemplate.blueDiagonal;
+        final lockPageHeight = isBlueDiagonal ||
+            template == ResumeTemplate.aurora ||
+            template == ResumeTemplate.inkPanel ||
+            template == ResumeTemplate.sunset ||
+            template == ResumeTemplate.sageFrame ||
+            template == ResumeTemplate.studio ||
+            template == ResumeTemplate.arc;
         // Blue Diagonal fills the tile so its diagonal footer lands on the
         // card edge. BoxFit.cover scales evenly and crops a sliver of width;
         // BoxFit.fill stretched the page and turned the photo circle into an
@@ -3875,7 +3882,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
               isBlueDiagonal ? Alignment.center : Alignment.topCenter,
           child: SizedBox(
             width: _pageWidth,
-            height: isBlueDiagonal ? pageHeight : null,
+            height: lockPageHeight ? pageHeight : null,
             child: ResumePreviewCanvas(
               resume: resume,
               showDebugLabel: false,

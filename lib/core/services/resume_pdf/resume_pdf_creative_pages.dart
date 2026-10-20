@@ -180,7 +180,7 @@ extension _ResumePdfCreativePages on ResumePdfService {
     );
     final headerColumn = pw.Column(
       crossAxisAlignment: kind == ResumeTemplate.sageFrame
-          ? pw.CrossAxisAlignment.center
+          ? pw.CrossAxisAlignment.stretch
           : pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
@@ -192,11 +192,23 @@ extension _ResumePdfCreativePages on ResumePdfService {
         ),
         if (resume.jobTitle.trim().isNotEmpty) ...[
           pw.SizedBox(height: 4),
-          pw.Text(resume.jobTitle.trim(), style: titleStyle),
+          pw.Text(
+            resume.jobTitle.trim(),
+            textAlign: kind == ResumeTemplate.sageFrame
+                ? pw.TextAlign.center
+                : pw.TextAlign.left,
+            style: titleStyle,
+          ),
         ],
         if (contact.isNotEmpty) ...[
           pw.SizedBox(height: 6),
-          pw.Text(contact, style: contactStyle),
+          pw.Text(
+            contact,
+            textAlign: kind == ResumeTemplate.sageFrame
+                ? pw.TextAlign.center
+                : pw.TextAlign.left,
+            style: contactStyle,
+          ),
         ],
       ],
     );
@@ -220,7 +232,10 @@ extension _ResumePdfCreativePages on ResumePdfService {
                 color: highlight,
               ),
             ),
-            headerColumn,
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(right: 36),
+              child: headerColumn,
+            ),
           ],
         ),
       ),
@@ -228,16 +243,15 @@ extension _ResumePdfCreativePages on ResumePdfService {
     };
 
     final margin = switch (kind) {
-      ResumeTemplate.sunset || ResumeTemplate.studio =>
-        const pw.EdgeInsets.fromLTRB(0, 0, 0, 28),
-      ResumeTemplate.inkPanel => const pw.EdgeInsets.fromLTRB(34, 28, 32, 32),
-      ResumeTemplate.sageFrame => const pw.EdgeInsets.fromLTRB(34, 30, 34, 32),
-      ResumeTemplate.arc => const pw.EdgeInsets.fromLTRB(40, 30, 48, 36),
-      _ => const pw.EdgeInsets.fromLTRB(40, 30, 36, 32),
+      ResumeTemplate.sunset || ResumeTemplate.studio => pw.EdgeInsets.zero,
+      ResumeTemplate.inkPanel => const pw.EdgeInsets.fromLTRB(36, 28, 36, 32),
+      ResumeTemplate.sageFrame => const pw.EdgeInsets.fromLTRB(32, 28, 32, 32),
+      ResumeTemplate.arc => const pw.EdgeInsets.fromLTRB(40, 28, 64, 40),
+      _ => const pw.EdgeInsets.fromLTRB(40, 28, 40, 32),
     };
     final bodyPad = kind == ResumeTemplate.sunset || kind == ResumeTemplate.studio
-        ? const pw.EdgeInsets.fromLTRB(40, 16, 40, 0)
-        : pw.EdgeInsets.zero;
+        ? const pw.EdgeInsets.fromLTRB(40, 16, 40, 48)
+        : const pw.EdgeInsets.only(top: 12);
 
     document.addPage(
       pw.MultiPage(
@@ -416,9 +430,9 @@ pw.Widget _creativePdfBackground(
         pw.Positioned.fill(
           child: pw.Container(color: PdfColor.fromInt(0xFFFFF4EC)),
         ),
-        pw.Positioned(right: -70, top: -80, child: blob(230, PdfColor.fromInt(0xFFF6C7A4))),
-        pw.Positioned(left: -80, bottom: 40, child: blob(190, PdfColor.fromInt(0xFFE5D4F8))),
-        pw.Positioned(right: 36, bottom: 90, child: blob(64, PdfColor.fromInt(0xFFF3D2BE))),
+        pw.Positioned(right: -160, top: -170, child: blob(200, PdfColor.fromInt(0xFFF6C7A4))),
+        pw.Positioned(left: -140, bottom: -50, child: blob(180, PdfColor.fromInt(0xFFE5D4F8))),
+        pw.Positioned(right: -16, bottom: -8, child: blob(52, PdfColor.fromInt(0xFFF3D2BE))),
       ],
     ),
     ResumeTemplate.inkPanel => pw.Stack(
@@ -438,7 +452,7 @@ pw.Widget _creativePdfBackground(
           right: 0,
           child: pw.Container(height: 8, color: accent),
         ),
-        pw.Positioned(right: -30, bottom: -20, child: blob(120, PdfColor.fromInt(0xFFE7D3C4))),
+        pw.Positioned(right: -70, bottom: -30, child: blob(110, PdfColor.fromInt(0xFFE7D3C4))),
       ],
     ),
     ResumeTemplate.sunset => pw.Stack(
@@ -446,8 +460,8 @@ pw.Widget _creativePdfBackground(
         pw.Positioned.fill(
           child: pw.Container(color: PdfColor.fromInt(0xFFFFF8F4)),
         ),
-        pw.Positioned(right: -20, top: 150, child: blob(90, PdfColor.fromInt(0xFFF6D3B0))),
-        pw.Positioned(left: -24, bottom: 30, child: blob(110, PdfColor.fromInt(0xFFF8CDB8))),
+        pw.Positioned(right: -36, top: 168, child: blob(72, PdfColor.fromInt(0xFFF6D3B0))),
+        pw.Positioned(left: -40, bottom: -16, child: blob(80, PdfColor.fromInt(0xFFF8CDB8))),
       ],
     ),
     ResumeTemplate.sageFrame => pw.Stack(
@@ -495,7 +509,7 @@ pw.Widget _creativePdfBackground(
           bottom: 0,
           child: pw.Container(height: 22, color: accent),
         ),
-        pw.Positioned(left: 28, bottom: 48, child: blob(46, highlight)),
+        pw.Positioned(left: 16, bottom: 30, child: blob(22, highlight)),
       ],
     ),
     ResumeTemplate.arc => pw.Stack(
@@ -503,14 +517,14 @@ pw.Widget _creativePdfBackground(
         pw.Positioned.fill(
           child: pw.Container(color: PdfColor.fromInt(0xFFF4FBFA)),
         ),
-        pw.Positioned(right: -90, top: -90, child: blob(240, accent)),
+        pw.Positioned(right: -130, top: -130, child: blob(180, accent)),
         pw.Positioned(
           left: 0,
           right: 0,
           bottom: 0,
           child: pw.Container(height: 18, color: accent),
         ),
-        pw.Positioned(left: 24, bottom: 48, child: blob(36, PdfColor.fromInt(0xFFB7E0DC))),
+        pw.Positioned(left: 18, bottom: 28, child: blob(22, PdfColor.fromInt(0xFFB7E0DC))),
       ],
     ),
     _ => pw.Container(color: PdfColors.white),
