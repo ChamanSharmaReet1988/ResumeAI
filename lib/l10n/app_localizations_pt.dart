@@ -251,7 +251,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chooseAPlan => 'Escolha um plano';
 
   @override
-  String get unlockProOnce => 'Desbloqueio único';
+  String get unlockProOnce => 'Pague apenas uma vez, para sempre';
 
   @override
   String get premiumLegalAgreement =>
@@ -284,6 +284,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get premiumBenefitAllTemplates =>
+      'Todos os modelos de currículo incluídos';
+
+  @override
   String get premiumBenefitRemoveAds => 'Remover todos os anúncios';
 
   @override
@@ -299,17 +303,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Faça backup e sincronize currículos com o Google Drive';
 
   @override
-  String get premiumUpcomingUpdateBadge => 'Em breve na próxima atualização';
+  String get premiumUpcomingUpdateBadge => 'Compra única vitalícia';
 
   @override
   String get premiumUpcomingUpdateMessage =>
-      'Novos layouts de currículo e modelos modernos, incluídos no Pro.';
+      'Todos os modelos de currículo estão incluídos. Você só precisa pagar uma vez.';
 
   @override
   String get planLifetime => 'Vitalício';
 
   @override
-  String get planSubtitleLifetime => 'Compra única · \$1.99';
+  String get planSubtitleLifetime => 'Pague uma vez · para sempre';
 
   @override
   String get planPro => 'Pro';

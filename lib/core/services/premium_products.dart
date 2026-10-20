@@ -115,6 +115,7 @@ List<PremiumPlanDefinition> premiumPlanDefinitions(AppLocalizations l10n) => [
 ];
 
 List<String> premiumBenefits(AppLocalizations l10n) => [
+  l10n.premiumBenefitAllTemplates,
   l10n.premiumBenefitRemoveAds,
   l10n.premiumBenefitUnlockLayouts,
   defaultTargetPlatform == TargetPlatform.android

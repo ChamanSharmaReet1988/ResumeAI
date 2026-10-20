@@ -555,7 +555,7 @@ abstract class AppLocalizations {
   /// No description provided for @unlockProOnce.
   ///
   /// In en, this message translates to:
-  /// **'One-time unlock'**
+  /// **'Pay only once, for life'**
   String get unlockProOnce;
 
   /// No description provided for @premiumLegalAgreement.
@@ -612,6 +612,12 @@ abstract class AppLocalizations {
   /// **'ResumeApp Pro is active on your {planLabel}. Ads are removed, and AI Resume plus {backup} are unlocked.'**
   String premiumWelcomeBody(String planLabel, String backup);
 
+  /// No description provided for @premiumBenefitAllTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'All resume templates are included'**
+  String get premiumBenefitAllTemplates;
+
   /// No description provided for @premiumBenefitRemoveAds.
   ///
   /// In en, this message translates to:
@@ -639,13 +645,13 @@ abstract class AppLocalizations {
   /// No description provided for @premiumUpcomingUpdateBadge.
   ///
   /// In en, this message translates to:
-  /// **'Coming in the next update'**
+  /// **'One-time lifetime purchase'**
   String get premiumUpcomingUpdateBadge;
 
   /// No description provided for @premiumUpcomingUpdateMessage.
   ///
   /// In en, this message translates to:
-  /// **'New resume layouts and modern templates, included with Pro.'**
+  /// **'All resume templates are included. You only need to pay once.'**
   String get premiumUpcomingUpdateMessage;
 
   /// No description provided for @planLifetime.
@@ -657,7 +663,7 @@ abstract class AppLocalizations {
   /// No description provided for @planSubtitleLifetime.
   ///
   /// In en, this message translates to:
-  /// **'One-time purchase · \$1.99'**
+  /// **'Pay once · yours for life'**
   String get planSubtitleLifetime;
 
   /// No description provided for @planPro.

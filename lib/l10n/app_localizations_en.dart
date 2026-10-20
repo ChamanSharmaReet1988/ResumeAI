@@ -250,7 +250,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseAPlan => 'Choose a plan';
 
   @override
-  String get unlockProOnce => 'One-time unlock';
+  String get unlockProOnce => 'Pay only once, for life';
 
   @override
   String get premiumLegalAgreement =>
@@ -283,6 +283,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get premiumBenefitAllTemplates => 'All resume templates are included';
+
+  @override
   String get premiumBenefitRemoveAds => 'Remove all ads';
 
   @override
@@ -298,17 +301,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Back up and sync resumes with Google Drive';
 
   @override
-  String get premiumUpcomingUpdateBadge => 'Coming in the next update';
+  String get premiumUpcomingUpdateBadge => 'One-time lifetime purchase';
 
   @override
   String get premiumUpcomingUpdateMessage =>
-      'New resume layouts and modern templates, included with Pro.';
+      'All resume templates are included. You only need to pay once.';
 
   @override
   String get planLifetime => 'Lifetime';
 
   @override
-  String get planSubtitleLifetime => 'One-time purchase · \$1.99';
+  String get planSubtitleLifetime => 'Pay once · yours for life';
 
   @override
   String get planPro => 'Pro';

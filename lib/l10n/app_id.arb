@@ -103,7 +103,7 @@
   "restore": "Pulihkan",
   "resumeAppPro": "ResumeApp Pro",
   "chooseAPlan": "Pilih paket",
-  "unlockProOnce": "Buka sekali bayar",
+  "unlockProOnce": "Bayar hanya sekali, seumur hidup",
   "premiumLegalAgreement": "Dengan melanjutkan, Anda menyetujui Syarat Penggunaan dan Kebijakan Privasi kami.",
   "subscriptionFound": "Langganan ditemukan",
   "processingEllipsis": "Memproses…",
@@ -123,14 +123,15 @@
       }
     }
   },
+  "premiumBenefitAllTemplates": "Semua template resume termasuk",
   "premiumBenefitRemoveAds": "Hapus semua iklan",
   "premiumBenefitUnlockLayouts": "Buka AI Resume — buat dan sempurnakan resume ATS dengan AI",
   "premiumBenefitBackupIcloud": "Cadangkan dan sinkronkan resume dengan iCloud",
   "premiumBenefitBackupGoogleDrive": "Cadangkan dan sinkronkan resume dengan Google Drive",
-  "premiumUpcomingUpdateBadge": "Hadir di pembaruan berikutnya",
-  "premiumUpcomingUpdateMessage": "Tata letak resume baru dan template modern, termasuk dalam Pro.",
+  "premiumUpcomingUpdateBadge": "Pembelian sekali seumur hidup",
+  "premiumUpcomingUpdateMessage": "Semua template resume sudah termasuk. Anda hanya perlu membayar sekali.",
   "planLifetime": "Seumur hidup",
-  "planSubtitleLifetime": "Pembelian sekali · $1.99",
+  "planSubtitleLifetime": "Bayar sekali · seumur hidup",
   "planPro": "Pro",
   "planLabelNamed": "Paket {title}",
   "@planLabelNamed": {

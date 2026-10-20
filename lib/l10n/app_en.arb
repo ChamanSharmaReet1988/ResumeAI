@@ -113,7 +113,7 @@
   "restore": "Restore",
   "resumeAppPro": "ResumeApp Pro",
   "chooseAPlan": "Choose a plan",
-  "unlockProOnce": "One-time unlock",
+  "unlockProOnce": "Pay only once, for life",
   "premiumLegalAgreement": "By continuing, you agree to our Terms of Use and Privacy Policy.",
   "subscriptionFound": "Subscription found",
   "processingEllipsis": "Processing…",
@@ -133,14 +133,15 @@
       }
     }
   },
+  "premiumBenefitAllTemplates": "All resume templates are included",
   "premiumBenefitRemoveAds": "Remove all ads",
   "premiumBenefitUnlockLayouts": "Unlock AI Resume — create and refine ATS resumes with AI",
   "premiumBenefitBackupIcloud": "Back up and sync resumes with iCloud",
   "premiumBenefitBackupGoogleDrive": "Back up and sync resumes with Google Drive",
-  "premiumUpcomingUpdateBadge": "Coming in the next update",
-  "premiumUpcomingUpdateMessage": "New resume layouts and modern templates, included with Pro.",
+  "premiumUpcomingUpdateBadge": "One-time lifetime purchase",
+  "premiumUpcomingUpdateMessage": "All resume templates are included. You only need to pay once.",
   "planLifetime": "Lifetime",
-  "planSubtitleLifetime": "One-time purchase · $1.99",
+  "planSubtitleLifetime": "Pay once · yours for life",
   "planPro": "Pro",
   "planLabelNamed": "{title} plan",
   "@planLabelNamed": {

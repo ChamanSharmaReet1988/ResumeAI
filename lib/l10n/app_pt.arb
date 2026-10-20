@@ -103,7 +103,7 @@
   "restore": "Restaurar",
   "resumeAppPro": "ResumeApp Pro",
   "chooseAPlan": "Escolha um plano",
-  "unlockProOnce": "Desbloqueio único",
+  "unlockProOnce": "Pague apenas uma vez, para sempre",
   "premiumLegalAgreement": "Ao continuar, você concorda com nossos Termos de uso e Política de privacidade.",
   "subscriptionFound": "Assinatura encontrada",
   "processingEllipsis": "Processando…",
@@ -123,14 +123,15 @@
       }
     }
   },
+  "premiumBenefitAllTemplates": "Todos os modelos de currículo incluídos",
   "premiumBenefitRemoveAds": "Remover todos os anúncios",
   "premiumBenefitUnlockLayouts": "Desbloqueie o AI Resume: crie e refine currículos ATS com IA",
   "premiumBenefitBackupIcloud": "Faça backup e sincronize currículos com o iCloud",
   "premiumBenefitBackupGoogleDrive": "Faça backup e sincronize currículos com o Google Drive",
-  "premiumUpcomingUpdateBadge": "Em breve na próxima atualização",
-  "premiumUpcomingUpdateMessage": "Novos layouts de currículo e modelos modernos, incluídos no Pro.",
+  "premiumUpcomingUpdateBadge": "Compra única vitalícia",
+  "premiumUpcomingUpdateMessage": "Todos os modelos de currículo estão incluídos. Você só precisa pagar uma vez.",
   "planLifetime": "Vitalício",
-  "planSubtitleLifetime": "Compra única · $1.99",
+  "planSubtitleLifetime": "Pague uma vez · para sempre",
   "planPro": "Pro",
   "planLabelNamed": "Plano {title}",
   "@planLabelNamed": {

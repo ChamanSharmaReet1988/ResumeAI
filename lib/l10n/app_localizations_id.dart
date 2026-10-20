@@ -252,7 +252,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get chooseAPlan => 'Pilih paket';
 
   @override
-  String get unlockProOnce => 'Buka sekali bayar';
+  String get unlockProOnce => 'Bayar hanya sekali, seumur hidup';
 
   @override
   String get premiumLegalAgreement =>
@@ -285,6 +285,9 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get premiumBenefitAllTemplates => 'Semua template resume termasuk';
+
+  @override
   String get premiumBenefitRemoveAds => 'Hapus semua iklan';
 
   @override
@@ -300,17 +303,17 @@ class AppLocalizationsId extends AppLocalizations {
       'Cadangkan dan sinkronkan resume dengan Google Drive';
 
   @override
-  String get premiumUpcomingUpdateBadge => 'Hadir di pembaruan berikutnya';
+  String get premiumUpcomingUpdateBadge => 'Pembelian sekali seumur hidup';
 
   @override
   String get premiumUpcomingUpdateMessage =>
-      'Tata letak resume baru dan template modern, termasuk dalam Pro.';
+      'Semua template resume sudah termasuk. Anda hanya perlu membayar sekali.';
 
   @override
   String get planLifetime => 'Seumur hidup';
 
   @override
-  String get planSubtitleLifetime => 'Pembelian sekali · \$1.99';
+  String get planSubtitleLifetime => 'Bayar sekali · seumur hidup';
 
   @override
   String get planPro => 'Pro';
