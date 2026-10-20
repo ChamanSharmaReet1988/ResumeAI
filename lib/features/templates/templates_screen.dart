@@ -3839,7 +3839,9 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.sunset ||
           ResumeTemplate.sageFrame ||
           ResumeTemplate.studio ||
-          ResumeTemplate.arc => true,
+          ResumeTemplate.arc ||
+          ResumeTemplate.modernLine ||
+          ResumeTemplate.typeplate => true,
           _ => false,
         };
         final creativePageColor = switch (template) {
@@ -3904,6 +3906,21 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
+                  if (template == ResumeTemplate.modernLine ||
+                      template == ResumeTemplate.typeplate)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: ColoredBox(
+                        color: resume.atsAccentColor,
+                        child: SizedBox(
+                          width: targetWidth *
+                              ((template == ResumeTemplate.modernLine ? 8 : 6) /
+                                  _pageWidth),
+                        ),
+                      ),
+                    ),
                   if (isAccentStrip)
                     Positioned(
                       left: targetWidth * (22 / _pageWidth),
