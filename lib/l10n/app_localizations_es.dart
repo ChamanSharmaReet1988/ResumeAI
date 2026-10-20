@@ -836,6 +836,20 @@ class AppLocalizationsEs extends AppLocalizations {
       'Arcos verde azulado en la página y un cuerpo de una sola columna.';
 
   @override
+  String get templateChevron => 'Chevrón';
+
+  @override
+  String get templateChevronCaption =>
+      'Un triángulo en la esquina superior derecha y página lisa debajo.';
+
+  @override
+  String get templateWave => 'Ola';
+
+  @override
+  String get templateWaveCaption =>
+      'Encabezado azul claro con una ola blanca y página lisa debajo.';
+
+  @override
   String get templateExecutiveNote => 'Nota ejecutiva';
 
   @override

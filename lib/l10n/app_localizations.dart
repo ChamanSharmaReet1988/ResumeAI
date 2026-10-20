@@ -1560,6 +1560,30 @@ abstract class AppLocalizations {
   /// **'Teal arcs on the page with a calm single-column body.'**
   String get templateArcCaption;
 
+  /// No description provided for @templateChevron.
+  ///
+  /// In en, this message translates to:
+  /// **'Chevron'**
+  String get templateChevron;
+
+  /// No description provided for @templateChevronCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'A triangle in the top-right corner, with a plain page below.'**
+  String get templateChevronCaption;
+
+  /// No description provided for @templateWave.
+  ///
+  /// In en, this message translates to:
+  /// **'Wave'**
+  String get templateWave;
+
+  /// No description provided for @templateWaveCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'A light blue header with a white wave, and a plain page below.'**
+  String get templateWaveCaption;
+
   /// No description provided for @templateExecutiveNote.
   ///
   /// In en, this message translates to:

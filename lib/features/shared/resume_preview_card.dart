@@ -129,6 +129,8 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.sageFrame ||
       ResumeTemplate.studio ||
       ResumeTemplate.arc ||
+      ResumeTemplate.chevron ||
+      ResumeTemplate.wave ||
       ResumeTemplate.creative ||
       ResumeTemplate.classicSidebar ||
       ResumeTemplate.headerSidebar => 'Garamond',
@@ -321,7 +323,9 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.sunset ||
       ResumeTemplate.sageFrame ||
       ResumeTemplate.studio ||
-      ResumeTemplate.arc => CreativeResumePreview(
+      ResumeTemplate.arc ||
+      ResumeTemplate.chevron ||
+      ResumeTemplate.wave => CreativeResumePreview(
         resume: resume,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),

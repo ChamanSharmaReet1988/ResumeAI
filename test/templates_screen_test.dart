@@ -91,7 +91,7 @@ void main() {
           gridView.childrenDelegate as SliverChildBuilderDelegate;
 
       expect(delegate.crossAxisCount, 2);
-      expect(childrenDelegate.childCount, 32);
+      expect(childrenDelegate.childCount, 34);
       expect(find.byKey(const Key('template-category-bestPick')), findsOneWidget);
       expect(find.text('Best Pick'), findsOneWidget);
       expect(find.byKey(const Key('template-tile-modern-line')), findsOneWidget);
@@ -121,10 +121,10 @@ void main() {
       );
       expect(
         (creativeGrid.childrenDelegate as SliverChildBuilderDelegate).childCount,
-        6,
+        8,
       );
       expect(find.text('Aurora'), findsOneWidget);
-      expect(find.text('Arc'), findsOneWidget);
+      expect(find.text('Wave'), findsOneWidget);
       final allChip = find.byKey(const Key('template-category-all'));
       await tester.ensureVisible(allChip);
       await tester.pumpAndSettle();

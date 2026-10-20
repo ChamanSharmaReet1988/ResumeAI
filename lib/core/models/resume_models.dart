@@ -75,6 +75,10 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.studio;
     case 'arc':
       return ResumeTemplate.arc;
+    case 'chevron':
+      return ResumeTemplate.chevron;
+    case 'wave':
+      return ResumeTemplate.wave;
     default:
       return ResumeTemplate.corporate;
   }
@@ -182,6 +186,12 @@ enum ResumeTemplate {
 
   /// Teal arc in the corner and a bar along the bottom.
   arc,
+
+  /// Repeating chevron pattern across the page.
+  chevron,
+
+  /// Light blue page with a white wave along the bottom.
+  wave,
 }
 
 enum CoverLetterTemplate {
@@ -256,6 +266,8 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.sageFrame,
   ResumeTemplate.studio,
   ResumeTemplate.arc,
+  ResumeTemplate.chevron,
+  ResumeTemplate.wave,
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
@@ -318,6 +330,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.sageFrame => 'Sage Frame',
     ResumeTemplate.studio => 'Studio',
     ResumeTemplate.arc => 'Arc',
+    ResumeTemplate.chevron => 'Chevron',
+    ResumeTemplate.wave => 'Wave',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -389,6 +403,10 @@ extension ResumeTemplateX on ResumeTemplate {
       'Colour blocks behind the name and a painted footer bar.',
     ResumeTemplate.arc =>
       'Teal arcs on the page with a calm single-column body.',
+    ResumeTemplate.chevron =>
+      'A triangle in the top-right corner, with a plain page below.',
+    ResumeTemplate.wave =>
+      'A light blue header with a white wave, and a plain page below.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -426,6 +444,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.sageFrame => const Color(0xFF2F6B45),
     ResumeTemplate.studio => const Color(0xFF1F4E5F),
     ResumeTemplate.arc => const Color(0xFF0F6E6B),
+    ResumeTemplate.chevron => const Color(0xFF1F8A78),
+    ResumeTemplate.wave => const Color(0xFF1E4E79),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -463,6 +483,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.sageFrame => const Color(0xFFE6EFE4),
     ResumeTemplate.studio => const Color(0xFFF7F4EF),
     ResumeTemplate.arc => const Color(0xFFF4FBFA),
+    ResumeTemplate.chevron => const Color(0xFFF7FBF9),
+    ResumeTemplate.wave => const Color(0xFFD7E7F6),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -501,6 +523,8 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.sageFrame => 'Outfit · sage frame',
     ResumeTemplate.studio => 'Outfit · studio',
     ResumeTemplate.arc => 'Outfit · arc',
+    ResumeTemplate.chevron => 'Outfit · chevron',
+    ResumeTemplate.wave => 'Outfit · wave',
   };
 }
 

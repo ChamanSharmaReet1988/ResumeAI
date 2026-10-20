@@ -121,7 +121,9 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.sunset ||
     ResumeTemplate.sageFrame ||
     ResumeTemplate.studio ||
-    ResumeTemplate.arc => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.arc ||
+    ResumeTemplate.chevron ||
+    ResumeTemplate.wave => kTemplateDefaultColorPresetIndex,
   };
 }
 

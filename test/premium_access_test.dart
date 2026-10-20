@@ -67,6 +67,11 @@ void main() {
         isTrue,
       );
       expect(PremiumAccess.templateTileRequiresPremium('creative-arc'), isTrue);
+      expect(
+        PremiumAccess.templateTileRequiresPremium('creative-chevron'),
+        isTrue,
+      );
+      expect(PremiumAccess.templateTileRequiresPremium('creative-wave'), isTrue);
     });
 
     test('all cover letter layouts are free', () {

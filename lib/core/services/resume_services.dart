@@ -8973,7 +8973,9 @@ class ResumePdfService {
         resume.template == ResumeTemplate.sunset ||
         resume.template == ResumeTemplate.sageFrame ||
         resume.template == ResumeTemplate.studio ||
-        resume.template == ResumeTemplate.arc) {
+        resume.template == ResumeTemplate.arc ||
+        resume.template == ResumeTemplate.chevron ||
+        resume.template == ResumeTemplate.wave) {
       final document = pw.Document();
       _addPaintedCreativeTemplatePage(
         document,
@@ -9076,6 +9078,8 @@ class ResumePdfService {
       case ResumeTemplate.sageFrame:
       case ResumeTemplate.studio:
       case ResumeTemplate.arc:
+      case ResumeTemplate.chevron:
+      case ResumeTemplate.wave:
         break;
     }
 
@@ -9475,7 +9479,9 @@ class ResumePdfService {
         resume.template == ResumeTemplate.sunset ||
         resume.template == ResumeTemplate.sageFrame ||
         resume.template == ResumeTemplate.studio ||
-        resume.template == ResumeTemplate.arc) {
+        resume.template == ResumeTemplate.arc ||
+        resume.template == ResumeTemplate.chevron ||
+        resume.template == ResumeTemplate.wave) {
       final document = pw.Document();
       _addPaintedCreativeTemplatePage(
         document,
@@ -9597,6 +9603,8 @@ class ResumePdfService {
       case ResumeTemplate.sageFrame:
       case ResumeTemplate.studio:
       case ResumeTemplate.arc:
+      case ResumeTemplate.chevron:
+      case ResumeTemplate.wave:
         break;
     }
 

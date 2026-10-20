@@ -836,6 +836,20 @@ class AppLocalizationsId extends AppLocalizations {
       'Busur hijau di halaman dengan isi satu kolom.';
 
   @override
+  String get templateChevron => 'Chevron';
+
+  @override
+  String get templateChevronCaption =>
+      'Segitiga di sudut kanan atas dan halaman polos di bawahnya.';
+
+  @override
+  String get templateWave => 'Gelombang';
+
+  @override
+  String get templateWaveCaption =>
+      'Header biru muda dengan gelombang putih dan halaman polos di bawahnya.';
+
+  @override
   String get templateExecutiveNote => 'Catatan eksekutif';
 
   @override

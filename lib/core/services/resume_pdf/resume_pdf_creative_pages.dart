@@ -176,7 +176,11 @@ extension _ResumePdfCreativePages on ResumePdfService {
     final contactStyle = style(
       ResumeFontWeight.w400,
       10,
-      onBand ? (lightBand ? bandInk : PdfColor.fromInt(0xFFFFF6F0)) : muted,
+      kind == ResumeTemplate.chevron
+          ? accent
+          : onBand
+          ? (lightBand ? bandInk : PdfColor.fromInt(0xFFFFF6F0))
+          : muted,
     );
     final headerColumn = pw.Column(
       crossAxisAlignment: kind == ResumeTemplate.sageFrame
@@ -247,6 +251,8 @@ extension _ResumePdfCreativePages on ResumePdfService {
       ResumeTemplate.inkPanel => const pw.EdgeInsets.fromLTRB(36, 28, 36, 32),
       ResumeTemplate.sageFrame => const pw.EdgeInsets.fromLTRB(32, 28, 32, 32),
       ResumeTemplate.arc => const pw.EdgeInsets.fromLTRB(40, 28, 64, 40),
+      ResumeTemplate.chevron ||
+      ResumeTemplate.wave => const pw.EdgeInsets.fromLTRB(40, 32, 40, 36),
       _ => const pw.EdgeInsets.fromLTRB(40, 28, 40, 32),
     };
     final bodyPad = kind == ResumeTemplate.sunset || kind == ResumeTemplate.studio
@@ -512,6 +518,14 @@ pw.Widget _creativePdfBackground(
         pw.Positioned(left: 16, bottom: 30, child: blob(22, highlight)),
       ],
     ),
+    ResumeTemplate.chevron => pw.CustomPaint(
+      size: const PdfPoint(595.28, 841.89),
+      painter: _paintChevronPage,
+    ),
+    ResumeTemplate.wave => pw.CustomPaint(
+      size: const PdfPoint(595.28, 841.89),
+      painter: _paintWavePage,
+    ),
     ResumeTemplate.arc => pw.Stack(
       children: [
         pw.Positioned.fill(
@@ -529,4 +543,91 @@ pw.Widget _creativePdfBackground(
     ),
     _ => pw.Container(color: PdfColors.white),
   };
+}
+
+void _paintChevronPage(PdfGraphics canvas, PdfPoint size) {
+  const band = 250.0;
+  const span = 340.0;
+  canvas
+    ..setFillColor(PdfColors.white)
+    ..drawRect(0, 0, size.x, size.y)
+    ..fillPath()
+    ..setFillColor(PdfColor.fromInt(0xFFF7FBF9))
+    ..moveTo(size.x, size.y)
+    ..lineTo(size.x - span, size.y)
+    ..lineTo(size.x, size.y - band)
+    ..closePath()
+    ..fillPath()
+    ..saveContext()
+    ..moveTo(size.x, size.y)
+    ..lineTo(size.x - span, size.y)
+    ..lineTo(size.x, size.y - band)
+    ..closePath()
+    ..clipPath()
+    ..setStrokeColor(PdfColor.fromInt(0xFFC5D2CC))
+    ..setLineWidth(1.15);
+  const pitch = 36.0;
+  const row = 22.0;
+  const depth = 10.0;
+  final top = size.y - band;
+  for (var r = 0;; r++) {
+    final y0 = top + depth + r * row;
+    if (y0 > size.y - depth) break;
+    canvas.moveTo(size.x - span - pitch, y0);
+    var x = size.x - span - pitch;
+    var up = r.isEven;
+    while (x < size.x + pitch) {
+      final next = x + pitch / 2;
+      canvas.lineTo(next, y0 + (up ? depth : -depth));
+      up = !up;
+      x = next;
+    }
+    canvas.strokePath();
+  }
+  canvas.restoreContext();
+}
+
+void _paintWavePage(PdfGraphics canvas, PdfPoint size) {
+  const band = 250.0;
+  final base = size.y - band;
+  canvas
+    ..setFillColor(PdfColors.white)
+    ..drawRect(0, 0, size.x, size.y)
+    ..fillPath()
+    ..setFillColor(PdfColor.fromInt(0xFFD7E7F6))
+    ..drawRect(0, base, size.x, band)
+    ..fillPath()
+    ..setStrokeColor(PdfColors.white)
+    ..setLineWidth(1.5);
+  void curve(double y, double amp) {
+    canvas
+      ..moveTo(-12, y)
+      ..curveTo(
+        size.x * 0.28,
+        y + amp,
+        size.x * 0.62,
+        y - amp,
+        size.x + 12,
+        y + amp * 0.35,
+      )
+      ..strokePath();
+  }
+
+  curve(size.y - 48, 18);
+  curve(size.y - 96, 12);
+  canvas
+    ..setFillColor(PdfColors.white)
+    ..moveTo(0, base)
+    ..lineTo(0, base + 78)
+    ..curveTo(
+      size.x * 0.24,
+      base + 130,
+      size.x * 0.58,
+      base + 18,
+      size.x,
+      base + 88,
+    )
+    ..lineTo(size.x, base)
+    ..closePath()
+    ..fillPath();
 }

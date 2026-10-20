@@ -758,6 +758,22 @@ const _creativeResumeCards = <_TemplateTileData>[
     caption: 'Teal arcs on the page with a calm single-column body.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'creative-chevron',
+    resumeTemplate: ResumeTemplate.chevron,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Chevron',
+    caption: 'A triangle in the top-right corner, with a plain page below.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'creative-wave',
+    resumeTemplate: ResumeTemplate.wave,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Wave',
+    caption: 'A light blue header with a white wave, and a plain page below.',
+    isPremium: false,
+  ),
 ];
 
 const _professionalResumeCards = <_TemplateTileData>[
@@ -1125,6 +1141,8 @@ class _TemplateTileData {
       'creative-sage-frame' => l10n.templateSageFrame,
       'creative-studio' => l10n.templateStudio,
       'creative-arc' => l10n.templateArc,
+      'creative-chevron' => l10n.templateChevron,
+      'creative-wave' => l10n.templateWave,
       'executive-note' => l10n.templateExecutiveNote,
       'minimal-letter' => l10n.templateMinimalLetter,
       'sidebar-letter' => l10n.templateMintLetter,
@@ -1177,6 +1195,8 @@ class _TemplateTileData {
       'creative-sage-frame' => l10n.templateSageFrameCaption,
       'creative-studio' => l10n.templateStudioCaption,
       'creative-arc' => l10n.templateArcCaption,
+      'creative-chevron' => l10n.templateChevronCaption,
+      'creative-wave' => l10n.templateWaveCaption,
       'executive-note' => l10n.templateExecutiveNoteCaption,
       'minimal-letter' => l10n.templateMinimalLetterCaption,
       'sidebar-letter' => l10n.templateMintLetterCaption,
@@ -1649,7 +1669,9 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.sunset ||
       ResumeTemplate.sageFrame ||
       ResumeTemplate.studio ||
-      ResumeTemplate.arc =>
+      ResumeTemplate.arc ||
+      ResumeTemplate.chevron ||
+      ResumeTemplate.wave =>
         _atsSampleFor(template),
     };
     return _applyTemplatePreviewPalette(sample, paletteSeed);
@@ -3840,6 +3862,8 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.sageFrame ||
           ResumeTemplate.studio ||
           ResumeTemplate.arc ||
+          ResumeTemplate.chevron ||
+          ResumeTemplate.wave ||
           ResumeTemplate.modernLine ||
           ResumeTemplate.typeplate => true,
           _ => false,
@@ -3851,6 +3875,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.sageFrame => const Color(0xFFE6EFE4),
           ResumeTemplate.studio => const Color(0xFFF7F4EF),
           ResumeTemplate.arc => const Color(0xFFF4FBFA),
+          ResumeTemplate.chevron || ResumeTemplate.wave => Colors.white,
           _ => Colors.white,
         };
         final bottomInset = fullHeightTemplate
@@ -3872,7 +3897,9 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
             template == ResumeTemplate.sunset ||
             template == ResumeTemplate.sageFrame ||
             template == ResumeTemplate.studio ||
-            template == ResumeTemplate.arc;
+            template == ResumeTemplate.arc ||
+            template == ResumeTemplate.chevron ||
+            template == ResumeTemplate.wave;
         // Blue Diagonal fills the tile so its diagonal footer lands on the
         // card edge. BoxFit.cover scales evenly and crops a sliver of width;
         // BoxFit.fill stretched the page and turned the photo circle into an
@@ -8155,7 +8182,9 @@ ResumeData galleryDetailSampleForTest(ResumeTemplate template) =>
       ResumeTemplate.sunset ||
       ResumeTemplate.sageFrame ||
       ResumeTemplate.studio ||
-      ResumeTemplate.arc =>
+      ResumeTemplate.arc ||
+      ResumeTemplate.chevron ||
+      ResumeTemplate.wave =>
         _atsSampleFor(template),
     };
 

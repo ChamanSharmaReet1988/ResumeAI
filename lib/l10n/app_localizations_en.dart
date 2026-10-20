@@ -834,6 +834,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Teal arcs on the page with a calm single-column body.';
 
   @override
+  String get templateChevron => 'Chevron';
+
+  @override
+  String get templateChevronCaption =>
+      'A triangle in the top-right corner, with a plain page below.';
+
+  @override
+  String get templateWave => 'Wave';
+
+  @override
+  String get templateWaveCaption =>
+      'A light blue header with a white wave, and a plain page below.';
+
+  @override
   String get templateExecutiveNote => 'Executive Note';
 
   @override

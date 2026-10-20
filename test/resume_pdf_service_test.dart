@@ -735,6 +735,8 @@ void main() {
       ResumeTemplate.sageFrame,
       ResumeTemplate.studio,
       ResumeTemplate.arc,
+      ResumeTemplate.chevron,
+      ResumeTemplate.wave,
     ]) {
       final bytes = await service.buildPdf(base.copyWith(template: template));
       expect(bytes, isNotEmpty, reason: template.toString());

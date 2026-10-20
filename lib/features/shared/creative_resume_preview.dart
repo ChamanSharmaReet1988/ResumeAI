@@ -176,7 +176,9 @@ class CreativeResumePreview extends StatelessWidget {
       final contactStyle = style(
         FontWeight.w400,
         10.5,
-        color: onBand
+        color: kind == ResumeTemplate.chevron
+            ? accent
+            : onBand
             ? (lightBand ? bandInk.withValues(alpha: 0.8) : const Color(0xFFFFF6F0))
             : muted,
         height: 1.3,
@@ -377,6 +379,8 @@ class CreativeResumePreview extends StatelessWidget {
       ResumeTemplate.inkPanel => const EdgeInsets.fromLTRB(36, 28, 36, 32),
       ResumeTemplate.sageFrame => const EdgeInsets.fromLTRB(32, 28, 32, 32),
       ResumeTemplate.arc => const EdgeInsets.fromLTRB(40, 28, 64, 40),
+      ResumeTemplate.chevron => const EdgeInsets.fromLTRB(40, 32, 40, 36),
+      ResumeTemplate.wave => const EdgeInsets.fromLTRB(40, 32, 40, 36),
       _ => const EdgeInsets.fromLTRB(40, 28, 40, 32),
     };
     final bodyInset = onBand
@@ -551,6 +555,8 @@ class _CreativePagePaint extends StatelessWidget {
           Positioned(left: 16, bottom: 30, child: _Blob(size: 22, color: highlight)),
         ],
       ),
+      ResumeTemplate.chevron => const _ChevronPage(),
+      ResumeTemplate.wave => const _WavePage(),
       ResumeTemplate.arc => Stack(
         children: [
           const Positioned.fill(child: ColoredBox(color: Color(0xFFF4FBFA))),
@@ -568,6 +574,126 @@ class _CreativePagePaint extends StatelessWidget {
       _ => const ColoredBox(color: Colors.white),
     };
   }
+}
+
+class _ChevronPage extends StatelessWidget {
+  const _ChevronPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const CustomPaint(
+      painter: _ChevronPainter(),
+      child: SizedBox.expand(),
+    );
+  }
+}
+
+class _ChevronPainter extends CustomPainter {
+  const _ChevronPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = Colors.white);
+    const band = 250.0;
+    const span = 340.0;
+    final triangle = Path()
+      ..moveTo(size.width, 0)
+      ..lineTo(size.width - span, 0)
+      ..lineTo(size.width, band)
+      ..close();
+    canvas.drawPath(triangle, Paint()..color = const Color(0xFFF7FBF9));
+    canvas.save();
+    canvas.clipPath(triangle);
+    final stroke = Paint()
+      ..color = const Color(0xFFC5D2CC)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.15
+      ..strokeJoin = StrokeJoin.round;
+    const pitch = 36.0;
+    const row = 22.0;
+    const depth = 10.0;
+    for (var r = 0; r * row < band + row; r++) {
+      final path = Path();
+      final y0 = r * row;
+      path.moveTo(size.width - span - pitch, y0);
+      var x = size.width - span - pitch;
+      var up = r.isEven;
+      while (x < size.width + pitch) {
+        final next = x + pitch / 2;
+        path.lineTo(next, y0 + (up ? depth : -depth));
+        up = !up;
+        x = next;
+      }
+      canvas.drawPath(path, stroke);
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _WavePage extends StatelessWidget {
+  const _WavePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const CustomPaint(
+      painter: _WavePainter(),
+      child: SizedBox.expand(),
+    );
+  }
+}
+
+class _WavePainter extends CustomPainter {
+  const _WavePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = Colors.white);
+    const band = 250.0;
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, band),
+      Paint()..color = const Color(0xFFD7E7F6),
+    );
+    final line = Paint()
+      ..color = const Color(0xF2FFFFFF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    void curve(double y, double amp) {
+      final path = Path()..moveTo(-12, y);
+      path.cubicTo(
+        size.width * 0.28,
+        y - amp,
+        size.width * 0.62,
+        y + amp,
+        size.width + 12,
+        y - amp * 0.35,
+      );
+      canvas.drawPath(path, line);
+    }
+
+    curve(48, 18);
+    curve(96, 12);
+    final wave = Path()
+      ..moveTo(0, band)
+      ..lineTo(0, band - 78)
+      ..cubicTo(
+        size.width * 0.24,
+        band - 130,
+        size.width * 0.58,
+        band - 18,
+        size.width,
+        band - 88,
+      )
+      ..lineTo(size.width, band)
+      ..close();
+    canvas.drawPath(wave, Paint()..color = Colors.white);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _Blob extends StatelessWidget {
