@@ -63,6 +63,18 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.harbor;
     case 'typeplate':
       return ResumeTemplate.typeplate;
+    case 'aurora':
+      return ResumeTemplate.aurora;
+    case 'inkPanel':
+      return ResumeTemplate.inkPanel;
+    case 'sunset':
+      return ResumeTemplate.sunset;
+    case 'sageFrame':
+      return ResumeTemplate.sageFrame;
+    case 'studio':
+      return ResumeTemplate.studio;
+    case 'arc':
+      return ResumeTemplate.arc;
     default:
       return ResumeTemplate.corporate;
   }
@@ -152,6 +164,24 @@ enum ResumeTemplate {
 
   /// Oversized type-first name with a left accent mark on each section heading.
   typeplate,
+
+  /// Soft color washes behind a clean nameplate.
+  aurora,
+
+  /// Cream page with an ink rail and a painted corner.
+  inkPanel,
+
+  /// Warm banner across the top of the page.
+  sunset,
+
+  /// Double frame on a sage page.
+  sageFrame,
+
+  /// Colour blocks behind the name and a painted footer.
+  studio,
+
+  /// Teal arc in the corner and a bar along the bottom.
+  arc,
 }
 
 enum CoverLetterTemplate {
@@ -220,6 +250,12 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.splitContact,
   ResumeTemplate.harbor,
   ResumeTemplate.typeplate,
+  ResumeTemplate.aurora,
+  ResumeTemplate.inkPanel,
+  ResumeTemplate.sunset,
+  ResumeTemplate.sageFrame,
+  ResumeTemplate.studio,
+  ResumeTemplate.arc,
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
@@ -276,6 +312,12 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.splitContact => 'Split Contact',
     ResumeTemplate.harbor => 'Harbor',
     ResumeTemplate.typeplate => 'Typeplate',
+    ResumeTemplate.aurora => 'Aurora',
+    ResumeTemplate.inkPanel => 'Ink Panel',
+    ResumeTemplate.sunset => 'Sunset',
+    ResumeTemplate.sageFrame => 'Sage Frame',
+    ResumeTemplate.studio => 'Studio',
+    ResumeTemplate.arc => 'Arc',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -335,6 +377,18 @@ extension ResumeTemplateX on ResumeTemplate {
       'Centered nameplate, middot contact, and ruled modern section titles.',
     ResumeTemplate.typeplate =>
       'Editorial type-first header with a left accent mark on each section.',
+    ResumeTemplate.aurora =>
+      'Soft color washes behind a clean nameplate and open sections.',
+    ResumeTemplate.inkPanel =>
+      'Cream page with an ink rail and a painted corner.',
+    ResumeTemplate.sunset =>
+      'Warm banner across the top of the page with airy sections below.',
+    ResumeTemplate.sageFrame =>
+      'Framed page on a sage background with centred headings.',
+    ResumeTemplate.studio =>
+      'Colour blocks behind the name and a painted footer bar.',
+    ResumeTemplate.arc =>
+      'Teal arcs on the page with a calm single-column body.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -366,6 +420,12 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.splitContact => const Color(0xFF1E3A5F),
     ResumeTemplate.harbor => const Color(0xFF1D4ED8),
     ResumeTemplate.typeplate => const Color(0xFFB45309),
+    ResumeTemplate.aurora => const Color(0xFFD4654A),
+    ResumeTemplate.inkPanel => const Color(0xFF1C2430),
+    ResumeTemplate.sunset => const Color(0xFFE36B45),
+    ResumeTemplate.sageFrame => const Color(0xFF2F6B45),
+    ResumeTemplate.studio => const Color(0xFF1F4E5F),
+    ResumeTemplate.arc => const Color(0xFF0F6E6B),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -397,6 +457,12 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.splitContact => const Color(0xFFE8EEF6),
     ResumeTemplate.harbor => const Color(0xFFDBEAFE),
     ResumeTemplate.typeplate => const Color(0xFFFDE68A),
+    ResumeTemplate.aurora => const Color(0xFFFFF4EC),
+    ResumeTemplate.inkPanel => const Color(0xFFF7F1E8),
+    ResumeTemplate.sunset => const Color(0xFFFFF8F4),
+    ResumeTemplate.sageFrame => const Color(0xFFE6EFE4),
+    ResumeTemplate.studio => const Color(0xFFF7F4EF),
+    ResumeTemplate.arc => const Color(0xFFF4FBFA),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -429,6 +495,12 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.splitContact => 'Outfit · split contact',
     ResumeTemplate.harbor => 'Outfit · harbor',
     ResumeTemplate.typeplate => 'Outfit · typeplate',
+    ResumeTemplate.aurora => 'Outfit · aurora',
+    ResumeTemplate.inkPanel => 'Outfit · ink panel',
+    ResumeTemplate.sunset => 'Outfit · sunset',
+    ResumeTemplate.sageFrame => 'Outfit · sage frame',
+    ResumeTemplate.studio => 'Outfit · studio',
+    ResumeTemplate.arc => 'Outfit · arc',
   };
 }
 

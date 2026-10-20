@@ -590,6 +590,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get atsResumes => 'Resume ATS';
 
   @override
+  String get creativeResumes => 'Resume Kreatif';
+
+  @override
   String get topPickTemplates => 'Pilihan Terbaik';
 
   @override
@@ -789,6 +792,48 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get templateTypeplateCaption =>
       'Header tipografi dengan tanda aksen di kiri setiap bagian.';
+
+  @override
+  String get templateAurora => 'Aurora';
+
+  @override
+  String get templateAuroraCaption =>
+      'Sapuan warna lembut di belakang nama dan bagian yang terbuka.';
+
+  @override
+  String get templateInkPanel => 'Panel Tinta';
+
+  @override
+  String get templateInkPanelCaption =>
+      'Halaman krem dengan garis tinta dan sudut yang dilukis.';
+
+  @override
+  String get templateSunset => 'Senja';
+
+  @override
+  String get templateSunsetCaption =>
+      'Pita hangat di atas halaman dengan bagian yang lapang di bawahnya.';
+
+  @override
+  String get templateSageFrame => 'Bingkai Sage';
+
+  @override
+  String get templateSageFrameCaption =>
+      'Halaman berbingkai di latar sage dengan judul di tengah.';
+
+  @override
+  String get templateStudio => 'Studio';
+
+  @override
+  String get templateStudioCaption =>
+      'Blok warna di belakang nama dan bilah di kaki halaman.';
+
+  @override
+  String get templateArc => 'Arc';
+
+  @override
+  String get templateArcCaption =>
+      'Busur hijau di halaman dengan isi satu kolom.';
 
   @override
   String get templateExecutiveNote => 'Catatan eksekutif';

@@ -729,6 +729,12 @@ void main() {
       ResumeTemplate.splitContact,
       ResumeTemplate.harbor,
       ResumeTemplate.typeplate,
+      ResumeTemplate.aurora,
+      ResumeTemplate.inkPanel,
+      ResumeTemplate.sunset,
+      ResumeTemplate.sageFrame,
+      ResumeTemplate.studio,
+      ResumeTemplate.arc,
     ]) {
       final bytes = await service.buildPdf(base.copyWith(template: template));
       expect(bytes, isNotEmpty, reason: template.toString());

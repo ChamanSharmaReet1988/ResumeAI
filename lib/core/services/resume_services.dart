@@ -47,6 +47,7 @@ part 'resume_pdf/resume_pdf_bold_pill_page.dart';
 part 'resume_pdf/resume_pdf_blue_corner_page.dart';
 part 'resume_pdf/resume_pdf_profile_timeline_page.dart';
 part 'resume_pdf/resume_pdf_top_pick_pages.dart';
+part 'resume_pdf/resume_pdf_creative_pages.dart';
 
 /// Emits PDF body sections (after Summary/header) in the user's saved builder
 /// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
@@ -8967,6 +8968,21 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.aurora ||
+        resume.template == ResumeTemplate.inkPanel ||
+        resume.template == ResumeTemplate.sunset ||
+        resume.template == ResumeTemplate.sageFrame ||
+        resume.template == ResumeTemplate.studio ||
+        resume.template == ResumeTemplate.arc) {
+      final document = pw.Document();
+      _addPaintedCreativeTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.slateSidebar) {
       final document = pw.Document();
       _addSlateSidebarTemplatePage(
@@ -9054,6 +9070,12 @@ class ResumePdfService {
       case ResumeTemplate.splitContact:
       case ResumeTemplate.harbor:
       case ResumeTemplate.typeplate:
+      case ResumeTemplate.aurora:
+      case ResumeTemplate.inkPanel:
+      case ResumeTemplate.sunset:
+      case ResumeTemplate.sageFrame:
+      case ResumeTemplate.studio:
+      case ResumeTemplate.arc:
         break;
     }
 
@@ -9448,6 +9470,24 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.aurora ||
+        resume.template == ResumeTemplate.inkPanel ||
+        resume.template == ResumeTemplate.sunset ||
+        resume.template == ResumeTemplate.sageFrame ||
+        resume.template == ResumeTemplate.studio ||
+        resume.template == ResumeTemplate.arc) {
+      final document = pw.Document();
+      _addPaintedCreativeTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.slateSidebar) {
       final profileImagePath = await ProfileImageStorage.resolvePath(
         resume.profileImagePath,
@@ -9551,6 +9591,12 @@ class ResumePdfService {
       case ResumeTemplate.splitContact:
       case ResumeTemplate.harbor:
       case ResumeTemplate.typeplate:
+      case ResumeTemplate.aurora:
+      case ResumeTemplate.inkPanel:
+      case ResumeTemplate.sunset:
+      case ResumeTemplate.sageFrame:
+      case ResumeTemplate.studio:
+      case ResumeTemplate.arc:
         break;
     }
 

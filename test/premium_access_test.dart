@@ -27,6 +27,14 @@ void main() {
         PremiumAccess.templateTileRequiresPremium('split-contact'),
         isFalse,
       );
+      expect(
+        PremiumAccess.templateTileRequiresPremium('creative-aurora'),
+        isFalse,
+      );
+      expect(
+        PremiumAccess.templateTileRequiresPremium('creative-ink-panel'),
+        isFalse,
+      );
     });
 
     test('later templates in each resume section require Pro', () {
@@ -54,6 +62,11 @@ void main() {
       expect(PremiumAccess.templateTileRequiresPremium('harbor'), isTrue);
       expect(PremiumAccess.templateTileRequiresPremium('typeplate'), isTrue);
       expect(PremiumAccess.templateTileRequiresPremium('ats-clean-sans'), isTrue);
+      expect(
+        PremiumAccess.resumeTemplateRequiresPremium(ResumeTemplate.sunset),
+        isTrue,
+      );
+      expect(PremiumAccess.templateTileRequiresPremium('creative-arc'), isTrue);
     });
 
     test('all cover letter layouts are free', () {

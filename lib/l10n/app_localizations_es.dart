@@ -590,6 +590,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get atsResumes => 'Currículums ATS';
 
   @override
+  String get creativeResumes => 'Currículums creativos';
+
+  @override
   String get topPickTemplates => 'Mejor elección';
 
   @override
@@ -789,6 +792,48 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get templateTypeplateCaption =>
       'Encabezado tipográfico con una marca de acento a la izquierda de cada sección.';
+
+  @override
+  String get templateAurora => 'Aurora';
+
+  @override
+  String get templateAuroraCaption =>
+      'Fondos de color suave detrás de un nombre claro y secciones abiertas.';
+
+  @override
+  String get templateInkPanel => 'Panel de tinta';
+
+  @override
+  String get templateInkPanelCaption =>
+      'Página crema con un riel de tinta y una esquina pintada.';
+
+  @override
+  String get templateSunset => 'Atardecer';
+
+  @override
+  String get templateSunsetCaption =>
+      'Franja cálida en la parte superior y secciones amplias debajo.';
+
+  @override
+  String get templateSageFrame => 'Marco salvia';
+
+  @override
+  String get templateSageFrameCaption =>
+      'Página enmarcada sobre un fondo salvia con títulos centrados.';
+
+  @override
+  String get templateStudio => 'Estudio';
+
+  @override
+  String get templateStudioCaption =>
+      'Bloques de color detrás del nombre y una barra al pie.';
+
+  @override
+  String get templateArc => 'Arco';
+
+  @override
+  String get templateArcCaption =>
+      'Arcos verde azulado en la página y un cuerpo de una sola columna.';
 
   @override
   String get templateExecutiveNote => 'Nota ejecutiva';

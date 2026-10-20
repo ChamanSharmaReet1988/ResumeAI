@@ -590,6 +590,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get atsResumes => 'Currículos ATS';
 
   @override
+  String get creativeResumes => 'Currículos criativos';
+
+  @override
   String get topPickTemplates => 'Melhor escolha';
 
   @override
@@ -789,6 +792,48 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get templateTypeplateCaption =>
       'Cabeçalho tipográfico com uma marca de destaque à esquerda de cada seção.';
+
+  @override
+  String get templateAurora => 'Aurora';
+
+  @override
+  String get templateAuroraCaption =>
+      'Lavagens de cor suaves atrás de um nome limpo e seções abertas.';
+
+  @override
+  String get templateInkPanel => 'Painel de tinta';
+
+  @override
+  String get templateInkPanelCaption =>
+      'Página creme com uma faixa de tinta e um canto pintado.';
+
+  @override
+  String get templateSunset => 'Pôr do sol';
+
+  @override
+  String get templateSunsetCaption =>
+      'Faixa quente no topo da página e seções amplas abaixo.';
+
+  @override
+  String get templateSageFrame => 'Moldura sálvia';
+
+  @override
+  String get templateSageFrameCaption =>
+      'Página emoldurada sobre fundo sálvia com títulos centralizados.';
+
+  @override
+  String get templateStudio => 'Estúdio';
+
+  @override
+  String get templateStudioCaption =>
+      'Blocos de cor atrás do nome e uma barra no rodapé.';
+
+  @override
+  String get templateArc => 'Arco';
+
+  @override
+  String get templateArcCaption =>
+      'Arcos verde-azulados na página e um corpo em coluna única.';
 
   @override
   String get templateExecutiveNote => 'Nota executiva';

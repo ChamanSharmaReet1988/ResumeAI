@@ -588,6 +588,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get atsResumes => 'ATS Resumes';
 
   @override
+  String get creativeResumes => 'Creative Resumes';
+
+  @override
   String get topPickTemplates => 'Best Pick';
 
   @override
@@ -787,6 +790,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get templateTypeplateCaption =>
       'Editorial type-first header with a left accent mark on each section.';
+
+  @override
+  String get templateAurora => 'Aurora';
+
+  @override
+  String get templateAuroraCaption =>
+      'Soft color washes behind a clean nameplate and open sections.';
+
+  @override
+  String get templateInkPanel => 'Ink Panel';
+
+  @override
+  String get templateInkPanelCaption =>
+      'Cream page with an ink rail and a painted corner.';
+
+  @override
+  String get templateSunset => 'Sunset';
+
+  @override
+  String get templateSunsetCaption =>
+      'Warm banner across the top of the page with airy sections below.';
+
+  @override
+  String get templateSageFrame => 'Sage Frame';
+
+  @override
+  String get templateSageFrameCaption =>
+      'Framed page on a sage background with centred headings.';
+
+  @override
+  String get templateStudio => 'Studio';
+
+  @override
+  String get templateStudioCaption =>
+      'Colour blocks behind the name and a painted footer bar.';
+
+  @override
+  String get templateArc => 'Arc';
+
+  @override
+  String get templateArcCaption =>
+      'Teal arcs on the page with a calm single-column body.';
 
   @override
   String get templateExecutiveNote => 'Executive Note';

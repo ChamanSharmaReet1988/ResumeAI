@@ -42,7 +42,7 @@ class TemplatesScreen extends StatefulWidget {
   State<TemplatesScreen> createState() => _TemplatesScreenState();
 }
 
-enum _ResumeCategory { all, professional, ats, bestPick }
+enum _ResumeCategory { all, professional, ats, bestPick, creative }
 
 enum _CoverLetterCategory { all, professional, creative }
 
@@ -80,6 +80,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     if (resumeTemplate != null) {
       for (final item in [
         ..._topPickResumeCards,
+        ..._creativeResumeCards,
         ..._professionalResumeCards,
         ..._atsResumeCards,
       ]) {
@@ -214,12 +215,14 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final resumeCards = switch (_selectedCategory) {
       _ResumeCategory.all => const [
         ..._topPickResumeCards,
+        ..._creativeResumeCards,
         ..._resumeTemplateCards,
         ..._atsResumeCards,
       ],
       _ResumeCategory.professional => _resumeTemplateCards,
       _ResumeCategory.ats => _atsResumeCards,
       _ResumeCategory.bestPick => _topPickResumeCards,
+      _ResumeCategory.creative => _creativeResumeCards,
     };
     final coverLetterCards = switch (_selectedCoverLetterCategory) {
       _CoverLetterCategory.all => _coverLetterTemplateCards,
@@ -387,6 +390,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                         _ResumeCategory.professional => l10n.professionalResumes,
                         _ResumeCategory.ats => l10n.atsResumes,
                         _ResumeCategory.bestPick => l10n.topPickTemplates,
+                        _ResumeCategory.creative => l10n.creativeResumes,
                       }),
                       selected: _selectedCategory == category,
                       onSelected: (_) =>
@@ -701,6 +705,57 @@ const _topPickResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.typeplateResume,
     headline: 'Typeplate',
     caption: 'Editorial type-first header with a left accent mark on each section.',
+    isPremium: false,
+  ),
+];
+
+const _creativeResumeCards = <_TemplateTileData>[
+  _TemplateTileData(
+    id: 'creative-aurora',
+    resumeTemplate: ResumeTemplate.aurora,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Aurora',
+    caption: 'Soft color washes behind a clean nameplate and open sections.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'creative-ink-panel',
+    resumeTemplate: ResumeTemplate.inkPanel,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Ink Panel',
+    caption: 'Cream page with an ink rail and a painted corner.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'creative-sunset',
+    resumeTemplate: ResumeTemplate.sunset,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Sunset',
+    caption: 'Warm banner across the top of the page with airy sections below.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'creative-sage-frame',
+    resumeTemplate: ResumeTemplate.sageFrame,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Sage Frame',
+    caption: 'Framed page on a sage background with centred headings.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'creative-studio',
+    resumeTemplate: ResumeTemplate.studio,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Studio',
+    caption: 'Colour blocks behind the name and a painted footer bar.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'creative-arc',
+    resumeTemplate: ResumeTemplate.arc,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Arc',
+    caption: 'Teal arcs on the page with a calm single-column body.',
     isPremium: false,
   ),
 ];
@@ -1064,6 +1119,12 @@ class _TemplateTileData {
       'split-contact' => l10n.templateSplitContact,
       'harbor' => l10n.templateHarbor,
       'typeplate' => l10n.templateTypeplate,
+      'creative-aurora' => l10n.templateAurora,
+      'creative-ink-panel' => l10n.templateInkPanel,
+      'creative-sunset' => l10n.templateSunset,
+      'creative-sage-frame' => l10n.templateSageFrame,
+      'creative-studio' => l10n.templateStudio,
+      'creative-arc' => l10n.templateArc,
       'executive-note' => l10n.templateExecutiveNote,
       'minimal-letter' => l10n.templateMinimalLetter,
       'sidebar-letter' => l10n.templateMintLetter,
@@ -1110,6 +1171,12 @@ class _TemplateTileData {
       'split-contact' => l10n.templateSplitContactCaption,
       'harbor' => l10n.templateHarborCaption,
       'typeplate' => l10n.templateTypeplateCaption,
+      'creative-aurora' => l10n.templateAuroraCaption,
+      'creative-ink-panel' => l10n.templateInkPanelCaption,
+      'creative-sunset' => l10n.templateSunsetCaption,
+      'creative-sage-frame' => l10n.templateSageFrameCaption,
+      'creative-studio' => l10n.templateStudioCaption,
+      'creative-arc' => l10n.templateArcCaption,
       'executive-note' => l10n.templateExecutiveNoteCaption,
       'minimal-letter' => l10n.templateMinimalLetterCaption,
       'sidebar-letter' => l10n.templateMintLetterCaption,
@@ -1158,6 +1225,7 @@ enum _TemplatePreviewKind {
   splitContactResume,
   harborResume,
   typeplateResume,
+  creativeResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
   sidebarCoverLetter,
@@ -1403,6 +1471,12 @@ class _TemplatePreviewArt extends StatelessWidget {
           paletteSeed,
         ),
       ),
+      _TemplatePreviewKind.creativeResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(item.resumeTemplate ?? ResumeTemplate.aurora),
+          paletteSeed,
+        ),
+      ),
       _TemplatePreviewKind.executiveNoteCoverLetter =>
         const _ExecutiveNoteCoverLetterArt(),
       _TemplatePreviewKind.minimalCoverLetter => const _MinimalCoverLetterArt(),
@@ -1569,7 +1643,13 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.modernLine ||
       ResumeTemplate.splitContact ||
       ResumeTemplate.harbor ||
-      ResumeTemplate.typeplate =>
+      ResumeTemplate.typeplate ||
+      ResumeTemplate.aurora ||
+      ResumeTemplate.inkPanel ||
+      ResumeTemplate.sunset ||
+      ResumeTemplate.sageFrame ||
+      ResumeTemplate.studio ||
+      ResumeTemplate.arc =>
         _atsSampleFor(template),
     };
     return _applyTemplatePreviewPalette(sample, paletteSeed);
@@ -3740,7 +3820,8 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
             resume.template.userFacingTemplate == ResumeTemplate.accentStrip;
         final isHeaderSidebar =
             resume.template.userFacingTemplate == ResumeTemplate.headerSidebar;
-        final fullHeightTemplate = switch (resume.template.userFacingTemplate) {
+        final template = resume.template.userFacingTemplate;
+        final fullHeightTemplate = switch (template) {
           ResumeTemplate.creative => true,
           ResumeTemplate.accentStrip => true,
           ResumeTemplate.headerSidebar => true,
@@ -3753,7 +3834,22 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.boldPill => true,
           ResumeTemplate.blueCorner => true,
           ResumeTemplate.profileTimeline => true,
+          ResumeTemplate.aurora ||
+          ResumeTemplate.inkPanel ||
+          ResumeTemplate.sunset ||
+          ResumeTemplate.sageFrame ||
+          ResumeTemplate.studio ||
+          ResumeTemplate.arc => true,
           _ => false,
+        };
+        final creativePageColor = switch (template) {
+          ResumeTemplate.aurora => const Color(0xFFFFF4EC),
+          ResumeTemplate.inkPanel => const Color(0xFFF7F1E8),
+          ResumeTemplate.sunset => const Color(0xFFFFF8F4),
+          ResumeTemplate.sageFrame => const Color(0xFFE6EFE4),
+          ResumeTemplate.studio => const Color(0xFFF7F4EF),
+          ResumeTemplate.arc => const Color(0xFFF4FBFA),
+          _ => Colors.white,
         };
         final bottomInset = fullHeightTemplate
             ? 0.0
@@ -3793,7 +3889,7 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
         final scaledPageHeight = targetWidth * (pageHeight / _pageWidth);
 
         return ColoredBox(
-          color: Colors.white,
+          color: creativePageColor,
           child: ClipRect(
             child: SizedBox(
               width: targetWidth,
@@ -3838,6 +3934,32 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
                           width: targetWidth * (206 / _pageWidth),
                         ),
                       ),
+                    ),
+                  // The tile is taller than the scaled page. Keep the painted
+                  // page color, side rail, and footer through that extra space.
+                  if (template == ResumeTemplate.inkPanel)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: ColoredBox(
+                        color: resume.creativeAccentColor,
+                        child: SizedBox(width: targetWidth * (16 / _pageWidth)),
+                      ),
+                    ),
+                  if ((template == ResumeTemplate.studio ||
+                          template == ResumeTemplate.arc) &&
+                      contentHeight != null &&
+                      contentHeight > scaledPageHeight - 4)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: scaledPageHeight -
+                          targetWidth *
+                              ((template == ResumeTemplate.studio ? 22 : 18) /
+                                  _pageWidth),
+                      bottom: 0,
+                      child: ColoredBox(color: resume.creativeAccentColor),
                     ),
                   // The tile can be taller than the scaled page, so continue
                   // the bold pill footer bar to the bottom of the tile.
@@ -8003,7 +8125,13 @@ ResumeData galleryDetailSampleForTest(ResumeTemplate template) =>
       ResumeTemplate.modernLine ||
       ResumeTemplate.splitContact ||
       ResumeTemplate.harbor ||
-      ResumeTemplate.typeplate =>
+      ResumeTemplate.typeplate ||
+      ResumeTemplate.aurora ||
+      ResumeTemplate.inkPanel ||
+      ResumeTemplate.sunset ||
+      ResumeTemplate.sageFrame ||
+      ResumeTemplate.studio ||
+      ResumeTemplate.arc =>
         _atsSampleFor(template),
     };
 

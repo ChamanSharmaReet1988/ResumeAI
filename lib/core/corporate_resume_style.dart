@@ -115,7 +115,13 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.modernLine ||
     ResumeTemplate.splitContact ||
     ResumeTemplate.harbor ||
-    ResumeTemplate.typeplate => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.typeplate ||
+    ResumeTemplate.aurora ||
+    ResumeTemplate.inkPanel ||
+    ResumeTemplate.sunset ||
+    ResumeTemplate.sageFrame ||
+    ResumeTemplate.studio ||
+    ResumeTemplate.arc => kTemplateDefaultColorPresetIndex,
   };
 }
 
@@ -319,6 +325,15 @@ extension ResumeCorporateStyleX on ResumeData {
 
   /// Creative template uses the selected preset only as an accent, not for titles.
   Color get creativeAccentColor => corporateColorPreset.headerColor;
+
+  /// Peach mark on Studio. Follows the color sheet once a swatch is chosen.
+  Color get paintedCreativeHighlightColor {
+    if (corporateColorPresetIndex >= kCorporateColorPresets.length) {
+      return const Color(0xFFE8A87C);
+    }
+    return Color.lerp(Colors.white, creativeAccentColor, 0.55) ??
+        const Color(0xFFE8A87C);
+  }
 
   Color get creativeRailColor =>
       Color.lerp(Colors.white, creativeAccentColor, 0.18) ?? Colors.white;

@@ -1134,6 +1134,12 @@ abstract class AppLocalizations {
   /// **'ATS Resumes'**
   String get atsResumes;
 
+  /// No description provided for @creativeResumes.
+  ///
+  /// In en, this message translates to:
+  /// **'Creative Resumes'**
+  String get creativeResumes;
+
   /// No description provided for @topPickTemplates.
   ///
   /// In en, this message translates to:
@@ -1481,6 +1487,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Editorial type-first header with a left accent mark on each section.'**
   String get templateTypeplateCaption;
+
+  /// No description provided for @templateAurora.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora'**
+  String get templateAurora;
+
+  /// No description provided for @templateAuroraCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft color washes behind a clean nameplate and open sections.'**
+  String get templateAuroraCaption;
+
+  /// No description provided for @templateInkPanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Ink Panel'**
+  String get templateInkPanel;
+
+  /// No description provided for @templateInkPanelCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Cream page with an ink rail and a painted corner.'**
+  String get templateInkPanelCaption;
+
+  /// No description provided for @templateSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset'**
+  String get templateSunset;
+
+  /// No description provided for @templateSunsetCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm banner across the top of the page with airy sections below.'**
+  String get templateSunsetCaption;
+
+  /// No description provided for @templateSageFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Sage Frame'**
+  String get templateSageFrame;
+
+  /// No description provided for @templateSageFrameCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Framed page on a sage background with centred headings.'**
+  String get templateSageFrameCaption;
+
+  /// No description provided for @templateStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Studio'**
+  String get templateStudio;
+
+  /// No description provided for @templateStudioCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour blocks behind the name and a painted footer bar.'**
+  String get templateStudioCaption;
+
+  /// No description provided for @templateArc.
+  ///
+  /// In en, this message translates to:
+  /// **'Arc'**
+  String get templateArc;
+
+  /// No description provided for @templateArcCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal arcs on the page with a calm single-column body.'**
+  String get templateArcCaption;
 
   /// No description provided for @templateExecutiveNote.
   ///

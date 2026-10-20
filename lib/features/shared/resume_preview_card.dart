@@ -10,6 +10,7 @@ import '../../core/models/resume_models.dart';
 import '../../core/resume_font_weight.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/sample_avatar.dart';
+import 'creative_resume_preview.dart';
 
 export '../../core/sample_avatar.dart';
 
@@ -122,6 +123,12 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.splitContact ||
       ResumeTemplate.harbor ||
       ResumeTemplate.typeplate ||
+      ResumeTemplate.aurora ||
+      ResumeTemplate.inkPanel ||
+      ResumeTemplate.sunset ||
+      ResumeTemplate.sageFrame ||
+      ResumeTemplate.studio ||
+      ResumeTemplate.arc ||
       ResumeTemplate.creative ||
       ResumeTemplate.classicSidebar ||
       ResumeTemplate.headerSidebar => 'Garamond',
@@ -306,6 +313,15 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.splitContact ||
       ResumeTemplate.harbor ||
       ResumeTemplate.typeplate => _TopPickAtsPreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
+      ResumeTemplate.aurora ||
+      ResumeTemplate.inkPanel ||
+      ResumeTemplate.sunset ||
+      ResumeTemplate.sageFrame ||
+      ResumeTemplate.studio ||
+      ResumeTemplate.arc => CreativeResumePreview(
         resume: resume,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),

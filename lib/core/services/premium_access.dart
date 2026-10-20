@@ -3,7 +3,7 @@ import 'platform_monetization.dart';
 
 /// What requires [PremiumPurchaseService.isPremium] vs what stays free.
 ///
-/// In Professional, ATS, and Best Pick, the first two templates stay free.
+/// In Professional, ATS, Best Pick, and Creative, the first two templates stay free.
 /// The rest need the $1.99 one-time Pro unlock, which also removes ads.
 /// Cover letters stay free. AI Resume stays free on Android.
 abstract final class PremiumAccess {
@@ -23,6 +23,8 @@ abstract final class PremiumAccess {
     'ats-latex-classic',
     'modern-line',
     'split-contact',
+    'creative-aurora',
+    'creative-ink-panel',
   };
 
   static const Set<ResumeTemplate> freeResumeTemplates = {
@@ -32,6 +34,8 @@ abstract final class PremiumAccess {
     ResumeTemplate.atsLatexClassic,
     ResumeTemplate.modernLine,
     ResumeTemplate.splitContact,
+    ResumeTemplate.aurora,
+    ResumeTemplate.inkPanel,
   };
 
   /// AI Resume tab (and Create ATS) requires Pro on iOS only.
