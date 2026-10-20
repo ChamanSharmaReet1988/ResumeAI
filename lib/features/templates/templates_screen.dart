@@ -1827,6 +1827,22 @@ ResumeData _applyTemplatePreviewPalette(
       ),
     );
   }
+  // Creative gallery art keeps each template's designed color.
+  // A color chosen on a resume changes that resume only.
+  if (sample.template == ResumeTemplate.aurora ||
+      sample.template == ResumeTemplate.inkPanel ||
+      sample.template == ResumeTemplate.sunset ||
+      sample.template == ResumeTemplate.sageFrame ||
+      sample.template == ResumeTemplate.studio ||
+      sample.template == ResumeTemplate.arc ||
+      sample.template == ResumeTemplate.chevron ||
+      sample.template == ResumeTemplate.wave) {
+    return sample.copyWith(
+      corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
+        sample.template,
+      ),
+    );
+  }
   // ATS gallery art stays black; preview color is chosen on the preview screen.
   if (sample.template.isAtsTemplate) {
     return sample.copyWith(
