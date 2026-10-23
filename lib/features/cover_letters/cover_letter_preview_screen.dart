@@ -12,7 +12,6 @@ import '../../core/services/android_ads_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/resume_services.dart';
 import '../shared/native_pdf_preview.dart';
-import '../shared/post_share_backup_prompt.dart';
 import '../shared/view_models.dart';
 import '../templates/templates_screen.dart';
 
@@ -66,10 +65,6 @@ class _CoverLetterPreviewScreenState extends State<CoverLetterPreviewScreen> {
           'source': 'cover_letter_preview',
         },
       );
-      if (!mounted) {
-        return;
-      }
-      await showPostShareBackupPromptIfNeeded(context);
     } catch (_) {
       if (!mounted) {
         return;

@@ -21,7 +21,6 @@ import '../../core/models/resume_models.dart';
 import '../../core/skill_autocomplete_suggestions.dart';
 import '../../core/services/app_preferences.dart';
 import 'resume_preview_screen.dart';
-import '../shared/post_share_backup_prompt.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/resume_share_format_sheet.dart';
 import '../shared/resume_title_dialog.dart';
@@ -463,10 +462,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
         'format': format.name,
       },
     );
-    if (!mounted) {
-      return;
-    }
-    await showPostShareBackupPromptIfNeeded(context);
   }
 
   Future<void> _printResume() async {

@@ -23,15 +23,11 @@ class AppPreferences {
     this._setAppLocaleCode,
     this._getSectionReorderNudgeDismissed,
     this._setSectionReorderNudgeDismissed,
-    this._getPostShareBackupPromptDismissed,
-    this._setPostShareBackupPromptDismissed,
   );
 
   static const _resumeOrderNudgeDismissedKey = 'resume_order_nudge_dismissed';
   static const _sectionReorderNudgeDismissedKey =
       'section_reorder_nudge_dismissed';
-  static const _postShareBackupPromptDismissedKey =
-      'post_share_backup_prompt_dismissed';
   static const _iCloudAutoSyncEnabledKey = 'icloud_auto_sync_enabled';
   static const _googleDriveAutoSyncEnabledKey =
       'google_drive_auto_sync_enabled';
@@ -62,8 +58,6 @@ class AppPreferences {
   final Future<void> Function(String) _setAppLocaleCode;
   final bool Function() _getSectionReorderNudgeDismissed;
   final Future<void> Function(bool) _setSectionReorderNudgeDismissed;
-  final bool Function() _getPostShareBackupPromptDismissed;
-  final Future<void> Function(bool) _setPostShareBackupPromptDismissed;
 
   static Future<AppPreferences> open() async {
     final box = await Hive.openBox<dynamic>('app_prefs');
@@ -132,8 +126,6 @@ class AppPreferences {
       ),
       () => (box.get(_sectionReorderNudgeDismissedKey) as bool?) ?? false,
       (value) async => box.put(_sectionReorderNudgeDismissedKey, value),
-      () => (box.get(_postShareBackupPromptDismissedKey) as bool?) ?? false,
-      (value) async => box.put(_postShareBackupPromptDismissedKey, value),
     );
   }
 
@@ -148,7 +140,6 @@ class AppPreferences {
     bool debugPremiumOverrideEnabled = false,
     String appLocaleCode = AppLocaleOption.system,
     bool sectionReorderNudgeDismissed = false,
-    bool postShareBackupPromptDismissed = false,
   }) {
     var dismissed = resumeOrderNudgeDismissed;
     var iCloudAuto = iCloudAutoSyncEnabled;
@@ -159,7 +150,6 @@ class AppPreferences {
     var debugPremiumOverride = debugPremiumOverrideEnabled;
     var localeCode = AppLocaleOption.normalizePreference(appLocaleCode);
     var sectionReorderDismissed = sectionReorderNudgeDismissed;
-    var postShareBackupDismissed = postShareBackupPromptDismissed;
     return AppPreferences._(
       () => dismissed,
       (value) async {
@@ -197,17 +187,11 @@ class AppPreferences {
       (value) async {
         sectionReorderDismissed = value;
       },
-      () => postShareBackupDismissed,
-      (value) async {
-        postShareBackupDismissed = value;
-      },
     );
   }
 
   bool get resumeOrderNudgeDismissed => _getDismissed();
   bool get sectionReorderNudgeDismissed => _getSectionReorderNudgeDismissed();
-  bool get postShareBackupPromptDismissed =>
-      _getPostShareBackupPromptDismissed();
   bool get iCloudAutoSyncEnabled => _getICloudAutoSyncEnabled();
   bool get googleDriveAutoSyncEnabled => _getGoogleDriveAutoSyncEnabled();
   bool get isPremium => _getIsPremium();
@@ -221,9 +205,6 @@ class AppPreferences {
 
   Future<void> setSectionReorderNudgeDismissed(bool value) =>
       _setSectionReorderNudgeDismissed(value);
-
-  Future<void> setPostShareBackupPromptDismissed(bool value) =>
-      _setPostShareBackupPromptDismissed(value);
 
   Future<void> setICloudAutoSyncEnabled(bool value) =>
       _setICloudAutoSyncEnabled(value);

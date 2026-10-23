@@ -11,7 +11,6 @@ import '../../core/services/analytics_events.dart';
 import '../../core/services/android_ads_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../shared/native_pdf_preview.dart';
-import '../shared/post_share_backup_prompt.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/resume_share_format_sheet.dart';
 import '../templates/templates_screen.dart';
@@ -100,10 +99,6 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
           'format': format.name,
         },
       );
-      if (!mounted) {
-        return;
-      }
-      await showPostShareBackupPromptIfNeeded(context);
     } catch (_) {
       if (!mounted) {
         return;
