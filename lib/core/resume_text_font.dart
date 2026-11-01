@@ -384,7 +384,7 @@ extension ResumeTextFontX on ResumeTextFont {
     ResumeTextFont.aptos => 'Source Sans 3',
     ResumeTextFont.calibri => 'Calibri',
     ResumeTextFont.arial => 'Arimo',
-    ResumeTextFont.outfit => 'Outfit',
+    ResumeTextFont.outfit => 'Outfit Resume',
     ResumeTextFont.garamond => 'Garamond',
   };
 

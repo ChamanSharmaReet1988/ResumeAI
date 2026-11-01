@@ -158,9 +158,10 @@ Future<_PdfFontSlots> _loadPdfFonts(ResumeTextFont font) async {
       return _PdfFontSlots(base: f, bold: f, italic: f, boldItalic: f);
     case ResumeTextFont.outfit:
       return _PdfFontSlots(
-        base: await loadPdfTtf('assets/fonts/outfit/Outfit-Regular.ttf'),
+        // Light, as in [loadOutfitResumePdfFonts], to match Garamond's weight.
+        base: await loadPdfTtf('assets/fonts/outfit/Outfit-Light.ttf'),
         bold: await loadPdfTtf('assets/fonts/outfit/Outfit-Bold.ttf'),
-        italic: await loadPdfTtf('assets/fonts/outfit/Outfit-Regular.ttf'),
+        italic: await loadPdfTtf('assets/fonts/outfit/Outfit-Light.ttf'),
         boldItalic: await loadPdfTtf('assets/fonts/outfit/Outfit-Bold.ttf'),
       );
     case ResumeTextFont.garamond:

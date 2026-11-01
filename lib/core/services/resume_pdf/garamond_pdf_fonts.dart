@@ -235,7 +235,9 @@ Future<GaramondPdfFonts> loadGaramondPdfFonts() async {
 ///
 /// Outfit has no italic cut, so italic text uses the upright faces.
 Future<GaramondPdfFonts> loadOutfitResumePdfFonts() async {
-  final regular = await loadPdfTtf('assets/fonts/outfit/Outfit-Regular.ttf');
+  // Light stands in for Regular so body copy is as dark on the page as
+  // Garamond Regular; Outfit Regular's thicker strokes read near-bold.
+  final regular = await loadPdfTtf('assets/fonts/outfit/Outfit-Light.ttf');
   final bold = await loadPdfTtf('assets/fonts/outfit/Outfit-Bold.ttf');
   return GaramondPdfFonts._(
     upright: {
