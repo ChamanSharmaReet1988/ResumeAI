@@ -212,7 +212,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final activeTemplate = (widget.selectedTemplate ?? library?.defaultTemplate)
         ?.userFacingTemplate;
     final activeCoverLetterTemplate = widget.selectedCoverLetterTemplate;
-    final resumeCards = switch (_selectedCategory) {
+    final resumeCards = _freeTemplatesFirst(switch (_selectedCategory) {
       _ResumeCategory.all => const [
         ..._topPickResumeCards,
         ..._creativeResumeCards,
@@ -223,7 +223,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       _ResumeCategory.ats => _atsResumeCards,
       _ResumeCategory.bestPick => _topPickResumeCards,
       _ResumeCategory.creative => _creativeResumeCards,
-    };
+    });
     final coverLetterCards = switch (_selectedCoverLetterCategory) {
       _CoverLetterCategory.all => _coverLetterTemplateCards,
       _CoverLetterCategory.professional => _professionalCoverLetterCards,
@@ -1087,6 +1087,16 @@ const _coverLetterTemplateCards = <_TemplateTileData>[
   ..._professionalCoverLetterCards,
   ..._creativeCoverLetterCards,
 ];
+
+/// Free templates first, Pro after; each group keeps its curated order.
+List<_TemplateTileData> _freeTemplatesFirst(List<_TemplateTileData> cards) {
+  return [
+    for (final card in cards)
+      if (!PremiumAccess.templateTileRequiresPremium(card.id)) card,
+    for (final card in cards)
+      if (PremiumAccess.templateTileRequiresPremium(card.id)) card,
+  ];
+}
 
 class _TemplateTileData {
   const _TemplateTileData({
