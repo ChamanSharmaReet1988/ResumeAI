@@ -20,6 +20,7 @@ import 'resume_optimize_highlight.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
 import '../shared/view_models.dart';
+import 'ats_resume_guide_screen.dart';
 
 class ResumeAnalyserScreen extends StatefulWidget {
   const ResumeAnalyserScreen({
@@ -241,9 +242,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
       _clearImportedResume();
       _resetAtsCreateProgress();
     });
-    unawaited(
-      logAnalyticsEvent(context, AnalyticsEvents.aiResumeSelected),
-    );
+    unawaited(logAnalyticsEvent(context, AnalyticsEvents.aiResumeSelected));
   }
 
   Future<void> _runTask(Future<void> Function() task) async {
@@ -309,9 +308,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
       await logAnalyticsEvent(
         context,
         AnalyticsEvents.aiResumeUploaded,
-        parameters: {
-          'mode': analyzeAfter ? 'check_ats' : 'enhance',
-        },
+        parameters: {'mode': analyzeAfter ? 'check_ats' : 'enhance'},
       );
 
       if (analyzeAfter) {
@@ -356,9 +353,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
       await logAnalyticsEvent(
         context,
         AnalyticsEvents.aiAtsChecked,
-        parameters: {
-          'source': _importedResume != null ? 'upload' : 'library',
-        },
+        parameters: {'source': _importedResume != null ? 'upload' : 'library'},
       );
     });
   }
@@ -373,9 +368,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     );
     if (selectedSource == null || !selectedSource.hasMeaningfulContent) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.selectResumeWithContentFirst),
-        ),
+        SnackBar(content: Text(context.l10n.selectResumeWithContentFirst)),
       );
       return;
     }
@@ -410,9 +403,9 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
       }
 
       if (outcome.fallbackNotice != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(outcome.fallbackNotice!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(outcome.fallbackNotice!)));
       }
 
       setState(() {
@@ -444,14 +437,13 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
       return;
     }
 
-    unawaited(
-      logAnalyticsEvent(context, AnalyticsEvents.aiResumeShown),
-    );
+    unawaited(logAnalyticsEvent(context, AnalyticsEvents.aiResumeShown));
 
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => _OptimizedResumePreviewScreen(
-          sourceResume: _sourceResumeFor(
+          sourceResume:
+              _sourceResumeFor(
                 context.read<ResumeLibraryViewModel>().resumes,
               ) ??
               created,
@@ -480,7 +472,8 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
     final l10n = context.l10n;
     final isCheckAts = _selectedSegment == _AiResumeSegment.checkAts;
     final sourceResume = _sourceResumeFor(resumes);
-    final showAiResumeBanner = PlatformMonetization.showsAiResumeBanner &&
+    final showAiResumeBanner =
+        PlatformMonetization.showsAiResumeBanner &&
         !(PlatformMonetization.isIapEnabled &&
             context.watch<PremiumPurchaseService>().isPremium);
 
@@ -490,7 +483,8 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
         final hasSource =
             (sourceResume?.hasMeaningfulContent ?? false) ||
             (_importedRawText?.trim().isNotEmpty ?? false);
-        final isFurtherPass = _createdResume != null &&
+        final isFurtherPass =
+            _createdResume != null &&
             _atsAttemptSourceId == sourceResume?.id &&
             _atsCreateAttempt > 0;
 
@@ -550,9 +544,9 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                 const SizedBox(height: 16),
                 Text(
                   l10n.selectFromAppResumeList,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 KeyedSubtree(
@@ -597,10 +591,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                             : resume.title;
                         return Align(
                           alignment: Alignment.centerLeft,
-                          child: Text(
-                            title,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text(title, overflow: TextOverflow.ellipsis),
                         );
                       }).toList();
                     },
@@ -701,9 +692,9 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                 const SizedBox(height: 20),
                 Text(
                   l10n.appliedChanges,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
                 ..._appliedChanges.map(
@@ -743,25 +734,45 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
                   20,
                   12,
                 ),
-                child: _AiResumeSegmentControl(
-                  selected: _selectedSegment,
-                  onChanged: (value) {
-                    if (value == _selectedSegment) {
-                      return;
-                    }
-                    setState(() => _selectedSegment = value);
-                    unawaited(
-                      logAnalyticsEvent(
-                        context,
-                        AnalyticsEvents.aiModeSelected,
-                        parameters: {
-                          'mode': value == _AiResumeSegment.checkAts
-                              ? 'check_ats'
-                              : 'enhance',
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _AiResumeSegmentControl(
+                        selected: _selectedSegment,
+                        onChanged: (value) {
+                          if (value == _selectedSegment) {
+                            return;
+                          }
+                          setState(() => _selectedSegment = value);
+                          unawaited(
+                            logAnalyticsEvent(
+                              context,
+                              AnalyticsEvents.aiModeSelected,
+                              parameters: {
+                                'mode': value == _AiResumeSegment.checkAts
+                                    ? 'check_ats'
+                                    : 'enhance',
+                              },
+                            ),
+                          );
                         },
                       ),
-                    );
-                  },
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(
+                      key: const Key('ats-guide-button'),
+                      tooltip: l10n.atsGuideTooltip,
+                      icon: const Icon(Icons.lightbulb_outline_rounded),
+                      onPressed: () {
+                        _dismissKeyboard();
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const AtsResumeGuideScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -948,9 +959,9 @@ class _AtsCheckResultsCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             ...items.map(
@@ -981,9 +992,9 @@ class _AtsCheckResultsCard extends StatelessWidget {
           children: [
             Text(
               l10n.atsCheckResults,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 14),
             Row(
@@ -1034,7 +1045,11 @@ class _AtsCheckResultsCard extends StatelessWidget {
                 ),
               ],
             ),
-            section(l10n.atsStrengths, analysis.strengths, Icons.check_circle_outline),
+            section(
+              l10n.atsStrengths,
+              analysis.strengths,
+              Icons.check_circle_outline,
+            ),
             section(
               l10n.atsMissingKeywords,
               analysis.missingSkills,
@@ -1258,8 +1273,7 @@ class _HighlightedResumePdfPreview extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          if (previewData.highlightSummary)
-            Text(l10n.highlightedSummaryChange),
+          if (previewData.highlightSummary) Text(l10n.highlightedSummaryChange),
           if (previewData.highlightedSkills.isNotEmpty)
             Text(
               l10n.highlightedSkillsLabel(

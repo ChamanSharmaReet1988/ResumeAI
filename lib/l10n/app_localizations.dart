@@ -609,13 +609,13 @@ abstract class AppLocalizations {
   /// No description provided for @premiumWelcomeBody.
   ///
   /// In en, this message translates to:
-  /// **'ResumeApp Pro is active on your {planLabel}. Ads are removed.'**
+  /// **'ResumeApp Pro is active on your {planLabel}. All premium templates are unlocked.'**
   String premiumWelcomeBody(String planLabel);
 
   /// No description provided for @premiumBenefitAllTemplates.
   ///
   /// In en, this message translates to:
-  /// **'All resume templates are included'**
+  /// **'Unlock all premium resume templates'**
   String get premiumBenefitAllTemplates;
 
   /// No description provided for @premiumBenefitRemoveAds.
@@ -651,7 +651,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumUpcomingUpdateMessage.
   ///
   /// In en, this message translates to:
-  /// **'Pay once to remove ads.'**
+  /// **'Pay once to unlock every premium template.'**
   String get premiumUpcomingUpdateMessage;
 
   /// No description provided for @planLifetime.
@@ -705,13 +705,13 @@ abstract class AppLocalizations {
   /// No description provided for @alreadySubscribedLifetime.
   ///
   /// In en, this message translates to:
-  /// **'You have ResumeApp Pro (Lifetime). Ads are removed.'**
+  /// **'You have ResumeApp Pro (Lifetime). All premium templates are unlocked.'**
   String get alreadySubscribedLifetime;
 
   /// No description provided for @alreadySubscribedGeneric.
   ///
   /// In en, this message translates to:
-  /// **'You have an active ResumeApp Pro subscription. Ads are removed.'**
+  /// **'You have an active ResumeApp Pro subscription. All premium templates are unlocked.'**
   String get alreadySubscribedGeneric;
 
   /// No description provided for @restoreInsteadLifetime.
@@ -3689,6 +3689,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Figma\nUser research\nPrototyping\nDesign systems\nWireframing\nAccessibility'**
   String get sampleSkills;
+
+  /// No description provided for @atsGuideTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'How to make an ATS-friendly resume'**
+  String get atsGuideTooltip;
+
+  /// No description provided for @atsGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ATS-Friendly Resume Guide'**
+  String get atsGuideTitle;
+
+  /// No description provided for @atsGuideIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Most companies collect applications in an Applicant Tracking System (ATS). It turns your resume into searchable data, and recruiters search and filter that data to find candidates.\nYour resume has two jobs: be read correctly by the software, and contain the words a recruiter searches for.'**
+  String get atsGuideIntro;
+
+  /// No description provided for @atsGuideMythTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What an ATS really does'**
+  String get atsGuideMythTitle;
+
+  /// No description provided for @atsGuideMythBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• The famous claim that \"75% of resumes are rejected by a robot\" traces back to a 2012 marketing pitch, not research.\n• In a 2025 survey of US recruiters, most said their ATS does not reject resumes automatically. People still read them.\n• The real automatic filters are knockout questions in the application form: work authorization, location, a required degree or license. Answer them carefully and honestly.\n• So the goal is not to \"beat a bot\". It is to be read correctly and to show up when a recruiter searches.'**
+  String get atsGuideMythBody;
+
+  /// No description provided for @atsGuideLayoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a layout the ATS can read'**
+  String get atsGuideLayoutTitle;
+
+  /// No description provided for @atsGuideLayoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Use one column that reads top to bottom. Sidebars and multiple columns can be read in the wrong order.\n• Don\'t put important details in tables, text boxes, or charts. They are often skipped or scrambled.\n• Keep your name, phone, and email in the main page, not in the page header or footer. Some systems ignore those areas.\n• Leave out photos, icons, logos, and skill bars. They turn into blank or garbled text.\n• Use a common font such as Arial, Calibri, Georgia, or Times New Roman, at 10–12 pt, with simple round bullets.\n• Save designed, multi-column resumes for when you email or hand your resume directly to a person.'**
+  String get atsGuideLayoutBody;
+
+  /// No description provided for @atsGuideHeadingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use standard section headings'**
+  String get atsGuideHeadingsTitle;
+
+  /// No description provided for @atsGuideHeadingsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Use headings the software recognizes: Summary, Work Experience, Education, Skills, Certifications, Projects.\n• Avoid creative names like \"My Journey\" or \"What I Bring\". The ATS may not know where that content belongs.\n• Put your strongest section first: Work Experience if you have experience, Education if you are a student or fresher.'**
+  String get atsGuideHeadingsBody;
+
+  /// No description provided for @atsGuideContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact details, job titles, and dates'**
+  String get atsGuideContactTitle;
+
+  /// No description provided for @atsGuideContactBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Put your full name on the first line, then phone, email, city, and LinkedIn as plain text.\n• For every role, list job title, company, location, and dates.\n• Use one date format everywhere, for example \"Jan 2023 – Present\".\n• If your official title is unusual, add the common name too, for example \"Associate II (Data Analyst)\".'**
+  String get atsGuideContactBody;
+
+  /// No description provided for @atsGuideKeywordsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Match keywords from the job post'**
+  String get atsGuideKeywordsTitle;
+
+  /// No description provided for @atsGuideKeywordsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Read the job post and note the job title, required skills, tools, and certifications.\n• Use the same wording where it is true for you. If the post says \"project management\", don\'t only write \"managed projects\".\n• Write acronyms both ways once, for example \"Search Engine Optimization (SEO)\".\n• Place keywords naturally in your summary, your skills, and inside bullets that show how you used them.\n• Don\'t stuff keywords or copy the job post. A recruiter reads your resume, and every line must be true.\n• Tailor your resume for each job. Updating the summary and skills is often enough.'**
+  String get atsGuideKeywordsBody;
+
+  /// No description provided for @atsGuideBulletsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write bullets that show results'**
+  String get atsGuideBulletsTitle;
+
+  /// No description provided for @atsGuideBulletsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Start each bullet with an action verb: Led, Built, Reduced, Increased, Designed.\n• Add numbers wherever you can: people, money, time, or percentages.\n• A simple formula: action + what you did + skill or tool + result.\n• Example: \"Reduced invoice processing time by 30% by automating approvals in SAP.\"\n• Avoid vague words like \"various\", \"multiple\", and \"responsible for\".\n• Use 3–5 bullets for recent roles and fewer for older ones.'**
+  String get atsGuideBulletsBody;
+
+  /// No description provided for @atsGuideSkillsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make your Skills section searchable'**
+  String get atsGuideSkillsTitle;
+
+  /// No description provided for @atsGuideSkillsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• List hard skills and tools by name, for example Python, Excel (Pivot Tables), Salesforce, Figma.\n• Group them simply, such as Technical Skills, Tools, and Languages.\n• Use plain text. No star ratings, percentages, or skill bars.\n• Write certifications with their full official name and the year earned.'**
+  String get atsGuideSkillsBody;
+
+  /// No description provided for @atsGuideFileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and send the right file'**
+  String get atsGuideFileTitle;
+
+  /// No description provided for @atsGuideFileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Always follow the employer\'s instructions. If they ask for a Word file (.docx), send .docx.\n• Otherwise, a text-based PDF works in most modern systems. Never upload a scanned image or a photo of your resume.\n• Name the file clearly, for example \"Firstname-Lastname-Resume.pdf\".\n• Keep it to 1 page early in your career and up to 2 pages with more experience. Relevance matters more than length.'**
+  String get atsGuideFileBody;
+
+  /// No description provided for @atsGuideCheckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check before you apply'**
+  String get atsGuideCheckTitle;
+
+  /// No description provided for @atsGuideCheckBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Copy all the text from your PDF and paste it into a notes app. If text is missing or out of order, an ATS will likely read it the same way.\n• Compare your resume with the job post. Are the most important required skills in it, wherever they are true for you?\n• Proofread your name, email, phone, and dates. One typo in your email means no callback.'**
+  String get atsGuideCheckBody;
+
+  /// No description provided for @atsGuideAppTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Do it faster in this app'**
+  String get atsGuideAppTitle;
+
+  /// No description provided for @atsGuideAppBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Pick a template from ATS Resumes in Templates. They keep your experience in one column with standard headings.\n• Use Check ATS to see your match score, strengths, and missing keywords for a job.\n• Use Enhance Resume to tailor your resume to a job description, then review every change before saving.'**
+  String get atsGuideAppBody;
 }
 
 class _AppLocalizationsDelegate

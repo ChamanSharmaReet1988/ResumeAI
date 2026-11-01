@@ -112,7 +112,7 @@
   "restoringYourSubscription": "Restaurando sua assinatura…",
   "pleaseWaitDoNotClose": "Aguarde. Não feche o app.",
   "premiumWelcomeCongratulations": "Parabéns!",
-  "premiumWelcomeBody": "O ResumeApp Pro está ativo no seu {planLabel}. Os anúncios foram removidos.",
+  "premiumWelcomeBody": "O ResumeApp Pro está ativo no seu {planLabel}. Todos os modelos premium estão desbloqueados.",
   "@premiumWelcomeBody": {
     "placeholders": {
       "planLabel": {
@@ -120,13 +120,13 @@
       }
     }
   },
-  "premiumBenefitAllTemplates": "Todos os modelos de currículo incluídos",
+  "premiumBenefitAllTemplates": "Desbloqueie todos os modelos de currículo premium",
   "premiumBenefitRemoveAds": "Remover todos os anúncios",
   "premiumBenefitUnlockLayouts": "Desbloqueie o AI Resume: crie e refine currículos ATS com IA",
   "premiumBenefitBackupIcloud": "Faça backup e sincronize currículos com o iCloud",
   "premiumBenefitBackupGoogleDrive": "Faça backup e sincronize currículos com o Google Drive",
   "premiumUpcomingUpdateBadge": "Compra única vitalícia",
-  "premiumUpcomingUpdateMessage": "Pague uma vez para remover os anúncios.",
+  "premiumUpcomingUpdateMessage": "Pague uma vez e desbloqueie todos os modelos premium.",
   "planLifetime": "Vitalício",
   "planSubtitleLifetime": "Pague uma vez · para sempre",
   "planPro": "Pro",
@@ -142,8 +142,8 @@
   "storeAccountGoogle": "conta do Google",
   "storeAccountApple": "Apple ID",
   "alreadySubscribedDebugOverride": "A substituição Pro de desenvolvedor está ativada. Todos os recursos Pro estão desbloqueados para testes neste dispositivo.",
-  "alreadySubscribedLifetime": "Você tem o ResumeApp Pro (vitalício). Os anúncios foram removidos.",
-  "alreadySubscribedGeneric": "Você tem uma assinatura ativa do ResumeApp Pro. Os anúncios foram removidos.",
+  "alreadySubscribedLifetime": "Você tem o ResumeApp Pro (vitalício). Todos os modelos premium estão desbloqueados.",
+  "alreadySubscribedGeneric": "Você tem uma assinatura ativa do ResumeApp Pro. Todos os modelos premium estão desbloqueados.",
   "restoreInsteadLifetime": "ResumeApp Pro (vitalício) foi encontrado para esta {account}. Use Restaurar para ativá-lo neste dispositivo em vez de comprar novamente.",
   "@restoreInsteadLifetime": {
     "placeholders": {
@@ -879,5 +879,28 @@
   "sampleEducationStart": "2016",
   "sampleEducationEnd": "2020",
   "sampleEducationDescription": "Estudei design de interação e comunicação visual.",
-  "sampleSkills": "Figma\nPesquisa com usuários\nProtótipos\nSistemas de design\nWireframes\nAcessibilidade"
+  "sampleSkills": "Figma\nPesquisa com usuários\nProtótipos\nSistemas de design\nWireframes\nAcessibilidade",
+  "atsGuideTooltip": "Como fazer um currículo compatível com ATS",
+  "atsGuideTitle": "Guia de currículo para ATS",
+  "atsGuideIntro": "A maioria das empresas recebe candidaturas em um sistema de rastreamento de candidatos (ATS). Ele transforma seu currículo em dados pesquisáveis, e os recrutadores pesquisam e filtram esses dados para encontrar candidatos.\nSeu currículo tem duas tarefas: ser lido corretamente pelo software e conter as palavras que o recrutador procura.",
+  "atsGuideMythTitle": "O que um ATS realmente faz",
+  "atsGuideMythBody": "• A famosa frase de que \"75% dos currículos são rejeitados por um robô\" vem de uma campanha de marketing de 2012, não de pesquisa.\n• Em uma pesquisa de 2025 com recrutadores dos EUA, a maioria disse que seu ATS não rejeita currículos automaticamente. Pessoas continuam lendo.\n• Os filtros automáticos de verdade são as perguntas eliminatórias do formulário: autorização de trabalho, localização, diploma ou licença obrigatórios. Responda com atenção e honestidade.\n• Então o objetivo não é \"vencer um robô\", e sim ser lido corretamente e aparecer quando um recrutador pesquisar.",
+  "atsGuideLayoutTitle": "Use um layout que o ATS consiga ler",
+  "atsGuideLayoutBody": "• Use uma única coluna, lida de cima para baixo. Barras laterais e várias colunas podem ser lidas na ordem errada.\n• Não coloque informações importantes em tabelas, caixas de texto ou gráficos. Elas costumam ser ignoradas ou embaralhadas.\n• Coloque nome, telefone e e-mail na página, não no cabeçalho ou rodapé. Alguns sistemas ignoram essas áreas.\n• Evite fotos, ícones, logotipos e barras de habilidade. Eles viram texto vazio ou ilegível.\n• Use uma fonte comum como Arial, Calibri, Georgia ou Times New Roman, de 10 a 12 pt, com marcadores redondos simples.\n• Guarde currículos com design e várias colunas para quando enviar por e-mail ou entregar diretamente a uma pessoa.",
+  "atsGuideHeadingsTitle": "Use títulos de seção padrão",
+  "atsGuideHeadingsBody": "• Use títulos que o software reconhece: Resumo, Experiência profissional, Formação, Habilidades, Certificações, Projetos.\n• Evite nomes criativos como \"Minha jornada\" ou \"O que eu ofereço\". O ATS pode não saber onde colocar esse conteúdo.\n• Coloque sua seção mais forte primeiro: Experiência profissional se você tem experiência, Formação se é estudante ou recém-formado.",
+  "atsGuideContactTitle": "Contato, cargos e datas",
+  "atsGuideContactBody": "• Escreva seu nome completo na primeira linha e depois telefone, e-mail, cidade e LinkedIn como texto simples.\n• Em cada vaga, informe cargo, empresa, local e datas.\n• Use o mesmo formato de data em todo o documento, por exemplo \"jan 2023 – atual\".\n• Se o seu cargo oficial for incomum, acrescente também o nome usual, por exemplo \"Associado II (Analista de dados)\".",
+  "atsGuideKeywordsTitle": "Use as palavras-chave da vaga",
+  "atsGuideKeywordsBody": "• Leia a vaga e anote o cargo, as habilidades exigidas, as ferramentas e as certificações.\n• Use as mesmas palavras quando forem verdadeiras para você. Se a vaga diz \"gestão de projetos\", não escreva apenas \"gerenciei projetos\".\n• Escreva siglas das duas formas uma vez, por exemplo \"Otimização para mecanismos de busca (SEO)\".\n• Inclua as palavras-chave de forma natural no resumo, nas habilidades e em tópicos que mostrem como você as usou.\n• Não encha o currículo de palavras-chave nem copie a vaga. Um recrutador vai ler, e cada linha precisa ser verdadeira.\n• Adapte o currículo para cada vaga. Muitas vezes basta atualizar o resumo e as habilidades.",
+  "atsGuideBulletsTitle": "Escreva tópicos que mostrem resultados",
+  "atsGuideBulletsBody": "• Comece cada tópico com um verbo de ação: Liderei, Criei, Reduzi, Aumentei, Projetei.\n• Acrescente números sempre que puder: pessoas, dinheiro, tempo ou porcentagens.\n• Uma fórmula simples: ação + o que você fez + habilidade ou ferramenta + resultado.\n• Exemplo: \"Reduzi em 30% o tempo de processamento de notas fiscais automatizando aprovações no SAP.\"\n• Evite palavras vagas como \"diversos\", \"vários\" e \"responsável por\".\n• Use de 3 a 5 tópicos nas vagas recentes e menos nas mais antigas.",
+  "atsGuideSkillsTitle": "Deixe suas habilidades pesquisáveis",
+  "atsGuideSkillsBody": "• Liste habilidades técnicas e ferramentas pelo nome, por exemplo Python, Excel (tabelas dinâmicas), Salesforce, Figma.\n• Agrupe de forma simples, como Habilidades técnicas, Ferramentas e Idiomas.\n• Use texto simples. Sem estrelas, porcentagens ou barras de nível.\n• Escreva as certificações com o nome oficial completo e o ano de obtenção.",
+  "atsGuideFileTitle": "Salve e envie o arquivo certo",
+  "atsGuideFileBody": "• Siga sempre as instruções da empresa. Se pedirem um arquivo do Word (.docx), envie .docx.\n• Caso contrário, um PDF com texto real funciona na maioria dos sistemas modernos. Nunca envie uma imagem digitalizada ou uma foto do currículo.\n• Dê um nome claro ao arquivo, por exemplo \"Nome-Sobrenome-Curriculo.pdf\".\n• Use 1 página no início da carreira e até 2 com mais experiência. A relevância importa mais que o tamanho.",
+  "atsGuideCheckTitle": "Confira antes de se candidatar",
+  "atsGuideCheckBody": "• Copie todo o texto do seu PDF e cole em um app de notas. Se faltar texto ou ele aparecer fora de ordem, um ATS provavelmente vai ler da mesma forma.\n• Compare seu currículo com a vaga. As habilidades exigidas mais importantes estão nele, sempre que forem verdadeiras para você?\n• Revise nome, e-mail, telefone e datas. Um erro de digitação no e-mail significa que ninguém conseguirá falar com você.",
+  "atsGuideAppTitle": "Faça mais rápido neste app",
+  "atsGuideAppBody": "• Escolha um modelo em Currículos ATS, na aba Modelos. Eles mantêm sua experiência em uma única coluna, com títulos padrão.\n• Use Verificar ATS para ver sua pontuação de compatibilidade, seus pontos fortes e as palavras-chave que faltam para uma vaga.\n• Use Melhorar currículo para adaptá-lo a uma descrição de vaga e revise cada mudança antes de salvar."
 }

@@ -281,11 +281,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String premiumWelcomeBody(String planLabel) {
-    return 'ResumeApp Pro aktif pada $planLabel Anda. Iklan dihapus.';
+    return 'ResumeApp Pro aktif pada $planLabel Anda. Semua template premium sudah terbuka.';
   }
 
   @override
-  String get premiumBenefitAllTemplates => 'Semua template resume termasuk';
+  String get premiumBenefitAllTemplates => 'Buka semua template resume premium';
 
   @override
   String get premiumBenefitRemoveAds => 'Hapus semua iklan';
@@ -307,7 +307,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get premiumUpcomingUpdateMessage =>
-      'Bayar sekali untuk menghapus iklan.';
+      'Bayar sekali untuk membuka semua template premium.';
 
   @override
   String get planLifetime => 'Seumur hidup';
@@ -338,11 +338,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get alreadySubscribedLifetime =>
-      'Anda memiliki ResumeApp Pro (seumur hidup). Iklan dihapus.';
+      'Anda memiliki ResumeApp Pro (Seumur Hidup). Semua template premium sudah terbuka.';
 
   @override
   String get alreadySubscribedGeneric =>
-      'Anda memiliki langganan ResumeApp Pro aktif. Iklan dihapus.';
+      'Anda memiliki langganan ResumeApp Pro yang aktif. Semua template premium sudah terbuka.';
 
   @override
   String restoreInsteadLifetime(String account) {
@@ -2085,4 +2085,84 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get sampleSkills =>
       'Figma\nRiset pengguna\nPrototipe\nSistem desain\nWireframe\nAksesibilitas';
+
+  @override
+  String get atsGuideTooltip => 'Cara membuat resume yang ramah ATS';
+
+  @override
+  String get atsGuideTitle => 'Panduan Resume Ramah ATS';
+
+  @override
+  String get atsGuideIntro =>
+      'Sebagian besar perusahaan menerima lamaran melalui Applicant Tracking System (ATS). Sistem ini mengubah resume Anda menjadi data yang bisa dicari, lalu perekrut mencari dan menyaring data tersebut untuk menemukan kandidat.\nResume Anda punya dua tugas: terbaca dengan benar oleh perangkat lunak, dan memuat kata-kata yang dicari perekrut.';
+
+  @override
+  String get atsGuideMythTitle => 'Apa yang sebenarnya dilakukan ATS';
+
+  @override
+  String get atsGuideMythBody =>
+      '• Klaim terkenal bahwa \"75% resume ditolak oleh robot\" berasal dari materi pemasaran tahun 2012, bukan dari penelitian.\n• Dalam survei perekrut di AS tahun 2025, sebagian besar mengatakan ATS mereka tidak menolak resume secara otomatis. Resume tetap dibaca oleh manusia.\n• Penyaring otomatis yang sebenarnya adalah pertanyaan gugur di formulir lamaran: izin kerja, lokasi, gelar atau lisensi wajib. Jawablah dengan teliti dan jujur.\n• Jadi tujuannya bukan \"mengalahkan robot\", melainkan terbaca dengan benar dan muncul saat perekrut melakukan pencarian.';
+
+  @override
+  String get atsGuideLayoutTitle => 'Gunakan tata letak yang bisa dibaca ATS';
+
+  @override
+  String get atsGuideLayoutBody =>
+      '• Gunakan satu kolom yang dibaca dari atas ke bawah. Sidebar dan beberapa kolom bisa terbaca dengan urutan yang salah.\n• Jangan letakkan informasi penting di tabel, kotak teks, atau grafik. Bagian itu sering terlewat atau berantakan.\n• Tulis nama, telepon, dan email di halaman utama, bukan di header atau footer. Beberapa sistem mengabaikan area tersebut.\n• Hindari foto, ikon, logo, dan bar keahlian. Semua itu berubah menjadi teks kosong atau rusak.\n• Gunakan font umum seperti Arial, Calibri, Georgia, atau Times New Roman, ukuran 10–12 pt, dengan bullet bulat sederhana.\n• Simpan resume berdesain dengan beberapa kolom untuk dikirim lewat email atau diberikan langsung kepada seseorang.';
+
+  @override
+  String get atsGuideHeadingsTitle => 'Gunakan judul bagian yang standar';
+
+  @override
+  String get atsGuideHeadingsBody =>
+      '• Gunakan judul yang dikenali perangkat lunak: Ringkasan, Pengalaman Kerja, Pendidikan, Keahlian, Sertifikasi, Proyek.\n• Hindari nama kreatif seperti \"Perjalanan Saya\" atau \"Apa yang Saya Tawarkan\". ATS mungkin tidak tahu di mana isi tersebut harus ditempatkan.\n• Letakkan bagian terkuat Anda di awal: Pengalaman Kerja jika sudah berpengalaman, Pendidikan jika masih pelajar atau fresh graduate.';
+
+  @override
+  String get atsGuideContactTitle => 'Kontak, jabatan, dan tanggal';
+
+  @override
+  String get atsGuideContactBody =>
+      '• Tulis nama lengkap di baris pertama, lalu telepon, email, kota, dan LinkedIn sebagai teks biasa.\n• Untuk setiap pekerjaan, cantumkan jabatan, perusahaan, lokasi, dan tanggal.\n• Gunakan satu format tanggal di seluruh dokumen, misalnya \"Jan 2023 – Sekarang\".\n• Jika jabatan resmi Anda tidak umum, tambahkan juga nama yang umum, misalnya \"Associate II (Analis Data)\".';
+
+  @override
+  String get atsGuideKeywordsTitle => 'Cocokkan kata kunci dari lowongan';
+
+  @override
+  String get atsGuideKeywordsBody =>
+      '• Baca lowongan dan catat nama jabatan, keahlian yang dibutuhkan, alat, dan sertifikasi.\n• Gunakan kata yang sama jika memang sesuai dengan Anda. Jika lowongan menyebut \"manajemen proyek\", jangan hanya menulis \"mengelola proyek\".\n• Tulis singkatan dalam dua bentuk satu kali, misalnya \"Search Engine Optimization (SEO)\".\n• Tempatkan kata kunci secara alami di ringkasan, keahlian, dan bullet yang menunjukkan cara Anda menggunakannya.\n• Jangan menjejalkan kata kunci atau menyalin lowongan. Perekrut akan membaca resume Anda, dan setiap baris harus benar.\n• Sesuaikan resume untuk setiap lowongan. Memperbarui ringkasan dan keahlian sering kali sudah cukup.';
+
+  @override
+  String get atsGuideBulletsTitle => 'Tulis bullet yang menunjukkan hasil';
+
+  @override
+  String get atsGuideBulletsBody =>
+      '• Awali setiap bullet dengan kata kerja aktif: Memimpin, Membangun, Mengurangi, Meningkatkan, Merancang.\n• Tambahkan angka jika memungkinkan: jumlah orang, uang, waktu, atau persentase.\n• Rumus sederhana: tindakan + apa yang Anda lakukan + keahlian atau alat + hasil.\n• Contoh: \"Mengurangi waktu pemrosesan faktur sebesar 30% dengan mengotomatiskan persetujuan di SAP.\"\n• Hindari kata yang samar seperti \"berbagai\", \"beberapa\", dan \"bertanggung jawab atas\".\n• Gunakan 3–5 bullet untuk pekerjaan terbaru dan lebih sedikit untuk pekerjaan lama.';
+
+  @override
+  String get atsGuideSkillsTitle => 'Buat bagian Keahlian mudah dicari';
+
+  @override
+  String get atsGuideSkillsBody =>
+      '• Tulis keahlian teknis dan alat dengan namanya, misalnya Python, Excel (Pivot Table), Salesforce, Figma.\n• Kelompokkan secara sederhana, seperti Keahlian Teknis, Alat, dan Bahasa.\n• Gunakan teks biasa. Tanpa bintang, persentase, atau bar keahlian.\n• Tulis sertifikasi dengan nama resmi lengkap dan tahun diperoleh.';
+
+  @override
+  String get atsGuideFileTitle => 'Simpan dan kirim file yang tepat';
+
+  @override
+  String get atsGuideFileBody =>
+      '• Selalu ikuti instruksi perusahaan. Jika mereka meminta file Word (.docx), kirim .docx.\n• Jika tidak, PDF berbasis teks bisa dibaca sebagian besar sistem modern. Jangan pernah mengunggah hasil pindaian atau foto resume.\n• Beri nama file yang jelas, misalnya \"NamaDepan-NamaBelakang-Resume.pdf\".\n• Gunakan 1 halaman di awal karier dan hingga 2 halaman jika pengalaman lebih banyak. Relevansi lebih penting daripada panjang.';
+
+  @override
+  String get atsGuideCheckTitle => 'Periksa sebelum melamar';
+
+  @override
+  String get atsGuideCheckBody =>
+      '• Salin semua teks dari PDF Anda lalu tempel ke aplikasi catatan. Jika ada teks yang hilang atau urutannya kacau, ATS kemungkinan membacanya dengan cara yang sama.\n• Bandingkan resume Anda dengan lowongan. Apakah keahlian wajib yang paling penting sudah ada, selama memang sesuai dengan Anda?\n• Periksa ulang nama, email, telepon, dan tanggal. Satu salah ketik di email berarti Anda tidak bisa dihubungi.';
+
+  @override
+  String get atsGuideAppTitle => 'Lakukan lebih cepat di aplikasi ini';
+
+  @override
+  String get atsGuideAppBody =>
+      '• Pilih template dari Resume ATS di menu Template. Template ini menempatkan pengalaman Anda dalam satu kolom dengan judul standar.\n• Gunakan Cek ATS untuk melihat skor kecocokan, kekuatan, dan kata kunci yang belum ada untuk sebuah lowongan.\n• Gunakan Tingkatkan Resume untuk menyesuaikan resume dengan deskripsi pekerjaan, lalu periksa setiap perubahan sebelum menyimpan.';
 }

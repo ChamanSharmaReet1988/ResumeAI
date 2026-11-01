@@ -114,7 +114,7 @@ List<PremiumPlanDefinition> premiumPlanDefinitions(AppLocalizations l10n) => [
 ];
 
 List<String> premiumBenefits(AppLocalizations l10n) => [
-  l10n.premiumBenefitRemoveAds,
+  l10n.premiumBenefitAllTemplates,
 ];
 
 String premiumUpcomingUpdateBadge(AppLocalizations l10n) =>

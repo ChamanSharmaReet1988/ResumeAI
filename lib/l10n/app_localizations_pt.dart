@@ -280,12 +280,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String premiumWelcomeBody(String planLabel) {
-    return 'O ResumeApp Pro está ativo no seu $planLabel. Os anúncios foram removidos.';
+    return 'O ResumeApp Pro está ativo no seu $planLabel. Todos os modelos premium estão desbloqueados.';
   }
 
   @override
   String get premiumBenefitAllTemplates =>
-      'Todos os modelos de currículo incluídos';
+      'Desbloqueie todos os modelos de currículo premium';
 
   @override
   String get premiumBenefitRemoveAds => 'Remover todos os anúncios';
@@ -307,7 +307,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get premiumUpcomingUpdateMessage =>
-      'Pague uma vez para remover os anúncios.';
+      'Pague uma vez e desbloqueie todos os modelos premium.';
 
   @override
   String get planLifetime => 'Vitalício';
@@ -338,11 +338,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get alreadySubscribedLifetime =>
-      'Você tem o ResumeApp Pro (vitalício). Os anúncios foram removidos.';
+      'Você tem o ResumeApp Pro (vitalício). Todos os modelos premium estão desbloqueados.';
 
   @override
   String get alreadySubscribedGeneric =>
-      'Você tem uma assinatura ativa do ResumeApp Pro. Os anúncios foram removidos.';
+      'Você tem uma assinatura ativa do ResumeApp Pro. Todos os modelos premium estão desbloqueados.';
 
   @override
   String restoreInsteadLifetime(String account) {
@@ -2088,4 +2088,84 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get sampleSkills =>
       'Figma\nPesquisa com usuários\nProtótipos\nSistemas de design\nWireframes\nAcessibilidade';
+
+  @override
+  String get atsGuideTooltip => 'Como fazer um currículo compatível com ATS';
+
+  @override
+  String get atsGuideTitle => 'Guia de currículo para ATS';
+
+  @override
+  String get atsGuideIntro =>
+      'A maioria das empresas recebe candidaturas em um sistema de rastreamento de candidatos (ATS). Ele transforma seu currículo em dados pesquisáveis, e os recrutadores pesquisam e filtram esses dados para encontrar candidatos.\nSeu currículo tem duas tarefas: ser lido corretamente pelo software e conter as palavras que o recrutador procura.';
+
+  @override
+  String get atsGuideMythTitle => 'O que um ATS realmente faz';
+
+  @override
+  String get atsGuideMythBody =>
+      '• A famosa frase de que \"75% dos currículos são rejeitados por um robô\" vem de uma campanha de marketing de 2012, não de pesquisa.\n• Em uma pesquisa de 2025 com recrutadores dos EUA, a maioria disse que seu ATS não rejeita currículos automaticamente. Pessoas continuam lendo.\n• Os filtros automáticos de verdade são as perguntas eliminatórias do formulário: autorização de trabalho, localização, diploma ou licença obrigatórios. Responda com atenção e honestidade.\n• Então o objetivo não é \"vencer um robô\", e sim ser lido corretamente e aparecer quando um recrutador pesquisar.';
+
+  @override
+  String get atsGuideLayoutTitle => 'Use um layout que o ATS consiga ler';
+
+  @override
+  String get atsGuideLayoutBody =>
+      '• Use uma única coluna, lida de cima para baixo. Barras laterais e várias colunas podem ser lidas na ordem errada.\n• Não coloque informações importantes em tabelas, caixas de texto ou gráficos. Elas costumam ser ignoradas ou embaralhadas.\n• Coloque nome, telefone e e-mail na página, não no cabeçalho ou rodapé. Alguns sistemas ignoram essas áreas.\n• Evite fotos, ícones, logotipos e barras de habilidade. Eles viram texto vazio ou ilegível.\n• Use uma fonte comum como Arial, Calibri, Georgia ou Times New Roman, de 10 a 12 pt, com marcadores redondos simples.\n• Guarde currículos com design e várias colunas para quando enviar por e-mail ou entregar diretamente a uma pessoa.';
+
+  @override
+  String get atsGuideHeadingsTitle => 'Use títulos de seção padrão';
+
+  @override
+  String get atsGuideHeadingsBody =>
+      '• Use títulos que o software reconhece: Resumo, Experiência profissional, Formação, Habilidades, Certificações, Projetos.\n• Evite nomes criativos como \"Minha jornada\" ou \"O que eu ofereço\". O ATS pode não saber onde colocar esse conteúdo.\n• Coloque sua seção mais forte primeiro: Experiência profissional se você tem experiência, Formação se é estudante ou recém-formado.';
+
+  @override
+  String get atsGuideContactTitle => 'Contato, cargos e datas';
+
+  @override
+  String get atsGuideContactBody =>
+      '• Escreva seu nome completo na primeira linha e depois telefone, e-mail, cidade e LinkedIn como texto simples.\n• Em cada vaga, informe cargo, empresa, local e datas.\n• Use o mesmo formato de data em todo o documento, por exemplo \"jan 2023 – atual\".\n• Se o seu cargo oficial for incomum, acrescente também o nome usual, por exemplo \"Associado II (Analista de dados)\".';
+
+  @override
+  String get atsGuideKeywordsTitle => 'Use as palavras-chave da vaga';
+
+  @override
+  String get atsGuideKeywordsBody =>
+      '• Leia a vaga e anote o cargo, as habilidades exigidas, as ferramentas e as certificações.\n• Use as mesmas palavras quando forem verdadeiras para você. Se a vaga diz \"gestão de projetos\", não escreva apenas \"gerenciei projetos\".\n• Escreva siglas das duas formas uma vez, por exemplo \"Otimização para mecanismos de busca (SEO)\".\n• Inclua as palavras-chave de forma natural no resumo, nas habilidades e em tópicos que mostrem como você as usou.\n• Não encha o currículo de palavras-chave nem copie a vaga. Um recrutador vai ler, e cada linha precisa ser verdadeira.\n• Adapte o currículo para cada vaga. Muitas vezes basta atualizar o resumo e as habilidades.';
+
+  @override
+  String get atsGuideBulletsTitle => 'Escreva tópicos que mostrem resultados';
+
+  @override
+  String get atsGuideBulletsBody =>
+      '• Comece cada tópico com um verbo de ação: Liderei, Criei, Reduzi, Aumentei, Projetei.\n• Acrescente números sempre que puder: pessoas, dinheiro, tempo ou porcentagens.\n• Uma fórmula simples: ação + o que você fez + habilidade ou ferramenta + resultado.\n• Exemplo: \"Reduzi em 30% o tempo de processamento de notas fiscais automatizando aprovações no SAP.\"\n• Evite palavras vagas como \"diversos\", \"vários\" e \"responsável por\".\n• Use de 3 a 5 tópicos nas vagas recentes e menos nas mais antigas.';
+
+  @override
+  String get atsGuideSkillsTitle => 'Deixe suas habilidades pesquisáveis';
+
+  @override
+  String get atsGuideSkillsBody =>
+      '• Liste habilidades técnicas e ferramentas pelo nome, por exemplo Python, Excel (tabelas dinâmicas), Salesforce, Figma.\n• Agrupe de forma simples, como Habilidades técnicas, Ferramentas e Idiomas.\n• Use texto simples. Sem estrelas, porcentagens ou barras de nível.\n• Escreva as certificações com o nome oficial completo e o ano de obtenção.';
+
+  @override
+  String get atsGuideFileTitle => 'Salve e envie o arquivo certo';
+
+  @override
+  String get atsGuideFileBody =>
+      '• Siga sempre as instruções da empresa. Se pedirem um arquivo do Word (.docx), envie .docx.\n• Caso contrário, um PDF com texto real funciona na maioria dos sistemas modernos. Nunca envie uma imagem digitalizada ou uma foto do currículo.\n• Dê um nome claro ao arquivo, por exemplo \"Nome-Sobrenome-Curriculo.pdf\".\n• Use 1 página no início da carreira e até 2 com mais experiência. A relevância importa mais que o tamanho.';
+
+  @override
+  String get atsGuideCheckTitle => 'Confira antes de se candidatar';
+
+  @override
+  String get atsGuideCheckBody =>
+      '• Copie todo o texto do seu PDF e cole em um app de notas. Se faltar texto ou ele aparecer fora de ordem, um ATS provavelmente vai ler da mesma forma.\n• Compare seu currículo com a vaga. As habilidades exigidas mais importantes estão nele, sempre que forem verdadeiras para você?\n• Revise nome, e-mail, telefone e datas. Um erro de digitação no e-mail significa que ninguém conseguirá falar com você.';
+
+  @override
+  String get atsGuideAppTitle => 'Faça mais rápido neste app';
+
+  @override
+  String get atsGuideAppBody =>
+      '• Escolha um modelo em Currículos ATS, na aba Modelos. Eles mantêm sua experiência em uma única coluna, com títulos padrão.\n• Use Verificar ATS para ver sua pontuação de compatibilidade, seus pontos fortes e as palavras-chave que faltam para uma vaga.\n• Use Melhorar currículo para adaptá-lo a uma descrição de vaga e revise cada mudança antes de salvar.';
 }

@@ -279,7 +279,7 @@ void main() {
   );
 
   testWidgets(
-    'every resume tile is unlocked for free users',
+    'free users see Pro locks only on the premium half of the tiles',
     (tester) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1.0;
@@ -309,10 +309,24 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.lock_rounded), findsNothing);
-
       await tester.tap(find.byKey(const Key('template-category-bestPick')));
       await tester.pumpAndSettle();
+
+      // Top picks: modern-line and split-contact are free, the rest are Pro.
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('template-tile-modern-line')),
+          matching: find.byIcon(Icons.lock_rounded),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('template-tile-harbor')),
+          matching: find.byIcon(Icons.lock_rounded),
+        ),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byKey(const Key('template-tile-modern-line')));
       await tester.pump();
@@ -329,8 +343,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Go Premium'), findsNothing);
-      expect(find.text('Harbor'), findsWidgets);
+      // Pro template: free users are sent to the Go Premium screen.
+      expect(find.text('Go Premium'), findsOneWidget);
     },
   );
 }

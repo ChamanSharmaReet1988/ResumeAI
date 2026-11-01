@@ -27,9 +27,14 @@ abstract final class PlatformMonetization {
         defaultTargetPlatform == TargetPlatform.iOS;
   }
 
+  /// Master switch for banners and interstitials. Ads are off on every
+  /// platform for now; Pro unlocks premium templates instead. Set to true to
+  /// bring ads back (they stay disabled in debug builds either way).
+  static const adsEnabled = false;
+
   /// Banners + interstitials on Android and iOS. Disabled in debug builds.
   static bool get showsAds {
-    if (kIsWeb || kDebugMode) {
+    if (!adsEnabled || kIsWeb || kDebugMode) {
       return false;
     }
     return defaultTargetPlatform == TargetPlatform.android ||

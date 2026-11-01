@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.3.8+94
+version: 1.3.9+95
 
 environment:
   sdk: ^3.11.0
@@ -57,7 +57,9 @@ dependencies:
   google_sign_in: ^7.2.0
   googleapis: ^16.0.0
   extension_google_sign_in_as_googleapis_auth: ^3.0.0
-  pdfrx: ^2.4.1
+  pdfrx: ^2.11.0
+  # image 4.10+ needs archive 4.1+, which conflicts with pdf/xml; keep 4.9.x.
+  image: ">=4.8.0 <4.10.0"
   in_app_purchase: ^3.3.0
   in_app_purchase_android: ^0.5.0
   in_app_purchase_storekit: ^0.4.8+1
@@ -86,6 +88,9 @@ dependency_overrides:
 # The following section is specific to Flutter packages.
 flutter:
   generate: true
+  # Keep iOS on CocoaPods: google_mobile_ads still needs CocoaPods-only plugins.
+  config:
+    enable-swift-package-manager: false
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

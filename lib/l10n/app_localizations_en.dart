@@ -279,11 +279,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String premiumWelcomeBody(String planLabel) {
-    return 'ResumeApp Pro is active on your $planLabel. Ads are removed.';
+    return 'ResumeApp Pro is active on your $planLabel. All premium templates are unlocked.';
   }
 
   @override
-  String get premiumBenefitAllTemplates => 'All resume templates are included';
+  String get premiumBenefitAllTemplates =>
+      'Unlock all premium resume templates';
 
   @override
   String get premiumBenefitRemoveAds => 'Remove all ads';
@@ -304,7 +305,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumUpcomingUpdateBadge => 'One-time lifetime purchase';
 
   @override
-  String get premiumUpcomingUpdateMessage => 'Pay once to remove ads.';
+  String get premiumUpcomingUpdateMessage =>
+      'Pay once to unlock every premium template.';
 
   @override
   String get planLifetime => 'Lifetime';
@@ -335,11 +337,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alreadySubscribedLifetime =>
-      'You have ResumeApp Pro (Lifetime). Ads are removed.';
+      'You have ResumeApp Pro (Lifetime). All premium templates are unlocked.';
 
   @override
   String get alreadySubscribedGeneric =>
-      'You have an active ResumeApp Pro subscription. Ads are removed.';
+      'You have an active ResumeApp Pro subscription. All premium templates are unlocked.';
 
   @override
   String restoreInsteadLifetime(String account) {
@@ -2079,4 +2081,84 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sampleSkills =>
       'Figma\nUser research\nPrototyping\nDesign systems\nWireframing\nAccessibility';
+
+  @override
+  String get atsGuideTooltip => 'How to make an ATS-friendly resume';
+
+  @override
+  String get atsGuideTitle => 'ATS-Friendly Resume Guide';
+
+  @override
+  String get atsGuideIntro =>
+      'Most companies collect applications in an Applicant Tracking System (ATS). It turns your resume into searchable data, and recruiters search and filter that data to find candidates.\nYour resume has two jobs: be read correctly by the software, and contain the words a recruiter searches for.';
+
+  @override
+  String get atsGuideMythTitle => 'What an ATS really does';
+
+  @override
+  String get atsGuideMythBody =>
+      '• The famous claim that \"75% of resumes are rejected by a robot\" traces back to a 2012 marketing pitch, not research.\n• In a 2025 survey of US recruiters, most said their ATS does not reject resumes automatically. People still read them.\n• The real automatic filters are knockout questions in the application form: work authorization, location, a required degree or license. Answer them carefully and honestly.\n• So the goal is not to \"beat a bot\". It is to be read correctly and to show up when a recruiter searches.';
+
+  @override
+  String get atsGuideLayoutTitle => 'Use a layout the ATS can read';
+
+  @override
+  String get atsGuideLayoutBody =>
+      '• Use one column that reads top to bottom. Sidebars and multiple columns can be read in the wrong order.\n• Don\'t put important details in tables, text boxes, or charts. They are often skipped or scrambled.\n• Keep your name, phone, and email in the main page, not in the page header or footer. Some systems ignore those areas.\n• Leave out photos, icons, logos, and skill bars. They turn into blank or garbled text.\n• Use a common font such as Arial, Calibri, Georgia, or Times New Roman, at 10–12 pt, with simple round bullets.\n• Save designed, multi-column resumes for when you email or hand your resume directly to a person.';
+
+  @override
+  String get atsGuideHeadingsTitle => 'Use standard section headings';
+
+  @override
+  String get atsGuideHeadingsBody =>
+      '• Use headings the software recognizes: Summary, Work Experience, Education, Skills, Certifications, Projects.\n• Avoid creative names like \"My Journey\" or \"What I Bring\". The ATS may not know where that content belongs.\n• Put your strongest section first: Work Experience if you have experience, Education if you are a student or fresher.';
+
+  @override
+  String get atsGuideContactTitle => 'Contact details, job titles, and dates';
+
+  @override
+  String get atsGuideContactBody =>
+      '• Put your full name on the first line, then phone, email, city, and LinkedIn as plain text.\n• For every role, list job title, company, location, and dates.\n• Use one date format everywhere, for example \"Jan 2023 – Present\".\n• If your official title is unusual, add the common name too, for example \"Associate II (Data Analyst)\".';
+
+  @override
+  String get atsGuideKeywordsTitle => 'Match keywords from the job post';
+
+  @override
+  String get atsGuideKeywordsBody =>
+      '• Read the job post and note the job title, required skills, tools, and certifications.\n• Use the same wording where it is true for you. If the post says \"project management\", don\'t only write \"managed projects\".\n• Write acronyms both ways once, for example \"Search Engine Optimization (SEO)\".\n• Place keywords naturally in your summary, your skills, and inside bullets that show how you used them.\n• Don\'t stuff keywords or copy the job post. A recruiter reads your resume, and every line must be true.\n• Tailor your resume for each job. Updating the summary and skills is often enough.';
+
+  @override
+  String get atsGuideBulletsTitle => 'Write bullets that show results';
+
+  @override
+  String get atsGuideBulletsBody =>
+      '• Start each bullet with an action verb: Led, Built, Reduced, Increased, Designed.\n• Add numbers wherever you can: people, money, time, or percentages.\n• A simple formula: action + what you did + skill or tool + result.\n• Example: \"Reduced invoice processing time by 30% by automating approvals in SAP.\"\n• Avoid vague words like \"various\", \"multiple\", and \"responsible for\".\n• Use 3–5 bullets for recent roles and fewer for older ones.';
+
+  @override
+  String get atsGuideSkillsTitle => 'Make your Skills section searchable';
+
+  @override
+  String get atsGuideSkillsBody =>
+      '• List hard skills and tools by name, for example Python, Excel (Pivot Tables), Salesforce, Figma.\n• Group them simply, such as Technical Skills, Tools, and Languages.\n• Use plain text. No star ratings, percentages, or skill bars.\n• Write certifications with their full official name and the year earned.';
+
+  @override
+  String get atsGuideFileTitle => 'Save and send the right file';
+
+  @override
+  String get atsGuideFileBody =>
+      '• Always follow the employer\'s instructions. If they ask for a Word file (.docx), send .docx.\n• Otherwise, a text-based PDF works in most modern systems. Never upload a scanned image or a photo of your resume.\n• Name the file clearly, for example \"Firstname-Lastname-Resume.pdf\".\n• Keep it to 1 page early in your career and up to 2 pages with more experience. Relevance matters more than length.';
+
+  @override
+  String get atsGuideCheckTitle => 'Check before you apply';
+
+  @override
+  String get atsGuideCheckBody =>
+      '• Copy all the text from your PDF and paste it into a notes app. If text is missing or out of order, an ATS will likely read it the same way.\n• Compare your resume with the job post. Are the most important required skills in it, wherever they are true for you?\n• Proofread your name, email, phone, and dates. One typo in your email means no callback.';
+
+  @override
+  String get atsGuideAppTitle => 'Do it faster in this app';
+
+  @override
+  String get atsGuideAppBody =>
+      '• Pick a template from ATS Resumes in Templates. They keep your experience in one column with standard headings.\n• Use Check ATS to see your match score, strengths, and missing keywords for a job.\n• Use Enhance Resume to tailor your resume to a job description, then review every change before saving.';
 }

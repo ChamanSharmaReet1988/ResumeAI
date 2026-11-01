@@ -280,12 +280,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String premiumWelcomeBody(String planLabel) {
-    return 'ResumeApp Pro está activo en tu $planLabel. Los anuncios están eliminados.';
+    return 'ResumeApp Pro está activo en tu $planLabel. Todas las plantillas premium están desbloqueadas.';
   }
 
   @override
   String get premiumBenefitAllTemplates =>
-      'Todas las plantillas de currículum incluidas';
+      'Desbloquea todas las plantillas de currículum premium';
 
   @override
   String get premiumBenefitRemoveAds => 'Quitar todos los anuncios';
@@ -307,7 +307,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get premiumUpcomingUpdateMessage =>
-      'Paga una vez para quitar los anuncios.';
+      'Paga una vez y desbloquea todas las plantillas premium.';
 
   @override
   String get planLifetime => 'De por vida';
@@ -338,11 +338,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get alreadySubscribedLifetime =>
-      'Tienes ResumeApp Pro (de por vida). Los anuncios están eliminados.';
+      'Tienes ResumeApp Pro (de por vida). Todas las plantillas premium están desbloqueadas.';
 
   @override
   String get alreadySubscribedGeneric =>
-      'Tienes una suscripción activa de ResumeApp Pro. Los anuncios están eliminados.';
+      'Tienes una suscripción activa a ResumeApp Pro. Todas las plantillas premium están desbloqueadas.';
 
   @override
   String restoreInsteadLifetime(String account) {
@@ -2090,4 +2090,84 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get sampleSkills =>
       'Figma\nInvestigación de usuarios\nPrototipos\nSistemas de diseño\nWireframes\nAccesibilidad';
+
+  @override
+  String get atsGuideTooltip => 'Cómo hacer un currículum compatible con ATS';
+
+  @override
+  String get atsGuideTitle => 'Guía de currículum para ATS';
+
+  @override
+  String get atsGuideIntro =>
+      'La mayoría de las empresas reciben las postulaciones en un sistema de seguimiento de candidatos (ATS). Este convierte tu currículum en datos que se pueden buscar, y los reclutadores buscan y filtran esos datos para encontrar candidatos.\nTu currículum tiene dos tareas: que el software lo lea correctamente y que contenga las palabras que busca el reclutador.';
+
+  @override
+  String get atsGuideMythTitle => 'Qué hace realmente un ATS';
+
+  @override
+  String get atsGuideMythBody =>
+      '• La famosa frase de que \"un robot rechaza el 75% de los currículums\" proviene de una campaña de marketing de 2012, no de una investigación.\n• En una encuesta de 2025 a reclutadores de EE. UU., la mayoría dijo que su ATS no rechaza currículums automáticamente. Las personas siguen leyéndolos.\n• Los filtros automáticos reales son las preguntas eliminatorias del formulario: permiso de trabajo, ubicación, un título o licencia obligatorios. Respóndelas con cuidado y con honestidad.\n• Así que el objetivo no es \"vencer a un robot\", sino que te lean correctamente y aparecer cuando un reclutador busca.';
+
+  @override
+  String get atsGuideLayoutTitle => 'Usa un diseño que el ATS pueda leer';
+
+  @override
+  String get atsGuideLayoutBody =>
+      '• Usa una sola columna que se lea de arriba abajo. Las barras laterales y las columnas pueden leerse en el orden equivocado.\n• No pongas datos importantes en tablas, cuadros de texto o gráficos. A menudo se omiten o se desordenan.\n• Escribe tu nombre, teléfono y correo en la página, no en el encabezado ni en el pie de página. Algunos sistemas ignoran esas zonas.\n• Evita fotos, íconos, logotipos y barras de habilidades. Se convierten en texto vacío o ilegible.\n• Usa una fuente común como Arial, Calibri, Georgia o Times New Roman, de 10 a 12 pt, con viñetas redondas simples.\n• Guarda los currículums con diseño y varias columnas para cuando los envíes por correo o los entregues directamente a una persona.';
+
+  @override
+  String get atsGuideHeadingsTitle => 'Usa títulos de sección estándar';
+
+  @override
+  String get atsGuideHeadingsBody =>
+      '• Usa títulos que el software reconozca: Resumen, Experiencia laboral, Educación, Habilidades, Certificaciones, Proyectos.\n• Evita nombres creativos como \"Mi trayectoria\" o \"Lo que aporto\". El ATS podría no saber dónde ubicar ese contenido.\n• Pon primero tu sección más fuerte: Experiencia laboral si tienes experiencia, Educación si eres estudiante o recién egresado.';
+
+  @override
+  String get atsGuideContactTitle => 'Datos de contacto, cargos y fechas';
+
+  @override
+  String get atsGuideContactBody =>
+      '• Escribe tu nombre completo en la primera línea y luego teléfono, correo, ciudad y LinkedIn como texto simple.\n• En cada puesto, indica cargo, empresa, ubicación y fechas.\n• Usa el mismo formato de fecha en todo el documento, por ejemplo \"ene 2023 – actualidad\".\n• Si tu cargo oficial es poco común, añade también el nombre habitual, por ejemplo \"Asociado II (Analista de datos)\".';
+
+  @override
+  String get atsGuideKeywordsTitle => 'Usa las palabras clave de la oferta';
+
+  @override
+  String get atsGuideKeywordsBody =>
+      '• Lee la oferta y anota el cargo, las habilidades requeridas, las herramientas y las certificaciones.\n• Usa las mismas palabras cuando sean ciertas para ti. Si la oferta dice \"gestión de proyectos\", no escribas solo \"gestioné proyectos\".\n• Escribe las siglas de las dos formas una vez, por ejemplo \"Optimización para motores de búsqueda (SEO)\".\n• Incluye las palabras clave de forma natural en tu resumen, tus habilidades y en viñetas que muestren cómo las usaste.\n• No llenes el currículum de palabras clave ni copies la oferta. Un reclutador lo leerá y cada línea debe ser verdad.\n• Adapta tu currículum a cada empleo. Muchas veces basta con actualizar el resumen y las habilidades.';
+
+  @override
+  String get atsGuideBulletsTitle => 'Escribe viñetas que muestren resultados';
+
+  @override
+  String get atsGuideBulletsBody =>
+      '• Empieza cada viñeta con un verbo de acción: Dirigí, Creé, Reduje, Aumenté, Diseñé.\n• Añade números siempre que puedas: personas, dinero, tiempo o porcentajes.\n• Una fórmula simple: acción + qué hiciste + habilidad o herramienta + resultado.\n• Ejemplo: \"Reduje en un 30% el tiempo de procesamiento de facturas automatizando aprobaciones en SAP\".\n• Evita palabras vagas como \"varios\", \"diversos\" y \"responsable de\".\n• Usa de 3 a 5 viñetas en los puestos recientes y menos en los antiguos.';
+
+  @override
+  String get atsGuideSkillsTitle => 'Haz que tus habilidades se puedan buscar';
+
+  @override
+  String get atsGuideSkillsBody =>
+      '• Escribe las habilidades técnicas y herramientas por su nombre, por ejemplo Python, Excel (tablas dinámicas), Salesforce, Figma.\n• Agrúpalas de forma sencilla, como Habilidades técnicas, Herramientas e Idiomas.\n• Usa texto simple. Sin estrellas, porcentajes ni barras de nivel.\n• Escribe las certificaciones con su nombre oficial completo y el año en que las obtuviste.';
+
+  @override
+  String get atsGuideFileTitle => 'Guarda y envía el archivo correcto';
+
+  @override
+  String get atsGuideFileBody =>
+      '• Sigue siempre las instrucciones de la empresa. Si piden un archivo de Word (.docx), envía .docx.\n• Si no, un PDF con texto real funciona en la mayoría de los sistemas modernos. Nunca subas una imagen escaneada ni una foto de tu currículum.\n• Ponle un nombre claro al archivo, por ejemplo \"Nombre-Apellido-CV.pdf\".\n• Usa 1 página al inicio de tu carrera y hasta 2 con más experiencia. Importa más la relevancia que la extensión.';
+
+  @override
+  String get atsGuideCheckTitle => 'Revisa antes de postularte';
+
+  @override
+  String get atsGuideCheckBody =>
+      '• Copia todo el texto de tu PDF y pégalo en una app de notas. Si falta texto o aparece desordenado, es probable que un ATS lo lea igual.\n• Compara tu currículum con la oferta. ¿Incluye las habilidades requeridas más importantes, siempre que sean ciertas para ti?\n• Revisa tu nombre, correo, teléfono y fechas. Un error en tu correo significa que no te podrán contactar.';
+
+  @override
+  String get atsGuideAppTitle => 'Hazlo más rápido en esta app';
+
+  @override
+  String get atsGuideAppBody =>
+      '• Elige una plantilla de Currículums ATS en Plantillas. Mantienen tu experiencia en una sola columna con títulos estándar.\n• Usa Comprobar ATS para ver tu puntuación de coincidencia, tus fortalezas y las palabras clave que faltan para un empleo.\n• Usa Mejorar currículum para adaptarlo a una oferta y revisa cada cambio antes de guardar.';
 }
