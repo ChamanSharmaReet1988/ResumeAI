@@ -214,7 +214,7 @@ void main() {
   );
 
   testWidgets(
-    'rate prompt shows each time Home is opened after a resume was shared',
+    'rate prompt shows once on Home after a resume was shared this session',
     (tester) async {
       _ignoreRenderOverflowErrors();
       final repository = _FakeAppShellRepository();
@@ -277,7 +277,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Home'));
       await tester.pumpAndSettle();
-      expect(nativeReviewRequests, 2);
+      expect(nativeReviewRequests, 1);
     },
   );
 

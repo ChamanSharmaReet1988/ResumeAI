@@ -13,9 +13,9 @@ abstract final class AndroidAdsConfig {
   static const _debugInterstitial = 'ca-app-pub-3940256099942544/1033173712';
   static const _debugBanner = 'ca-app-pub-3940256099942544/6300978111';
 
-  /// Temporary: use real AdMob units in debug so ads can be verified on device.
-  /// Set back to `false` before release if you prefer Google test units in debug.
-  static const useProductionAdUnitsInDebug = true;
+  /// Debug builds use Google’s sample ad units so the live AdMob account is not
+  /// filled with test traffic. Release builds always use production units.
+  static const useProductionAdUnitsInDebug = false;
 
   // —— Android production units ——
   static const androidPreviewInterstitialAdUnitId =
@@ -46,8 +46,7 @@ abstract final class AndroidAdsConfig {
   static const iosSettingsBannerAdUnitId =
       'ca-app-pub-4326780099537551/1695016111';
 
-  /// Kept for the preview placement counter. Successful resume and cover
-  /// letter shares show this unit every time via [AndroidAdsService.showShareInterstitial].
+  /// Preview / create-resume full-screen ads (not used after share).
   static const previewInterstitialEveryNthOpen = 4;
 
   /// Templates tab: full-screen ad on every 2nd visit.
@@ -96,7 +95,7 @@ abstract final class AndroidAdsConfig {
       return switch (placement) {
         AndroidAdPlacement.templates => iosTemplatesInterstitialAdUnitId,
         AndroidAdPlacement.preview => iosPreviewInterstitialAdUnitId,
-        // No third production unit; reuse the share / preview interstitial.
+        // No third production unit; reuse the preview interstitial.
         AndroidAdPlacement.createResume => iosPreviewInterstitialAdUnitId,
       };
     }
@@ -111,6 +110,28 @@ abstract final class AndroidAdsConfig {
   /// shows a full-screen ad.
   static bool shouldShowCreateResumeInterstitial(int openCount) =>
       openCount >= 2;
+
+  /// New installs see no full-screen ads for this long (banners still show).
+  static const newUserGracePeriod = Duration(days: 3);
+
+  /// Full-screen ads shown at most this many times per app session.
+  static const maxInterstitialsPerSession = 1;
+
+  /// Whether a full-screen ad may show now, before the per-placement rules.
+  static bool allowsInterstitial({
+    required DateTime now,
+    required DateTime? firstLaunchAt,
+    required int shownThisSession,
+  }) {
+    if (shownThisSession >= maxInterstitialsPerSession) {
+      return false;
+    }
+    if (firstLaunchAt != null &&
+        now.difference(firstLaunchAt) < newUserGracePeriod) {
+      return false;
+    }
+    return true;
+  }
 }
 
 /// Where an interstitial may be requested from.
@@ -126,6 +147,14 @@ class AndroidAdsService {
 
   /// When true (iOS Pro), banners and interstitials are suppressed.
   static bool Function()? isPremiumActive;
+
+  /// Install time for the new-user grace period; null means no grace.
+  static DateTime? firstLaunchAt;
+
+  @visibleForTesting
+  static DateTime Function() clock = DateTime.now;
+
+  static int _interstitialsShownThisSession = 0;
   static final Map<AndroidAdPlacement, InterstitialAd?> _interstitials = {
     for (final placement in AndroidAdPlacement.values) placement: null,
   };
@@ -145,6 +174,9 @@ class AndroidAdsService {
   @visibleForTesting
   static void resetForTest() {
     _initialized = false;
+    firstLaunchAt = null;
+    clock = DateTime.now;
+    _interstitialsShownThisSession = 0;
     for (final placement in AndroidAdPlacement.values) {
       _interstitials[placement]?.dispose();
       _interstitials[placement] = null;
@@ -154,6 +186,18 @@ class AndroidAdsService {
   }
 
   static bool get _adsSuppressedByPremium => isPremiumActive?.call() ?? false;
+
+  @visibleForTesting
+  static int get interstitialsShownThisSession =>
+      _interstitialsShownThisSession;
+
+  /// Grace period and per-session cap, shared by every full-screen placement.
+  @visibleForTesting
+  static bool get interstitialAllowedNow => AndroidAdsConfig.allowsInterstitial(
+    now: clock(),
+    firstLaunchAt: firstLaunchAt,
+    shownThisSession: _interstitialsShownThisSession,
+  );
 
   static Future<void> initialize() async {
     if (!PlatformMonetization.showsAds || _initialized) {
@@ -233,7 +277,7 @@ class AndroidAdsService {
     _openCounts[placement] = nextCount;
     final everyNth = AndroidAdsConfig.interstitialEveryNthOpenFor(placement);
     final shouldShow = nextCount % everyNth == 0;
-    if (!shouldShow) {
+    if (!shouldShow || !interstitialAllowedNow) {
       unawaitedLoadInterstitial(placement);
       return;
     }
@@ -244,50 +288,8 @@ class AndroidAdsService {
       return;
     }
     _interstitials[placement] = null;
+    _interstitialsShownThisSession += 1;
     await ad.show();
-  }
-
-  /// Shows the preview full-screen ad immediately. Used after a successful
-  /// resume or cover letter PDF/DOCX share. Waits until the ad is dismissed.
-  static Future<void> showShareInterstitial() async {
-    if (!PlatformMonetization.showsAds ||
-        !_initialized ||
-        _adsSuppressedByPremium) {
-      return;
-    }
-
-    const placement = AndroidAdPlacement.preview;
-    final ad = _interstitials[placement];
-    if (ad == null) {
-      unawaitedLoadInterstitial(placement);
-      return;
-    }
-    _interstitials[placement] = null;
-    final dismissed = Completer<void>();
-    ad.fullScreenContentCallback = FullScreenContentCallback(
-      onAdDismissedFullScreenContent: (ad) {
-        ad.dispose();
-        unawaitedLoadInterstitial(placement);
-        if (!dismissed.isCompleted) {
-          dismissed.complete();
-        }
-      },
-      onAdFailedToShowFullScreenContent: (ad, _) {
-        ad.dispose();
-        unawaitedLoadInterstitial(placement);
-        if (!dismissed.isCompleted) {
-          dismissed.complete();
-        }
-      },
-    );
-    try {
-      await ad.show();
-    } catch (_) {
-      ad.dispose();
-      unawaitedLoadInterstitial(placement);
-      return;
-    }
-    await dismissed.future;
   }
 
   /// Resume create screen: skip the first visit, then show a full-screen ad
@@ -302,7 +304,8 @@ class AndroidAdsService {
     const placement = AndroidAdPlacement.createResume;
     final nextCount = (_openCounts[placement] ?? 0) + 1;
     _openCounts[placement] = nextCount;
-    if (!AndroidAdsConfig.shouldShowCreateResumeInterstitial(nextCount)) {
+    if (!AndroidAdsConfig.shouldShowCreateResumeInterstitial(nextCount) ||
+        !interstitialAllowedNow) {
       unawaitedLoadInterstitial(placement);
       return;
     }
@@ -313,6 +316,7 @@ class AndroidAdsService {
       return;
     }
     _interstitials[placement] = null;
+    _interstitialsShownThisSession += 1;
     final dismissed = Completer<void>();
     ad.fullScreenContentCallback = FullScreenContentCallback(
       onAdDismissedFullScreenContent: (ad) {

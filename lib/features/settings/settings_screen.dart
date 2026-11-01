@@ -24,6 +24,7 @@ import '../../core/services/android_ads_service.dart';
 import '../../core/services/firebase_app_services.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/platform_monetization.dart';
+import '../../core/services/premium_access.dart';
 import '../../core/services/premium_purchase_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -342,7 +343,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ? Icons.cloud_done_outlined
             : Icons.cloud_queue_outlined;
         final showBackupPremiumIcon =
-            PlatformMonetization.isIapEnabled &&
+            (isIos
+                ? PremiumAccess.iCloudBackupRequiresPremium
+                : PremiumAccess.googleDriveBackupRequiresPremium) &&
             !premium.hasConfirmedPremiumStatus;
         final showSettingsBanner = PlatformMonetization.showsSettingsBanner &&
             !(PlatformMonetization.isIapEnabled && premium.isPremium);

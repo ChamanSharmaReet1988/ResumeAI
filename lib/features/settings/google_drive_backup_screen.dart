@@ -12,7 +12,6 @@ import '../../core/models/resume_models.dart';
 import '../../core/services/app_preferences.dart';
 import '../../core/services/google_drive_resume_service.dart';
 import '../../core/services/resume_services.dart';
-import '../premium/premium_gate.dart';
 import '../shared/view_models.dart';
 
 class GoogleDriveBackupScreen extends StatefulWidget {
@@ -46,10 +45,6 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
       if (!mounted) {
         return;
       }
-      if (!readPremiumAccess(context)) {
-        Navigator.of(context).pop();
-        return;
-      }
       unawaited(_bootstrap());
       unawaited(
         context.read<CoverLetterLibraryViewModel>().loadCoverLetters(),
@@ -58,12 +53,6 @@ class _GoogleDriveBackupScreenState extends State<GoogleDriveBackupScreen> {
   }
 
   Future<void> _setAutoSyncEnabled(bool value) async {
-    if (value && !readPremiumAccess(context)) {
-      final allowed = await ensurePremiumForGoogleDriveBackup(context);
-      if (!allowed || !mounted) {
-        return;
-      }
-    }
     await _preferences.setGoogleDriveAutoSyncEnabled(value);
     if (!mounted) {
       return;

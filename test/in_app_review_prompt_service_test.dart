@@ -118,13 +118,14 @@ void main() {
     expect(await service.claimHomePrompt(resumeCount: 1), isFalse);
   });
 
-  test('promptAfterShare only records share and does not request review',
+  test('promptAfterShare records share and requests review immediately',
       () async {
     final service = buildService();
 
     await service.promptAfterShare();
     expect(hasShared, isTrue);
-    expect(requestNativeReviewCalls, 0);
+    expect(requestNativeReviewCalls, 1);
+    expect(service.didRequestNativeReviewThisSession, isTrue);
   });
 
   test('saving a PDF unlocks the rating but does not show it yet', () async {

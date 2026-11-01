@@ -22,8 +22,9 @@ class AppPreferences {
     this._getAppLocaleCode,
     this._setAppLocaleCode,
     this._getSectionReorderNudgeDismissed,
-    this._setSectionReorderNudgeDismissed,
-  );
+    this._setSectionReorderNudgeDismissed, {
+    this.firstLaunchAt,
+  });
 
   static const _resumeOrderNudgeDismissedKey = 'resume_order_nudge_dismissed';
   static const _sectionReorderNudgeDismissedKey =
@@ -39,6 +40,7 @@ class AppPreferences {
   static const _debugPremiumOverrideEnabledKey =
       'debug_premium_override_enabled';
   static const _appLocaleCodeKey = 'app_locale_code';
+  static const _firstLaunchAtMsKey = 'first_launch_at_ms';
 
   final bool Function() _getDismissed;
   final Future<void> Function(bool) _setDismissed;
@@ -83,6 +85,15 @@ class AppPreferences {
     if (!box.containsKey(_appLocaleCodeKey)) {
       await box.put(_appLocaleCodeKey, AppLocaleOption.system);
     }
+    if (!box.containsKey(_firstLaunchAtMsKey)) {
+      // Existing installs get 0 so the new-user ad grace period only applies
+      // to people installing from this version on.
+      await box.put(
+        _firstLaunchAtMsKey,
+        isFreshInstall ? DateTime.now().millisecondsSinceEpoch : 0,
+      );
+    }
+    final firstLaunchMs = box.get(_firstLaunchAtMsKey);
     return AppPreferences._(
       () => (box.get(_resumeOrderNudgeDismissedKey) as bool?) ?? false,
       (value) async => box.put(_resumeOrderNudgeDismissedKey, value),
@@ -126,6 +137,9 @@ class AppPreferences {
       ),
       () => (box.get(_sectionReorderNudgeDismissedKey) as bool?) ?? false,
       (value) async => box.put(_sectionReorderNudgeDismissedKey, value),
+      firstLaunchAt: firstLaunchMs is int && firstLaunchMs > 0
+          ? DateTime.fromMillisecondsSinceEpoch(firstLaunchMs)
+          : null,
     );
   }
 
@@ -140,6 +154,7 @@ class AppPreferences {
     bool debugPremiumOverrideEnabled = false,
     String appLocaleCode = AppLocaleOption.system,
     bool sectionReorderNudgeDismissed = false,
+    DateTime? firstLaunchAt,
   }) {
     var dismissed = resumeOrderNudgeDismissed;
     var iCloudAuto = iCloudAutoSyncEnabled;
@@ -187,8 +202,13 @@ class AppPreferences {
       (value) async {
         sectionReorderDismissed = value;
       },
+      firstLaunchAt: firstLaunchAt,
     );
   }
+
+  /// When this install first opened the app, or null for installs that
+  /// predate tracking (they get no new-user grace period).
+  final DateTime? firstLaunchAt;
 
   bool get resumeOrderNudgeDismissed => _getDismissed();
   bool get sectionReorderNudgeDismissed => _getSectionReorderNudgeDismissed();

@@ -83,6 +83,11 @@ class DeepLinkService {
         _rememberHandled(initial);
         _pending = initialDestination;
         await _logOpen(initialDestination, initial, coldStart: true);
+        // If Home already attached (startup ran after the first frame),
+        // deliver the cold-start link on the live stream.
+        if (_destinationsController.hasListener) {
+          _destinationsController.add(initialDestination);
+        }
       }
     } catch (error, stackTrace) {
       assert(() {

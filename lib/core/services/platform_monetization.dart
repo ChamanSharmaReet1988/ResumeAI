@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
 
 /// Platform monetization:
-/// - Android: ads by default; $1.99 one-time Pro removes ads and unlocks
-///   paid templates
-/// - iOS: one-time Pro (IAP) + ads for free users
+/// - Android and iOS: ads by default; $1.99 one-time Pro removes ads.
+///   Templates, AI Resume, and backup stay free.
 abstract final class PlatformMonetization {
   static bool get isAndroidAdsModel {
     if (kIsWeb) {
@@ -43,7 +42,7 @@ abstract final class PlatformMonetization {
   /// Settings top banner on Android and iOS.
   static bool get showsSettingsBanner => showsAds;
 
-  /// AI Resume top banner (Android). iOS AI tab is Pro-gated / ad-free.
+  /// AI Resume top banner on Android and iOS. Hidden for Pro (no ads).
   /// Follows [showsAds] so debug builds stay ad-free.
-  static bool get showsAiResumeBanner => showsAds && isAndroidAdsModel;
+  static bool get showsAiResumeBanner => showsAds;
 }

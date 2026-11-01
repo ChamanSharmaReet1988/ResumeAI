@@ -112,13 +112,10 @@
   "restoringYourSubscription": "Restaurando tu suscripción…",
   "pleaseWaitDoNotClose": "Espera. No cierres la app.",
   "premiumWelcomeCongratulations": "¡Enhorabuena!",
-  "premiumWelcomeBody": "ResumeApp Pro está activo en tu {planLabel}. Los anuncios están eliminados, y AI Resume más {backup} están desbloqueados.",
+  "premiumWelcomeBody": "ResumeApp Pro está activo en tu {planLabel}. Los anuncios están eliminados.",
   "@premiumWelcomeBody": {
     "placeholders": {
       "planLabel": {
-        "type": "String"
-      },
-      "backup": {
         "type": "String"
       }
     }
@@ -129,7 +126,7 @@
   "premiumBenefitBackupIcloud": "Haz copia de seguridad y sincroniza currículums con iCloud",
   "premiumBenefitBackupGoogleDrive": "Haz copia de seguridad y sincroniza currículums con Google Drive",
   "premiumUpcomingUpdateBadge": "Compra única de por vida",
-  "premiumUpcomingUpdateMessage": "Todas las plantillas de currículum están incluidas. Solo tienes que pagar una vez.",
+  "premiumUpcomingUpdateMessage": "Paga una vez para quitar los anuncios.",
   "planLifetime": "De por vida",
   "planSubtitleLifetime": "Paga una vez · para siempre",
   "planPro": "Pro",
@@ -145,15 +142,8 @@
   "storeAccountGoogle": "cuenta de Google",
   "storeAccountApple": "Apple ID",
   "alreadySubscribedDebugOverride": "La anulación Pro de desarrollador está activada. Todas las funciones Pro están desbloqueadas para pruebas en este dispositivo.",
-  "alreadySubscribedLifetime": "Tienes ResumeApp Pro (de por vida). Los anuncios están eliminados, y AI Resume más {backup} están desbloqueados.",
-  "@alreadySubscribedLifetime": {
-    "placeholders": {
-      "backup": {
-        "type": "String"
-      }
-    }
-  },
-  "alreadySubscribedGeneric": "Tienes una suscripción activa de ResumeApp Pro. Todas las funciones premium están incluidas en tu plan.",
+  "alreadySubscribedLifetime": "Tienes ResumeApp Pro (de por vida). Los anuncios están eliminados.",
+  "alreadySubscribedGeneric": "Tienes una suscripción activa de ResumeApp Pro. Los anuncios están eliminados.",
   "restoreInsteadLifetime": "Se encontró ResumeApp Pro (de por vida) para esta {account}. Usa Restaurar para activarlo en este dispositivo en lugar de comprar de nuevo.",
   "@restoreInsteadLifetime": {
     "placeholders": {

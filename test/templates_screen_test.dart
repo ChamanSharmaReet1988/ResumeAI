@@ -279,7 +279,7 @@ void main() {
   );
 
   testWidgets(
-    'paid resume tiles lock and open Go Premium for free users',
+    'every resume tile is unlocked for free users',
     (tester) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1.0;
@@ -309,7 +309,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.lock_rounded), findsWidgets);
+      expect(find.byIcon(Icons.lock_rounded), findsNothing);
 
       await tester.tap(find.byKey(const Key('template-category-bestPick')));
       await tester.pumpAndSettle();
@@ -329,7 +329,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Go Premium'), findsOneWidget);
+      expect(find.text('Go Premium'), findsNothing);
+      expect(find.text('Harbor'), findsWidgets);
     },
   );
 }

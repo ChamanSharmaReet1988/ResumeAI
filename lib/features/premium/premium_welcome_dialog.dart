@@ -59,10 +59,7 @@ class PremiumWelcomeDialog extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  l10n.premiumWelcomeBody(
-                    planLabel,
-                    PremiumProducts.backupSyncBenefit(l10n),
-                  ),
+                  l10n.premiumWelcomeBody(planLabel),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,

@@ -609,8 +609,8 @@ abstract class AppLocalizations {
   /// No description provided for @premiumWelcomeBody.
   ///
   /// In en, this message translates to:
-  /// **'ResumeApp Pro is active on your {planLabel}. Ads are removed, and AI Resume plus {backup} are unlocked.'**
-  String premiumWelcomeBody(String planLabel, String backup);
+  /// **'ResumeApp Pro is active on your {planLabel}. Ads are removed.'**
+  String premiumWelcomeBody(String planLabel);
 
   /// No description provided for @premiumBenefitAllTemplates.
   ///
@@ -651,7 +651,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumUpcomingUpdateMessage.
   ///
   /// In en, this message translates to:
-  /// **'All resume templates are included. You only need to pay once.'**
+  /// **'Pay once to remove ads.'**
   String get premiumUpcomingUpdateMessage;
 
   /// No description provided for @planLifetime.
@@ -705,13 +705,13 @@ abstract class AppLocalizations {
   /// No description provided for @alreadySubscribedLifetime.
   ///
   /// In en, this message translates to:
-  /// **'You have ResumeApp Pro (Lifetime). Ads are removed, and AI Resume plus {backup} are unlocked.'**
-  String alreadySubscribedLifetime(String backup);
+  /// **'You have ResumeApp Pro (Lifetime). Ads are removed.'**
+  String get alreadySubscribedLifetime;
 
   /// No description provided for @alreadySubscribedGeneric.
   ///
   /// In en, this message translates to:
-  /// **'You have an active ResumeApp Pro subscription. All premium features are included in your plan.'**
+  /// **'You have an active ResumeApp Pro subscription. Ads are removed.'**
   String get alreadySubscribedGeneric;
 
   /// No description provided for @restoreInsteadLifetime.

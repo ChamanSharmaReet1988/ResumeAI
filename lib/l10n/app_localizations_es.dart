@@ -279,8 +279,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get premiumWelcomeCongratulations => '¡Enhorabuena!';
 
   @override
-  String premiumWelcomeBody(String planLabel, String backup) {
-    return 'ResumeApp Pro está activo en tu $planLabel. Los anuncios están eliminados, y AI Resume más $backup están desbloqueados.';
+  String premiumWelcomeBody(String planLabel) {
+    return 'ResumeApp Pro está activo en tu $planLabel. Los anuncios están eliminados.';
   }
 
   @override
@@ -307,7 +307,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get premiumUpcomingUpdateMessage =>
-      'Todas las plantillas de currículum están incluidas. Solo tienes que pagar una vez.';
+      'Paga una vez para quitar los anuncios.';
 
   @override
   String get planLifetime => 'De por vida';
@@ -337,13 +337,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'La anulación Pro de desarrollador está activada. Todas las funciones Pro están desbloqueadas para pruebas en este dispositivo.';
 
   @override
-  String alreadySubscribedLifetime(String backup) {
-    return 'Tienes ResumeApp Pro (de por vida). Los anuncios están eliminados, y AI Resume más $backup están desbloqueados.';
-  }
+  String get alreadySubscribedLifetime =>
+      'Tienes ResumeApp Pro (de por vida). Los anuncios están eliminados.';
 
   @override
   String get alreadySubscribedGeneric =>
-      'Tienes una suscripción activa de ResumeApp Pro. Todas las funciones premium están incluidas en tu plan.';
+      'Tienes una suscripción activa de ResumeApp Pro. Los anuncios están eliminados.';
 
   @override
   String restoreInsteadLifetime(String account) {

@@ -69,9 +69,8 @@ abstract final class PremiumProducts {
     if (debugOverride) {
       return l10n.alreadySubscribedDebugOverride;
     }
-    final backup = backupSyncBenefit(l10n);
     return switch (productId) {
-      lifetime => l10n.alreadySubscribedLifetime(backup),
+      lifetime => l10n.alreadySubscribedLifetime,
       _ => l10n.alreadySubscribedGeneric,
     };
   }
@@ -115,12 +114,7 @@ List<PremiumPlanDefinition> premiumPlanDefinitions(AppLocalizations l10n) => [
 ];
 
 List<String> premiumBenefits(AppLocalizations l10n) => [
-  l10n.premiumBenefitAllTemplates,
   l10n.premiumBenefitRemoveAds,
-  l10n.premiumBenefitUnlockLayouts,
-  defaultTargetPlatform == TargetPlatform.android
-      ? l10n.premiumBenefitBackupGoogleDrive
-      : l10n.premiumBenefitBackupIcloud,
 ];
 
 String premiumUpcomingUpdateBadge(AppLocalizations l10n) =>

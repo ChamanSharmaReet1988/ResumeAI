@@ -122,13 +122,10 @@
   "restoringYourSubscription": "Restoring your subscription…",
   "pleaseWaitDoNotClose": "Please wait. Do not close the app.",
   "premiumWelcomeCongratulations": "Congratulations!",
-  "premiumWelcomeBody": "ResumeApp Pro is active on your {planLabel}. Ads are removed, and AI Resume plus {backup} are unlocked.",
+  "premiumWelcomeBody": "ResumeApp Pro is active on your {planLabel}. Ads are removed.",
   "@premiumWelcomeBody": {
     "placeholders": {
       "planLabel": {
-        "type": "String"
-      },
-      "backup": {
         "type": "String"
       }
     }
@@ -139,7 +136,7 @@
   "premiumBenefitBackupIcloud": "Back up and sync resumes with iCloud",
   "premiumBenefitBackupGoogleDrive": "Back up and sync resumes with Google Drive",
   "premiumUpcomingUpdateBadge": "One-time lifetime purchase",
-  "premiumUpcomingUpdateMessage": "All resume templates are included. You only need to pay once.",
+  "premiumUpcomingUpdateMessage": "Pay once to remove ads.",
   "planLifetime": "Lifetime",
   "planSubtitleLifetime": "Pay once · yours for life",
   "planPro": "Pro",
@@ -155,15 +152,8 @@
   "storeAccountGoogle": "Google account",
   "storeAccountApple": "Apple ID",
   "alreadySubscribedDebugOverride": "Developer Pro override is on. All Pro features are unlocked for testing on this device.",
-  "alreadySubscribedLifetime": "You have ResumeApp Pro (Lifetime). Ads are removed, and AI Resume plus {backup} are unlocked.",
-  "@alreadySubscribedLifetime": {
-    "placeholders": {
-      "backup": {
-        "type": "String"
-      }
-    }
-  },
-  "alreadySubscribedGeneric": "You have an active ResumeApp Pro subscription. All premium features are included in your plan.",
+  "alreadySubscribedLifetime": "You have ResumeApp Pro (Lifetime). Ads are removed.",
+  "alreadySubscribedGeneric": "You have an active ResumeApp Pro subscription. Ads are removed.",
   "restoreInsteadLifetime": "ResumeApp Pro (Lifetime) was found for this {account}. Use Restore to activate it on this device instead of buying again.",
   "@restoreInsteadLifetime": {
     "placeholders": {

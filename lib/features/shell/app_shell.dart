@@ -98,8 +98,8 @@ class _AppShellState extends State<AppShell> {
     super.dispose();
   }
 
-  /// After the user has shared one resume or one cover letter, show the rate
-  /// dialog each time they arrive on Home from another screen.
+  /// After a PDF save (or a prior share in another session), request the
+  /// system rating when Home is shown. Skipped if share already asked.
   Future<void> _showRatePromptOnReturnHome() async {
     if (!mounted || _ratePromptVisible || _currentIndex != 0) {
       return;
@@ -107,6 +107,9 @@ class _AppShellState extends State<AppShell> {
     _ratePromptVisible = true;
     final review = context.read<InAppReviewPromptService>();
     try {
+      if (review.didRequestNativeReviewThisSession) {
+        return;
+      }
       if (!await review.hasSharedOnce()) {
         return;
       }
@@ -143,7 +146,7 @@ class _AppShellState extends State<AppShell> {
       ),
     );
 
-    // iOS: AI Resume is Pro — open Go Premium instead of the tab when locked.
+    // AI Resume is free; this only runs if a later gate is turned back on.
     if (index == _aiResumeTabIndex &&
         PremiumAccess.atsAiCreateRequiresPremium) {
       final allowed = await ensurePremiumForAtsAiCreate(context);

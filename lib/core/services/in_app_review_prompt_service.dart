@@ -5,9 +5,8 @@ import 'package:in_app_review/in_app_review.dart';
 
 /// System in-app review (Apple stars sheet / Play In-App Review).
 ///
-/// Flow: after the user shares or saves a PDF once, request the rating the
-/// next time they land on Home (not immediately after create, share or save).
-/// The OS may still suppress the sheet based on its own quota.
+/// Flow: after a successful share, request the rating immediately. Saving a
+/// PDF still unlocks Home. The OS may suppress the sheet based on its quota.
 class InAppReviewPromptService {
   InAppReviewPromptService({
     Future<bool> Function()? readRatingCompleted,
@@ -67,6 +66,7 @@ class InAppReviewPromptService {
 
   bool _promptInFlight = false;
   bool _skippedUntilNextHomeVisit = false;
+  bool _nativeReviewRequestedThisSession = false;
   int _homeVisitCount = 0;
   bool _homeVisitCountHydrated = false;
   bool? _hasSharedCached;
@@ -173,7 +173,14 @@ class InAppReviewPromptService {
   Future<void> openStoreListing() => _openStoreListing();
 
   /// Shows Apple / Google’s system rating UI when available.
-  Future<void> requestNativeReview() => _requestNativeReview();
+  Future<void> requestNativeReview() async {
+    _nativeReviewRequestedThisSession = true;
+    await _requestNativeReview();
+  }
+
+  /// True after this session already asked for a rating (share or Home).
+  bool get didRequestNativeReviewThisSession =>
+      _nativeReviewRequestedThisSession;
 
   Future<bool> hasSharedOnce() async {
     final cached = _hasSharedCached;
@@ -248,10 +255,11 @@ class InAppReviewPromptService {
     return true;
   }
 
-  /// Call after a successful share — unlocks Home rate on the 2nd visit.
-  /// Does not show the rating UI immediately.
+  /// Call after a successful share — records it and requests the system
+  /// rating sheet immediately (the OS may still hide the sheet).
   Future<void> promptAfterShare() async {
     await markSharedOnce();
+    await requestNativeReview();
   }
 
   /// Call after a PDF is saved to the device. Saving a finished resume is as

@@ -4,6 +4,10 @@ import 'package:resume_app/core/services/android_ads_service.dart';
 void main() {
   setUp(AndroidAdsService.resetForTest);
 
+  test('debug builds do not use production AdMob units', () {
+    expect(AndroidAdsConfig.useProductionAdUnitsInDebug, isFalse);
+  });
+
   test('preview interstitial every 4th open', () {
     expect(AndroidAdsConfig.previewInterstitialEveryNthOpen, 4);
     expect(
@@ -45,8 +49,7 @@ void main() {
     bool bump(AndroidAdPlacement placement) {
       if (placement == AndroidAdPlacement.templates) {
         templates += 1;
-        return templates %
-                AndroidAdsConfig.templatesInterstitialEveryNthOpen ==
+        return templates % AndroidAdsConfig.templatesInterstitialEveryNthOpen ==
             0;
       }
       preview += 1;
@@ -68,11 +71,79 @@ void main() {
     expect(AndroidAdsService.openCountFor(AndroidAdPlacement.createResume), 0);
   });
 
-  test('create resume interstitial skips the first visit then always shows', () {
-    expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(1), isFalse);
-    expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(2), isTrue);
-    expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(3), isTrue);
-    expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(8), isTrue);
+  test(
+    'create resume interstitial skips the first visit then always shows',
+    () {
+      expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(1), isFalse);
+      expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(2), isTrue);
+      expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(3), isTrue);
+      expect(AndroidAdsConfig.shouldShowCreateResumeInterstitial(8), isTrue);
+    },
+  );
+
+  group('full-screen ad frequency', () {
+    final installed = DateTime(2026, 11, 1, 9);
+
+    test('no full-screen ads during the first 3 days after install', () {
+      for (final hours in [0, 1, 24, 48, 71]) {
+        expect(
+          AndroidAdsConfig.allowsInterstitial(
+            now: installed.add(Duration(hours: hours)),
+            firstLaunchAt: installed,
+            shownThisSession: 0,
+          ),
+          isFalse,
+          reason: '$hours h after install',
+        );
+      }
+      expect(
+        AndroidAdsConfig.allowsInterstitial(
+          now: installed.add(const Duration(days: 3)),
+          firstLaunchAt: installed,
+          shownThisSession: 0,
+        ),
+        isTrue,
+      );
+    });
+
+    test('installs from before tracking get no grace period', () {
+      expect(
+        AndroidAdsConfig.allowsInterstitial(
+          now: installed,
+          firstLaunchAt: null,
+          shownThisSession: 0,
+        ),
+        isTrue,
+      );
+    });
+
+    test('at most one full-screen ad per session', () {
+      expect(AndroidAdsConfig.maxInterstitialsPerSession, 1);
+      expect(
+        AndroidAdsConfig.allowsInterstitial(
+          now: installed.add(const Duration(days: 10)),
+          firstLaunchAt: installed,
+          shownThisSession: 1,
+        ),
+        isFalse,
+      );
+    });
+
+    test('service applies the grace period from its install time', () {
+      AndroidAdsService.firstLaunchAt = installed;
+      AndroidAdsService.clock = () => installed.add(const Duration(days: 1));
+      expect(AndroidAdsService.interstitialAllowedNow, isFalse);
+      AndroidAdsService.clock = () => installed.add(const Duration(days: 4));
+      expect(AndroidAdsService.interstitialAllowedNow, isTrue);
+      expect(AndroidAdsService.interstitialsShownThisSession, 0);
+    });
+
+    test('reset clears the install time and session count', () {
+      AndroidAdsService.firstLaunchAt = installed;
+      AndroidAdsService.resetForTest();
+      expect(AndroidAdsService.firstLaunchAt, isNull);
+      expect(AndroidAdsService.interstitialsShownThisSession, 0);
+    });
   });
 
   test('templates interstitial unit ids are configured', () {

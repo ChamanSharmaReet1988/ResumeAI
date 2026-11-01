@@ -2897,7 +2897,6 @@ class ResumeRepository {
   final Box<dynamic> _resumeBox;
   final Box<dynamic> _coverLetterBox;
   AppPreferences? _appPreferences;
-  bool Function()? _hasPremiumAccess;
   ICloudResumeService? _iCloudResumeService;
   Timer? _iCloudAutoSyncTimer;
   bool _isFlushingICloudAutoSync = false;
@@ -2927,16 +2926,11 @@ class ResumeRepository {
   }) {
     _appPreferences = appPreferences;
     _iCloudResumeService = service;
-    _hasPremiumAccess = hasPremium;
   }
 
-  bool get _canUseICloudBackup =>
-      (_hasPremiumAccess?.call() ?? false) &&
-      (_appPreferences?.isPremium ?? false);
+  bool get _canUseICloudBackup => true;
 
-  bool get _canUseGoogleDriveBackup =>
-      (_hasPremiumAccess?.call() ?? false) &&
-      (_appPreferences?.isPremium ?? false);
+  bool get _canUseGoogleDriveBackup => true;
 
   void configureGoogleDriveAutoSync({
     required AppPreferences appPreferences,
@@ -2945,9 +2939,6 @@ class ResumeRepository {
   }) {
     _appPreferences = appPreferences;
     _googleDriveResumeService = service;
-    if (hasPremium != null) {
-      _hasPremiumAccess = hasPremium;
-    }
   }
 
   Future<List<ResumeData>> loadResumes() async {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,10 +24,11 @@ import '../core/services/resume_services.dart';
 import '../features/shared/view_models.dart';
 import '../features/shell/app_shell.dart';
 import 'app_theme.dart';
+import 'platform_startup.dart';
 import 'premium_subscription_watcher.dart';
 import 'vertical_edge_bounce.dart';
 
-class ResumeApp extends StatelessWidget {
+class ResumeApp extends StatefulWidget {
   const ResumeApp({
     super.key,
     required this.repository,
@@ -35,6 +38,7 @@ class ResumeApp extends StatelessWidget {
     required this.googleDriveResumeService,
     this.deepLinkService,
     this.aiApiKeyStore,
+    this.deferPlatformStartup = false,
   });
 
   final ResumeRepository repository;
@@ -44,13 +48,47 @@ class ResumeApp extends StatelessWidget {
   final GoogleDriveResumeService googleDriveResumeService;
   final DeepLinkService? deepLinkService;
   final AiApiKeyStore? aiApiKeyStore;
+  final bool deferPlatformStartup;
+
+  @override
+  State<ResumeApp> createState() => _ResumeAppState();
+}
+
+class _ResumeAppState extends State<ResumeApp> {
+  late FirebaseAppServices _firebase;
+  late DeepLinkService _deepLinks;
+
+  @override
+  void initState() {
+    super.initState();
+    _firebase = widget.firebaseServices;
+    _deepLinks = widget.deepLinkService ??
+        DeepLinkService(enablePlatformLinks: false, firebase: _firebase);
+    if (widget.deferPlatformStartup) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_runDeferredStartup());
+      });
+    }
+  }
+
+  Future<void> _runDeferredStartup() async {
+    final firebase = await startDeferredPlatformServices(
+      premiumPurchaseService: widget.premiumPurchaseService,
+      deepLinkService: _deepLinks,
+    );
+    if (!mounted || identical(firebase, _firebase)) {
+      return;
+    }
+    setState(() => _firebase = firebase);
+  }
 
   @override
   Widget build(BuildContext context) {
     final platform = defaultTargetPlatform;
-    final resolvedDeepLinks =
-        deepLinkService ??
-        DeepLinkService(enablePlatformLinks: false, firebase: firebaseServices);
+    final repository = widget.repository;
+    final appPreferences = widget.appPreferences;
+    final premiumPurchaseService = widget.premiumPurchaseService;
+    final googleDriveResumeService = widget.googleDriveResumeService;
 
     return MultiProvider(
       providers: [
@@ -59,8 +97,8 @@ class ResumeApp extends StatelessWidget {
         ChangeNotifierProvider<PremiumPurchaseService>.value(
           value: premiumPurchaseService,
         ),
-        Provider<FirebaseAppServices>.value(value: firebaseServices),
-        Provider<DeepLinkService>.value(value: resolvedDeepLinks),
+        Provider<FirebaseAppServices>.value(value: _firebase),
+        Provider<DeepLinkService>.value(value: _deepLinks),
         Provider<ICloudResumeService>(
           create: (_) => const MethodChannelICloudResumeService(),
         ),
@@ -81,7 +119,7 @@ class ResumeApp extends StatelessWidget {
           create: (_) => InAppReviewPromptService(),
         ),
         ChangeNotifierProvider<AiApiKeyStore>(
-          create: (_) => (aiApiKeyStore ?? AiApiKeyStore())..load(),
+          create: (_) => (widget.aiApiKeyStore ?? AiApiKeyStore())..load(),
         ),
         Provider<AiResumeCoordinator>(
           create: (context) => AiResumeCoordinator(
@@ -111,8 +149,8 @@ class ResumeApp extends StatelessWidget {
             onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             debugShowCheckedModeBanner: false,
             navigatorObservers: [
-              if (firebaseServices.analyticsObserver != null)
-                firebaseServices.analyticsObserver!,
+              if (_firebase.analyticsObserver != null)
+                _firebase.analyticsObserver!,
             ],
             scrollBehavior: const VerticalEdgeBounceScrollBehavior(),
             themeMode: settings.themeMode,

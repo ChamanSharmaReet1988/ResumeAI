@@ -112,13 +112,10 @@
   "restoringYourSubscription": "Memulihkan langganan Anda…",
   "pleaseWaitDoNotClose": "Harap tunggu. Jangan tutup aplikasi.",
   "premiumWelcomeCongratulations": "Selamat!",
-  "premiumWelcomeBody": "ResumeApp Pro aktif pada {planLabel} Anda. Iklan dihapus, serta AI Resume dan {backup} dibuka.",
+  "premiumWelcomeBody": "ResumeApp Pro aktif pada {planLabel} Anda. Iklan dihapus.",
   "@premiumWelcomeBody": {
     "placeholders": {
       "planLabel": {
-        "type": "String"
-      },
-      "backup": {
         "type": "String"
       }
     }
@@ -129,7 +126,7 @@
   "premiumBenefitBackupIcloud": "Cadangkan dan sinkronkan resume dengan iCloud",
   "premiumBenefitBackupGoogleDrive": "Cadangkan dan sinkronkan resume dengan Google Drive",
   "premiumUpcomingUpdateBadge": "Pembelian sekali seumur hidup",
-  "premiumUpcomingUpdateMessage": "Semua template resume sudah termasuk. Anda hanya perlu membayar sekali.",
+  "premiumUpcomingUpdateMessage": "Bayar sekali untuk menghapus iklan.",
   "planLifetime": "Seumur hidup",
   "planSubtitleLifetime": "Bayar sekali · seumur hidup",
   "planPro": "Pro",
@@ -145,15 +142,8 @@
   "storeAccountGoogle": "akun Google",
   "storeAccountApple": "Apple ID",
   "alreadySubscribedDebugOverride": "Override Pro pengembang aktif. Semua fitur Pro terbuka untuk pengujian di perangkat ini.",
-  "alreadySubscribedLifetime": "Anda memiliki ResumeApp Pro (seumur hidup). Iklan dihapus, serta AI Resume dan {backup} dibuka.",
-  "@alreadySubscribedLifetime": {
-    "placeholders": {
-      "backup": {
-        "type": "String"
-      }
-    }
-  },
-  "alreadySubscribedGeneric": "Anda memiliki langganan ResumeApp Pro aktif. Semua fitur premium termasuk dalam paket Anda.",
+  "alreadySubscribedLifetime": "Anda memiliki ResumeApp Pro (seumur hidup). Iklan dihapus.",
+  "alreadySubscribedGeneric": "Anda memiliki langganan ResumeApp Pro aktif. Iklan dihapus.",
   "restoreInsteadLifetime": "ResumeApp Pro (seumur hidup) ditemukan untuk {account} ini. Gunakan Pulihkan untuk mengaktifkannya di perangkat ini alih-alih membeli lagi.",
   "@restoreInsteadLifetime": {
     "placeholders": {

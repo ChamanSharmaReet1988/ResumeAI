@@ -280,8 +280,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get premiumWelcomeCongratulations => 'Selamat!';
 
   @override
-  String premiumWelcomeBody(String planLabel, String backup) {
-    return 'ResumeApp Pro aktif pada $planLabel Anda. Iklan dihapus, serta AI Resume dan $backup dibuka.';
+  String premiumWelcomeBody(String planLabel) {
+    return 'ResumeApp Pro aktif pada $planLabel Anda. Iklan dihapus.';
   }
 
   @override
@@ -307,7 +307,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get premiumUpcomingUpdateMessage =>
-      'Semua template resume sudah termasuk. Anda hanya perlu membayar sekali.';
+      'Bayar sekali untuk menghapus iklan.';
 
   @override
   String get planLifetime => 'Seumur hidup';
@@ -337,13 +337,12 @@ class AppLocalizationsId extends AppLocalizations {
       'Override Pro pengembang aktif. Semua fitur Pro terbuka untuk pengujian di perangkat ini.';
 
   @override
-  String alreadySubscribedLifetime(String backup) {
-    return 'Anda memiliki ResumeApp Pro (seumur hidup). Iklan dihapus, serta AI Resume dan $backup dibuka.';
-  }
+  String get alreadySubscribedLifetime =>
+      'Anda memiliki ResumeApp Pro (seumur hidup). Iklan dihapus.';
 
   @override
   String get alreadySubscribedGeneric =>
-      'Anda memiliki langganan ResumeApp Pro aktif. Semua fitur premium termasuk dalam paket Anda.';
+      'Anda memiliki langganan ResumeApp Pro aktif. Iklan dihapus.';
 
   @override
   String restoreInsteadLifetime(String account) {

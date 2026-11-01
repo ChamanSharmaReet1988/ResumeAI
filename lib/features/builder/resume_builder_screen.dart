@@ -14,7 +14,6 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/bottom_sheet_insets.dart';
 import '../../core/models/resume_builder_section_order.dart';
 import '../../core/services/analytics_events.dart';
-import '../../core/services/android_ads_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../../core/services/profile_image_storage.dart';
 import '../../core/models/resume_models.dart';
@@ -440,10 +439,6 @@ class _ResumeBuilderScreenState extends State<ResumeBuilderScreen> {
       return;
     }
     if (result.status == ShareResultStatus.success) {
-      await AndroidAdsService.showShareInterstitial();
-      if (!mounted) {
-        return;
-      }
       await context.read<InAppReviewPromptService>().promptAfterShare();
     }
     if (!mounted) {

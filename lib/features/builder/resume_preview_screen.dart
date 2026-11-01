@@ -8,7 +8,6 @@ import '../../core/corporate_resume_style.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/models/resume_models.dart';
 import '../../core/services/analytics_events.dart';
-import '../../core/services/android_ads_service.dart';
 import '../../core/services/in_app_review_prompt_service.dart';
 import '../shared/native_pdf_preview.dart';
 import '../shared/resume_preview_card.dart';
@@ -77,10 +76,6 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
         return;
       }
       if (result.status == ShareResultStatus.success) {
-        await AndroidAdsService.showShareInterstitial();
-        if (!mounted) {
-          return;
-        }
         await context.read<InAppReviewPromptService>().promptAfterShare();
       }
       if (!mounted) {

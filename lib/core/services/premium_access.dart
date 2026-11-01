@@ -1,60 +1,17 @@
 import '../models/resume_models.dart';
-import 'platform_monetization.dart';
 
 /// What requires [PremiumPurchaseService.isPremium] vs what stays free.
 ///
-/// In Professional, ATS, Best Pick, and Creative, the first two templates stay free.
-/// The rest need the $1.99 one-time Pro unlock, which also removes ads.
-/// Cover letters stay free. AI Resume stays free on Android.
+/// Pro only removes ads. Templates, AI Resume, and cloud backup stay free.
 abstract final class PremiumAccess {
-  static const Set<String> coverLetterTemplateTileIds = {
-    'executive-note',
-    'minimal-letter',
-    'sidebar-letter',
-    'classic-business-letter',
-    'accent-bar-letter',
-    'ruled-letterhead',
-  };
-
-  static const Set<String> freeResumeTileIds = {
-    'dark-header',
-    'accent-strip',
-    'ats-structured',
-    'ats-latex-classic',
-    'modern-line',
-    'split-contact',
-    'creative-aurora',
-    'creative-ink-panel',
-  };
-
-  static const Set<ResumeTemplate> freeResumeTemplates = {
-    ResumeTemplate.corporate,
-    ResumeTemplate.accentStrip,
-    ResumeTemplate.atsStructured,
-    ResumeTemplate.atsLatexClassic,
-    ResumeTemplate.modernLine,
-    ResumeTemplate.splitContact,
-    ResumeTemplate.aurora,
-    ResumeTemplate.inkPanel,
-  };
-
-  /// AI Resume tab (and Create ATS) requires Pro on iOS only.
-  static bool get atsAiCreateRequiresPremium => PlatformMonetization.isIos;
+  static bool get atsAiCreateRequiresPremium => false;
 
   static bool templateTileRequiresPremium(String tileId) {
-    if (freeResumeTileIds.contains(tileId)) {
-      return false;
-    }
-    if (coverLetterTemplateTileIds.contains(tileId) ||
-        tileId.endsWith('-letter') ||
-        tileId.contains('letter')) {
-      return false;
-    }
-    return true;
+    return false;
   }
 
   static bool resumeTemplateRequiresPremium(ResumeTemplate template) {
-    return !freeResumeTemplates.contains(template.userFacingTemplate);
+    return false;
   }
 
   static bool coverLetterTemplateRequiresPremium(CoverLetterTemplate template) {
@@ -65,9 +22,7 @@ abstract final class PremiumAccess {
     return false;
   }
 
-  static bool get iCloudBackupRequiresPremium =>
-      PlatformMonetization.isIapEnabled;
+  static bool get iCloudBackupRequiresPremium => false;
 
-  static bool get googleDriveBackupRequiresPremium =>
-      PlatformMonetization.isIapEnabled;
+  static bool get googleDriveBackupRequiresPremium => false;
 }

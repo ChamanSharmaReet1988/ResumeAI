@@ -112,13 +112,10 @@
   "restoringYourSubscription": "Restaurando sua assinatura…",
   "pleaseWaitDoNotClose": "Aguarde. Não feche o app.",
   "premiumWelcomeCongratulations": "Parabéns!",
-  "premiumWelcomeBody": "O ResumeApp Pro está ativo no seu {planLabel}. Os anúncios foram removidos, e o AI Resume mais {backup} estão desbloqueados.",
+  "premiumWelcomeBody": "O ResumeApp Pro está ativo no seu {planLabel}. Os anúncios foram removidos.",
   "@premiumWelcomeBody": {
     "placeholders": {
       "planLabel": {
-        "type": "String"
-      },
-      "backup": {
         "type": "String"
       }
     }
@@ -129,7 +126,7 @@
   "premiumBenefitBackupIcloud": "Faça backup e sincronize currículos com o iCloud",
   "premiumBenefitBackupGoogleDrive": "Faça backup e sincronize currículos com o Google Drive",
   "premiumUpcomingUpdateBadge": "Compra única vitalícia",
-  "premiumUpcomingUpdateMessage": "Todos os modelos de currículo estão incluídos. Você só precisa pagar uma vez.",
+  "premiumUpcomingUpdateMessage": "Pague uma vez para remover os anúncios.",
   "planLifetime": "Vitalício",
   "planSubtitleLifetime": "Pague uma vez · para sempre",
   "planPro": "Pro",
@@ -145,15 +142,8 @@
   "storeAccountGoogle": "conta do Google",
   "storeAccountApple": "Apple ID",
   "alreadySubscribedDebugOverride": "A substituição Pro de desenvolvedor está ativada. Todos os recursos Pro estão desbloqueados para testes neste dispositivo.",
-  "alreadySubscribedLifetime": "Você tem o ResumeApp Pro (vitalício). Os anúncios foram removidos, e o AI Resume mais {backup} estão desbloqueados.",
-  "@alreadySubscribedLifetime": {
-    "placeholders": {
-      "backup": {
-        "type": "String"
-      }
-    }
-  },
-  "alreadySubscribedGeneric": "Você tem uma assinatura ativa do ResumeApp Pro. Todos os recursos premium estão incluídos no seu plano.",
+  "alreadySubscribedLifetime": "Você tem o ResumeApp Pro (vitalício). Os anúncios foram removidos.",
+  "alreadySubscribedGeneric": "Você tem uma assinatura ativa do ResumeApp Pro. Os anúncios foram removidos.",
   "restoreInsteadLifetime": "ResumeApp Pro (vitalício) foi encontrado para esta {account}. Use Restaurar para ativá-lo neste dispositivo em vez de comprar novamente.",
   "@restoreInsteadLifetime": {
     "placeholders": {
