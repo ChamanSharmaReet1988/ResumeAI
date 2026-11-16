@@ -168,7 +168,13 @@ class _AppShellState extends State<AppShell> {
 
     if (index == 0) {
       unawaited(_onHomeBecameVisible(countVisit: true));
-      unawaited(_showRatePromptOnReturnHome());
+      final adShown = await AndroidAdsService.showInterstitialIfReady(
+        placement: AndroidAdPlacement.home,
+      );
+      // One interruption at a time: no rating prompt over a full-screen ad.
+      if (!adShown && mounted) {
+        unawaited(_showRatePromptOnReturnHome());
+      }
     }
   }
 
@@ -218,11 +224,6 @@ class _AppShellState extends State<AppShell> {
       androidAi: context.read<AndroidGenAiService>(),
       seedResume: seed ?? library.newDraft(l10n: context.l10n),
     );
-
-    await AndroidAdsService.showCreateResumeInterstitial();
-    if (!mounted) {
-      return;
-    }
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -347,10 +348,6 @@ class _AppShellState extends State<AppShell> {
 
     if (targetStep != null) {
       viewModel.setStep(targetStep);
-      await AndroidAdsService.showCreateResumeInterstitial();
-      if (!mounted) {
-        return;
-      }
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ChangeNotifierProvider<ResumeEditorViewModel>.value(

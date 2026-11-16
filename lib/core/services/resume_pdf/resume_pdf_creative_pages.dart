@@ -11,7 +11,7 @@ extension _ResumePdfCreativePages on ResumePdfService {
     Map<int, Set<String>> highlightedBulletsByExperience = const {},
   }) {
     final kind = resume.template.userFacingTemplate;
-    final ink = PdfColor.fromInt(0xFF241C18);
+    final ink = _pdfRgb(ResumeTypography.atsStructuredBodyTextColor);
     final muted = PdfColor.fromInt(0xFF6B625C);
     final accent = _pdfRgb(resume.creativeAccentColor);
     final highlight = _pdfRgb(resume.paintedCreativeHighlightColor);
@@ -45,7 +45,9 @@ extension _ResumePdfCreativePages on ResumePdfService {
 
     pw.Widget sectionTitle(String heading) {
       final label = switch (kind) {
-        ResumeTemplate.inkPanel || ResumeTemplate.studio => heading.toUpperCase(),
+        ResumeTemplate.inkPanel ||
+        ResumeTemplate.studio ||
+        ResumeTemplate.prism => heading.toUpperCase(),
         _ => heading,
       };
       final title = pw.Text(
@@ -54,7 +56,11 @@ extension _ResumePdfCreativePages on ResumePdfService {
           ResumeFontWeight.w700,
           kind == ResumeTemplate.sageFrame ? 13 : 12.5,
           accent,
-          letterSpacing: kind == ResumeTemplate.inkPanel ? 1.4 : 0.2,
+          letterSpacing: switch (kind) {
+            ResumeTemplate.inkPanel => 1.4,
+            ResumeTemplate.prism => 1.1,
+            _ => 0.2,
+          },
         ),
       );
       final rule = pw.Container(height: 1, color: accent);
@@ -100,6 +106,61 @@ extension _ResumePdfCreativePages on ResumePdfService {
               title,
             ],
           ),
+          ResumeTemplate.terrazzo => pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              title,
+              pw.SizedBox(height: 4),
+              pw.Row(
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  pw.Container(width: 26, height: 3, color: accent),
+                  pw.SizedBox(width: 3),
+                  pw.Container(width: 10, height: 3, color: highlight),
+                ],
+              ),
+            ],
+          ),
+          ResumeTemplate.dotfield => pw.Row(
+            children: [
+              for (final size in const [7.0, 5.0, 3.0]) ...[
+                pw.Container(
+                  width: size,
+                  height: size,
+                  decoration: pw.BoxDecoration(
+                    color: accent,
+                    shape: pw.BoxShape.circle,
+                  ),
+                ),
+                pw.SizedBox(width: 3),
+              ],
+              pw.SizedBox(width: 4),
+              title,
+            ],
+          ),
+          ResumeTemplate.orbit => pw.Row(
+            children: [
+              pw.Container(
+                width: 11,
+                height: 11,
+                alignment: pw.Alignment.center,
+                decoration: pw.BoxDecoration(
+                  shape: pw.BoxShape.circle,
+                  border: pw.Border.all(color: accent, width: 1.2),
+                ),
+                child: pw.Container(
+                  width: 3.5,
+                  height: 3.5,
+                  decoration: pw.BoxDecoration(
+                    color: accent,
+                    shape: pw.BoxShape.circle,
+                  ),
+                ),
+              ),
+              pw.SizedBox(width: 7),
+              title,
+            ],
+          ),
           _ => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
@@ -134,21 +195,32 @@ extension _ResumePdfCreativePages on ResumePdfService {
       required List<String> lines,
       Set<String> highlighted = const {},
     }) {
-      return [
-        pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Expanded(child: pw.Text(title, style: strongStyle)),
-            if (dates.isNotEmpty) pw.Text(dates, style: metaStyle),
-          ],
-        ),
-        if (subtitle.isNotEmpty)
-          pw.Padding(
-            padding: const pw.EdgeInsets.only(top: 1),
-            child: pw.Text(subtitle, style: metaStyle),
-          ),
+      final bullets = [
         for (final line in lines.where((line) => line.trim().isNotEmpty))
           bullet(line.trim(), highlight: highlighted.contains(line.trim())),
+      ];
+      return [
+        pw.Inseparable(
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Expanded(child: pw.Text(title, style: strongStyle)),
+                  if (dates.isNotEmpty) pw.Text(dates, style: metaStyle),
+                ],
+              ),
+              if (subtitle.isNotEmpty)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 1),
+                  child: pw.Text(subtitle, style: metaStyle),
+                ),
+              if (bullets.isNotEmpty) bullets.first,
+            ],
+          ),
+        ),
+        ...bullets.skip(1),
         pw.SizedBox(height: 8),
       ];
     }
@@ -243,6 +315,14 @@ extension _ResumePdfCreativePages on ResumePdfService {
           ],
         ),
       ),
+      // Keep the name and contact clear of the art in the corner.
+      ResumeTemplate.terrazzo ||
+      ResumeTemplate.dotfield ||
+      ResumeTemplate.orbit ||
+      ResumeTemplate.prism => pw.Padding(
+        padding: const pw.EdgeInsets.only(right: 150),
+        child: headerColumn,
+      ),
       _ => headerColumn,
     };
 
@@ -253,6 +333,10 @@ extension _ResumePdfCreativePages on ResumePdfService {
       ResumeTemplate.arc => const pw.EdgeInsets.fromLTRB(40, 28, 64, 40),
       ResumeTemplate.chevron ||
       ResumeTemplate.wave => const pw.EdgeInsets.fromLTRB(40, 32, 40, 36),
+      ResumeTemplate.terrazzo ||
+      ResumeTemplate.dotfield ||
+      ResumeTemplate.orbit ||
+      ResumeTemplate.prism => const pw.EdgeInsets.fromLTRB(40, 32, 40, 42),
       _ => const pw.EdgeInsets.fromLTRB(40, 28, 40, 32),
     };
     final bodyPad = kind == ResumeTemplate.sunset || kind == ResumeTemplate.studio
@@ -266,7 +350,12 @@ extension _ResumePdfCreativePages on ResumePdfService {
           margin: margin,
           buildBackground: (context) => pw.FullPage(
             ignoreMargins: true,
-            child: _creativePdfBackground(kind, accent: accent, highlight: highlight),
+            child: _creativePdfBackground(
+              kind,
+              accent: accent,
+              highlight: highlight,
+              firstPage: context.pageNumber == 1,
+            ),
           ),
         ),
         build: (context) => [
@@ -276,6 +365,12 @@ extension _ResumePdfCreativePages on ResumePdfService {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
+                if (resume.summary.trim().isNotEmpty &&
+                    (kind == ResumeTemplate.terrazzo ||
+                        kind == ResumeTemplate.dotfield ||
+                        kind == ResumeTemplate.orbit ||
+                        kind == ResumeTemplate.prism))
+                  sectionTitle('Professional Summary'),
                 if (resume.summary.trim().isNotEmpty)
                   _headerSidebarMaybeHighlight(
                     highlight: highlightSummary,
@@ -291,7 +386,7 @@ extension _ResumePdfCreativePages on ResumePdfService {
                       case ResumeBuilderSectionIds.work:
                         final items = resume.visibleWorkExperiences;
                         if (items.isEmpty) return null;
-                        return [
+                        return _keepHeadingWithFirstBlock([
                           sectionTitle(resume.sectionHeading(id, 'Work Experience')),
                           for (var index = 0; index < items.length; index++)
                             ...entry(
@@ -310,11 +405,11 @@ extension _ResumePdfCreativePages on ResumePdfService {
                                   highlightedBulletsByExperience[index] ??
                                   const {},
                             ),
-                        ];
+                        ]);
                       case ResumeBuilderSectionIds.education:
                         final items = resume.visibleEducation;
                         if (items.isEmpty) return null;
-                        return [
+                        return _keepHeadingWithFirstBlock([
                           sectionTitle(resume.sectionHeading(id, 'Education')),
                           for (final item in items)
                             ...entry(
@@ -326,13 +421,13 @@ extension _ResumePdfCreativePages on ResumePdfService {
                               ),
                               lines: [educationDetailLine(item)],
                             ),
-                        ];
+                        ]);
                       case ResumeBuilderSectionIds.skills:
                         if (!resume.includeSkillsInResume) return null;
                         final grouped = resume.showCategorisedSkills;
                         final flat = resume.skillsForResume;
                         if (!grouped && flat.isEmpty) return null;
-                        return [
+                        return _keepHeadingWithFirstBlock([
                           sectionTitle(resume.sectionHeading(id, 'Skills')),
                           if (grouped)
                             for (final group in resume.skillGroupsForResume) ...[
@@ -352,11 +447,11 @@ extension _ResumePdfCreativePages on ResumePdfService {
                                 skill,
                                 highlight: highlightedSkills.contains(skill),
                               ),
-                        ];
+                        ]);
                       case ResumeBuilderSectionIds.projects:
                         final items = resume.visibleProjects;
                         if (items.isEmpty) return null;
-                        return [
+                        return _keepHeadingWithFirstBlock([
                           sectionTitle(resume.sectionHeading(id, 'Projects')),
                           for (final item in items)
                             ...entry(
@@ -369,7 +464,7 @@ extension _ResumePdfCreativePages on ResumePdfService {
                               dates: '',
                               lines: item.bullets,
                             ),
-                        ];
+                        ]);
                       default:
                         final index = ResumeBuilderSectionIds.customIndex(id);
                         if (index == null ||
@@ -423,6 +518,7 @@ pw.Widget _creativePdfBackground(
   ResumeTemplate kind, {
   required PdfColor accent,
   required PdfColor highlight,
+  bool firstPage = true,
 }) {
   pw.Widget blob(double size, PdfColor color) => pw.Container(
     width: size,
@@ -541,8 +637,95 @@ pw.Widget _creativePdfBackground(
         pw.Positioned(left: 18, bottom: 28, child: blob(22, PdfColor.fromInt(0xFFB7E0DC))),
       ],
     ),
+    // Corner art only on the first page: later pages start at the top margin
+    // and their text would run over it.
+    ResumeTemplate.terrazzo => pw.CustomPaint(
+      size: const PdfPoint(kResumePageWidthPt, kResumePageHeightPt),
+      painter: (canvas, size) {
+        canvas
+          ..setFillColor(PdfColor.fromInt(0xFFFBF7F1))
+          ..drawRect(0, 0, size.x, size.y)
+          ..fillPath();
+        _paintPageArtFacets(canvas, size, [
+          if (firstPage) ...kTerrazzoCornerChips,
+          ...kTerrazzoFootChips,
+        ], accent);
+      },
+    ),
+    ResumeTemplate.dotfield => pw.CustomPaint(
+      size: const PdfPoint(kResumePageWidthPt, kResumePageHeightPt),
+      painter: (canvas, size) {
+        canvas
+          ..setFillColor(_topPickWash(accent, 0.6))
+          ..setStrokeColor(_topPickWash(accent, 0.6));
+        for (final dot in kDotfieldDots) {
+          if (!firstPage && dot.y < size.y / 2) continue;
+          canvas
+            ..drawEllipse(dot.x, size.y - dot.y, dot.radius, dot.radius)
+            ..fillPath();
+        }
+      },
+    ),
+    ResumeTemplate.orbit => pw.CustomPaint(
+      size: const PdfPoint(kResumePageWidthPt, kResumePageHeightPt),
+      painter: (canvas, size) {
+        canvas
+          ..setFillColor(PdfColor.fromInt(0xFFFAF8FD))
+          ..drawRect(0, 0, size.x, size.y)
+          ..fillPath();
+        for (final ring in [
+          if (firstPage) ...kOrbitCornerRings,
+          ...kOrbitFootRings,
+        ]) {
+          final color = _topPickWash(accent, ring.tint);
+          canvas.drawEllipse(ring.x, size.y - ring.y, ring.radius, ring.radius);
+          if (ring.fill) {
+            canvas
+              ..setFillColor(color)
+              ..fillPath();
+          } else {
+            canvas
+              ..setStrokeColor(color)
+              ..setLineWidth(1.2)
+              ..strokePath();
+          }
+        }
+      },
+    ),
+    ResumeTemplate.prism => pw.CustomPaint(
+      size: const PdfPoint(kResumePageWidthPt, kResumePageHeightPt),
+      painter: (canvas, size) => _paintPageArtFacets(canvas, size, [
+        if (firstPage) ...kPrismCornerFacets,
+        ...kPrismFootFacets,
+      ], accent),
+    ),
     _ => pw.Container(color: PdfColors.white),
   };
+}
+
+/// Fills [facets] on a page; PDF y runs up, the shared art's y runs down.
+void _paintPageArtFacets(
+  PdfGraphics canvas,
+  PdfPoint size,
+  List<PageArtFacet> facets,
+  PdfColor accent,
+) {
+  for (final facet in facets) {
+    final neutral = facet.neutralArgb;
+    canvas.setFillColor(
+      neutral != null
+          ? PdfColor.fromInt(neutral)
+          : _topPickWash(accent, facet.tint),
+    );
+    final (startX, startY) = facet.points.first;
+    canvas.moveTo(startX, size.y - startY);
+    for (final (x, y) in facet.points.skip(1)) {
+      canvas.lineTo(x, size.y - y);
+    }
+    canvas
+      ..closePath()
+      ..fillPath();
+  }
 }
 
 void _paintChevronPage(PdfGraphics canvas, PdfPoint size) {

@@ -737,9 +737,100 @@ void main() {
       ResumeTemplate.arc,
       ResumeTemplate.chevron,
       ResumeTemplate.wave,
+      ResumeTemplate.meridian,
+      ResumeTemplate.ledger,
+      ResumeTemplate.keystone,
+      ResumeTemplate.cadence,
+      ResumeTemplate.terrazzo,
+      ResumeTemplate.dotfield,
+      ResumeTemplate.orbit,
+      ResumeTemplate.prism,
+      ResumeTemplate.summit,
+      ResumeTemplate.folio,
+      ResumeTemplate.beacon,
+      ResumeTemplate.vertex,
+      ResumeTemplate.atsBoldRule,
+      ResumeTemplate.atsCompact,
+      ResumeTemplate.atsFocus,
+      ResumeTemplate.atsDoubleRule,
     ]) {
       final bytes = await service.buildPdf(base.copyWith(template: template));
       expect(bytes, isNotEmpty, reason: template.toString());
+    }
+  });
+
+  group('newer templates across pages', () {
+    const templates = [
+      ResumeTemplate.meridian,
+      ResumeTemplate.ledger,
+      ResumeTemplate.keystone,
+      ResumeTemplate.cadence,
+      ResumeTemplate.terrazzo,
+      ResumeTemplate.dotfield,
+      ResumeTemplate.orbit,
+      ResumeTemplate.prism,
+      ResumeTemplate.summit,
+      ResumeTemplate.folio,
+      ResumeTemplate.beacon,
+      ResumeTemplate.vertex,
+      ResumeTemplate.atsBoldRule,
+      ResumeTemplate.atsCompact,
+      ResumeTemplate.atsFocus,
+      ResumeTemplate.atsDoubleRule,
+    ];
+
+    String pdfText(List<int> bytes) {
+      final document = sfpdf.PdfDocument(inputBytes: bytes);
+      final text = sfpdf.PdfTextExtractor(
+        document,
+      ).extractText().replaceAll(RegExp(r'\s+'), ' ');
+      document.dispose();
+      return text;
+    }
+
+    for (final template in templates) {
+      test('${template.name} keeps every job and skill', () async {
+        final resume = ResumeData.empty(template: template).copyWith(
+          fullName: 'Alex Morgan',
+          jobTitle: 'Product Designer',
+          email: 'alex.morgan@example.com',
+          summary: 'Product designer with five years of experience.',
+          workExperiences: [
+            for (var i = 0; i < 14; i++)
+              WorkExperience(
+                role: 'Role$i',
+                company: 'Company$i',
+                startDate: '2020',
+                endDate: '2021',
+                description: '',
+                bullets: [
+                  for (var b = 0; b < 4; b++)
+                    'Delivered outcome job$i line$b across several teams and a long enough sentence to wrap.',
+                ],
+              ),
+          ],
+          skills: [for (var i = 0; i < 80; i++) 'Skill$i'],
+        );
+        final text = pdfText(await ResumePdfService().buildPdf(resume));
+        expect(text.toLowerCase(), contains('alex morgan'));
+        for (var i = 0; i < 14; i++) {
+          expect(text, contains('Role$i'), reason: 'missing Role$i');
+          expect(text, contains('job$i line3'), reason: 'missing job$i');
+        }
+        for (var i = 0; i < 80; i++) {
+          expect(text, contains('Skill$i'), reason: 'missing Skill$i');
+        }
+      });
+
+      test('${template.name} builds with only a name', () async {
+        final resume = ResumeData.empty(
+          template: template,
+        ).copyWith(fullName: 'Alex Morgan');
+        final bytes = await ResumePdfService().buildPdf(resume);
+        final document = sfpdf.PdfDocument(inputBytes: bytes);
+        expect(document.pages.count, 1);
+        document.dispose();
+      });
     }
   });
 

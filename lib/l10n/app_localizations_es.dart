@@ -849,6 +849,118 @@ class AppLocalizationsEs extends AppLocalizations {
       'Encabezado azul claro con una ola blanca y página lisa debajo.';
 
   @override
+  String get templateMeridian => 'Meridiano';
+
+  @override
+  String get templateMeridianCaption =>
+      'Nombre centrado entre filetes finos y títulos entre líneas delgadas.';
+
+  @override
+  String get templateLedger => 'Registro';
+
+  @override
+  String get templateLedgerCaption =>
+      'Fechas en su propia columna izquierda para leer la trayectoria de un vistazo.';
+
+  @override
+  String get templateKeystone => 'Clave';
+
+  @override
+  String get templateKeystoneCaption =>
+      'Banda sólida en el encabezado, títulos sobre franjas tintadas y cuerpo limpio.';
+
+  @override
+  String get templateCadence => 'Cadencia';
+
+  @override
+  String get templateCadenceCaption =>
+      'Monograma cuadrado junto al nombre y barras cortas bajo los títulos.';
+
+  @override
+  String get templateTerrazzo => 'Terrazo';
+
+  @override
+  String get templateTerrazzoCaption =>
+      'Página cálida con fragmentos de terrazo en la esquina y al pie.';
+
+  @override
+  String get templateDotfield => 'Campo de puntos';
+
+  @override
+  String get templateDotfieldCaption =>
+      'Puntos de semitono que se desvanecen desde la esquina sobre una página blanca.';
+
+  @override
+  String get templateOrbit => 'Órbita';
+
+  @override
+  String get templateOrbitCaption =>
+      'Anillos concéntricos y un pequeño satélite en la parte superior de la página.';
+
+  @override
+  String get templatePrism => 'Prisma';
+
+  @override
+  String get templatePrismCaption =>
+      'Facetas de color en la esquina y una barra marcada al pie.';
+
+  @override
+  String get templateSummit => 'Cumbre';
+
+  @override
+  String get templateSummitCaption =>
+      'Encabezado a todo color con foto, franja de contacto y habilidades en etiquetas.';
+
+  @override
+  String get templateFolio => 'Folio';
+
+  @override
+  String get templateFolioCaption =>
+      'Diseño editorial con los títulos de sección en el margen izquierdo.';
+
+  @override
+  String get templateBeacon => 'Faro';
+
+  @override
+  String get templateBeaconCaption =>
+      'Columna derecha tintada con foto, contacto y habilidades junto a un cuerpo amplio.';
+
+  @override
+  String get templateVertex => 'Vértice';
+
+  @override
+  String get templateVertexCaption =>
+      'Encabezado en ángulo con foto y cuerpo a dos columnas.';
+
+  @override
+  String get templateBoldRuleAts => 'Filete Marcado ATS';
+
+  @override
+  String get templateBoldRuleAtsCaption =>
+      'Títulos en mayúsculas sobre filetes marcados en una sola columna.';
+
+  @override
+  String get templateCompactAts => 'Compacto ATS';
+
+  @override
+  String get templateCompactAtsCaption =>
+      'Espaciado ajustado y filetes en línea para que quepa más en una página.';
+
+  @override
+  String get templateFocusAts => 'Enfoque ATS';
+
+  @override
+  String get templateFocusAtsCaption =>
+      'Resumen en un panel suave arriba y títulos con barra debajo.';
+
+  @override
+  String get templateDoubleRuleAts => 'Doble Filete ATS';
+
+  @override
+  String get templateDoubleRuleAtsCaption =>
+      'Títulos centrados entre filetes dobles para una lectura formal y ordenada.';
+
+  @override
   String get templateExecutiveNote => 'Nota ejecutiva';
 
   @override

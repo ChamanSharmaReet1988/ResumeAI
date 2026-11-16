@@ -146,10 +146,39 @@ void main() {
     });
   });
 
+  test('Android banners use the new AdMob account', () {
+    expect(
+      AndroidAdsConfig.androidAppId,
+      'ca-app-pub-8035254224173849~6502534323',
+    );
+    for (final unit in [
+      AndroidAdsConfig.androidHomeBannerAdUnitId,
+      AndroidAdsConfig.androidSettingsBannerAdUnitId,
+      AndroidAdsConfig.androidAiResumeBannerAdUnitId,
+    ]) {
+      expect(unit, 'ca-app-pub-8035254224173849/3932870445');
+    }
+  });
+
+  test('Home interstitial uses the new account, every 2nd return', () {
+    expect(
+      AndroidAdsConfig.androidHomeInterstitialAdUnitId,
+      'ca-app-pub-8035254224173849/3579702567',
+    );
+    expect(
+      AndroidAdsConfig.interstitialEveryNthOpenFor(AndroidAdPlacement.home),
+      2,
+    );
+  });
+
   test('templates interstitial unit ids are configured', () {
     expect(
       AndroidAdsConfig.androidTemplatesInterstitialAdUnitId,
-      'ca-app-pub-4326780099537551/3087154686',
+      'ca-app-pub-8035254224173849/2265253918',
+    );
+    expect(
+      AndroidAdsConfig.interstitialAdUnitIdFor(AndroidAdPlacement.createResume),
+      isNot(contains('4326780099537551')),
     );
     expect(
       AndroidAdsConfig.iosTemplatesInterstitialAdUnitId,

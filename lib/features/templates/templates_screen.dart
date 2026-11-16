@@ -692,6 +692,23 @@ const _topPickResumeCards = <_TemplateTileData>[
     isPremium: false,
   ),
   _TemplateTileData(
+    id: 'meridian',
+    resumeTemplate: ResumeTemplate.meridian,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Meridian',
+    caption:
+        'Centered nameplate between fine rules, with headings set between hairlines.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'ledger',
+    resumeTemplate: ResumeTemplate.ledger,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Ledger',
+    caption: 'Dates in their own left column so a career reads at a glance.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
     id: 'harbor',
     resumeTemplate: ResumeTemplate.harbor,
     previewKind: _TemplatePreviewKind.harborResume,
@@ -705,6 +722,23 @@ const _topPickResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.typeplateResume,
     headline: 'Typeplate',
     caption: 'Editorial type-first header with a left accent mark on each section.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'keystone',
+    resumeTemplate: ResumeTemplate.keystone,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Keystone',
+    caption: 'Solid header band with tinted section strips and a clean body.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'cadence',
+    resumeTemplate: ResumeTemplate.cadence,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Cadence',
+    caption:
+        'Monogram square beside the name, with short accent bars under headings.',
     isPremium: false,
   ),
 ];
@@ -743,6 +777,23 @@ const _creativeResumeCards = <_TemplateTileData>[
     isPremium: false,
   ),
   _TemplateTileData(
+    id: 'creative-terrazzo',
+    resumeTemplate: ResumeTemplate.terrazzo,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Terrazzo',
+    caption:
+        'Warm page scattered with terrazzo chips in the corner and along the foot.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'creative-dotfield',
+    resumeTemplate: ResumeTemplate.dotfield,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Dotfield',
+    caption: 'Halftone dots fade out from the corner over a crisp white page.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
     id: 'creative-studio',
     resumeTemplate: ResumeTemplate.studio,
     previewKind: _TemplatePreviewKind.creativeResume,
@@ -772,6 +823,24 @@ const _creativeResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.creativeResume,
     headline: 'Wave',
     caption: 'A light blue header with a white wave, and a plain page below.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'creative-orbit',
+    resumeTemplate: ResumeTemplate.orbit,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Orbit',
+    caption:
+        'Concentric rings and a small satellite circle the top of the page.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'creative-prism',
+    resumeTemplate: ResumeTemplate.prism,
+    previewKind: _TemplatePreviewKind.creativeResume,
+    headline: 'Prism',
+    caption:
+        'Faceted colour shards in the corner with a bold bar along the foot.',
     isPremium: false,
   ),
 ];
@@ -834,6 +903,23 @@ const _professionalResumeCards = <_TemplateTileData>[
     isPremium: false,
   ),
   _TemplateTileData(
+    id: 'summit',
+    resumeTemplate: ResumeTemplate.summit,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Summit',
+    caption:
+        'Full-width colour header with a ringed photo, contact strip and skill chips.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'folio',
+    resumeTemplate: ResumeTemplate.folio,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Folio',
+    caption: 'Editorial layout with section labels set in the left margin.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
     id: 'soft-header',
     resumeTemplate: ResumeTemplate.softHeader,
     previewKind: _TemplatePreviewKind.softHeaderResume,
@@ -890,6 +976,24 @@ _TemplateTileData(
     caption: 'Centred photo header with rated skills and date-chip experience.',
     isPremium: false,
   ),
+  _TemplateTileData(
+    id: 'beacon',
+    resumeTemplate: ResumeTemplate.beacon,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Beacon',
+    caption:
+        'Tinted right rail with photo, contact and skills beside a roomy main column.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'vertex',
+    resumeTemplate: ResumeTemplate.vertex,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Vertex',
+    caption:
+        'Angled colour header with a ringed photo over a two-column body.',
+    isPremium: false,
+  ),
 ];
 
 const _resumeTemplateCards = _professionalResumeCards;
@@ -928,6 +1032,22 @@ const _atsResumeCards = <_TemplateTileData>[
     isPremium: false,
   ),
   _TemplateTileData(
+    id: 'ats-bold-rule',
+    resumeTemplate: ResumeTemplate.atsBoldRule,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Bold Rule ATS',
+    caption: 'Heavy uppercase headings on strong rules in one clean column.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'ats-compact',
+    resumeTemplate: ResumeTemplate.atsCompact,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Compact ATS',
+    caption: 'Tight spacing and inline rules that fit more on one page.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
     id: 'ats-center-classic',
     resumeTemplate: ResumeTemplate.atsCenterClassic,
     previewKind: _TemplatePreviewKind.atsCenterClassicResume,
@@ -957,6 +1077,23 @@ const _atsResumeCards = <_TemplateTileData>[
     previewKind: _TemplatePreviewKind.atsCleanSansResume,
     headline: 'Clean Sans ATS',
     caption: 'Bold uppercase name, right-aligned contact, and two-column skills.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'ats-focus',
+    resumeTemplate: ResumeTemplate.atsFocus,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Focus ATS',
+    caption: 'Summary in a soft panel up top, with barred headings below.',
+    isPremium: false,
+  ),
+  _TemplateTileData(
+    id: 'ats-double-rule',
+    resumeTemplate: ResumeTemplate.atsDoubleRule,
+    previewKind: _TemplatePreviewKind.sampledResume,
+    headline: 'Double Rule ATS',
+    caption:
+        'Centered headings between double rules for a formal, orderly read.',
     isPremium: false,
   ),
 ];
@@ -1153,6 +1290,22 @@ class _TemplateTileData {
       'creative-arc' => l10n.templateArc,
       'creative-chevron' => l10n.templateChevron,
       'creative-wave' => l10n.templateWave,
+      'meridian' => l10n.templateMeridian,
+      'ledger' => l10n.templateLedger,
+      'keystone' => l10n.templateKeystone,
+      'cadence' => l10n.templateCadence,
+      'creative-terrazzo' => l10n.templateTerrazzo,
+      'creative-dotfield' => l10n.templateDotfield,
+      'creative-orbit' => l10n.templateOrbit,
+      'creative-prism' => l10n.templatePrism,
+      'summit' => l10n.templateSummit,
+      'folio' => l10n.templateFolio,
+      'beacon' => l10n.templateBeacon,
+      'vertex' => l10n.templateVertex,
+      'ats-bold-rule' => l10n.templateBoldRuleAts,
+      'ats-compact' => l10n.templateCompactAts,
+      'ats-focus' => l10n.templateFocusAts,
+      'ats-double-rule' => l10n.templateDoubleRuleAts,
       'executive-note' => l10n.templateExecutiveNote,
       'minimal-letter' => l10n.templateMinimalLetter,
       'sidebar-letter' => l10n.templateMintLetter,
@@ -1207,6 +1360,22 @@ class _TemplateTileData {
       'creative-arc' => l10n.templateArcCaption,
       'creative-chevron' => l10n.templateChevronCaption,
       'creative-wave' => l10n.templateWaveCaption,
+      'meridian' => l10n.templateMeridianCaption,
+      'ledger' => l10n.templateLedgerCaption,
+      'keystone' => l10n.templateKeystoneCaption,
+      'cadence' => l10n.templateCadenceCaption,
+      'creative-terrazzo' => l10n.templateTerrazzoCaption,
+      'creative-dotfield' => l10n.templateDotfieldCaption,
+      'creative-orbit' => l10n.templateOrbitCaption,
+      'creative-prism' => l10n.templatePrismCaption,
+      'summit' => l10n.templateSummitCaption,
+      'folio' => l10n.templateFolioCaption,
+      'beacon' => l10n.templateBeaconCaption,
+      'vertex' => l10n.templateVertexCaption,
+      'ats-bold-rule' => l10n.templateBoldRuleAtsCaption,
+      'ats-compact' => l10n.templateCompactAtsCaption,
+      'ats-focus' => l10n.templateFocusAtsCaption,
+      'ats-double-rule' => l10n.templateDoubleRuleAtsCaption,
       'executive-note' => l10n.templateExecutiveNoteCaption,
       'minimal-letter' => l10n.templateMinimalLetterCaption,
       'sidebar-letter' => l10n.templateMintLetterCaption,
@@ -1256,6 +1425,7 @@ enum _TemplatePreviewKind {
   harborResume,
   typeplateResume,
   creativeResume,
+  sampledResume,
   executiveNoteCoverLetter,
   minimalCoverLetter,
   sidebarCoverLetter,
@@ -1501,6 +1671,12 @@ class _TemplatePreviewArt extends StatelessWidget {
           paletteSeed,
         ),
       ),
+      _TemplatePreviewKind.sampledResume => _ResumeTemplatePreviewArt(
+        resume: _applyTemplatePreviewPalette(
+          _atsSampleFor(item.resumeTemplate ?? ResumeTemplate.meridian),
+          paletteSeed,
+        ),
+      ),
       _TemplatePreviewKind.creativeResume => _ResumeTemplatePreviewArt(
         resume: _applyTemplatePreviewPalette(
           _atsSampleFor(item.resumeTemplate ?? ResumeTemplate.aurora),
@@ -1681,7 +1857,23 @@ class _ResumeTemplateDetailPreview extends StatelessWidget {
       ResumeTemplate.studio ||
       ResumeTemplate.arc ||
       ResumeTemplate.chevron ||
-      ResumeTemplate.wave =>
+      ResumeTemplate.wave ||
+      ResumeTemplate.meridian ||
+      ResumeTemplate.ledger ||
+      ResumeTemplate.keystone ||
+      ResumeTemplate.cadence ||
+      ResumeTemplate.terrazzo ||
+      ResumeTemplate.dotfield ||
+      ResumeTemplate.orbit ||
+      ResumeTemplate.prism ||
+      ResumeTemplate.summit ||
+      ResumeTemplate.folio ||
+      ResumeTemplate.beacon ||
+      ResumeTemplate.vertex ||
+      ResumeTemplate.atsBoldRule ||
+      ResumeTemplate.atsCompact ||
+      ResumeTemplate.atsFocus ||
+      ResumeTemplate.atsDoubleRule =>
         _atsSampleFor(template),
     };
     return _applyTemplatePreviewPalette(sample, paletteSeed);
@@ -1830,6 +2022,10 @@ ResumeData _applyTemplatePreviewPalette(
       sample.template == ResumeTemplate.boldPill ||
       sample.template == ResumeTemplate.blueCorner ||
       sample.template == ResumeTemplate.profileTimeline ||
+      sample.template == ResumeTemplate.summit ||
+      sample.template == ResumeTemplate.folio ||
+      sample.template == ResumeTemplate.beacon ||
+      sample.template == ResumeTemplate.vertex ||
       sample.template == ResumeTemplate.classicSidebar) {
     return sample.copyWith(
       corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
@@ -1846,7 +2042,11 @@ ResumeData _applyTemplatePreviewPalette(
       sample.template == ResumeTemplate.studio ||
       sample.template == ResumeTemplate.arc ||
       sample.template == ResumeTemplate.chevron ||
-      sample.template == ResumeTemplate.wave) {
+      sample.template == ResumeTemplate.wave ||
+      sample.template == ResumeTemplate.terrazzo ||
+      sample.template == ResumeTemplate.dotfield ||
+      sample.template == ResumeTemplate.orbit ||
+      sample.template == ResumeTemplate.prism) {
     return sample.copyWith(
       corporateColorPresetIndex: defaultColorPresetIndexForTemplate(
         sample.template,
@@ -3891,7 +4091,23 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.chevron ||
           ResumeTemplate.wave ||
           ResumeTemplate.modernLine ||
-          ResumeTemplate.typeplate => true,
+          ResumeTemplate.typeplate ||
+          ResumeTemplate.meridian ||
+          ResumeTemplate.ledger ||
+          ResumeTemplate.keystone ||
+          ResumeTemplate.cadence ||
+          ResumeTemplate.terrazzo ||
+          ResumeTemplate.dotfield ||
+          ResumeTemplate.orbit ||
+          ResumeTemplate.prism ||
+          ResumeTemplate.summit ||
+          ResumeTemplate.folio ||
+          ResumeTemplate.beacon ||
+          ResumeTemplate.vertex ||
+          ResumeTemplate.atsBoldRule ||
+          ResumeTemplate.atsCompact ||
+          ResumeTemplate.atsFocus ||
+          ResumeTemplate.atsDoubleRule => true,
           _ => false,
         };
         final creativePageColor = switch (template) {
@@ -3901,6 +4117,8 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
           ResumeTemplate.sageFrame => const Color(0xFFE6EFE4),
           ResumeTemplate.studio => const Color(0xFFF7F4EF),
           ResumeTemplate.arc => const Color(0xFFF4FBFA),
+          ResumeTemplate.terrazzo => const Color(0xFFFBF7F1),
+          ResumeTemplate.orbit => const Color(0xFFFAF8FD),
           ResumeTemplate.chevron || ResumeTemplate.wave => Colors.white,
           _ => Colors.white,
         };
@@ -3925,7 +4143,15 @@ class _ResumeTemplatePreviewArt extends StatelessWidget {
             template == ResumeTemplate.studio ||
             template == ResumeTemplate.arc ||
             template == ResumeTemplate.chevron ||
-            template == ResumeTemplate.wave;
+            template == ResumeTemplate.wave ||
+            template == ResumeTemplate.terrazzo ||
+            template == ResumeTemplate.dotfield ||
+            template == ResumeTemplate.orbit ||
+            template == ResumeTemplate.prism ||
+            template == ResumeTemplate.summit ||
+            template == ResumeTemplate.folio ||
+            template == ResumeTemplate.beacon ||
+            template == ResumeTemplate.vertex;
         // Blue Diagonal fills the tile so its diagonal footer lands on the
         // card edge. BoxFit.cover scales evenly and crops a sliver of width;
         // BoxFit.fill stretched the page and turned the photo circle into an
@@ -8210,7 +8436,23 @@ ResumeData galleryDetailSampleForTest(ResumeTemplate template) =>
       ResumeTemplate.studio ||
       ResumeTemplate.arc ||
       ResumeTemplate.chevron ||
-      ResumeTemplate.wave =>
+      ResumeTemplate.wave ||
+      ResumeTemplate.meridian ||
+      ResumeTemplate.ledger ||
+      ResumeTemplate.keystone ||
+      ResumeTemplate.cadence ||
+      ResumeTemplate.terrazzo ||
+      ResumeTemplate.dotfield ||
+      ResumeTemplate.orbit ||
+      ResumeTemplate.prism ||
+      ResumeTemplate.summit ||
+      ResumeTemplate.folio ||
+      ResumeTemplate.beacon ||
+      ResumeTemplate.vertex ||
+      ResumeTemplate.atsBoldRule ||
+      ResumeTemplate.atsCompact ||
+      ResumeTemplate.atsFocus ||
+      ResumeTemplate.atsDoubleRule =>
         _atsSampleFor(template),
     };
 

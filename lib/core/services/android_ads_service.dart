@@ -7,7 +7,7 @@ import 'platform_monetization.dart';
 
 /// AdMob config for Android + iOS. No-ops on web.
 abstract final class AndroidAdsConfig {
-  static const androidAppId = 'ca-app-pub-4326780099537551~1798944583';
+  static const androidAppId = 'ca-app-pub-8035254224173849~6502534323';
   static const iosAppId = 'ca-app-pub-4326780099537551~5871431827';
 
   static const _debugInterstitial = 'ca-app-pub-3940256099942544/1033173712';
@@ -18,22 +18,26 @@ abstract final class AndroidAdsConfig {
   static const useProductionAdUnitsInDebug = false;
 
   // —— Android production units ——
+  // All on the account of [androidAppId]: one banner unit shared by every
+  // banner, its own full-screen unit for Templates, and one full-screen unit
+  // shared by Home and the builder.
+  static const _androidBannerAdUnitId =
+      'ca-app-pub-8035254224173849/3932870445';
+  static const _androidInterstitialAdUnitId =
+      'ca-app-pub-8035254224173849/3579702567';
+  static const androidHomeInterstitialAdUnitId = _androidInterstitialAdUnitId;
   static const androidPreviewInterstitialAdUnitId =
-      'ca-app-pub-4326780099537551/2864614244';
+      _androidInterstitialAdUnitId;
   static const androidTemplatesInterstitialAdUnitId =
-      'ca-app-pub-4326780099537551/3087154686';
-  static const androidTemplatesBannerAdUnitId =
-      'ca-app-pub-4326780099537551/6374346359';
-  static const androidSettingsBannerAdUnitId =
-      'ca-app-pub-4326780099537551/7581767617';
+      'ca-app-pub-8035254224173849/2265253918';
+  static const androidTemplatesBannerAdUnitId = _androidBannerAdUnitId;
+  static const androidSettingsBannerAdUnitId = _androidBannerAdUnitId;
 
   /// Android Home banner.
-  static const androidHomeBannerAdUnitId =
-      'ca-app-pub-4326780099537551/1505163054';
+  static const androidHomeBannerAdUnitId = _androidBannerAdUnitId;
 
   /// Android AI Resume banner.
-  static const androidAiResumeBannerAdUnitId =
-      'ca-app-pub-4326780099537551/8215709938';
+  static const androidAiResumeBannerAdUnitId = _androidBannerAdUnitId;
 
   // —— iOS production units ——
   static const iosPreviewInterstitialAdUnitId =
@@ -52,10 +56,15 @@ abstract final class AndroidAdsConfig {
   /// Templates tab: full-screen ad on every 2nd visit.
   static const templatesInterstitialEveryNthOpen = 2;
 
+  /// Home tab: full-screen ad on every 2nd return. Opening the app lands on
+  /// Home without counting, so it never shows at launch.
+  static const homeInterstitialEveryNthOpen = 2;
+
   static int interstitialEveryNthOpenFor(AndroidAdPlacement placement) {
     return switch (placement) {
       AndroidAdPlacement.preview => previewInterstitialEveryNthOpen,
       AndroidAdPlacement.templates => templatesInterstitialEveryNthOpen,
+      AndroidAdPlacement.home => homeInterstitialEveryNthOpen,
       AndroidAdPlacement.createResume => 1,
     };
   }
@@ -95,14 +104,16 @@ abstract final class AndroidAdsConfig {
       return switch (placement) {
         AndroidAdPlacement.templates => iosTemplatesInterstitialAdUnitId,
         AndroidAdPlacement.preview => iosPreviewInterstitialAdUnitId,
-        // No third production unit; reuse the preview interstitial.
+        // No more production units; reuse the preview interstitial.
         AndroidAdPlacement.createResume => iosPreviewInterstitialAdUnitId,
+        AndroidAdPlacement.home => iosPreviewInterstitialAdUnitId,
       };
     }
     return switch (placement) {
       AndroidAdPlacement.templates => androidTemplatesInterstitialAdUnitId,
       AndroidAdPlacement.preview => androidPreviewInterstitialAdUnitId,
       AndroidAdPlacement.createResume => androidPreviewInterstitialAdUnitId,
+      AndroidAdPlacement.home => androidHomeInterstitialAdUnitId,
     };
   }
 
@@ -135,7 +146,7 @@ abstract final class AndroidAdsConfig {
 }
 
 /// Where an interstitial may be requested from.
-enum AndroidAdPlacement { templates, preview, createResume }
+enum AndroidAdPlacement { templates, preview, createResume, home }
 
 /// Banner placements.
 enum AndroidBannerPlacement { home, templates, settings, aiResume }
@@ -187,6 +198,11 @@ class AndroidAdsService {
 
   static bool get _adsSuppressedByPremium => isPremiumActive?.call() ?? false;
 
+  /// Full-screen ads: everywhere with ads on, and on Android on their own.
+  static bool get _interstitialsOn =>
+      PlatformMonetization.showsAds ||
+      PlatformMonetization.showsAndroidInterstitials;
+
   @visibleForTesting
   static int get interstitialsShownThisSession =>
       _interstitialsShownThisSession;
@@ -200,7 +216,9 @@ class AndroidAdsService {
   );
 
   static Future<void> initialize() async {
-    if (!PlatformMonetization.showsAds || _initialized) {
+    if ((!PlatformMonetization.showsBanners &&
+            !PlatformMonetization.showsAndroidInterstitials) ||
+        _initialized) {
       return;
     }
     await MobileAds.instance.initialize();
@@ -214,9 +232,7 @@ class AndroidAdsService {
   }
 
   static void unawaitedLoadInterstitial([AndroidAdPlacement? placement]) {
-    if (!PlatformMonetization.showsAds ||
-        !_initialized ||
-        _adsSuppressedByPremium) {
+    if (!_initialized || _adsSuppressedByPremium) {
       return;
     }
     if (placement != null) {
@@ -228,8 +244,17 @@ class AndroidAdsService {
     }
   }
 
+  /// Placements that show a full-screen ad. The builder shows none, so its
+  /// units are never requested.
+  static const _livePlacements = {
+    AndroidAdPlacement.templates,
+    AndroidAdPlacement.home,
+  };
+
   static void _loadInterstitial(AndroidAdPlacement placement) {
-    if (_interstitials[placement] != null ||
+    if (!_interstitialsOn ||
+        !_livePlacements.contains(placement) ||
+        _interstitials[placement] != null ||
         _isLoadingInterstitial[placement] == true) {
       return;
     }
@@ -263,14 +288,12 @@ class AndroidAdsService {
   }
 
   /// Records an open for [placement] and shows an interstitial on every Nth
-  /// open (templates tab: 2nd).
-  static Future<void> showInterstitialIfReady({
+  /// open (templates tab and Home: 2nd). True when an ad was shown.
+  static Future<bool> showInterstitialIfReady({
     required AndroidAdPlacement placement,
   }) async {
-    if (!PlatformMonetization.showsAds ||
-        !_initialized ||
-        _adsSuppressedByPremium) {
-      return;
+    if (!_interstitialsOn || !_initialized || _adsSuppressedByPremium) {
+      return false;
     }
 
     final nextCount = (_openCounts[placement] ?? 0) + 1;
@@ -279,25 +302,24 @@ class AndroidAdsService {
     final shouldShow = nextCount % everyNth == 0;
     if (!shouldShow || !interstitialAllowedNow) {
       unawaitedLoadInterstitial(placement);
-      return;
+      return false;
     }
 
     final ad = _interstitials[placement];
     if (ad == null) {
       unawaitedLoadInterstitial(placement);
-      return;
+      return false;
     }
     _interstitials[placement] = null;
     _interstitialsShownThisSession += 1;
     await ad.show();
+    return true;
   }
 
   /// Resume create screen: skip the first visit, then show a full-screen ad
   /// on every later visit. Waits until the ad is dismissed.
   static Future<void> showCreateResumeInterstitial() async {
-    if (!PlatformMonetization.showsAds ||
-        !_initialized ||
-        _adsSuppressedByPremium) {
+    if (!_interstitialsOn || !_initialized || _adsSuppressedByPremium) {
       return;
     }
 

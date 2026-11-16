@@ -849,6 +849,118 @@ class AppLocalizationsPt extends AppLocalizations {
       'Cabeçalho azul-claro com uma onda branca e página lisa abaixo.';
 
   @override
+  String get templateMeridian => 'Meridiano';
+
+  @override
+  String get templateMeridianCaption =>
+      'Nome centralizado entre fios finos e títulos entre linhas delicadas.';
+
+  @override
+  String get templateLedger => 'Registro';
+
+  @override
+  String get templateLedgerCaption =>
+      'Datas em uma coluna própria à esquerda para ler a carreira de relance.';
+
+  @override
+  String get templateKeystone => 'Chave';
+
+  @override
+  String get templateKeystoneCaption =>
+      'Faixa sólida no cabeçalho, títulos em tiras coloridas e corpo limpo.';
+
+  @override
+  String get templateCadence => 'Cadência';
+
+  @override
+  String get templateCadenceCaption =>
+      'Monograma quadrado ao lado do nome e barras curtas sob os títulos.';
+
+  @override
+  String get templateTerrazzo => 'Granilite';
+
+  @override
+  String get templateTerrazzoCaption =>
+      'Página acolhedora com lascas de granilite no canto e no rodapé.';
+
+  @override
+  String get templateDotfield => 'Campo de pontos';
+
+  @override
+  String get templateDotfieldCaption =>
+      'Pontos em meio-tom que se dissolvem a partir do canto sobre a página branca.';
+
+  @override
+  String get templateOrbit => 'Órbita';
+
+  @override
+  String get templateOrbitCaption =>
+      'Anéis concêntricos e um pequeno satélite no topo da página.';
+
+  @override
+  String get templatePrism => 'Prisma';
+
+  @override
+  String get templatePrismCaption =>
+      'Facetas de cor no canto e uma barra marcante no rodapé.';
+
+  @override
+  String get templateSummit => 'Cume';
+
+  @override
+  String get templateSummitCaption =>
+      'Cabeçalho colorido com foto, faixa de contato e habilidades em etiquetas.';
+
+  @override
+  String get templateFolio => 'Fólio';
+
+  @override
+  String get templateFolioCaption =>
+      'Layout editorial com os títulos das seções na margem esquerda.';
+
+  @override
+  String get templateBeacon => 'Farol';
+
+  @override
+  String get templateBeaconCaption =>
+      'Coluna direita colorida com foto, contato e habilidades ao lado do corpo principal.';
+
+  @override
+  String get templateVertex => 'Vértice';
+
+  @override
+  String get templateVertexCaption =>
+      'Cabeçalho em ângulo com foto sobre corpo em duas colunas.';
+
+  @override
+  String get templateBoldRuleAts => 'Fio Marcante ATS';
+
+  @override
+  String get templateBoldRuleAtsCaption =>
+      'Títulos em maiúsculas sobre fios marcantes em uma só coluna.';
+
+  @override
+  String get templateCompactAts => 'Compacto ATS';
+
+  @override
+  String get templateCompactAtsCaption =>
+      'Espaçamento justo e fios em linha para caber mais em uma página.';
+
+  @override
+  String get templateFocusAts => 'Foco ATS';
+
+  @override
+  String get templateFocusAtsCaption =>
+      'Resumo em um painel suave no topo e títulos com barra abaixo.';
+
+  @override
+  String get templateDoubleRuleAts => 'Fio Duplo ATS';
+
+  @override
+  String get templateDoubleRuleAtsCaption =>
+      'Títulos centralizados entre fios duplos para uma leitura formal e organizada.';
+
+  @override
   String get templateExecutiveNote => 'Nota executiva';
 
   @override

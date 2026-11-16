@@ -293,6 +293,7 @@ class _ResumeAnalyserScreenState extends State<ResumeAnalyserScreen>
           .parseImportedResumeText(
             resumeText: importedFile.resumeText,
             candidateResumeTexts: importedFile.candidateResumeTexts,
+            exportedResumeJson: importedFile.exportedResumeJson,
             template: draft.template,
             sourceTitle: importedFile.suggestedTitle,
           )

@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../core/corporate_resume_style.dart';
 import '../../core/models/resume_builder_section_order.dart';
 import '../../core/models/resume_models.dart';
+import '../../core/resume_page_art.dart';
+import '../../core/resume_text_font.dart';
 
-/// On-screen page for the six Creative resume templates. Page paint sits
+/// On-screen page for the Creative resume templates. Page paint sits
 /// behind a single-column body so the layout stays readable.
 class CreativeResumePreview extends StatelessWidget {
   const CreativeResumePreview({
@@ -22,7 +24,11 @@ class CreativeResumePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final kind = resume.template.userFacingTemplate;
-    final ink = const Color(0xFF241C18);
+    const ink = ResumeTypography.atsStructuredBodyTextColor;
+    final family = resume.usesOutfitResumeFont
+        ? ResumeTextFont.outfit.flutterFontFamily
+        : ResumeTextFont.garamond.flutterFontFamily;
+    final bodyPt = resume.effectiveBodyFontPt.toDouble();
     final muted = const Color(0xFF6B625C);
     final accent = resume.creativeAccentColor;
     final highlight = resume.paintedCreativeHighlightColor;
@@ -31,11 +37,11 @@ class CreativeResumePreview extends StatelessWidget {
     TextStyle style(
       FontWeight weight,
       double size, {
-      Color color = const Color(0xFF241C18),
+      Color color = ink,
       double letterSpacing = 0,
-      double height = 1.35,
+      double height = ResumeTypography.bodyTextLineHeight,
     }) => TextStyle(
-      fontFamily: 'Garamond',
+      fontFamily: family,
       fontWeight: weight,
       fontSize: size,
       color: color,
@@ -43,12 +49,14 @@ class CreativeResumePreview extends StatelessWidget {
       height: height,
     );
 
-    final body = style(FontWeight.w400, 11.5, color: ink);
-    final meta = style(FontWeight.w400, 11, color: muted);
+    final body = style(FontWeight.w400, bodyPt);
+    final meta = style(FontWeight.w400, bodyPt - 0.5, color: muted);
 
     Widget sectionTitle(String heading) {
       final label = switch (kind) {
-        ResumeTemplate.inkPanel || ResumeTemplate.studio => heading.toUpperCase(),
+        ResumeTemplate.inkPanel ||
+        ResumeTemplate.studio ||
+        ResumeTemplate.prism => heading.toUpperCase(),
         _ => heading,
       };
       final title = Text(
@@ -57,7 +65,11 @@ class CreativeResumePreview extends StatelessWidget {
           FontWeight.w700,
           kind == ResumeTemplate.sageFrame ? 13 : 12.5,
           color: accent,
-          letterSpacing: kind == ResumeTemplate.inkPanel ? 1.4 : 0.2,
+          letterSpacing: switch (kind) {
+            ResumeTemplate.inkPanel => 1.4,
+            ResumeTemplate.prism => 1.1,
+            _ => 0.2,
+          },
         ),
       );
       return Padding(
@@ -99,6 +111,61 @@ class CreativeResumePreview extends StatelessWidget {
               title,
             ],
           ),
+          ResumeTemplate.terrazzo => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              title,
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 26, height: 3, color: accent),
+                  const SizedBox(width: 3),
+                  Container(width: 10, height: 3, color: highlight),
+                ],
+              ),
+            ],
+          ),
+          ResumeTemplate.dotfield => Row(
+            children: [
+              for (final size in const [7.0, 5.0, 3.0]) ...[
+                Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 3),
+              ],
+              const SizedBox(width: 4),
+              title,
+            ],
+          ),
+          ResumeTemplate.orbit => Row(
+            children: [
+              Container(
+                width: 11,
+                height: 11,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: accent, width: 1.2),
+                ),
+                child: Container(
+                  width: 3.5,
+                  height: 3.5,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 7),
+              title,
+            ],
+          ),
           _ => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -131,7 +198,7 @@ class CreativeResumePreview extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: Text(title, style: style(FontWeight.w700, 12, color: ink))),
+                Expanded(child: Text(title, style: style(FontWeight.w700, bodyPt + 0.5))),
                 if (dates.isNotEmpty)
                   Text(dates, style: meta),
               ],
@@ -219,6 +286,16 @@ class CreativeResumePreview extends StatelessWidget {
           child: column,
         );
       }
+      if (kind == ResumeTemplate.terrazzo ||
+          kind == ResumeTemplate.dotfield ||
+          kind == ResumeTemplate.orbit ||
+          kind == ResumeTemplate.prism) {
+        // Keep the name and contact clear of the art in the corner.
+        return Padding(
+          padding: const EdgeInsets.only(right: 150),
+          child: column,
+        );
+      }
       if (kind == ResumeTemplate.studio) {
         return Container(
           width: double.infinity,
@@ -301,7 +378,7 @@ class CreativeResumePreview extends StatelessWidget {
                   if (grouped)
                     for (final group in resume.skillGroupsForResume) ...[
                       if (group.heading.trim().isNotEmpty)
-                        Text(group.heading.trim(), style: style(FontWeight.w700, 11.5, color: ink)),
+                        Text(group.heading.trim(), style: style(FontWeight.w700, bodyPt + 0.5)),
                       for (final skill in group.skills.where((s) => s.trim().isNotEmpty))
                         bullet(skill.trim()),
                     ]
@@ -381,6 +458,10 @@ class CreativeResumePreview extends StatelessWidget {
       ResumeTemplate.arc => const EdgeInsets.fromLTRB(40, 28, 64, 40),
       ResumeTemplate.chevron => const EdgeInsets.fromLTRB(40, 32, 40, 36),
       ResumeTemplate.wave => const EdgeInsets.fromLTRB(40, 32, 40, 36),
+      ResumeTemplate.terrazzo ||
+      ResumeTemplate.dotfield ||
+      ResumeTemplate.orbit ||
+      ResumeTemplate.prism => const EdgeInsets.fromLTRB(40, 32, 40, 42),
       _ => const EdgeInsets.fromLTRB(40, 28, 40, 32),
     };
     final bodyInset = onBand
@@ -428,6 +509,12 @@ class CreativeResumePreview extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: [
+                                      if (summary.isNotEmpty &&
+                                          (kind == ResumeTemplate.terrazzo ||
+                                              kind == ResumeTemplate.dotfield ||
+                                              kind == ResumeTemplate.orbit ||
+                                              kind == ResumeTemplate.prism))
+                                        sectionTitle('Professional Summary'),
                                       if (summary.isNotEmpty)
                                         Text(summary, style: body),
                                       ...sections(),
@@ -557,6 +644,38 @@ class _CreativePagePaint extends StatelessWidget {
       ),
       ResumeTemplate.chevron => const _ChevronPage(),
       ResumeTemplate.wave => const _WavePage(),
+      ResumeTemplate.terrazzo => CustomPaint(
+        painter: _PageArtPainter(
+          accent: accent,
+          background: const Color(0xFFFBF7F1),
+          facets: const [...kTerrazzoCornerChips, ...kTerrazzoFootChips],
+        ),
+        child: const SizedBox.expand(),
+      ),
+      ResumeTemplate.dotfield => CustomPaint(
+        painter: _PageArtPainter(
+          accent: accent,
+          background: Colors.white,
+          dots: kDotfieldDots,
+        ),
+        child: const SizedBox.expand(),
+      ),
+      ResumeTemplate.orbit => CustomPaint(
+        painter: _PageArtPainter(
+          accent: accent,
+          background: const Color(0xFFFAF8FD),
+          rings: const [...kOrbitCornerRings, ...kOrbitFootRings],
+        ),
+        child: const SizedBox.expand(),
+      ),
+      ResumeTemplate.prism => CustomPaint(
+        painter: _PageArtPainter(
+          accent: accent,
+          background: Colors.white,
+          facets: const [...kPrismCornerFacets, ...kPrismFootFacets],
+        ),
+        child: const SizedBox.expand(),
+      ),
       ResumeTemplate.arc => Stack(
         children: [
           const Positioned.fill(child: ColoredBox(color: Color(0xFFF4FBFA))),
@@ -574,6 +693,63 @@ class _CreativePagePaint extends StatelessWidget {
       _ => const ColoredBox(color: Colors.white),
     };
   }
+}
+
+/// Draws the shared page art from [resume_page_art.dart], the same shapes the
+/// PDF page paints.
+class _PageArtPainter extends CustomPainter {
+  const _PageArtPainter({
+    required this.accent,
+    required this.background,
+    this.facets = const [],
+    this.dots = const [],
+    this.rings = const [],
+  });
+
+  final Color accent;
+  final Color background;
+  final List<PageArtFacet> facets;
+  final List<PageArtDot> dots;
+  final List<PageArtRing> rings;
+
+  Color _tint(double amount) => Color.lerp(Colors.white, accent, amount) ?? accent;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = background);
+    for (final facet in facets) {
+      final path = Path();
+      final (startX, startY) = facet.points.first;
+      path.moveTo(startX, startY);
+      for (final (x, y) in facet.points.skip(1)) {
+        path.lineTo(x, y);
+      }
+      path.close();
+      final neutral = facet.neutralArgb;
+      canvas.drawPath(
+        path,
+        Paint()..color = neutral != null ? Color(neutral) : _tint(facet.tint),
+      );
+    }
+    final dotPaint = Paint()..color = _tint(0.6);
+    for (final dot in dots) {
+      canvas.drawCircle(Offset(dot.x, dot.y), dot.radius, dotPaint);
+    }
+    for (final ring in rings) {
+      canvas.drawCircle(
+        Offset(ring.x, ring.y),
+        ring.radius,
+        Paint()
+          ..color = _tint(ring.tint)
+          ..style = ring.fill ? PaintingStyle.fill : PaintingStyle.stroke
+          ..strokeWidth = 1.2,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PageArtPainter oldDelegate) =>
+      oldDelegate.accent != accent;
 }
 
 class _ChevronPage extends StatelessWidget {

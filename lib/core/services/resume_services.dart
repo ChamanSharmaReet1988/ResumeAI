@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' show Color;
@@ -19,6 +20,7 @@ import '../models/resume_builder_section_order.dart';
 import '../models/resume_models.dart';
 import '../resume_font_weight.dart';
 import '../resume_text_font.dart';
+import '../resume_page_art.dart';
 import '../sample_avatar.dart';
 import '../skill_autocomplete_suggestions.dart';
 import 'google_drive_resume_service.dart';
@@ -27,6 +29,7 @@ import 'profile_image_storage.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sfpdf;
 
 import 'resume_docx_exporter.dart';
+import 'resume_pdf_data.dart';
 import 'resume_pdf/calibri_pdf_fonts.dart' hide darkHeaderInitialsPdfStyle;
 import 'resume_pdf/garamond_pdf_fonts.dart';
 import 'resume_pdf/inter_pdf_fonts.dart';
@@ -48,6 +51,7 @@ part 'resume_pdf/resume_pdf_blue_corner_page.dart';
 part 'resume_pdf/resume_pdf_profile_timeline_page.dart';
 part 'resume_pdf/resume_pdf_top_pick_pages.dart';
 part 'resume_pdf/resume_pdf_creative_pages.dart';
+part 'resume_pdf/resume_pdf_professional_pages.dart';
 
 /// Emits PDF body sections (after Summary/header) in the user's saved builder
 /// chip order. Sidebar templates should pass [exclude] for skills kept in the rail.
@@ -67,6 +71,20 @@ List<pw.Widget> _pdfBodySectionsInBuilderOrder(
     if (widgets != null && widgets.isNotEmpty) out.addAll(widgets);
   }
   return out;
+}
+
+/// Keeps a section heading on the same page as the first block under it.
+List<pw.Widget> _keepHeadingWithFirstBlock(List<pw.Widget> section) {
+  if (section.length < 2) return section;
+  return [
+    pw.Inseparable(
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        children: section.take(2).toList(),
+      ),
+    ),
+    ...section.skip(2),
+  ];
 }
 
 /// Single-column skill lines for MultiPage body flow (one widget per skill so
@@ -3435,7 +3453,18 @@ class LocalAiResumeService {
     required ResumeTemplate template,
     String sourceTitle = '',
     List<String> candidateResumeTexts = const [],
+    String? exportedResumeJson,
   }) {
+    if (exportedResumeJson != null) {
+      final exported = _resumeFromExportedData(
+        exportedResumeJson,
+        template: template,
+        sourceTitle: sourceTitle,
+      );
+      if (exported != null) {
+        return exported;
+      }
+    }
     final normalizedCandidates = <String>[];
     final seen = <String>{};
 
@@ -3461,7 +3490,11 @@ class LocalAiResumeService {
         template: template,
         sourceTitle: sourceTitle,
       );
-      final score = _scoreImportedResumeParse(parsed, candidate);
+      // The first read follows the page's columns. A later one has to be
+      // clearly better, or interleaved fragments win by looking like more data.
+      final score =
+          _scoreImportedResumeParse(parsed, candidate) +
+          (candidate == normalizedCandidates.first ? 20 : 0);
       if (score > bestScore) {
         bestScore = score;
         bestResume = parsed;
@@ -5078,6 +5111,84 @@ class LocalAiResumeService {
     return prompts.take(4).toList();
   }
 
+  /// The resume stored in a PDF this app exported (see `resume_pdf_data.dart`),
+  /// or null if it does not hold up. Template, look and photo stay the new
+  /// resume's own: only the printed content is restored.
+  ResumeData? _resumeFromExportedData(
+    String json, {
+    required ResumeTemplate template,
+    required String sourceTitle,
+  }) {
+    try {
+      final data = jsonDecode(json) as Map<String, dynamic>;
+      String text(String key) => data[key] as String? ?? '';
+      final empty = ResumeData.empty(template: template.userFacingTemplate);
+      List<T> items<T>(
+        String key,
+        T Function(Map<String, dynamic>) read,
+        T emptyItem,
+      ) {
+        final values = [
+          for (final item in data[key] as List<dynamic>)
+            read(Map<String, dynamic>.from(item as Map)),
+        ];
+        return values.isEmpty ? [emptyItem] : values;
+      }
+
+      final projects = items('projects', ProjectItem.fromJson, const ProjectItem.empty());
+      final hasProjects = projects.any((item) => !item.isBlank);
+      final customSections = [
+        for (final item in data['customSections'] as List<dynamic>)
+          CustomSectionItem.fromJson(Map<String, dynamic>.from(item as Map)),
+      ];
+      return empty.copyWith(
+        title: _normalizeImportedResumeTitle(
+          sourceTitle: _cleanImportedTitle(sourceTitle),
+          fullName: text('fullName'),
+          jobTitle: text('jobTitle'),
+        ),
+        fullName: text('fullName'),
+        jobTitle: text('jobTitle'),
+        email: text('email'),
+        phone: text('phone'),
+        location: text('location'),
+        website: text('website'),
+        githubLink: text('githubLink'),
+        linkedinLink: text('linkedinLink'),
+        summary: text('summary'),
+        workExperiences: items(
+          'workExperiences',
+          WorkExperience.fromJson,
+          const WorkExperience.empty(),
+        ),
+        education: items(
+          'education',
+          EducationItem.fromJson,
+          const EducationItem.empty(),
+        ),
+        skills: (data['skills'] as List<dynamic>).cast<String>(),
+        useSkillSubheadings: data['useSkillSubheadings'] as bool? ?? false,
+        skillGroups: [
+          for (final item in data['skillGroups'] as List<dynamic>)
+            SkillGroup.fromJson(Map<String, dynamic>.from(item as Map)),
+        ],
+        projects: projects,
+        includeProjectsInResume: hasProjects,
+        customSections: customSections,
+        sectionTitles: (data['sectionTitles'] as Map).map(
+          (key, value) => MapEntry(key as String, value as String),
+        ),
+        builderSectionOrder: normalizeBuilderSectionOrder(
+          (data['builderSectionOrder'] as List<dynamic>).cast<String>(),
+          customSections.length,
+        ),
+        updatedAt: DateTime.now(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   ResumeData _buildResumeFromImportedText({
     required String resumeText,
     required ResumeTemplate template,
@@ -5090,21 +5201,24 @@ class LocalAiResumeService {
     // Narrow columns wrap e-mail addresses and profile URLs mid-token
     // ("rohan.kapoor@gmail." / "com"), which dropped them entirely.
     final contactText = _repairWrappedImportedContacts(normalizedText);
-    final lines = normalizedText
-        .split('\n')
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty)
-        .toList();
+    final lines = _withImportedHeadingsOnOwnLine(
+      normalizedText
+          .split('\n')
+          .map((line) => line.trim())
+          .where((line) => line.isNotEmpty)
+          .toList(),
+    );
     final sections = _splitImportedResumeSections(lines);
-    final headerLines = sections['header'] ?? const <String>[];
+    final headerLines = _withImportedNameOnOwnLine(
+      sections['header'] ?? const <String>[],
+    );
     final summaryLines = sections['summary'] ?? const <String>[];
-    final skillsLines = sections['skills'] ?? const <String>[];
-    final experienceLines =
+    final rawExperienceLines =
         sections['experience']
             ?.where((line) => line.trim().isNotEmpty)
             .toList() ??
         _fallbackImportedExperienceLines(lines);
-    final educationLines =
+    final rawEducationLines =
         sections['education']
             ?.where((line) => line.trim().isNotEmpty)
             .toList() ??
@@ -5117,6 +5231,18 @@ class LocalAiResumeService {
 
     final fallbackTitle = _cleanImportedTitle(sourceTitle);
     final fullName = _inferImportedFullName(headerLines, fallbackTitle);
+    final experienceLines = _beforeImportedInitials(
+      rawExperienceLines,
+      fullName,
+    );
+    final educationLines = _beforeImportedInitials(
+      rawEducationLines,
+      fullName,
+    );
+    final skillsLines = _beforeImportedInitials(
+      sections['skills'] ?? const <String>[],
+      fullName,
+    );
     final jobTitle = _inferImportedJobTitle(
       headerLines: headerLines,
       experienceLines: experienceLines,
@@ -5142,12 +5268,17 @@ class LocalAiResumeService {
           _firstRegexMatch(contactText, RegExp(r'[\w\.-]+@[\w\.-]+\.\w+')) ??
           '',
       phone: _extractImportedPhone(contactText),
-      location: _inferImportedLocation(headerLines),
+      location: _inferImportedLocation([
+        ...headerLines,
+        ...sections['contact'] ?? const <String>[],
+        // Contact lines of a sidebar with no heading of its own, read straight
+        // after the monogram at the end of a section.
+        ..._afterImportedInitials(sections['skills'] ?? const [], fullName),
+      ]),
       website: _extractImportedWebsite(contactText),
       summary: _collectImportedSummary(
         summaryLines: summaryLines,
         headerLines: headerLines,
-        allLines: lines,
       ),
       workExperiences: workExperiences,
       education: education,
@@ -5180,6 +5311,123 @@ class LocalAiResumeService {
     );
   }
 
+  /// [headerLines] with the name first and on one line, whichever way the
+  /// layout set it: "Rohan Kapoor | Senior Developer", a title above the name,
+  /// or a name a narrow column stacked on two lines.
+  List<String> _withImportedNameOnOwnLine(List<String> headerLines) {
+    if (headerLines.isEmpty) {
+      return headerLines;
+    }
+    bool isNameLike(String line) {
+      final words = line.trim().split(RegExp(r'\s+'));
+      return words.length >= 2 &&
+          words.length <= 4 &&
+          !_isImportedContactLine(line) &&
+          !_looksLikeImportedDateLine(line) &&
+          !_looksLikeImportedJobTitle(line);
+    }
+
+    var lines = [...headerLines];
+    // A monogram or sidebar label above the nameplate stays out of the way.
+    final top = lines.indexWhere((line) => !_isImportedHeaderDecoration(line));
+    if (top < 0) {
+      return headerLines;
+    }
+    if (top > 0) {
+      lines = lines.sublist(top);
+    }
+
+    final first = lines.first;
+    final pipeParts = first.split(' | ');
+    final commaParts = first.split(', ');
+    if (pipeParts.length == 2 && isNameLike(pipeParts.first)) {
+      lines.replaceRange(0, 1, [pipeParts.first.trim(), pipeParts.last.trim()]);
+    } else if (commaParts.length == 2 &&
+        isNameLike(commaParts.first) &&
+        _looksLikeImportedJobTitle(commaParts.last)) {
+      lines.replaceRange(0, 1, [commaParts.first.trim(), commaParts.last.trim()]);
+    } else if (lines.length > 1 &&
+        _looksLikeImportedJobTitle(first) &&
+        isNameLike(lines[1])) {
+      lines
+        ..[0] = lines[1]
+        ..[1] = first;
+    } else if (lines.length > 1 &&
+        _isSingleImportedNameWord(first) &&
+        _isSingleImportedNameWord(lines[1]) &&
+        !_looksLikeImportedJobTitle(lines[1])) {
+      lines.replaceRange(0, 2, ['${first.trim()} ${lines[1].trim()}']);
+    }
+
+    // A title a narrow column wrapped: "Senior Android" / "Developer".
+    if (lines.length > 2 &&
+        !_looksLikeImportedJobTitle(lines[1]) &&
+        !_isImportedContactLine(lines[1]) &&
+        _looksLikeImportedJobTitle('${lines[1]} ${lines[2]}') &&
+        lines[2].trim().split(RegExp(r'\s+')).length <= 2) {
+      lines.replaceRange(1, 3, ['${lines[1].trim()} ${lines[2].trim()}']);
+    }
+    return lines;
+  }
+
+  bool _isSingleImportedNameWord(String line) =>
+      RegExp(r"^[A-Za-z][A-Za-z.'-]+$").hasMatch(line.trim());
+
+  /// A line that reads as a job title: it ends in a title word ("Senior
+  /// Android Developer"), or opens with "Head of" and the like. Company names
+  /// that merely contain one ("Head Start Coffee") do not count.
+  bool _looksLikeImportedJobTitle(String line) {
+    final cleaned = line.trim();
+    return RegExp(
+          r'\b(developer|engineer|programmer|manager|lead|analyst|designer|consultant|director|officer|architect|administrator|specialist|intern|head|coordinator|executive|scientist|teacher|accountant|supervisor|technician|assistant|associate|president|founder|partner|recruiter|writer|editor|nurse|strategist|barista|cashier|clerk|driver|server|chef|cook|attendant|representative|agent)s?\s*(?:[,(].*)?$',
+          caseSensitive: false,
+        ).hasMatch(cleaned) ||
+        RegExp(
+          r'^(head|director|vp|vice president|manager|chief)\s+of\b',
+          caseSensitive: false,
+        ).hasMatch(cleaned);
+  }
+
+  /// [lines] with what cannot be read as one line split apart: a heading stuck
+  /// to the end of a sentence ("... by 12%. REFERENCES"), and a label wrapped
+  /// around the row beside it ("WORK", a job, "EXPERIENCE").
+  List<String> _withImportedHeadingsOnOwnLine(List<String> lines) {
+    final result = <String>[];
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      final stuck = RegExp(r'^(.*[.!?])\s+([A-Z][A-Z &]{3,})$').firstMatch(line);
+      if (stuck != null &&
+          _matchImportedSectionHeading(stuck.group(2)!) != null) {
+        result
+          ..add(stuck.group(1)!)
+          ..add(stuck.group(2)!);
+        continue;
+      }
+      // "... | January" / "2019 - Present", or "June 2015 -" / "December 2018".
+      if (i + 1 < lines.length &&
+          RegExp(r'^(?:19|20)\d{2}\b|^[A-Za-z]{3,9}\.? (?:19|20)\d{2}\b').hasMatch(lines[i + 1]) &&
+          RegExp(
+            r'(?:\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?|\b(?:19|20)\d{2}\s*[-\u2013\u2014]|\bto)$',
+            caseSensitive: false,
+          ).hasMatch(line)) {
+        result.add('$line ${lines[i + 1]}');
+        i += 1;
+        continue;
+      }
+      if (line.toLowerCase() == 'work' &&
+          i + 2 < lines.length &&
+          lines[i + 2].toLowerCase() == 'experience') {
+        result
+          ..add('$line ${lines[i + 2]}')
+          ..add(lines[i + 1]);
+        i += 2;
+        continue;
+      }
+      result.add(line);
+    }
+    return result;
+  }
+
   /// Rejoins contact tokens a narrow column split across two lines. Only these
   /// shapes are joined, so unrelated lines stay separate.
   String _repairWrappedImportedContacts(String text) {
@@ -5205,16 +5453,35 @@ class LocalAiResumeService {
               r'(https?://|www\.|[a-z0-9-]+\.(com|net|org|io|dev|co|in|me))[\w./-]*[/.]$',
               caseSensitive: false,
             ).hasMatch(previous);
+        // "rohan.kapoor@" + "gmail.com"
+        final isEmailDomain =
+            previous.endsWith('@') &&
+            RegExp(r'^[\w-]+(\.[\w-]+)+$').hasMatch(line);
+        // "linkedin.com/in/rohankap" + "oor"
+        final isProfileTail =
+            RegExp(r'^[a-z0-9-]{1,14}$').hasMatch(line) &&
+            RegExp(
+              r'(linkedin\.com/in|github\.com)/[\w-]+$',
+              caseSensitive: false,
+            ).hasMatch(previous);
         if ((isEmailTail && previousEndsMidToken) ||
             isDomainTail ||
-            isUrlTail) {
+            isUrlTail ||
+            isEmailDomain ||
+            isProfileTail) {
           repaired[repaired.length - 1] = '$previous$line';
           continue;
         }
       }
       repaired.add(line);
     }
-    return repaired.join('\n');
+    // "rohan.kapoor @ gmail.com", from a read that spaces every drawn run.
+    return repaired
+        .join('\n')
+        .replaceAllMapped(
+          RegExp(r'([\w.-]+)\s+@\s*([\w-]+(?:\.[\w-]+)+)'),
+          (match) => '${match.group(1)}@${match.group(2)}',
+        );
   }
 
   Map<String, List<String>> _splitImportedResumeSections(List<String> lines) {
@@ -5244,13 +5511,17 @@ class LocalAiResumeService {
 
   static const Map<String, String> _importedSectionHeadingMap = {
     'professional summary': 'summary',
+    'profile summary': 'summary',
     'career summary': 'summary',
     'executive summary': 'summary',
     'summary': 'summary',
     'profile': 'summary',
     'objective': 'summary',
+    'references': 'references',
+    'reference': 'references',
     'contact': 'contact',
     'contacts': 'contact',
+    'details': 'contact',
     'contact me': 'contact',
     'contact info': 'contact',
     'contact information': 'contact',
@@ -5396,19 +5667,30 @@ class LocalAiResumeService {
       if (_isImportedContactLine(line) || _isImportedHeaderDecoration(line)) {
         continue;
       }
-      if (line.split(RegExp(r'\s+')).length <= 8) {
-        return line.trim();
+      // The summary has started, so the short line after it is its wrapped
+      // tail ("of customers."), not a job title.
+      if (_isImportedProseLine(line)) {
+        break;
+      }
+      // "Senior Android Developer | Kotlin | Java | Coroutines"
+      final title = line.split(' | ').first.trim();
+      if (title.split(RegExp(r'\s+')).length <= 8) {
+        return title;
       }
     }
 
-    for (final line in experienceLines.take(3)) {
-      if (_isImportedBulletLine(line) || _isImportedContactLine(line)) {
-        continue;
-      }
-      final role = _extractImportedRole(line);
-      if (role.isNotEmpty) {
-        return role;
-      }
+    // No title in the header: the latest job's role is the next best thing.
+    final latestJob = experienceLines.take(4).where(
+      (line) => !_isImportedBulletLine(line) && !_isImportedContactLine(line),
+    );
+    final cleanedJob = latestJob.map(
+      (line) => _extractImportedRole(_withoutImportedDates(line)),
+    );
+    final role =
+        cleanedJob.where(_looksLikeImportedJobTitle).firstOrNull ??
+        cleanedJob.where((line) => line.isNotEmpty).firstOrNull;
+    if (role != null) {
+      return role;
     }
 
     return fallbackTitle
@@ -5418,16 +5700,23 @@ class LocalAiResumeService {
 
   String _inferImportedLocation(List<String> headerLines) {
     for (final line in headerLines) {
-      if (!_isImportedContactLine(line) && line.contains(',')) {
-        return line.trim();
+      if (_isImportedProseLine(line)) {
+        continue;
       }
-
-      final segments = line.split('|').map((item) => item.trim());
-      for (final segment in segments) {
-        if (segment.contains(',') &&
-            !_isImportedContactLine(segment) &&
-            !segment.contains('@')) {
-          return segment;
+      // "rohan@gmail.com · Pune, India · linkedin.com/in/rohan", or the same
+      // run together with commas.
+      for (final segment in line.split(RegExp(r'[|\u00b7\u2022]'))) {
+        final parts = segment
+            .replaceAll(RegExp(r'[\w\.-]+@[\w\.-]+\.\w+'), ' ')
+            .replaceAll(RegExp(r'\S*(?:https?:\/\/|www\.|\.com|\.\w{2,4}\/)\S*'), ' ')
+            .replaceAll(RegExp(r'(\+\d{1,3}[\s-]?)?(\d[\s-]?){10,}'), ' ')
+            .replaceAll(RegExp(r'\(?\d{2,4}\)?[\s.-]?\d{3}[\s.-]?\d{3,4}'), ' ')
+            .split(',')
+            .map((part) => part.trim())
+            .where((part) => part.isNotEmpty)
+            .toList();
+        if (parts.length >= 2 && !_looksLikeImportedJobTitle(parts.first)) {
+          return parts.join(', ');
         }
       }
     }
@@ -5437,28 +5726,91 @@ class LocalAiResumeService {
   String _collectImportedSummary({
     required List<String> summaryLines,
     required List<String> headerLines,
-    required List<String> allLines,
   }) {
-    if (summaryLines.isNotEmpty) {
-      return summaryLines.take(3).join(' ').trim();
+    final lines = summaryLines.isNotEmpty
+        ? summaryLines
+        : _importedHeaderSummaryLines(headerLines);
+    return _importedParagraph(lines).join(' ').trim();
+  }
+
+  /// The summary of a resume that gives it no heading: the paragraph between
+  /// the contact lines and the first section. Stays empty when there is none,
+  /// so a job bullet is never passed off as a summary.
+  List<String> _importedHeaderSummaryLines(List<String> headerLines) {
+    final start = headerLines.indexWhere(_isImportedProseLine);
+    if (start < 0) {
+      return const [];
     }
+    // Bullets or dates first mean this is body text under an unrecognised
+    // heading, not an introduction.
+    final isBodyLine = (String line) =>
+        _isImportedBulletLine(line) || _isImportedDateOnlyLine(line);
+    if (headerLines.take(start).any(isBodyLine)) {
+      return const [];
+    }
+    return headerLines
+        .skip(start)
+        .takeWhile((line) => !_isImportedContactLine(line) && !isBodyLine(line))
+        .toList();
+  }
 
-    final fallbackLines = allLines
-        .where((line) {
-          if (headerLines.contains(line)) {
-            return false;
-          }
-          if (_matchImportedSectionHeading(line) != null) {
-            return false;
-          }
-          if (_isImportedContactLine(line)) {
-            return false;
-          }
-          return line.split(RegExp(r'\s+')).length >= 8;
-        })
-        .take(2);
+  bool _isImportedProseLine(String line) {
+    final cleaned = line.trim();
+    return cleaned.split(RegExp(r'\s+')).length >= 8 &&
+        !_isImportedContactLine(cleaned) &&
+        !_isImportedBulletLine(cleaned) &&
+        !RegExp(r'[|\u00b7\u2022]').hasMatch(cleaned);
+  }
 
-    return fallbackLines.join(' ').trim();
+  /// The wrapped paragraph at the start of [lines], without a short line after
+  /// a finished sentence: that is a stray label, not more of the paragraph.
+  List<String> _importedParagraph(List<String> lines) {
+    final paragraph = <String>[];
+    for (final line in lines) {
+      if (paragraph.length == 20) {
+        break;
+      }
+      if (paragraph.isNotEmpty &&
+          _endsImportedSentence(paragraph.last) &&
+          line.trim().split(RegExp(r'\s+')).length < 4 &&
+          !_endsImportedSentence(line)) {
+        break;
+      }
+      paragraph.add(line);
+    }
+    return paragraph;
+  }
+
+  bool _endsImportedSentence(String line) =>
+      RegExp(r'[.!?]\s*$').hasMatch(line);
+
+  /// [lines] up to an avatar monogram ("RK"), where a sidebar read straight
+  /// after the section begins.
+  List<String> _beforeImportedInitials(List<String> lines, String fullName) {
+    final index = _importedInitialsIndex(lines, fullName);
+    return index < 0 ? lines : lines.sublist(0, index);
+  }
+
+  List<String> _afterImportedInitials(List<String> lines, String fullName) {
+    final index = _importedInitialsIndex(lines, fullName);
+    return index < 0 ? const [] : lines.sublist(index + 1);
+  }
+
+  int _importedInitialsIndex(List<String> lines, String fullName) {
+    final words = fullName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
+    if (words.length < 2) {
+      return -1;
+    }
+    final initials = words.map((word) => word[0].toUpperCase()).join();
+    final firstAndLast = '${words.first[0]}${words.last[0]}'.toUpperCase();
+    // Only the last such line: an earlier one can be a degree ("MS").
+    return lines.lastIndexWhere(
+      (line) => line.trim() == initials || line.trim() == firstAndLast,
+    );
   }
 
   /// Name-like fragments ("Rohan", "Kapoor", "RK", and the pieces a column
@@ -5629,14 +5981,17 @@ class LocalAiResumeService {
       );
     }
     for (final cleaned in _mergeSplitImportedSkills(rawItems)) {
-      if (!_isValidImportedSkill(
-        cleaned,
-        exclusions: exclusions,
-        nameFragments: nameFragments,
-      )) {
+      final splitSkills = _splitKnownImportedSkills(cleaned);
+      // A row of known skills run together is fine however long; anything else
+      // has to pass as one skill.
+      if (splitSkills.length < 2 &&
+          !_isValidImportedSkill(
+            cleaned,
+            exclusions: exclusions,
+            nameFragments: nameFragments,
+          )) {
         continue;
       }
-      final splitSkills = _splitKnownImportedSkills(cleaned);
       for (final skill in splitSkills) {
         if (_isValidImportedSkill(
           skill,
@@ -5808,17 +6163,43 @@ class LocalAiResumeService {
     final entries = <List<String>>[];
     var current = <String>[];
     var sawBullet = false;
+    // Date-column layouts read "dates, role, company, bullets": every date line
+    // opens an entry, and nothing else does.
+    final datesFirst = _importedEntriesOpenWithDates(experienceLines);
 
-    for (final line in experienceLines) {
+    for (var i = 0; i < experienceLines.length; i++) {
+      final line = experienceLines[i];
       final isBullet = _isImportedBulletLine(line);
+      // A dates line under a title leaves room for the company below it.
       final currentHeaderCount = current
-          .where((item) => !_isImportedBulletLine(item))
+          .where(
+            (item) =>
+                !_isImportedBulletLine(item) && !_isImportedDateOnlyLine(item),
+          )
           .length;
+      final nextIsDates =
+          i + 1 < experienceLines.length &&
+          _isImportedDateOnlyLine(experienceLines[i + 1]);
+      // The tail of a wrapped bullet ("monthly users on low end devices").
+      final continuesBullet =
+          current.isNotEmpty &&
+          !_endsImportedSentence(current.last) &&
+          RegExp(r'^[a-z0-9]').hasMatch(line.trim()) &&
+          !_looksLikeImportedDateLine(line);
+      final wrapsOntoNextLine = _importedLineWraps(experienceLines, i);
+      final startsEntry = datesFirst
+          ? _isImportedDateOnlyLine(line)
+          : !isBullet &&
+                !continuesBullet &&
+                !wrapsOntoNextLine &&
+                _looksLikeImportedExperienceHeader(line) &&
+                (sawBullet ||
+                    currentHeaderCount >= 2 ||
+                    (currentHeaderCount == 1 &&
+                        nextIsDates &&
+                        current.any(_isImportedDateOnlyLine)));
 
-      if (current.isNotEmpty &&
-          !isBullet &&
-          _looksLikeImportedExperienceHeader(line) &&
-          (sawBullet || currentHeaderCount >= 2)) {
+      if (current.isNotEmpty && startsEntry) {
         entries.add(current);
         current = <String>[line];
         sawBullet = false;
@@ -5848,18 +6229,30 @@ class LocalAiResumeService {
     return items.isEmpty ? const [WorkExperience.empty()] : items;
   }
 
-  List<EducationItem> _extractImportedEducation(List<String> educationLines) {
-    if (educationLines.isEmpty) {
+  List<EducationItem> _extractImportedEducation(List<String> rawLines) {
+    if (rawLines.isEmpty) {
       return const [EducationItem.empty()];
     }
 
     final entries = <List<String>>[];
     var current = <String>[];
+    final datesFirst = _importedEntriesOpenWithDates(rawLines);
+    final educationLines = _withImportedEducationGridAsEntries(rawLines);
 
-    for (final line in educationLines) {
-      if (current.isNotEmpty &&
-          _looksLikeImportedEducationHeader(line) &&
-          _educationEntryLooksComplete(current)) {
+    for (var i = 0; i < educationLines.length; i++) {
+      final line = educationLines[i];
+      // Without dates, a second degree still opens a new entry.
+      final isNextUndatedDegree =
+          current.length >= 2 &&
+          _hasImportedDegree(line) &&
+          current.any(_hasImportedDegree);
+      final startsEntry = datesFirst
+          ? _isImportedDateOnlyLine(line)
+          : isNextUndatedDegree ||
+                (_looksLikeImportedEducationHeader(line) &&
+                    _educationEntryLooksComplete(current) &&
+                    !_educationLineCompletesEntry(current, educationLines, i));
+      if (current.isNotEmpty && startsEntry) {
         entries.add(current);
         current = <String>[line];
         continue;
@@ -5869,6 +6262,12 @@ class LocalAiResumeService {
 
     if (current.isNotEmpty) {
       entries.add(current);
+    }
+
+    if (datesFirst) {
+      for (var i = 0; i < entries.length; i++) {
+        entries[i] = _joinWrappedImportedInstitution(entries[i]);
+      }
     }
 
     final items = entries
@@ -6194,12 +6593,23 @@ class LocalAiResumeService {
       score += 5;
     }
 
-    for (final item in resume.visibleWorkExperiences) {
+    final jobs = resume.visibleWorkExperiences;
+    bool isDated(WorkExperience item) =>
+        item.startDate.trim().isNotEmpty || item.endDate.trim().isNotEmpty;
+    final datesAreUsed = jobs.any(isDated);
+    for (final item in jobs) {
       // A one-word role with no bullets is almost always a fragment of badly
       // extracted text ("building @ fintech"), not a real job; penalise it so a
       // garbled read never outscores a clean one just by producing more jobs.
       final hasBullets = item.bullets.any((b) => b.trim().isNotEmpty);
-      if (item.role.trim().split(RegExp(r'\s+')).length <= 1 && !hasBullets) {
+      final oneWordRole = item.role.trim().split(RegExp(r'\s+')).length <= 1;
+      final bareRole =
+          item.company.trim().isEmpty &&
+          item.startDate.trim().isEmpty &&
+          item.endDate.trim().isEmpty;
+      // So is an undated job beside dated ones: resumes date all or none.
+      if ((oneWordRole && (!hasBullets || bareRole)) ||
+          (datesAreUsed && !isDated(item))) {
         score -= 8;
         continue;
       }
@@ -6271,12 +6681,16 @@ class LocalAiResumeService {
 
   bool _isImportedContactLine(String line) {
     return line.contains('@') ||
-        RegExp(r'(https?:\/\/|www\.)', caseSensitive: false).hasMatch(line) ||
-        RegExp(r'(\+\d{1,3}[\s-]?)?(\d[\s-]?){10,}').hasMatch(line);
+        RegExp(
+          r'(https?:\/\/|www\.|\b(?:linkedin|github)\.com\b)',
+          caseSensitive: false,
+        ).hasMatch(line) ||
+        RegExp(r'(\+\d{1,3}[\s-]?)?(\d[\s-]?){10,}').hasMatch(line) ||
+        RegExp(r'\(\d{2,4}\)[\s.-]?\d{3}[\s.-]?\d{3,4}').hasMatch(line);
   }
 
   bool _isImportedBulletLine(String line) {
-    if (!RegExp(r'^\s*[\-\u2022\*]').hasMatch(line)) {
+    if (!RegExp(r'^\s*(?:[\-\u2022\*]|[\u2013\u2014]\s)').hasMatch(line)) {
       return false;
     }
     // Some templates prefix job headers with a marker too
@@ -6291,7 +6705,9 @@ class LocalAiResumeService {
   }
 
   String _stripImportedBullet(String line) {
-    return line.replaceFirst(RegExp(r'^\s*[\-\u2022\*]\s*'), '').trim();
+    return line
+        .replaceFirst(RegExp(r'^\s*(?:[\-\u2022\*]|[\u2013\u2014]\s)\s*'), '')
+        .trim();
   }
 
   bool _looksLikeImportedExperienceHeader(String line) {
@@ -6335,35 +6751,155 @@ class LocalAiResumeService {
   }
 
   bool _looksLikeImportedEducationHeader(String line) {
-    final cleaned = line.trim();
-    if (cleaned.isEmpty || _looksLikeImportedDateLine(cleaned)) {
+    // "B.Tech, Computer Engineering | 2011 - 2015" opens an entry just as the
+    // same text without dates does.
+    final cleaned = _looksLikeImportedDateLine(line)
+        ? _withoutImportedDates(line)
+        : line.trim();
+    if (cleaned.isEmpty) {
       return false;
     }
 
-    return RegExp(
-          r'(bachelor|master|diploma|degree|b\.tech|btech|mba|bsc|msc|ba|bs|phd|certificate|certification|associate)',
-          caseSensitive: false,
-        ).hasMatch(cleaned) ||
+    return _hasImportedDegree(cleaned) ||
         (cleaned.split(RegExp(r'\s+')).length <= 8 && !cleaned.endsWith('.'));
+  }
+
+  /// Short forms are matched by case and whole word: "ba" must not match
+  /// "Bombay", nor "be" a verb.
+  bool _hasImportedDegree(String line) {
+    return RegExp(
+          r'\b(bachelor|master|diploma|degree|b\.?\s?tech|m\.?\s?tech|b\.?\s?sc|m\.?\s?sc|ph\.?\s?d|certificate|certification|associate)',
+          caseSensitive: false,
+        ).hasMatch(line) ||
+        RegExp(
+          r'\b(MBA|BBA|BCA|MCA|B\.?[AES]\.?|M\.?[AES]\.?)(?![A-Za-z])',
+        ).hasMatch(line);
   }
 
   bool _educationEntryLooksComplete(List<String> lines) {
     return lines.length >= 2 && lines.any(_looksLikeImportedDateLine);
   }
 
+  /// A two-column education grid reads across its rows: both degrees, both
+  /// colleges, then "2015 - 2017 | 2011 - 2015". Lays it out entry by entry.
+  List<String> _withImportedEducationGridAsEntries(List<String> lines) {
+    final result = <String>[];
+    for (final line in lines) {
+      final ranges = line.split(' | ');
+      if (ranges.length == 2 &&
+          ranges.every(_isImportedDateOnlyLine) &&
+          result.length >= 4) {
+        final cells = result.sublist(result.length - 4);
+        result
+          ..length -= 4
+          ..addAll([
+            cells[0],
+            cells[2],
+            ranges[0],
+            cells[1],
+            cells[3],
+            ranges[1],
+          ]);
+      } else {
+        result.add(line);
+      }
+    }
+    return result;
+  }
+
+  /// Whether the line at [index] is the other half of [current], read as
+  /// "degree, dates, college": [current] names one thing, and this line neither
+  /// has dates of its own nor is a second degree.
+  bool _educationLineCompletesEntry(
+    List<String> current,
+    List<String> lines,
+    int index,
+  ) {
+    final named = current.where((line) => !_isImportedDateOnlyLine(line));
+    final line = lines[index];
+    final hasOwnDates =
+        _looksLikeImportedDateLine(line) ||
+        (index + 1 < lines.length && _isImportedDateOnlyLine(lines[index + 1]));
+    if (hasOwnDates) {
+      return false;
+    }
+    final entryHasDegree = named.any(_hasImportedDegree);
+    if (!entryHasDegree && _hasImportedDegree(line)) {
+      return true;
+    }
+    // "College", then "Degree | dates": the next entry, dated on its own row.
+    // Not when the entry so far is a degree wrapped around its dates ("B.Tech,
+    // Computer", dates, "Engineering"): the college is still to come.
+    final degreeWrapsDates =
+        current.length >= 3 &&
+        _isImportedDateOnlyLine(current[current.length - 2]) &&
+        current.last.trim().split(RegExp(r'\s+')).length <= 2;
+    if (named.length >= 2 &&
+        !degreeWrapsDates &&
+        index + 1 < lines.length &&
+        _looksLikeImportedDateLine(lines[index + 1])) {
+      return false;
+    }
+    // The tail of a wrapped name, or the college under "degree, dates".
+    return !_hasImportedDegree(line) && named.length <= 2;
+  }
+
+  /// A dates-first entry as "degree | dates" and one institution line, joining
+  /// the pieces a narrow column wrapped it into ("College of" / "Engineering
+  /// Pune"). The side columns can read in either order, so the degree is found
+  /// by name.
+  List<String> _joinWrappedImportedInstitution(List<String> entry) {
+    final dates = entry.first;
+    final text = entry.skip(1).toList();
+    if (text.isEmpty) {
+      return entry;
+    }
+    final degree = text.firstWhere(_hasImportedDegree, orElse: () => text.first);
+    final score = RegExp(r'\d(?:\s*(?:cgpa|gpa|%)|\.\d)', caseSensitive: false);
+    final rest = text.where((line) => line != degree);
+    return [
+      '$degree | $dates',
+      rest.where((line) => !score.hasMatch(line)).join(' '),
+      ...rest.where(score.hasMatch),
+    ].where((line) => line.isNotEmpty).toList();
+  }
+
+  /// Whether the line at [index] is the start of a sentence that carries on
+  /// below it, rather than a heading of its own.
+  bool _importedLineWraps(List<String> lines, int index) {
+    final line = lines[index].trim();
+    if (_looksLikeImportedDateLine(line) || index + 1 >= lines.length) {
+      return false;
+    }
+    final next = lines[index + 1].trim();
+    return line.endsWith(',') ||
+        (RegExp(r'^[a-z0-9]').hasMatch(next) &&
+            !_looksLikeImportedDateLine(next) &&
+            !_isImportedBulletLine(next));
+  }
+
   WorkExperience _buildImportedWorkExperience(
     List<String> entry, {
     required String fallbackJobTitle,
   }) {
-    final bulletLines = entry
-        .where(_isImportedBulletLine)
-        .map(_stripImportedBullet)
-        .where((line) => line.isNotEmpty)
-        .take(8)
-        .toList();
-    final detailLines = entry
-        .where((line) => !_isImportedBulletLine(line))
-        .toList();
+    final allBullets = <String>[];
+    final detailLines = <String>[];
+    for (final line in entry) {
+      if (_isImportedBulletLine(line)) {
+        final bullet = _stripImportedBullet(line);
+        if (bullet.isNotEmpty) {
+          allBullets.add(bullet);
+        }
+      } else if (allBullets.isNotEmpty &&
+          !_endsImportedSentence(allBullets.last) &&
+          !_looksLikeImportedDateLine(line)) {
+        // A bullet wrapped onto this line.
+        allBullets[allBullets.length - 1] = '${allBullets.last} ${line.trim()}';
+      } else {
+        detailLines.add(line);
+      }
+    }
+    final bulletLines = allBullets.take(8).toList();
 
     var role = fallbackJobTitle;
     var roleFound = false;
@@ -6372,8 +6908,8 @@ class LocalAiResumeService {
     var endDate = '';
     final descriptionLines = <String>[];
 
-    for (final rawLine in detailLines) {
-      var line = _stripImportedBullet(rawLine);
+    for (var i = 0; i < detailLines.length; i++) {
+      var line = _stripImportedBullet(detailLines[i]);
       if (_looksLikeImportedDateLine(line)) {
         final dates = _extractImportedDates(line);
         if (startDate.isEmpty && dates.$1.isNotEmpty) {
@@ -6385,7 +6921,7 @@ class LocalAiResumeService {
         // Headers often carry the dates on the same line
         // ("Senior Developer, Acme Jan 2021 — Present"); keep the text part.
         line = _withoutImportedDates(line);
-        if (line.split(RegExp(r'\s+')).length < 2) {
+        if (line.isEmpty) {
           continue;
         }
       }
@@ -6402,14 +6938,35 @@ class LocalAiResumeService {
         continue;
       }
 
-      if (company.isEmpty &&
-          line.split(RegExp(r'\s+')).length <= 8 &&
-          !line.endsWith('.')) {
-        company = line.trim();
+      // "Starbucks - Portland, OR", then "Shift Supervisor": the opening line
+      // named the employer and where it is.
+      final titleBelow = _extractImportedRole(line);
+      if (!isSentence &&
+          !_looksLikeImportedJobTitle(role) &&
+          !_looksLikeImportedJobTitle(company) &&
+          _looksLikeImportedJobTitle(titleBelow)) {
+        company = role;
+        role = titleBelow;
         continue;
       }
 
-      descriptionLines.add(line);
+      if (company.isEmpty &&
+          line.split(RegExp(r'\s+')).length <= 8 &&
+          !line.endsWith('.') &&
+          !_importedLineWraps(detailLines, i)) {
+        // "Flipkart | Pune, India": the company, not where it is.
+        company = _extractImportedRole(line);
+        continue;
+      }
+
+      // A sentence wrapped onto this line.
+      if (descriptionLines.isNotEmpty &&
+          !_endsImportedSentence(descriptionLines.last)) {
+        descriptionLines[descriptionLines.length - 1] =
+            '${descriptionLines.last} $line';
+      } else {
+        descriptionLines.add(line);
+      }
     }
 
     // Some templates write achievements as plain sentences with no bullet
@@ -6417,13 +6974,19 @@ class LocalAiResumeService {
     final useSentencesAsBullets =
         bulletLines.isEmpty &&
         descriptionLines.isNotEmpty &&
-        descriptionLines.every((line) => line.endsWith('.'));
+        (descriptionLines.length > 1 ||
+            descriptionLines.every((line) => line.endsWith('.')));
     final description = useSentencesAsBullets
         ? ''
         : descriptionLines.take(2).join(' ').trim();
+    // Layouts that open with the company read "PhonePe", then the role. Swap
+    // only when the words say so, and leave them when unsure.
+    final companyFirst =
+        !_looksLikeImportedJobTitle(role) &&
+        _looksLikeImportedJobTitle(company);
     return WorkExperience(
-      role: role.ifEmpty(fallbackJobTitle),
-      company: company,
+      role: companyFirst ? company : role.ifEmpty(fallbackJobTitle),
+      company: companyFirst ? role : company,
       startDate: startDate,
       endDate: endDate,
       description: description,
@@ -6437,8 +7000,20 @@ class LocalAiResumeService {
   EducationItem _buildImportedEducationItem(List<String> rawEntry) {
     // Drop list markers ("* College…") and keep dates out of the text fields;
     // the dates are still read into startDate/endDate from the combined text.
+    // "College of Engineering Pune | B.Tech" names two things on one line, as
+    // does "B.Tech, Computer Engineering, College of Engineering Pune".
     final entry = rawEntry
         .map(_stripImportedBullet)
+        .expand((line) => line.split(' | '))
+        .expand(
+          (line) => line.split(
+            RegExp(
+              r',\s+(?=(?:[\w.&\x27-]+\s+)*(?:college|university|institute|school|academy)\b)',
+              caseSensitive: false,
+            ),
+          ),
+        )
+        .map((line) => line.trim())
         .where((line) => line.isNotEmpty)
         .toList();
     if (entry.isEmpty) {
@@ -6460,25 +7035,38 @@ class LocalAiResumeService {
         ? score.trim().replaceFirst(RegExp(r'%\s*$'), '').trim()
         : score.trim();
     final degree = entry.firstWhere(
-      (line) => RegExp(
-        r'(bachelor|master|diploma|degree|b\.tech|btech|mba|bsc|msc|ba|bs|phd|certificate|certification|associate)',
-        caseSensitive: false,
-      ).hasMatch(line),
+      _hasImportedDegree,
       orElse: () => entry.first,
     );
-    final institution = entry.firstWhere(
-      (line) =>
-          line != degree && !_looksLikeImportedDateLine(line) && line != score,
-      orElse: () => '',
-    );
-
     String withoutDates(String value) => _looksLikeImportedDateLine(value)
         ? _withoutImportedDates(value)
         : value.trim();
 
+    final others = entry
+        .where((line) => line != degree && line != score)
+        .map(withoutDates)
+        .where((line) => line.isNotEmpty)
+        .toList();
+    bool isShortFragment(String line) =>
+        line.split(RegExp(r'\s+')).length <= 3 &&
+        !line.contains(',') &&
+        !RegExp(r'\d').hasMatch(line);
+    // A narrow column wraps these: "B.Tech, Computer" / "Engineering", then
+    // "College of Engineering" / "Pune".
+    final degreeTail =
+        others.length >= 2 &&
+            others.first.split(RegExp(r'\s+')).length <= 2 &&
+            others[1].split(RegExp(r'\s+')).length > 2
+        ? others.removeAt(0)
+        : '';
+    var institution = others.isEmpty ? '' : others.first;
+    if (others.length >= 2 && isShortFragment(others[1])) {
+      institution = '$institution ${others[1]}';
+    }
+
     return EducationItem(
-      institution: withoutDates(institution),
-      degree: withoutDates(degree),
+      institution: institution,
+      degree: '${withoutDates(degree)} $degreeTail'.trim(),
       startDate: dates.$1,
       endDate: dates.$2,
       score: normalizedScore,
@@ -6551,6 +7139,26 @@ class LocalAiResumeService {
     ).hasMatch(line);
   }
 
+  /// Whether each entry in [lines] opens with its own dates line: the section
+  /// starts with one and no entry carries its dates inline.
+  bool _importedEntriesOpenWithDates(List<String> lines) {
+    return _isImportedDateOnlyLine(lines.first) &&
+        lines
+            .where(
+              (line) =>
+                  !_isImportedBulletLine(line) &&
+                  _looksLikeImportedDateLine(line),
+            )
+            .every(_isImportedDateOnlyLine);
+  }
+
+  /// A line holding nothing but dates ("Jul 2017 - Dec 2020").
+  bool _isImportedDateOnlyLine(String line) {
+    final cleaned = _stripImportedBullet(line);
+    return _looksLikeImportedDateLine(cleaned) &&
+        _withoutImportedDates(cleaned).isEmpty;
+  }
+
   (String, String) _extractImportedDates(String line) {
     final matches = RegExp(
       r'((?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{4}|\d{1,2}/\d{4}|\b(?:19|20)\d{2}\b|present|current)',
@@ -6582,16 +7190,20 @@ class LocalAiResumeService {
   /// [line] with its dates and date-range separators removed, leaving the
   /// role/company text of a header like "Developer, Acme Jan 2021 — Present".
   String _withoutImportedDates(String line) {
+    const date =
+        r'(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{4}|\d{1,2}/\d{4}|\b(?:19|20)\d{2}\b|present|current)';
     return line
         .replaceAll(
           RegExp(
-            r'((?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{4}|\d{1,2}/\d{4}|\b(?:19|20)\d{2}\b|present|current)',
+            '$date(?:\\s*(?:[\\-\u2013\u2014]|\\bto\\b)\\s*$date)?',
             caseSensitive: false,
           ),
           ' ',
         )
-        .replaceAll(RegExp(r'\s+(?:[\-–—]|to)\s+'), ' ')
-        .replaceAll(RegExp(r'[\s\-–—|·,]+$'), '')
+        .replaceAll(RegExp(r'\(\s*\)'), ' ')
+        .replaceAll(RegExp(r'\bgraduated:?', caseSensitive: false), ' ')
+        .replaceAll(RegExp(r'[\s\-\u2013\u2014|\u00b7,]+$'), '')
+        .replaceAll(RegExp(r'^[\s\-\u2013\u2014|\u00b7,]+'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
   }
@@ -6610,10 +7222,16 @@ class LocalAiResumeService {
     if (cleaned.contains(' / ')) {
       return cleaned.split(' / ').map((part) => part.trim()).toList();
     }
+    final dashParts = cleaned.split(RegExp(r' [\u2013\u2014-] '));
+    if (dashParts.length == 2) {
+      return dashParts.map((part) => part.trim()).toList();
+    }
     // A single comma separates role and company; more commas usually mean the
-    // role itself contains one ("Manager, Sales and Marketing").
+    // role itself contains one ("Manager, Sales and Marketing"), unless what
+    // opens the line is plainly a title ("Manager, Acme Inc., Boston, MA").
     final commaParts = cleaned.split(', ');
-    if (commaParts.length == 2) {
+    if (commaParts.length == 2 ||
+        (commaParts.length > 2 && _looksLikeImportedJobTitle(commaParts.first))) {
       return commaParts.map((part) => part.trim()).toList();
     }
     return [cleaned];
@@ -6632,11 +7250,17 @@ class LocalAiResumeService {
   }
 
   String _extractImportedPhone(String text) {
-    return _firstRegexMatch(
-          text,
-          RegExp(r'(\+\d{1,3}[\s-]?)?(\d[\s-]?){10,}'),
-        ) ??
-        '';
+    final candidates = RegExp(
+      r'(\+\d{1,3}[ .-]?)?(\(\d{2,4}\)[ .-]?)?(\d[ .-]?){6,}\d',
+    ).allMatches(text);
+    // Long enough to dial, which rules out dates and short numbers.
+    for (final match in candidates) {
+      final phone = match.group(0)!.trim();
+      if (phone.replaceAll(RegExp(r'\D'), '').length >= 10) {
+        return phone;
+      }
+    }
+    return '';
   }
 
   String _extractImportedWebsite(String text) {
@@ -8719,6 +9343,33 @@ class ResumePdfService {
     }
   }
 
+  /// Saves [document] with a copy of the text it prints (see
+  /// `resume_pdf_data.dart`). Never fails an export over this: without the copy
+  /// the PDF is the same and an upload reads its pages instead.
+  Future<Uint8List> _saveWithResumeData(
+    pw.Document document,
+    ResumeData resume,
+  ) async {
+    final plain = await document.save();
+    sfpdf.PdfDocument? saved;
+    try {
+      saved = sfpdf.PdfDocument(inputBytes: plain);
+      final block = resumePdfDataBlock(
+        resume,
+        sfpdf.PdfTextExtractor(saved).extractText(),
+      );
+      if (block == null) {
+        return plain;
+      }
+      PdfMetadata(document.document, block);
+      return await document.save();
+    } catch (_) {
+      return plain;
+    } finally {
+      saved?.dispose();
+    }
+  }
+
   /// Builds the resume PDF, then drops any trailing page the layout left
   /// blank (see [_withoutBlankTrailingPages]).
   Future<Uint8List> buildPdf(
@@ -8749,7 +9400,7 @@ class ResumePdfService {
         garamond: garamond,
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.classicSidebar) {
@@ -8761,7 +9412,7 @@ class ResumePdfService {
         garamond: garamond,
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.minimalProfile) {
@@ -8772,7 +9423,7 @@ class ResumePdfService {
         fonts: await _resumePdfFontsFor(resume),
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.accentStrip) {
@@ -8792,63 +9443,63 @@ class ResumePdfService {
         calibri: calibri,
         garamond: garamond,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.atsStructured) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsStructuredTemplatePage(document, resume, garamond: garamond);
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.atsSerifRules) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsSerifRulesTemplatePage(document, resume, garamond: garamond);
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.atsModernFlow) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsModernFlowTemplatePage(document, resume, garamond: garamond);
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.atsExecutive) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsExecutiveTemplatePage(document, resume, garamond: garamond);
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.atsCenterClassic) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsCenterClassicTemplatePage(document, resume, garamond: garamond);
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.atsProfessionalBlue) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsProfessionalBlueTemplatePage(document, resume, garamond: garamond);
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.atsLatexClassic) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsLatexClassicTemplatePage(document, resume, garamond: garamond);
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.atsClassicCv) {
       final garamond = await _resumePdfFontsFor(resume);
       final document = pw.Document();
       _addAtsClassicCvTemplatePage(document, resume, garamond: garamond);
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.headerSidebar) {
@@ -8860,7 +9511,7 @@ class ResumePdfService {
         garamond: garamond,
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.blueDiagonal) {
@@ -8871,7 +9522,7 @@ class ResumePdfService {
         fonts: await _resumePdfFontsFor(resume),
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.charcoalCurve) {
@@ -8882,7 +9533,7 @@ class ResumePdfService {
         fonts: await _resumePdfFontsFor(resume),
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
     if (resume.template == ResumeTemplate.boldPill) {
       final document = pw.Document();
@@ -8892,7 +9543,7 @@ class ResumePdfService {
         fonts: await _resumePdfFontsFor(resume),
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
     if (resume.template == ResumeTemplate.blueCorner) {
       final document = pw.Document();
@@ -8902,7 +9553,7 @@ class ResumePdfService {
         fonts: await _resumePdfFontsFor(resume),
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
     if (resume.template == ResumeTemplate.profileTimeline) {
       final document = pw.Document();
@@ -8912,7 +9563,7 @@ class ResumePdfService {
         fonts: await _resumePdfFontsFor(resume),
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.softHeader) {
@@ -8922,7 +9573,7 @@ class ResumePdfService {
         resume,
         fonts: await _resumePdfFontsFor(resume),
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.timelineProfile) {
@@ -8933,7 +9584,7 @@ class ResumePdfService {
         fonts: await _resumePdfFontsFor(resume),
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.atsCleanSans) {
@@ -8943,20 +9594,28 @@ class ResumePdfService {
         resume,
         fonts: await _resumePdfFontsFor(resume),
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.modernLine ||
         resume.template == ResumeTemplate.splitContact ||
         resume.template == ResumeTemplate.harbor ||
-        resume.template == ResumeTemplate.typeplate) {
+        resume.template == ResumeTemplate.typeplate ||
+        resume.template == ResumeTemplate.meridian ||
+        resume.template == ResumeTemplate.ledger ||
+        resume.template == ResumeTemplate.keystone ||
+        resume.template == ResumeTemplate.cadence ||
+        resume.template == ResumeTemplate.atsBoldRule ||
+        resume.template == ResumeTemplate.atsCompact ||
+        resume.template == ResumeTemplate.atsFocus ||
+        resume.template == ResumeTemplate.atsDoubleRule) {
       final document = pw.Document();
       _addTopPickAtsTemplatePage(
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.aurora ||
@@ -8966,14 +9625,32 @@ class ResumePdfService {
         resume.template == ResumeTemplate.studio ||
         resume.template == ResumeTemplate.arc ||
         resume.template == ResumeTemplate.chevron ||
-        resume.template == ResumeTemplate.wave) {
+        resume.template == ResumeTemplate.wave ||
+        resume.template == ResumeTemplate.terrazzo ||
+        resume.template == ResumeTemplate.dotfield ||
+        resume.template == ResumeTemplate.orbit ||
+        resume.template == ResumeTemplate.prism) {
       final document = pw.Document();
       _addPaintedCreativeTemplatePage(
         document,
         resume,
         fonts: await _resumePdfFontsFor(resume),
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
+    }
+
+    if (resume.template == ResumeTemplate.summit ||
+        resume.template == ResumeTemplate.folio ||
+        resume.template == ResumeTemplate.beacon ||
+        resume.template == ResumeTemplate.vertex) {
+      final document = pw.Document();
+      _addProfessionalTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage: profileImage,
+      );
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.slateSidebar) {
@@ -8984,7 +9661,7 @@ class ResumePdfService {
         fonts: await _resumePdfFontsFor(resume),
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     if (resume.template == ResumeTemplate.corporate) {
@@ -8996,7 +9673,7 @@ class ResumePdfService {
         garamond: garamond,
         profileImage: profileImage,
       );
-      return document.save();
+      return _saveWithResumeData(document, resume);
     }
 
     final corporateBodyPt = resume.effectiveBodyFontPt.toDouble();
@@ -9071,10 +9748,26 @@ class ResumePdfService {
       case ResumeTemplate.arc:
       case ResumeTemplate.chevron:
       case ResumeTemplate.wave:
+      case ResumeTemplate.meridian:
+      case ResumeTemplate.ledger:
+      case ResumeTemplate.keystone:
+      case ResumeTemplate.cadence:
+      case ResumeTemplate.terrazzo:
+      case ResumeTemplate.dotfield:
+      case ResumeTemplate.orbit:
+      case ResumeTemplate.prism:
+      case ResumeTemplate.summit:
+      case ResumeTemplate.folio:
+      case ResumeTemplate.beacon:
+      case ResumeTemplate.vertex:
+      case ResumeTemplate.atsBoldRule:
+      case ResumeTemplate.atsCompact:
+      case ResumeTemplate.atsFocus:
+      case ResumeTemplate.atsDoubleRule:
         break;
     }
 
-    return document.save();
+    return _saveWithResumeData(document, resume);
   }
 
   /// As [buildPdf], for the analyser's highlighted preview.
@@ -9343,6 +10036,29 @@ class ResumePdfService {
       return document.save();
     }
 
+    if (resume.template == ResumeTemplate.summit ||
+        resume.template == ResumeTemplate.folio ||
+        resume.template == ResumeTemplate.beacon ||
+        resume.template == ResumeTemplate.vertex) {
+      final profileImagePath = await ProfileImageStorage.resolvePath(
+        resume.profileImagePath,
+        resume.id,
+      );
+      final document = pw.Document();
+      _addProfessionalTemplatePage(
+        document,
+        resume,
+        fonts: await _resumePdfFontsFor(resume),
+        profileImage:
+            await _loadProfileImage(profileImagePath) ??
+            (resume.isGallerySample ? await _sampleAvatarImage(resume) : null),
+        highlightSummary: highlightSummary,
+        highlightedSkills: highlightedSkills,
+        highlightedBulletsByExperience: highlightedBulletsByExperience,
+      );
+      return document.save();
+    }
+
     if (resume.template == ResumeTemplate.boldPill) {
       final profileImagePath = await ProfileImageStorage.resolvePath(
         resume.profileImagePath,
@@ -9452,7 +10168,15 @@ class ResumePdfService {
     if (resume.template == ResumeTemplate.modernLine ||
         resume.template == ResumeTemplate.splitContact ||
         resume.template == ResumeTemplate.harbor ||
-        resume.template == ResumeTemplate.typeplate) {
+        resume.template == ResumeTemplate.typeplate ||
+        resume.template == ResumeTemplate.meridian ||
+        resume.template == ResumeTemplate.ledger ||
+        resume.template == ResumeTemplate.keystone ||
+        resume.template == ResumeTemplate.cadence ||
+        resume.template == ResumeTemplate.atsBoldRule ||
+        resume.template == ResumeTemplate.atsCompact ||
+        resume.template == ResumeTemplate.atsFocus ||
+        resume.template == ResumeTemplate.atsDoubleRule) {
       final document = pw.Document();
       _addTopPickAtsTemplatePage(
         document,
@@ -9472,7 +10196,11 @@ class ResumePdfService {
         resume.template == ResumeTemplate.studio ||
         resume.template == ResumeTemplate.arc ||
         resume.template == ResumeTemplate.chevron ||
-        resume.template == ResumeTemplate.wave) {
+        resume.template == ResumeTemplate.wave ||
+        resume.template == ResumeTemplate.terrazzo ||
+        resume.template == ResumeTemplate.dotfield ||
+        resume.template == ResumeTemplate.orbit ||
+        resume.template == ResumeTemplate.prism) {
       final document = pw.Document();
       _addPaintedCreativeTemplatePage(
         document,
@@ -9596,6 +10324,22 @@ class ResumePdfService {
       case ResumeTemplate.arc:
       case ResumeTemplate.chevron:
       case ResumeTemplate.wave:
+      case ResumeTemplate.meridian:
+      case ResumeTemplate.ledger:
+      case ResumeTemplate.keystone:
+      case ResumeTemplate.cadence:
+      case ResumeTemplate.terrazzo:
+      case ResumeTemplate.dotfield:
+      case ResumeTemplate.orbit:
+      case ResumeTemplate.prism:
+      case ResumeTemplate.summit:
+      case ResumeTemplate.folio:
+      case ResumeTemplate.beacon:
+      case ResumeTemplate.vertex:
+      case ResumeTemplate.atsBoldRule:
+      case ResumeTemplate.atsCompact:
+      case ResumeTemplate.atsFocus:
+      case ResumeTemplate.atsDoubleRule:
         break;
     }
 

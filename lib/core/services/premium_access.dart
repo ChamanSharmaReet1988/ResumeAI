@@ -14,11 +14,15 @@ abstract final class PremiumAccess {
     // Top picks
     ResumeTemplate.harbor,
     ResumeTemplate.typeplate,
+    ResumeTemplate.keystone,
+    ResumeTemplate.cadence,
     // Creative
     ResumeTemplate.studio,
     ResumeTemplate.arc,
     ResumeTemplate.chevron,
     ResumeTemplate.wave,
+    ResumeTemplate.orbit,
+    ResumeTemplate.prism,
     // Professional
     ResumeTemplate.softHeader,
     ResumeTemplate.blueDiagonal,
@@ -27,21 +31,29 @@ abstract final class PremiumAccess {
     ResumeTemplate.boldPill,
     ResumeTemplate.blueCorner,
     ResumeTemplate.profileTimeline,
+    ResumeTemplate.beacon,
+    ResumeTemplate.vertex,
     // ATS
     ResumeTemplate.atsCenterClassic,
     ResumeTemplate.atsProfessionalBlue,
     ResumeTemplate.atsClassicCv,
     ResumeTemplate.atsCleanSans,
+    ResumeTemplate.atsFocus,
+    ResumeTemplate.atsDoubleRule,
   };
 
   /// Template tile ids for [premiumResumeTemplates].
   static const premiumTemplateTileIds = <String>{
     'harbor',
     'typeplate',
+    'keystone',
+    'cadence',
     'creative-studio',
     'creative-arc',
     'creative-chevron',
     'creative-wave',
+    'creative-orbit',
+    'creative-prism',
     'soft-header',
     'blue-diagonal',
     'minimal-profile',
@@ -49,10 +61,14 @@ abstract final class PremiumAccess {
     'bold-pill',
     'blue-corner',
     'profile-timeline',
+    'beacon',
+    'vertex',
     'ats-center-classic',
     'ats-professional-blue',
     'ats-classic-cv',
     'ats-clean-sans',
+    'ats-focus',
+    'ats-double-rule',
   };
 
   static bool templateTileRequiresPremium(String tileId) {

@@ -848,6 +848,118 @@ class AppLocalizationsEn extends AppLocalizations {
       'A light blue header with a white wave, and a plain page below.';
 
   @override
+  String get templateMeridian => 'Meridian';
+
+  @override
+  String get templateMeridianCaption =>
+      'Centered nameplate between fine rules, with headings set between hairlines.';
+
+  @override
+  String get templateLedger => 'Ledger';
+
+  @override
+  String get templateLedgerCaption =>
+      'Dates in their own left column so a career reads at a glance.';
+
+  @override
+  String get templateKeystone => 'Keystone';
+
+  @override
+  String get templateKeystoneCaption =>
+      'Solid header band with tinted section strips and a clean body.';
+
+  @override
+  String get templateCadence => 'Cadence';
+
+  @override
+  String get templateCadenceCaption =>
+      'Monogram square beside the name, with short accent bars under headings.';
+
+  @override
+  String get templateTerrazzo => 'Terrazzo';
+
+  @override
+  String get templateTerrazzoCaption =>
+      'Warm page scattered with terrazzo chips in the corner and along the foot.';
+
+  @override
+  String get templateDotfield => 'Dotfield';
+
+  @override
+  String get templateDotfieldCaption =>
+      'Halftone dots fade out from the corner over a crisp white page.';
+
+  @override
+  String get templateOrbit => 'Orbit';
+
+  @override
+  String get templateOrbitCaption =>
+      'Concentric rings and a small satellite circle the top of the page.';
+
+  @override
+  String get templatePrism => 'Prism';
+
+  @override
+  String get templatePrismCaption =>
+      'Faceted colour shards in the corner with a bold bar along the foot.';
+
+  @override
+  String get templateSummit => 'Summit';
+
+  @override
+  String get templateSummitCaption =>
+      'Full-width colour header with a ringed photo, contact strip and skill chips.';
+
+  @override
+  String get templateFolio => 'Folio';
+
+  @override
+  String get templateFolioCaption =>
+      'Editorial layout with section labels set in the left margin.';
+
+  @override
+  String get templateBeacon => 'Beacon';
+
+  @override
+  String get templateBeaconCaption =>
+      'Tinted right rail with photo, contact and skills beside a roomy main column.';
+
+  @override
+  String get templateVertex => 'Vertex';
+
+  @override
+  String get templateVertexCaption =>
+      'Angled colour header with a ringed photo over a two-column body.';
+
+  @override
+  String get templateBoldRuleAts => 'Bold Rule ATS';
+
+  @override
+  String get templateBoldRuleAtsCaption =>
+      'Heavy uppercase headings on strong rules in one clean column.';
+
+  @override
+  String get templateCompactAts => 'Compact ATS';
+
+  @override
+  String get templateCompactAtsCaption =>
+      'Tight spacing and inline rules that fit more on one page.';
+
+  @override
+  String get templateFocusAts => 'Focus ATS';
+
+  @override
+  String get templateFocusAtsCaption =>
+      'Summary in a soft panel up top, with barred headings below.';
+
+  @override
+  String get templateDoubleRuleAts => 'Double Rule ATS';
+
+  @override
+  String get templateDoubleRuleAtsCaption =>
+      'Centered headings between double rules for a formal, orderly read.';
+
+  @override
   String get templateExecutiveNote => 'Executive Note';
 
   @override

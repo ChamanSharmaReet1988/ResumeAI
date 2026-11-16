@@ -1584,6 +1584,198 @@ abstract class AppLocalizations {
   /// **'A light blue header with a white wave, and a plain page below.'**
   String get templateWaveCaption;
 
+  /// No description provided for @templateMeridian.
+  ///
+  /// In en, this message translates to:
+  /// **'Meridian'**
+  String get templateMeridian;
+
+  /// No description provided for @templateMeridianCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Centered nameplate between fine rules, with headings set between hairlines.'**
+  String get templateMeridianCaption;
+
+  /// No description provided for @templateLedger.
+  ///
+  /// In en, this message translates to:
+  /// **'Ledger'**
+  String get templateLedger;
+
+  /// No description provided for @templateLedgerCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Dates in their own left column so a career reads at a glance.'**
+  String get templateLedgerCaption;
+
+  /// No description provided for @templateKeystone.
+  ///
+  /// In en, this message translates to:
+  /// **'Keystone'**
+  String get templateKeystone;
+
+  /// No description provided for @templateKeystoneCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid header band with tinted section strips and a clean body.'**
+  String get templateKeystoneCaption;
+
+  /// No description provided for @templateCadence.
+  ///
+  /// In en, this message translates to:
+  /// **'Cadence'**
+  String get templateCadence;
+
+  /// No description provided for @templateCadenceCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Monogram square beside the name, with short accent bars under headings.'**
+  String get templateCadenceCaption;
+
+  /// No description provided for @templateTerrazzo.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrazzo'**
+  String get templateTerrazzo;
+
+  /// No description provided for @templateTerrazzoCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm page scattered with terrazzo chips in the corner and along the foot.'**
+  String get templateTerrazzoCaption;
+
+  /// No description provided for @templateDotfield.
+  ///
+  /// In en, this message translates to:
+  /// **'Dotfield'**
+  String get templateDotfield;
+
+  /// No description provided for @templateDotfieldCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Halftone dots fade out from the corner over a crisp white page.'**
+  String get templateDotfieldCaption;
+
+  /// No description provided for @templateOrbit.
+  ///
+  /// In en, this message translates to:
+  /// **'Orbit'**
+  String get templateOrbit;
+
+  /// No description provided for @templateOrbitCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Concentric rings and a small satellite circle the top of the page.'**
+  String get templateOrbitCaption;
+
+  /// No description provided for @templatePrism.
+  ///
+  /// In en, this message translates to:
+  /// **'Prism'**
+  String get templatePrism;
+
+  /// No description provided for @templatePrismCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Faceted colour shards in the corner with a bold bar along the foot.'**
+  String get templatePrismCaption;
+
+  /// No description provided for @templateSummit.
+  ///
+  /// In en, this message translates to:
+  /// **'Summit'**
+  String get templateSummit;
+
+  /// No description provided for @templateSummitCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Full-width colour header with a ringed photo, contact strip and skill chips.'**
+  String get templateSummitCaption;
+
+  /// No description provided for @templateFolio.
+  ///
+  /// In en, this message translates to:
+  /// **'Folio'**
+  String get templateFolio;
+
+  /// No description provided for @templateFolioCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Editorial layout with section labels set in the left margin.'**
+  String get templateFolioCaption;
+
+  /// No description provided for @templateBeacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Beacon'**
+  String get templateBeacon;
+
+  /// No description provided for @templateBeaconCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Tinted right rail with photo, contact and skills beside a roomy main column.'**
+  String get templateBeaconCaption;
+
+  /// No description provided for @templateVertex.
+  ///
+  /// In en, this message translates to:
+  /// **'Vertex'**
+  String get templateVertex;
+
+  /// No description provided for @templateVertexCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Angled colour header with a ringed photo over a two-column body.'**
+  String get templateVertexCaption;
+
+  /// No description provided for @templateBoldRuleAts.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold Rule ATS'**
+  String get templateBoldRuleAts;
+
+  /// No description provided for @templateBoldRuleAtsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy uppercase headings on strong rules in one clean column.'**
+  String get templateBoldRuleAtsCaption;
+
+  /// No description provided for @templateCompactAts.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact ATS'**
+  String get templateCompactAts;
+
+  /// No description provided for @templateCompactAtsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Tight spacing and inline rules that fit more on one page.'**
+  String get templateCompactAtsCaption;
+
+  /// No description provided for @templateFocusAts.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus ATS'**
+  String get templateFocusAts;
+
+  /// No description provided for @templateFocusAtsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary in a soft panel up top, with barred headings below.'**
+  String get templateFocusAtsCaption;
+
+  /// No description provided for @templateDoubleRuleAts.
+  ///
+  /// In en, this message translates to:
+  /// **'Double Rule ATS'**
+  String get templateDoubleRuleAts;
+
+  /// No description provided for @templateDoubleRuleAtsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Centered headings between double rules for a formal, orderly read.'**
+  String get templateDoubleRuleAtsCaption;
+
   /// No description provided for @templateExecutiveNote.
   ///
   /// In en, this message translates to:

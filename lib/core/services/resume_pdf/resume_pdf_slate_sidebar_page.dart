@@ -103,18 +103,20 @@ List<_SlateSidebarPageSlice> _slateSidebarPageSlices({
   required int contactCount,
   required double detailPt,
   PdfPageFormat pageFormat = PdfPageFormat.a4,
+  double railTextWidth =
+      _slateSidebarRailWidthPt -
+      _slateSidebarRailInsetPt -
+      _slateSidebarRailRightInsetPt,
+  double avatarSizePt = _slateSidebarAvatarSizePt,
+  double firstPageReservedPt = 0,
 }) {
   final availableHeight =
       pageFormat.height - _slateSidebarPageTopPt - _slateSidebarPageBottomPt;
-  final railTextWidth =
-      _slateSidebarRailWidthPt -
-      _slateSidebarRailInsetPt -
-      _slateSidebarRailRightInsetPt;
 
   // Avatar + gap, then Contact heading, then contact rows.
   // Pad identity so we never over-fill page 1 (ClipRect would hide skills).
   const headingBlock = 22.0 + 12.0 + 6.0 + 16.0;
-  final avatarBlock = _slateSidebarAvatarSizePt + 6.0;
+  final avatarBlock = avatarSizePt + 6.0;
   final contactEntryHeight =
       (detailPt * ResumeTypography.bodyTextLineHeight) * 2 + 1 + 9;
   final contactBodyHeight = contactCount == 0
@@ -159,7 +161,7 @@ List<_SlateSidebarPageSlice> _slateSidebarPageSlices({
   }
 
   final firstPageSkillsAvailable =
-      availableHeight - identityHeight - headingBlock;
+      availableHeight - firstPageReservedPt - identityHeight - headingBlock;
   final continuedPageSkillsAvailable = availableHeight - headingBlock;
 
   final slices = <_SlateSidebarPageSlice>[];

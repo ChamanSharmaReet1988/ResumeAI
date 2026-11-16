@@ -849,6 +849,118 @@ class AppLocalizationsId extends AppLocalizations {
       'Header biru muda dengan gelombang putih dan halaman polos di bawahnya.';
 
   @override
+  String get templateMeridian => 'Meridian';
+
+  @override
+  String get templateMeridianCaption =>
+      'Nama di tengah di antara garis halus, dengan judul di antara garis tipis.';
+
+  @override
+  String get templateLedger => 'Buku Besar';
+
+  @override
+  String get templateLedgerCaption =>
+      'Tanggal di kolom kiri tersendiri agar karier terbaca sekilas.';
+
+  @override
+  String get templateKeystone => 'Kunci';
+
+  @override
+  String get templateKeystoneCaption =>
+      'Pita header solid, strip berwarna pada judul bagian, dan isi yang bersih.';
+
+  @override
+  String get templateCadence => 'Irama';
+
+  @override
+  String get templateCadenceCaption =>
+      'Monogram persegi di samping nama, dengan garis pendek di bawah judul.';
+
+  @override
+  String get templateTerrazzo => 'Teraso';
+
+  @override
+  String get templateTerrazzoCaption =>
+      'Halaman hangat dengan serpihan teraso di sudut dan di bagian bawah.';
+
+  @override
+  String get templateDotfield => 'Bidang Titik';
+
+  @override
+  String get templateDotfieldCaption =>
+      'Titik halftone memudar dari sudut di atas halaman putih bersih.';
+
+  @override
+  String get templateOrbit => 'Orbit';
+
+  @override
+  String get templateOrbitCaption =>
+      'Cincin konsentris dan satelit kecil di bagian atas halaman.';
+
+  @override
+  String get templatePrism => 'Prisma';
+
+  @override
+  String get templatePrismCaption =>
+      'Potongan warna bersegi di sudut dengan garis tegas di bagian bawah.';
+
+  @override
+  String get templateSummit => 'Puncak';
+
+  @override
+  String get templateSummitCaption =>
+      'Header warna penuh dengan foto, strip kontak, dan keahlian dalam label.';
+
+  @override
+  String get templateFolio => 'Folio';
+
+  @override
+  String get templateFolioCaption =>
+      'Tata letak editorial dengan label bagian di margin kiri.';
+
+  @override
+  String get templateBeacon => 'Mercusuar';
+
+  @override
+  String get templateBeaconCaption =>
+      'Kolom kanan berwarna dengan foto, kontak, dan keahlian di samping kolom utama.';
+
+  @override
+  String get templateVertex => 'Vertex';
+
+  @override
+  String get templateVertexCaption =>
+      'Header bersudut dengan foto di atas isi dua kolom.';
+
+  @override
+  String get templateBoldRuleAts => 'Garis Tebal ATS';
+
+  @override
+  String get templateBoldRuleAtsCaption =>
+      'Judul kapital tebal di atas garis tegas dalam satu kolom.';
+
+  @override
+  String get templateCompactAts => 'Ringkas ATS';
+
+  @override
+  String get templateCompactAtsCaption =>
+      'Jarak rapat dan garis sebaris agar lebih banyak muat di satu halaman.';
+
+  @override
+  String get templateFocusAts => 'Fokus ATS';
+
+  @override
+  String get templateFocusAtsCaption =>
+      'Ringkasan dalam panel lembut di atas, dengan judul berpalang di bawah.';
+
+  @override
+  String get templateDoubleRuleAts => 'Garis Ganda ATS';
+
+  @override
+  String get templateDoubleRuleAtsCaption =>
+      'Judul di tengah di antara garis ganda untuk tampilan formal dan rapi.';
+
+  @override
   String get templateExecutiveNote => 'Catatan eksekutif';
 
   @override

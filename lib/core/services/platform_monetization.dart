@@ -32,6 +32,18 @@ abstract final class PlatformMonetization {
   /// bring ads back (they stay disabled in debug builds either way).
   static const adsEnabled = false;
 
+  /// Android banners only, on the AdMob account in [AndroidAdsConfig]. Full-
+  /// screen ads stay behind [adsEnabled].
+  static const androidBannersEnabled = true;
+
+  /// Android full-screen ads, on the same account as the banners. iOS stays
+  /// behind [adsEnabled].
+  static const androidInterstitialsEnabled = true;
+
+  static bool get showsAndroidInterstitials =>
+      showsAds ||
+      (androidInterstitialsEnabled && !kDebugMode && isAndroidAdsModel);
+
   /// Banners + interstitials on Android and iOS. Disabled in debug builds.
   static bool get showsAds {
     if (!adsEnabled || kIsWeb || kDebugMode) {
@@ -41,13 +53,21 @@ abstract final class PlatformMonetization {
         defaultTargetPlatform == TargetPlatform.iOS;
   }
 
-  /// Home top banner on Android and iOS.
-  static bool get showsHomeBanner => showsAds;
+  /// Banners: wherever [showsAds] is on, and on Android with
+  /// [androidBannersEnabled]. Disabled in debug builds.
+  static bool get showsBanners {
+    if (showsAds) {
+      return true;
+    }
+    return androidBannersEnabled && !kDebugMode && isAndroidAdsModel;
+  }
 
-  /// Settings top banner on Android and iOS.
-  static bool get showsSettingsBanner => showsAds;
+  /// Home top banner. Hidden for Pro (no ads).
+  static bool get showsHomeBanner => showsBanners;
 
-  /// AI Resume top banner on Android and iOS. Hidden for Pro (no ads).
-  /// Follows [showsAds] so debug builds stay ad-free.
-  static bool get showsAiResumeBanner => showsAds;
+  /// Settings top banner. Hidden for Pro (no ads).
+  static bool get showsSettingsBanner => showsBanners;
+
+  /// AI Resume top banner. Hidden for Pro (no ads).
+  static bool get showsAiResumeBanner => showsBanners;
 }

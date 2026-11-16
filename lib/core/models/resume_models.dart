@@ -79,6 +79,38 @@ ResumeTemplate resumeTemplateFromStorage(dynamic raw) {
       return ResumeTemplate.chevron;
     case 'wave':
       return ResumeTemplate.wave;
+    case 'meridian':
+      return ResumeTemplate.meridian;
+    case 'ledger':
+      return ResumeTemplate.ledger;
+    case 'keystone':
+      return ResumeTemplate.keystone;
+    case 'cadence':
+      return ResumeTemplate.cadence;
+    case 'terrazzo':
+      return ResumeTemplate.terrazzo;
+    case 'dotfield':
+      return ResumeTemplate.dotfield;
+    case 'orbit':
+      return ResumeTemplate.orbit;
+    case 'prism':
+      return ResumeTemplate.prism;
+    case 'summit':
+      return ResumeTemplate.summit;
+    case 'folio':
+      return ResumeTemplate.folio;
+    case 'beacon':
+      return ResumeTemplate.beacon;
+    case 'vertex':
+      return ResumeTemplate.vertex;
+    case 'atsBoldRule':
+      return ResumeTemplate.atsBoldRule;
+    case 'atsCompact':
+      return ResumeTemplate.atsCompact;
+    case 'atsFocus':
+      return ResumeTemplate.atsFocus;
+    case 'atsDoubleRule':
+      return ResumeTemplate.atsDoubleRule;
     default:
       return ResumeTemplate.corporate;
   }
@@ -192,6 +224,54 @@ enum ResumeTemplate {
 
   /// Light blue page with a white wave along the bottom.
   wave,
+
+  /// Centered nameplate between fine rules, with hairlines around each heading.
+  meridian,
+
+  /// Dates in their own left column beside each entry.
+  ledger,
+
+  /// Solid header band with tinted strips behind each section heading.
+  keystone,
+
+  /// Initials in a colour square beside the name, with short bars under headings.
+  cadence,
+
+  /// Warm page with terrazzo chips in the corner and along the foot.
+  terrazzo,
+
+  /// Halftone dots fading out from the corner of a white page.
+  dotfield,
+
+  /// Concentric rings and a small satellite in the corners of the page.
+  orbit,
+
+  /// Faceted colour shards in the corner and a bar along the foot.
+  prism,
+
+  /// Full-width colour header with a ringed photo, contact strip and skill chips.
+  summit,
+
+  /// Editorial layout with section labels set in the left margin.
+  folio,
+
+  /// Tinted right rail with photo, contact and skills beside the main column.
+  beacon,
+
+  /// Angled colour header with a ringed photo over a two-column body.
+  vertex,
+
+  /// Heavy uppercase headings on strong rules (ATS-friendly).
+  atsBoldRule,
+
+  /// Tight spacing and inline rules that fit more on a page (ATS-friendly).
+  atsCompact,
+
+  /// Summary in a soft panel with barred headings below (ATS-friendly).
+  atsFocus,
+
+  /// Centered headings between double rules (ATS-friendly).
+  atsDoubleRule,
 }
 
 enum CoverLetterTemplate {
@@ -268,6 +348,22 @@ const availableResumeTemplates = <ResumeTemplate>[
   ResumeTemplate.arc,
   ResumeTemplate.chevron,
   ResumeTemplate.wave,
+  ResumeTemplate.meridian,
+  ResumeTemplate.ledger,
+  ResumeTemplate.keystone,
+  ResumeTemplate.cadence,
+  ResumeTemplate.terrazzo,
+  ResumeTemplate.dotfield,
+  ResumeTemplate.orbit,
+  ResumeTemplate.prism,
+  ResumeTemplate.summit,
+  ResumeTemplate.folio,
+  ResumeTemplate.beacon,
+  ResumeTemplate.vertex,
+  ResumeTemplate.atsBoldRule,
+  ResumeTemplate.atsCompact,
+  ResumeTemplate.atsFocus,
+  ResumeTemplate.atsDoubleRule,
 ];
 
 extension ResumeTemplateX on ResumeTemplate {
@@ -291,7 +387,15 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.modernLine ||
     ResumeTemplate.splitContact ||
     ResumeTemplate.harbor ||
-    ResumeTemplate.typeplate => true,
+    ResumeTemplate.typeplate ||
+    ResumeTemplate.meridian ||
+    ResumeTemplate.ledger ||
+    ResumeTemplate.keystone ||
+    ResumeTemplate.cadence ||
+    ResumeTemplate.atsBoldRule ||
+    ResumeTemplate.atsCompact ||
+    ResumeTemplate.atsFocus ||
+    ResumeTemplate.atsDoubleRule => true,
     _ => false,
   };
 
@@ -332,6 +436,22 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.arc => 'Arc',
     ResumeTemplate.chevron => 'Chevron',
     ResumeTemplate.wave => 'Wave',
+    ResumeTemplate.meridian => 'Meridian',
+    ResumeTemplate.ledger => 'Ledger',
+    ResumeTemplate.keystone => 'Keystone',
+    ResumeTemplate.cadence => 'Cadence',
+    ResumeTemplate.terrazzo => 'Terrazzo',
+    ResumeTemplate.dotfield => 'Dotfield',
+    ResumeTemplate.orbit => 'Orbit',
+    ResumeTemplate.prism => 'Prism',
+    ResumeTemplate.summit => 'Summit',
+    ResumeTemplate.folio => 'Folio',
+    ResumeTemplate.beacon => 'Beacon',
+    ResumeTemplate.vertex => 'Vertex',
+    ResumeTemplate.atsBoldRule => 'Bold Rule ATS',
+    ResumeTemplate.atsCompact => 'Compact ATS',
+    ResumeTemplate.atsFocus => 'Focus ATS',
+    ResumeTemplate.atsDoubleRule => 'Double Rule ATS',
   };
 
   String get description => switch (userFacingTemplate) {
@@ -407,6 +527,38 @@ extension ResumeTemplateX on ResumeTemplate {
       'A triangle in the top-right corner, with a plain page below.',
     ResumeTemplate.wave =>
       'A light blue header with a white wave, and a plain page below.',
+    ResumeTemplate.meridian =>
+      'Centered nameplate between fine rules, with headings set between hairlines.',
+    ResumeTemplate.ledger =>
+      'Dates in their own left column so a career reads at a glance.',
+    ResumeTemplate.keystone =>
+      'Solid header band with tinted section strips and a clean body.',
+    ResumeTemplate.cadence =>
+      'Monogram square beside the name, with short accent bars under headings.',
+    ResumeTemplate.terrazzo =>
+      'Warm page scattered with terrazzo chips in the corner and along the foot.',
+    ResumeTemplate.dotfield =>
+      'Halftone dots fade out from the corner over a crisp white page.',
+    ResumeTemplate.orbit =>
+      'Concentric rings and a small satellite circle the top of the page.',
+    ResumeTemplate.prism =>
+      'Faceted colour shards in the corner with a bold bar along the foot.',
+    ResumeTemplate.summit =>
+      'Full-width colour header with a ringed photo, contact strip and skill chips.',
+    ResumeTemplate.folio =>
+      'Editorial layout with section labels set in the left margin.',
+    ResumeTemplate.beacon =>
+      'Tinted right rail with photo, contact and skills beside a roomy main column.',
+    ResumeTemplate.vertex =>
+      'Angled colour header with a ringed photo over a two-column body.',
+    ResumeTemplate.atsBoldRule =>
+      'Heavy uppercase headings on strong rules in one clean column.',
+    ResumeTemplate.atsCompact =>
+      'Tight spacing and inline rules that fit more on one page.',
+    ResumeTemplate.atsFocus =>
+      'Summary in a soft panel up top, with barred headings below.',
+    ResumeTemplate.atsDoubleRule =>
+      'Centered headings between double rules for a formal, orderly read.',
   };
 
   Color get accentColor => switch (userFacingTemplate) {
@@ -446,6 +598,22 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.arc => const Color(0xFF0F6E6B),
     ResumeTemplate.chevron => const Color(0xFF1F8A78),
     ResumeTemplate.wave => const Color(0xFF1E4E79),
+    ResumeTemplate.meridian => const Color(0xFF7A1F2B),
+    ResumeTemplate.ledger => const Color(0xFF1F5F4A),
+    ResumeTemplate.keystone => const Color(0xFF1E2A44),
+    ResumeTemplate.cadence => const Color(0xFF5B3FA8),
+    ResumeTemplate.terrazzo => const Color(0xFFC2513A),
+    ResumeTemplate.dotfield => const Color(0xFF2F5DA8),
+    ResumeTemplate.orbit => const Color(0xFF6C3FA0),
+    ResumeTemplate.prism => const Color(0xFF0E7C86),
+    ResumeTemplate.summit => const Color(0xFF14506B),
+    ResumeTemplate.folio => const Color(0xFF9A3412),
+    ResumeTemplate.beacon => const Color(0xFF0F4C81),
+    ResumeTemplate.vertex => const Color(0xFF9F1D35),
+    ResumeTemplate.atsBoldRule => const Color(0xFF000000),
+    ResumeTemplate.atsCompact => const Color(0xFF000000),
+    ResumeTemplate.atsFocus => const Color(0xFF000000),
+    ResumeTemplate.atsDoubleRule => const Color(0xFF000000),
   };
 
   Color get tintColor => switch (userFacingTemplate) {
@@ -485,6 +653,22 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.arc => const Color(0xFFF4FBFA),
     ResumeTemplate.chevron => const Color(0xFFF7FBF9),
     ResumeTemplate.wave => const Color(0xFFD7E7F6),
+    ResumeTemplate.meridian => const Color(0xFFF8E9EB),
+    ResumeTemplate.ledger => const Color(0xFFE6F2ED),
+    ResumeTemplate.keystone => const Color(0xFFE4E7EF),
+    ResumeTemplate.cadence => const Color(0xFFEEEAF8),
+    ResumeTemplate.terrazzo => const Color(0xFFFBF7F1),
+    ResumeTemplate.dotfield => const Color(0xFFFFFFFF),
+    ResumeTemplate.orbit => const Color(0xFFFAF8FD),
+    ResumeTemplate.prism => const Color(0xFFFFFFFF),
+    ResumeTemplate.summit => const Color(0xFFE3EEF3),
+    ResumeTemplate.folio => const Color(0xFFFBEDE6),
+    ResumeTemplate.beacon => const Color(0xFFE5EDF4),
+    ResumeTemplate.vertex => const Color(0xFFF7E6E9),
+    ResumeTemplate.atsBoldRule => const Color(0xFFF3F4F6),
+    ResumeTemplate.atsCompact => const Color(0xFFF3F4F6),
+    ResumeTemplate.atsFocus => const Color(0xFFF3F4F6),
+    ResumeTemplate.atsDoubleRule => const Color(0xFFF3F4F6),
   };
 
   /// Short typography hint for the style sheet (PDF uses built-in fonts per layout).
@@ -525,6 +709,22 @@ extension ResumeTemplateX on ResumeTemplate {
     ResumeTemplate.arc => 'Outfit · arc',
     ResumeTemplate.chevron => 'Outfit · chevron',
     ResumeTemplate.wave => 'Outfit · wave',
+    ResumeTemplate.meridian => 'Outfit · meridian',
+    ResumeTemplate.ledger => 'Outfit · ledger',
+    ResumeTemplate.keystone => 'Outfit · keystone',
+    ResumeTemplate.cadence => 'Outfit · cadence',
+    ResumeTemplate.terrazzo => 'Outfit · terrazzo',
+    ResumeTemplate.dotfield => 'Outfit · dotfield',
+    ResumeTemplate.orbit => 'Outfit · orbit',
+    ResumeTemplate.prism => 'Outfit · prism',
+    ResumeTemplate.summit => 'Outfit · summit',
+    ResumeTemplate.folio => 'Outfit · folio',
+    ResumeTemplate.beacon => 'Outfit · beacon',
+    ResumeTemplate.vertex => 'Outfit · vertex',
+    ResumeTemplate.atsBoldRule => 'Outfit · bold rule ATS',
+    ResumeTemplate.atsCompact => 'Outfit · compact ATS',
+    ResumeTemplate.atsFocus => 'Outfit · focus ATS',
+    ResumeTemplate.atsDoubleRule => 'Outfit · double rule ATS',
   };
 }
 

@@ -10,6 +10,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart' as sfpdf;
 import 'package:xml/xml.dart';
 
 import '../models/resume_models.dart';
+import 'resume_pdf_data.dart';
 import 'resume_services.dart' show LocalAiResumeService;
 
 class ImportedResumeFile {
@@ -17,11 +18,16 @@ class ImportedResumeFile {
     required this.fileName,
     required this.resumeText,
     this.candidateResumeTexts = const [],
+    this.exportedResumeJson,
   });
 
   final String fileName;
   final String resumeText;
   final List<String> candidateResumeTexts;
+
+  /// The resume stored in a PDF this app exported, when it still matches the
+  /// PDF's text (see `resume_pdf_data.dart`).
+  final String? exportedResumeJson;
 
   List<String> get allResumeTexts {
     final values = <String>[];
@@ -107,6 +113,9 @@ class ResumeImportService {
     final textCandidates = await Isolate.run(
       () => _extractTextCandidates(extension, bytes),
     );
+    final exportedResumeJson = extension == 'pdf' && hasResumePdfData(bytes)
+        ? await Isolate.run(() => _readExportedResume(bytes))
+        : null;
 
     final normalizedCandidates = textCandidates
         .map((item) => item.trim())
@@ -123,7 +132,20 @@ class ResumeImportService {
       fileName: file.name,
       resumeText: normalizedCandidates.first,
       candidateResumeTexts: normalizedCandidates.skip(1).toList(),
+      exportedResumeJson: exportedResumeJson,
     );
+  }
+
+  String? _readExportedResume(Uint8List bytes) {
+    final document = sfpdf.PdfDocument(inputBytes: bytes);
+    try {
+      return readResumePdfData(
+        bytes,
+        sfpdf.PdfTextExtractor(document).extractText(),
+      );
+    } finally {
+      document.dispose();
+    }
   }
 
   List<String> _extractTextCandidates(String extension, Uint8List bytes) =>
@@ -142,11 +164,13 @@ class ResumeImportService {
   }) {
     final resumeText = file.resumeText;
     final candidates = file.candidateResumeTexts;
+    final exportedResumeJson = file.exportedResumeJson;
     final title = file.suggestedTitle;
     return Isolate.run(
       () => LocalAiResumeService().parseImportedResumeText(
         resumeText: resumeText,
         candidateResumeTexts: candidates,
+        exportedResumeJson: exportedResumeJson,
         template: template,
         sourceTitle: title,
       ),
@@ -201,14 +225,31 @@ class ResumeImportService {
         }
       }
 
+      String plainText;
+      try {
+        plainText = extractor.extractText();
+      } catch (_) {
+        plainText = '';
+      }
+
       // Some documents make the line extractor throw (a RangeError inside
       // syncfusion). One failing strategy must not abort the import, so the
-      // plain-text read below still gets its chance.
+      // draw-order and plain-text reads below still get their chance.
       List<sfpdf.TextLine> textLines;
       try {
         textLines = extractor.extractTextLines();
       } catch (_) {
         textLines = const <sfpdf.TextLine>[];
+        try {
+          addCandidate(
+            _buildPdfDrawOrderText(
+              plainText,
+              extractor.extractText(layoutText: true),
+            ),
+          );
+        } catch (_) {
+          // Fall through to the plain-text read.
+        }
       }
       if (textLines.isNotEmpty) {
         // Columns first: on two-column resumes the top-sorted read interleaves
@@ -219,7 +260,12 @@ class ResumeImportService {
           () => _buildPdfColumnAwareText(textLines, document),
         ]) {
           try {
-            addCandidate(build());
+            addCandidate(
+              _restoreGarbledWords(
+                _restoreDroppedMonths(build(), plainText),
+                plainText,
+              ),
+            );
           } catch (_) {
             // Skip this reading strategy and keep the others.
           }
@@ -230,12 +276,6 @@ class ResumeImportService {
       // a separate text run, and the plain extractor then returns one word per
       // line. The line-based resume parser reads that as dozens of fake jobs,
       // so only fall back to it when the line-based reads produced nothing.
-      String plainText;
-      try {
-        plainText = extractor.extractText();
-      } catch (_) {
-        plainText = '';
-      }
       if (plainText.isNotEmpty &&
           (candidates.isEmpty || !_looksWordPerLine(plainText))) {
         addCandidate(plainText);
@@ -245,6 +285,302 @@ class ResumeImportService {
     } finally {
       document.dispose();
     }
+  }
+
+  static const _pdfMonthPattern =
+      r'(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?';
+
+  /// The line extractor can lose a word at the start of a line ("Jan 2021 -
+  /// Present" reads "2021 - Present") that the plain read still has, so a range
+  /// opening on a bare year takes its month back from there.
+  String _restoreDroppedMonths(String text, String plainText) {
+    final plain = plainText.replaceAll(RegExp(r'\s+'), ' ');
+    final rows = text.split('\n');
+    for (var i = 0; i < rows.length; i++) {
+      // The month is not lost when it just wrapped: "... | January" above.
+      final above = i == 0 ? '' : rows[i - 1];
+      rows[i] = rows[i].replaceAllMapped(
+        RegExp(
+          r'(?<![A-Za-z.] ?)\b(?:19|20)\d{2} [-–—] '
+          '(?:(?:$_pdfMonthPattern )?\\d{4}|present|current|now)',
+          caseSensitive: false,
+        ),
+        (match) {
+          final range = match.group(0)!;
+          final month = RegExp(
+            '\\b($_pdfMonthPattern) ${RegExp.escape(range)}',
+            caseSensitive: false,
+          ).firstMatch(plain);
+          final wrapped =
+              month != null &&
+              match.start == 0 &&
+              above.toLowerCase().endsWith(month.group(1)!.toLowerCase());
+          return month == null || wrapped
+              ? range
+              : '${month.group(1)} $range';
+        },
+      );
+    }
+    return rows.join('\n');
+  }
+
+  /// The line extractor can also cut a word short ("redesign t improved"). A
+  /// word the plain read does not have takes its place back from there, when
+  /// the same two neighbours surround a longer word holding it.
+  String _restoreGarbledWords(String text, String plainText) {
+    final plain = plainText
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
+    final known = plain.toSet();
+    return text
+        .split('\n')
+        .map((row) {
+          final words = row.split(' ');
+          for (var i = 1; i < words.length - 1; i++) {
+            if (known.contains(words[i]) || words[i] == '|') {
+              continue;
+            }
+            for (var k = 1; k < plain.length - 1; k++) {
+              if (plain[k - 1] == words[i - 1] &&
+                  plain[k + 1] == words[i + 1] &&
+                  plain[k].contains(words[i])) {
+                words[i] = plain[k];
+                break;
+              }
+            }
+          }
+          return words.join(' ');
+        })
+        .join('\n');
+  }
+
+  /// Rows in drawing order, for when the line extractor fails. The layout read
+  /// knows where rows end but loses the spaces; the plain read has the words
+  /// but not the rows. Together they give the text without any positions, and
+  /// returns an empty string when the two reads disagree.
+  String _buildPdfDrawOrderText(String plainText, String layoutText) {
+    final words = plainText
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
+    var next = 0;
+    final rows = <String>[];
+    for (final line in layoutText.split(RegExp(r'[\r\n]+'))) {
+      var rest = line.replaceAll(RegExp(r'\s+'), '');
+      final row = <String>[];
+      while (rest.isNotEmpty) {
+        if (next >= words.length || !rest.startsWith(words[next])) {
+          return '';
+        }
+        rest = rest.substring(words[next].length);
+        row.add(words[next++]);
+      }
+      if (row.isNotEmpty) {
+        rows.addAll(_splitDrawOrderRow(row));
+      }
+    }
+    return _mainColumnFirst(_repairDrawOrderRows(rows)).join('\n');
+  }
+
+  /// Puts back what running rows together broke: a bullet alone on its row
+  /// belongs to the next one, and the title before a dates row can be stuck to
+  /// the end of the line above ("... rural regions Android Developer").
+  List<String> _repairDrawOrderRows(List<String> rows) {
+    final repaired = <String>[];
+    for (var i = 0; i < rows.length; i++) {
+      final row = rows[i];
+      if (row == '\u2022' && i + 1 < rows.length) {
+        rows[i + 1] = '\u2022 ${rows[i + 1]}';
+        continue;
+      }
+      // "Infosys Maintained internal tools.", below a dates row and a title.
+      final company = RegExp(
+        r'^((?:[A-Z]\S* )+)([A-Z][a-z]+ [a-z].*[.!?])$',
+      ).firstMatch(row);
+      if (company != null &&
+          repaired.length >= 2 &&
+          _pdfDateRange.hasMatch(
+            repaired[repaired.length - 2].replaceFirst('(', ''),
+          )) {
+        repaired
+          ..add(company.group(1)!.trim())
+          ..add(company.group(2)!);
+        continue;
+      }
+      final title =
+          i + 1 < rows.length &&
+              _pdfDateRange.hasMatch(rows[i + 1].replaceFirst('(', ''))
+          ? _pdfTrailingTitleStart(row)
+          : null;
+      if (title == null) {
+        repaired.add(row);
+      } else {
+        repaired
+          ..add(row.substring(0, title).trim())
+          ..add(row.substring(title));
+      }
+    }
+    return repaired;
+  }
+
+  /// Where a row's trailing title starts, or null if it has none: the last run
+  /// of capitalised words after a lowercase word, from a word ending in a comma
+  /// if the run has one ("... of Technology Bombay B.Tech, Computer Science").
+  int? _pdfTrailingTitleStart(String row) {
+    final run = RegExp(
+      r'(?<=(?:^|\s)[a-z][^\s]* )(?:[A-Z][^\s]* )*[A-Z][^\s]*$',
+    ).firstMatch(row);
+    if (run == null) {
+      return null;
+    }
+    final comma = RegExp(r'[^\s]+, ').firstMatch(run.group(0)!);
+    return run.start + (comma?.start ?? 0);
+  }
+
+  /// Some layouts draw the sidebar first, leaving the name after the contact
+  /// lines and skills where it cannot be found. Starts from the name instead:
+  /// the short rows just before a heading, once a sidebar has been read.
+  List<String> _mainColumnFirst(List<String> rows) {
+    final firstHeading = rows.indexWhere(_isPdfHeadingRow);
+    final sidebarFirst =
+        firstHeading >= 0 &&
+        rows
+            .take(firstHeading)
+            .every((row) => RegExp(r'^[A-Z]{1,3}$').hasMatch(row));
+    if (!sidebarFirst) {
+      return rows;
+    }
+    bool isNameplateRow(String row) =>
+        !row.startsWith('\u2022') &&
+        !_isPdfHeadingRow(row) &&
+        !RegExp(r'[@/\d,]').hasMatch(row) &&
+        row.split(' ').length <= 6;
+    for (var i = firstHeading + 2; i < rows.length; i++) {
+      if (_isPdfHeadingRow(rows[i]) &&
+          isNameplateRow(rows[i - 1]) &&
+          (isNameplateRow(rows[i - 2]) || i - 2 == firstHeading)) {
+        final start = isNameplateRow(rows[i - 2]) ? i - 2 : i - 1;
+        return [...rows.sublist(start), ...rows.sublist(0, start)];
+      }
+    }
+    return rows;
+  }
+
+  bool _isPdfHeadingRow(String row) {
+    final words = row.split(' ');
+    return _pdfHeadingLengthAt(words, 0) == words.length;
+  }
+
+  static const _pdfSectionHeadings = <List<String>>[
+    ['Professional', 'Summary'],
+    ['Summary'],
+    ['Profile'],
+    ['About', 'Me'],
+    ['Objective'],
+    ['Work', 'Experience'],
+    ['Professional', 'Experience'],
+    ['Experience'],
+    ['Education'],
+    ['Skills'],
+    ['Projects'],
+    ['Contact'],
+    ['Details'],
+    ['Certifications'],
+    ['Languages'],
+  ];
+
+  static final _pdfDateRange = RegExp(
+    '^(?:(?:$_pdfMonthPattern )?\\d{4}) [-\u2013\u2014] '
+    '(?:(?:$_pdfMonthPattern )?\\d{4}|present|current|now)',
+    caseSensitive: false,
+  );
+
+  /// The layout read sometimes runs several visual rows into one. Breaks a row
+  /// at what cannot share a row: bullets, section headings and date ranges.
+  List<String> _splitDrawOrderRow(List<String> words) {
+    final rows = <List<String>>[<String>[]];
+    void breakRow() {
+      if (rows.last.isNotEmpty) {
+        rows.add(<String>[]);
+      }
+    }
+
+    for (var i = 0; i < words.length;) {
+      final heading = _pdfHeadingLengthAt(words, i);
+      if (heading > 0) {
+        breakRow();
+        rows.last.addAll(words.sublist(i, i + heading));
+        breakRow();
+        i += heading;
+        continue;
+      }
+      final range = _pdfDateRange.stringMatch(
+        words.skip(i).join(' ').replaceFirst(RegExp(r'^\('), ''),
+      );
+      if (range != null) {
+        breakRow();
+        final length = range.split(' ').length;
+        rows.last.addAll(words.sublist(i, i + length));
+        breakRow();
+        i += length;
+        continue;
+      }
+      if (words[i] == '\u2022') {
+        breakRow();
+      }
+      rows.last.add(words[i]);
+      // A finished sentence followed by a dated title is a new entry.
+      if (RegExp(r'[.!?]$').hasMatch(words[i]) &&
+          words.skip(i + 1).any((word) => RegExp(r'^\d{4}$').hasMatch(word))) {
+        breakRow();
+      }
+      i++;
+    }
+    return rows
+        .where((row) => row.isNotEmpty)
+        .map((row) => row.join(' '))
+        .toList();
+  }
+
+  /// Length of the section heading starting at [index] in [words], or 0. Inside
+  /// a row only an all-caps heading counts, or one that ends the row and is not
+  /// part of a phrase like "Head of Education".
+  int _pdfHeadingLengthAt(List<String> words, int index) {
+    for (final heading in _pdfSectionHeadings) {
+      final end = index + heading.length;
+      if (end > words.length) {
+        continue;
+      }
+      final found = words.sublist(index, end);
+      final isUpper = found.join() == heading.join().toUpperCase();
+      if (!isUpper && found.join() != heading.join()) {
+        continue;
+      }
+      final isWholeRow = index == 0 && end == words.length;
+      // "Contact +91 98200 11223", "Infosys Skills Kotlin Java": these are not
+      // words a sentence capitalises.
+      final opensList = const {
+        'Contact',
+        'Details',
+        'Skills',
+      }.contains(found.join(' '));
+      final endsRow =
+          index > 0 &&
+          (end == words.length || opensList) &&
+          !const {
+            'of',
+            'in',
+            'and',
+            'for',
+            'the',
+            '&',
+          }.contains(words[index - 1].toLowerCase());
+      if (isUpper || isWholeRow || endsRow || (index == 0 && opensList)) {
+        return heading.length;
+      }
+    }
+    return 0;
   }
 
   bool _looksWordPerLine(String text) {
@@ -359,7 +695,22 @@ class ResumeImportService {
     if (droppedLeadingDingbat && !RegExp(r'^[\-\u2022\*]').hasMatch(text)) {
       text = '- $text';
     }
-    return _sanitizePdfExtractedLine(text);
+    return _sanitizePdfExtractedLine(_datesAfterTitle(text));
+  }
+
+  /// Date-column layouts read "2019 - 2021 | Project Lead"; the parser expects
+  /// the title first, as every other layout gives it.
+  static final RegExp _leadingDateRange = RegExp(
+    r'^((?:[A-Za-z]{3,9}\.?\s+)?\d{4}\s*[-\u2013\u2014]\s*'
+    r'(?:(?:[A-Za-z]{3,9}\.?\s+)?\d{4}|Present|Current|Now))'
+    r'\s*(?:\|\s*)?([A-Za-z].*)$',
+    caseSensitive: false,
+  );
+
+  String _datesAfterTitle(String text) {
+    final match = _leadingDateRange.firstMatch(text);
+    if (match == null) return text;
+    return '${match.group(2)} | ${match.group(1)}';
   }
 
   /// Reads each page as separate columns when a vertical band of the page has
@@ -377,6 +728,11 @@ class ResumeImportService {
     }
 
     final pageTexts = <String>[];
+    // Read after every page's main column, so a section running onto the next
+    // page is not cut in two by the sidebar beside it.
+    final sidebarTexts = <String>[];
+    // Except a sidebar holding the name: that one opens the document.
+    var nameplateText = '';
     var splitAnyPage = false;
     for (final pageIndex in byPage.keys.toList()..sort()) {
       final pageLines = [...byPage[pageIndex]!];
@@ -394,7 +750,8 @@ class ResumeImportService {
       }
       splitAnyPage = true;
       // A line crossing the gutter is a full-width header (the nameplate), so
-      // it leads, then the main column, then the sidebar.
+      // it leads. The main column is the one with more text, on whichever side
+      // that is.
       final header = pageLines
           .where((line) => line.bounds.left < splitX && line.bounds.right > splitX)
           .toList()
@@ -403,16 +760,28 @@ class ResumeImportService {
         ..sort(_comparePdfTextLines);
       final right = pageLines.where((line) => line.bounds.left >= splitX).toList()
         ..sort(_comparePdfTextLines);
-      pageTexts.add(
-        [
-          ...header.map(_pdfLineText),
-          ...right.map(_pdfLineText),
-          ...left.map(_pdfLineText),
-        ].join('\n'),
-      );
+      int textLength(List<sfpdf.TextLine> lines) =>
+          lines.fold(0, (total, line) => total + line.text.length);
+      // A monogram in an avatar circle can be set larger than the name.
+      double largestType(List<sfpdf.TextLine> lines) => lines
+          .where((line) => !RegExp(r'^[A-Z]{1,3}$').hasMatch(line.text.trim()))
+          .fold(0.0, (largest, line) => math.max(largest, line.fontSize));
+      final main = textLength(right) >= textLength(left) ? right : left;
+      final sidebar = identical(main, right) ? left : right;
+      final sidebarText = sidebar.map(_pdfLineText).join('\n');
+      pageTexts.add([...header, ...main].map(_pdfLineText).join('\n'));
+      if (pageTexts.length == 1 && largestType(sidebar) > largestType(main)) {
+        nameplateText = sidebarText;
+      } else {
+        sidebarTexts.add(sidebarText);
+      }
     }
 
-    return splitAnyPage ? pageTexts.join('\n') : '';
+    return splitAnyPage
+        ? [nameplateText, ...pageTexts, ...sidebarTexts]
+              .where((text) => text.isNotEmpty)
+              .join('\n')
+        : '';
   }
 
   /// X where a gutter separates two columns, or null when the page is one
@@ -434,7 +803,7 @@ class ResumeImportService {
     // Only a full-width header (the nameplate band at the top of the page)
     // may cross the gutter; body text crossing means this x cuts content.
     final headerBandBottom = pageHeight * 0.24;
-    for (var x = pageWidth * 0.22; x <= pageWidth * 0.62; x += 4) {
+    for (var x = pageWidth * 0.22; x <= pageWidth * 0.7; x += 4) {
       final crossesBody = body.any(
         (line) =>
             line.bounds.left < x &&
@@ -446,8 +815,10 @@ class ResumeImportService {
       }
       final leftLines = body.where((line) => line.bounds.right <= x).toList();
       final rightLines = body.where((line) => line.bounds.left >= x).toList();
-      // Both sides need real content, or this is just a page margin.
-      if (leftLines.length < 5 || rightLines.length < 8) {
+      // Both sides need real content, or this is just a page margin. The
+      // sidebar can be on either side.
+      if (math.min(leftLines.length, rightLines.length) < 4 ||
+          math.max(leftLines.length, rightLines.length) < 8) {
         continue;
       }
       final leftEdge = leftLines

@@ -123,7 +123,23 @@ int defaultColorPresetIndexForTemplate(ResumeTemplate template) {
     ResumeTemplate.studio ||
     ResumeTemplate.arc ||
     ResumeTemplate.chevron ||
-    ResumeTemplate.wave => kTemplateDefaultColorPresetIndex,
+    ResumeTemplate.wave ||
+    ResumeTemplate.meridian ||
+    ResumeTemplate.ledger ||
+    ResumeTemplate.keystone ||
+    ResumeTemplate.cadence ||
+    ResumeTemplate.terrazzo ||
+    ResumeTemplate.dotfield ||
+    ResumeTemplate.orbit ||
+    ResumeTemplate.prism ||
+    ResumeTemplate.summit ||
+    ResumeTemplate.folio ||
+    ResumeTemplate.beacon ||
+    ResumeTemplate.vertex ||
+    ResumeTemplate.atsBoldRule ||
+    ResumeTemplate.atsCompact ||
+    ResumeTemplate.atsFocus ||
+    ResumeTemplate.atsDoubleRule => kTemplateDefaultColorPresetIndex,
   };
 }
 

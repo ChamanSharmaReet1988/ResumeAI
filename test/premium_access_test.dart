@@ -6,13 +6,15 @@ void main() {
   group('PremiumAccess', () {
     test('first half of each template section is free', () {
       for (final id in [
-        'modern-line', 'split-contact', // top picks
+        'modern-line', 'split-contact', 'meridian', 'ledger', // top picks
         'creative-aurora', 'creative-ink-panel', 'creative-sunset',
-        'creative-sage-frame', // creative
+        'creative-sage-frame', 'creative-terrazzo',
+        'creative-dotfield', // creative
         'dark-header', 'accent-strip', 'profile-sidebar', 'classic-sidebar',
-        'header-sidebar', 'slate-sidebar', 'timeline-profile', // professional
+        'header-sidebar', 'slate-sidebar', 'timeline-profile', 'summit',
+        'folio', // professional
         'ats-structured', 'ats-latex-classic', 'ats-modern-flow',
-        'ats-executive', // ATS
+        'ats-executive', 'ats-bold-rule', 'ats-compact', // ATS
       ]) {
         expect(
           PremiumAccess.templateTileRequiresPremium(id),
@@ -33,8 +35,8 @@ void main() {
     });
 
     test('second half of each template section needs Pro', () {
-      expect(PremiumAccess.premiumTemplateTileIds, hasLength(17));
-      expect(PremiumAccess.premiumResumeTemplates, hasLength(17));
+      expect(PremiumAccess.premiumTemplateTileIds, hasLength(25));
+      expect(PremiumAccess.premiumResumeTemplates, hasLength(25));
       for (final id in PremiumAccess.premiumTemplateTileIds) {
         expect(PremiumAccess.templateTileRequiresPremium(id), isTrue);
       }
@@ -50,6 +52,12 @@ void main() {
         PremiumAccess.templateTileRequiresPremium('ats-clean-sans'),
         isTrue,
       );
+      for (final id in [
+        'keystone', 'cadence', 'creative-orbit', 'creative-prism', 'beacon',
+        'vertex', 'ats-focus', 'ats-double-rule',
+      ]) {
+        expect(PremiumAccess.templateTileRequiresPremium(id), isTrue);
+      }
     });
 
     test('all cover letter layouts are free', () {

@@ -16,9 +16,14 @@ String gallerySampleAvatarAsset(ResumeTemplate template) {
     ResumeTemplate.corporate ||
     ResumeTemplate.creative ||
     ResumeTemplate.classicSidebar ||
-    ResumeTemplate.minimalProfile =>
+    ResumeTemplate.minimalProfile ||
+    ResumeTemplate.summit ||
+    ResumeTemplate.vertex =>
       kSampleAvatarMaleAsset,
-    ResumeTemplate.charcoalCurve => kSampleAvatarFemaleAsset,
+    ResumeTemplate.charcoalCurve ||
+    ResumeTemplate.folio ||
+    ResumeTemplate.beacon =>
+      kSampleAvatarFemaleAsset,
     _ => kSampleAvatarAsset,
   };
 }

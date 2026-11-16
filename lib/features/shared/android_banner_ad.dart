@@ -40,7 +40,8 @@ class _AndroidBannerAdSlotState extends State<AndroidBannerAdSlot> {
   }
 
   Future<void> _ensureBanner() async {
-    if (!PlatformMonetization.showsAds || !AndroidAdsService.isInitialized) {
+    if (!PlatformMonetization.showsBanners ||
+        !AndroidAdsService.isInitialized) {
       return;
     }
     if (_premiumHidesAds(context)) {
@@ -94,7 +95,7 @@ class _AndroidBannerAdSlotState extends State<AndroidBannerAdSlot> {
 
   @override
   Widget build(BuildContext context) {
-    if (!PlatformMonetization.showsAds || _premiumHidesAds(context)) {
+    if (!PlatformMonetization.showsBanners || _premiumHidesAds(context)) {
       return const SizedBox.shrink();
     }
     final banner = _banner;

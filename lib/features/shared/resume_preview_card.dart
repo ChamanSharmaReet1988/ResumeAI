@@ -11,6 +11,7 @@ import '../../core/resume_font_weight.dart';
 import '../../core/resume_text_font.dart';
 import '../../core/sample_avatar.dart';
 import 'creative_resume_preview.dart';
+import 'professional_resume_preview.dart';
 
 export '../../core/sample_avatar.dart';
 
@@ -131,6 +132,22 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.arc ||
       ResumeTemplate.chevron ||
       ResumeTemplate.wave ||
+      ResumeTemplate.meridian ||
+      ResumeTemplate.ledger ||
+      ResumeTemplate.keystone ||
+      ResumeTemplate.cadence ||
+      ResumeTemplate.terrazzo ||
+      ResumeTemplate.dotfield ||
+      ResumeTemplate.orbit ||
+      ResumeTemplate.prism ||
+      ResumeTemplate.summit ||
+      ResumeTemplate.folio ||
+      ResumeTemplate.beacon ||
+      ResumeTemplate.vertex ||
+      ResumeTemplate.atsBoldRule ||
+      ResumeTemplate.atsCompact ||
+      ResumeTemplate.atsFocus ||
+      ResumeTemplate.atsDoubleRule ||
       ResumeTemplate.creative ||
       ResumeTemplate.classicSidebar ||
       ResumeTemplate.headerSidebar => 'Garamond',
@@ -150,6 +167,22 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.splitContact ||
       ResumeTemplate.harbor ||
       ResumeTemplate.typeplate ||
+      ResumeTemplate.meridian ||
+      ResumeTemplate.ledger ||
+      ResumeTemplate.keystone ||
+      ResumeTemplate.cadence ||
+      ResumeTemplate.terrazzo ||
+      ResumeTemplate.dotfield ||
+      ResumeTemplate.orbit ||
+      ResumeTemplate.prism ||
+      ResumeTemplate.summit ||
+      ResumeTemplate.folio ||
+      ResumeTemplate.beacon ||
+      ResumeTemplate.vertex ||
+      ResumeTemplate.atsBoldRule ||
+      ResumeTemplate.atsCompact ||
+      ResumeTemplate.atsFocus ||
+      ResumeTemplate.atsDoubleRule ||
       ResumeTemplate.corporate => ResumeTypography.atsStructuredBodyTextColor,
       _ => onSurface,
     };
@@ -314,7 +347,15 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.modernLine ||
       ResumeTemplate.splitContact ||
       ResumeTemplate.harbor ||
-      ResumeTemplate.typeplate => _TopPickAtsPreview(
+      ResumeTemplate.typeplate ||
+      ResumeTemplate.meridian ||
+      ResumeTemplate.ledger ||
+      ResumeTemplate.keystone ||
+      ResumeTemplate.cadence ||
+      ResumeTemplate.atsBoldRule ||
+      ResumeTemplate.atsCompact ||
+      ResumeTemplate.atsFocus ||
+      ResumeTemplate.atsDoubleRule => _TopPickAtsPreview(
         resume: resume,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),
@@ -325,7 +366,18 @@ class ResumePreviewCanvas extends StatelessWidget {
       ResumeTemplate.studio ||
       ResumeTemplate.arc ||
       ResumeTemplate.chevron ||
-      ResumeTemplate.wave => CreativeResumePreview(
+      ResumeTemplate.wave ||
+      ResumeTemplate.terrazzo ||
+      ResumeTemplate.dotfield ||
+      ResumeTemplate.orbit ||
+      ResumeTemplate.prism => CreativeResumePreview(
+        resume: resume,
+        followBuilderSectionOrder: followBuilderSectionOrder,
+      ),
+      ResumeTemplate.summit ||
+      ResumeTemplate.folio ||
+      ResumeTemplate.beacon ||
+      ResumeTemplate.vertex => ProfessionalResumePreview(
         resume: resume,
         followBuilderSectionOrder: followBuilderSectionOrder,
       ),
@@ -13293,6 +13345,10 @@ class _TopPickAtsPreview extends StatelessWidget {
 
   static const double _pageWidth = 595.28;
   static const double _pageHeight = 841.89;
+  static const double _keystoneBandHeight = 134;
+  static const double _keystonePageTop = 34;
+  static const double _ledgerDateColumn = 112;
+  static const double _ledgerDateGap = 12;
 
   @override
   Widget build(BuildContext context) {
@@ -13318,7 +13374,9 @@ class _TopPickAtsPreview extends StatelessWidget {
     );
 
     final strong = style(FontWeight.w600, textPt + 0.5);
-    final body = style(FontWeight.w400, textPt, color: const Color(0xFF2B2B2B));
+    final body = style(FontWeight.w400, textPt);
+    final onBand = resume.corporateColorPreset.headerOnColor;
+    final compact = kind == ResumeTemplate.atsCompact;
     final name = _pdfAlignedDisplayName(resume);
     final title = resume.jobTitle.trim();
     final contactParts = [
@@ -13410,6 +13468,141 @@ class _TopPickAtsPreview extends StatelessWidget {
                   ),
                 ),
                 Expanded(child: Container(height: 1, color: const Color(0xFFD6D6D6))),
+              ],
+            ),
+          );
+        case ResumeTemplate.meridian:
+          return Padding(
+            padding: const EdgeInsets.only(top: 18, bottom: 8),
+            child: Row(
+              children: [
+                Expanded(child: Container(height: 0.6, color: accent)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    heading.toUpperCase(),
+                    style: style(
+                      FontWeight.w600,
+                      11,
+                      color: accent,
+                      letterSpacing: 1.8,
+                    ),
+                  ),
+                ),
+                Expanded(child: Container(height: 0.6, color: accent)),
+              ],
+            ),
+          );
+        case ResumeTemplate.ledger:
+          return Padding(
+            padding: const EdgeInsets.only(top: 18, bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(heading, style: style(FontWeight.w700, 13, color: accent)),
+                const SizedBox(height: 4),
+                Container(height: 0.8, color: accent),
+              ],
+            ),
+          );
+        case ResumeTemplate.keystone:
+          return Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(top: 16, bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            color: wash,
+            child: Text(
+              heading.toUpperCase(),
+              style: style(
+                FontWeight.w700,
+                11,
+                color: accent,
+                letterSpacing: 1.2,
+              ),
+            ),
+          );
+        case ResumeTemplate.cadence:
+          return Padding(
+            padding: const EdgeInsets.only(top: 18, bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(heading, style: style(FontWeight.w700, 13.5)),
+                const SizedBox(height: 4),
+                Container(width: 28, height: 3, color: accent),
+              ],
+            ),
+          );
+        case ResumeTemplate.atsBoldRule:
+          return Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 7),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  heading.toUpperCase(),
+                  style: style(
+                    FontWeight.w800,
+                    12,
+                    color: accent,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Container(height: 1.8, color: accent),
+              ],
+            ),
+          );
+        case ResumeTemplate.atsCompact:
+          return Padding(
+            padding: const EdgeInsets.only(top: 9, bottom: 4),
+            child: Row(
+              children: [
+                Text(
+                  heading.toUpperCase(),
+                  style: style(
+                    FontWeight.w700,
+                    10.5,
+                    color: accent,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Container(height: 0.7, color: accent)),
+              ],
+            ),
+          );
+        case ResumeTemplate.atsFocus:
+          return Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 7),
+            child: Row(
+              children: [
+                Container(width: 3, height: 15, color: accent),
+                const SizedBox(width: 7),
+                Text(heading, style: style(FontWeight.w700, 13, color: accent)),
+              ],
+            ),
+          );
+        case ResumeTemplate.atsDoubleRule:
+          return Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(height: 0.7, color: accent),
+                const SizedBox(height: 4),
+                Text(
+                  heading.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: style(
+                    FontWeight.w700,
+                    10.5,
+                    color: accent,
+                    letterSpacing: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(height: 0.7, color: accent),
               ],
             ),
           );
@@ -13562,6 +13755,246 @@ class _TopPickAtsPreview extends StatelessWidget {
                 ),
             ],
           );
+        case ResumeTemplate.meridian:
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(height: 0.6, color: accent),
+              const SizedBox(height: 2),
+              Container(height: 1.8, color: accent),
+              const SizedBox(height: 14),
+              Text(
+                name,
+                style: style(FontWeight.w600, 30, letterSpacing: 0.4),
+                textAlign: TextAlign.center,
+              ),
+              if (title.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                    title,
+                    style: style(
+                      FontWeight.w400,
+                      12.5,
+                      color: accent,
+                      letterSpacing: 0.6,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              if (contactParts.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 7),
+                  child: Text(
+                    contactParts.join('  ·  '),
+                    style: style(FontWeight.w400, textPt - 1.5),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              const SizedBox(height: 12),
+              Container(height: 1.8, color: accent),
+              const SizedBox(height: 2),
+              Container(height: 0.6, color: accent),
+            ],
+          );
+        case ResumeTemplate.ledger:
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Text(name, style: style(FontWeight.w700, 28)),
+                  ),
+                  if (title.isNotEmpty) ...[
+                    const SizedBox(width: 16),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        title,
+                        style: style(FontWeight.w600, 12, color: accent),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 6),
+              Container(height: 2.4, color: accent),
+              if (contactParts.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 7),
+                  child: Text(
+                    contactParts.join('  ·  '),
+                    style: style(FontWeight.w400, textPt - 1.5),
+                  ),
+                ),
+            ],
+          );
+        case ResumeTemplate.keystone:
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: _keystoneBandHeight - _keystonePageTop,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: style(FontWeight.w700, 26, color: onBand)),
+                  if (title.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        title,
+                        style: style(FontWeight.w400, 12.5, color: onBand),
+                      ),
+                    ),
+                  if (contactParts.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        contactParts.join('  ·  '),
+                        style: style(FontWeight.w400, 9.5, color: onBand),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        case ResumeTemplate.cadence:
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    alignment: Alignment.center,
+                    color: accent,
+                    child: Text(
+                      _pdfAlignedInitials(resume),
+                      style: style(FontWeight.w700, 21, color: onBand),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(name, style: style(FontWeight.w700, 26)),
+                        if (title.isNotEmpty)
+                          Text(
+                            title,
+                            style: style(FontWeight.w600, 12.5, color: accent),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (contactParts.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  padding: const EdgeInsets.only(top: 7),
+                  decoration: BoxDecoration(
+                    border: Border(top: BorderSide(color: wash)),
+                  ),
+                  child: Text(
+                    contactParts.join('  ·  '),
+                    style: style(FontWeight.w400, textPt - 1.5),
+                  ),
+                ),
+            ],
+          );
+        case ResumeTemplate.atsBoldRule:
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name.toUpperCase(),
+                style: style(FontWeight.w800, 25, letterSpacing: 0.3),
+              ),
+              if (title.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    title,
+                    style: style(FontWeight.w600, 12.5, color: accent),
+                  ),
+                ),
+              if (contactParts.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Text(contactParts.join('  ·  '), style: body),
+                ),
+            ],
+          );
+        case ResumeTemplate.atsCompact:
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title.isEmpty ? name : '$name  |  $title',
+                style: style(FontWeight.w700, 18),
+              ),
+              if (contactParts.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(contactParts.join('  ·  '), style: body),
+                ),
+            ],
+          );
+        case ResumeTemplate.atsFocus:
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: style(FontWeight.w700, 26)),
+              if (title.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    title,
+                    style: style(FontWeight.w600, 13, color: accent),
+                  ),
+                ),
+              if (contactParts.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Text(contactParts.join('  ·  '), style: body),
+                ),
+            ],
+          );
+        case ResumeTemplate.atsDoubleRule:
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                name,
+                style: style(FontWeight.w700, 25),
+                textAlign: TextAlign.center,
+              ),
+              if (title.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    title,
+                    style: style(FontWeight.w600, 12.5, color: accent),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              if (contactParts.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Text(
+                    contactParts.join('  ·  '),
+                    style: body,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
+          );
         default:
           return Text(name, style: style(FontWeight.w700, 24));
       }
@@ -13600,8 +14033,36 @@ class _TopPickAtsPreview extends StatelessWidget {
       final useCompanyFirst = kind == ResumeTemplate.typeplate;
       final first = useCompanyFirst && subtitle.isNotEmpty ? subtitle : title;
       final second = useCompanyFirst && subtitle.isNotEmpty ? title : subtitle;
+      if (kind == ResumeTemplate.ledger) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: _ledgerDateColumn,
+                child: Text(
+                  dates,
+                  style: style(FontWeight.w600, textPt + 0.5, color: accent),
+                ),
+              ),
+              const SizedBox(width: _ledgerDateGap),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(first, style: strong),
+                    if (second.isNotEmpty) Text(second, style: body),
+                    for (final line in bullets) bulletRow(line),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
       return Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+        padding: EdgeInsets.only(bottom: compact ? 5 : 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -13622,7 +14083,19 @@ class _TopPickAtsPreview extends StatelessWidget {
     final designedBody = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (resume.summary.trim().isNotEmpty) ...[
+        if (resume.summary.trim().isNotEmpty &&
+            kind == ResumeTemplate.atsFocus) ...[
+          sectionTitle('Professional Summary'),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(12, 9, 12, 10),
+            decoration: BoxDecoration(
+              color: softWash,
+              border: Border.all(color: wash, width: 0.8),
+            ),
+            child: Text(resume.summary.trim(), style: body),
+          ),
+        ] else if (resume.summary.trim().isNotEmpty) ...[
           sectionTitle('Professional Summary'),
           Text(resume.summary.trim(), style: body),
         ],
@@ -13771,6 +14244,13 @@ class _TopPickAtsPreview extends StatelessWidget {
       ResumeTemplate.typeplate => const EdgeInsets.fromLTRB(50, 36, 40, 36),
       ResumeTemplate.splitContact => const EdgeInsets.fromLTRB(40, 18, 40, 36),
       ResumeTemplate.harbor => const EdgeInsets.fromLTRB(44, 16, 44, 36),
+      ResumeTemplate.keystone => const EdgeInsets.fromLTRB(
+        44,
+        _keystonePageTop,
+        44,
+        36,
+      ),
+      ResumeTemplate.atsCompact => const EdgeInsets.fromLTRB(38, 30, 38, 30),
       _ => const EdgeInsets.fromLTRB(44, 40, 44, 36),
     };
 
@@ -13817,6 +14297,14 @@ class _TopPickAtsPreview extends StatelessWidget {
                         height: 7,
                         child: ColoredBox(color: accent),
                       ),
+                    if (kind == ResumeTemplate.keystone)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        height: _keystoneBandHeight,
+                        child: ColoredBox(color: accent),
+                      ),
                     SingleChildScrollView(
                       physics: const NeverScrollableScrollPhysics(),
                       child: Column(
@@ -13829,7 +14317,14 @@ class _TopPickAtsPreview extends StatelessWidget {
                               padding: bodyPad.copyWith(bottom: 0),
                               child: header(),
                             ),
-                          Padding(padding: bodyPad, child: designedBody),
+                          // Page top is already above the header; only the
+                          // bleed headers need a gap below them.
+                          Padding(
+                            padding: bleedHeader
+                                ? bodyPad
+                                : bodyPad.copyWith(top: 0),
+                            child: designedBody,
+                          ),
                         ],
                       ),
                     ),
